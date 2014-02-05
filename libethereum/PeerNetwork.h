@@ -97,7 +97,6 @@ private:
 	uint m_protocolVersion;
 	uint m_networkId;
 	uint m_reqNetworkId;
-	bi::address m_listenAddress;
 	short m_listenPort;			///< Port that the remote client is listening on for connections. Useful for giving to peers.
 	uint m_caps;
 

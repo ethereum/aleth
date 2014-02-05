@@ -51,13 +51,12 @@ PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId, bi
 	m_server(_s),
 	m_socket(std::move(_socket)),
 	m_reqNetworkId(_rNId),
-	m_listenAddress(_peerAddress),
 	m_listenPort(_peerPort),
 	m_rating(0)
 {
 	m_disconnect = std::chrono::steady_clock::time_point::max();
 	m_connect = std::chrono::steady_clock::now();
-	m_info = PeerInfo({"?", m_listenAddress.to_string(), m_listenPort, std::chrono::steady_clock::duration(0)});
+	m_info = PeerInfo({"?", _peerAddress.to_string(), m_listenPort, std::chrono::steady_clock::duration(0)});
 }
 
 PeerSession::~PeerSession()
@@ -89,7 +88,8 @@ bool PeerSession::interpret(RLP const& _r)
 		m_networkId = _r[2].toInt<uint>();
 		auto clientVersion = _r[3].toString();
 		m_caps = _r.itemCount() > 4 ? _r[4].toInt<uint>() : 0x07;
-		if (_r.itemCount() > 5) { m_listenPort = _r[5].toInt<short>(); }
+		if (_r.itemCount() > 5)
+			m_listenPort = _r[5].toInt<short>();
 
 		if (m_server->m_verbosity >= 2)
 			cout << std::setw(2) << m_socket.native_handle() << " | Hello: " << clientVersion << " " << showbase << hex << m_caps << dec << " " << m_listenPort << endl;
