@@ -67,7 +67,7 @@ class PeerSession: public std::enable_shared_from_this<PeerSession>
 	friend class PeerServer;
 
 public:
-	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId);
+	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, short _peerPort = 0);
 	~PeerSession();
 
 	void start();
@@ -97,6 +97,7 @@ private:
 	uint m_protocolVersion;
 	uint m_networkId;
 	uint m_reqNetworkId;
+	bi::address m_listenAddress;
 	short m_listenPort;			///< Port that the remote client is listening on for connections. Useful for giving to peers.
 	uint m_caps;
 

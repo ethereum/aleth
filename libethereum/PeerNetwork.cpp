@@ -47,14 +47,17 @@ static const vector<bi::address> c_rejectAddresses = {
 	{bi::address_v6::from_string("::")}
 };
 
-PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId):
+PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, short _peerPort):
 	m_server(_s),
 	m_socket(std::move(_socket)),
 	m_reqNetworkId(_rNId),
+	m_listenAddress(_peerAddress),
+	m_listenPort(_peerPort),
 	m_rating(0)
 {
 	m_disconnect = std::chrono::steady_clock::time_point::max();
 	m_connect = std::chrono::steady_clock::now();
+	m_info = PeerInfo({"?", m_listenAddress.to_string(), m_listenPort, std::chrono::steady_clock::duration(0)});
 }
 
 PeerSession::~PeerSession()
@@ -86,18 +89,18 @@ bool PeerSession::interpret(RLP const& _r)
 		m_networkId = _r[2].toInt<uint>();
 		auto clientVersion = _r[3].toString();
 		m_caps = _r.itemCount() > 4 ? _r[4].toInt<uint>() : 0x07;
-		m_listenPort = _r.itemCount() > 5 ? _r[5].toInt<short>() : 0;
+		if (_r.itemCount() > 5) { m_listenPort = _r[5].toInt<short>(); }
 
 		if (m_server->m_verbosity >= 2)
 			cout << std::setw(2) << m_socket.native_handle() << " | Hello: " << clientVersion << " " << showbase << hex << m_caps << dec << " " << m_listenPort << endl;
 
-		if (m_protocolVersion != 0 || m_networkId != m_reqNetworkId)
+		if (m_listenPort == 0 || m_protocolVersion != 0 || m_networkId != m_reqNetworkId)
 		{
 			disconnect();
 			return false;
 		}
 		try
-			{ m_info = PeerInfo({clientVersion, m_socket.remote_endpoint().address().to_string(), (short)m_socket.remote_endpoint().port(), std::chrono::steady_clock::duration()}); }
+			{ m_info = PeerInfo({clientVersion, m_socket.remote_endpoint().address().to_string(), m_listenPort, std::chrono::steady_clock::duration()}); }
 		catch (...)
 		{
 			disconnect();
@@ -823,7 +826,9 @@ void PeerServer::ensureAccepting()
 						try {
 							cout << "Accepted connection from " << m_socket.remote_endpoint() << std::endl;
 						} catch (...){}
-					auto p = std::make_shared<PeerSession>(this, std::move(m_socket), m_requiredNetworkId);
+					bi::address remoteAddress = m_socket.remote_endpoint().address();
+					// Port defaults to 0 - we let the hello tell us which port the peer listens to
+					auto p = std::make_shared<PeerSession>(this, std::move(m_socket), m_requiredNetworkId, remoteAddress);
 					m_peers.push_back(p);
 					p->start();
 				}
@@ -854,10 +859,10 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 		}
 		else
 		{
-			auto p = make_shared<PeerSession>(this, std::move(*s), m_requiredNetworkId);
+			auto p = make_shared<PeerSession>(this, std::move(*s), m_requiredNetworkId, _ep.address(), _ep.port());
 			m_peers.push_back(p);
 			if (m_verbosity >= 1)
-				cout << "Connected to " << p->endpoint() << endl;
+				cout << "Connected to " << _ep << endl;
 			p->start();
 		}
 		delete s;
