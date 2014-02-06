@@ -67,7 +67,7 @@ class PeerSession: public std::enable_shared_from_this<PeerSession>
 	friend class PeerServer;
 
 public:
-	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId);
+	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, short _peerPort = 0);
 	~PeerSession();
 
 	void start();
