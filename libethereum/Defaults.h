@@ -14,40 +14,33 @@
 	You should have received a copy of the GNU General Public License
 	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
+/** @file Defaults.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- * Main test functions.
  */
 
-// TODO: utilise the shared testdata.
+#pragma once
 
-int trieTest();
-int rlpTest();
-int daggerTest();
-int cryptoTest();
-int stateTest();
-int hexPrefixTest();
-int peerTest(int argc, char** argv);
+#include "Common.h"
 
-#include <BlockInfo.h>
-using namespace eth;
-
-int main(int argc, char** argv)
+namespace eth
 {
-/*	RLPStream s;
-	BlockInfo::genesis().fillStream(s, false);
-	std::cout << RLP(s.out()) << std::endl;
-	std::cout << asHex(s.out()) << std::endl;
-	std::cout << sha3(s.out()) << std::endl;*/
 
-	hexPrefixTest();
-	rlpTest();
-	trieTest();
-//	daggerTest();
-//	cryptoTest();
-//	stateTest();
-//	peerTest(argc, argv);
-	return 0;
+struct Defaults
+{
+	friend class BlockChain;
+	friend class State;
+
+public:
+	Defaults();
+
+	static Defaults* get() { if (!s_this) s_this = new Defaults; return s_this; }
+	static void setDBPath(std::string const& _dbPath) { get()->m_dbPath = _dbPath; }
+
+private:
+	std::string m_dbPath;
+
+	static Defaults* s_this;
+};
+
 }
-

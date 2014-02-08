@@ -14,40 +14,39 @@
 	You should have received a copy of the GNU General Public License
 	along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
- * @author Gav Wood <i@gavwood.com>
+/** @file UPnP.h
+ * @authors:
+ *   Gav Wood <i@gavwood.com>
  * @date 2014
- * Main test functions.
  */
 
-// TODO: utilise the shared testdata.
+#pragma once
 
-int trieTest();
-int rlpTest();
-int daggerTest();
-int cryptoTest();
-int stateTest();
-int hexPrefixTest();
-int peerTest(int argc, char** argv);
+#include <set>
+#include <string>
 
-#include <BlockInfo.h>
-using namespace eth;
+struct UPNPUrls;
+struct IGDdatas;
 
-int main(int argc, char** argv)
+namespace eth
 {
-/*	RLPStream s;
-	BlockInfo::genesis().fillStream(s, false);
-	std::cout << RLP(s.out()) << std::endl;
-	std::cout << asHex(s.out()) << std::endl;
-	std::cout << sha3(s.out()) << std::endl;*/
 
-	hexPrefixTest();
-	rlpTest();
-	trieTest();
-//	daggerTest();
-//	cryptoTest();
-//	stateTest();
-//	peerTest(argc, argv);
-	return 0;
+class UPnP
+{
+public:
+	UPnP();
+	~UPnP();
+
+	std::string externalIP();
+	int addRedirect(char const* addr, int port);
+	void removeRedirect(int port);
+
+	bool isValid() const { return m_ok; }
+
+	std::set<int> m_reg;
+	bool m_ok;
+	struct UPNPUrls* m_urls;
+	struct IGDdatas* m_data;
+};
+
 }
-
