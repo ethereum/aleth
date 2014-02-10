@@ -169,6 +169,13 @@ int main(int argc, char** argv)
 	}
 
 	Client c("Ethereum(++)/v" ADD_QUOTES(ETH_VERSION) "/" ADD_QUOTES(ETH_BUILD_TYPE) "/" ADD_QUOTES(ETH_BUILD_PLATFORM), coinbase, dbPath);
+
+	cout << endl
+	cout << "Address: " << endl;
+	cout << asHex(us.address().asArray()) << endl;
+	cout << "Secret: " << endl;
+	cout << asHex(us.secret().asArray()) << endl;
+
 	if (interactive)
 	{
 		cout << "Ethereum (++)" << endl;
@@ -205,6 +212,26 @@ int main(int argc, char** argv)
 			{
 				c.stopMining();
 			}
+			else if (cmd == "address")
+			{
+				cout << endl;
+				cout << "Current address: " + asHex(us.address().asArray()) << endl;
+				cout << "===" << endl;
+			}
+			else if (cmd == "secret")
+			{
+				cout << endl;
+				cout << "Current secret: " + asHex(us.secret().asArray()) << endl;
+				cout << "===" << endl;
+			}
+			else if (cmd == "balance")
+			{
+				u256 balance = c.state().balance(us.address());
+				cout << endl;
+				cout << "Current balance: ";
+				cout << balance << endl;
+				cout << "===" << endl;
+			}	
 			else if (cmd == "transact")
 			{
 				string sechex;
