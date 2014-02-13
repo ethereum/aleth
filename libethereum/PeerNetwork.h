@@ -76,11 +76,18 @@ enum DisconnectReason
 	ClientQuit
 };
 
+enum SessionDirection
+{
+	Incoming = 0,
+	Outgoing
+};
+
 class PeerServer;
 
 struct PeerInfo
 {
 	std::string clientVersion;
+	SessionDirection direction;
 	std::string host;
 	short port;
 	std::chrono::steady_clock::duration lastPing;
@@ -91,7 +98,7 @@ class PeerSession: public std::enable_shared_from_this<PeerSession>
 	friend class PeerServer;
 
 public:
-	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, short _peerPort = 0);
+	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId, SessionDirection _sessionDirection, bi::address _peerAddress, short _peerPort = 0);
 	~PeerSession();
 
 	void start();
@@ -125,6 +132,7 @@ private:
 	uint m_networkId;
 	uint m_reqNetworkId;
 	short m_listenPort;			///< Port that the remote client is listening on for connections. Useful for giving to peers.
+	SessionDirection m_sessionDirection;
 	uint m_caps;
 
 	std::chrono::steady_clock::time_point m_ping;
