@@ -62,7 +62,7 @@ static const vector<bi::address> c_rejectAddresses = {
 
 // Helper function to determine if an address falls within one of the reserved ranges
 // For V4:
-// Class A "10.*", Class B "172.[16->31].*", Class C "192.168.*"
+// Class A "10.*" and "127.*", Class B "172.[16->31].*", Class C "192.168.*"
 // Not implemented yet for V6
 bool eth::isPrivateAddress(bi::address _addressToCheck)
 {
@@ -70,7 +70,7 @@ bool eth::isPrivateAddress(bi::address _addressToCheck)
 	{
 		bi::address_v4 v4Address = _addressToCheck.to_v4();
 		bi::address_v4::bytes_type bytesToCheck = v4Address.to_bytes();
-		if (bytesToCheck[0] == 10)
+		if (bytesToCheck[0] == 10 || bytesToCheck[0] == 127)
 			return true;
 		if (bytesToCheck[0] == 172 && (bytesToCheck[1] >= 16 && bytesToCheck[1] <=31))
 			return true;
@@ -80,16 +80,17 @@ bool eth::isPrivateAddress(bi::address _addressToCheck)
 	return false;
 }
 
-PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, short _peerPort):
+PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId, SessionDirection _sessionDirection, bi::address _peerAddress, short _peerPort):
 	m_server(_s),
 	m_socket(std::move(_socket)),
 	m_reqNetworkId(_rNId),
 	m_listenPort(_peerPort),
+	m_sessionDirection(_sessionDirection),
 	m_rating(0)
 {
 	m_disconnect = std::chrono::steady_clock::time_point::max();
 	m_connect = std::chrono::steady_clock::now();
-	m_info = PeerInfo({"?", _peerAddress.to_string(), m_listenPort, std::chrono::steady_clock::duration(0)});
+	m_info = PeerInfo({"?", m_sessionDirection, _peerAddress.to_string(), m_listenPort, std::chrono::steady_clock::duration(0)});
 }
 
 PeerSession::~PeerSession()
@@ -158,7 +159,7 @@ bool PeerSession::interpret(RLP const& _r)
 			return false;
 		}
 		try
-			{ m_info = PeerInfo({clientVersion, m_socket.remote_endpoint().address().to_string(), m_listenPort, std::chrono::steady_clock::duration()}); }
+			{ m_info = PeerInfo({clientVersion, m_sessionDirection, m_socket.remote_endpoint().address().to_string(), m_listenPort, std::chrono::steady_clock::duration()}); }
 		catch (...)
 		{
 			disconnect(BadProtocol);
@@ -816,7 +817,7 @@ void PeerServer::ensureAccepting()
 					} catch (...){}
 					bi::address remoteAddress = m_socket.remote_endpoint().address();
 					// Port defaults to 0 - we let the hello tell us which port the peer listens to
-					auto p = std::make_shared<PeerSession>(this, std::move(m_socket), m_requiredNetworkId, remoteAddress);
+					auto p = std::make_shared<PeerSession>(this, std::move(m_socket), m_requiredNetworkId, Incoming, remoteAddress);
 					p->start();
 				}
 				catch (std::exception const& _e)
@@ -865,7 +866,7 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 		}
 		else
 		{
-			auto p = make_shared<PeerSession>(this, std::move(*s), m_requiredNetworkId, _ep.address(), _ep.port());
+			auto p = make_shared<PeerSession>(this, std::move(*s), m_requiredNetworkId, Outgoing, _ep.address(), _ep.port());
 			clog(NetNote) << "Connected to " << p->endpoint();
 			p->start();
 		}

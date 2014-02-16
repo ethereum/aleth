@@ -130,7 +130,12 @@ void Main::refresh()
 		ui->peerCount->setText(QString::fromStdString(toString(m_client->peerCount())) + " peer(s)");
 		ui->peers->clear();
 		for (PeerInfo const& i: m_client->peers())
-			ui->peers->addItem(QString("%3 ms - %1:%2 - %4").arg(i.host.c_str()).arg(i.port).arg(chrono::duration_cast<chrono::milliseconds>(i.lastPing).count()).arg(i.clientVersion.c_str()));
+			ui->peers->addItem(QString("%1 ms %2 %3:%4 - %5")
+				.arg(chrono::duration_cast<chrono::milliseconds>(i.lastPing).count())
+				.arg(i.direction == Incoming ? "<=" : "=>" )
+				.arg(i.host.c_str())
+				.arg(i.port)
+				.arg(i.clientVersion.c_str()));
 
 		auto d = m_client->blockChain().details();
 		auto diff = BlockInfo(m_client->blockChain().block()).difficulty;
