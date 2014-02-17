@@ -19,84 +19,72 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AddressState.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="BlockChain.cpp" />
-    <ClCompile Include="BlockInfo.cpp" />
-    <ClCompile Include="Client.cpp" />
-    <ClCompile Include="Common.cpp" />
-    <ClCompile Include="Dagger.cpp" />
-    <ClCompile Include="Defaults.cpp" />
-    <ClCompile Include="FileSystem.cpp" />
-    <ClCompile Include="MemTrie.cpp" />
-    <ClCompile Include="PeerNetwork.cpp" />
-    <ClCompile Include="RLP.cpp" />
-    <ClCompile Include="State.cpp" />
-    <ClCompile Include="Transaction.cpp" />
-    <ClCompile Include="TransactionQueue.cpp" />
-    <ClCompile Include="TrieCommon.cpp" />
-    <ClCompile Include="TrieDB.cpp" />
-    <ClCompile Include="TrieHash.cpp" />
-    <ClCompile Include="UPnP.cpp" />
+    <ClCompile Include="..\..\cryptopp\algparam.cpp" />
+    <ClCompile Include="..\..\cryptopp\cpu.cpp" />
+    <ClCompile Include="..\..\cryptopp\cryptlib.cpp" />
+    <ClCompile Include="..\..\cryptopp\filters.cpp" />
+    <ClCompile Include="..\..\cryptopp\fips140.cpp" />
+    <ClCompile Include="..\..\cryptopp\iterhash.cpp" />
+    <ClCompile Include="..\..\cryptopp\misc.cpp" />
+    <ClCompile Include="..\..\cryptopp\mqueue.cpp" />
+    <ClCompile Include="..\..\cryptopp\queue.cpp" />
+    <ClCompile Include="..\..\cryptopp\rdtables.cpp" />
+    <ClCompile Include="..\..\cryptopp\rijndael.cpp" />
+    <ClCompile Include="..\..\cryptopp\ripemd.cpp" />
+    <ClCompile Include="..\..\cryptopp\sha.cpp" />
+    <ClCompile Include="..\..\cryptopp\sha3.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AddressState.h" />
-    <ClInclude Include="BlockChain.h" />
-    <ClInclude Include="BlockInfo.h" />
-    <ClInclude Include="Client.h" />
-    <ClInclude Include="Common.h" />
-    <ClInclude Include="Dagger.h" />
-    <ClInclude Include="Defaults.h" />
-    <ClInclude Include="Exceptions.h" />
-    <ClInclude Include="FileSystem.h" />
-    <ClInclude Include="Instruction.h" />
-    <ClInclude Include="MemTrie.h" />
-    <ClInclude Include="PeerNetwork.h" />
-    <ClInclude Include="RLP.h" />
-    <ClInclude Include="State.h" />
-    <ClInclude Include="Transaction.h" />
-    <ClInclude Include="TransactionQueue.h" />
-    <ClInclude Include="TrieCommon.h" />
-    <ClInclude Include="TrieDB.h" />
-    <ClInclude Include="TrieHash.h" />
-    <ClInclude Include="UPnP.h" />
-    <ClInclude Include="vector_ref.h" />
+    <ClInclude Include="..\..\cryptopp\algparam.h" />
+    <ClInclude Include="..\..\cryptopp\cpu.h" />
+    <ClInclude Include="..\..\cryptopp\cryptlib.h" />
+    <ClInclude Include="..\..\cryptopp\filters.h" />
+    <ClInclude Include="..\..\cryptopp\fips140.h" />
+    <ClInclude Include="..\..\cryptopp\iterhash.h" />
+    <ClInclude Include="..\..\cryptopp\misc.h" />
+    <ClInclude Include="..\..\cryptopp\mqueue.h" />
+    <ClInclude Include="..\..\cryptopp\queue.h" />
+    <ClInclude Include="..\..\cryptopp\rijndael.h" />
+    <ClInclude Include="..\..\cryptopp\ripemd.h" />
+    <ClInclude Include="..\..\cryptopp\sha.h" />
+    <ClInclude Include="..\..\cryptopp\sha3.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="..\..\cryptopp\x64dll.asm">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ml64.exe /c /nologo /Fo"$(IntDir)x64dll.obj" /Zi "%(FullPath)"</Command>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ml64.exe /c /nologo /Fo"$(IntDir)x64dll.obj" /Zi "%(FullPath)"</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)x64dll.obj</Outputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)x64dll.obj</Outputs>
+    </CustomBuild>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{7050C7CF-7551-48BE-8E57-92235906C13A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>LibEthereum</RootNamespace>
+    <RootNamespace>LibCryptoPP</RootNamespace>
+    <ProjectGuid>{1CC213A4-3482-4211-B47B-172E90DAC7DE}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v120</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v120</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -118,25 +106,17 @@
     <Import Project="LibEthereum.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>..\build\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>..\build\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\build\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>..\build\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\build\$(ProjectName)\$(Platform)_$(Configuration)\</OutDir>
-    <IntDir>..\build\$(ProjectName)\$(Platform)_$(Configuration)\</IntDir>
-  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DisableSpecificWarnings>4189;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -145,26 +125,26 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <MinimalRebuild>false</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+      <DisableSpecificWarnings>4189;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Lib />
-    <ProjectReference />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableSpecificWarnings>4189;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,12 +155,13 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <TreatWarningAsError>true</TreatWarningAsError>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <DisableSpecificWarnings>4189;4244;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
