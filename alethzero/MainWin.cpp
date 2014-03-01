@@ -148,7 +148,11 @@ QString Main::pretty(eth::Address _a) const
 	if (h256 n = state().contractMemory(m_nameReg, (h256)(u256)(u160)_a))
 	{
 		std::string s((char const*)n.data(), 32);
-		s.resize(s.find_first_of('\0'));
+		std::size_t pos = s.find_first_of('\0');
+		if(pos == string::npos)
+			s = std::string("");
+		else
+			s.resize(pos);
 		return QString::fromStdString(s);
 	}
 	return QString();

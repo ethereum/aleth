@@ -8,7 +8,7 @@ Contributors, builders and testers include Eric Lombrozo (cross-compilation), Ti
 
 ### Building
 
-See https://github.com/ethereum/cpp-ethereum/wiki/Building and https://github.com/ethereum/cpp-ethereum/wiki/Compatibility-Info-and-Build-Tips .
+See [Build Instructions](https://github.com/ethereum/cpp-ethereum/wiki/Build-Instructions) and [Compatibility Info and Build Tips](https://github.com/ethereum/cpp-ethereum/wiki/Compatibility-Info-and-Build-Tips).
 
 ### Testing
 
@@ -16,12 +16,12 @@ To run the tests, make sure you clone the tests repository from github.com/ether
 
 ### Yet To Do
 
-See TODO
+See [TODO](TODO)
 
 ### License
 
-See LICENSE
+See [LICENSE](LICENSE)
 
 ### Contributing
 
-Please read CodingStandards.txt thoroughly before making alterations to the code base. Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formating guidelines as describled in CodingStandards.txt.
+Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making alterations to the code base. Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formatting guidelines as described in [CodingStandards.txt](CodingStandards.txt).
