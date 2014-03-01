@@ -14,39 +14,36 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
+/** @file FeeStructure.cpp
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#pragma once
+#include "FeeStructure.h"
 
-#include <set>
-#include <string>
+using namespace std;
+using namespace eth;
 
-struct UPNPUrls;
-struct IGDdatas;
+u256 const c_stepFee = 1;
+u256 const c_dataFee = 20;
+u256 const c_memoryFee = 5;
+u256 const c_extroFee = 40;
+u256 const c_cryptoFee = 20;
+u256 const c_newContractFee = 100;
+u256 const c_txFee = 100;
 
-namespace eth
+void FeeStructure::setMultiplier(u256 _x)
 {
+	m_stepFee = c_stepFee * _x;
+	m_dataFee = c_dataFee * _x;
+	m_memoryFee = c_memoryFee * _x;
+	m_extroFee = c_extroFee * _x;
+	m_cryptoFee = c_cryptoFee * _x;
+	m_newContractFee = c_newContractFee * _x;
+	m_txFee = c_txFee * _x;
+}
 
-class UPnP
+u256 FeeStructure::multiplier() const
 {
-public:
-	UPnP();
-	~UPnP();
-
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-	std::set<int> m_reg;
-	bool m_ok;
-	std::unique_ptr<struct UPNPUrls> m_urls;
-	std::unique_ptr<struct IGDdatas> m_data;
-};
-
+	return m_stepFee / c_stepFee;
 }

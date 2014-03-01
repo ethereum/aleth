@@ -14,39 +14,47 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
+/** @file VM.cpp
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#pragma once
+#include "VM.h"
 
-#include <set>
-#include <string>
+#include <secp256k1.h>
+#include <boost/filesystem.hpp>
+#if WIN32
+#pragma warning(push)
+#pragma warning(disable:4244)
+#else
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif
+#include <sha.h>
+#include <sha3.h>
+#include <ripemd.h>
+#if WIN32
+#pragma warning(pop)
+#else
+#endif
+#include <ctime>
+#include <random>
+#include "BlockChain.h"
+#include "Instruction.h"
+#include "Exceptions.h"
+#include "Dagger.h"
+#include "Defaults.h"
+using namespace std;
+using namespace eth;
 
-struct UPNPUrls;
-struct IGDdatas;
-
-namespace eth
+VM::VM()
 {
+	reset();
+}
 
-class UPnP
+void VM::reset()
 {
-public:
-	UPnP();
-	~UPnP();
-
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-	std::set<int> m_reg;
-	bool m_ok;
-	std::unique_ptr<struct UPNPUrls> m_urls;
-	std::unique_ptr<struct IGDdatas> m_data;
-};
-
+	m_curPC = 0;
+	m_nextPC = 1;
+	m_stepCount = 0;
+	m_runFee = 0;
 }

@@ -14,39 +14,30 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
+/** @file FeeStructure.h
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#include <set>
-#include <string>
-
-struct UPNPUrls;
-struct IGDdatas;
+#include "Common.h"
 
 namespace eth
 {
 
-class UPnP
+struct FeeStructure
 {
-public:
-	UPnP();
-	~UPnP();
-
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-	std::set<int> m_reg;
-	bool m_ok;
-	std::unique_ptr<struct UPNPUrls> m_urls;
-	std::unique_ptr<struct IGDdatas> m_data;
+	/// The fee structure. Values yet to be agreed on...
+	void setMultiplier(u256 _x);				///< The current block multiplier.
+	u256 multiplier() const;
+	u256 m_stepFee;
+	u256 m_dataFee;
+	u256 m_memoryFee;
+	u256 m_extroFee;
+	u256 m_cryptoFee;
+	u256 m_newContractFee;
+	u256 m_txFee;
 };
 
 }
