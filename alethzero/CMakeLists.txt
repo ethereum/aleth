@@ -18,10 +18,11 @@ if (APPLE)
 
 	set(CMAKE_PREFIX_PATH /usr/local/opt/qt5)
 	include_directories(/usr/local/opt/qt5/include /usr/local/include)
+elseif (UNIX)
+    set(CMAKE_PREFIX_PATH  ${CMAKE_PREFIX_PATH} ";$ENV{QTDIR}/lib/cmake")
 elseif (${TARGET_PLATFORM} STREQUAL "w64")
 	set(SRC_LIST ${SRC_LIST} ../windows/qt_plugin_import.cpp)
 endif ()
-
 
 find_package(Qt5Widgets REQUIRED)
 qt5_wrap_ui(ui_Main.h Main.ui)
@@ -95,6 +96,8 @@ elseif (${TARGET_PLATFORM} STREQUAL "w64")
 	target_link_libraries(${EXECUTEABLE} crypt32)
 	target_link_libraries(${EXECUTEABLE} Qt5PlatformSupport)
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
+elseif (UNIX)
+
 else ()
 	target_link_libraries(${EXECUTEABLE} boost_system)
 	target_link_libraries(${EXECUTEABLE} boost_filesystem)
