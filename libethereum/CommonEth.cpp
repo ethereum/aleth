@@ -21,6 +21,8 @@
 
 #include "CommonEth.h"
 
+#include <random>
+
 #if WIN32
 #pragma warning(push)
 #pragma warning(disable:4244)
