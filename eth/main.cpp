@@ -200,7 +200,27 @@ int main(int argc, char** argv)
 			cout << "> " << flush;
 			std::string cmd;
 			cin >> cmd;
-			if (cmd == "netstart")
+			if (cmd == "help" || cmd == "?" || cmd == "h")
+			{
+			        cout << "Help" << endl;
+			        cout << "  Interactive commands may require additional parameters, " << endl;
+			        cout << "  shown below as <parameter>." << endl;
+			        cout << "  Commands: " << endl;
+			        cout << "       help" << endl;
+			        cout << "       netstart, <port>" << endl;
+			        cout << "       connect, <address>, <port>" << endl;
+			        cout << "       netstop" << endl;
+			        cout << "       minestart" << endl;
+			        cout << "       minestop" << endl;
+			        cout << "       secret" << endl;
+			        cout << "       address" << endl;
+			        cout << "       balance" << endl;
+			        cout << "       transact, <sending secret>, <receive address>, <ether amount> " << endl;
+			        cout << "       send, <receive address>, <ether amount>" << endl;
+			        cout << "       exit" << endl;
+			        cout << "===" << endl;
+			}
+			else if (cmd == "netstart")
 			{
 				eth::uint port;
 				cin >> port;
