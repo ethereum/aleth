@@ -89,6 +89,7 @@ void interactiveHelp()
         << "    balance  Gives the current balance." << endl
         << "    transact <secret> <dest> <amount>  Executes a given transaction." << endl
         << "    send <dest> <amount>  Executes a given transaction with current secret." << endl
+        << "    contract <endowment> <gasPrice> <gas> <code> <init>  Create a new contract with current secret."
         << "    inspect <contract> Dumps a contract to <APPDATA>/<contract>.evm." << endl
         << "    exit  Exits the application." << endl;
 }
@@ -374,7 +375,7 @@ int main(int argc, char** argv)
 
 		/*  Initialize ncurses  */
 		const char* chr;
-		char* str = new char[255];
+		char* str = new char[256^256];
 		int width;
 		int height;
 		int y = 0;
@@ -524,6 +525,19 @@ int main(int argc, char** argv)
 				Address dest = h160(fromHex(rechex));
 
 				c.transact(us.secret(), amount, gasPrice, gas, dest, bytes());
+			}
+			else if (cmd == "contract")
+			{
+				string sechex;
+				u256 endowment;
+				u256 gasPrice;
+				u256 gas;
+				string scode;
+				string sinit;
+				iss >> endowment >> gasPrice >> gas >> scode >> sinit;
+				bytes code = asBytes(scode);
+				bytes init = asBytes(sinit);
+				c.transact(us.secret(), endowment, gasPrice, gas, code, init);
 			}
 			else if (cmd == "inspect")
 			{
