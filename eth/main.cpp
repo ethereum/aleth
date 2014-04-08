@@ -28,6 +28,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <boost/algorithm/string/trim_all.hpp>
 #include "Defaults.h"
 #include "Client.h"
 #include "PeerNetwork.h"
@@ -38,6 +39,7 @@
 #include "BuildInfo.h"
 using namespace std;
 using namespace eth;
+using namespace boost::algorithm;
 using eth::Instruction;
 using eth::c_instructionInfo;
 
@@ -670,23 +672,37 @@ int main(int argc, char** argv)
 						cwarn << "Minimum gas amount is " << c_minGas;
 					else
 					{
-						fields[3].erase(std::find_if(fields[3].rbegin(), fields[3].rend(), std::bind1st(std::not_equal_to<char>(), ' ')).base(), fields[3].end());
-						fields[4].erase(std::find_if(fields[4].rbegin(), fields[4].rend(), std::bind1st(std::not_equal_to<char>(), ' ')).base(), fields[4].end());
 						string scode = fields[3];
+						trim_all(scode);
 						string sinit = fields[4];
+						trim_all(sinit);
 						int size = scode.length();
-						cout << "Code:" << endl << scode << endl;
-						cout << "Init:" << endl << sinit << endl;
-						cout << "Code size: " << size << endl;
+						cnote << "Code:";
+						cnote << scode;
+						cnote << "Init:";
+						cnote << sinit;
+						cnote << "Code size: " << size;
 						if (size < 1)
 							cwarn << "No code submitted";
 						else
 						{
-							eth::bytes code = assemble(scode);
-							cout << "Assembled:" << endl << code << endl;
-							eth::bytes init = assemble(sinit);
-							cout << "Init:" << endl << init << endl;
-							c.transact(us.secret(), endowment, code, init, gas, gasPrice);
+							bytes data;
+							bytes code = compileLisp(scode, false, sinit);
+							// scode = asString(code);
+							// bytes code = assemble(scode);
+							cnote << "Assembled:";
+							stringstream ssc;
+							ssc << disassemble(code);
+							cnote << ssc.str();
+							// int ssize = sinit.length();
+							// bytes init = compileLisp(sinit, false, data);
+							// sinit = asString(init);
+							// bytes init = assemble(sinit);
+							// ssc.str(string());
+							ssc << disassemble(init);
+							cnote << "Init:";
+							cnote << ssc.str();
+							c.transact(us.secret(), endowment, data, init, gas, gasPrice);
 						}
 					}
 				}
