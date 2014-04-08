@@ -1,6 +1,6 @@
 cmake_policy(SET CMP0015 NEW)
 
-if ("${TARGET_PLATFORM}" STREQUAL "w64")
+if (TARGET_WIN64)
 	cmake_policy(SET CMP0020 NEW)
 endif ()
 
@@ -12,15 +12,15 @@ include_directories(..)
 link_directories(../libethereum)
 
 # Find Qt5 for Apple and update src_list for windows
-if (APPLE)
+if (TARGET_OSX)
 	# homebrew defaults to qt4 and installs qt5 as 'keg-only'
 	# which places it into /usr/local/opt insteadof /usr/local.
 
 	set(CMAKE_PREFIX_PATH /usr/local/opt/qt5)
 	include_directories(/usr/local/opt/qt5/include /usr/local/include)
-elseif (${TARGET_PLATFORM} STREQUAL "w64")
+elseif (TARGET_WIN64)
 	set(SRC_LIST ${SRC_LIST} ../windows/qt_plugin_import.cpp)
-elseif (UNIX)
+elseif (TARGET_LINUX)
     set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ";$ENV{QTDIR}/lib/cmake") 
 endif ()
 
@@ -31,7 +31,7 @@ find_package(Qt5WebKitWidgets REQUIRED)
 qt5_wrap_ui(ui_Main.h Main.ui)
 
 # Set name of binary and add_executable()
-if (APPLE)
+if (TARGET_OSX)
 	set(EXECUTEABLE AlethZero)
 	set(CMAKE_INSTALL_PREFIX ./)
 	set(BIN_INSTALL_DIR ".")
@@ -56,7 +56,7 @@ endif ()
 qt5_use_modules(${EXECUTEABLE} Core Gui Widgets Network WebKit WebKitWidgets)
 target_link_libraries(${EXECUTEABLE} ethereum secp256k1 ${CRYPTOPP_LIBRARIES})
 
-if (APPLE)
+if (TARGET_OSX)
 	set_target_properties(${EXECUTEABLE} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/EthereumMacOSXBundleInfo.plist.in")
 
 	SET_SOURCE_FILES_PROPERTIES(${EXECUTEABLE} PROPERTIES MACOSX_PACKAGE_LOCATION MacOS)
@@ -87,7 +87,7 @@ if (APPLE)
 		DEPENDS ${PROJECT_NAME}
 	)
 
-elseif (${TARGET_PLATFORM} STREQUAL "w64")
+elseif (TARGET_WIN64)
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-keep-inline-dllexport -static-libgcc -static-libstdc++ -static")
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-s -Wl,-subsystem,windows -mthreads -L/usr/x86_64-w64-mingw32/plugins/platforms")
 	target_link_libraries(${EXECUTEABLE} gcc)
@@ -99,7 +99,7 @@ elseif (${TARGET_PLATFORM} STREQUAL "w64")
 	target_link_libraries(${EXECUTEABLE} crypt32)
 	target_link_libraries(${EXECUTEABLE} Qt5PlatformSupport)
 	set(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
-elseif (UNIX)
+elseif (TARGET_LINUX)
 else ()
 	target_link_libraries(${EXECUTEABLE} boost_system)
 	target_link_libraries(${EXECUTEABLE} boost_filesystem)
