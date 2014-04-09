@@ -14,21 +14,17 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.cpp
- * @author Gav Wood <i@gavwood.com>
+/** @file TestHelper.h
+ * @author Marko Simovic <markobarko@gmail.com>
  * @date 2014
  */
 
-#include "VM.h"
+#pragma once
 
-using namespace std;
-using namespace eth;
-
-void VM::reset(u256 _gas)
+namespace eth
 {
-	m_gas = _gas;
-	m_curPC = 0;
-	m_nextPC = 1;
-	m_stepCount = 0;
-	m_runFee = 0;
+
+void mine(Client& c, int numBlocks);
+void connectClients(Client& c1, Client& c2);
+
 }

@@ -14,21 +14,41 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.cpp
+/** @file MemTrie.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "VM.h"
+#pragma once
 
-using namespace std;
-using namespace eth;
+#include <Common.h>
+#include <FixedHash.h>
 
-void VM::reset(u256 _gas)
+namespace eth
 {
-	m_gas = _gas;
-	m_curPC = 0;
-	m_nextPC = 1;
-	m_stepCount = 0;
-	m_runFee = 0;
+
+class MemTrieNode;
+
+/**
+ * @brief Merkle Patricia Tree "Trie": a modifed base-16 Radix tree.
+ */
+class MemTrie
+{
+public:
+	MemTrie(): m_root(nullptr) {}
+	~MemTrie();
+
+	h256 hash256() const;
+	bytes rlp() const;
+
+	void debugPrint();
+
+	std::string const& at(std::string const& _key) const;
+	void insert(std::string const& _key, std::string const& _value);
+	void remove(std::string const& _key);
+
+private:
+	MemTrieNode* m_root;
+};
+
 }

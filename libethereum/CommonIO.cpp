@@ -14,45 +14,35 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
+/** @file CommonIO.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- * Main test functions.
  */
 
-#include <boost/test/unit_test.hpp>
+#include "Common.h"
 
-// TODO: utilise the shared testdata.
-
-int trieTest();
-int rlpTest();
-int daggerTest();
-int cryptoTest();
-int stateTest();
-int vmTest();
-int hexPrefixTest();
-int peerTest(int argc, char** argv);
-
-#include <BlockInfo.h>
+#include <fstream>
+#include "Exceptions.h"
+using namespace std;
 using namespace eth;
 
-BOOST_AUTO_TEST_CASE(basic_tests)
+bytes eth::contents(std::string const& _file)
 {
-/*	RLPStream s;
-	BlockInfo::genesis().fillStream(s, false);
-	std::cout << RLP(s.out()) << std::endl;
-	std::cout << toHex(s.out()) << std::endl;
-	std::cout << sha3(s.out()) << std::endl;*/
+	std::ifstream is(_file, std::ifstream::binary);
+	if (!is)
+		return bytes();
+	// get length of file:
+	is.seekg (0, is.end);
+	streamoff length = is.tellg();
+	is.seekg (0, is.beg);
+	bytes ret(length);
+	is.read((char*)ret.data(), length);
+	is.close();
+	return ret;
+}
 
-	int r = 0;
-	r += hexPrefixTest();
-	r += rlpTest();
-	r += trieTest();
-	r += vmTest();
-	r += cryptoTest();	// TODO: Put in tests repo.
-//	r += daggerTest();
-//	r += stateTest();
-//	r += peerTest(argc, argv);
-	BOOST_REQUIRE(!r);
+void eth::writeFile(std::string const& _file, bytes const& _data)
+{
+	ofstream(_file, ios::trunc).write((char const*)_data.data(), _data.size());
 }
 

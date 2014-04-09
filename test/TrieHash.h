@@ -14,21 +14,21 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.cpp
+/** @file TrieHash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "VM.h"
+#pragma once
 
-using namespace std;
-using namespace eth;
+#include <Common.h>
+#include <FixedHash.h>
 
-void VM::reset(u256 _gas)
+namespace eth
 {
-	m_gas = _gas;
-	m_curPC = 0;
-	m_nextPC = 1;
-	m_stepCount = 0;
-	m_runFee = 0;
+
+bytes rlp256(StringMap const& _s);
+h256 hash256(StringMap const& _s);
+h256 hash256(u256Map const& _s);
+
 }

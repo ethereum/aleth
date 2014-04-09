@@ -14,21 +14,41 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file VM.cpp
+/** @file Log.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "VM.h"
+#include "Log.h"
 
+#include <string>
+#include <iostream>
 using namespace std;
 using namespace eth;
 
-void VM::reset(u256 _gas)
+// Logging
+int eth::g_logVerbosity = 8;
+map<type_info const*, bool> eth::g_logOverride;
+
+ThreadLocalLogName eth::t_logThreadName("main");
+
+// foward declare without all of Windows.h
+#ifdef _WIN32
+extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
+#endif
+
+void eth::simpleDebugOut(std::string const& _s, char const*)
 {
-	m_gas = _gas;
-	m_curPC = 0;
-	m_nextPC = 1;
-	m_stepCount = 0;
-	m_runFee = 0;
+	cout << _s << endl << flush;
+
+	// helpful to use OutputDebugString on windows
+	#ifdef _WIN32
+	{
+		OutputDebugStringA(_s.data());
+		OutputDebugStringA("\n");
+	}
+	#endif
 }
+
+std::function<void(std::string const&, char const*)> eth::g_logPost = simpleDebugOut;
+
