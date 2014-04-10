@@ -114,9 +114,9 @@ string credits(bool _interactive = false)
 		vs = vs.substr(vs.find_first_of('.') + 1)[0];
 		int pocnumber = stoi(vs);
 		string m_servers;
-		if (pocnumber == 3)
+		if (pocnumber <= 3)
 			m_servers = "54.201.28.117";
-		if (pocnumber == 4)
+		if (pocnumber > 3)
 			m_servers = "54.72.31.55";
 
 		ccout << "Type 'netstart 30303' to start networking" << endl;
@@ -547,7 +547,7 @@ int main(int argc, char** argv)
 				ccout << "Current balance:" << endl;
 				const char* addchr = toString(balance).c_str();
 				ccout << addchr << endl;
-			}	
+			}
 			else if (cmd == "transact")
 			{
 				vector<string> s;
