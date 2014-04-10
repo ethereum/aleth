@@ -28,6 +28,7 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 #include "Defaults.h"
 #include "Client.h"
@@ -279,6 +280,7 @@ int nc_window_streambuf::sync()
 }
 
 vector<string> form_dialog(vector<string> _sfields, vector<string> _lfields, vector<string> _bfields, int _cols, int _rows, string _post_form);
+bytes parse_data(string _args);
 
 
 int main(int argc, char** argv)
@@ -577,6 +579,15 @@ int main(int argc, char** argv)
 					u256 gas = atoll(fields[3].c_str());
 					string sechex = fields[4];
 					string sdata = fields[5];
+					cnote << "Data:";
+					cnote << sdata;
+					bytes data = parse_data(sdata);
+					cnote << "Bytes:";
+					string sbd = asString(data);
+					bytes bbd = asBytes(sbd);
+					stringstream ssbd;
+					ssbd << bbd;
+					cnote << ssbd.str();
 					int ssize = fields[4].length();
 					if (size < 40)
 					{
@@ -598,7 +609,6 @@ int main(int argc, char** argv)
 					{
 						Secret secret = h256(fromHex(sechex));
 						Address dest = h160(fromHex(fields[0]));
-						bytes data = asBytes(sdata);
 						c.transact(secret, amount, dest, data, gas, gasPrice);
 					}
 				}
@@ -687,9 +697,9 @@ int main(int argc, char** argv)
 						else
 						{
 							bytes data;
-							bytes code = compileLisp(scode, false, sinit);
+							// bytes code = compileLisp(scode, false, data);
 							// scode = asString(code);
-							// bytes code = assemble(scode);
+							bytes code = assemble(scode);
 							cnote << "Assembled:";
 							stringstream ssc;
 							ssc << disassemble(code);
@@ -697,8 +707,8 @@ int main(int argc, char** argv)
 							// int ssize = sinit.length();
 							// bytes init = compileLisp(sinit, false, data);
 							// sinit = asString(init);
-							// bytes init = assemble(sinit);
-							// ssc.str(string());
+							bytes init = assemble(sinit);
+							ssc.str(string());
 							ssc << disassemble(init);
 							cnote << "Init:";
 							cnote << ssc.str();
@@ -718,43 +728,12 @@ int main(int argc, char** argv)
 				{
 					c.lock();
 					auto h = h160(fromHex(rechex));
-
 					stringstream s;
 					auto mem = c.state().contractStorage(h);
-					u256 next = 0;
-					unsigned numerics = 0;
-					bool unexpectedNumeric = false;
+
 					for (auto const& i: mem)
-					{
-						if (next < i.first)
-						{
-							unsigned j;
-							for (j = 0; j <= numerics && next + j < i.first; ++j)
-								s << (j < numerics || unexpectedNumeric ? " 0" : " STOP");
-							unexpectedNumeric = false;
-							numerics -= min(numerics, j);
-							if (next + j < i.first)
-								s << "\n@" << showbase << hex << i.first << "    ";
-						}
-						else if (!next)
-							s << "@" << showbase << hex << i.first << "    ";
-						auto iit = c_instructionInfo.find((Instruction)(unsigned)i.second);
-						if (numerics || iit == c_instructionInfo.end() || (u256)(unsigned)iit->first != i.second)	// not an instruction or expecting an argument...
-						{
-							if (numerics)
-								numerics--;
-							else
-								unexpectedNumeric = true;
-							s << " " << showbase << hex << i.second;
-						}
-						else
-						{
-							auto const& ii = iit->second;
-							s << " " << ii.name;
-							numerics = ii.additional;
-						}
-						next = i.first + 1;
-					}
+						s << "@" << showbase << hex << i.first << "    " << showbase << hex << i.second << endl;
+					s << endl << disassemble(c.state().contractCode(h));
 
 					string outFile = getDataDir() + "/" + rechex + ".evm";
 					ofstream ofs;
@@ -1122,4 +1101,60 @@ vector<string> form_dialog(vector<string> _sv, vector<string> _lv, vector<string
 			vs.push_back(field_buffer(field[fi], 0));
 
 	return vs;
+}
+
+bytes parse_data(string _args)
+{
+	bytes m_data;
+	stringstream args(_args);
+	string arg;
+	int cc = 0;
+	while (args >> arg)
+	{
+		int al = arg.length();
+		if (boost::starts_with(arg, "0x"))
+		{
+			bytes bs = fromHex(arg);
+			m_data += bs;
+		}
+		else if (arg[0] == '@')
+		{
+			arg = arg.substr(1, arg.length());
+			if (boost::starts_with(arg, "0x"))
+			{
+				cnote << "hex: " << arg;
+				bytes bs = fromHex(arg);
+				int size = bs.size();
+				if (size < 32)
+					for (auto i = 0; i < 32 - size; ++i)
+						m_data.push_back(0);
+				m_data += bs;
+			}
+			else if (boost::starts_with(arg, "\"") && boost::ends_with(arg, "\""))
+			{
+				arg = arg.substr(1, arg.length() - 2);
+				cnote << "string: " << arg;
+				if (al < 32)
+					for (int i = 0; i < 32 - al; ++i)
+						m_data.push_back(0);
+				for (int i = 0; i < al; ++i)
+					m_data.push_back(arg[i]);
+			}
+			else
+			{
+				cnote << "value: " << arg;
+				bytes bs = toBigEndian(u256(arg));
+				int size = bs.size();
+				if (size < 32)
+					for (auto i = 0; i < 32 - size; ++i)
+						m_data.push_back(0);
+				m_data += bs;
+			}
+		}
+		else
+			for (int i = 0; i < al; ++i)
+				m_data.push_back(arg[i]);
+		cc++;
+	}
+	return m_data;
 }
