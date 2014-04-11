@@ -753,6 +753,9 @@ int main(int argc, char** argv)
 			cmd = "";
 
 
+			// Lock to prevent corrupt block-chain errors
+			c.lock();
+
 			// Blocks
 			auto const& st = c.state();
 			auto const& bc = c.blockChain();
@@ -875,6 +878,9 @@ int main(int argc, char** argv)
 				mvwprintw(consolewin, qheight - 1, width / 4 - 11, "Mining ON");
 			else
 				mvwprintw(consolewin, qheight - 1, width / 4 - 12, "Mining OFF");
+
+			// Unlock
+			c.unlock();
 
 			wmove(consolewin, 1, x);
 
