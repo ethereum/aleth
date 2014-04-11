@@ -135,7 +135,7 @@ void version()
 
 u256 c_minGasPrice = 10000000000000;
 u256 c_minGas = 100;
-Address c_config = Address("ccdeac59d35627b7de09332e819d5159e7bb7250");
+Address c_config = Address("5620133321fcac7f15a5c570016f6cb6dc263f9d");
 string pretty(h160 _a, eth::State _st)
 {
 	string ns;
