@@ -33,8 +33,8 @@ enum class Instruction: uint8_t
 {
 	STOP = 0x00,		///< halts execution
 	ADD,
-	SUB,
 	MUL,
+	SUB,
 	DIV,
 	SDIV,
 	MOD,
