@@ -14,35 +14,36 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CommonIO.cpp
+/** @file CompilerState.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Common.h"
+#pragma once
 
-#include <fstream>
-#include "Exceptions.h"
-using namespace std;
-using namespace eth;
+#include <boost/spirit/include/support_utree.hpp>
+#include "CodeFragment.h"
 
-bytes eth::contents(std::string const& _file)
+namespace eth
 {
-	std::ifstream is(_file, std::ifstream::binary);
-	if (!is)
-		return bytes();
-	// get length of file:
-	is.seekg (0, is.end);
-	streamoff length = is.tellg();
-	is.seekg (0, is.beg);
-	bytes ret(length);
-	is.read((char*)ret.data(), length);
-	is.close();
-	return ret;
-}
 
-void eth::writeFile(std::string const& _file, bytes const& _data)
+struct Macro
 {
-	ofstream(_file, ios::trunc).write((char const*)_data.data(), _data.size());
-}
+	std::vector<std::string> args;
+	boost::spirit::utree code;
+	std::map<std::string, CodeFragment> env;
+};
 
+struct CompilerState
+{
+	CodeFragment const& getDef(std::string const& _s);
+
+	std::map<std::string, unsigned> vars;
+	std::map<std::string, CodeFragment> defs;
+	std::map<std::string, CodeFragment> args;
+	std::map<std::string, CodeFragment> outers;
+	std::map<std::string, Macro> macros;
+	std::vector<boost::spirit::utree> treesToKill;
+};
+
+}

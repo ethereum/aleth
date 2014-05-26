@@ -14,41 +14,48 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Log.cpp
+/** @file Compiler.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Log.h"
+#include "Compiler.h"
+#include "Parser.h"
+#include "CompilerState.h"
+#include "CodeFragment.h"
 
-#include <string>
-#include <iostream>
 using namespace std;
 using namespace eth;
 
-// Logging
-int eth::g_logVerbosity = 5;
-map<type_info const*, bool> eth::g_logOverride;
-
-ThreadLocalLogName eth::t_logThreadName("main");
-
-// foward declare without all of Windows.h
-#ifdef _WIN32
-extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
-#endif
-
-void eth::simpleDebugOut(std::string const& _s, char const*)
+bytes eth::compileLLL(string const& _s, vector<string>* _errors)
 {
-	cout << _s << endl << flush;
-
-	// helpful to use OutputDebugString on windows
-	#ifdef _WIN32
+	try
 	{
-		OutputDebugStringA(_s.data());
-		OutputDebugStringA("\n");
+		CompilerState cs;
+		bytes ret = CodeFragment::compile(_s, cs).code();
+		for (auto i: cs.treesToKill)
+			killBigints(i);
+		return ret;
 	}
-	#endif
+	catch (Exception const& _e)
+	{
+		if (_errors)
+			_errors->push_back(_e.description());
+	}
+	catch (std::exception)
+	{
+		if (_errors)
+			_errors->push_back("Parse error.");
+	}
+	return bytes();
 }
 
-std::function<void(std::string const&, char const*)> eth::g_logPost = simpleDebugOut;
-
+string eth::parseLLL(string const& _src)
+{
+	sp::utree o;
+	parseTreeLLL(_src, o);
+	ostringstream ret;
+	debugOutAST(ret, o);
+	killBigints(o);
+	return ret.str();
+}

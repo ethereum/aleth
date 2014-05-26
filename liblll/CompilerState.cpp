@@ -14,39 +14,24 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
+/** @file CompilerState.cpp
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#pragma once
+#include "CompilerState.h"
 
-#include <set>
-#include <string>
+using namespace std;
+using namespace eth;
 
-struct UPNPUrls;
-struct IGDdatas;
-
-namespace eth
+CodeFragment const& CompilerState::getDef(std::string const& _s)
 {
-
-class UPnP
-{
-public:
-	UPnP();
-	~UPnP();
-
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-	std::set<int> m_reg;
-	bool m_ok;
-	std::unique_ptr<struct UPNPUrls> m_urls;
-	std::unique_ptr<struct IGDdatas> m_data;
-};
-
+	if (defs.count(_s))
+		return defs.at(_s);
+	else if (args.count(_s))
+		return args.at(_s);
+	else if (outers.count(_s))
+		return outers.at(_s);
+	else
+		return NullCodeFragment;
 }

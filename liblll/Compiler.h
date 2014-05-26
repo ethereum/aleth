@@ -14,15 +14,22 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Common.cpp
+/** @file Compiler.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Common.h"
+#pragma once
 
-using namespace std;
-using namespace eth;
+#include <string>
+#include <vector>
+#include <libethsupport/Common.h>
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-namespace { char dummy; };
+namespace eth
+{
+
+std::string parseLLL(std::string const& _src);
+bytes compileLLL(std::string const& _s, std::vector<std::string>* _errors = nullptr);
+
+}
+
