@@ -93,6 +93,9 @@ public:
 	/// @returns the new contract's address (assuming it all goes through).
 	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
 
+  void call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256* _gas, bytesRef _out, Address _originAddress);
+
+
 	void inject(bytesConstRef _rlp);
 
 	/// Makes the given call. Nothing is recorded into the state. TODO
