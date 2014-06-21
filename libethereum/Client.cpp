@@ -172,6 +172,12 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 	return right160(sha3(rlpList(t.sender(), t.nonce)));
 }
 
+void Client::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256* _gas, bytesRef _out, Address _originAddress)
+{  //Pass it along.
+    m_postMine.call(_receiveAddress, _senderAddress, _value, _gasPrice, _data, _gas, _out, _originAddres);
+    //TODO.. revert.. the hard bit?!
+}
+
 void Client::inject(bytesConstRef _rlp)
 {
 	lock_guard<recursive_mutex> l(m_lock);
