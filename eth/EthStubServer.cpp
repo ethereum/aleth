@@ -149,6 +149,15 @@ Json::Value EthStubServer::transact(const std::string& _aDest, const std::string
 	return Json::Value();
 }
 
+std::String EthStubServer::call(const std::string& _aRecv, const std::string& _senderAddress, const std::string& _xValue, const std::string& _xGasPrice, const std::string& _bData, u256* _gas, const std::string& _originAddress)
+{
+	ClientGuard g(&m_client);
+  u256 gas = jsToU256(_xGas);
+  bytesRef out;
+	m_client.call(jsToAddress(_aRecv), jsToAddress(_senderAddress),  jsToU256(_xValue), jsToU256(_xGasPrice), jsToBytes(_bData), gas, out, jsToAddress(_originAddress));
+	return toJS(out); //TODO might not be right.
+}
+
 std::string EthStubServer::txCountAt(const std::string& _a)
 {
 	ClientGuard g(&m_client);
