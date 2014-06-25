@@ -987,8 +987,8 @@ void Main::on_data_textChanged()
 					errors.push_back("Serpent " + err);
 				}
 			}
-#endif
 			else
+#endif
 				lll = "<h4>Opt</h4><pre>" + QString::fromStdString(asmcodeopt).toHtmlEscaped() + "</pre><h4>Pre</h4><pre>" + QString::fromStdString(asmcode).toHtmlEscaped() + "</pre>";
 		}
 		QString errs;
