@@ -14,21 +14,39 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TrieHash.h
- * @author Gav Wood <i@gavwood.com>
+/** @file UPnP.h
+ * @authors:
+ *   Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#include <libethential/Common.h>
-#include <libethential/FixedHash.h>
+#include <set>
+#include <string>
+
+struct UPNPUrls;
+struct IGDdatas;
 
 namespace eth
 {
 
-bytes rlp256(StringMap const& _s);
-h256 hash256(StringMap const& _s);
-h256 hash256(u256Map const& _s);
+class UPnP
+{
+public:
+	UPnP();
+	~UPnP();
+
+	std::string externalIP();
+	int addRedirect(char const* addr, int port);
+	void removeRedirect(int port);
+
+	bool isValid() const { return m_ok; }
+
+	std::set<int> m_reg;
+	bool m_ok;
+	std::unique_ptr<struct UPNPUrls> m_urls;
+	std::unique_ptr<struct IGDdatas> m_data;
+};
 
 }

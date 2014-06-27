@@ -14,44 +14,22 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file main.cpp
+/** @file TrieDB.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- * Main test functions.
  */
 
-#include <libethcore/TrieDB.h>
-#include "TrieHash.h"
-#include "MemTrie.h"
-
-#include <boost/test/unit_test.hpp>
-
-int trieTest();
-int rlpTest();
-int daggerTest();
-int cryptoTest();
-int stateTest();
-int vmTest();
-int hexPrefixTest();
-int peerTest(int argc, char** argv);
-
-#include <libethential/Log.h>
-#include <libethcore/BlockInfo.h>
+#include <libethential/Common.h>
+#include "TrieDB.h"
 using namespace std;
 using namespace eth;
 
-BOOST_AUTO_TEST_CASE(basic_tests)
+namespace eth
 {
-/*	RLPStream s;
-	BlockInfo::genesis().fillStream(s, false);
-	std::cout << RLP(s.out()) << std::endl;
-	std::cout << toHex(s.out()) << std::endl;
-	std::cout << sha3(s.out()) << std::endl;*/
 
-//	int r = 0;
-//	r += daggerTest();
-//	r += stateTest();
-//	r += peerTest(argc, argv);
-//	BOOST_REQUIRE(!r);
+#if !ETH_LANGUAGES
+
+const h256 c_shaNull = sha3(rlp(""));
+
+#endif
 }
-

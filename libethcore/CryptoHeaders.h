@@ -14,21 +14,23 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TrieHash.h
- * @author Gav Wood <i@gavwood.com>
+/** @file CryptoHeaders.h
+ * @author Tim Hughes <tim@twistedfury.com>
  * @date 2014
  */
-
 #pragma once
 
-#include <libethential/Common.h>
-#include <libethential/FixedHash.h>
+// need to leave this one disabled
+#pragma GCC diagnostic ignored "-Wunused-function"
 
-namespace eth
-{
-
-bytes rlp256(StringMap const& _s);
-h256 hash256(StringMap const& _s);
-h256 hash256(u256Map const& _s);
-
-}
+#pragma warning(push)
+#pragma warning(disable:4100 4244)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include <sha.h>
+#include <sha3.h>
+#include <ripemd.h>
+#include <secp256k1/secp256k1.h>
+#pragma warning(pop)
+#pragma GCC diagnostic pop
