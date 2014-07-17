@@ -186,6 +186,7 @@ int main(int argc, char** argv)
 #endif
 	string publicIP;
 	bool upnp = true;
+	bool autoSync = false;
 	string clientName;
 
 	// Init defaults
@@ -287,9 +288,7 @@ int main(int argc, char** argv)
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else if (arg == "-as" || arg == "--autosync")
-		{
-
-		}
+			autoSync = true;
 		else
 			remoteHost = argv[i];
 	}
@@ -301,6 +300,19 @@ int main(int argc, char** argv)
 
 	cout << "Address: " << endl << toHex(us.address().asArray()) << endl;
 	c.startNetwork(listenPort, remoteHost, remotePort, mode, peers, publicIP, upnp);
+
+	if (autoSync)
+	{
+		string vs = toString(eth::EthVersion);
+		vs = vs.substr(vs.find_first_of('.') + 1)[0];
+		int pocnumber = stoi(vs);
+		string m_servers;
+		if (pocnumber == 4)
+			m_servers = eth::PrevSeedAddress;
+		else
+			m_servers = eth::SeedAddress;
+		c.connect(m_servers);
+	}
 
 #if ETH_JSONRPC
 	auto_ptr<EthStubServer> jsonrpcServer;
