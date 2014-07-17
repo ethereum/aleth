@@ -51,7 +51,7 @@ namespace eth
 
 extern char const* EthVersion;
 extern char const* PrevSeedAddress;
-extern char	const* SeedAddress;
+extern char const* SeedAddress;
 
 // Binary data types.
 using bytes = std::vector<byte>;
