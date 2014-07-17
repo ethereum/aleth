@@ -97,6 +97,7 @@ void help()
         << "Usage eth [OPTIONS] <remote-host>" << endl
         << "Options:" << endl
         << "    -a,--address <addr>  Set the coinbase (mining payout) address to addr (default: auto)." << endl
+        << "    -as,--autosync  Automatically connect to the seed address(es)" << endl
         << "    -c,--client-name <name>  Add a name to your client's version string (default: blank)." << endl
         << "    -d,--db-path <path>  Load database from path (default:  ~/.ethereum " << endl
         << "                         <APPDATA>/Etherum or Library/Application Support/Ethereum)." << endl
@@ -135,9 +136,9 @@ string credits(bool _interactive = false)
 		int pocnumber = stoi(vs);
 		string m_servers;
 		if (pocnumber == 4)
-			m_servers = "54.72.31.55";
+			m_servers = eth::PrevSeedAddress;
 		else
-			m_servers = "54.72.69.180";
+			m_servers = eth::SeedAddress;
 
 		cout << "Type 'netstart 30303' to start networking" << endl;
 		cout << "Type 'connect " << m_servers << " 30303' to connect" << endl;
@@ -285,6 +286,10 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
+		else if (arg == "-as" || arg == "--autosync")
+		{
+
+		}
 		else
 			remoteHost = argv[i];
 	}
