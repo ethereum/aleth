@@ -134,9 +134,9 @@ string credits()
 	int pocnumber = stoi(vs);
 	string m_servers;
 	if (pocnumber == 4)
-		m_servers = Eth::PrevSeedAddress;
+		m_servers = eth::PrevSeedAddress;
 	else
-		m_servers = Eth::SeedAddress;
+		m_servers = eth::SeedAddress;
 
 	ccout << "Type 'netstart 30303' to start networking" << endl;
 	ccout << "Type 'connect " << m_servers << " 30303' to connect" << endl;
