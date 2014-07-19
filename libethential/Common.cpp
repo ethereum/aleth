@@ -28,5 +28,6 @@ namespace eth
 {
 
 char const* EthVersion = "0.5.15";
-
+char const* PrevSeedAddress = "54.72.31.55";
+char const* SeedAddress = "54.72.69.180";
 }

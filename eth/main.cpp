@@ -97,6 +97,7 @@ void help()
         << "Usage eth [OPTIONS] <remote-host>" << endl
         << "Options:" << endl
         << "    -a,--address <addr>  Set the coinbase (mining payout) address to addr (default: auto)." << endl
+        << "    -as,--autosync  Automatically connect to the seed address(es)" << endl
         << "    -c,--client-name <name>  Add a name to your client's version string (default: blank)." << endl
         << "    -d,--db-path <path>  Load database from path (default:  ~/.ethereum " << endl
         << "                         <APPDATA>/Etherum or Library/Application Support/Ethereum)." << endl
@@ -135,9 +136,9 @@ string credits(bool _interactive = false)
 		int pocnumber = stoi(vs);
 		string m_servers;
 		if (pocnumber == 4)
-			m_servers = "54.72.31.55";
+			m_servers = eth::PrevSeedAddress;
 		else
-			m_servers = "54.72.69.180";
+			m_servers = eth::SeedAddress;
 
 		cout << "Type 'netstart 30303' to start networking" << endl;
 		cout << "Type 'connect " << m_servers << " 30303' to connect" << endl;
@@ -185,6 +186,7 @@ int main(int argc, char** argv)
 #endif
 	string publicIP;
 	bool upnp = true;
+	bool autoSync = false;
 	string clientName;
 
 	// Init defaults
@@ -285,6 +287,8 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
+		else if (arg == "-as" || arg == "--autosync")
+			autoSync = true;
 		else
 			remoteHost = argv[i];
 	}
@@ -292,10 +296,23 @@ int main(int argc, char** argv)
 	if (!clientName.empty())
 		clientName += "/";
     Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath);
-	cout << credits();
+	cout << credits(interactive);
 
 	cout << "Address: " << endl << toHex(us.address().asArray()) << endl;
 	c.startNetwork(listenPort, remoteHost, remotePort, mode, peers, publicIP, upnp);
+
+	if (autoSync)
+	{
+		string vs = toString(eth::EthVersion);
+		vs = vs.substr(vs.find_first_of('.') + 1)[0];
+		int pocnumber = stoi(vs);
+		string m_servers;
+		if (pocnumber == 4)
+			m_servers = eth::PrevSeedAddress;
+		else
+			m_servers = eth::SeedAddress;
+		c.connect(m_servers);
+	}
 
 #if ETH_JSONRPC
 	auto_ptr<EthStubServer> jsonrpcServer;
