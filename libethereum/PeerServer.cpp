@@ -108,7 +108,7 @@ PeerServer::~PeerServer()
 {
 	for (auto const& i: m_peers)
 		if (auto p = i.second.lock())
-			p->disconnect(ClientQuit);
+			p->sendDisconnect(ClientQuit);
 	delete m_upnp;
 }
 
@@ -383,6 +383,13 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 		for (auto j: m_peers)
 			if (auto p = j.second.lock())
 			{
+				// Remove peer if not available (closed socket, pending disconnect, etc)
+				if (!p->ensureOpen())
+				{
+					m_peers.erase(j.first);
+					continue;
+				}
+				
 				bytes b;
 				uint n = 0;
 				for (auto const& i: _tq.transactions())
@@ -475,7 +482,7 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 					seal(b);
 					for (auto const& i: m_peers)
 						if (auto p = i.second.lock())
-							if (p->isOpen())
+							if (p->ensureOpen())
 								p->send(&b);
 					m_lastPeersRequest = chrono::steady_clock::now();
 				}
@@ -499,8 +506,9 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 	// guarantees that everyone else respect the rules of the system. (i.e. obeys laws).
 
 	// We'll keep at most twice as many as is ideal, halfing what counts as "too young to kill" until we get there.
+	std::set<Public> removed;
 	for (uint old = 15000; m_peers.size() > m_idealPeerCount * 2 && old > 100; old /= 2)
-		while (m_peers.size() > m_idealPeerCount)
+		while (m_peers.size() - removed.size() > m_idealPeerCount)
 		{
 			// look for worst peer to kick off
 			// first work out how many are old enough to kick off.
@@ -508,15 +516,18 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 			unsigned agedPeers = 0;
 			for (auto i: m_peers)
 				if (auto p = i.second.lock())
-					if ((m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
+					if (!removed.count(i.first) && (m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
 					{
 						++agedPeers;
 						if ((!worst || p->m_rating < worst->m_rating || (p->m_rating == worst->m_rating && p->m_connect > worst->m_connect)))	// kill older ones
+						{
+							removed.insert(i.first);
 							worst = p;
+						}
 					}
 			if (!worst || agedPeers <= m_idealPeerCount)
 				break;
-			worst->disconnect(TooManyPeers);
+			worst->sendDisconnect(TooManyPeers);
 		}
 
 	return ret;

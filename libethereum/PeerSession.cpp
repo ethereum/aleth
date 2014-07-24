@@ -47,17 +47,6 @@ PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId, bi
 	m_info = PeerInfo({"?", _peerAddress.to_string(), m_listenPort, std::chrono::steady_clock::duration(0)});
 }
 
-PeerSession::~PeerSession()
-{
-	// Read-chain finished for one reason or another.
-	try
-	{
-		if (m_socket.is_open())
-			m_socket.close();
-	}
-	catch (...){}
-}
-
 bi::tcp::endpoint PeerSession::endpoint() const
 {
 	if (m_socket.is_open())
@@ -86,24 +75,24 @@ bool PeerSession::interpret(RLP const& _r)
 
 		if (m_server->m_peers.count(m_id))
 			if (auto l = m_server->m_peers[m_id].lock())
-				if (l.get() != this && l->isOpen())
+				if (l.get() != this && l->ensureOpen())
 				{
 					// Already connected.
 					cwarn << "Already have peer id" << m_id.abridged() << "at" << l->endpoint() << "rather than" << endpoint();
-					disconnect(DuplicatePeer);
+					sendDisconnect(DuplicatePeer);
 					return false;
 				}
 
 		if (m_protocolVersion != PeerServer::protocolVersion() || m_networkId != m_server->networkId() || !m_id)
 		{
-			disconnect(IncompatibleProtocol);
+			sendDisconnect(IncompatibleProtocol);
 			return false;
 		}
 		try
 			{ m_info = PeerInfo({clientVersion, m_socket.remote_endpoint().address().to_string(), m_listenPort, std::chrono::steady_clock::duration()}); }
 		catch (...)
 		{
-			disconnect(BadProtocol);
+			sendDisconnect(BadProtocol);
 			return false;
 		}
 
@@ -350,7 +339,7 @@ bool PeerSession::interpret(RLP const& _r)
 		if (noGood == m_server->m_chain->genesisHash())
 		{
 			clogS(NetWarn) << "Discordance over genesis block! Disconnect.";
-			disconnect(WrongGenesis);
+			sendDisconnect(WrongGenesis);
 		}
 		else
 		{
@@ -381,6 +370,7 @@ bool PeerSession::interpret(RLP const& _r)
 
 void PeerSession::ping()
 {
+	// TODO: ping timestamp to be sent when packet is sent rather than when dispatched
 	RLPStream s;
 	sealAndSend(prep(s).appendList(1) << PingPacket);
 	m_ping = std::chrono::steady_clock::now();
@@ -424,7 +414,7 @@ void PeerSession::sendDestroy(bytes& _msg)
 	}
 
 	bytes buffer = bytes(std::move(_msg));
-	writeImpl(buffer);
+	write(buffer);
 }
 
 void PeerSession::send(bytesConstRef _msg)
@@ -437,51 +427,62 @@ void PeerSession::send(bytesConstRef _msg)
 	}
 
 	bytes buffer = bytes(_msg.toBytes());
-	writeImpl(buffer);
+	write(buffer);
 }
 
-void PeerSession::writeImpl(bytes& _buffer)
+void PeerSession::write(bytes& _buffer)
 {
-//	cerr << (void*)this << " writeImpl" << endl;
-	if (!m_socket.is_open())
-		return;
-
-	lock_guard<recursive_mutex> l(m_writeLock);
+	unique_lock<recursive_mutex> ql(m_queueLock);
 	m_writeQueue.push_back(_buffer);
 	if (m_writeQueue.size() == 1)
-		write();
+	{
+		ql.unlock();
+		doWrite();
+	}
 }
 
-void PeerSession::write()
+void PeerSession::doWrite()
 {
-//	cerr << (void*)this << " write" << endl;
-	lock_guard<recursive_mutex> l(m_writeLock);
-	if (m_writeQueue.empty())
+//	cerr << (void*)this << " doWrite" << endl;
+	if (!ensureOpen())
 		return;
 	
+	lock_guard<recursive_mutex> l(m_writeLock);
+	{
+		lock_guard<recursive_mutex> ql(m_queueLock);
+		if (m_writeQueue.empty())
+			return;
+	}
+
 	const bytes& bytes = m_writeQueue[0];
 	auto self(shared_from_this());
-	ba::async_write(m_socket, ba::buffer(bytes), [this, self](boost::system::error_code ec, std::size_t /*length*/)
+	ba::async_write(m_socket, ba::buffer(bytes), [this, self, &l](boost::system::error_code ec, std::size_t /*length*/)
 	{
-//		cerr << (void*)this << " write.callback" << endl;
-
-		// must check queue, as write callback can occur following dropped()
+		//		cerr << (void*)this << " write.callback" << endl;
+		
 		if (ec)
 		{
 			cwarn << "Error sending: " << ec.message();
-			dropped();
+			sendDisconnect(TCPError);
 		}
 		else
 		{
 			m_writeQueue.pop_front();
-			write();
+			doWrite();
 		}
 	});
 }
 
-void PeerSession::dropped()
+//- Ensure socket is available and peer is not scheduled for disconnect. If false is returned, peer will ensure it is safe to delete.
+bool PeerSession::ensureOpen()
 {
-//	cerr << (void*)this << " dropped" << endl;
+	// return socket status if connection hasn't timed out
+	if (m_disconnect == chrono::steady_clock::time_point::max() || chrono::steady_clock::now() - m_disconnect < chrono::seconds(2))
+	{
+		return m_socket.is_open();
+	}
+
+	// otherwise kill timed-out connection
 	if (m_socket.is_open())
 		try
 		{
@@ -489,32 +490,32 @@ void PeerSession::dropped()
 			m_socket.close();
 		}
 		catch (...) {}
-
-	// Remove from peer server
-	for (auto i = m_server->m_peers.begin(); i != m_server->m_peers.end(); ++i)
-		if (i->second.lock().get() == this)
-		{
-			m_server->m_peers.erase(i);
-			break;
-		}
+	return false;
 }
 
-void PeerSession::disconnect(int _reason)
+void PeerSession::sendDisconnect(DisconnectReason _reason)
 {
+	m_disconnect = chrono::steady_clock::now();
+	
 	clogS(NetNote) << "Disconnecting (reason:" << reasonOf((DisconnectReason)_reason) << ")";
-	if (m_socket.is_open())
+	if (_reason == ClientQuit || _reason == TCPError || !m_socket.is_open())
 	{
-		if (m_disconnect == chrono::steady_clock::time_point::max())
-		{
-			RLPStream s;
-			prep(s);
-			s.appendList(2) << DisconnectPacket << _reason;
-			sealAndSend(s);
-			m_disconnect = chrono::steady_clock::now();
-		}
-		else
-			dropped();
+		// Disconnect immediately if closed socket, TPCError, or ClientQuit
+		if(m_socket.is_open())
+			try
+			{
+				clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
+				m_socket.close();
+			}
+			catch (...) {}
+		return;
 	}
+
+	// Otherwise send disconnect packet and ensureOpen will cause socket to eventually be closed
+	RLPStream s;
+	prep(s);
+	s.appendList(2) << DisconnectPacket << _reason;
+	sealAndSend(s);
 }
 
 void PeerSession::start()
@@ -532,7 +533,7 @@ void PeerSession::start()
 void PeerSession::doRead()
 {
 	// ignore packets received while waiting to disconnect
-	if (chrono::steady_clock::now() - m_disconnect > chrono::seconds(0))
+	if (!ensureOpen())
 		return;
 	
 	auto self(shared_from_this());
@@ -543,7 +544,7 @@ void PeerSession::doRead()
 		{
 			// got here with length of 1241...
 			cwarn << "Error reading: " << ec.message();
-			dropped();
+			sendDisconnect(BadProtocol);
 		}
 		else if (ec && length == 0)
 		{
@@ -572,7 +573,7 @@ void PeerSession::doRead()
 						{
 							cerr << "Received " << len << ": " << toHex(bytesConstRef(m_incoming.data() + 8, len)) << endl;
 							cwarn << "INVALID MESSAGE RECEIVED";
-							disconnect(BadProtocol);
+							sendDisconnect(BadProtocol);
 							return;
 						}
 						else
@@ -581,7 +582,7 @@ void PeerSession::doRead()
 							if (!interpret(r))
 							{
 								// error
-								dropped();
+								sendDisconnect(BadProtocol);
 								return;
 							}
 						}
@@ -594,12 +595,12 @@ void PeerSession::doRead()
 			catch (Exception const& _e)
 			{
 				clogS(NetWarn) << "ERROR: " << _e.description();
-				dropped();
+				sendDisconnect(BadProtocol);
 			}
 			catch (std::exception const& _e)
 			{
 				clogS(NetWarn) << "ERROR: " << _e.what();
-				dropped();
+				sendDisconnect(BadProtocol);
 			}
 		}
 	});
