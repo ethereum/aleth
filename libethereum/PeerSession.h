@@ -39,21 +39,21 @@ class PeerSession: public std::enable_shared_from_this<PeerSession>
 
 public:
 	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, unsigned short _peerPort = 0);
-	~PeerSession();
+	~PeerSession(){};
 
 	void start();
-	void disconnect(int _reason);
+	bool ensureOpen();
+	void sendDisconnect(DisconnectReason _reason);
 
 	void ping();
-
-	bool isOpen() const { return m_socket.is_open(); }
 
 	bi::tcp::endpoint endpoint() const;	///< for other peers to connect to.
 
 private:
-	void dropped();
+	void write(bytes& _buffer);
 	void doRead();
-	void doWrite(std::size_t length);
+	void doWrite();
+	void doDisconnect();
 	bool interpret(RLP const& _r);
 
 	/// @returns true iff the _msg forms a valid message for sending or receiving on the network.
@@ -63,11 +63,10 @@ private:
 	void sealAndSend(RLPStream& _s);
 	void sendDestroy(bytes& _msg);
 	void send(bytesConstRef _msg);
-	void writeImpl(bytes& _buffer);
-	void write();
 	PeerServer* m_server;
 
 	std::recursive_mutex m_writeLock;
+	std::recursive_mutex m_queueLock;
 	std::deque<bytes> m_writeQueue;
 
 	bi::tcp::socket m_socket;
