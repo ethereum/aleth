@@ -39,7 +39,7 @@ class PeerSession: public std::enable_shared_from_this<PeerSession>
 
 public:
 	PeerSession(PeerServer* _server, bi::tcp::socket _socket, uint _rNId, bi::address _peerAddress, unsigned short _peerPort = 0);
-	~PeerSession(){};
+	~PeerSession();
 
 	void start();
 	bool ensureOpen();
@@ -50,9 +50,10 @@ public:
 	bi::tcp::endpoint endpoint() const;	///< for other peers to connect to.
 
 private:
-	void write(bytes& _buffer);
+	void doWrite(bytes& _buffer);
+	void handleWrite(const boost::system::error_code& ec);
 	void doRead();
-	void doWrite();
+	void handleRead(const boost::system::error_code& ec, size_t length);
 	void doDisconnect();
 	bool interpret(RLP const& _r);
 
@@ -65,8 +66,6 @@ private:
 	void send(bytesConstRef _msg);
 	PeerServer* m_server;
 
-	std::recursive_mutex m_writeLock;
-	std::recursive_mutex m_queueLock;
 	std::deque<bytes> m_writeQueue;
 
 	bi::tcp::socket m_socket;

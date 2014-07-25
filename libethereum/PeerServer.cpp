@@ -386,6 +386,7 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 				// Remove peer if not available (closed socket, pending disconnect, etc)
 				if (!p->ensureOpen())
 				{
+					clog(NetNote) << "Erasing Peer";
 					m_peers.erase(j.first);
 					continue;
 				}
