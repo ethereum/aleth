@@ -422,7 +422,8 @@ void PeerSession::sendDestroy(bytes& _msg)
 	}
 	
 	bytes *buffer = new bytes(std::move(_msg));
-	m_socket.get_io_service().post([this, buffer]{
+	auto self(shared_from_this());
+	m_socket.get_io_service().post([this, buffer, self]{
 		doWrite(*buffer);
 		delete buffer;
 	});
@@ -438,7 +439,8 @@ void PeerSession::send(bytesConstRef _msg)
 	}
 	
 	bytes *buffer = new bytes(_msg.toBytes());
-	m_socket.get_io_service().post([this, buffer]{
+	auto self(shared_from_this());
+	m_socket.get_io_service().post([this, buffer, self]{
 		doWrite(*buffer);
 		delete buffer;
 	});
@@ -451,9 +453,12 @@ void PeerSession::doWrite(bytes& _buffer)
 	bool write_in_progress = !m_writeQueue.empty();
 	m_writeQueue.push_back(_buffer);
 	if(!write_in_progress)
-		ba::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this](const boost::system::error_code& ec, std::size_t /*len*/){
+	{
+		auto self(shared_from_this());
+		ba::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& ec, std::size_t /*len*/){
 			handleWrite(ec);
 		});
+	}
 }
 
 void PeerSession::handleWrite(const boost::system::error_code& ec) {
@@ -466,9 +471,12 @@ void PeerSession::handleWrite(const boost::system::error_code& ec) {
 	else
 		m_writeQueue.pop_front(); // pop previous buffer
 		if (!m_writeQueue.empty())
-			boost::asio::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this](const boost::system::error_code& ec, std::size_t /*len*/){
+		{
+			auto self(shared_from_this());
+			boost::asio::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& ec, std::size_t /*len*/){
 				handleWrite(ec);
 			});
+		}
 }
 
 //- Ensure socket is available and peer is not scheduled for disconnect. If false is returned, peer will ensure it is safe to delete.
@@ -534,6 +542,15 @@ void PeerSession::start()
 	doRead();
 }
 
+void PeerSession::doRead()
+{
+	auto self(shared_from_this());
+	m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
+	 {
+		 handleRead(ec, length);
+	 });
+}
+
 void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
 {
 	if (!ensureOpen()) return;
@@ -558,10 +575,13 @@ void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
 			while (m_incoming.size() > 8)
 			{
 				if (m_incoming[0] != 0x22 || m_incoming[1] != 0x40 || m_incoming[2] != 0x08 || m_incoming[3] != 0x91)
-					m_socket.async_read_some(boost::asio::buffer(m_data), [this](boost::system::error_code ec, std::size_t length)
+				{
+					auto self(shared_from_this());
+					m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
 					{
 						handleRead(ec, length);
 					});
+				}
 				else
 				{
 					uint32_t len = fromBigEndian<uint32_t>(bytesConstRef(m_incoming.data() + 4, 4));
@@ -592,7 +612,9 @@ void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
 					m_incoming.resize(m_incoming.size() - tlen);
 				}
 			}
-			m_socket.async_read_some(boost::asio::buffer(m_data), [this](boost::system::error_code ec, std::size_t length)
+			
+			auto self(shared_from_this());
+			m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
 			{
 				handleRead(ec, length);
 			});
@@ -608,12 +630,4 @@ void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
 			sendDisconnect(BadProtocol);
 		}
 	}
-}
-
-void PeerSession::doRead()
-{
-	m_socket.async_read_some(boost::asio::buffer(m_data), [this](boost::system::error_code ec, std::size_t length)
-	{
-		handleRead(ec, length);
-	});
 }

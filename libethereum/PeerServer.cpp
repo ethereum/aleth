@@ -383,14 +383,6 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 		for (auto j: m_peers)
 			if (auto p = j.second.lock())
 			{
-				// Remove peer if not available (closed socket, pending disconnect, etc)
-				if (!p->ensureOpen())
-				{
-					clog(NetNote) << "Erasing Peer";
-					m_peers.erase(j.first);
-					continue;
-				}
-				
 				bytes b;
 				uint n = 0;
 				for (auto const& i: _tq.transactions())
@@ -483,8 +475,7 @@ bool PeerServer::sync(BlockChain& _bc, TransactionQueue& _tq, OverlayDB& _o)
 					seal(b);
 					for (auto const& i: m_peers)
 						if (auto p = i.second.lock())
-							if (p->ensureOpen())
-								p->send(&b);
+							p->send(&b);
 					m_lastPeersRequest = chrono::steady_clock::now();
 				}
 
