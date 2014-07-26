@@ -7,7 +7,7 @@
 #include <libserpent/funcs.h>
 
 #define PYMETHOD(name, FROM, method, TO) \
-    static PyObject * name(PyObject *self, PyObject *args) { \
+    static PyObject * name(PyObject *, PyObject *args) { \
         FROM(med) \
         return TO(method(med)); \
     }
@@ -114,7 +114,7 @@ std::vector<Node> cppifyNodeList(PyObject* o) {
 }
 
 PYMETHOD(ps_compile, FROMSTR, compile, pyifyString)
-PYMETHOD(ps_compile_to_lll, FROMSTR, compileToLLL, pyifyNode)
+// PYMETHOD(ps_compile_to_lll, FROMSTR, compileToLLL, pyifyNode)
 PYMETHOD(ps_compile_lll, FROMNODE, compileLLL, pyifyString)
 PYMETHOD(ps_parse, FROMSTR, parseSerpent, pyifyNode)
 PYMETHOD(ps_rewrite, FROMNODE, rewrite, pyifyNode)
@@ -151,5 +151,5 @@ static PyMethodDef PyextMethods[] = {
 
 PyMODINIT_FUNC initpyext(void)
 {
-     PyObject *m = Py_InitModule( "pyext", PyextMethods );
+     Py_InitModule( "pyext", PyextMethods );
 }
