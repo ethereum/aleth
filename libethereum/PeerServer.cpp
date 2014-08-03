@@ -118,24 +118,20 @@ void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
 {
 	const char* c_threadName = "net";
 	if (!m_run)
-		m_run.reset(new thread([&]()
+		m_run.reset(new thread([&, c_threadName]()
 		{
 			m_stop = false;
 			setThreadName(c_threadName);
 			while(!m_stop)
 			{
+				// clog() removed (too noisey w/1ms loop)
+				
 				// NOTE: process() and ioservice use a single thread so
 				// tq and bq are manipulated in threadsafe manner.
-				clog(NetNote) << "NETWORK";
 				process();
 
-				// TODO: 1) check if there's anything to import
-				clog(NetNote) << "NET <==> TQ ; CHAIN ==> NET ==> BQ";
+				// TODO: skip if there's nothing to import
 				sync(_tq, _bq);
-				
-#if !defined(__APPLE__) // TODO: clang doesn't like items()
-				clog(NetNote) << "TQ:" << _tq.items() << "; BQ:" << _bq.items();
-#endif
 				this_thread::sleep_for(chrono::milliseconds(1));
 			}
 		}));

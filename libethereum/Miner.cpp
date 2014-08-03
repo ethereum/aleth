@@ -35,12 +35,11 @@ Miner::Miner():
 void Miner::run(BlockChain const& _bc, State &_postMine, std::function<void(MineProgress _progress, bool _completed, State &_postMined)> _progress_cb)
 {
 	assert(_progress_cb);
-//	std::function<void(MineProgress _progress, bool _completed, State &_postMined)> cb = _progress_cb;
-	
+
 	m_currentMine = _postMine;
 	const char* c_threadName = "mine";
 	if (!m_run)
-		m_run.reset(new thread([&, _progress_cb]()
+		m_run.reset(new thread([&, c_threadName, _progress_cb]()
 		{
 		   m_stop = false;
 		   setThreadName(c_threadName);
