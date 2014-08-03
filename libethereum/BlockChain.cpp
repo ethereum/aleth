@@ -164,18 +164,16 @@ bool contains(T const& _t, V const& _v)
 	return false;
 }
 
+/// drain blockqueue, update blockchain, callback: updates state for mining
 void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb)
 {
 	assert(_cb);
-	m_workingStateDB = _stateDB;
 	
-	// drain blockqueue, update blockchain, callback: updates state for mining
+	// always run once to update working state (mined blocks, new transactions)
 	lock_guard<std::mutex> l(x_run);
-	if (_bq.items().first > 0 || _bq.items().second > 0)
-	{
-		h256s blocks = sync(_bq, m_workingStateDB, 100);
-		_cb(blocks, m_workingStateDB);
-	}
+	m_workingStateDB = _stateDB;
+	h256s blocks = sync(_bq, m_workingStateDB, 100);
+	_cb(blocks, m_workingStateDB);
 	
 	const char* c_threadName = "chain";
 	if (!m_run)

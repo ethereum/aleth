@@ -309,7 +309,7 @@ void Client::startNetwork(unsigned short _listenPort, std::string const& _seedHo
 
 void Client::stopNetwork()
 {
-	if(m_net) m_net->stop();
+	if(m_net.get()) m_net.reset();
 }
 
 std::vector<PeerInfo> Client::peers()

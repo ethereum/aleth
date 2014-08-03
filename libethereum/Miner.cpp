@@ -30,6 +30,9 @@ Miner::Miner():
 	m_stop(true),
 	m_restart(false)
 {
+	m_mineProgress.best = (double)-1;
+	m_mineProgress.hashes = 0;
+	m_mineProgress.ms = 0;
 }
 
 void Miner::run(BlockChain const& _bc, State &_postMine, std::function<void(MineProgress _progress, bool _completed, State &_postMined)> _progress_cb)
