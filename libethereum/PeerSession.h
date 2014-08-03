@@ -42,11 +42,10 @@ public:
 	~PeerSession();
 
 	void start();
-	void disconnect(int _reason);
+	bool ensureOpen();
+	void sendDisconnect(DisconnectReason _reason);
 
 	void ping();
-
-	bool isOpen() const { return m_socket.is_open(); }
 
 	bi::tcp::endpoint endpoint() const;	///< for other peers to connect to.
 
@@ -54,8 +53,11 @@ private:
 	void startInitialSync();
 
 	void dropped();
+	void doWrite(bytes& _buffer);
+	void handleWrite(const boost::system::error_code& ec);
 	void doRead();
-	void doWrite(std::size_t length);
+	void handleRead(const boost::system::error_code& ec, size_t length);
+	void doDisconnect();
 	bool interpret(RLP const& _r);
 
 	/// @returns true iff the _msg forms a valid message for sending or receiving on the network.
@@ -65,11 +67,8 @@ private:
 	void sealAndSend(RLPStream& _s);
 	void sendDestroy(bytes& _msg);
 	void send(bytesConstRef _msg);
-	void writeImpl(bytes& _buffer);
-	void write();
 	PeerServer* m_server;
 
-	std::recursive_mutex m_writeLock;
 	std::deque<bytes> m_writeQueue;
 
 	bi::tcp::socket m_socket;

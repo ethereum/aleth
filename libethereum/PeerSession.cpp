@@ -49,13 +49,7 @@ PeerSession::PeerSession(PeerServer* _s, bi::tcp::socket _socket, uint _rNId, bi
 
 PeerSession::~PeerSession()
 {
-	// Read-chain finished for one reason or another.
-	try
-	{
-		if (m_socket.is_open())
-			m_socket.close();
-	}
-	catch (...){}
+
 }
 
 bi::tcp::endpoint PeerSession::endpoint() const
@@ -86,24 +80,26 @@ bool PeerSession::interpret(RLP const& _r)
 
 		clogS(NetMessageSummary) << "Hello: " << clientVersion << "V[" << m_protocolVersion << "/" << m_networkId << "]" << m_id.abridged() << showbase << hex << m_caps << dec << m_listenPort;
 
-		if (m_server->havePeer(m_id))
-		{
-			// Already connected.
-			cwarn << "Already have peer id" << m_id.abridged();// << "at" << l->endpoint() << "rather than" << endpoint();
-			disconnect(DuplicatePeer);
-			return false;
-		}
+		if (m_server->m_peers.count(m_id))
+			if (auto l = m_server->m_peers[m_id].lock())
+				if (l.get() != this)
+				{
+					// Already connected.
+					cwarn << "Already have peer id" << m_id.abridged() << "at" << l->endpoint() << "rather than" << endpoint();
+					sendDisconnect(DuplicatePeer);
+					return false;
+				}
 
 		if (m_protocolVersion != PeerServer::protocolVersion() || m_networkId != m_server->networkId() || !m_id)
 		{
-			disconnect(IncompatibleProtocol);
+			sendDisconnect(IncompatibleProtocol);
 			return false;
 		}
 		try
 			{ m_info = PeerInfo({clientVersion, m_socket.remote_endpoint().address().to_string(), m_listenPort, std::chrono::steady_clock::duration()}); }
 		catch (...)
 		{
-			disconnect(BadProtocol);
+			sendDisconnect(BadProtocol);
 			return false;
 		}
 
@@ -124,12 +120,15 @@ bool PeerSession::interpret(RLP const& _r)
 		string reason = "Unspecified";
 		if (_r[1].isInt())
 			reason = reasonOf((DisconnectReason)_r[1].toInt<int>());
-
+		
+		// TODO: move into sendDisconnect
 		clogS(NetMessageSummary) << "Disconnect (reason: " << reason << ")";
 		if (m_socket.is_open())
 			clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
 		else
 			clogS(NetNote) << "Remote closed.";
+		m_writeQueue.clear();
+		m_socket.shutdown(ba::ip::tcp::socket::shutdown_both);
 		m_socket.close();
 		return false;
 	}
@@ -345,7 +344,7 @@ bool PeerSession::interpret(RLP const& _r)
 		if (noGood == m_server->m_chain->genesisHash())
 		{
 			clogS(NetWarn) << "Discordance over genesis block! Disconnect.";
-			disconnect(WrongGenesis);
+			sendDisconnect(WrongGenesis);
 		}
 		else
 		{
@@ -376,6 +375,7 @@ bool PeerSession::interpret(RLP const& _r)
 
 void PeerSession::ping()
 {
+	// TODO: ping timestamp to be sent when packet is sent rather than when dispatched
 	RLPStream s;
 	sealAndSend(prep(s).appendList(1) << PingPacket);
 	m_ping = std::chrono::steady_clock::now();
@@ -417,9 +417,13 @@ void PeerSession::sendDestroy(bytes& _msg)
 	{
 		cwarn << "INVALID PACKET CONSTRUCTED!";
 	}
-
-	bytes buffer = bytes(std::move(_msg));
-	writeImpl(buffer);
+	
+	bytes *buffer = new bytes(std::move(_msg));
+	auto self(shared_from_this());
+	m_socket.get_io_service().post([this, buffer, self]{
+		doWrite(*buffer);
+		delete buffer;
+	});
 }
 
 void PeerSession::send(bytesConstRef _msg)
@@ -430,78 +434,97 @@ void PeerSession::send(bytesConstRef _msg)
 	{
 		cwarn << "INVALID PACKET CONSTRUCTED!";
 	}
-
-	bytes buffer = bytes(_msg.toBytes());
-	writeImpl(buffer);
-}
-
-void PeerSession::writeImpl(bytes& _buffer)
-{
-//	cerr << (void*)this << " writeImpl" << endl;
-	if (!m_socket.is_open())
-		return;
-
-	lock_guard<recursive_mutex> l(m_writeLock);
-	m_writeQueue.push_back(_buffer);
-	if (m_writeQueue.size() == 1)
-		write();
-}
-
-void PeerSession::write()
-{
-//	cerr << (void*)this << " write" << endl;
-	lock_guard<recursive_mutex> l(m_writeLock);
-	if (m_writeQueue.empty())
-		return;
 	
-	const bytes& bytes = m_writeQueue[0];
+	bytes *buffer = new bytes(_msg.toBytes());
 	auto self(shared_from_this());
-	ba::async_write(m_socket, ba::buffer(bytes), [this, self](boost::system::error_code ec, std::size_t /*length*/)
-	{
-//		cerr << (void*)this << " write.callback" << endl;
-
-		// must check queue, as write callback can occur following dropped()
-		if (ec)
-		{
-			cwarn << "Error sending: " << ec.message();
-			dropped();
-		}
-		else
-		{
-			m_writeQueue.pop_front();
-			write();
-		}
+	m_socket.get_io_service().post([this, buffer, self]{
+		doWrite(*buffer);
+		delete buffer;
 	});
 }
 
-void PeerSession::dropped()
+//- Perform async_writes. Must call via io_service.post() to ensure orderly and blockfree message delivery.
+void PeerSession::doWrite(bytes& _buffer)
 {
-//	cerr << (void*)this << " dropped" << endl;
+	// boost docs recommend bool here
+	bool write_in_progress = !m_writeQueue.empty();
+	m_writeQueue.push_back(_buffer);
+	if(!write_in_progress)
+	{
+		auto self(shared_from_this());
+		ba::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& ec, std::size_t /*len*/){
+			handleWrite(ec);
+		});
+	}
+}
+
+void PeerSession::handleWrite(const boost::system::error_code& ec) {
+	if (ec)
+	{
+		// TODO: pass error to sendisconnect
+		cwarn << "Error sending: " << ec.message();
+		sendDisconnect(TCPError);
+	}
+	else
+		m_writeQueue.pop_front(); // pop previous buffer
+		if (!m_writeQueue.empty())
+		{
+			auto self(shared_from_this());
+			boost::asio::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& ec, std::size_t /*len*/){
+				handleWrite(ec);
+			});
+		}
+}
+
+//- Ensure socket is available and peer is not scheduled for disconnect. If false is returned, peer will ensure it is safe to delete.
+bool PeerSession::ensureOpen()
+{
+	// return socket status if connection hasn't timed out
+	if (m_disconnect == chrono::steady_clock::time_point::max() || chrono::steady_clock::now() - m_disconnect < chrono::seconds(2))
+	{
+		return m_socket.is_open();
+	}
+
+	// otherwise kill timed-out connection
 	if (m_socket.is_open())
 		try
 		{
-			clogS(NetConnect) << "Closing " << m_socket.remote_endpoint();
+			clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
+			m_writeQueue.clear();
+			m_socket.shutdown(ba::ip::tcp::socket::shutdown_both);
 			m_socket.close();
 		}
 		catch (...) {}
+	return false;
 }
 
-void PeerSession::disconnect(int _reason)
+void PeerSession::sendDisconnect(DisconnectReason _reason)
 {
-	clogS(NetConnect) << "Disconnecting (reason:" << reasonOf((DisconnectReason)_reason) << ")";
-	if (m_socket.is_open())
+	if (!ensureOpen()) return;
+	
+	m_disconnect = chrono::steady_clock::now();
+	m_writeQueue.clear();
+	
+	clogS(NetNote) << "Disconnecting (reason:" << reasonOf((DisconnectReason)_reason) << ")";
+	if (_reason == ClientQuit || _reason == TCPError || !m_socket.is_open())
 	{
-		if (m_disconnect == chrono::steady_clock::time_point::max())
-		{
-			RLPStream s;
-			prep(s);
-			s.appendList(2) << DisconnectPacket << _reason;
-			sealAndSend(s);
-			m_disconnect = chrono::steady_clock::now();
-		}
-		else
-			dropped();
+		// Disconnect immediately if closed socket, TPCError, or ClientQuit
+		if(m_socket.is_open())
+			try
+			{
+				clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
+				m_socket.shutdown(ba::ip::tcp::socket::shutdown_both);
+				m_socket.close();
+			}
+			catch (...) {}
+		return;
 	}
+
+	// Otherwise send disconnect packet
+	RLPStream s;
+	prep(s);
+	s.appendList(2) << DisconnectPacket << _reason;
+	sealAndSend(s);
 }
 
 void PeerSession::start()
@@ -537,76 +560,90 @@ void PeerSession::startInitialSync()
 
 void PeerSession::doRead()
 {
-	// ignore packets received while waiting to disconnect
-	if (chrono::steady_clock::now() - m_disconnect > chrono::seconds(0))
-		return;
-	
 	auto self(shared_from_this());
-	m_socket.async_read_some(boost::asio::buffer(m_data), [this,self](boost::system::error_code ec, std::size_t length)
+	m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
+	 {
+		 handleRead(ec, length);
+	 });
+}
+
+void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
+{
+	if (!ensureOpen()) return;
+	
+	// If error is end of file, ignore
+	if (ec && ec.category() != boost::asio::error::get_misc_category() && ec.value() != boost::asio::error::eof)
 	{
-		// If error is end of file, ignore
-		if (ec && ec.category() != boost::asio::error::get_misc_category() && ec.value() != boost::asio::error::eof)
+		// got here with length of 1241...
+		cwarn << "Error reading: " << ec.message();
+		sendDisconnect(BadProtocol);
+	}
+	else if (ec && length == 0)
+	{
+		return;
+	}
+	else
+	{
+		try
 		{
-			// got here with length of 1241...
-			cwarn << "Error reading: " << ec.message();
-			dropped();
-		}
-		else if (ec && length == 0)
-		{
-			return;
-		}
-		else
-		{
-			try
+			m_incoming.resize(m_incoming.size() + length);
+			memcpy(m_incoming.data() + m_incoming.size() - length, m_data.data(), length);
+			while (m_incoming.size() > 8)
 			{
-				m_incoming.resize(m_incoming.size() + length);
-				memcpy(m_incoming.data() + m_incoming.size() - length, m_data.data(), length);
-				while (m_incoming.size() > 8)
+				if (m_incoming[0] != 0x22 || m_incoming[1] != 0x40 || m_incoming[2] != 0x08 || m_incoming[3] != 0x91)
 				{
-					if (m_incoming[0] != 0x22 || m_incoming[1] != 0x40 || m_incoming[2] != 0x08 || m_incoming[3] != 0x91)
-						doRead();
+					auto self(shared_from_this());
+					m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
+					{
+						handleRead(ec, length);
+					});
+				}
+				else
+				{
+					uint32_t len = fromBigEndian<uint32_t>(bytesConstRef(m_incoming.data() + 4, 4));
+					uint32_t tlen = len + 8;
+					if (m_incoming.size() < tlen)
+						break;
+					
+					// enough has come in.
+					auto data = bytesConstRef(m_incoming.data(), tlen);
+					if (!checkPacket(data))
+					{
+						cerr << "Received " << len << ": " << toHex(bytesConstRef(m_incoming.data() + 8, len)) << endl;
+						cwarn << "INVALID MESSAGE RECEIVED";
+						sendDisconnect(BadProtocol);
+						return;
+					}
 					else
 					{
-						uint32_t len = fromBigEndian<uint32_t>(bytesConstRef(m_incoming.data() + 4, 4));
-						uint32_t tlen = len + 8;
-						if (m_incoming.size() < tlen)
-							break;
-
-						// enough has come in.
-						auto data = bytesConstRef(m_incoming.data(), tlen);
-						if (!checkPacket(data))
+						RLP r(data.cropped(8));
+						if (!interpret(r))
 						{
-							cerr << "Received " << len << ": " << toHex(bytesConstRef(m_incoming.data() + 8, len)) << endl;
-							cwarn << "INVALID MESSAGE RECEIVED";
-							disconnect(BadProtocol);
+							// error
+							sendDisconnect(BadProtocol);
 							return;
 						}
-						else
-						{
-							RLP r(data.cropped(8));
-							if (!interpret(r))
-							{
-								// error
-								dropped();
-								return;
-							}
-						}
-						memmove(m_incoming.data(), m_incoming.data() + tlen, m_incoming.size() - tlen);
-						m_incoming.resize(m_incoming.size() - tlen);
 					}
+					memmove(m_incoming.data(), m_incoming.data() + tlen, m_incoming.size() - tlen);
+					m_incoming.resize(m_incoming.size() - tlen);
 				}
-				doRead();
 			}
-			catch (Exception const& _e)
+			
+			auto self(shared_from_this());
+			m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
 			{
-				clogS(NetWarn) << "ERROR: " << _e.description();
-				dropped();
-			}
-			catch (std::exception const& _e)
-			{
-				clogS(NetWarn) << "ERROR: " << _e.what();
-				dropped();
-			}
+				handleRead(ec, length);
+			});
 		}
-	});
+		catch (Exception const& _e)
+		{
+			clogS(NetWarn) << "ERROR: " << _e.description();
+			sendDisconnect(BadProtocol);
+		}
+		catch (std::exception const& _e)
+		{
+			clogS(NetWarn) << "ERROR: " << _e.what();
+			sendDisconnect(BadProtocol);
+		}
+	}
 }

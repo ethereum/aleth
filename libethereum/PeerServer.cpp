@@ -107,34 +107,9 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 
 PeerServer::~PeerServer()
 {
-	disconnectPeers();
-}
-
-void PeerServer::registerPeer(std::shared_ptr<PeerSession> _s)
-{
-	Guard l(x_peers);
-	m_peers[_s->m_id] = _s;
-}
-
-void PeerServer::disconnectPeers()
-{
-	for (unsigned n = 0;; n = 0)
-	{
-		{
-			Guard l(x_peers);
-			for (auto i: m_peers)
-				if (auto p = i.second.lock())
-				{
-					p->disconnect(ClientQuit);
-					n++;
-				}
-		}
-		if (!n)
-			break;
-		m_ioService.poll();
-		this_thread::sleep_for(chrono::milliseconds(100));
-	}
-
+	for (auto const& i: m_peers)
+		if (auto p = i.second.lock())
+			p->sendDisconnect(ClientQuit);
 	delete m_upnp;
 }
 
@@ -526,8 +501,9 @@ void PeerServer::prunePeers()
 {
 	Guard l(x_peers);
 	// We'll keep at most twice as many as is ideal, halfing what counts as "too young to kill" until we get there.
+	std::set<Public> removed;
 	for (uint old = 15000; m_peers.size() > m_idealPeerCount * 2 && old > 100; old /= 2)
-		while (m_peers.size() > m_idealPeerCount)
+		while (m_peers.size() - removed.size() > m_idealPeerCount)
 		{
 			// look for worst peer to kick off
 			// first work out how many are old enough to kick off.
@@ -535,15 +511,18 @@ void PeerServer::prunePeers()
 			unsigned agedPeers = 0;
 			for (auto i: m_peers)
 				if (auto p = i.second.lock())
-					if ((m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
+					if (!removed.count(i.first) && (m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
 					{
 						++agedPeers;
 						if ((!worst || p->m_rating < worst->m_rating || (p->m_rating == worst->m_rating && p->m_connect > worst->m_connect)))	// kill older ones
+						{
+							removed.insert(i.first);
 							worst = p;
+						}
 					}
 			if (!worst || agedPeers <= m_idealPeerCount)
 				break;
-			worst->disconnect(TooManyPeers);
+			worst->sendDisconnect(TooManyPeers);
 		}
 
 	// Remove dead peers from list.
