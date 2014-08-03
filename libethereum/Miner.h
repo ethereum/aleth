@@ -53,7 +53,7 @@ public:
 	void run(BlockChain const& _bc, State &_postMine, std::function<void(MineProgress _progress, bool _completed, State &_postMined)> _progress_cb);
 
 	/// Stop mining
-	void stop() { m_stop = true; if (m_run){ m_run->join(); m_run = nullptr; } };
+	void stop();
 	
 	/// Restart mining.
 	void restart(State _postMine);

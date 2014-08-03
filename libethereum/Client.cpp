@@ -82,9 +82,8 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 
 Client::~Client()
 {
-	// TODO: stop mining
-	if (m_net) m_net->stop();		// stop network
-	m_bc.stop();					// stop blockchain
+	if (m_net.get()) m_net->stop();
+	m_bc.stop();
 	m_miner->stop();
 	
 	// Synchronise state according to the head of the block chain.
@@ -111,12 +110,12 @@ void Client::ensureWorking()
 			{
 				cwork << "COMPLETE MINE";
 				// todo: replace stop/start blockchain with conditional, future, or mutex
-				m_bc.stop(); // prevent blockchain from commiting state to disk
+				m_bc.stop(); // stop blockchain to prevent commiting state to disk
 				_postMined.completeMine(); // commits to db
 				
 				h256Set changeds;
 				cwork << "CHAIN <== postSTATE";
-				h256s hs = m_bc.attemptImport(m_postMine.blockData(), m_stateDB);
+				h256s hs = m_bc.attemptImport(_postMined.blockData(), m_stateDB);
 				if (hs.size())
 				{
 					for (auto h: hs)
@@ -128,8 +127,7 @@ void Client::ensureWorking()
 				cwork << "noteChanged" << changeds.size() << "items";
 				noteChanged(changeds);
 				cworkout << "WORK";
-				
-				flushTransactions(); // restart blockchain
+				ensureWorking();
 			}
 		});
 	else
@@ -412,9 +410,8 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 
 void Client::inject(bytesConstRef _rlp)
 {
-	ensureWorking();
-
 	m_tq.attemptImport(_rlp);
+	ensureWorking();
 }
 
 unsigned Client::numberOf(int _n) const

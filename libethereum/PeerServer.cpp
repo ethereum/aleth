@@ -124,6 +124,9 @@ void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
 			setThreadName(c_threadName);
 			while(!m_stop)
 			{
+				// TODO: schedule 100ms loop for sync() onto io_service and
+				//       look at .run() instead of poll.
+				
 				// clog() removed (too noisey w/1ms loop)
 				
 				// NOTE: process() and ioservice use a single thread so
@@ -132,7 +135,7 @@ void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
 
 				// TODO: skip if there's nothing to import
 				sync(_tq, _bq);
-				this_thread::sleep_for(chrono::milliseconds(1));
+				this_thread::sleep_for(chrono::milliseconds(85));
 			}
 		}));
 }

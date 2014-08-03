@@ -56,8 +56,10 @@ void Miner::run(BlockChain const& _bc, State &_postMine, std::function<void(Mine
 			   }
 			   
 			   if (mine(_bc, m_currentMine))
+			   {
 				   _progress_cb(m_mineProgress, true, m_currentMine);
-			   else
+				   m_stop = true;
+			   } else
 				   _progress_cb(m_mineProgress, false, m_currentMine);
 		   }
 		}));
@@ -68,6 +70,12 @@ void Miner::restart(State _postMine)
 	m_restartMine = _postMine;
 	m_restart = true;
 }
+
+void Miner::stop()
+{
+	m_stop = true;
+	if (m_run){ m_run->join(); m_run = nullptr; }
+};
 
 bool Miner::mine(BlockChain const& _bc, State &_postMine, bool _restart)
 {
