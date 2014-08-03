@@ -210,16 +210,17 @@ bool PeerSession::interpret(RLP const& _r)
 		{
 			auto h = sha3(_r[i].data());
 			if (m_server->noteBlock(h, _r[i].data()))
-			{
-				m_knownBlocks.insert(h);
 				used++;
-			}
+			
+			m_knownBlocks.insert(h);
 		}
 		m_rating += used;
-		unsigned knownParents = 0;
-		unsigned unknownParents = 0;
+
 		if (g_logVerbosity >= 2)
 		{
+			unsigned knownParents = 0;
+			unsigned unknownParents = 0;
+			
 			for (unsigned i = 1; i < _r.itemCount(); ++i)
 			{
 				auto h = sha3(_r[i].data());
@@ -235,8 +236,10 @@ bool PeerSession::interpret(RLP const& _r)
 					clogS(NetMessageDetail) << "Known parent " << bi.parentHash << " of block " << h;
 				}
 			}
+			
+			clogS(NetMessageSummary) << dec << knownParents << " known parents, " << unknownParents << "unknown, " << used << "used.";
 		}
-		clogS(NetMessageSummary) << dec << knownParents << " known parents, " << unknownParents << "unknown, " << used << "used.";
+		
 		if (used)	// we received some - check if there's any more
 		{
 			RLPStream s;

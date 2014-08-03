@@ -106,7 +106,8 @@ bytes BlockChain::createGenesisBlock()
 	return block.out();
 }
 
-BlockChain::BlockChain(std::string _path, bool _killExisting)
+BlockChain::BlockChain(std::string _path, bool _killExisting):
+	m_stop(true)
 {
 	if (_path.empty())
 		_path = Defaults::get()->m_dbPath;
@@ -161,6 +162,32 @@ bool contains(T const& _t, V const& _v)
 		if (i == _v)
 			return true;
 	return false;
+}
+
+void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb)
+{
+	std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> cb = _cb;
+	m_workingStateDB = _stateDB;
+	
+	// drain blockqueue, update blockchain, callback: updates state for mining
+	lock_guard<std::mutex> l(x_run);
+	h256s blocks = sync(_bq, m_workingStateDB, 100);
+	if (_cb) _cb(blocks, m_workingStateDB);
+	
+	const char* c_threadName = "chain";
+	if (!m_run)
+		m_run.reset(new thread([&, c_threadName, cb]()
+		{
+			m_stop = false;
+			setThreadName(c_threadName);
+			while(!m_stop)
+			{
+				if (_bq.items().first > 0 || _bq.items().second > 0)
+					run(_bq, m_workingStateDB, cb);
+				else
+					this_thread::sleep_for(chrono::milliseconds(250));
+			}
+		}));
 }
 
 h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)

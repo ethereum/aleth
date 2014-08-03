@@ -22,6 +22,7 @@
 #pragma once
 
 #include <mutex>
+#include <thread>
 #include <libethential/Log.h>
 #include <libethcore/CommonEth.h>
 #include <libethcore/BlockInfo.h>
@@ -29,15 +30,13 @@
 #include "BlockDetails.h"
 #include "AddressState.h"
 #include "BlockQueue.h"
+#include "State.h"
 namespace ldb = leveldb;
 
 namespace eth
 {
 
 static const h256s NullH256s;
-
-class State;
-class OverlayDB;
 
 class AlreadyHaveBlock: public std::exception {};
 class UnknownParent: public std::exception {};
@@ -63,10 +62,15 @@ public:
 	BlockChain(std::string _path, bool _killExisting = false);
 	~BlockChain();
 
-	/// (Potentially) renders invalid existing bytesConstRef returned by lastBlock.
-	/// To be called from main loop every 100ms or so.
-	void process();
-
+	/// Continously sync from blockqueue (?signalled by conditional variable)
+	void run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb);
+	
+	/// @returns if blockchain is running
+	bool running() { return m_stop ? false : !!m_run; };
+	
+	/// Stop blockchain (used during exit to commit state to disk)
+	void stop() { m_stop = true; if (m_run){ m_run->join(); m_run = nullptr; } };
+	
 	/// Sync the chain with any incoming blocks. All blocks should, if processed in order
 	h256s sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
 
@@ -153,6 +157,10 @@ private:
 		return ret.first->second;
 	}
 
+	std::unique_ptr<std::thread> m_run;
+	std::mutex x_run;
+	std::atomic<bool> m_stop;
+	
 	void checkConsistency();
 
 	/// The caches of the disk DB and their locks.
@@ -169,6 +177,9 @@ private:
 	ldb::DB* m_db;
 	ldb::DB* m_extrasDB;
 
+	/// Continuously updated by run/sync
+	OverlayDB m_workingStateDB;
+	
 	/// Hash of the last (valid) block on the longest chain.
 	mutable boost::shared_mutex x_lastBlockHash;
 	h256 m_lastBlockHash;

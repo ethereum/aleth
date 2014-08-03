@@ -56,6 +56,7 @@ static const set<bi::address> c_rejectAddresses = {
 };
 
 PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, unsigned int _networkId, unsigned short _port, NodeMode _m, string const& _publicAddress, bool _upnp):
+	m_stop(true),
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(_port),
@@ -72,6 +73,7 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 }
 
 PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, unsigned int _networkId, NodeMode _m, string const& _publicAddress, bool _upnp):
+	m_stop(true),
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(0),
@@ -91,6 +93,7 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 }
 
 PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, unsigned int _networkId, NodeMode _m):
+	m_stop(true),
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(0),
@@ -107,10 +110,57 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 
 PeerServer::~PeerServer()
 {
-	for (auto const& i: m_peers)
-		if (auto p = i.second.lock())
-			p->sendDisconnect(ClientQuit);
+	stop();
 	delete m_upnp;
+}
+
+void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
+{
+	const char* c_threadName = "net";
+	if (!m_run)
+		m_run.reset(new thread([&]()
+		{
+			m_stop = false;
+			setThreadName(c_threadName);
+			while(!m_stop)
+			{
+				// NOTE: process() and ioservice use a single thread so
+				// tq and bq are manipulated in threadsafe manner.
+				clog(NetNote) << "NETWORK";
+				process();
+
+				// TODO: 1) check if there's anything to import
+				clog(NetNote) << "NET <==> TQ ; CHAIN ==> NET ==> BQ";
+				sync(_tq, _bq);
+				
+#if !defined(__APPLE__) // TODO: clang doesn't like items()
+				clog(NetNote) << "TQ:" << _tq.items() << "; BQ:" << _bq.items();
+#endif
+				this_thread::sleep_for(chrono::milliseconds(1));
+			}
+		}));
+}
+
+void PeerServer::stop()
+{
+	disconnectPeers();
+	this_thread::sleep_for(chrono::milliseconds(100));
+	m_stop = true;
+	if (m_run) m_run->join();
+	m_run = nullptr;
+};
+
+void PeerServer::registerPeer(std::shared_ptr<PeerSession> _s)
+{
+	m_peers[_s->m_id] = _s;
+}
+
+void PeerServer::disconnectPeers()
+{
+	for (auto i: m_peers)
+		if (auto p = i.second.lock())
+			p->sendDisconnect(ClientQuit);	
+	m_ioService.poll();
 }
 
 unsigned PeerServer::protocolVersion()
@@ -365,8 +415,15 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 	return false;
 }
 
+void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> _s) {
+	Guard l(x_peers);
+	m_peerEvents.push_back(std::make_pair(_e, _s));
+}
+
 bool PeerServer::sync(TransactionQueue& _tq, BlockQueue& _bq)
 {
+	// TODO: try-lock tq and bq, else return false (against blockchain/client/miner)
+	
 	bool netChange = ensureInitialised(_tq);
 	
 	if (m_mode == NodeMode::Full)
@@ -478,7 +535,6 @@ void PeerServer::growPeers()
 				seal(b);
 				for (auto const& i: m_peers)
 					if (auto p = i.second.lock())
-						if (p->isOpen())
 							p->send(&b);
 				m_lastPeersRequest = chrono::steady_clock::now();
 			}

@@ -22,6 +22,7 @@
 #pragma once
 
 #include <thread>
+#include <future>
 #include <mutex>
 #include <list>
 #include <atomic>
@@ -35,18 +36,10 @@
 #include "TransactionQueue.h"
 #include "State.h"
 #include "PeerNetwork.h"
+#include "Miner.h"
 
 namespace eth
 {
-
-struct MineProgress
-{
-	double requirement;
-	double best;
-	double current;
-	uint hashes;
-	uint ms;
-};
 
 class Client;
 
@@ -304,13 +297,9 @@ public:
 private:
 	/// Ensure the worker thread is running. Needed for blockchain maintenance & mining.
 	void ensureWorking();
-
-	/// Do some work. Handles blockchain maintenance and mining.
-	/// @param _justQueue If true will only processing the transaction queues.
-	void work(bool _justQueue = false);
-
-	/// Do some work on the network.
-	void workNet();
+	
+	/// Update statedb objects from new blocks (emitted by blockchain sync)
+	void sync(h256s newBlocks, OverlayDB &stateDB);
 
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
 	/// Insert any filters that are activated into @a o_changed.
@@ -340,14 +329,13 @@ private:
 	State m_preMine;						///< The present state of the client.
 	State m_postMine;						///< The state of the client which we're mining (i.e. it'll have all the rewards added).
 
-	std::unique_ptr<std::thread> m_workNet;	///< The network thread.
-	std::atomic<ClientWorkState> m_workNetState;
 	mutable boost::shared_mutex x_net;		///< Lock for the network existance.
 	std::unique_ptr<PeerServer> m_net;		///< Should run in background and send us events when blocks found and allow us to send blocks as required.
+	
+	std::unique_ptr<Miner> m_miner;			///< Miner object (runs in background)
 
-	std::unique_ptr<std::thread> m_work;	///< The work thread.
-	std::atomic<ClientWorkState> m_workState;
-
+	mutable std::mutex x_run;					///< Lock for run loop (ensureWorking).
+	
 	bool m_paranoia = false;
 	bool m_doMine = false;					///< Are we supposed to be mining?
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
