@@ -169,7 +169,8 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 {
 	assert(_cb);
 	
-	// always run once to update working state (mined blocks, new transactions)
+	// always run once to update working state, regardless of _bq.items()
+	// useful for mined blocks and new transactions
 	lock_guard<std::mutex> l(x_run);
 	m_workingStateDB = _stateDB;
 	h256s blocks = sync(_bq, m_workingStateDB, 100);
@@ -187,7 +188,7 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 				if (_bq.items().first > 0 || _bq.items().second > 0)
 				{
 					h256s blocks = sync(_bq, m_workingStateDB, 100);
-					if (_cb) _cb(blocks, m_workingStateDB);
+					_cb(blocks, m_workingStateDB);
 				} else
 					this_thread::sleep_for(chrono::milliseconds(250));
 			}

@@ -74,14 +74,28 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	m_vc.setOk();
+
+	m_miner.reset(new Miner(m_bc));
 	
-	m_restartMining = false;
-	m_miner.reset(new Miner);
-	ensureWorking();
+	// todo: shouldn't start threads from constructors
+	const char* c_threadName = "eth";
+	m_run.reset(new thread([=]()
+	{
+	   setThreadName(c_threadName);
+	   m_stop = false;
+	   while(!m_stop)
+	   {
+		   ensureWorking();
+		   this_thread::sleep_for(chrono::milliseconds(250));
+	   }
+	}));
 }
 
 Client::~Client()
 {
+	m_stop = true;
+	m_run->join();
+	
 	if (m_net.get()) m_net->stop();
 	m_bc.stop();
 	m_miner->stop();
@@ -102,20 +116,21 @@ void Client::ensureWorking()
 	if (m_net.get()) m_net->run(m_tq, m_bq);
 	
 	// run mining
-	if (m_doMine && (m_pendingCount || m_forceMining))
-		m_miner->run(m_bc, m_postMine, [&](MineProgress _progress, bool _complete, State& _postMined){
+	if (m_doMine && (m_forceMining || m_pendingCount) && !m_miner->running())
+		m_miner->run(m_postMine, [&](MineProgress _progress, bool _complete, State& _mined){
 			cworkin << "WORK";
 			m_mineProgress = _progress;
 			if (_complete)
 			{
 				cwork << "COMPLETE MINE";
-				// todo: replace stop/start blockchain with conditional, future, or mutex
-				m_bc.stop(); // stop blockchain to prevent commiting state to disk
-				_postMined.completeMine(); // commits to db
+				
+				lock_guard<std::mutex> l(x_run);
+				m_bc.stop(); // prevent blockchain commiting state to disk
+				_mined.completeMine(); // commit to db
 				
 				h256Set changeds;
 				cwork << "CHAIN <== postSTATE";
-				h256s hs = m_bc.attemptImport(_postMined.blockData(), m_stateDB);
+				h256s hs = m_bc.attemptImport(_mined.blockData(), m_stateDB);
 				if (hs.size())
 				{
 					for (auto h: hs)
@@ -127,18 +142,20 @@ void Client::ensureWorking()
 				cwork << "noteChanged" << changeds.size() << "items";
 				noteChanged(changeds);
 				cworkout << "WORK";
-				ensureWorking();
+				
+				m_postMine = State(std::move(_mined));
 			}
 		});
-	else
+	else if (!m_doMine && m_miner->running())
 		m_miner->stop();
 }
 
 void Client::flushTransactions()
 {
+	// blockchain runtime will only sync when blockqueue is affected;
+	// call this method when transaction queue is modified
+	lock_guard<std::mutex> l(x_run);
 	m_bc.run(m_bq, m_stateDB, [&](h256s newBlocks, OverlayDB &stateDB){
-		// TODO: try-lock m_bq and m_tq (against network)
-		lock_guard<std::mutex> l(x_run);
 		sync(newBlocks, stateDB);
 	});
 }
@@ -168,12 +185,13 @@ void Client::sync(h256s newBlocks, OverlayDB &stateDB)
 	if (newBlocks.size())
 		m_stateDB = stateDB;
 	
+	bool restartMining;
 	cwork << "preSTATE <== CHAIN";
 	if (m_preMine.sync(m_bc) || m_postMine.address() != m_preMine.address())
 	{
 		if (m_doMine)
-			cnote << "New block on chain: Restarting mining operation.";
-		m_restartMining = true;	// need to re-commit to mine.
+			cnote << "New block on chain: Updating state.";
+		restartMining = true;	// need to re-commit to mine.
 		m_postMine = m_preMine;
 
 		changeds.insert(PendingChangedFilter);
@@ -190,11 +208,11 @@ void Client::sync(h256s newBlocks, OverlayDB &stateDB)
 		
 		if (m_doMine)
 			cnote << "Additional transaction ready: Restarting mining operation.";
-		m_restartMining = true;
+		restartMining = true;
 	}
 	m_pendingCount = m_postMine.pending().size();
 	
-	if (m_restartMining && m_miner.get())
+	if (restartMining)
 		m_miner->restart(m_postMine);
 	
 	noteChanged(changeds);
@@ -355,9 +373,6 @@ void Client::connect(std::string const& _seedHost, unsigned short _port)
 void Client::startMining()
 {
 	m_doMine = true;
-	m_restartMining = true;
-	
-	ensureWorking();
 }
 
 void Client::stopMining()
@@ -381,9 +396,7 @@ void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _
 	t.sign(_secret);
 	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
-	
 	flushTransactions();
-	ensureWorking();
 }
 
 Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
@@ -401,17 +414,14 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 	t.sign(_secret);
 	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
-	
 	flushTransactions();
-	ensureWorking();
-	
 	return right160(sha3(rlpList(t.sender(), t.nonce)));
 }
 
 void Client::inject(bytesConstRef _rlp)
 {
 	m_tq.attemptImport(_rlp);
-	ensureWorking();
+	flushTransactions();
 }
 
 unsigned Client::numberOf(int _n) const

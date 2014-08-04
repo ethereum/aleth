@@ -280,13 +280,13 @@ public:
 	/// Stop mining.
 	void stopMining();
 	/// Are we mining now?
-	bool isMining() { return m_doMine; }
+	bool isMining() { return m_doMine && (m_pendingCount || m_forceMining); }
 	/// Register a callback for information concerning mining.
 	/// This callback will be in an arbitrary thread, blocking progress. JUST COPY THE DATA AND GET OUT.
 	/// Check the progress of the mining.
 	MineProgress miningProgress() const { return m_mineProgress; }
 	/// Get and clear the mining history.
-	std::list<MineInfo> miningHistory() { auto ret = m_mineHistory; m_mineHistory.clear(); return ret; }
+	std::list<MineInfo> miningHistory() { return m_miner->miningHistory(); }
 
 	bool forceMining() const { return m_forceMining; }
 	void setForceMining(bool _enable) { m_forceMining = _enable; }
@@ -328,11 +328,13 @@ private:
 	OverlayDB m_stateDB;					///< Acts as the central point for the state database, so multiple States can share it.
 	State m_preMine;						///< The present state of the client.
 	State m_postMine;						///< The state of the client which we're mining (i.e. it'll have all the rewards added).
+	std::unique_ptr<std::thread> m_run;
+	mutable std::atomic<bool> m_stop;
 
 	mutable boost::shared_mutex x_net;		///< Lock for the network existance.
 	std::unique_ptr<PeerServer> m_net;		///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 	
-	std::unique_ptr<Miner> m_miner;			///< Miner object (runs in background)
+	std::shared_ptr<Miner> m_miner;			///< Miner object (runs in background)
 
 	mutable std::mutex x_run;					///< Lock for run loop (ensureWorking).
 	
@@ -340,8 +342,6 @@ private:
 	bool m_doMine = false;					///< Are we supposed to be mining?
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
 	MineProgress m_mineProgress;
-	std::list<MineInfo> m_mineHistory;
-	mutable bool m_restartMining = false;
 	mutable unsigned m_pendingCount = 0;
 
 	mutable std::mutex m_filterLock;

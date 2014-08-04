@@ -26,49 +26,68 @@
 using namespace std;
 using namespace eth;
 
-Miner::Miner():
-	m_stop(true),
-	m_restart(false)
-{
-	m_mineProgress.best = (double)-1;
-	m_mineProgress.hashes = 0;
-	m_mineProgress.ms = 0;
-}
+Miner::Miner(BlockChain const& _bc):
+	m_bc(_bc),
+	m_paranoia(false),
+	m_stop(true)
+{}
 
-void Miner::run(BlockChain const& _bc, State &_postMine, std::function<void(MineProgress _progress, bool _completed, State &_postMined)> _progress_cb)
+void Miner::run(State _s, std::function<void(MineProgress _progress, bool _completed, State& _mined)> _progress_cb)
 {
-	assert(_progress_cb);
-
-	m_currentMine = _postMine;
+	restart(_s);
+	
 	const char* c_threadName = "mine";
-	if (!m_run)
+	if (!m_run.get())
 		m_run.reset(new thread([&, c_threadName, _progress_cb]()
 		{
 		   m_stop = false;
 		   setThreadName(c_threadName);
 		   while(!m_stop)
 		   {
-			   // todo: replace m_restart w/conditional or future
-			   if (m_restart)
-			   {
-				   m_restart = false;
-				   m_currentMine = m_restartMine;
-			   }
-			   
-			   if (mine(_bc, m_currentMine))
-			   {
-				   _progress_cb(m_mineProgress, true, m_currentMine);
+			   lock_guard<std::mutex> ml(x_restart);
+			   mine();
+
+			   _progress_cb(m_mineProgress, m_mineInfo.completed, std::ref(m_minerState));
+
+			   if (m_mineInfo.completed)
 				   m_stop = true;
-			   } else
-				   _progress_cb(m_mineProgress, false, m_currentMine);
 		   }
 		}));
 }
 
-void Miner::restart(State _postMine)
+bool Miner::running()
 {
-	m_restartMine = _postMine;
-	m_restart = true;
+	// cleanup thread
+	if (m_stop && m_run.get())
+		stop();
+	
+	return m_stop ? false : !!m_run.get();
+}
+
+void Miner::restart(State _s)
+{
+	lock_guard<std::mutex> l(x_restart);
+	m_minerState = _s;
+	
+	m_mineProgress.best = (double)-1;
+	m_mineProgress.hashes = 0;
+	m_mineProgress.ms = 0;
+	
+	if (m_paranoia)
+	{
+		if (m_minerState.amIJustParanoid(m_bc))
+		{
+			cnote << "I'm just paranoid. Block is fine.";
+			m_minerState.commitToMine(m_bc);
+		}
+		else
+		{
+			cwarn << "I'm not just paranoid. Cannot mine. Please file a bug report.";
+			m_stop = true;
+		}
+	}
+	else
+		m_minerState.commitToMine(m_bc);
 }
 
 void Miner::stop()
@@ -77,43 +96,16 @@ void Miner::stop()
 	if (m_run){ m_run->join(); m_run = nullptr; }
 };
 
-bool Miner::mine(BlockChain const& _bc, State &_postMine, bool _restart)
+void Miner::mine()
 {
-	if(_restart)
-	{
-		m_mineProgress.best = (double)-1;
-		m_mineProgress.hashes = 0;
-		m_mineProgress.ms = 0;
-
-		// todo: fixme, WriteGuard l(x_stateDB)
-		
-		if (m_paranoia)
-		{
-			if (_postMine.amIJustParanoid(_bc))
-			{
-				cnote << "I'm just paranoid. Block is fine.";
-				_postMine.commitToMine(_bc);
-			}
-			else
-			{
-				cwarn << "I'm not just paranoid. Cannot mine. Please file a bug report.";
-				// todo: disable mining
-	//			m_doMine = false;
-			}
-		}
-		else
-			_postMine.commitToMine(_bc);
-	}
-	
 	cwork << "MINE";
 
 	// Mine for a while.
-	MineInfo mineInfo = _postMine.mine(100);
-	m_mineProgress.best = min(m_mineProgress.best, mineInfo.best);
-	m_mineProgress.current = mineInfo.best;
-	m_mineProgress.requirement = mineInfo.requirement;
+	m_mineInfo = m_minerState.mine(100);
+	m_mineProgress.best = min(m_mineProgress.best, m_mineInfo.best);
+	m_mineProgress.current = m_mineInfo.best;
+	m_mineProgress.requirement = m_mineInfo.requirement;
 	m_mineProgress.ms += 100;
-	m_mineProgress.hashes += mineInfo.hashes;
-	m_mineHistory.push_back(mineInfo);
-	return mineInfo.completed;
+	m_mineProgress.hashes += m_mineInfo.hashes;
+	m_mineHistory.push_back(MineInfo(m_mineInfo));
 }

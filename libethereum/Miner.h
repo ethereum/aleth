@@ -44,16 +44,19 @@ struct MineProgress
 	uint ms;
 };
 
-class Miner
+class Miner: public std::enable_shared_from_this<Miner>
 {
 public:
-	Miner();
+	Miner(BlockChain const& _bc);
 	
 	/// Run miner with progress callback for completion status.
-	void run(BlockChain const& _bc, State &_postMine, std::function<void(MineProgress _progress, bool _completed, State &_postMined)> _progress_cb);
+	void run(State _postMine, std::function<void(MineProgress _progress, bool _completed, State& _mined)> _progress_cb);
 
-	/// Stop mining
+	/// Stop mining.
 	void stop();
+	
+	/// @returns if mining
+	bool running();
 	
 	/// Restart mining.
 	void restart(State _postMine);
@@ -69,18 +72,21 @@ public:
 	std::list<MineInfo> miningHistory() { auto ret = m_mineHistory; m_mineHistory.clear(); return ret; }
 	
 private:
-	bool mine(BlockChain const& _bc, State &_postMine, bool _restart = false);
+	/// Perform mining
+	void mine();
 	
-	State m_currentMine;
-	State m_restartMine;
-	
+	BlockChain const& m_bc;
 	bool m_paranoia;
+	
+	State m_minerState;
+
+	MineInfo m_mineInfo;
 	MineProgress m_mineProgress;
 	std::list<MineInfo> m_mineHistory;
 	
 	std::unique_ptr<std::thread> m_run;
+	mutable std::mutex x_restart;
 	mutable std::atomic<bool> m_stop;
-	mutable std::atomic<bool> m_restart;
 };
 
 }
