@@ -167,8 +167,6 @@ bool contains(T const& _t, V const& _v)
 /// drain blockqueue, update blockchain, callback: updates state for mining
 void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb)
 {
-	assert(_cb);
-	
 	// always run once to update working state, regardless of _bq.items()
 	// useful for mined blocks and new transactions
 	lock_guard<std::mutex> l(x_run);

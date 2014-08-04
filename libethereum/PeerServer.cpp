@@ -127,8 +127,6 @@ void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
 				// TODO: schedule 100ms loop for sync() onto io_service and
 				//       look at .run() instead of poll.
 				
-				// clog() removed (too noisey w/1ms loop)
-				
 				// NOTE: process() and ioservice use a single thread so
 				// tq and bq are manipulated in threadsafe manner.
 				process();
@@ -151,6 +149,7 @@ void PeerServer::stop()
 
 void PeerServer::registerPeer(std::shared_ptr<PeerSession> _s)
 {
+	Guard l(x_peers);
 	m_peers[_s->m_id] = _s;
 }
 

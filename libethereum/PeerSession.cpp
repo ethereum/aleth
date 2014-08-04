@@ -80,15 +80,14 @@ bool PeerSession::interpret(RLP const& _r)
 
 		clogS(NetMessageSummary) << "Hello: " << clientVersion << "V[" << m_protocolVersion << "/" << m_networkId << "]" << m_id.abridged() << showbase << hex << m_caps << dec << m_listenPort;
 
-		if (m_server->m_peers.count(m_id))
-			if (auto l = m_server->m_peers[m_id].lock())
-				if (l.get() != this)
-				{
-					// Already connected.
-					cwarn << "Already have peer id" << m_id.abridged() << "at" << l->endpoint() << "rather than" << endpoint();
-					sendDisconnect(DuplicatePeer);
-					return false;
-				}
+		if (m_server->havePeer(m_id))
+		{
+			auto p = m_server->m_peers[m_id].lock().get();
+			// Already connected.
+			cwarn << "Already have peer id" << m_id.abridged() << "at" << p->endpoint() << "rather than" << endpoint();
+			sendDisconnect(DuplicatePeer);
+			return false;
+		}
 
 		if (m_protocolVersion != PeerServer::protocolVersion() || m_networkId != m_server->networkId() || !m_id)
 		{
@@ -124,9 +123,9 @@ bool PeerSession::interpret(RLP const& _r)
 		// TODO: move into sendDisconnect
 		clogS(NetMessageSummary) << "Disconnect (reason: " << reason << ")";
 		if (m_socket.is_open())
-			clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
+			clogS(NetConnect) << "Closing " << m_socket.remote_endpoint();
 		else
-			clogS(NetNote) << "Remote closed.";
+			clogS(NetConnect) << "Remote closed.";
 		m_writeQueue.clear();
 		m_socket.shutdown(ba::ip::tcp::socket::shutdown_both);
 		m_socket.close();
@@ -492,7 +491,7 @@ bool PeerSession::ensureOpen()
 	if (m_socket.is_open())
 		try
 		{
-			clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
+			clogS(NetConnect) << "Closing " << m_socket.remote_endpoint();
 			m_writeQueue.clear();
 			m_socket.shutdown(ba::ip::tcp::socket::shutdown_both);
 			m_socket.close();
@@ -508,14 +507,14 @@ void PeerSession::sendDisconnect(DisconnectReason _reason)
 	m_disconnect = chrono::steady_clock::now();
 	m_writeQueue.clear();
 	
-	clogS(NetNote) << "Disconnecting (reason:" << reasonOf((DisconnectReason)_reason) << ")";
+	clogS(NetConnect) << "Disconnecting (reason:" << reasonOf((DisconnectReason)_reason) << ")";
 	if (_reason == ClientQuit || _reason == TCPError || !m_socket.is_open())
 	{
 		// Disconnect immediately if closed socket, TPCError, or ClientQuit
 		if(m_socket.is_open())
 			try
 			{
-				clogS(NetNote) << "Closing " << m_socket.remote_endpoint();
+				clogS(NetConnect) << "Closing " << m_socket.remote_endpoint();
 				m_socket.shutdown(ba::ip::tcp::socket::shutdown_both);
 				m_socket.close();
 			}

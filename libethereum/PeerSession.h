@@ -52,7 +52,6 @@ public:
 private:
 	void startInitialSync();
 
-	void dropped();
 	void doWrite(bytes& _buffer);
 	void handleWrite(const boost::system::error_code& ec);
 	void doRead();
