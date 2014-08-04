@@ -468,7 +468,10 @@ void PeerSession::handleWrite(const boost::system::error_code& ec) {
 		sendDisconnect(TCPError);
 	}
 	else
-		m_writeQueue.pop_front(); // pop previous buffer
+		// handleWrite is recursively called via callback and is meant to remove the
+		// previously-interpreted buffer. however it's possible that the queue gets
+		// cleared by a disconnect. thus it's necessary to check twice if the buffer is empty.
+		if (!m_writeQueue.empty()) m_writeQueue.pop_front(); // pop previous buffer
 		if (!m_writeQueue.empty())
 		{
 			auto self(shared_from_this());
