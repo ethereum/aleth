@@ -454,17 +454,17 @@ void PeerSession::doWrite(bytes& _buffer)
 	if(!write_in_progress)
 	{
 		auto self(shared_from_this());
-		ba::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& ec, std::size_t /*len*/){
-			handleWrite(ec);
+		ba::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& _ec, std::size_t /*len*/){
+			handleWrite(_ec);
 		});
 	}
 }
 
-void PeerSession::handleWrite(const boost::system::error_code& ec) {
-	if (ec)
+void PeerSession::handleWrite(const boost::system::error_code& _ec) {
+	if (_ec)
 	{
 		// TODO: pass error to sendisconnect
-		cwarn << "Error sending: " << ec.message();
+		cwarn << "Error sending: " << _ec.message();
 		sendDisconnect(TCPError);
 	}
 	else
@@ -475,8 +475,8 @@ void PeerSession::handleWrite(const boost::system::error_code& ec) {
 		if (!m_writeQueue.empty())
 		{
 			auto self(shared_from_this());
-			boost::asio::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& ec, std::size_t /*len*/){
-				handleWrite(ec);
+			boost::asio::async_write(m_socket, ba::buffer(m_writeQueue.front()), [this, self](const boost::system::error_code& _ec, std::size_t /*len*/){
+				handleWrite(_ec);
 			});
 		}
 }
@@ -486,9 +486,7 @@ bool PeerSession::ensureOpen()
 {
 	// return socket status if connection hasn't timed out
 	if (m_disconnect == chrono::steady_clock::time_point::max() || chrono::steady_clock::now() - m_disconnect < chrono::seconds(2))
-	{
 		return m_socket.is_open();
-	}
 
 	// otherwise kill timed-out connection
 	if (m_socket.is_open())
@@ -505,10 +503,11 @@ bool PeerSession::ensureOpen()
 
 void PeerSession::sendDisconnect(DisconnectReason _reason)
 {
-	if (!ensureOpen()) return;
+	m_writeQueue.clear();
+	if (!ensureOpen())
+		return;
 	
 	m_disconnect = chrono::steady_clock::now();
-	m_writeQueue.clear();
 	
 	clogS(NetConnect) << "Disconnecting (reason:" << reasonOf((DisconnectReason)_reason) << ")";
 	if (_reason == ClientQuit || _reason == TCPError || !m_socket.is_open())
@@ -566,41 +565,38 @@ void PeerSession::startInitialSync()
 void PeerSession::doRead()
 {
 	auto self(shared_from_this());
-	m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
-	 {
-		 handleRead(ec, length);
-	 });
+	m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code _ec, std::size_t _length)
+	{
+		handleRead(_ec, _length);
+	});
 }
 
-void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
+void PeerSession::handleRead(const boost::system::error_code& _ec, size_t _length)
 {
-	if (!ensureOpen()) return;
+	if (!ensureOpen())
+		return;
 	
 	// If error is end of file, ignore
-	if (ec && ec.category() != boost::asio::error::get_misc_category() && ec.value() != boost::asio::error::eof)
+	if (_ec && _ec.category() != boost::asio::error::get_misc_category() && _ec.value() != boost::asio::error::eof)
 	{
-		// got here with length of 1241...
-		cwarn << "Error reading: " << ec.message();
+		cwarn << "Error reading: " << _ec.message();
 		sendDisconnect(BadProtocol);
 	}
-	else if (ec && length == 0)
-	{
+	else if (_ec && _length == 0)
 		return;
-	}
 	else
-	{
 		try
 		{
-			m_incoming.resize(m_incoming.size() + length);
-			memcpy(m_incoming.data() + m_incoming.size() - length, m_data.data(), length);
+			m_incoming.resize(m_incoming.size() + _length);
+			memcpy(m_incoming.data() + m_incoming.size() - _length, m_data.data(), _length);
 			while (m_incoming.size() > 8)
 			{
 				if (m_incoming[0] != 0x22 || m_incoming[1] != 0x40 || m_incoming[2] != 0x08 || m_incoming[3] != 0x91)
 				{
 					auto self(shared_from_this());
-					m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
+					m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code _ec, std::size_t _length)
 					{
-						handleRead(ec, length);
+						handleRead(_ec, _length);
 					});
 				}
 				else
@@ -635,9 +631,9 @@ void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
 			}
 			
 			auto self(shared_from_this());
-			m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code ec, std::size_t length)
+			m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code _ec, std::size_t _length)
 			{
-				handleRead(ec, length);
+				handleRead(_ec, _length);
 			});
 		}
 		catch (Exception const& _e)
@@ -650,5 +646,4 @@ void PeerSession::handleRead(const boost::system::error_code& ec, size_t length)
 			clogS(NetWarn) << "ERROR: " << _e.what();
 			sendDisconnect(BadProtocol);
 		}
-	}
 }

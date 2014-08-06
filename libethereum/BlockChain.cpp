@@ -178,11 +178,10 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 	if (!m_run)
 		m_run.reset(new thread([&, c_threadName, _cb]()
 		{
-			m_stop = false;
 			setThreadName(c_threadName);
-			while(!m_stop)
+			m_stop.store(false, std::memory_order_release);
+			while (!m_stop.load(std::memory_order_acquire))
 			{
-				lock_guard<std::mutex> l(x_run);
 				if (_bq.items().first > 0 || _bq.items().second > 0)
 				{
 					h256s blocks = sync(_bq, m_workingStateDB, 100);
@@ -191,6 +190,15 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 					this_thread::sleep_for(chrono::milliseconds(250));
 			}
 		}));
+}
+
+void BlockChain::stop()
+{
+	m_stop.store(true, std::memory_order_release);
+	lock_guard<std::mutex> l(x_run);
+	if (m_run)
+		m_run->join();
+	m_run = nullptr;
 }
 
 h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)

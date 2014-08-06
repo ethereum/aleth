@@ -66,10 +66,10 @@ public:
 	void run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb);
 	
 	/// @returns if blockchain is running
-	bool running() { return m_stop ? false : !!m_run; };
+	bool running() { std::lock_guard<std::mutex> l(x_run); return m_stop ? false : !!m_run; };
 	
-	/// Stop blockchain (used during exit to commit state to disk)
-	void stop() { m_stop = true; if (m_run){ m_run->join(); m_run = nullptr; } };
+	/// Stop blockchain (used to prevent commits and on exit to commit state to disk)
+	void stop();
 	
 	/// Sync the chain with any incoming blocks. All blocks should, if processed in order
 	h256s sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);

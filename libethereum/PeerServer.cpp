@@ -117,12 +117,13 @@ PeerServer::~PeerServer()
 void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
 {
 	const char* c_threadName = "net";
+	lock_guard<std::mutex> l(x_run);
 	if (!m_run)
 		m_run.reset(new thread([&, c_threadName]()
 		{
-			m_stop = false;
 			setThreadName(c_threadName);
-			while(!m_stop)
+			m_stop.store(false, std::memory_order_release);
+			while (!m_stop.load(std::memory_order_acquire))
 			{
 				// TODO: schedule 100ms loop for sync() onto io_service and
 				//       look at .run() instead of poll.
@@ -133,17 +134,21 @@ void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
 
 				// TODO: skip if there's nothing to import
 				sync(_tq, _bq);
-				this_thread::sleep_for(chrono::milliseconds(85));
+				this_thread::sleep_for(chrono::milliseconds(50));
 			}
 		}));
 }
 
 void PeerServer::stop()
 {
+	lock_guard<std::mutex> l(x_run);
+	m_stop.store(true, std::memory_order_release);
+	
 	disconnectPeers();
 	this_thread::sleep_for(chrono::milliseconds(100));
-	m_stop = true;
-	if (m_run) m_run->join();
+
+	if (m_run)
+		m_run->join();
 	m_run = nullptr;
 };
 
@@ -320,9 +325,9 @@ void PeerServer::ensureAccepting()
 	{
 		clog(NetConnect) << "Listening on local port " << m_listenPort << " (public: " << m_public << ")";
 		m_accepting = true;
-		m_acceptor.async_accept(m_socket, [=](boost::system::error_code ec)
+		m_acceptor.async_accept(m_socket, [=](boost::system::error_code _ec)
 		{
-			if (!ec)
+			if (!_ec)
 				try
 				{
 					try {
@@ -338,7 +343,7 @@ void PeerServer::ensureAccepting()
 					clog(NetWarn) << "ERROR: " << _e.what();
 				}
 			m_accepting = false;
-			if (ec.value() != 1 && (m_mode == NodeMode::PeerServer || peerCount() < m_idealPeerCount * 2))
+			if (_ec.value() != 1 && (m_mode == NodeMode::PeerServer || peerCount() < m_idealPeerCount * 2))
 				ensureAccepting();
 		});
 	}
@@ -361,11 +366,11 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 {
 	clog(NetConnect) << "Attempting connection to " << _ep;
 	bi::tcp::socket* s = new bi::tcp::socket(m_ioService);
-	s->async_connect(_ep, [=](boost::system::error_code const& ec)
+	s->async_connect(_ep, [=](boost::system::error_code const& _ec)
 	{
-		if (ec)
+		if (_ec)
 		{
-			clog(NetConnect) << "Connection refused to " << _ep << " (" << ec.message() << ")";
+			clog(NetConnect) << "Connection refused to " << _ep << " (" << _ec.message() << ")";
 			for (auto i = m_incomingPeers.begin(); i != m_incomingPeers.end(); ++i)
 				if (i->second.first == _ep && i->second.second < 3)
 				{
@@ -413,7 +418,8 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 	return false;
 }
 
-void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> _s) {
+void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> _s)
+{
 	Guard l(x_peers);
 	m_peerEvents.push_back(std::make_pair(_e, _s));
 }

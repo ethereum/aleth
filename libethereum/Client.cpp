@@ -81,24 +81,27 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 	const char* c_threadName = "eth";
 	m_run.reset(new thread([=]()
 	{
-	   setThreadName(c_threadName);
-	   m_stop = false;
-	   while(!m_stop)
-	   {
+		setThreadName(c_threadName);
+		m_stop.store(false, std::memory_order_release);
+		while (!m_stop.load(std::memory_order_acquire))
+		{
 		   ensureWorking();
 		   this_thread::sleep_for(chrono::milliseconds(250));
-	   }
+		}
 	}));
 }
 
 Client::~Client()
 {
-	m_stop = true;
+	// Stop Client thread.
+	m_stop.store(true, std::memory_order_release);
 	m_run->join();
 	
-	if (m_net.get()) m_net->stop();
-	m_bc.stop();
+	// Stop additional threads in a well mannered fashion.
+	if (m_net.get())
+		m_net->stop();
 	m_miner->stop();
+	m_bc.stop();
 	
 	// Synchronise state according to the head of the block chain.
 	// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
@@ -110,10 +113,12 @@ Client::~Client()
 void Client::ensureWorking()
 {
 	// flushTransactions implicitly ensures blockchain is running
-	if (!m_bc.running()) flushTransactions();
+	if (!m_bc.running())
+		flushTransactions();
 	
 	// run network
-	if (m_net.get()) m_net->run(m_tq, m_bq);
+	if (m_net.get())
+		m_net->run(m_tq, m_bq);
 	
 	// run mining
 	if (m_doMine && (m_forceMining || m_pendingCount) && !m_miner->running())
@@ -325,7 +330,8 @@ void Client::startNetwork(unsigned short _listenPort, std::string const& _seedHo
 
 void Client::stopNetwork()
 {
-	if(m_net.get()) m_net.reset();
+	if (m_net.get())
+		m_net.reset();
 }
 
 std::vector<PeerInfo> Client::peers()

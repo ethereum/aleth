@@ -63,7 +63,7 @@ public:
 	void run(TransactionQueue& _tq, BlockQueue& _bq);
 	
 	/// @returns if server is running
-	bool running() { return m_stop ? false : !!m_run; };
+	bool running() { std::lock_guard<std::mutex> l(x_run); return m_stop ? false : !!m_run; };
 	
 	/// Disconnect all peers and stop thread
 	void stop();
@@ -107,9 +107,6 @@ public:
 	void restorePeers(bytesConstRef _b);
 
 private:
-	std::unique_ptr<std::thread> m_run;
-	std::atomic<bool> m_stop;
-	
 	void peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> _s);
 	void registerPeer(std::shared_ptr<PeerSession> _s);
 
@@ -134,6 +131,10 @@ private:
 
 	std::map<Public, bi::tcp::endpoint> potentialPeers();
 
+	std::unique_ptr<std::thread> m_run;
+	mutable std::mutex x_run;
+	std::atomic<bool> m_stop;
+	
 	std::string m_clientVersion;
 	NodeMode m_mode = NodeMode::Full;
 
