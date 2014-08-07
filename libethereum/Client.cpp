@@ -130,6 +130,8 @@ void Client::ensureWorking()
 				cwork << "COMPLETE MINE";
 				
 				lock_guard<std::mutex> l(x_run);
+				
+				// TODO: is stop() still necessary if moved into BlockChain::run() callback?
 				m_bc.stop(); // prevent blockchain commiting state to disk
 				_mined.completeMine(); // commit to db
 				

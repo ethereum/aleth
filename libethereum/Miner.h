@@ -85,7 +85,7 @@ private:
 	std::list<MineInfo> m_mineHistory;
 	
 	std::unique_ptr<std::thread> m_run;
-	std::mutex x_run;
+	std::recursive_mutex x_run;
 	std::mutex x_restart;
 	std::atomic<bool> m_stop;
 };

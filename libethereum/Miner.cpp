@@ -37,7 +37,7 @@ void Miner::run(State _s, std::function<void(MineProgress _progress, bool _compl
 	restart(_s);
 	
 	const char* c_threadName = "mine";
-	std::lock_guard<std::mutex> l(x_run);
+	std::lock_guard<std::recursive_mutex> l(x_run);
 	if (!m_run.get())
 		m_run.reset(new thread([&, c_threadName, _progressCb]()
 		{
@@ -58,7 +58,7 @@ void Miner::run(State _s, std::function<void(MineProgress _progress, bool _compl
 
 bool Miner::running()
 {
-	std::lock_guard<std::mutex> l(x_run);
+	std::lock_guard<std::recursive_mutex> l(x_run);
 	
 	// Cleanup thread if bad-block caused exit.
 	if (m_stop && m_run.get())
@@ -95,7 +95,7 @@ void Miner::restart(State _s)
 
 void Miner::stop()
 {
-	std::lock_guard<std::mutex> l(x_run);
+	std::lock_guard<std::recursive_mutex> l(x_run);
 	m_stop.store(true, std::memory_order_release);
 	if (m_run.get())
 		m_run->join();

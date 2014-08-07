@@ -159,6 +159,7 @@ private:
 
 	std::unique_ptr<std::thread> m_run;
 	std::mutex x_run;
+	std::recursive_mutex x_sync;
 	std::atomic<bool> m_stop;
 	
 	void checkConsistency();
