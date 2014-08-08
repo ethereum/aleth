@@ -134,7 +134,7 @@ public:
 
 	Q_INVOKABLE QString doCreate(QString _secret, QString _amount, QString _init, QString _gas, QString _gasPrice);
 	Q_INVOKABLE void doTransact(QString _secret, QString _amount, QString _dest, QString _data, QString _gas, QString _gasPrice);
-	Q_INVOKABLE void doTransact(QString _json);
+	Q_INVOKABLE void doTransact(const QString& _json);
 	Q_INVOKABLE QString doCall(QString _json);
 
 	Q_INVOKABLE unsigned newWatch(QString _json);

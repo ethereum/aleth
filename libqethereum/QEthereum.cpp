@@ -292,7 +292,7 @@ struct TransactionSkeleton
 	u256 gasPrice;
 };
 
-static TransactionSkeleton toTransaction(QString _json)
+static TransactionSkeleton toTransaction(QString& _json)
 {
 	TransactionSkeleton ret;
 
@@ -403,11 +403,13 @@ void QEthereum::doTransact(QString _secret, QString _amount, QString _dest, QStr
 	client()->flushTransactions();
 }
 
-void QEthereum::doTransact(QString _json)
+void QEthereum::doTransact(const QString& _json)
 {
+	QString json(_json);
+	
 	if (!m_client)
 		return;
-	TransactionSkeleton t = toTransaction(_json);
+	TransactionSkeleton t = toTransaction(json);
 	if (!t.from && m_accounts.size())
 		t.from = m_accounts[0].secret();
 	if (!t.gasPrice)
