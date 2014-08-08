@@ -219,9 +219,10 @@ void Client::sync(h256s newBlocks, OverlayDB &stateDB)
 	}
 	m_pendingCount = m_postMine.pending().size();
 	
-	if (restartMining)
+	if (m_doMine && restartMining)
 		m_miner->restart(m_postMine);
 	
+	l.unlock();
 	noteChanged(changeds);
 }
 
