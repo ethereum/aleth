@@ -60,12 +60,14 @@ var coinsCode = eth.lll("
 (msg allgas " + nameReg + " 0 0 64)
 (returnlll {
 	(def 'name $0)
+	(def 'denom $32)
 	(def 'address (caller))
 	(when (|| (& 0xffffffffffffffffffffffffff name) @@name) (stop))
 	(set 'n (+ @@0 1))
 	[[0]] @n
 	[[@n]] name
 	[[name]] address
+	[[(sha3 name)]] denom
 })
 }
 ");
@@ -87,7 +89,8 @@ var gavCoinCode = eth.lll("
 
 [0]'register [32]'GavCoin
 (msg allgas " + nameReg + " 0 0 64)
-(msg " + coins + " 'GAV)
+[0]'GAV [32]'1000
+(msg allgas " + coins + " 0 0 64)
 
 (returnlll {
 	(when (&& (= $0 'kill) (= (caller) @@0x69)) (suicide (caller)))
@@ -237,10 +240,11 @@ var exchangeCode = eth.lll("
 	(when (= $0 'delete) {
 		(set 'offer $32)
 		(set 'want $64)
+		(set 'rate $96)
 		(set 'list (sha3pair @offer @want))
 		(set 'last @list)
 		(set 'item @@ @last)
-		(for {} (&& @item (!= (idof @item) (caller))) { (set 'last @item) (inc item) } {})
+		(for {} (&& @item (!= (idof @item) (caller)) (!= (rateof @item) @rate)) { (set 'last @item) (inc item) } {})
 		(when @item {
 			(set 'xoffer (fpmul (wantof @item) (rateof @item)))
 			[[ @last ]] @@ @item

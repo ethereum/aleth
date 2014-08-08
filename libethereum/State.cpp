@@ -1106,7 +1106,7 @@ h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas,
 		newAddress = (u160)newAddress + 1;
 
 	// Set up new account...
-	m_cache[newAddress] = AddressState(0, 0, h256(), h256());
+	m_cache[newAddress] = AddressState(0, _endowment, h256(), h256());
 
 	// Execute init code.
 	VM vm(*_gas);
@@ -1227,10 +1227,12 @@ std::ostream& eth::operator<<(std::ostream& _out, State const& _s)
 				}
 				if (cache)
 					for (auto const& j: cache->storage())
+					{
 						if ((!mem.count(j.first) && j.second) || (mem.count(j.first) && mem.at(j.first) != j.second))
 							mem[j.first] = j.second, delta.insert(j.first);
 						else if (j.second)
 							cached.insert(j.first);
+					}
 				if (delta.size())
 					lead = (lead == " .   ") ? "*.*  " : "***  ";
 
