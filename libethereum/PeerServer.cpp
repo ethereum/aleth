@@ -525,9 +525,11 @@ void PeerServer::growPeers()
 void PeerServer::prunePeers()
 {
 	Guard l(x_peers);
+
+	set<shared_ptr<PeerSession>> disconnected;
 	// We'll keep at most twice as many as is ideal, halfing what counts as "too young to kill" until we get there.
 	for (uint old = 15000; m_peers.size() > m_idealPeerCount * 2 && old > 100; old /= 2)
-		while (m_peers.size() > m_idealPeerCount)
+		while (m_peers.size() - disconnected.size() > m_idealPeerCount)
 		{
 			// look for worst peer to kick off
 			// first work out how many are old enough to kick off.
@@ -535,7 +537,7 @@ void PeerServer::prunePeers()
 			unsigned agedPeers = 0;
 			for (auto i: m_peers)
 				if (auto p = i.second.lock())
-					if ((m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
+					if (!disconnected.count(p) && (m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
 					{
 						++agedPeers;
 						if ((!worst || p->m_rating < worst->m_rating || (p->m_rating == worst->m_rating && p->m_connect > worst->m_connect)))	// kill older ones
@@ -544,6 +546,7 @@ void PeerServer::prunePeers()
 			if (!worst || agedPeers <= m_idealPeerCount)
 				break;
 			worst->disconnect(TooManyPeers);
+			disconnected.insert(worst);
 		}
 
 	// Remove dead peers from list.
