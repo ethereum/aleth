@@ -23,6 +23,7 @@
 
 #include <mutex>
 #include <thread>
+#include <atomic>
 #include <libethential/Log.h>
 #include <libethcore/CommonEth.h>
 #include <libethcore/BlockInfo.h>
@@ -66,8 +67,8 @@ public:
 	void run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb);
 	
 	/// @returns if blockchain is running
-	bool running() { std::lock_guard<std::mutex> l(x_run); return m_stop ? false : !!m_run; };
-	
+	bool running();
+
 	/// Stop blockchain (used to prevent commits and on exit to commit state to disk)
 	void stop();
 	

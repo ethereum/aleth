@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <list>
+#include <atomic>
 #include <libethential/Common.h>
 #include <libethcore/CommonEth.h>
 #include <libethcore/Dagger.h>

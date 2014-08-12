@@ -21,6 +21,7 @@
 
 #include "BlockChain.h"
 
+#include <atomic>
 #include <boost/filesystem.hpp>
 #include <libethential/Common.h>
 #include <libethential/RLP.h>
@@ -198,6 +199,12 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 					this_thread::sleep_for(chrono::milliseconds(250));
 			}
 		}));
+}
+
+bool BlockChain::running()
+{
+	std::lock_guard<std::mutex> l(x_run);
+	return m_stop ? false : !!m_run;
 }
 
 void BlockChain::stop()
