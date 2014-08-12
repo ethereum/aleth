@@ -138,6 +138,7 @@ private slots:
 	void on_debugDumpState_triggered(int _add = 1);
 	void on_debugDumpStatePre_triggered();
 	void on_refresh_triggered();
+	void on_enableOptimizer_triggered();
 
 signals:
 	void poll();
@@ -159,8 +160,7 @@ private:
 	void alterDebugStateGroup(bool _enable) const;
 
 	void updateFee();
-	void readSettings(bool _skipGeometry);
-	void readSettings() { readSettings(false); }
+	void readSettings(bool _skipGeometry = false);
 	void writeSettings();
 
 	bool isCreation() const;
@@ -205,10 +205,6 @@ private:
 	unsigned m_balancesFilter = (unsigned)-1;
 
 	QByteArray m_peers;
-	QMutex m_guiLock;
-	QTimer* m_ticker;
-	QTimer* m_refreshNetwork;
-	QTimer* m_refreshMining;
 	QStringList m_servers;
 	QList<eth::KeyPair> m_myKeys;
 	bool m_keysChanged = false;
@@ -226,6 +222,7 @@ private:
 	QMap<unsigned, unsigned> m_pcWarp;
 	QList<WorldState> m_history;
 	std::map<eth::u256, eth::bytes> m_codes;	// and pcWarps
+	bool m_enableOptimizer = true;
 
 	QNetworkAccessManager m_webCtrl;
 

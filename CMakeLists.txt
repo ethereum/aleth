@@ -190,6 +190,7 @@ else()
 	endif ()
 
 	find_path( PYTHON_ID pyconfig.h
+		${PYTHON_INCLUDE_DIR}
 		/usr/include/python2.7
 		/usr/local/include/python2.7
 		)
@@ -358,6 +359,7 @@ if (NOT LANGUAGES)
 		
 		add_subdirectory(libqethereum)
 		add_subdirectory(alethzero)
+		add_subdirectory(third)
 		if(QTQML)
 			add_subdirectory(walleth)
 		endif()

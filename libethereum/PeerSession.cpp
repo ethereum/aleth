@@ -593,11 +593,9 @@ void PeerSession::handleRead(const boost::system::error_code& _ec, size_t _lengt
 			{
 				if (m_incoming[0] != 0x22 || m_incoming[1] != 0x40 || m_incoming[2] != 0x08 || m_incoming[3] != 0x91)
 				{
-					auto self(shared_from_this());
-					m_socket.async_read_some(boost::asio::buffer(m_data), [this, self](boost::system::error_code _ec, std::size_t _length)
-					{
-						handleRead(_ec, _length);
-					});
+					cwarn << "INVALID MESSAGE RECEIVED";
+					sendDisconnect(BadProtocol);
+					return;
 				}
 				else
 				{
