@@ -433,7 +433,7 @@ QString QEthereum::doTransact(const QString& _json)
 	QString ret;
 	if (!m_client)
 		return ret;
-	TransactionSkeleton t = toTransaction(_json);
+	TransactionSkeleton t = toTransaction(json);
 	if (!t.from && m_accounts.size())
 	{
 		auto b = m_accounts.first();
