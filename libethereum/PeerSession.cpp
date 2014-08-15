@@ -82,9 +82,8 @@ bool PeerSession::interpret(RLP const& _r)
 
 		if (m_server->havePeer(m_id))
 		{
-			auto p = m_server->m_peers[m_id].lock().get();
 			// Already connected.
-			cwarn << "Already have peer id" << m_id.abridged() << "at" << p->endpoint() << "rather than" << endpoint();
+			cwarn << "Already have peer id" << m_id.abridged(); // << "at" << p->endpoint() << "rather than" << endpoint();
 			sendDisconnect(DuplicatePeer);
 			return false;
 		}
