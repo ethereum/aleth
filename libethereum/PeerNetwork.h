@@ -81,6 +81,12 @@ enum DisconnectReason
 	IncompatibleProtocol,
 	ClientQuit
 };
+	
+enum PeerEvent
+{
+	Register = 0,
+	Remove
+};
 
 /// @returns the string form of the given disconnection reason.
 std::string reasonOf(DisconnectReason _r);

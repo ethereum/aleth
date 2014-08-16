@@ -23,6 +23,7 @@
 
 #include <chrono>
 #include <thread>
+#include <future>
 #include <boost/filesystem.hpp>
 #include <libethential/Log.h>
 #include "Defaults.h"
@@ -68,53 +69,161 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 	m_bc(_dbPath, !m_vc.ok() || _forceClean),
 	m_stateDB(State::openDB(_dbPath, !m_vc.ok() || _forceClean)),
 	m_preMine(_us, m_stateDB),
-	m_postMine(_us, m_stateDB),
-	m_workState(Deleted)
+	m_postMine(_us, m_stateDB)
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	m_vc.setOk();
-	work(true);
-}
 
-void Client::ensureWorking()
-{
-	static const char* c_threadName = "eth";
-
-	if (!m_work)
-		m_work.reset(new thread([&]()
+	m_miner.reset(new Miner(m_bc));
+	
+	// todo: shouldn't start threads from constructors
+	const char* c_threadName = "eth";
+	m_run.reset(new thread([=]()
+	{
+		setThreadName(c_threadName);
+		m_stop.store(false, std::memory_order_release);
+		while (!m_stop.load(std::memory_order_acquire))
 		{
-			setThreadName(c_threadName);
-			m_workState.store(Active, std::memory_order_release);
-			while (m_workState.load(std::memory_order_acquire) != Deleting)
-				work();
-			m_workState.store(Deleted, std::memory_order_release);
-
-			// Synchronise the state according to the head of the block chain.
-			// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
-			WriteGuard l(x_stateDB);
-			m_preMine.sync(m_bc);
-			m_postMine = m_preMine;
-		}));
+		   ensureWorking();
+		   this_thread::sleep_for(chrono::milliseconds(250));
+		}
+	}));
 }
 
 Client::~Client()
 {
-	if (m_work)
-	{
-		if (m_workState.load(std::memory_order_acquire) == Active)
-			m_workState.store(Deleting, std::memory_order_release);
-		while (m_workState.load(std::memory_order_acquire) != Deleted)
-			this_thread::sleep_for(chrono::milliseconds(10));
-		m_work->join();
-		m_work.reset(nullptr);
-	}
-	stopNetwork();
+	// Stop Client thread.
+	m_stop.store(true, std::memory_order_release);
+	m_run->join();
+	
+	// Stop additional threads in a well mannered fashion.
+	if (m_net.get())
+		m_net->stop();
+	m_miner->stop();
+	m_bc.stop();
+	
+	// Synchronise state according to the head of the block chain.
+	// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
+	WriteGuard l(x_stateDB);
+	m_preMine.sync(m_bc);
+}
+
+/// ensure blockchain, network, and miner are working
+void Client::ensureWorking()
+{
+	// flushTransactions implicitly ensures blockchain is running
+	if (!m_bc.running())
+		flushTransactions();
+	
+	// run network
+	if (m_net.get())
+		m_net->run(m_tq, m_bq);
+	
+	// run mining
+	if (m_doMine && (m_forceMining || m_pendingCount) && !m_miner->running())
+		m_miner->run(m_postMine, [&](MineProgress _progress, bool _complete, State& _mined){
+			cworkin << "WORK";
+			m_mineProgress = _progress;
+			if (_complete)
+			{
+				cwork << "COMPLETE MINE";
+				
+				lock_guard<std::mutex> l(x_run);
+				
+				// TODO: is stop() still necessary if moved into BlockChain::run() callback?
+				m_bc.stop(); // prevent blockchain commiting state to disk
+				_mined.completeMine(); // commit to db
+				
+				h256Set changeds;
+				cwork << "CHAIN <== postSTATE";
+				h256s hs = m_bc.attemptImport(_mined.blockData(), m_stateDB);
+				if (hs.size())
+				{
+					for (auto h: hs)
+						appendFromNewBlock(h, changeds);
+					changeds.insert(ChainChangedFilter);
+					//_changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
+				}
+				
+				cwork << "noteChanged" << changeds.size() << "items";
+				noteChanged(changeds);
+				cworkout << "WORK";
+				
+				m_postMine = State(std::move(_mined));
+			}
+		});
+	else if (!m_doMine && m_miner->running())
+		m_miner->stop();
 }
 
 void Client::flushTransactions()
 {
-	work(true);
+	// blockchain runtime will only sync when blockqueue is affected;
+	// call this method when transaction queue is modified
+	lock_guard<std::mutex> l(x_run);
+	m_bc.run(m_bq, m_stateDB, [&](h256s newBlocks, OverlayDB &stateDB){
+		sync(newBlocks, stateDB);
+	});
+}
+
+void Client::sync(h256s newBlocks, OverlayDB &stateDB)
+{
+	h256Set changeds;
+	
+	// Synchronise state to block chain.
+	// This should remove any transactions on our queue that are included within our state.
+	// It also guarantees that the state reflects the longest (valid!) chain on the block chain.
+	//   This might mean reverting to an earlier state and replaying some blocks, or, (worst-case:
+	//   if there are no checkpoints before our fork) reverting to the genesis block and replaying
+	//   all blocks.
+	// Resynchronise state with block chain & trans
+	
+	cwork << "BQ ==> CHAIN ==> STATE";
+	// TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
+	if (newBlocks.size())
+	{
+		for (auto i: newBlocks)
+			appendFromNewBlock(i, changeds);
+		changeds.insert(ChainChangedFilter);
+	}
+	
+	WriteGuard l(x_stateDB);
+	if (newBlocks.size())
+		m_stateDB = stateDB;
+	
+	bool restartMining;
+	cwork << "preSTATE <== CHAIN";
+	if (m_preMine.sync(m_bc) || m_postMine.address() != m_preMine.address())
+	{
+		if (m_doMine)
+			cnote << "New block on chain: Updating state.";
+		restartMining = true;	// need to re-commit to mine.
+		m_postMine = m_preMine;
+
+		changeds.insert(PendingChangedFilter);
+	}
+	
+	// returns h256s as blooms, once for each transaction.
+	cwork << "postSTATE <== TQ";
+	h256s newPendingBlooms = m_postMine.sync(m_tq);
+	if (newPendingBlooms.size())
+	{
+		for (auto i: newPendingBlooms)
+			appendFromNewPending(i, changeds);
+		changeds.insert(PendingChangedFilter);
+		
+		if (m_doMine)
+			cnote << "Additional transaction ready: Restarting mining operation.";
+		restartMining = true;
+	}
+	m_pendingCount = m_postMine.pending().size();
+	
+	if (m_doMine && restartMining)
+		m_miner->restart(m_postMine);
+	
+	l.unlock();
+	noteChanged(changeds);
 }
 
 void Client::clearPending()
@@ -199,63 +308,33 @@ void Client::noteChanged(h256Set const& _filters)
 
 void Client::startNetwork(unsigned short _listenPort, std::string const& _seedHost, unsigned short _port, NodeMode _mode, unsigned _peers, string const& _publicIP, bool _upnp, u256 _networkId)
 {
-	static const char* c_threadName = "net";
-
-	{
+	std::async(std::launch::async, [&](){
 		UpgradableGuard l(x_net);
 		if (m_net.get())
 			return;
+		try
 		{
-			UpgradeGuard ul(l);
-
-			if (!m_workNet)
-				m_workNet.reset(new thread([&]()
-				{
-					setThreadName(c_threadName);
-					m_workNetState.store(Active, std::memory_order_release);
-					while (m_workNetState.load(std::memory_order_acquire) != Deleting)
-						workNet();
-					m_workNetState.store(Deleted, std::memory_order_release);
-				}));
-
-			try
-			{
-				m_net.reset(new PeerServer(m_clientVersion, m_bc, _networkId, _listenPort, _mode, _publicIP, _upnp));
-			}
-			catch (std::exception const&)
-			{
-				// Probably already have the port open.
-				cwarn << "Could not initialize with specified/default port. Trying system-assigned port";
-				m_net.reset(new PeerServer(m_clientVersion, m_bc, 0, _mode, _publicIP, _upnp));
-			}
+			m_net.reset(new PeerServer(m_clientVersion, m_bc, _networkId, _listenPort, _mode, _publicIP, _upnp));
+		}
+		catch (std::exception const&)
+		{
+			// Probably already have the port open.
+			cwarn << "Could not initialize with specified/default port. Trying system-assigned port";
+			m_net.reset(new PeerServer(m_clientVersion, m_bc, _networkId, _mode, _publicIP, _upnp));
 		}
 		m_net->setIdealPeerCount(_peers);
-	}
 
-	if (_seedHost.size())
-		connect(_seedHost, _port);
+		if (_seedHost.size())
+			connect(_seedHost, _port);
 
-	ensureWorking();
+		m_net->run(m_tq, m_bq);
+	});
 }
 
 void Client::stopNetwork()
 {
-	UpgradableGuard l(x_net);
-
-	if (m_workNet)
-	{
-		if (m_workNetState.load(std::memory_order_acquire) == Active)
-			m_workNetState.store(Deleting, std::memory_order_release);
-		while (m_workNetState.load(std::memory_order_acquire) != Deleted)
-			this_thread::sleep_for(chrono::milliseconds(10));
-		m_workNet->join();
-	}
-	if (m_net)
-	{
-		UpgradeGuard ul(l);
-		m_net.reset(nullptr);
-		m_workNet.reset(nullptr);
-	}
+	if (m_net.get())
+		m_net.reset();
 }
 
 std::vector<PeerInfo> Client::peers()
@@ -302,10 +381,7 @@ void Client::connect(std::string const& _seedHost, unsigned short _port)
 
 void Client::startMining()
 {
-	ensureWorking();
-
 	m_doMine = true;
-	m_restartMining = true;
 }
 
 void Client::stopMining()
@@ -315,8 +391,6 @@ void Client::stopMining()
 
 void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
-	ensureWorking();
-
 	Transaction t;
 //	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
 	{
@@ -331,6 +405,7 @@ void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _
 	t.sign(_secret);
 	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
+	flushTransactions();
 }
 
 bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
@@ -357,8 +432,6 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 
 Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
 {
-	ensureWorking();
-
 	Transaction t;
 	{
 		ReadGuard l(x_stateDB);
@@ -372,170 +445,14 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 	t.sign(_secret);
 	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
+	flushTransactions();
 	return right160(sha3(rlpList(t.sender(), t.nonce)));
 }
 
 void Client::inject(bytesConstRef _rlp)
 {
-	ensureWorking();
-
 	m_tq.attemptImport(_rlp);
-}
-
-void Client::workNet()
-{
-	// Process network events.
-	// Synchronise block chain with network.
-	// Will broadcast any of our (new) transactions and blocks, and collect & add any of their (new) transactions and blocks.
-	{
-		ReadGuard l(x_net);
-		if (m_net)
-		{
-			cwork << "NETWORK";
-			m_net->process();	// must be in guard for now since it uses the blockchain.
-
-			// returns h256Set as block hashes, once for each block that has come in/gone out.
-			cwork << "NET <==> TQ ; CHAIN ==> NET ==> BQ";
-			m_net->sync(m_tq, m_bq);
-
-			cwork << "TQ:" << m_tq.items() << "; BQ:" << m_bq.items();
-		}
-	}
-	this_thread::sleep_for(chrono::milliseconds(1));
-}
-
-void Client::work(bool _justQueue)
-{
-	cworkin << "WORK";
-	h256Set changeds;
-
-	// Do some mining.
-	if (!_justQueue && (m_pendingCount || m_forceMining))
-	{
-
-		// TODO: Separate "Miner" object.
-		if (m_doMine)
-		{
-			if (m_restartMining)
-			{
-				m_mineProgress.best = (double)-1;
-				m_mineProgress.hashes = 0;
-				m_mineProgress.ms = 0;
-				WriteGuard l(x_stateDB);
-				if (m_paranoia)
-				{
-					if (m_postMine.amIJustParanoid(m_bc))
-					{
-						cnote << "I'm just paranoid. Block is fine.";
-						m_postMine.commitToMine(m_bc);
-					}
-					else
-					{
-						cwarn << "I'm not just paranoid. Cannot mine. Please file a bug report.";
-						m_doMine = false;
-					}
-				}
-				else
-					m_postMine.commitToMine(m_bc);
-			}
-		}
-
-		if (m_doMine)
-		{
-			cwork << "MINE";
-			m_restartMining = false;
-
-			// Mine for a while.
-			MineInfo mineInfo = m_postMine.mine(100);
-
-			m_mineProgress.best = min(m_mineProgress.best, mineInfo.best);
-			m_mineProgress.current = mineInfo.best;
-			m_mineProgress.requirement = mineInfo.requirement;
-			m_mineProgress.ms += 100;
-			m_mineProgress.hashes += mineInfo.hashes;
-			WriteGuard l(x_stateDB);
-			m_mineHistory.push_back(mineInfo);
-			if (mineInfo.completed)
-			{
-				// Import block.
-				cwork << "COMPLETE MINE";
-				m_postMine.completeMine();
-				cwork << "CHAIN <== postSTATE";
-				h256s hs = m_bc.attemptImport(m_postMine.blockData(), m_stateDB);
-				if (hs.size())
-				{
-					for (auto h: hs)
-						appendFromNewBlock(h, changeds);
-					changeds.insert(ChainChangedFilter);
-					//changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
-				}
-			}
-		}
-		else
-		{
-			cwork << "SLEEP";
-			this_thread::sleep_for(chrono::milliseconds(100));
-		}
-	}
-	else
-	{
-		cwork << "SLEEP";
-		this_thread::sleep_for(chrono::milliseconds(100));
-	}
-
-	// Synchronise state to block chain.
-	// This should remove any transactions on our queue that are included within our state.
-	// It also guarantees that the state reflects the longest (valid!) chain on the block chain.
-	//   This might mean reverting to an earlier state and replaying some blocks, or, (worst-case:
-	//   if there are no checkpoints before our fork) reverting to the genesis block and replaying
-	//   all blocks.
-	// Resynchronise state with block chain & trans
-	{
-		WriteGuard l(x_stateDB);
-
-		cwork << "BQ ==> CHAIN ==> STATE";
-		OverlayDB db = m_stateDB;
-		x_stateDB.unlock();
-		h256s newBlocks = m_bc.sync(m_bq, db, 100);	// TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
-		if (newBlocks.size())
-		{
-			for (auto i: newBlocks)
-				appendFromNewBlock(i, changeds);
-			changeds.insert(ChainChangedFilter);
-		}
-		x_stateDB.lock();
-		if (newBlocks.size())
-			m_stateDB = db;
-
-		cwork << "preSTATE <== CHAIN";
-		if (m_preMine.sync(m_bc) || m_postMine.address() != m_preMine.address())
-		{
-			if (m_doMine)
-				cnote << "New block on chain: Restarting mining operation.";
-			m_restartMining = true;	// need to re-commit to mine.
-			m_postMine = m_preMine;
-			changeds.insert(PendingChangedFilter);
-		}
-
-		// returns h256s as blooms, once for each transaction.
-		cwork << "postSTATE <== TQ";
-		h256s newPendingBlooms = m_postMine.sync(m_tq);
-		if (newPendingBlooms.size())
-		{
-			for (auto i: newPendingBlooms)
-				appendFromNewPending(i, changeds);
-			changeds.insert(PendingChangedFilter);
-
-			if (m_doMine)
-				cnote << "Additional transaction ready: Restarting mining operation.";
-			m_restartMining = true;
-		}
-		m_pendingCount = m_postMine.pending().size();
-	}
-
-	cwork << "noteChanged" << changeds.size() << "items";
-	noteChanged(changeds);
-	cworkout << "WORK";
+	flushTransactions();
 }
 
 unsigned Client::numberOf(int _n) const
