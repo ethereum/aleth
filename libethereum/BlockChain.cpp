@@ -190,13 +190,16 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 			m_stop.store(false, std::memory_order_release);
 			while (!m_stop.load(std::memory_order_acquire))
 			{
-				std::lock_guard<std::recursive_mutex> l(x_sync);
-				if (_bq.items().first > 0 || _bq.items().second > 0)
 				{
-					h256s blocks = sync(_bq, m_workingStateDB, 100);
-					_cb(blocks, m_workingStateDB);
-				} else
-					this_thread::sleep_for(chrono::milliseconds(250));
+					std::lock_guard<std::recursive_mutex> l(x_sync);
+					if (_bq.items().first > 0 || _bq.items().second > 0)
+					{
+						h256s blocks = sync(_bq, m_workingStateDB, 100);
+						_cb(blocks, m_workingStateDB);
+						continue;
+					}
+				}
+				this_thread::sleep_for(chrono::milliseconds(250));
 			}
 		}));
 }
