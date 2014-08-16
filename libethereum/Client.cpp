@@ -308,7 +308,7 @@ void Client::noteChanged(h256Set const& _filters)
 
 void Client::startNetwork(unsigned short _listenPort, std::string const& _seedHost, unsigned short _port, NodeMode _mode, unsigned _peers, string const& _publicIP, bool _upnp, u256 _networkId)
 {
-	std::async(std::launch::async, [&](){
+	std::async(std::launch::async, [=](){
 		UpgradableGuard l(x_net);
 		if (m_net.get())
 			return;
