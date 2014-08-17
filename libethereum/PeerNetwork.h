@@ -60,9 +60,9 @@ struct NetConnect: public LogChannel { static const char* name() { return "+N+";
 struct NetMessageDetail: public LogChannel { static const char* name() { return "=N="; } static const int verbosity = 5; };
 struct NetTriviaSummary: public LogChannel { static const char* name() { return "-N-"; } static const int verbosity = 10; };
 struct NetTriviaDetail: public LogChannel { static const char* name() { return "=N="; } static const int verbosity = 11; };
-struct NetAllDetail: public LogChannel { static const char* name() { return "=N="; } static const int verbosity = 15; };
-struct NetRight: public LogChannel { static const char* name() { return ">N>"; } static const int verbosity = 18; };
-struct NetLeft: public LogChannel { static const char* name() { return "<N<"; } static const int verbosity = 19; };
+struct NetAllDetail: public LogChannel { static const char* name() { return "=N="; } static const int verbosity = 13; };
+struct NetRight: public LogChannel { static const char* name() { return ">N>"; } static const int verbosity = 14; };
+struct NetLeft: public LogChannel { static const char* name() { return "<N<"; } static const int verbosity = 15; };
 
 enum PacketType
 {

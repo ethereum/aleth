@@ -433,7 +433,7 @@ bool PeerServer::ensureInitialised(TransactionQueue& _tq)
 	{
 		// First time - just initialise.
 		m_latestBlockSent = m_chain->currentHash();
-		clog(NetNote) << "Initialising: latest=" << m_latestBlockSent;
+		clog(NetNote) << "Initialising: latest=" << m_latestBlockSent.abridged();
 
 		for (auto const& i: _tq.transactions())
 			m_transactionsSent.insert(i.first);

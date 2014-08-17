@@ -163,7 +163,7 @@ bool PeerSession::interpret(RLP const& _r)
 		s << PeersPacket;
 		for (auto i: peers)
 		{
-            clogS(NetTriviaDetail) << "Sending peer " << toHex(i.first.ref().cropped(0, 4)) << i.second;
+			clogS(NetTriviaDetail) << "Sending peer " << i.first.abridged() << i.second;
 			s.appendList(3) << bytesConstRef(i.second.address().to_v4().to_bytes().data(), 4) << i.second.port() << i.first;
 		}
 		sealAndSend(s);
@@ -217,8 +217,8 @@ bool PeerSession::interpret(RLP const& _r)
 		if (m_server->m_mode == NodeMode::PeerServer)
 			break;
 		unsigned limit = _r[1].toInt<unsigned>();
-		h256 later = _r[1].toHash<h256>();
-		clogS(NetMessageSummary) << "GetBlockHashes (" << limit << "entries, " << later << ")";
+		h256 later = _r[2].toHash<h256>();
+		clogS(NetMessageSummary) << "GetBlockHashes (" << limit << "entries, " << later.abridged() << ")";
 
 		unsigned c = min<unsigned>(m_server->m_chain->number(later), limit);
 
@@ -228,6 +228,7 @@ bool PeerSession::interpret(RLP const& _r)
 		for (unsigned i = 0; i < c; ++i, p = m_server->m_chain->details(p).parent)
 			s << p;
 		sealAndSend(s);
+		break;
 	}
 	case BlockHashesPacket:
 	{
@@ -250,6 +251,7 @@ bool PeerSession::interpret(RLP const& _r)
 		prep(s).appendList(3);
 		s << GetBlockHashesPacket << c_maxHashesAsk << m_neededBlocks.back();
 		sealAndSend(s);
+		break;
 	}
 	case GetBlocksPacket:
 	{
@@ -270,6 +272,7 @@ bool PeerSession::interpret(RLP const& _r)
 		}
 		RLPStream s;
 		sealAndSend(prep(s).appendList(n + 1).append(BlocksPacket).appendRaw(rlp));
+		break;
 	}
 	case BlocksPacket:
 	{
@@ -518,7 +521,7 @@ void PeerSession::start()
 {
 	RLPStream s;
 	prep(s);
-	s.appendList(7) << HelloPacket
+	s.appendList(9) << HelloPacket
 					<< (uint)PeerServer::protocolVersion()
 					<< m_server->networkId()
 					<< m_server->m_clientVersion
