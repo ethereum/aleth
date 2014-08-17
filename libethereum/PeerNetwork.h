@@ -42,6 +42,11 @@ namespace eth
  */
 bool isPrivateAddress(bi::address _addressToCheck);
 
+static const eth::uint c_maxHashes = 4096;		///< Maximum number of hashes BlockHashes will ever send.
+static const eth::uint c_maxHashesAsk = 4096;	///< Maximum number of hashes GetBlockHashes will ever ask for.
+static const eth::uint c_maxBlocks = 512;		///< Maximum number of blocks Blocks will ever send.
+static const eth::uint c_maxBlocksAsk = 512;	///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
+
 class OverlayDB;
 class BlockChain;
 class TransactionQueue;
@@ -71,7 +76,10 @@ enum PacketType
 	BlocksPacket,
 	GetChainPacket,
 	NotInChainPacket,
-	GetTransactionsPacket
+	GetTransactionsPacket,
+	GetBlockHashesPacket,
+	BlockHashesPacket,
+	GetBlocksPacket,
 };
 
 enum DisconnectReason

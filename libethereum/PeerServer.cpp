@@ -391,6 +391,35 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 	});
 }
 
+void PeerServer::constructGetBlocks(RLPStream& _s, h256 _latest)
+{
+	// Place into _s the GetBlocks message to get a bunch of blocks no earlier than _latest.
+
+	unsigned count = c_maxBlocksAsk;
+
+	// TODO reduce to the number of blocks yet left to ask for no later than _latest
+
+	_s.appendList(count + 1) << GetBlocksPacket;
+
+	// TODO: place blocks in...
+
+	// TODO: move blocks over to m_blocksUnderway
+}
+
+bool PeerServer::havePeer(Public _id) const
+{
+	Guard l(x_peers);
+
+	// Remove dead peers from list.
+	for (auto i = m_peers.begin(); i != m_peers.end();)
+		if (i->second.lock().get())
+			++i;
+		else
+			i = m_peers.erase(i);
+
+	return m_peers.count(_id);
+}
+
 bool PeerServer::ensureInitialised(TransactionQueue& _tq)
 {
 	if (m_latestBlockSent == h256())

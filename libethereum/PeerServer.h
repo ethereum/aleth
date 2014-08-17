@@ -37,6 +37,7 @@ namespace bi = boost::asio::ip;
 namespace eth
 {
 
+class RLPStream;
 class TransactionQueue;
 class BlockQueue;
 
@@ -62,8 +63,8 @@ public:
 	/// Start peer server thread
 	void run(TransactionQueue& _tq, BlockQueue& _bq);
 	
-	/// @returns if server is running
-	bool running() { std::lock_guard<std::mutex> l(x_run); return m_stop ? false : !!m_run; };
+	/// @returns true iff server is running
+	bool running() { Guard l(x_run); return m_stop ? false : !!m_run; }
 	
 	/// Disconnect all peers and stop thread
 	void stop();
@@ -84,11 +85,13 @@ public:
 	/// Conduct I/O, polling, syncing, whatever.
 	void process() { if (isInitialised()) m_ioService.poll(); }
 
-	bool havePeer(Public _id) const { Guard l(x_peers); return m_peers.count(_id) != 0; }
+	/// @returns true iff we have the a peer of the given id.
+	bool havePeer(Public _id) const;
 
 	/// Set ideal number of peers.
 	void setIdealPeerCount(unsigned _n) { m_idealPeerCount = _n; }
 
+	/// Set the mode of operation on the network.
 	void setMode(NodeMode _m) { m_mode = _m; }
 
 	/// Get peer information.
@@ -103,7 +106,10 @@ public:
 	/// Get the port we're listening on currently.
 	unsigned short listenPort() const { return m_public.port(); }
 
+	/// Serialise the set of known peers.
 	bytes savePeers() const;
+
+	/// Deserialise the data and populate the set of known peers.
 	void restorePeers(bytesConstRef _b);
 
 private:
@@ -123,6 +129,8 @@ private:
 	void prunePeers();
 	void maintainTransactions(TransactionQueue& _tq, h256 _currentBlock);
 	void maintainBlocks(BlockQueue& _bq, h256 _currentBlock);
+
+	void constructGetBlocks(RLPStream& _s, h256 _h);
 
 	///	Check to see if the network peer-state initialisation has happened.
 	bool isInitialised() const { return m_latestBlockSent; }
@@ -160,6 +168,10 @@ private:
 	std::vector<bytes> m_incomingBlocks;
 	std::map<Public, std::pair<bi::tcp::endpoint, unsigned>> m_incomingPeers;
 	std::vector<Public> m_freePeers;
+
+	u256 m_totalDifficultyOfNeeded;
+	h256s m_blocksNeeded;
+	h256s m_blocksUnderway;
 	
 	h256 m_latestBlockSent;
 	std::set<h256> m_transactionsSent;

@@ -82,6 +82,9 @@ private:
 	unsigned short m_listenPort;			///< Port that the remote client is listening on for connections. Useful for giving to peers.
 	uint m_caps;
 
+	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
+	h256s m_neededBlocks;					///< The blocks that we should download from this peer.
+
 	std::chrono::steady_clock::time_point m_ping;
 	std::chrono::steady_clock::time_point m_connect;
 	std::chrono::steady_clock::time_point m_disconnect;
