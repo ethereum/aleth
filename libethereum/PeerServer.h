@@ -119,6 +119,10 @@ private:
 	/// Session wants to pass us a block that we might not have.
 	/// @returns true if we didn't have it.
 	bool noteBlock(h256 _hash, bytesConstRef _data);
+	/// Session has finished getting the chain of hashes.
+	void noteHaveChain(std::shared_ptr<PeerSession> const& _who);
+	/// Called when the session has provided us with a new peer we can connect to.
+	void noteNewPeers() {}
 
 	void seal(bytes& _b);
 	void populateAddresses();
@@ -130,7 +134,10 @@ private:
 	void maintainTransactions(TransactionQueue& _tq, h256 _currentBlock);
 	void maintainBlocks(BlockQueue& _bq, h256 _currentBlock);
 
-	void constructGetBlocks(RLPStream& _s, h256 _h);
+	/// Get a bunch of needed blocks.
+	/// Removes them from our list of needed blocks.
+	/// @returns empty if there's no more blocks left to fetch, otherwise the blocks to fetch.
+	h256Set neededBlocks();
 
 	///	Check to see if the network peer-state initialisation has happened.
 	bool isInitialised() const { return m_latestBlockSent; }
@@ -160,7 +167,7 @@ private:
 	u256 m_networkId;
 
 	mutable std::mutex x_peers;
-	std::map<Public, std::weak_ptr<PeerSession>> m_peers;
+	mutable std::map<Public, std::weak_ptr<PeerSession>> m_peers;	// mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
 	std::deque<std::pair<PeerEvent, std::weak_ptr<PeerSession>>> m_peerEvents;
 
 	mutable std::recursive_mutex m_incomingLock;
@@ -169,9 +176,10 @@ private:
 	std::map<Public, std::pair<bi::tcp::endpoint, unsigned>> m_incomingPeers;
 	std::vector<Public> m_freePeers;
 
+	mutable std::mutex x_blocksNeeded;
 	u256 m_totalDifficultyOfNeeded;
-	h256s m_blocksNeeded;
-	h256s m_blocksUnderway;
+	h256s m_blocksNeeded;				/// From latest to earliest.
+	h256Set m_blocksOnWay;
 	
 	h256 m_latestBlockSent;
 	std::set<h256> m_transactionsSent;

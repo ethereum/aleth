@@ -146,6 +146,9 @@ void PeerServer::stop()
 	
 	disconnectPeers();
 //	this_thread::sleep_for(chrono::milliseconds(100));
+	for (auto i: m_peers)
+		if (shared_ptr<PeerSession> p = i.second.lock())
+			p->giveUpOnFetch();
 
 	if (m_run)
 		m_run->join();
@@ -391,19 +394,23 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 	});
 }
 
-void PeerServer::constructGetBlocks(RLPStream& _s, h256 _latest)
+h256Set PeerServer::neededBlocks()
 {
-	// Place into _s the GetBlocks message to get a bunch of blocks no earlier than _latest.
-
-	unsigned count = c_maxBlocksAsk;
-
-	// TODO reduce to the number of blocks yet left to ask for no later than _latest
-
-	_s.appendList(count + 1) << GetBlocksPacket;
-
-	// TODO: place blocks in...
-
-	// TODO: move blocks over to m_blocksUnderway
+	Guard l(x_blocksNeeded);
+	h256Set ret;
+	if (m_blocksNeeded.size())
+	{
+		while (ret.size() < c_maxBlocksAsk && m_blocksNeeded.size())
+		{
+			ret.insert(m_blocksNeeded.back());
+			m_blocksOnWay.insert(m_blocksNeeded.back());
+			m_blocksNeeded.pop_back();
+		}
+	}
+	else
+		for (auto i = m_blocksOnWay.begin(); ret.size() < c_maxBlocksAsk && i != m_blocksOnWay.end(); ++i)
+			ret.insert(*i);
+	return ret;
 }
 
 bool PeerServer::havePeer(Public _id) const
@@ -438,6 +445,8 @@ bool PeerServer::ensureInitialised(TransactionQueue& _tq)
 
 bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 {
+	Guard l(x_blocksNeeded);
+	m_blocksOnWay.erase(_hash);
 	if (!m_chain->details(_hash))
 	{
 		lock_guard<recursive_mutex> l(m_incomingLock);
@@ -445,6 +454,25 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 		return true;
 	}
 	return false;
+}
+
+void PeerServer::noteHaveChain(std::shared_ptr<PeerSession> const& _from)
+{
+	Guard l(x_blocksNeeded);
+	auto td = _from->m_totalDifficulty;
+
+	if ((m_totalDifficultyOfNeeded && td < m_totalDifficultyOfNeeded) || td < m_chain->details().totalDifficulty)
+		return;
+
+	m_blocksNeeded = _from->m_neededBlocks;
+
+	// Looks like it's the best yet for total difficulty. Set to download.
+	{
+		Guard l(x_peers);
+		for (auto const& i: m_peers)
+			if (shared_ptr<PeerSession> p = i.second.lock())
+				p->ensureGettingChain();
+	}
 }
 
 void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> const& _s)
