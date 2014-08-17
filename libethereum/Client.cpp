@@ -167,7 +167,7 @@ void Client::flushTransactions()
 	});
 }
 
-void Client::sync(h256s newBlocks, OverlayDB &stateDB)
+void Client::sync(h256s _newBlocks, OverlayDB& _stateDB)
 {
 	h256Set changeds;
 	
@@ -181,16 +181,16 @@ void Client::sync(h256s newBlocks, OverlayDB &stateDB)
 	
 	cwork << "BQ ==> CHAIN ==> STATE";
 	// TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
-	if (newBlocks.size())
+	if (_newBlocks.size())
 	{
-		for (auto i: newBlocks)
+		for (auto i: _newBlocks)
 			appendFromNewBlock(i, changeds);
 		changeds.insert(ChainChangedFilter);
 	}
 	
 	WriteGuard l(x_stateDB);
-	if (newBlocks.size())
-		m_stateDB = stateDB;
+	if (_newBlocks.size())
+		m_stateDB = _stateDB;
 	
 	bool restartMining;
 	cwork << "preSTATE <== CHAIN";
@@ -308,7 +308,7 @@ void Client::noteChanged(h256Set const& _filters)
 
 void Client::startNetwork(unsigned short _listenPort, std::string const& _seedHost, unsigned short _port, NodeMode _mode, unsigned _peers, string const& _publicIP, bool _upnp, u256 _networkId)
 {
-	std::async(std::launch::async, [&](){
+	std::async(std::launch::async, [=](){
 		UpgradableGuard l(x_net);
 		if (m_net.get())
 			return;

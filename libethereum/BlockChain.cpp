@@ -165,14 +165,6 @@ bool contains(T const& _t, V const& _v)
 	return false;
 }
 
-
-/*!
-	\fn void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb)
- 
-	Creates a thread which poll blockqueue for updates. When new blocks are in queue they 
-	will be sync'd and _cb will be called with new blocks and updated statedb.
- 
- */
 void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb)
 {
 	// always run once to update working state, regardless of _bq.items()
@@ -190,7 +182,7 @@ void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<v
 			m_stop.store(false, std::memory_order_release);
 			while (!m_stop.load(std::memory_order_acquire))
 			{
-				std::lock_guard<std::recursive_mutex> l(x_sync);
+				std::lock_guard<std::recursive_mutex> l(m_sync);
 				if (_bq.items().first > 0 || _bq.items().second > 0)
 				{
 					h256s blocks = sync(_bq, m_workingStateDB, 100);
@@ -219,7 +211,7 @@ void BlockChain::stop()
 h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
 {
 	vector<bytes> blocks;
-	std::lock_guard<std::recursive_mutex> l(x_sync);
+	std::lock_guard<std::recursive_mutex> l(m_sync);
 	_bq.drain(blocks);
 
 	h256s ret;

@@ -512,7 +512,7 @@ void PeerSession::sendDisconnect(DisconnectReason _reason)
 	if (_reason == ClientQuit || _reason == TCPError || !m_socket.is_open())
 	{
 		// Disconnect immediately if closed socket, TPCError, or ClientQuit
-		if(m_socket.is_open())
+		if (m_socket.is_open())
 			try
 			{
 				clogS(NetConnect) << "Closing " << m_socket.remote_endpoint();
