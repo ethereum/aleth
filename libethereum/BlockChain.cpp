@@ -21,6 +21,7 @@
 
 #include "BlockChain.h"
 
+#include <atomic>
 #include <boost/filesystem.hpp>
 #include <libethential/Common.h>
 #include <libethential/RLP.h>
@@ -106,7 +107,8 @@ bytes BlockChain::createGenesisBlock()
 	return block.out();
 }
 
-BlockChain::BlockChain(std::string _path, bool _killExisting)
+BlockChain::BlockChain(std::string _path, bool _killExisting):
+	m_stop(true)
 {
 	if (_path.empty())
 		_path = Defaults::get()->m_dbPath;
@@ -163,9 +165,53 @@ bool contains(T const& _t, V const& _v)
 	return false;
 }
 
+void BlockChain::run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb)
+{
+	// always run once to update working state, regardless of _bq.items()
+	// useful for mined blocks and new transactions
+	lock_guard<std::mutex> l(x_run);
+	m_workingStateDB = _stateDB;
+	h256s blocks = sync(_bq, m_workingStateDB, 100);
+	_cb(blocks, m_workingStateDB);
+	
+	const char* c_threadName = "chain";
+	if (!m_run)
+		m_run.reset(new thread([&, c_threadName, _cb]()
+		{
+			setThreadName(c_threadName);
+			m_stop.store(false, std::memory_order_release);
+			while (!m_stop.load(std::memory_order_acquire))
+			{
+				std::lock_guard<std::recursive_mutex> l(m_sync);
+				if (_bq.items().first > 0 || _bq.items().second > 0)
+				{
+					h256s blocks = sync(_bq, m_workingStateDB, 100);
+					_cb(blocks, m_workingStateDB);
+				} else
+					this_thread::sleep_for(chrono::milliseconds(250));
+			}
+		}));
+}
+
+bool BlockChain::running()
+{
+	std::lock_guard<std::mutex> l(x_run);
+	return m_stop ? false : !!m_run;
+}
+
+void BlockChain::stop()
+{
+	m_stop.store(true, std::memory_order_release);
+	lock_guard<std::mutex> l(x_run);
+	if (m_run)
+		m_run->join();
+	m_run = nullptr;
+}
+
 h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
 {
 	vector<bytes> blocks;
+	std::lock_guard<std::recursive_mutex> l(m_sync);
 	_bq.drain(blocks);
 
 	h256s ret;

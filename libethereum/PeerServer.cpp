@@ -56,6 +56,7 @@ static const set<bi::address> c_rejectAddresses = {
 };
 
 PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, unsigned short _port, NodeMode _m, string const& _publicAddress, bool _upnp):
+	m_stop(true),
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(_port),
@@ -72,6 +73,7 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 }
 
 PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m, string const& _publicAddress, bool _upnp):
+	m_stop(true),
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(0),
@@ -91,6 +93,7 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 }
 
 PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m):
+	m_stop(true),
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(0),
@@ -107,8 +110,47 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 
 PeerServer::~PeerServer()
 {
-	disconnectPeers();
+	stop();
+	delete m_upnp;
 }
+
+void PeerServer::run(TransactionQueue& _tq, BlockQueue& _bq)
+{
+	const char* c_threadName = "net";
+	lock_guard<std::mutex> l(x_run);
+	if (!m_run)
+		m_run.reset(new thread([&, c_threadName]()
+		{
+			setThreadName(c_threadName);
+			m_stop.store(false, std::memory_order_release);
+			while (!m_stop.load(std::memory_order_acquire))
+			{
+				// TODO: schedule 100ms loop for sync() onto io_service and
+				//       look at .run() instead of poll.
+				
+				// NOTE: process() and ioservice use a single thread so
+				// tq and bq are manipulated in threadsafe manner.
+				process();
+
+				// TODO: skip if there's nothing to import
+				sync(_tq, _bq);
+				this_thread::sleep_for(chrono::milliseconds(50));
+			}
+		}));
+}
+
+void PeerServer::stop()
+{
+	lock_guard<std::mutex> l(x_run);
+	m_stop.store(true, std::memory_order_release);
+	
+	disconnectPeers();
+//	this_thread::sleep_for(chrono::milliseconds(100));
+
+	if (m_run)
+		m_run->join();
+	m_run = nullptr;
+};
 
 void PeerServer::registerPeer(std::shared_ptr<PeerSession> _s)
 {
@@ -118,24 +160,10 @@ void PeerServer::registerPeer(std::shared_ptr<PeerSession> _s)
 
 void PeerServer::disconnectPeers()
 {
-	for (unsigned n = 0;; n = 0)
-	{
-		{
-			Guard l(x_peers);
-			for (auto i: m_peers)
-				if (auto p = i.second.lock())
-				{
-					p->disconnect(ClientQuit);
-					n++;
-				}
-		}
-		if (!n)
-			break;
-		m_ioService.poll();
-		this_thread::sleep_for(chrono::milliseconds(100));
-	}
-
-	delete m_upnp;
+	for (auto i: m_peers)
+		if (auto p = i.second.lock())
+			p->sendDisconnect(ClientQuit);	
+	m_ioService.poll();
 }
 
 unsigned PeerServer::protocolVersion()
@@ -297,9 +325,9 @@ void PeerServer::ensureAccepting()
 	{
 		clog(NetConnect) << "Listening on local port " << m_listenPort << " (public: " << m_public << ")";
 		m_accepting = true;
-		m_acceptor.async_accept(m_socket, [=](boost::system::error_code ec)
+		m_acceptor.async_accept(m_socket, [=](boost::system::error_code _ec)
 		{
-			if (!ec)
+			if (!_ec)
 				try
 				{
 					try {
@@ -315,7 +343,7 @@ void PeerServer::ensureAccepting()
 					clog(NetWarn) << "ERROR: " << _e.what();
 				}
 			m_accepting = false;
-			if (ec.value() != 1 && (m_mode == NodeMode::PeerServer || peerCount() < m_idealPeerCount * 2))
+			if (_ec.value() != 1 && (m_mode == NodeMode::PeerServer || peerCount() < m_idealPeerCount * 2))
 				ensureAccepting();
 		});
 	}
@@ -338,11 +366,11 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 {
 	clog(NetConnect) << "Attempting connection to " << _ep;
 	bi::tcp::socket* s = new bi::tcp::socket(m_ioService);
-	s->async_connect(_ep, [=](boost::system::error_code const& ec)
+	s->async_connect(_ep, [=](boost::system::error_code const& _ec)
 	{
-		if (ec)
+		if (_ec)
 		{
-			clog(NetConnect) << "Connection refused to " << _ep << " (" << ec.message() << ")";
+			clog(NetConnect) << "Connection refused to " << _ep << " (" << _ec.message() << ")";
 			for (auto i = m_incomingPeers.begin(); i != m_incomingPeers.end(); ++i)
 				if (i->second.first == _ep && i->second.second < 3)
 				{
@@ -390,8 +418,16 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 	return false;
 }
 
+void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> const& _s)
+{
+	Guard l(x_peers);
+	m_peerEvents.push_back(std::make_pair(_e, _s));
+}
+
 bool PeerServer::sync(TransactionQueue& _tq, BlockQueue& _bq)
 {
+	// TODO: try-lock tq and bq, else return false (against blockchain/client/miner)
+	
 	bool netChange = ensureInitialised(_tq);
 	
 	if (m_mode == NodeMode::Full)
@@ -503,7 +539,6 @@ void PeerServer::growPeers()
 				seal(b);
 				for (auto const& i: m_peers)
 					if (auto p = i.second.lock())
-						if (p->isOpen())
 							p->send(&b);
 				m_lastPeersRequest = chrono::steady_clock::now();
 			}
@@ -526,8 +561,9 @@ void PeerServer::prunePeers()
 {
 	Guard l(x_peers);
 	// We'll keep at most twice as many as is ideal, halfing what counts as "too young to kill" until we get there.
+	std::set<Public> removed;
 	for (uint old = 15000; m_peers.size() > m_idealPeerCount * 2 && old > 100; old /= 2)
-		while (m_peers.size() > m_idealPeerCount)
+		while (m_peers.size() - removed.size() > m_idealPeerCount)
 		{
 			// look for worst peer to kick off
 			// first work out how many are old enough to kick off.
@@ -535,15 +571,18 @@ void PeerServer::prunePeers()
 			unsigned agedPeers = 0;
 			for (auto i: m_peers)
 				if (auto p = i.second.lock())
-					if ((m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
+					if (!removed.count(i.first) && (m_mode != NodeMode::PeerServer || p->m_caps != 0x01) && chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
 					{
 						++agedPeers;
 						if ((!worst || p->m_rating < worst->m_rating || (p->m_rating == worst->m_rating && p->m_connect > worst->m_connect)))	// kill older ones
+						{
+							removed.insert(i.first);
 							worst = p;
+						}
 					}
 			if (!worst || agedPeers <= m_idealPeerCount)
 				break;
-			worst->disconnect(TooManyPeers);
+			worst->sendDisconnect(TooManyPeers);
 		}
 
 	// Remove dead peers from list.

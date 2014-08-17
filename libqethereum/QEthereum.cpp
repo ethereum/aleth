@@ -427,7 +427,7 @@ void QEthereum::doTransact(QString _secret, QString _amount, QString _dest, QStr
 	client()->flushTransactions();
 }
 
-QString QEthereum::doTransact(QString _json)
+QString QEthereum::doTransact(QString const& _json)
 {
 	QString ret;
 	if (!m_client)

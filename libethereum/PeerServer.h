@@ -59,6 +59,15 @@ public:
 	/// Will block on network process events.
 	~PeerServer();
 
+	/// Start peer server thread
+	void run(TransactionQueue& _tq, BlockQueue& _bq);
+	
+	/// @returns if server is running
+	bool running() { std::lock_guard<std::mutex> l(x_run); return m_stop ? false : !!m_run; };
+	
+	/// Disconnect all peers and stop thread
+	void stop();
+	
 	/// Closes all peers.
 	void disconnectPeers();
 
@@ -73,8 +82,6 @@ public:
 	bool sync(TransactionQueue&, BlockQueue& _bc);
 
 	/// Conduct I/O, polling, syncing, whatever.
-	/// Ideally all time-consuming I/O is done in a background thread or otherwise asynchronously, but you get this call every 100ms or so anyway.
-	/// This won't touch alter the blockchain.
 	void process() { if (isInitialised()) m_ioService.poll(); }
 
 	bool havePeer(Public _id) const { Guard l(x_peers); return m_peers.count(_id) != 0; }
@@ -99,9 +106,10 @@ public:
 	bytes savePeers() const;
 	void restorePeers(bytesConstRef _b);
 
+private:
+	void peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> const& _s);
 	void registerPeer(std::shared_ptr<PeerSession> _s);
 
-private:
 	/// Session wants to pass us a block that we might not have.
 	/// @returns true if we didn't have it.
 	bool noteBlock(h256 _hash, bytesConstRef _data);
@@ -123,6 +131,10 @@ private:
 
 	std::map<Public, bi::tcp::endpoint> potentialPeers();
 
+	std::unique_ptr<std::thread> m_run;		///< Thread which periodically clalls process() and sync().
+	mutable std::mutex x_run;				///< Ensure a single thread and state (start or stop).
+	std::atomic<bool> m_stop;				///< Setting to false stops running thread in threadsafe manner.
+	
 	std::string m_clientVersion;
 	NodeMode m_mode = NodeMode::Full;
 
@@ -141,13 +153,14 @@ private:
 
 	mutable std::mutex x_peers;
 	std::map<Public, std::weak_ptr<PeerSession>> m_peers;
+	std::deque<std::pair<PeerEvent, std::weak_ptr<PeerSession>>> m_peerEvents;
 
 	mutable std::recursive_mutex m_incomingLock;
 	std::vector<bytes> m_incomingTransactions;
 	std::vector<bytes> m_incomingBlocks;
 	std::map<Public, std::pair<bi::tcp::endpoint, unsigned>> m_incomingPeers;
 	std::vector<Public> m_freePeers;
-
+	
 	h256 m_latestBlockSent;
 	std::set<h256> m_transactionsSent;
 
