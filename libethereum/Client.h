@@ -275,7 +275,7 @@ public:
 	/// Change whether we check block validity prior to mining.
 	void setParanoia(bool _p) { m_paranoia = _p; }
 	/// Set the coinbase address.
-	void setAddress(Address _us) { m_preMine.setAddress(_us); }
+	void setAddress(Address _us) { m_preMine.setAddress(_us); m_postMine.setAddress(_us); }
 	/// Get the coinbase address.
 	Address address() const { return m_preMine.address(); }
 	/// Start mining.
