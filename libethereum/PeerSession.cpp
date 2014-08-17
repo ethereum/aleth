@@ -235,7 +235,12 @@ bool PeerSession::interpret(RLP const& _r)
 		if (m_server->m_mode == NodeMode::PeerServer)
 			break;
 		clogS(NetMessageSummary) << "BlockHashes (" << dec << (_r.itemCount() - 1) << " entries)";
-		for (unsigned i = 1; i < _r.itemCount() && !m_server->m_chain->details(_r[i].toHash<h256>()); ++i)
+		if (_r.itemCount() == 1)
+		{
+			m_server->noteHaveChain(shared_from_this());
+			return true;
+		}
+		for (unsigned i = 1; i < _r.itemCount(); ++i)
 		{
 			auto h = _r[i].toHash<h256>();
 			if (m_server->m_chain->details(h))
@@ -528,8 +533,8 @@ void PeerSession::start()
 					<< (m_server->m_mode == NodeMode::Full ? 0x07 : m_server->m_mode == NodeMode::PeerServer ? 0x01 : 0)
 					<< m_server->m_public.port()
 					<< m_server->m_key.pub()
-					<< m_server->m_chain->currentHash()
-					<< m_server->m_chain->details().totalDifficulty;
+					<< m_server->m_chain->details().totalDifficulty
+					<< m_server->m_chain->currentHash();
 	sealAndSend(s);
 	ping();
 	getPeers();
