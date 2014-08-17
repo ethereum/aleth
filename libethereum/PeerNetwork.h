@@ -35,6 +35,11 @@ namespace bi = boost::asio::ip;
 namespace eth
 {
 
+/** @brief Helper to determine if an address falls within one of the reserved ranges.
+ * For V4:
+ * Class A "10.*", Class B "172.[16->31].*", Class C "192.168.*"
+ * Not implemented yet for V6
+ */
 bool isPrivateAddress(bi::address _addressToCheck);
 
 class OverlayDB;

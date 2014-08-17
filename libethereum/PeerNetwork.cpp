@@ -23,10 +23,6 @@
 using namespace std;
 using namespace eth;
 
-// Helper function to determine if an address falls within one of the reserved ranges
-// For V4:
-// Class A "10.*", Class B "172.[16->31].*", Class C "192.168.*"
-// Not implemented yet for V6
 bool eth::isPrivateAddress(bi::address _addressToCheck)
 {
 	if (_addressToCheck.is_v4())
