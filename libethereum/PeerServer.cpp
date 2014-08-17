@@ -418,7 +418,7 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 	return false;
 }
 
-void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> _s)
+void PeerServer::peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> const& _s)
 {
 	Guard l(x_peers);
 	m_peerEvents.push_back(std::make_pair(_e, _s));
