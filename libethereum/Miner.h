@@ -48,6 +48,7 @@ struct MineProgress
 class Miner: public std::enable_shared_from_this<Miner>
 {
 public:
+	/// Constructor.
 	Miner(BlockChain const& _bc);
 	
 	/// Run miner with progress callback for completion status.
@@ -76,19 +77,19 @@ private:
 	/// Perform mining
 	void mine();
 	
-	BlockChain const& m_bc;
-	bool m_paranoia;
+	BlockChain const& m_bc;				///< Reference to BlockChain
+	bool m_paranoia;					///< Toggle paranoia; if enabled, enacts and verifies state and block before mining
 	
-	State m_minerState;
+	State m_minerState;					///< State which is being mined
 
-	MineInfo m_mineInfo;
-	MineProgress m_mineProgress;
-	std::list<MineInfo> m_mineHistory;
+	MineInfo m_mineInfo;				///< Current Dagger mining information.
+	MineProgress m_mineProgress;		///< Cumulative mining progress information.
+	std::list<MineInfo> m_mineHistory;	///< History of Dagger mining information.
 	
-	std::unique_ptr<std::thread> m_run;
-	std::recursive_mutex x_run;
-	std::mutex x_restart;
-	std::atomic<bool> m_stop;
+	std::unique_ptr<std::thread> m_run;	///< Thread which runs mine() and progress callback.
+	std::recursive_mutex x_run;			///< Recursive mutex for startup, start/stup, and status of m_run thread.
+	std::mutex m_restart;				///< Guards state of operational data members (primarily m_minerState).
+	std::atomic<bool> m_stop;			///< Setting to false stops running thread in threadsafe manner.
 };
 
 }

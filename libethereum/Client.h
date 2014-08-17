@@ -302,7 +302,7 @@ private:
 	void ensureWorking();
 	
 	/// Update statedb objects from new blocks (emitted by blockchain sync)
-	void sync(h256s newBlocks, OverlayDB &stateDB);
+	void sync(h256s _newBlocks, OverlayDB& _stateDB);
 
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
 	/// Insert any filters that are activated into @a o_changed.
@@ -331,7 +331,7 @@ private:
 	OverlayDB m_stateDB;					///< Acts as the central point for the state database, so multiple States can share it.
 	State m_preMine;						///< The present state of the client.
 	State m_postMine;						///< The state of the client which we're mining (i.e. it'll have all the rewards added).
-	std::unique_ptr<std::thread> m_run;
+	std::unique_ptr<std::thread> m_run;		///< Client thread (periodically runs ensureWorking)
 	mutable std::atomic<bool> m_stop;
 
 	mutable boost::shared_mutex x_net;		///< Lock for the network existance.
@@ -339,7 +339,7 @@ private:
 	
 	std::shared_ptr<Miner> m_miner;			///< Miner object (runs in background)
 
-	mutable std::mutex x_run;					///< Lock for run loop (ensureWorking).
+	mutable std::mutex x_run;				///< Lock for run loop (ensureWorking).
 	
 	bool m_paranoia = false;
 	bool m_doMine = false;					///< Are we supposed to be mining?

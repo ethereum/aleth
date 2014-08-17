@@ -107,7 +107,7 @@ public:
 	void restorePeers(bytesConstRef _b);
 
 private:
-	void peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> _s);
+	void peerEvent(PeerEvent _e, std::shared_ptr<PeerSession> const& _s);
 	void registerPeer(std::shared_ptr<PeerSession> _s);
 
 	/// Session wants to pass us a block that we might not have.
@@ -131,9 +131,9 @@ private:
 
 	std::map<Public, bi::tcp::endpoint> potentialPeers();
 
-	std::unique_ptr<std::thread> m_run;
-	mutable std::mutex x_run;
-	std::atomic<bool> m_stop;
+	std::unique_ptr<std::thread> m_run;		///< Thread which periodically clalls process() and sync().
+	mutable std::mutex x_run;				///< Ensure a single thread and state (start or stop).
+	std::atomic<bool> m_stop;				///< Setting to false stops running thread in threadsafe manner.
 	
 	std::string m_clientVersion;
 	NodeMode m_mode = NodeMode::Full;

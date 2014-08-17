@@ -63,7 +63,12 @@ public:
 	BlockChain(std::string _path, bool _killExisting = false);
 	~BlockChain();
 
-	/// Continously sync from blockqueue (?signalled by conditional variable)
+	/** @brief Continously syncs blockqueue and calls @arg _cb with h256s of new blocks and a post-commited OveryDB.
+	 * Creates a thread which poll blockqueue for updates. When new blocks are
+	 * in queue they will be sync'd and _cb will be called with new blocks and
+	 * updated statedb.
+	 * @todo signal via std::cond_var or other non-polling method; investigate removing _stateDB from _cb
+	 */
 	void run(BlockQueue& _bq, OverlayDB const& _stateDB, std::function<void(h256s _newBlocks, OverlayDB& _stateDB)> _cb);
 	
 	/// @returns if blockchain is running
@@ -160,7 +165,7 @@ private:
 
 	std::unique_ptr<std::thread> m_run;
 	std::mutex x_run;
-	std::recursive_mutex x_sync;
+	std::recursive_mutex m_sync;
 	std::atomic<bool> m_stop;
 	
 	void checkConsistency();

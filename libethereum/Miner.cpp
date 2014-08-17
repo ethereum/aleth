@@ -45,7 +45,7 @@ void Miner::run(State _s, std::function<void(MineProgress _progress, bool _compl
 			m_stop.store(false, std::memory_order_release);
 			while (!m_stop.load(std::memory_order_acquire))
 			{
-				lock_guard<std::mutex> ml(x_restart);
+				lock_guard<std::mutex> ml(m_restart);
 				mine();
 
 				_progressCb(m_mineProgress, m_mineInfo.completed, std::ref(m_minerState));
@@ -69,7 +69,7 @@ bool Miner::running()
 
 void Miner::restart(State _s)
 {
-	lock_guard<std::mutex> l(x_restart);
+	lock_guard<std::mutex> l(m_restart);
 	m_minerState = _s;
 	
 	m_mineProgress.best = (double)-1;
