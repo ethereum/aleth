@@ -424,7 +424,7 @@ bool PeerServer::havePeer(Public _id) const
 		else
 			i = m_peers.erase(i);
 
-	return m_peers.count(_id);
+	return m_peers.count(_id) != 0;
 }
 
 bool PeerServer::ensureInitialised(TransactionQueue& _tq)
