@@ -458,13 +458,15 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 
 void PeerServer::noteHaveChain(std::shared_ptr<PeerSession> const& _from)
 {
-	Guard l(x_blocksNeeded);
 	auto td = _from->m_totalDifficulty;
 
 	if ((m_totalDifficultyOfNeeded && td < m_totalDifficultyOfNeeded) || td < m_chain->details().totalDifficulty)
 		return;
 
-	m_blocksNeeded = _from->m_neededBlocks;
+	{
+		Guard l(x_blocksNeeded);
+		m_blocksNeeded = _from->m_neededBlocks;
+	}
 
 	// Looks like it's the best yet for total difficulty. Set to download.
 	{

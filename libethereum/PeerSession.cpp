@@ -276,7 +276,7 @@ bool PeerSession::interpret(RLP const& _r)
 			}
 		}
 		RLPStream s;
-		sealAndSend(prep(s).appendList(n + 1).append(BlocksPacket).appendRaw(rlp));
+		sealAndSend(prep(s).appendList(n + 1).append(BlocksPacket).appendRaw(rlp, n));
 		break;
 	}
 	case BlocksPacket:
@@ -353,7 +353,9 @@ void PeerSession::ensureGettingChain()
 	{
 		RLPStream s;
 		prep(s);
-		s.appendList(m_askedBlocks.size() + 1) << GetBlocksPacket << m_askedBlocks;
+		s.appendList(m_askedBlocks.size() + 1) << GetBlocksPacket;
+		for (auto i: m_askedBlocks)
+			s << i;
 		sealAndSend(s);
 	}
 	else
