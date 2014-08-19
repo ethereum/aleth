@@ -356,7 +356,11 @@ void PeerServer::connect(std::string const& _addr, unsigned short _port) noexcep
 {
 	try
 	{
-		connect(bi::tcp::endpoint(bi::address::from_string(_addr), _port));
+		auto i = bi::tcp::resolver(m_ioService).resolve(bi::tcp::resolver::query(_addr, std::to_string(_port)));
+		if (i != bi::tcp::resolver::iterator())
+			connect(*i);
+		else
+			clog(NetConnect) << "No usable address found for " << _addr;
 	}
 	catch (exception const& e)
 	{
