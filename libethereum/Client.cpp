@@ -74,7 +74,39 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	m_vc.setOk();
-	work(true);
+	
+	m_miner.reset(new Miner(m_bc, [&, this](MineProgress _progress, bool _complete){
+		cworkin << "WORK";
+		m_mineProgress = _progress;
+
+		if (_complete)
+		{
+			cwork << "CHAIN <== postSTATE";
+			
+			h256Set changeds;
+			h256s hs;
+			{
+				WriteGuard l(x_stateDB);
+				hs = m_miner->completeMine(m_stateDB);
+			}
+
+			if (hs.size())
+			{
+				for (auto h: hs)
+					appendFromNewBlock(h, changeds);
+				changeds.insert(ChainChangedFilter);
+				//_changeds.insert(PendingChangedFilter);       // if we mined the new block, then we've probably reset the pending transactions.
+				
+				cwork << "noteChanged" << changeds.size() << "items";
+				noteChanged(changeds);
+				
+				// force full sync of blockchain which will restart() mining
+				flushTransactions();
+			}
+		}
+	}));
+	
+	work();
 }
 
 void Client::ensureWorking()
@@ -100,6 +132,8 @@ void Client::ensureWorking()
 
 Client::~Client()
 {
+	m_miner->stop();
+	
 	if (m_work)
 	{
 		if (m_workState.load(std::memory_order_acquire) == Active)
@@ -114,7 +148,7 @@ Client::~Client()
 
 void Client::flushTransactions()
 {
-	work(true);
+	work();
 }
 
 void Client::clearPending()
@@ -305,13 +339,24 @@ void Client::startMining()
 	ensureWorking();
 
 	m_doMine = true;
-	m_restartMining = true;
+	setForceMining(m_forceMining);
 }
 
 void Client::stopMining()
 {
 	m_doMine = false;
+	m_miner->stop();
 }
+
+void Client::setForceMining(bool _enable)
+{
+	m_forceMining = _enable;
+	if (_enable && m_doMine && !m_miner->running())
+		m_miner->restart(m_postMine);
+	else if (!_enable && !m_pendingCount && m_miner->running())
+		m_miner->stop();
+}
+
 
 void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
@@ -404,84 +449,13 @@ void Client::workNet()
 	this_thread::sleep_for(chrono::milliseconds(1));
 }
 
-void Client::work(bool _justQueue)
+void Client::work()
 {
 	cworkin << "WORK";
 	h256Set changeds;
 
-	// Do some mining.
-	if (!_justQueue && (m_pendingCount || m_forceMining))
-	{
-
-		// TODO: Separate "Miner" object.
-		if (m_doMine)
-		{
-			if (m_restartMining)
-			{
-				m_mineProgress.best = (double)-1;
-				m_mineProgress.hashes = 0;
-				m_mineProgress.ms = 0;
-				WriteGuard l(x_stateDB);
-				if (m_paranoia)
-				{
-					if (m_postMine.amIJustParanoid(m_bc))
-					{
-						cnote << "I'm just paranoid. Block is fine.";
-						m_postMine.commitToMine(m_bc);
-					}
-					else
-					{
-						cwarn << "I'm not just paranoid. Cannot mine. Please file a bug report.";
-						m_doMine = false;
-					}
-				}
-				else
-					m_postMine.commitToMine(m_bc);
-			}
-		}
-
-		if (m_doMine)
-		{
-			cwork << "MINE";
-			m_restartMining = false;
-
-			// Mine for a while.
-			MineInfo mineInfo = m_postMine.mine(100);
-
-			m_mineProgress.best = min(m_mineProgress.best, mineInfo.best);
-			m_mineProgress.current = mineInfo.best;
-			m_mineProgress.requirement = mineInfo.requirement;
-			m_mineProgress.ms += 100;
-			m_mineProgress.hashes += mineInfo.hashes;
-			WriteGuard l(x_stateDB);
-			m_mineHistory.push_back(mineInfo);
-			if (mineInfo.completed)
-			{
-				// Import block.
-				cwork << "COMPLETE MINE";
-				m_postMine.completeMine();
-				cwork << "CHAIN <== postSTATE";
-				h256s hs = m_bc.attemptImport(m_postMine.blockData(), m_stateDB);
-				if (hs.size())
-				{
-					for (auto h: hs)
-						appendFromNewBlock(h, changeds);
-					changeds.insert(ChainChangedFilter);
-					//changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
-				}
-			}
-		}
-		else
-		{
-			cwork << "SLEEP";
-			this_thread::sleep_for(chrono::milliseconds(100));
-		}
-	}
-	else
-	{
-		cwork << "SLEEP";
-		this_thread::sleep_for(chrono::milliseconds(100));
-	}
+	cwork << "SLEEP";
+	this_thread::sleep_for(chrono::milliseconds(100));
 
 	// Synchronise state to block chain.
 	// This should remove any transactions on our queue that are included within our state.
@@ -508,11 +482,12 @@ void Client::work(bool _justQueue)
 			m_stateDB = db;
 
 		cwork << "preSTATE <== CHAIN";
+		bool restartMining = false;
 		if (m_preMine.sync(m_bc) || m_postMine.address() != m_preMine.address())
 		{
 			if (m_doMine)
 				cnote << "New block on chain: Restarting mining operation.";
-			m_restartMining = true;	// need to re-commit to mine.
+			restartMining = true;	// need to re-commit to mine.
 			m_postMine = m_preMine;
 			changeds.insert(PendingChangedFilter);
 		}
@@ -528,9 +503,12 @@ void Client::work(bool _justQueue)
 
 			if (m_doMine)
 				cnote << "Additional transaction ready: Restarting mining operation.";
-			m_restartMining = true;
+			restartMining = true;
 		}
 		m_pendingCount = m_postMine.pending().size();
+		
+		if (m_doMine && restartMining && (m_pendingCount || m_forceMining))
+			m_miner->restart(m_postMine);
 	}
 
 	cwork << "noteChanged" << changeds.size() << "items";
