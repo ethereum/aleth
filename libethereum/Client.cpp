@@ -339,6 +339,9 @@ void Client::startMining()
 	ensureWorking();
 
 	m_doMine = true;
+	if (m_pendingCount && !m_miner->running())
+		m_miner->restart(m_postMine);
+	
 	setForceMining(m_forceMining);
 }
 
