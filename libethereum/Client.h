@@ -292,7 +292,7 @@ public:
 	std::list<MineInfo> miningHistory() { return m_miner->miningHistory(); }
 
 	bool forceMining() const { return m_forceMining; }
-	void setForceMining(bool _enable) { m_forceMining = _enable; }
+	void setForceMining(bool _enable);
 
 	/// Clears pending transactions. Just for debug use.
 	void clearPending();
@@ -339,8 +339,6 @@ private:
 	
 	std::shared_ptr<Miner> m_miner;			///< Miner object (runs in background)
 
-	mutable std::mutex x_run;				///< Lock for run loop (ensureWorking).
-	
 	bool m_paranoia = false;
 	bool m_doMine = false;					///< Are we supposed to be mining?
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?

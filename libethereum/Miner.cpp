@@ -26,92 +26,105 @@
 using namespace std;
 using namespace eth;
 
-Miner::Miner(BlockChain const& _bc):
+Miner::Miner(BlockChain& _bc, std::function<void(MineProgress _progress, bool _completed)> _progressCb):
 	m_bc(_bc),
+	m_progressCb(_progressCb),
 	m_paranoia(false),
+	m_mineProgress{(double)-1,0,0,0,0},
 	m_stop(true)
 {}
 
-void Miner::run(State _s, std::function<void(MineProgress _progress, bool _completed, State& _mined)> _progressCb)
-{
-	restart(_s);
-	
-	const char* c_threadName = "mine";
-	std::lock_guard<std::recursive_mutex> l(x_run);
-	if (!m_run.get())
-		m_run.reset(new thread([&, c_threadName, _progressCb]()
-		{
-			setThreadName(c_threadName);
-			m_stop.store(false, std::memory_order_release);
-			while (!m_stop.load(std::memory_order_acquire))
-			{
-				lock_guard<std::mutex> ml(m_restart);
-				mine();
-
-				_progressCb(m_mineProgress, m_mineInfo.completed, std::ref(m_minerState));
-
-				if (m_mineInfo.completed)
-				   m_stop.store(true, std::memory_order_release);
-			}
-		}));
-}
-
-bool Miner::running()
-{
-	std::lock_guard<std::recursive_mutex> l(x_run);
-	
-	// Cleanup thread if bad-block caused exit.
-	if (m_stop && m_run.get())
-		stop();
-	
-	return m_stop ? false : !!m_run.get();
-}
-
 void Miner::restart(State _s)
 {
-	lock_guard<std::mutex> l(m_restart);
-	m_minerState = _s;
+	State *s = new State(_s);
+	if (m_paranoia)
+	{
+		if (s->amIJustParanoid(m_bc))
+			cnote << "I'm just paranoid. Block is fine.";
+		else
+		{
+			cwarn << "I'm not just paranoid. Cannot mine. Please file a bug report.";
+			stop();
+			return;
+		}
+	}
+	s->commitToMine(m_bc);
+	m_minerState = std::shared_ptr<State>(s);
+	m_minedState.reset();
 	
 	m_mineProgress.best = (double)-1;
 	m_mineProgress.hashes = 0;
 	m_mineProgress.ms = 0;
 	
-	if (m_paranoia)
-	{
-		if (m_minerState.amIJustParanoid(m_bc))
-		{
-			cnote << "I'm just paranoid. Block is fine.";
-			m_minerState.commitToMine(m_bc);
-		}
-		else
-		{
-			cwarn << "I'm not just paranoid. Cannot mine. Please file a bug report.";
-			m_stop.store(true, std::memory_order_release);
-		}
-	}
-	else
-		m_minerState.commitToMine(m_bc);
+	mine();
+}
+
+bool Miner::running()
+{
+	return !m_stop;
 }
 
 void Miner::stop()
 {
-	std::lock_guard<std::recursive_mutex> l(x_run);
+	std::lock_guard<std::mutex> l(x_run);
 	m_stop.store(true, std::memory_order_release);
-	if (m_run.get())
-		m_run->join();
 	m_run = nullptr;
-};
+}
 
 void Miner::mine()
 {
-	cwork << "MINE";
-
-	// Mine for a while.
-	m_mineInfo = m_minerState.mine(100);
-	m_mineProgress.best = min(m_mineProgress.best, m_mineInfo.best);
-	m_mineProgress.current = m_mineInfo.best;
-	m_mineProgress.requirement = m_mineInfo.requirement;
-	m_mineProgress.ms += 100;
-	m_mineProgress.hashes += m_mineInfo.hashes;
-	m_mineHistory.push_back(MineInfo(m_mineInfo));
+	const char* c_threadName = "mine";
+	std::lock_guard<std::mutex> l(x_run);
+	m_stop.store(false, std::memory_order_release);
+	if (!m_run.get())
+	{
+		m_run.reset(new thread([&, c_threadName]()
+			{
+				setThreadName(c_threadName);
+				while (!m_stop.load(std::memory_order_acquire))
+				{
+					std::shared_ptr<State> s = m_minerState;
+					if (s.get())
+					{
+						cwork << "MINE";
+						m_mineInfo = s->mine(100);
+						m_mineProgress.best = min(m_mineProgress.best, m_mineInfo.best);
+						m_mineProgress.current = m_mineInfo.best;
+						m_mineProgress.requirement = m_mineInfo.requirement;
+						m_mineProgress.ms += 100;
+						m_mineProgress.hashes += m_mineInfo.hashes;
+						m_mineHistory.push_back(MineInfo(m_mineInfo));
+						
+						if (m_mineInfo.completed)
+						{
+							cwork << "COMPLETE MINE";
+							m_minedState = m_minerState;
+							State *prev = m_minerState.get();
+							m_progressCb(m_mineProgress, m_mineInfo.completed);
+							
+							// Stop if miner state wasn't changed by restart()
+							if (prev == m_minerState.get())
+								stop();
+						}
+						else
+							m_progressCb(m_mineProgress, m_mineInfo.completed);
+					}
+				}
+			}));
+		m_run->detach();
+	}
 }
+
+h256s Miner::completeMine(OverlayDB& _stateDB)
+{
+	h256s ret = h256s();
+	std::shared_ptr<State> s = m_minedState;
+	if (m_minedState.get() != nullptr)
+	{
+		m_minedState->completeMine();
+		ret = m_bc.attemptImport(m_minedState->blockData(), _stateDB);
+	}
+	
+	return ret;
+}
+

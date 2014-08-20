@@ -45,14 +45,17 @@ struct MineProgress
 	uint ms;
 };
 
+/**
+ * @brief Implements Miner.
+ * The miner will start a thread when there is work. When a block is found the
+ * _progressCb is called and is expected to restart the miner with new work when
+ * appropriate. _progressCb is also called every ~100ms with progress updates.
+ */
 class Miner: public std::enable_shared_from_this<Miner>
 {
 public:
-	/// Constructor.
-	Miner(BlockChain const& _bc);
-	
-	/// Run miner with progress callback for completion status.
-	void run(State _postMine, std::function<void(MineProgress _progress, bool _completed, State& _mined)> _progressCb);
+	/// Constructor. Progress callback is expected to call completeMine() and restart().
+	Miner(BlockChain& _bc, std::function<void(MineProgress _progress, bool _completed)> _progressCb);
 
 	/// Stop mining.
 	void stop();
@@ -60,7 +63,7 @@ public:
 	/// @returns if mining
 	bool running();
 	
-	/// Restart mining.
+	/// (Re)start mining.
 	void restart(State _postMine);
 	
 	/// Check block validity prior to mining.
@@ -72,24 +75,31 @@ public:
 	MineProgress miningProgress() const { return m_mineProgress; }
 	/// Get and clear the mining history.
 	std::list<MineInfo> miningHistory() { auto ret = m_mineHistory; m_mineHistory.clear(); return ret; }
+
+	/// Imports completed block; called within _progressCb after mining is complete.
+	h256s completeMine(OverlayDB& _stateDB);
 	
 private:
-	/// Perform mining
+	/// Called by restart; performs mining within thread and starts new thread when necessary
 	void mine();
 	
-	BlockChain const& m_bc;				///< Reference to BlockChain
-	bool m_paranoia;					///< Toggle paranoia; if enabled, enacts and verifies state and block before mining
-	
-	State m_minerState;					///< State which is being mined
+	BlockChain &m_bc;						///< BlockChain required by state when committing to mine block.
+	std::function<void(MineProgress _progress, bool _completed)> m_progressCb;	///< Called periodically and when mining is complete.
+
+	bool m_paranoia;						///< Toggle paranoia; if enabled, enacts and verifies state and block before mining.
+
+	// Shared pointers are used for state, as State does not copy block bytes which are
+	// needed for subsequent call to completeMine() and they're thread-safe.
+	std::shared_ptr<State> m_minerState;	///< State which is being mined.
+	std::shared_ptr<State> m_minedState;	///< State after mined block reaches required difficulty.
 
 	MineInfo m_mineInfo;				///< Current Dagger mining information.
 	MineProgress m_mineProgress;		///< Cumulative mining progress information.
 	std::list<MineInfo> m_mineHistory;	///< History of Dagger mining information.
 	
+	std::mutex x_run;					///< Guards m_run thread
 	std::unique_ptr<std::thread> m_run;	///< Thread which runs mine() and progress callback.
-	std::recursive_mutex x_run;			///< Recursive mutex for startup, start/stup, and status of m_run thread.
-	std::mutex m_restart;				///< Guards state of operational data members (primarily m_minerState).
-	std::atomic<bool> m_stop;			///< Setting to false stops running thread in threadsafe manner.
+	std::atomic<bool> m_stop;			///< Signals m_run thread to exit
 };
 
 }

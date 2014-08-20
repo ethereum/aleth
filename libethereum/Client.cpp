@@ -75,7 +75,31 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 		Defaults::setDBPath(_dbPath);
 	m_vc.setOk();
 
-	m_miner.reset(new Miner(m_bc));
+	m_miner.reset(new Miner(m_bc, [&](MineProgress _progress, bool _complete){
+		cworkin << "WORK";
+		m_mineProgress = _progress;
+		
+		if (_complete)
+		{
+			cwork << "CHAIN <== postSTATE";
+			
+			h256Set changeds;
+			h256s hs = m_miner->completeMine(m_stateDB);
+			if (hs.size())
+			{
+				for (auto h: hs)
+					appendFromNewBlock(h, changeds);
+				changeds.insert(ChainChangedFilter);
+				//_changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
+				
+				cwork << "noteChanged" << changeds.size() << "items";
+				noteChanged(changeds);
+				
+				// force full sync of blockchain which will restart() mining
+				this->flushTransactions();
+			}
+		}
+	}));
 	
 	// todo: shouldn't start threads from constructors
 	const char* c_threadName = "eth";
@@ -119,49 +143,12 @@ void Client::ensureWorking()
 	// run network
 	if (m_net.get())
 		m_net->run(m_tq, m_bq);
-	
-	// run mining
-	if (m_doMine && (m_forceMining || m_pendingCount) && !m_miner->running())
-		m_miner->run(m_postMine, [&](MineProgress _progress, bool _complete, State& _mined){
-			cworkin << "WORK";
-			m_mineProgress = _progress;
-			if (_complete)
-			{
-				cwork << "COMPLETE MINE";
-				
-				lock_guard<std::mutex> l(x_run);
-				
-				// TODO: is stop() still necessary if moved into BlockChain::run() callback?
-				m_bc.stop(); // prevent blockchain commiting state to disk
-				_mined.completeMine(); // commit to db
-				
-				h256Set changeds;
-				cwork << "CHAIN <== postSTATE";
-				h256s hs = m_bc.attemptImport(_mined.blockData(), m_stateDB);
-				if (hs.size())
-				{
-					for (auto h: hs)
-						appendFromNewBlock(h, changeds);
-					changeds.insert(ChainChangedFilter);
-					//_changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
-				}
-				
-				cwork << "noteChanged" << changeds.size() << "items";
-				noteChanged(changeds);
-				cworkout << "WORK";
-				
-				m_postMine = State(std::move(_mined));
-			}
-		});
-	else if (!m_doMine && m_miner->running())
-		m_miner->stop();
 }
 
 void Client::flushTransactions()
 {
 	// blockchain runtime will only sync when blockqueue is affected;
 	// call this method when transaction queue is modified
-	lock_guard<std::mutex> l(x_run);
 	m_bc.run(m_bq, m_stateDB, [&](h256s newBlocks, OverlayDB &stateDB){
 		sync(newBlocks, stateDB);
 	});
@@ -219,7 +206,7 @@ void Client::sync(h256s _newBlocks, OverlayDB& _stateDB)
 	}
 	m_pendingCount = m_postMine.pending().size();
 	
-	if (m_doMine && restartMining)
+	if (m_doMine && restartMining && (m_pendingCount || m_forceMining))
 		m_miner->restart(m_postMine);
 	
 	l.unlock();
@@ -382,11 +369,22 @@ void Client::connect(std::string const& _seedHost, unsigned short _port)
 void Client::startMining()
 {
 	m_doMine = true;
+	setForceMining(m_forceMining);
 }
 
 void Client::stopMining()
 {
 	m_doMine = false;
+	m_miner->stop();
+}
+
+void Client::setForceMining(bool _enable)
+{
+	m_forceMining = _enable;
+	if (_enable && m_doMine && !m_miner->running())
+		m_miner->restart(m_postMine);
+	else if (!_enable && !m_pendingCount && m_miner->running())
+		m_miner->stop();
 }
 
 void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
