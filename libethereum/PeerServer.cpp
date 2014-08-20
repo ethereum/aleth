@@ -356,16 +356,20 @@ void PeerServer::connect(std::string const& _addr, unsigned short _port) noexcep
 {
 	try
 	{
-		auto i = bi::tcp::resolver(m_ioService).resolve(bi::tcp::resolver::query(_addr, std::to_string(_port)));
-		if (i != bi::tcp::resolver::iterator())
-			connect(*i);
-		else
-			clog(NetConnect) << "No usable address found for " << _addr;
+		for (auto i = bi::tcp::resolver(m_ioService).resolve(bi::tcp::resolver::query(_addr, std::to_string(_port))); i != bi::tcp::resolver::iterator(); ++i)
+			try
+			{
+				connect(*i);
+			}
+			catch (exception const& e)
+			{
+				clog(NetConnect) << "Bad host: " << i->endpoint().address() << " (" << e.what() << ")";
+			}
 	}
 	catch (exception const& e)
 	{
 		// Couldn't connect
-		clog(NetConnect) << "Bad host " << _addr << " (" << e.what() << ")";
+		clog(NetConnect) << "Error resolving: " << _addr << " (" << e.what() << ")";
 	}
 }
 
