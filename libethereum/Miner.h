@@ -52,7 +52,7 @@ struct MineProgress
  * @fn completeMine() is to be called once a block is found.
  * If miner is not restarted from _progressCb the thread will terminate.
  * @threadsafe
- * @todo refactor redundant dagger/miner stats
+ * @todo signal from child->parent thread to wait on exit; refactor redundant dagger/miner stats
  */
 class Miner: public std::enable_shared_from_this<Miner>
 {
@@ -77,7 +77,7 @@ public:
 	/// Check the progress of the mining.
 	MineProgress miningProgress() const { return m_mineProgress; }
 	/// Get and clear the mining history.
-	std::list<MineInfo> miningHistory() { auto ret = m_mineHistory; m_mineHistory.clear(); return ret; }
+	std::list<MineInfo> miningHistory();
 
 	/// Imports completed block; usually called within _progressCb after mining is complete.
 	h256s completeMine(OverlayDB& _stateDB);
@@ -98,6 +98,7 @@ private:
 
 	MineInfo m_mineInfo;				///< Current Dagger mining information.
 	MineProgress m_mineProgress;		///< Cumulative mining progress information.
+	std::mutex x_mineHistory;			///< Guard insert and clear of m_mineHistory.
 	std::list<MineInfo> m_mineHistory;	///< History of Dagger mining information.
 	
 	std::mutex x_run;					///< Guards m_run thread

@@ -93,7 +93,11 @@ void Miner::mine()
 						m_mineProgress.requirement = m_mineInfo.requirement;
 						m_mineProgress.ms += 100;
 						m_mineProgress.hashes += m_mineInfo.hashes;
-						m_mineHistory.push_back(MineInfo(m_mineInfo));
+						
+						{
+							lock_guard<std::mutex> l(x_mineHistory);
+							m_mineHistory.push_back(m_mineInfo);
+						}
 						
 						if (m_mineInfo.completed)
 						{
@@ -113,6 +117,14 @@ void Miner::mine()
 			}));
 		m_run->detach();
 	}
+}
+
+std::list<MineInfo> Miner::miningHistory()
+{
+	lock_guard<std::mutex> l(x_mineHistory);
+	auto ret = m_mineHistory;
+	m_mineHistory.clear();
+	return ret;
 }
 
 h256s Miner::completeMine(OverlayDB& _stateDB)
