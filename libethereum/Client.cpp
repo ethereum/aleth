@@ -74,39 +74,44 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	m_vc.setOk();
-	
-	m_miner.reset(new Miner(m_bc, [&, this](MineProgress _progress, bool _complete){
-		cworkin << "WORK";
-		m_mineProgress = _progress;
 
-		if (_complete)
-		{
-			cwork << "CHAIN <== postSTATE";
-			
-			h256Set changeds;
-			h256s hs;
-			{
-				WriteGuard l(x_stateDB);
-				hs = m_miner->completeMine(m_stateDB);
-			}
-
-			if (hs.size())
-			{
-				for (auto h: hs)
-					appendFromNewBlock(h, changeds);
-				changeds.insert(ChainChangedFilter);
-				//_changeds.insert(PendingChangedFilter);       // if we mined the new block, then we've probably reset the pending transactions.
-				
-				cwork << "noteChanged" << changeds.size() << "items";
-				noteChanged(changeds);
-				
-				// force full sync of blockchain which will restart() mining
-				flushTransactions();
-			}
-		}
+	m_miner.reset(new Miner(m_bc, [this](MineProgress _progress, bool _complete){
+		minerDidUpdate(_progress, _complete);
 	}));
 	
 	work();
+}
+
+void Client::minerDidUpdate(MineProgress _progress, bool _complete)
+{
+	cworkin << "WORK";
+	m_mineProgress = _progress;
+
+	if (_complete)
+	{
+		cwork << "CHAIN <== postSTATE";
+		
+		h256Set changeds;
+		h256s hs;
+		{
+			WriteGuard l(x_stateDB);
+			hs = m_miner->completeMine(m_stateDB);
+		}
+		
+		if (hs.size())
+		{
+			for (auto h: hs)
+				appendFromNewBlock(h, changeds);
+			changeds.insert(ChainChangedFilter);
+			//_changeds.insert(PendingChangedFilter);       // if we mined the new block, then we've probably reset the pending transactions.
+			
+			cwork << "noteChanged" << changeds.size() << "items";
+			noteChanged(changeds);
+			
+			// force full sync of blockchain which will restart() mining
+			flushTransactions();
+		}
+	}
 }
 
 void Client::ensureWorking()

@@ -306,6 +306,9 @@ private:
 	/// Do some work on the network.
 	void workNet();
 
+	/// Passed to Miner constructor as callback for mining updates or completion.
+	void minerDidUpdate(MineProgress _progress, bool _complete);
+	
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
 	/// Insert any filters that are activated into @a o_changed.
 	void appendFromNewPending(h256 _pendingTransactionBloom, h256Set& o_changed) const;
