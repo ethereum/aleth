@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file PeerServer.h
+/** @file EthereumHost.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
@@ -28,9 +28,9 @@
 #include <memory>
 #include <utility>
 #include <thread>
+#include <libethential/Guards.h>
 #include <libethcore/CommonEth.h>
-#include "PeerNetwork.h"
-#include "Guards.h"
+#include "CommonNet.h"
 namespace ba = boost::asio;
 namespace bi = boost::asio::ip;
 
@@ -42,23 +42,23 @@ class TransactionQueue;
 class BlockQueue;
 
 /**
- * @brief The PeerServer class
+ * @brief The EthereumHost class
  * @warning None of this is thread-safe. You have been warned.
  */
-class PeerServer
+class EthereumHost
 {
-	friend class PeerSession;
+	friend class EthereumSession;
 
 public:
 	/// Start server, listening for connections on the given port.
-	PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, unsigned short _port, NodeMode _m = NodeMode::Full, std::string const& _publicAddress = std::string(), bool _upnp = true);
+	EthereumHost(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, unsigned short _port, NodeMode _m = NodeMode::Full, std::string const& _publicAddress = std::string(), bool _upnp = true);
 	/// Start server, listening for connections on a system-assigned port.
-	PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m = NodeMode::Full, std::string const& _publicAddress = std::string(), bool _upnp = true);
+	EthereumHost(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m = NodeMode::Full, std::string const& _publicAddress = std::string(), bool _upnp = true);
 	/// Start server, but don't listen.
-	PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m = NodeMode::Full);
+	EthereumHost(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m = NodeMode::Full);
 
 	/// Will block on network process events.
-	~PeerServer();
+	~EthereumHost();
 
 	/// Closes all peers.
 	void disconnectPeers();
@@ -105,14 +105,14 @@ public:
 	/// Deserialise the data and populate the set of known peers.
 	void restorePeers(bytesConstRef _b);
 
-	void registerPeer(std::shared_ptr<PeerSession> _s);
+	void registerPeer(std::shared_ptr<EthereumSession> _s);
 
 private:
 	/// Session wants to pass us a block that we might not have.
 	/// @returns true if we didn't have it.
 	bool noteBlock(h256 _hash, bytesConstRef _data);
 	/// Session has finished getting the chain of hashes.
-	void noteHaveChain(std::shared_ptr<PeerSession> const& _who);
+	void noteHaveChain(std::shared_ptr<EthereumSession> const& _who);
 	/// Called when the session has provided us with a new peer we can connect to.
 	void noteNewPeers() {}
 
@@ -132,7 +132,7 @@ private:
 	h256Set neededBlocks();
 
 	///	Check to see if the network peer-state initialisation has happened.
-	bool isInitialised() const { return m_latestBlockSent; }
+	virtual bool isInitialised() const { return m_latestBlockSent; }
 	/// Initialises the network peer-state, doing the stuff that needs to be once-only. @returns true if it really was first.
 	bool ensureInitialised(TransactionQueue& _tq);
 
@@ -155,7 +155,7 @@ private:
 	u256 m_networkId;
 
 	mutable std::mutex x_peers;
-	mutable std::map<Public, std::weak_ptr<PeerSession>> m_peers;	// mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
+	mutable std::map<Public, std::weak_ptr<EthereumSession>> m_peers;	// mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
 
 	mutable std::recursive_mutex m_incomingLock;
 	std::vector<bytes> m_incomingTransactions;

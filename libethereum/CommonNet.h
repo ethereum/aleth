@@ -45,8 +45,8 @@ static const eth::uint c_maxBlocksAsk = 16;	///< Maximum number of blocks we ask
 class OverlayDB;
 class BlockChain;
 class TransactionQueue;
-class PeerServer;
-class PeerSession;
+class EthereumHost;
+class EthereumSession;
 
 struct NetWarn: public LogChannel { static const char* name() { return "!N!"; } static const int verbosity = 0; };
 struct NetNote: public LogChannel { static const char* name() { return "*N*"; } static const int verbosity = 1; };

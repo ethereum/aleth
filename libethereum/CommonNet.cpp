@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "PeerNetwork.h"
+#include "CommonNet.h"
 using namespace std;
 using namespace eth;
 

@@ -14,14 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file PeerNetwork.cpp
+/** @file EthereumHost.cpp
  * @authors:
  *   Gav Wood <i@gavwood.com>
  *   Eric Lombrozo <elombrozo@gmail.com>
  * @date 2014
  */
 
-#include "PeerServer.h"
+#include "EthereumHost.h"
 
 #include <sys/types.h>
 #ifdef _WIN32
@@ -40,7 +40,7 @@
 #include "BlockChain.h"
 #include "TransactionQueue.h"
 #include "BlockQueue.h"
-#include "PeerSession.h"
+#include "EthereumSession.h"
 using namespace std;
 using namespace eth;
 
@@ -55,7 +55,7 @@ static const set<bi::address> c_rejectAddresses = {
 	{bi::address_v6::from_string("::")}
 };
 
-PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, unsigned short _port, NodeMode _m, string const& _publicAddress, bool _upnp):
+EthereumHost::EthereumHost(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, unsigned short _port, NodeMode _m, string const& _publicAddress, bool _upnp):
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(_port),
@@ -71,7 +71,7 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 	clog(NetNote) << "Id:" << toHex(m_key.address().ref().cropped(0, 4)) << "Mode: " << (_m == NodeMode::PeerServer ? "PeerServer" : "Full");
 }
 
-PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m, string const& _publicAddress, bool _upnp):
+EthereumHost::EthereumHost(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m, string const& _publicAddress, bool _upnp):
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(0),
@@ -90,7 +90,7 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 	clog(NetNote) << "Id:" << toHex(m_key.address().ref().cropped(0, 4)) << "Mode: " << (m_mode == NodeMode::PeerServer ? "PeerServer" : "Full");
 }
 
-PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m):
+EthereumHost::EthereumHost(std::string const& _clientVersion, BlockChain const& _ch, u256 _networkId, NodeMode _m):
 	m_clientVersion(_clientVersion),
 	m_mode(_m),
 	m_listenPort(0),
@@ -105,22 +105,22 @@ PeerServer::PeerServer(std::string const& _clientVersion, BlockChain const& _ch,
 	clog(NetNote) << "Id:" << toHex(m_key.address().ref().cropped(0, 4)) << "Mode: " << (m_mode == NodeMode::PeerServer ? "PeerServer" : "Full");
 }
 
-PeerServer::~PeerServer()
+EthereumHost::~EthereumHost()
 {
 	disconnectPeers();
 
 	for (auto i: m_peers)
-		if (shared_ptr<PeerSession> p = i.second.lock())
+		if (shared_ptr<EthereumSession> p = i.second.lock())
 			p->giveUpOnFetch();
 }
 
-void PeerServer::registerPeer(std::shared_ptr<PeerSession> _s)
+void EthereumHost::registerPeer(std::shared_ptr<EthereumSession> _s)
 {
 	Guard l(x_peers);
 	m_peers[_s->m_id] = _s;
 }
 
-void PeerServer::disconnectPeers()
+void EthereumHost::disconnectPeers()
 {
 	for (unsigned n = 0;; n = 0)
 	{
@@ -142,12 +142,12 @@ void PeerServer::disconnectPeers()
 	delete m_upnp;
 }
 
-unsigned PeerServer::protocolVersion()
+unsigned EthereumHost::protocolVersion()
 {
 	return c_protocolVersion;
 }
 
-void PeerServer::seal(bytes& _b)
+void EthereumHost::seal(bytes& _b)
 {
 	_b[0] = 0x22;
 	_b[1] = 0x40;
@@ -160,7 +160,7 @@ void PeerServer::seal(bytes& _b)
 	_b[7] = len & 0xff;
 }
 
-void PeerServer::determinePublic(string const& _publicAddress, bool _upnp)
+void EthereumHost::determinePublic(string const& _publicAddress, bool _upnp)
 {
 	if (_upnp)
 		try
@@ -202,7 +202,7 @@ void PeerServer::determinePublic(string const& _publicAddress, bool _upnp)
 	}
 }
 
-void PeerServer::populateAddresses()
+void EthereumHost::populateAddresses()
 {
 #ifdef _WIN32
 	WSAData wsaData;
@@ -277,7 +277,7 @@ void PeerServer::populateAddresses()
 #endif
 }
 
-std::map<Public, bi::tcp::endpoint> PeerServer::potentialPeers()
+std::map<Public, bi::tcp::endpoint> EthereumHost::potentialPeers()
 {
 	std::map<Public, bi::tcp::endpoint> ret;
 	if (!m_public.address().is_unspecified())
@@ -295,7 +295,7 @@ std::map<Public, bi::tcp::endpoint> PeerServer::potentialPeers()
 	return ret;
 }
 
-void PeerServer::ensureAccepting()
+void EthereumHost::ensureAccepting()
 {
 	if (m_accepting == false)
 	{
@@ -311,7 +311,7 @@ void PeerServer::ensureAccepting()
 					} catch (...){}
 					bi::address remoteAddress = m_socket.remote_endpoint().address();
 					// Port defaults to 0 - we let the hello tell us which port the peer listens to
-					auto p = std::make_shared<PeerSession>(this, std::move(m_socket), m_networkId, remoteAddress);
+					auto p = std::make_shared<EthereumSession>(this, std::move(m_socket), m_networkId, remoteAddress);
 					p->start();
 				}
 				catch (std::exception const& _e)
@@ -325,7 +325,7 @@ void PeerServer::ensureAccepting()
 	}
 }
 
-void PeerServer::connect(std::string const& _addr, unsigned short _port) noexcept
+void EthereumHost::connect(std::string const& _addr, unsigned short _port) noexcept
 {
 	try
 	{
@@ -338,7 +338,7 @@ void PeerServer::connect(std::string const& _addr, unsigned short _port) noexcep
 	}
 }
 
-void PeerServer::connect(bi::tcp::endpoint const& _ep)
+void EthereumHost::connect(bi::tcp::endpoint const& _ep)
 {
 	clog(NetConnect) << "Attempting connection to " << _ep;
 	bi::tcp::socket* s = new bi::tcp::socket(m_ioService);
@@ -359,7 +359,7 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 		}
 		else
 		{
-			auto p = make_shared<PeerSession>(this, std::move(*s), m_networkId, _ep.address(), _ep.port());
+			auto p = make_shared<EthereumSession>(this, std::move(*s), m_networkId, _ep.address(), _ep.port());
 			clog(NetConnect) << "Connected to " << _ep;
 			p->start();
 		}
@@ -367,7 +367,7 @@ void PeerServer::connect(bi::tcp::endpoint const& _ep)
 	});
 }
 
-h256Set PeerServer::neededBlocks()
+h256Set EthereumHost::neededBlocks()
 {
 	Guard l(x_blocksNeeded);
 	h256Set ret;
@@ -386,7 +386,7 @@ h256Set PeerServer::neededBlocks()
 	return ret;
 }
 
-bool PeerServer::havePeer(Public _id) const
+bool EthereumHost::havePeer(Public _id) const
 {
 	Guard l(x_peers);
 
@@ -400,7 +400,7 @@ bool PeerServer::havePeer(Public _id) const
 	return !!m_peers.count(_id);
 }
 
-bool PeerServer::ensureInitialised(TransactionQueue& _tq)
+bool EthereumHost::ensureInitialised(TransactionQueue& _tq)
 {
 	if (m_latestBlockSent == h256())
 	{
@@ -416,7 +416,7 @@ bool PeerServer::ensureInitialised(TransactionQueue& _tq)
 	return false;
 }
 
-bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
+bool EthereumHost::noteBlock(h256 _hash, bytesConstRef _data)
 {
 	Guard l(x_blocksNeeded);
 	m_blocksOnWay.erase(_hash);
@@ -429,7 +429,7 @@ bool PeerServer::noteBlock(h256 _hash, bytesConstRef _data)
 	return false;
 }
 
-bool PeerServer::sync(TransactionQueue& _tq, BlockQueue& _bq)
+bool EthereumHost::sync(TransactionQueue& _tq, BlockQueue& _bq)
 {
 	bool netChange = ensureInitialised(_tq);
 	
@@ -453,7 +453,7 @@ bool PeerServer::sync(TransactionQueue& _tq, BlockQueue& _bq)
 	return netChange;
 }
 
-void PeerServer::maintainTransactions(TransactionQueue& _tq, h256 _currentHash)
+void EthereumHost::maintainTransactions(TransactionQueue& _tq, h256 _currentHash)
 {
 	bool resendAll = (_currentHash != m_latestBlockSent);
 
@@ -481,7 +481,7 @@ void PeerServer::maintainTransactions(TransactionQueue& _tq, h256 _currentHash)
 			if (n)
 			{
 				RLPStream ts;
-				PeerSession::prep(ts);
+				EthereumSession::prep(ts);
 				ts.appendList(n + 1) << TransactionsPacket;
 				ts.appendRaw(b, n).swapOut(b);
 				seal(b);
@@ -492,7 +492,7 @@ void PeerServer::maintainTransactions(TransactionQueue& _tq, h256 _currentHash)
 		}
 }
 
-void PeerServer::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
+void EthereumHost::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 {
 	// Import new blocks
 	{
@@ -508,7 +508,7 @@ void PeerServer::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 	if (_currentHash != m_latestBlockSent)
 	{
 		RLPStream ts;
-		PeerSession::prep(ts);
+		EthereumSession::prep(ts);
 		bytes bs;
 		unsigned c = 0;
 		for (auto h: m_chain->treeRoute(m_latestBlockSent, _currentHash, nullptr, false, true))
@@ -533,7 +533,7 @@ void PeerServer::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 	m_latestBlockSent = _currentHash;
 }
 
-void PeerServer::growPeers()
+void EthereumHost::growPeers()
 {
 	Guard l(x_peers);
 	while (m_peers.size() < m_idealPeerCount)
@@ -544,7 +544,7 @@ void PeerServer::growPeers()
 			{
 				RLPStream s;
 				bytes b;
-				(PeerSession::prep(s).appendList(1) << GetPeersPacket).swapOut(b);
+				(EthereumSession::prep(s).appendList(1) << GetPeersPacket).swapOut(b);
 				seal(b);
 				for (auto const& i: m_peers)
 					if (auto p = i.second.lock())
@@ -567,29 +567,41 @@ void PeerServer::growPeers()
 	}
 }
 
-void PeerServer::noteHaveChain(std::shared_ptr<PeerSession> const& _from)
+void EthereumHost::noteHaveChain(std::shared_ptr<EthereumSession> const& _from)
 {
 	auto td = _from->m_totalDifficulty;
 
-	if ((m_totalDifficultyOfNeeded && td < m_totalDifficultyOfNeeded) || td < m_chain->details().totalDifficulty)
+	if (_from->m_neededBlocks.empty())
 		return;
 
+	clog(NetNote) << "Hash-chain COMPLETE:" << log2((double)_from->m_totalDifficulty) << "vs" << log2((double)m_chain->details().totalDifficulty) << "," << log2((double)m_totalDifficultyOfNeeded) << ";" << _from->m_neededBlocks.size() << " blocks, ends" << _from->m_neededBlocks.back().abridged();
+
+	if ((m_totalDifficultyOfNeeded && td < m_totalDifficultyOfNeeded) || td < m_chain->details().totalDifficulty)
 	{
-		Guard l(x_blocksNeeded);
-		m_blocksNeeded = _from->m_neededBlocks;
+		clog(NetNote) << "Difficulty of hashchain LOWER. Ignoring.";
+		return;
 	}
+
+	clog(NetNote) << "Difficulty of hashchain HIGHER. Replacing fetch queue.";
 
 	// Looks like it's the best yet for total difficulty. Set to download.
 	{
+		Guard l(x_blocksNeeded);
+		m_blocksNeeded = _from->m_neededBlocks;
+		m_blocksOnWay.clear();
+		m_totalDifficultyOfNeeded = td;
+	}
+
+	{
 		Guard l(x_peers);
 		for (auto const& i: m_peers)
-			if (shared_ptr<PeerSession> p = i.second.lock())
+			if (shared_ptr<EthereumSession> p = i.second.lock())
 				p->ensureGettingChain();
 	}
 }
 
 
-void PeerServer::prunePeers()
+void EthereumHost::prunePeers()
 {
 	Guard l(x_peers);
 	// We'll keep at most twice as many as is ideal, halfing what counts as "too young to kill" until we get there.
@@ -598,7 +610,7 @@ void PeerServer::prunePeers()
 		{
 			// look for worst peer to kick off
 			// first work out how many are old enough to kick off.
-			shared_ptr<PeerSession> worst;
+			shared_ptr<EthereumSession> worst;
 			unsigned agedPeers = 0;
 			for (auto i: m_peers)
 				if (auto p = i.second.lock())
@@ -621,11 +633,11 @@ void PeerServer::prunePeers()
 			i = m_peers.erase(i);
 }
 
-std::vector<PeerInfo> PeerServer::peers(bool _updatePing) const
+std::vector<PeerInfo> EthereumHost::peers(bool _updatePing) const
 {
 	Guard l(x_peers);
     if (_updatePing)
-        const_cast<PeerServer*>(this)->pingAll();
+		const_cast<EthereumHost*>(this)->pingAll();
 	this_thread::sleep_for(chrono::milliseconds(200));
 	std::vector<PeerInfo> ret;
 	for (auto& i: m_peers)
@@ -635,7 +647,7 @@ std::vector<PeerInfo> PeerServer::peers(bool _updatePing) const
 	return ret;
 }
 
-void PeerServer::pingAll()
+void EthereumHost::pingAll()
 {
 	Guard l(x_peers);
 	for (auto& i: m_peers)
@@ -643,7 +655,7 @@ void PeerServer::pingAll()
 			j->ping();
 }
 
-bytes PeerServer::savePeers() const
+bytes EthereumHost::savePeers() const
 {
 	Guard l(x_peers);
 	RLPStream ret;
@@ -658,7 +670,7 @@ bytes PeerServer::savePeers() const
 	return RLPStream(n).appendRaw(ret.out(), n).out();
 }
 
-void PeerServer::restorePeers(bytesConstRef _b)
+void EthereumHost::restorePeers(bytesConstRef _b)
 {
 	for (auto i: RLP(_b))
 	{
