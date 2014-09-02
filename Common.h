@@ -14,21 +14,43 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Whisper.cpp
+/** @file Common.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Whisper.h"
+#pragma once
 
+#include <string>
+#include <chrono>
+#include <libethential/Common.h>
 #include <libethential/Log.h>
-using namespace std;
-using namespace eth;
+#include <libethcore/CommonEth.h>
+#include <libethnet/Common.h>
 
-Whisper::Whisper()
+namespace shh
 {
-}
 
-Whisper::~Whisper()
+using h256 = eth::h256;
+using h512 = eth::h512;
+using h256s = eth::h256s;
+using bytes = eth::bytes;
+using RLPStream = eth::RLPStream;
+using RLP = eth::RLP;
+using bytesRef = eth::bytesRef;
+using bytesConstRef = eth::bytesConstRef;
+using h256Set = eth::h256Set;
+
+class WhisperHost;
+class WhisperPeer;
+class Whisper;
+
+enum WhisperPacket
 {
+	StatusPacket = 0x20,
+	MessagesPacket,
+	AddFilterPacket,
+	RemoveFilterPacket
+};
+
 }
