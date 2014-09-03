@@ -26,7 +26,7 @@
 #include <libethential/Common.h>
 #include <libethential/Log.h>
 #include <libethcore/CommonEth.h>
-#include <libp2p/Common.h>
+#include <libp2p/Capability.h>
 
 namespace shh
 {
