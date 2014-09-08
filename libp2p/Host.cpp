@@ -447,8 +447,10 @@ std::vector<PeerInfo> Host::peers(bool _updatePing) const
 {
 	Guard l(x_peers);
     if (_updatePing)
+	{
 		const_cast<Host*>(this)->pingAll();
-	this_thread::sleep_for(chrono::milliseconds(200));
+		this_thread::sleep_for(chrono::milliseconds(200));
+	}
 	std::vector<PeerInfo> ret;
 	for (auto& i: m_peers)
 		if (auto j = i.second.lock())

@@ -10,6 +10,7 @@ add_executable(testeth ${SRC_LIST})
 
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)
+target_link_libraries(testeth ethereumx)
 target_link_libraries(testeth secp256k1)
 target_link_libraries(testeth gmp)
 target_link_libraries(testeth ${CRYPTOPP_LS})

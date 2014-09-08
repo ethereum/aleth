@@ -16,6 +16,7 @@
 */
 /** @file Ethereum.h
  * @author Gav Wood <i@gavwood.com>
+ * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
  */
 
@@ -25,16 +26,19 @@
 #include <mutex>
 #include <list>
 #include <atomic>
+#include <deque>
 #include <boost/utility.hpp>
-#include <libethential/Common.h>
-#include <libethential/CommonIO.h>
-#include <libethential/Guards.h>
+#include <boost/asio/deadline_timer.hpp>
+#include <libdevcore/Common.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/Guards.h>
 #include <libevm/FeeStructure.h>
 #include <libp2p/Common.h>
 #include <libethcore/Dagger.h>
 #include <libethereum/PastMessage.h>
 #include <libethereum/MessageFilter.h>
 #include <libethereum/CommonNet.h>
+#include "Common.h"
 
 namespace dev
 {
@@ -42,6 +46,7 @@ namespace eth
 {
 
 class Client;
+class EthereumSession;
 
 /**
  * @brief Main API hub for interfacing with Ethereum.
@@ -49,10 +54,23 @@ class Client;
  * instances, cross-process.
  *
  * Other than that, it provides much the same subset of functionality as Client.
+ *
+ * Client requests are synchronous and expect a response from the server before returning.
+ *
+ * Ethx Wire Protocol:
+ * The RPC Server is a serial request/response protocol. Request and response packets have
+ * the same structure with the exception that the response packet type is generic (success or failure).
+ *
+ * Packets consists of a 4-byte length header followed by RLP.
+ * The RLP is a 2-item list; the 1st item is the packet type and 2nd is serialized RLP of the request or response.
+ *
+ * When an RPC Client connects the server expects a RequestVersion packet to be sent by the client.
+ *
  */
-class Ethereum
+class Ethereum: public std::enable_shared_from_this<Ethereum>
 {
 	friend class Miner;
+	friend class EthereumSession;
 
 public:
 	/// Constructor. After this, everything should be set up to go.
@@ -60,7 +78,12 @@ public:
 
 	/// Destructor.
 	~Ethereum();
+	
+	unsigned socketId() const { return m_socket.native_handle(); }
 
+	/// Check to see if the client connection is open.
+	bool clientConnectionOpen() const;
+	
 	/// Submits the given message-call transaction.
 	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
 
@@ -120,7 +143,8 @@ public:
 	u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }
 #endif
 	// Network stuff:
-
+	
+	
 	/// Get information on the current peer set.
 	std::vector<p2p::PeerInfo> peers();
 	/// Same as peers().size(), but more efficient.
@@ -130,16 +154,44 @@ public:
 	void connect(std::string const& _seedHost, unsigned short _port = 30303);
 
 private:
-	/// Ensure that through either the client or the
+	/// Ensure that through either an rpc connection to server or, if directly from client if acting server
 	void ensureReady();
-	/// Check to see if the client/server connection is open.
-	bool connectionOpen() const;
-	/// Start the API client.
+	/// Start the API client. (connects to local RPC server)
 	void connectToRPCServer();
 	/// Start the API server.
 	void startRPCServer();
+	/// Responds to requests and continuously dispatches socket acceptor until shutdown.
+	void runServer();
+	/// @returns if instance is server
+	bool isServer() const { std::lock_guard<std::mutex> l(x_client); return !!m_client.get(); }
+	
+	/// @returns if RLP message size is valid and matches length from 4-byte header
+	bool checkPacket(bytesConstRef _msg) const;
+	
+	/// Send request from client to server and @return response. I/O is blocking and serialized by x_socket mutex.
+	/// If server goes away midrequest, server-start and/or client connection is restarted;
+	/// RPCServerWentAway will be thrown and calling-method must retry request.
+	/// RPCInvalidResponse is thrown if checkPacket fails or RLP message !isList()
+	/// RPCRemoteException is thrown if RLP contains remote exception (this will change)
+	bytes sendRequest(RPCRequestPacketType _type, RLP const& _rlp) const;
 
-	std::unique_ptr<Client> m_client;
+	// RCP Shared:
+	bi::tcp::endpoint m_endpoint;								///< Endpoint of 127.0.0.1:30310
+	
+	// RPC Server:
+	boost::asio::io_service m_ioService;						///< Service for I/O. Only used by server at this time; client uses sync/blocking calls.
+	std::unique_ptr<Client> m_client;							///< Ethereum Client, created when isServer(). (RPC Server)
+	mutable std::mutex x_client;								///< m_client mutex. (RPC Server)
+	std::thread m_serverThread;								///< Thread for IO polling, created when isServer(). (RPC Server)
+	boost::asio::ip::tcp::acceptor m_acceptor;					///< Socket acceptor for incoming client connection.
+	std::vector<std::weak_ptr<EthereumSession>> m_sessions;	///< Client sessions. (RPC Server)
+	std::mutex x_sessions;									///< m_sessions mutex. (RPC Server)
+	std::atomic<bool> m_shutdown;								///< Signals Ethereum to shutdown; prevents switching roles when sockets are closed.
+
+	// RPC Client:
+	mutable boost::asio::ip::tcp::socket m_socket;				///< Socket for local or remote connection.
+	mutable std::mutex x_socket;								///< Currently used to serialize requests.
+	mutable std::atomic<int> m_pendingRequests;				///< Tracks pending client I/O. Destructor will not close socket until 0.
 
 	int m_default = -1;
 };
