@@ -56,9 +56,12 @@ BOOST_AUTO_TEST_CASE(ethx_test_server_going_away)
 	size_t c3peerCount = client3->peerCount();
 	cnote << "ethx: client3 peerCount()" << c3peerCount;
 	
+	client3->connect("54.76.56.74");
 	client3->flushTransactions();
+
+	cnote << "ethx: Connected peerCount()" << client3->peerCount();
 	
-	usleep(100 * 1000);
+	usleep(2000 * 1000);
 	
 	delete client2;
 	delete client3;

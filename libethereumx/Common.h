@@ -24,7 +24,7 @@
 
 #include <libdevcore/Exceptions.h>
 
-#define clogS(X) LogOutputStream<X, true>(false) << "| " << std::setw(2) << socketId() << "] "
+#define clogS(X) LogOutputStream<X, true>(true)
 
 namespace dev
 {

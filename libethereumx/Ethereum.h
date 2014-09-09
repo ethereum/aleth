@@ -24,20 +24,18 @@
 
 #include <thread>
 #include <mutex>
-#include <list>
 #include <atomic>
-#include <deque>
 #include <boost/utility.hpp>
 #include <boost/asio/deadline_timer.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
-#include <libevm/FeeStructure.h>
-#include <libp2p/Common.h>
-#include <libethcore/Dagger.h>
+//#include <libevm/FeeStructure.h>
+//#include <libethcore/Dagger.h>
 #include <libethereum/PastMessage.h>
 #include <libethereum/MessageFilter.h>
-#include <libethereum/CommonNet.h>
+//#include <libethereum/CommonNet.h>
+#include <libp2p/Common.h>
 #include "Common.h"
 
 namespace dev
@@ -67,9 +65,8 @@ class EthereumSession;
  * When an RPC Client connects the server expects a RequestVersion packet to be sent by the client.
  *
  */
-class Ethereum: public std::enable_shared_from_this<Ethereum>
+class Ethereum
 {
-	friend class Miner;
 	friend class EthereumSession;
 
 public:
@@ -78,8 +75,6 @@ public:
 
 	/// Destructor.
 	~Ethereum();
-	
-	unsigned socketId() const { return m_socket.native_handle(); }
 
 	/// Check to see if the client connection is open.
 	bool clientConnectionOpen() const;
@@ -151,7 +146,7 @@ public:
 	size_t peerCount() const;
 
 	/// Connect to a particular peer.
-	void connect(std::string const& _seedHost, unsigned short _port = 30303);
+	void connect(std::string const& _host, unsigned short _port = 30303);
 
 private:
 	/// Ensure that through either an rpc connection to server or, if directly from client if acting server

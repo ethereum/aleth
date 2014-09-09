@@ -186,8 +186,16 @@ bool EthereumSession::interpretRequest(RLP const& _r)
 				
 			case ConnectToPeer:
 			{
-				std::string host = _r[0].toString();
-				unsigned short port = (short)_r[1].toInt();
+				try
+				{
+					std::string host = _r[1][0].toString();
+					unsigned short port = (short)_r[1][1].toInt();
+					m_ethereum->connect(host, port);
+				}
+				catch(Exception const& _e)
+				{
+					throw _e;
+				}
 				
 				break;
 			}

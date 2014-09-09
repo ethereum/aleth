@@ -359,28 +359,35 @@ size_t Ethereum::peerCount() const
 			}
 }
 
-void Ethereum::connect(std::string const& _seedHost, unsigned short _port)
+void Ethereum::connect(std::string const& _host, unsigned short _port)
 {
 	// RequestConnectionToPeer
-//	while (true)
-//		if (isServer())
-//			return m_client->connect(_seedHost, _port);
-//		else
-//			try
-//			{
-//				RLPStream s(2);
-//				s << _seedHost;
-//				s.append(_port);
-//
-//				sendRequest(ConnectToPeer, RLP(s.out()));
-//				return;
-//			}
-//			catch (RPCServerWentAway const&){} // try again
-//			catch (std::exception const& _e)
-//			{
-//				// RPCRemoteException, RPCInvalidResponse, or other
-//				throw _e;
-//			}
+	while (true)
+		if (isServer())
+		{
+			if (!m_client->haveNetwork())
+				m_client->startNetwork(30303, _host, _port);
+			else
+				m_client->connect(_host, _port);
+			
+			return;
+		}
+		else
+			try
+			{
+				RLPStream s(2);
+				s.append(_host);
+				s.append(_port);
+
+				sendRequest(ConnectToPeer, RLP(s.out()));
+				return;
+			}
+			catch (RPCServerWentAway const&){} // try again
+			catch (std::exception const& _e)
+			{
+				// RPCRemoteException, RPCInvalidResponse, or other
+				throw _e;
+			}
 }
 
 void Ethereum::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
