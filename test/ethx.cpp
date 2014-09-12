@@ -25,7 +25,24 @@
 
 #include <libethereumx/Ethereum.h>
 
+#include <libwebthree/WebThreeServer.h>
+
+using namespace dev;
 using namespace dev::eth;
+
+
+BOOST_AUTO_TEST_SUITE( webthree_server )
+
+BOOST_AUTO_TEST_CASE(test_webthree_server_lifecycle)
+{
+	WebThreeServer s;
+	s.setMessageHandler(WebThreeService, [=](RLP const& _request){
+		
+	});
+}
+
+BOOST_AUTO_TEST_SUITE_END() // webthree_server
+
 
 BOOST_AUTO_TEST_CASE(ethx_test_server_going_away)
 {

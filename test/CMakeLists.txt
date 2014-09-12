@@ -8,6 +8,7 @@ link_directories(../libethereum)
 
 add_executable(testeth ${SRC_LIST})
 
+target_link_libraries(testeth webthree)
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)
 target_link_libraries(testeth ethereumx)
