@@ -44,6 +44,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, u256 _networkId):
 	m_chain		(&_ch),
 	m_networkId	(_networkId)
 {
+	m_latestBlockSent = _ch.currentHash();
 }
 
 EthereumHost::~EthereumHost()
@@ -78,7 +79,7 @@ h256Set EthereumHost::neededBlocks(h256Set const& _exclude)
 
 bool EthereumHost::ensureInitialised(TransactionQueue& _tq)
 {
-	if (m_latestBlockSent == h256())
+	if (!m_latestBlockSent)
 	{
 		// First time - just initialise.
 		m_latestBlockSent = m_chain->currentHash();
@@ -97,7 +98,10 @@ void EthereumHost::noteDoneBlocks()
 	if (m_blocksOnWay.empty())
 	{
 		// Done our chain-get.
-		clog(NetNote) << "No more blocks coming. Missing" << m_blocksNeeded.size() << "blocks.";
+		if (m_blocksNeeded.size())
+			clog(NetNote) << "No more blocks coming. Missing" << m_blocksNeeded.size() << "blocks.";
+		else
+			clog(NetNote) << "No more blocks to get.";
 		m_latestBlockSent = m_chain->currentHash();
 	}
 }
@@ -192,7 +196,7 @@ void EthereumHost::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 			bs += m_chain->block(h);
 			++c;
 		}
-		clog(NetNote) << "Sending" << c << "new blocks (current is" << _currentHash << ", was" << m_latestBlockSent << ")";
+		clog(NetMessageSummary) << "Sending" << c << "new blocks (current is" << _currentHash << ", was" << m_latestBlockSent << ")";
 		ts.appendList(1 + c).append(BlocksPacket).appendRaw(bs, c);
 		bytes b;
 		ts.swapOut(b);

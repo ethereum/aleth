@@ -39,6 +39,7 @@
 #include "PastMessage.h"
 #include "MessageFilter.h"
 #include "Miner.h"
+#include "Interface.h"
 
 namespace dev
 {
@@ -107,13 +108,16 @@ struct WorkChannel: public LogChannel { static const char* name() { return "-W-"
 /**
  * @brief Main API hub for interfacing with Ethereum.
  */
-class Client: public MinerHost
+class Client: public MinerHost, public Interface
 {
 	friend class Miner;
 
 public:
-	/// Constructor.
+	/// Original Constructor.
 	explicit Client(std::string const& _clientVersion, Address _us = Address(), std::string const& _dbPath = std::string(), bool _forceClean = false);
+
+	/// New-style Constructor.
+	explicit Client(p2p::Host* _host, std::string const& _dbPath = std::string(), bool _forceClean = false, u256 _networkId = 0);
 
 	/// Destructor.
 	~Client();
@@ -138,14 +142,11 @@ public:
 
 	// [NEW API]
 
-	int getDefault() const { return m_default; }
-	void setDefault(int _block) { m_default = _block; }
-
-	u256 balanceAt(Address _a) const { return balanceAt(_a, m_default); }
-	u256 countAt(Address _a) const { return countAt(_a, m_default); }
-	u256 stateAt(Address _a, u256 _l) const { return stateAt(_a, _l, m_default); }
-	bytes codeAt(Address _a) const { return codeAt(_a, m_default); }
-	std::map<u256, u256> storageAt(Address _a) const { return storageAt(_a, m_default); }
+	using Interface::balanceAt;
+	using Interface::countAt;
+	using Interface::stateAt;
+	using Interface::codeAt;
+	using Interface::storageAt;
 
 	u256 balanceAt(Address _a, int _block) const;
 	u256 countAt(Address _a, int _block) const;
@@ -164,21 +165,21 @@ public:
 
 	// [EXTRA API]:
 
+	/// @returns the length of the chain.
+	virtual unsigned number() const { return m_bc.number(); }
+
 	/// Get a map containing each of the pending transactions.
 	/// @TODO: Remove in favour of transactions().
 	Transactions pending() const { return m_postMine.pending(); }
 
 	/// Differences between transactions.
-	StateDiff diff(unsigned _txi) const { return diff(_txi, m_default); }
+	using Interface::diff;
 	StateDiff diff(unsigned _txi, h256 _block) const;
 	StateDiff diff(unsigned _txi, int _block) const;
 
 	/// Get a list of all active addresses.
-	std::vector<Address> addresses() const { return addresses(m_default); }
+	using Interface::addresses;
 	std::vector<Address> addresses(int _block) const;
-
-	/// Get the fee associated for a transaction with the given data.
-	static u256 txGas(unsigned _dataCount, u256 _gas = 0) { return c_txDataGas * _dataCount + c_txGas + _gas; }
 
 	/// Get the remaining gas limit in this block.
 	u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }
@@ -256,8 +257,14 @@ public:
 	/// Get and clear the mining history.
 	std::list<MineInfo> miningHistory();
 
+	// Debug stuff:
+
+	/// Sets the network id.
+	void setNetworkId(u256 _n);
 	/// Clears pending transactions. Just for debug use.
 	void clearPending();
+	/// Kills the blockchain. Just for debug use.
+	void killChain();
 
 private:
 	/// Ensure the worker thread is running. Needed for blockchain maintenance & mining.
@@ -309,6 +316,8 @@ private:
 	mutable boost::shared_mutex x_net;		///< Lock for the network existance.
 	std::unique_ptr<p2p::Host> m_net;		///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 
+	std::weak_ptr<EthereumHost> m_extHost;	///< Our Ethereum Host. Don't do anything if we can't lock.
+
 	std::unique_ptr<std::thread> m_work;	///< The work thread.
 	std::atomic<ClientWorkState> m_workState;
 
@@ -321,51 +330,7 @@ private:
 	mutable std::mutex m_filterLock;
 	std::map<h256, InstalledFilter> m_filters;
 	std::map<unsigned, ClientWatch> m_watches;
-
-	int m_default = -1;
-};
-
-class Watch;
-
-}
-}
-
-namespace std { void swap(dev::eth::Watch& _a, dev::eth::Watch& _b); }
-
-namespace dev
-{
-namespace eth
-{
-
-class Watch: public boost::noncopyable
-{
-	friend void std::swap(Watch& _a, Watch& _b);
-
-public:
-	Watch() {}
-	Watch(Client& _c, h256 _f): m_c(&_c), m_id(_c.installWatch(_f)) {}
-	Watch(Client& _c, MessageFilter const& _tf): m_c(&_c), m_id(_c.installWatch(_tf)) {}
-	~Watch() { if (m_c) m_c->uninstallWatch(m_id); }
-
-	bool check() { return m_c ? m_c->checkWatch(m_id) : false; }
-	bool peek() { return m_c ? m_c->peekWatch(m_id) : false; }
-	PastMessages messages() const { return m_c->messages(m_id); }
-
-private:
-	Client* m_c;
-	unsigned m_id;
 };
 
 }
-}
-
-namespace std
-{
-
-inline void swap(dev::eth::Watch& _a, dev::eth::Watch& _b)
-{
-	swap(_a.m_c, _b.m_c);
-	swap(_a.m_id, _b.m_id);
-}
-
 }
