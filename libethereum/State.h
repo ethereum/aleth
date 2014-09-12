@@ -280,6 +280,11 @@ public:
 	/// the block since all state changes are ultimately reversed.
 	void cleanup(bool _fullCommit);
 
+
+    /// Dump current state to a file in json format
+    /// comparable with other clients
+    void dumpToFile();
+
 private:
 	/// Undo the changes to the state for committing to mine.
 	void uncommitToMine();
@@ -350,6 +355,8 @@ private:
 	static std::string c_defaultPath;
 
 	friend std::ostream& operator<<(std::ostream& _out, State const& _s);
+
+
 };
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);

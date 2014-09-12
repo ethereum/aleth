@@ -168,7 +168,7 @@ class Client
 {
 public:
 	/// Constructor.
-	explicit Client(std::string const& _clientVersion, Address _us = Address(), std::string const& _dbPath = std::string(), bool _forceClean = false);
+	explicit Client(std::string const& _clientVersion, Address _us = Address(), std::string const& _dbPath = std::string(), bool _forceClean = false, bool _dumping = false);
 
 	/// Destructor.
 	~Client();
@@ -284,6 +284,8 @@ public:
 	Address address() const { return m_preMine.address(); }
 	/// Start mining.
 	void startMining();
+    /// Start dumping.
+    void startDumping();
 	/// Stop mining.
 	void stopMining();
 	/// Are we mining now?
@@ -351,6 +353,7 @@ private:
 	bool m_paranoia = false;
 	bool m_doMine = false;					///< Are we supposed to be mining?
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
+    bool m_dumping = false;
 	MineProgress m_mineProgress;
 	std::list<MineInfo> m_mineHistory;
 	mutable bool m_restartMining = false;

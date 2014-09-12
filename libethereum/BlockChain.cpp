@@ -28,10 +28,13 @@
 #include <libethcore/Exceptions.h>
 #include <libethcore/Dagger.h>
 #include <libethcore/BlockInfo.h>
+#include <json_spirit/json_spirit_writer_template.h>
 #include "State.h"
 #include "Defaults.h"
 using namespace std;
 using namespace eth;
+using namespace json_spirit;
+
 
 #define ETH_CATCH 1
 
@@ -106,7 +109,7 @@ bytes BlockChain::createGenesisBlock()
 	return block.out();
 }
 
-BlockChain::BlockChain(std::string _path, bool _killExisting)
+BlockChain::BlockChain(std::string _path, bool _killExisting, bool _dumping)
 {
 	if (_path.empty())
 		_path = Defaults::get()->m_dbPath;
@@ -116,6 +119,8 @@ BlockChain::BlockChain(std::string _path, bool _killExisting)
 		boost::filesystem::remove_all(_path + "/blocks");
 		boost::filesystem::remove_all(_path + "/details");
 	}
+
+    m_dumping = _dumping;
 
 	ldb::Options o;
 	o.create_if_missing = true;
@@ -257,6 +262,7 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 		// Check transactions are valid and that they result in a state equivalent to our state_root.
 		// Get total difficulty increase and update state, checking it.
 		State s(bi.coinbaseAddress, _db);
+
 		auto tdIncrease = s.enactOn(&_block, bi, *this);
 		auto b = s.bloom();
 		BlockBlooms bb;
@@ -296,6 +302,13 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 #if ETH_PARANOIA
 		checkConsistency();
 #endif
+
+
+        /// if -dmp set dump to a file
+        if (m_dumping){
+            s.dumpToFile();
+        }
+
 	}
 #if ETH_CATCH
 	catch (Exception const& _e)
@@ -326,6 +339,10 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 	{
 		clog(BlockChainNote) << "   Imported but not best (oTD:" << details(last).totalDifficulty << ", TD:" << td << ")";
 	}
+
+
+
+
 	return ret;
 }
 
@@ -415,3 +432,6 @@ h256 BlockChain::numberHash(unsigned _n) const
 	for (; _n < details().number; ++_n, ret = details(ret).parent) {}
 	return ret;
 }
+
+
+

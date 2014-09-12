@@ -62,10 +62,10 @@ void VersionChecker::setOk()
 	}
 }
 
-Client::Client(std::string const& _clientVersion, Address _us, std::string const& _dbPath, bool _forceClean):
+Client::Client(std::string const& _clientVersion, Address _us, std::string const& _dbPath, bool _forceClean, bool _dumping):
 	m_clientVersion(_clientVersion),
 	m_vc(_dbPath),
-	m_bc(_dbPath, !m_vc.ok() || _forceClean),
+	m_bc(_dbPath, !m_vc.ok() || _forceClean, _dumping),
 	m_stateDB(State::openDB(_dbPath, !m_vc.ok() || _forceClean)),
 	m_preMine(_us, m_stateDB),
 	m_postMine(_us, m_stateDB),
@@ -299,6 +299,12 @@ void Client::connect(std::string const& _seedHost, unsigned short _port)
 		return;
 	m_net->connect(_seedHost, _port);
 }
+
+void Client::startDumping()
+{
+    m_dumping = true;
+}
+
 
 void Client::startMining()
 {
