@@ -60,7 +60,7 @@ class BlockChain
 {
 public:
 	BlockChain(bool _killExisting = false): BlockChain(std::string(), _killExisting) {}
-	BlockChain(std::string _path, bool _killExisting = false);
+	BlockChain(std::string _path, bool _killExisting = false, bool dumping = false);
 	~BlockChain();
 
 	/// (Potentially) renders invalid existing bytesConstRef returned by lastBlock.
@@ -164,6 +164,9 @@ private:
 	mutable BlockTracesHash m_traces;
 	mutable boost::shared_mutex x_cache;
 	mutable std::map<h256, bytes> m_cache;
+
+
+    bool m_dumping = false;
 
 	/// The disk DBs. Thread-safe, so no need for locks.
 	ldb::DB* m_db;
