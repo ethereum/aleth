@@ -22,7 +22,9 @@
 
 #pragma once
 
-#include "WebThreeMessage.h"
+#include <future>
+#include "RLPConnection.h"
+#include "WebThreeResponse.h"
 
 namespace dev
 {
@@ -34,21 +36,29 @@ namespace dev
  */
 class WebThreeClient
 {
-	// constructor of egress requests call nextSequence() /* todo: constructor of ingress notification messages call setServiceSequence() */
 	friend class WebThreeRequest;
 	
 public:
 	WebThreeClient(WebThreeServiceType _type);
-	~WebThreeClient();
+	~WebThreeClient() {};
 
-	bytes request(int _type, RLP const& _request);
+	/// Provided function will be passed RLP of incoming messages for the given service. Not thread-safe.
+	/// @todo exception if responder already registered
+	void setMessageHandler(WebThreeServiceType _serviceId, std::function<void(RLP const& _rlp)> _responder);
+	
+	bytes request(RLPMessageType _type, RLP const& _request);
 	
 private:
-	void send(WebThreeMessage* _msg);
-	uint16_t nextSequence();
+	RLPMessageSequence nextSequence();
 	
+	boost::asio::io_service m_io;
+	RLPConnection m_connection;
 	WebThreeServiceType m_serviceType;
-	std::atomic<uint16_t> m_clientSequence;
+	std::atomic<RLPMessageSequence> m_clientSequence;
+
+	typedef std::promise<std::shared_ptr<WebThreeResponse>> promiseResponse;
+	std::vector<std::pair<RLPMessageSequence,promiseResponse*>> m_promises;
+		std::mutex x_promises;											///< Mutex concurrent access to m_promises.
 };
 
 }

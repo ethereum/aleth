@@ -22,26 +22,27 @@
 
 #pragma once
 
-#include "WebThreeMessage.h"
-#include "WebThreeClient.h" // TODO remove
-#include "WebThreeConnection.h" // TODO remove
+#include "RLPMessage.h"
 
 namespace dev
 {
-	
+
+class WebThreeClient;
+class RLPConnection;
+
 /**
  * @brief Private class used by WebThreeClient to send requests and by WebThree. (messages are sent immediately)
  * @todo move implementation into cpp and remove cast from webthreeresponse
  * @todo (notes) received on wire; sequence is parsed from RLP
  * @todo check RLP
  */
-class WebThreeRequest: public WebThreeMessage
+class WebThreeRequest: public RLPMessage
 {
 	friend class WebThreeClient;
 	
 public:
-	WebThreeRequest(WebThreeClient *_c, RLP const& _request);
-	void respond(WebThreeConnection *_s, RLP const& _response);
+	WebThreeRequest(WebThreeClient *_c, RLPMessageType _packetType, RLP const& _request);
+	void respond(RLPConnection *_s, RLP const& _response);
 };
 
 }

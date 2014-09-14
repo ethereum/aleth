@@ -25,8 +25,8 @@
 
 using namespace dev;
 
-WebThreeResponse::WebThreeResponse(WebThreeConnection *_s, WebThreeRequest *_request, RLP const& _response): WebThreeMessage(((WebThreeMessage*)_request)->sequence, _response)
+WebThreeResponse::WebThreeResponse(RLPConnection *_s, WebThreeRequest *_request, RLP const& _response, bool _exception): RLPMessage(_request->service(), _request->sequence(), 0x80 + !_exception, _response)
 {
-	_s->send(*this);
+//	_s->send(*this);
 }
 

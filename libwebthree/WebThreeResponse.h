@@ -23,21 +23,20 @@
 #pragma once
 
 #include "WebThreeRequest.h"
-#include "WebThreeConnection.h" // TODO remove
+#include "RLPConnection.h" // TODO remove
 
 namespace dev
 {
 
 /**
- * @brief Private class called by WebThreeRequest::respond() which is typically called from a WebThreeConnection::messageHandler. (message is immediately sent)
+ * @brief Private class called by WebThreeRequest::respond() which is typically called from a RLPConnection::messageHandler. (message is immediately sent)
  * @todo move implementation into cpp and remove cast from webthreeresponse
  * @todo check RLP
  */
-class WebThreeResponse: public WebThreeMessage
+class WebThreeResponse: public RLPMessage
 {
-	friend class WebThreeServer;
-	friend class WebThreeRequest;
-	WebThreeResponse(WebThreeConnection *_s, WebThreeRequest *_request, RLP const& _response);
+public:
+	WebThreeResponse(RLPConnection *_s, WebThreeRequest *_request, RLP const& _response, bool _exception = false);
 };
 
 }

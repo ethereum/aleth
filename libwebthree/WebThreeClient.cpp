@@ -20,26 +20,42 @@
  * @date 2014
  */
 
+#include <memory>
 #include "WebThreeClient.h"
 
+using namespace std;
 using namespace dev;
 
-WebThreeClient::WebThreeClient(WebThreeServiceType _type): m_serviceType(_type)
+WebThreeClient::WebThreeClient(WebThreeServiceType _type): m_io(), m_connection(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310)), m_serviceType(_type)
 {
 	
 }
 
-WebThreeClient::~WebThreeClient()
+bytes WebThreeClient::request(RLPMessageType _type, RLP const& _request)
 {
+	promiseResponse p;
+	std::future<std::shared_ptr<WebThreeResponse>> f = p.get_future();
 	
+	RLPMessage msg(m_serviceType, nextSequence(), _type, _request);
+	{
+		lock_guard<mutex> l(x_promises);
+		m_promises.push_back(make_pair(msg.sequence(),&p));
+	}
+	
+	m_connection.send(msg);
+	
+	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(10));
+	if (s != future_status::ready)
+	{
+		// todo: mutex m_promises and remove promise
+		throw WebThreeRequestTimeout();
+	}
+	
+	return std::move(f.get()->payload());
 }
 
-void WebThreeClient::send(WebThreeMessage* _msg)
-{
-	
-}
-
-uint16_t WebThreeClient::nextSequence()
+RLPMessageSequence WebThreeClient::nextSequence()
 {
 	return m_clientSequence++;
 }
+

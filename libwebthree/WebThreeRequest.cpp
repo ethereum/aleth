@@ -22,16 +22,17 @@
 
 #include "WebThreeRequest.h"
 #include "WebThreeResponse.h"
+#include "WebThreeClient.h"
 
 using namespace dev;
 
-WebThreeRequest::WebThreeRequest(WebThreeClient *_c, RLP const& _request): WebThreeMessage(_c->nextSequence(), _request)
+WebThreeRequest::WebThreeRequest(WebThreeClient *_c, RLPMessageType _packetType, RLP const& _request): RLPMessage(_c->m_serviceType, _c->nextSequence(), _packetType, _request)
 {
-	_c->send(this);
+//	_c->send(this);
 }
 
-void WebThreeRequest::respond(WebThreeConnection *_s, RLP const& _response)
+void WebThreeRequest::respond(RLPConnection *_s, RLP const& _response)
 {
-	WebThreeResponse(_s, this, _response);
+//	WebThreeResponse(_s, this, _response);
 }
 

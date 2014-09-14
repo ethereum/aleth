@@ -31,8 +31,8 @@
 namespace dev
 {
 	
-class WebThreeConnection;
-class WebThreeMessage;
+class RLPConnection;
+class RLPMessage;
 	
 /**
  * @brief Server for interfacing between Ethereum systems (client, whisper, swarm).
@@ -45,11 +45,13 @@ class WebThreeMessage;
  * @todo: document header, sequences, notification channels (0x00 packets are for notifying channels; header size is 4 instead of 3)
  * @todo: refactor for reflective interface
  * @todo: createServerProcess();  Creates ethereum process dedicated to providing RPC services.
+ * @todo: handling exceptions (MessageTooLarge/Small/etc) thrown from boost work
+ * @todo: disconnect message/packet (*only* for version mismatch)
  *
  */
-class WebThreeServer
+class WebThreeServer: public std::enable_shared_from_this<WebThreeServer>
 {
-	friend class WebThreeMessage; // server verifies sequence
+	friend class RLPMessage; // server verifies sequence
 	
 public:
 	/// Constructor. After this, everything should be set up to go.
@@ -72,24 +74,22 @@ private:
 	/// Stops server. Server sets m_stopped to true and then joins network and responder threads.
 	void stopServer();
 	
-	/// @returns if RLP message size is valid and matches length from 4-byte header
-	bool checkPacket(bytesConstRef _msg) const;
-
+	void doAccept();
+	
 	boost::asio::ip::tcp::endpoint m_endpoint;							///< Default endpoint is 127.0.0.1:30310
 
 	boost::asio::io_service m_io;										///< Boost IO Service
 	boost::asio::ip::tcp::acceptor m_acceptor;							///< Socket acceptor for incoming client connections.
 	std::thread m_ioThread;											///< Thread for run()'ing boost I/O
 	
-	std::map<WebThreeServiceType,messageHandler> m_responders;		///< Services' responder methods.
-	std::vector<std::shared_ptr<WebThreeConnection>> m_connections;		///< Connected sessions.
+	std::map<WebThreeServiceType,std::shared_ptr<messageHandler>> m_responders;		///< Services' responder methods.
+	std::mutex x_responders;											///< m_responders mutex.
+	std::vector<std::shared_ptr<RLPConnection>> m_connections;		///< Connected sessions.
 	std::mutex x_connections;											///< m_sessions mutex.
-	
-	std::atomic<uint32_t> m_pendingRequests;							///< @todo increment from session
-	
+
 	/// Setting true causes responder-process to set a deadline timer. Acceptor and read loops halt when deadline timer occurs.
 	std::atomic<bool> m_stopped;
-	std::mutex x_shutdown;
+	std::mutex x_stopped;
 };
 
 

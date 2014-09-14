@@ -23,7 +23,8 @@
  */
 
 #include "WebThreeServer.h"
-#include "WebThreeConnection.h"
+#include "RLPMessage.h"
+#include "RLPConnection.h"
 
 using namespace std;
 using namespace dev;
@@ -43,16 +44,15 @@ WebThreeServer::~WebThreeServer()
 
 void WebThreeServer::setMessageHandler(WebThreeServiceType _serviceId, messageHandler _responder)
 {
+	lock_guard<mutex> l(x_responders);
 	if (!m_responders.count(_serviceId))
-		m_responders.insert(make_pair(_serviceId,_responder));
-
-	refreshHandlers();
+		m_responders.insert(make_pair(_serviceId,make_shared<messageHandler>(_responder)));
 }
 
 void WebThreeServer::startServer()
 {
 	{
-		lock_guard<mutex> l(x_shutdown);
+		lock_guard<mutex> l(x_stopped);
 		if (!m_stopped)
 			return;
 		m_stopped = false;
@@ -69,24 +69,37 @@ void WebThreeServer::startServer()
 			m_acceptor.listen();
 		}
 
+		doAccept();
+		
 		m_io.run();
 		m_acceptor.close();
 	});
 }
 
+void WebThreeServer::refreshHandlers()
+{
+	if (m_stopped)
+		return;
+	
+	for (auto r: m_responders)
+	{
+		
+	}
+}
+
 void WebThreeServer::stopServer()
 {
 	{
-		lock_guard<mutex> l(x_shutdown);
+		lock_guard<mutex> l(x_stopped);
 		if (m_stopped)
 			return;
 		m_stopped = true;
-	}
 	
-	lock_guard<mutex> ls(x_connections);
-	for (auto s: m_connections)
-		if (auto p = s.get())
-			p->disconnect();
+		lock_guard<mutex> ls(x_connections);
+		for (auto s: m_connections)
+			if (auto p = s.get())
+				p->shutdown();
+	}
 	
 	// stop IO service, causing ioThread to end
 	m_io.stop();
@@ -96,9 +109,31 @@ void WebThreeServer::stopServer()
 		m_ioThread.join();
 }
 
-void WebThreeServer::refreshHandlers()
+void WebThreeServer::doAccept()
 {
-	if (m_stopped)
-		return;
+	shared_ptr<RLPConnection> conn(new RLPConnection(m_io));
+	m_acceptor.async_accept(conn->m_socket, [this, conn](boost::system::error_code _ec)
+	{
+		clog(RPCConnect) << "WebThreeServer::doAccept new connection";
+		
+		if (!_ec)
+		{
+			{
+				lock_guard<mutex> l(x_connections);
+				if (!m_stopped)
+					m_connections.push_back(conn);
+			}
+			conn->handshake();
+		}
+
+		// TODO fixme: handle _ec (restart or exception/crash if appropriate)
+		if (_ec.value() != 1)
+			doAccept();
+		else
+			clog(RPCNote) << "WebThreeServer::doAccept going awawy";
+	});
 }
+
+
+
 

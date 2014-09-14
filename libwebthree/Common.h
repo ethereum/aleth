@@ -29,6 +29,8 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 
+#include <libdevcore/Exceptions.h>
+
 namespace dev
 {
 
@@ -37,15 +39,41 @@ struct RPCNote: public LogChannel { static const char* name() { return "*X*"; } 
 struct RPCMessageSummary: public LogChannel { static const char* name() { return "-X-"; } static const int verbosity = 2; };
 struct RPCConnect: public LogChannel { static const char* name() { return "+X+"; } static const int verbosity = 4; };
 
-enum WebThreeServiceType
+typedef uint8_t RLPMessageServiceType;
+typedef uint8_t RLPMessageType;
+typedef uint16_t RLPMessageSequence;
+	
+enum WebThreeServiceType : RLPMessageServiceType
 {
-	Reserved, /* reserved */
 	WebThreeService = 0x01,
 	EthereumService,
 	SwarmService,
 	WhisperService
 };
+class WebThreeRequestTimeout: public Exception {};
 
+//enum EthereumRPCRequest : RLPMessageType
+//{
+//	EthereumRPC = 0x00,
+//	RequestSubmitTransaction,
+//	RequestCreateContract,
+//	RequestRLPInject,
+//	RequestFlushTransactions,
+//	RequestCallTransaction,
+//	RequestBalanceAt,
+//	RequestCountAt,
+//	RequestStateAt,
+//	RequestCodeAt,
+//	RequestStorageAt,
+//	RequestMessages,
+//	RequestPeers,
+//	RequestPeerCount,
+//	ConnectToPeer = 0x10
+//};
+	
 typedef std::function<void(RLP const&)> messageHandler; // TODO move into Message
+
+class MessageTooLarge: public Exception {};
+class MessageTooSmall: public Exception {};
 	
 }

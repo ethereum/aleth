@@ -36,9 +36,22 @@ BOOST_AUTO_TEST_SUITE( webthree_server )
 BOOST_AUTO_TEST_CASE(test_webthree_server_lifecycle)
 {
 	WebThreeServer s;
-	s.setMessageHandler(WebThreeService, [=](RLP const& _request){
-		
+	s.setMessageHandler(EthereumService, [=](RLP const& _request){
+		// handle eth requests
 	});
+	
+	s.setMessageHandler(WhisperService, [=](RLP const& _request){
+		// handle shh requests
+	});
+
+	s.setMessageHandler(SwarmService, [=](RLP const& _request){
+		// handle bzz requests
+	});
+	
+	s.setMessageHandler(WebThreeService, [=](RLP const& _request){
+		// handle general requests
+	});
+	
 }
 
 BOOST_AUTO_TEST_SUITE_END() // webthree_server
