@@ -54,6 +54,10 @@ NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::
 	});
 }
 
+boost::asio::ip::tcp::socket& NetConnection::socket() {
+	return m_socket;
+}
+
 void NetConnection::send(NetMsgServiceType _svc, NetMsgSequence _seq, NetMsgType _type, RLP const& _msg)
 {
 	while (!m_stopped && !m_socket.is_open())

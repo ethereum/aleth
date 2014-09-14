@@ -30,11 +30,13 @@ namespace dev
 
 class NetMsg;
 	
+/**
+ * @brief Interface for listening on or connecting sockets for
+ *
+ * @todo Random sequence initialization.
+ */
 class NetConnection: public std::enable_shared_from_this<NetConnection>
 {
-	friend class WebThreeServer;
-	friend class WebThreeClient;
-	
 public:
 	// Constructor for incoming connections.
 	NetConnection(boost::asio::io_service& _io_service);
@@ -50,6 +52,9 @@ public:
 	
 	/// Send handhsake and start connection read loop
 	void start() { handshake(); };
+	
+	/// Use at your own risk!
+	boost::asio::ip::tcp::socket& socket();
 	
 	/// Send message
 	void send(NetMsg& _msg);

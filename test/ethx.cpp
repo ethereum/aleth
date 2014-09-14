@@ -23,42 +23,78 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <libethereumx/Ethereum.h>
-
+#include <libwebthree/NetConnection.h>
 #include <libwebthree/WebThreeServer.h>
+#include <libethereumx/Ethereum.h>
+#include <future>
 
+using namespace std;
 using namespace dev;
-using namespace dev::eth;
+
+BOOST_AUTO_TEST_SUITE( rlpnet )
+BOOST_AUTO_TEST_CASE(test_rlpnet_connection)
+{
+	boost::asio::io_service io;
+	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
+	boost::asio::ip::tcp::acceptor acceptor(io, ep);
+
+	std::promise<bool> p_connAccepted;
+	std::future<bool> f_connAccepted = p_connAccepted.get_future();
+	
+	shared_ptr<NetConnection> connIn(new NetConnection(io));
+	acceptor.async_accept(connIn->socket(), [connIn, &p_connAccepted](boost::system::error_code _ec)
+	{
+		p_connAccepted.set_value(true);
+	});
+	connIn.reset();
+	
+	
+	NetConnection *connOut = new NetConnection(io, ep, 0, nullptr, nullptr);
+	while (!connOut->connectionOpen())
+		usleep(100);
+	delete connOut;
+
+	// listening side
+	assert(f_connAccepted.get() == true);
+	
+	
+	// connecting side
+	
+}
+BOOST_AUTO_TEST_SUITE_END() // rlpnet
 
 
-BOOST_AUTO_TEST_SUITE( webthree_server )
-
-BOOST_AUTO_TEST_CASE(test_webthree_server_lifecycle)
+BOOST_AUTO_TEST_SUITE( webthree_net )
+BOOST_AUTO_TEST_CASE(test_webthree_net_eth)
 {
 	WebThreeServer s;
 	s.setMessageHandler(EthereumService, [=](NetMsgType _type, RLP const& _request){
 		// handle eth requests
 	});
-	
-	s.setMessageHandler(WhisperService, [=](NetMsgType _type, RLP const& _request){
-		// handle shh requests
-	});
-
-	s.setMessageHandler(SwarmService, [=](NetMsgType _type, RLP const& _request){
-		// handle bzz requests
-	});
-	
-	s.setMessageHandler(WebThreeService, [=](NetMsgType _type, RLP const& _request){
-		// handle general requests
-	});
-	
 }
 
-BOOST_AUTO_TEST_SUITE_END() // webthree_server
+BOOST_AUTO_TEST_CASE(test_webthree_net_shh)
+{
+	WebThreeServer s;
+	s.setMessageHandler(EthereumService, [=](NetMsgType _type, RLP const& _request){
+		// shh requests
+	});
+}
+
+BOOST_AUTO_TEST_CASE(test_webthree_net_bzz)
+{
+	WebThreeServer s;
+	s.setMessageHandler(EthereumService, [=](NetMsgType _type, RLP const& _request){
+		// bzz requests
+	});
+}
+BOOST_AUTO_TEST_SUITE_END() // webthree_net
 
 
 BOOST_AUTO_TEST_CASE(ethx_test_server_going_away)
 {
+	using namespace dev::eth;
+	
 	cnote << "Testing EthereumX...";
 
 	cnote << "ethx: Starting first client";

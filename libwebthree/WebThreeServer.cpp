@@ -98,7 +98,7 @@ void WebThreeServer::stopServer()
 		lock_guard<mutex> ls(x_connections);
 		for (auto s: m_connections)
 			if (auto p = s.get())
-				p->shutdown();
+				delete p;
 	}
 	
 	// stop IO service, causing ioThread to end
@@ -112,7 +112,7 @@ void WebThreeServer::stopServer()
 void WebThreeServer::doAccept()
 {
 	shared_ptr<NetConnection> conn(new NetConnection(m_io));
-	m_acceptor.async_accept(conn->m_socket, [this, conn](boost::system::error_code _ec)
+	m_acceptor.async_accept(conn->socket(), [this, conn](boost::system::error_code _ec)
 	{
 		clog(RPCConnect) << "WebThreeServer::doAccept new connection";
 		
@@ -123,7 +123,7 @@ void WebThreeServer::doAccept()
 				if (!m_stopped)
 					m_connections.push_back(conn);
 			}
-			conn->handshake();
+			conn->start();
 		}
 
 		// TODO fixme: handle _ec (restart or exception/crash if appropriate)
