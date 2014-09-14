@@ -23,8 +23,8 @@
  */
 
 #include "WebThreeServer.h"
-#include "RLPMessage.h"
-#include "RLPConnection.h"
+#include "NetMsg.h"
+#include "NetConnection.h"
 
 using namespace std;
 using namespace dev;
@@ -111,7 +111,7 @@ void WebThreeServer::stopServer()
 
 void WebThreeServer::doAccept()
 {
-	shared_ptr<RLPConnection> conn(new RLPConnection(m_io));
+	shared_ptr<NetConnection> conn(new NetConnection(m_io));
 	m_acceptor.async_accept(conn->m_socket, [this, conn](boost::system::error_code _ec)
 	{
 		clog(RPCConnect) << "WebThreeServer::doAccept new connection";

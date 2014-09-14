@@ -22,13 +22,13 @@
 
 #pragma once
 
-#include "RLPMessage.h"
+#include "NetMsg.h"
 
 namespace dev
 {
 
 class WebThreeClient;
-class RLPConnection;
+class NetConnection;
 
 /**
  * @brief Private class used by WebThreeClient to send requests and by WebThree. (messages are sent immediately)
@@ -36,13 +36,13 @@ class RLPConnection;
  * @todo (notes) received on wire; sequence is parsed from RLP
  * @todo check RLP
  */
-class WebThreeRequest: public RLPMessage
+class WebThreeRequest: public NetMsg
 {
 	friend class WebThreeClient;
 	
 public:
-	WebThreeRequest(WebThreeClient *_c, RLPMessageType _packetType, RLP const& _request);
-	void respond(RLPConnection *_s, RLP const& _response);
+	WebThreeRequest(WebThreeClient *_c, NetMsgType _packetType, RLP const& _request);
+	void respond(NetConnection *_s, RLP const& _response);
 };
 
 }

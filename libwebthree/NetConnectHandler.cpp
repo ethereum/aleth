@@ -14,19 +14,45 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file WebThreeResponse.cpp
+/** @file NetConnectHandler.cpp
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "WebThreeResponse.h"
-#include "WebThreeRequest.h"
+#include "NetConnectHandler.h"
+#include "NetMsg.h"
 
+using namespace std;
 using namespace dev;
 
-WebThreeResponse::WebThreeResponse(NetConnection *_s, WebThreeRequest *_request, RLP const& _response, bool _exception): NetMsg(_request->service(), _request->sequence(), 0x80 + !_exception, _response)
+NetConnectHandler::NetConnectHandler(NetMsgServiceType _type, boost::asio::ip::tcp::endpoint _ep): m_serviceType(_type), m_localDataSequence(0), m_io(), m_connection(m_io, _ep, _type, nullptr, nullptr)
 {
-//	_s->send(*this);
+}
+
+NetConnectHandler::~NetConnectHandler()
+{
+	m_io.stop();
+	if (m_ioThread.joinable())
+		m_ioThread.join();
+}
+
+void NetConnectHandler::run()
+{
+	m_ioThread = std::thread([&]()
+	{
+		m_io.run();
+	});
+}
+
+void NetConnectHandler::send(NetMsgType _type, RLP const& _rlp)
+{
+	NetMsg msg(m_serviceType, nextDataSequence(), _type, _rlp);
+	m_connection.send(msg);
+}
+
+NetMsgSequence NetConnectHandler::nextDataSequence()
+{
+	return m_localDataSequence++;
 }
 

@@ -31,8 +31,8 @@
 namespace dev
 {
 	
-class RLPConnection;
-class RLPMessage;
+class NetConnection;
+class NetMsg;
 	
 /**
  * @brief Server for interfacing between Ethereum systems (client, whisper, swarm).
@@ -51,7 +51,7 @@ class RLPMessage;
  */
 class WebThreeServer: public std::enable_shared_from_this<WebThreeServer>
 {
-	friend class RLPMessage; // server verifies sequence
+	friend class NetMsg; // server verifies sequence
 	
 public:
 	/// Constructor. After this, everything should be set up to go.
@@ -62,7 +62,7 @@ public:
 
 	/// Provided function will be passed RLP of incoming messages for the given service. Not thread-safe.
 	/// @todo exception if responder already registered
-	void setMessageHandler(WebThreeServiceType _serviceId, std::function<void(RLP const& _rlp)> _responder);
+	void setMessageHandler(WebThreeServiceType _serviceId, std::function<void(NetMsgType _type, RLP const& _rlp)> _responder);
 	
 private:
 	/// Start server.
@@ -84,7 +84,7 @@ private:
 	
 	std::map<WebThreeServiceType,std::shared_ptr<messageHandler>> m_responders;		///< Services' responder methods.
 	std::mutex x_responders;											///< m_responders mutex.
-	std::vector<std::shared_ptr<RLPConnection>> m_connections;		///< Connected sessions.
+	std::vector<std::shared_ptr<NetConnection>> m_connections;		///< Connected sessions.
 	std::mutex x_connections;											///< m_sessions mutex.
 
 	/// Setting true causes responder-process to set a deadline timer. Acceptor and read loops halt when deadline timer occurs.

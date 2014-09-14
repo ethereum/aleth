@@ -14,29 +14,29 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file RLPMessage.cpp
+/** @file NetMsg.cpp
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "RLPMessage.h"
+#include "NetMsg.h"
 
 using namespace dev;
 
-RLPMessage::RLPMessage(RLPMessageServiceType _service, RLPMessageSequence _seq, RLPMessageType _packetType, RLP const& _req): m_service(_service), m_sequence(_seq), m_messageType(_packetType), m_messageBytes(std::move(packetify(_req)))
+NetMsg::NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req): m_service(_service), m_sequence(_seq), m_messageType(_packetType), m_messageBytes(std::move(packetify(_req)))
 {
 }
 
-RLPMessage::RLPMessage(bytes const& _packetData): m_messageBytes(std::move(bytesConstRef(&_packetData).toBytes()))
+NetMsg::NetMsg(bytes const& _packetData): m_messageBytes(std::move(bytesConstRef(&_packetData).toBytes()))
 {
 }
 
-RLPMessage::RLPMessage(bytesConstRef _packetData): m_messageBytes(std::move(_packetData.toBytes()))
+NetMsg::NetMsg(bytesConstRef _packetData): m_messageBytes(std::move(_packetData.toBytes()))
 {
 }
 
-bytes RLPMessage::packetify(RLP const& _rlp) const
+bytes NetMsg::packetify(RLP const& _rlp) const
 {
 	int listSize = (!m_service || !m_messageType) ? 3 : 4;
 	

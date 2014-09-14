@@ -26,12 +26,12 @@
 
 using namespace dev;
 
-WebThreeRequest::WebThreeRequest(WebThreeClient *_c, RLPMessageType _packetType, RLP const& _request): RLPMessage(_c->m_serviceType, _c->nextSequence(), _packetType, _request)
+WebThreeRequest::WebThreeRequest(WebThreeClient *_c, NetMsgType _packetType, RLP const& _request): NetMsg(_c->m_serviceType, _c->nextDataSequence(), _packetType, _request)
 {
 //	_c->send(this);
 }
 
-void WebThreeRequest::respond(RLPConnection *_s, RLP const& _response)
+void WebThreeRequest::respond(NetConnection *_s, RLP const& _response)
 {
 //	WebThreeResponse(_s, this, _response);
 }

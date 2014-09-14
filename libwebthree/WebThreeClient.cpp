@@ -26,17 +26,29 @@
 using namespace std;
 using namespace dev;
 
-WebThreeClient::WebThreeClient(WebThreeServiceType _type): m_io(), m_connection(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310)), m_serviceType(_type)
+WebThreeClient::WebThreeClient(WebThreeServiceType _type): m_io(), m_connection(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310), _type, nullptr, nullptr), m_serviceType(_type)
 {
-	
+	startClient();
 }
 
-bytes WebThreeClient::request(RLPMessageType _type, RLP const& _request)
+WebThreeClient::~WebThreeClient()
+{
+}
+
+void WebThreeClient::startClient()
+{
+	m_ioThread = std::thread([&]()
+	{
+		m_io.run();
+	});
+}
+
+bytes WebThreeClient::request(NetMsgType _type, RLP const& _request)
 {
 	promiseResponse p;
 	std::future<std::shared_ptr<WebThreeResponse>> f = p.get_future();
 	
-	RLPMessage msg(m_serviceType, nextSequence(), _type, _request);
+	NetMsg msg(m_serviceType, nextDataSequence(), _type, _request);
 	{
 		lock_guard<mutex> l(x_promises);
 		m_promises.push_back(make_pair(msg.sequence(),&p));
@@ -54,7 +66,7 @@ bytes WebThreeClient::request(RLPMessageType _type, RLP const& _request)
 	return std::move(f.get()->payload());
 }
 
-RLPMessageSequence WebThreeClient::nextSequence()
+NetMsgSequence WebThreeClient::nextDataSequence()
 {
 	return m_clientSequence++;
 }

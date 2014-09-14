@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file RLPConnection.h
+/** @file NetConnection.h
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -28,37 +28,38 @@
 namespace dev
 {
 
-class RLPMessage;
+class NetMsg;
 	
-class RLPConnection: public std::enable_shared_from_this<RLPConnection>
+class NetConnection: public std::enable_shared_from_this<NetConnection>
 {
 	friend class WebThreeServer;
 	friend class WebThreeClient;
 	
 public:
 	// Constructor for incoming connections.
-	RLPConnection(boost::asio::io_service& io_service);
+	NetConnection(boost::asio::io_service& _io_service);
 	
-	// Constructor for outgoing connections.
-	RLPConnection(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint _ep);
+	// Constructor for outgoing connections (multiple services).
+	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers);
+	
+	// Constructor for outgoing connections (single service, twoway).
+	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, NetMsgServiceType _svc, messageHandler* _svcMsgHandler, messageHandler* _dataMsgHandler);
 	
 	// Destructor.
-	~RLPConnection() {}
-	
-	void setMessageHandler(RLPMessageServiceType _serviceId, messageHandler _responder);
+	~NetConnection() {}
 	
 	/// Send handhsake and start connection read loop
 	void start() { handshake(); };
 	
 	/// Send message
-	void send(RLPMessage& _msg);
+	void send(NetMsg& _msg);
 	
 	/// @returns if connection is open; returns false if connection is shutting down
 	bool connectionOpen() const;
 
 private:
 	/// Build and send message
-	void send(RLPMessageServiceType _svc, RLPMessageSequence _seq, RLPMessageType _type, RLP const& _msg);
+	void send(NetMsgServiceType _svc, NetMsgSequence _seq, NetMsgType _type, RLP const& _msg);
 	
 	/// @returns if RLP message size is valid and matches length from 4-byte header
 	/// @todo check service, sequence, packet type
@@ -70,7 +71,8 @@ private:
 	/// Shutdown connection
 	void shutdown(bool _wait = true);
 	
-	std::map<RLPMessageServiceType,std::shared_ptr<messageHandler>> m_msgHandlers;		///< Services' responder methods.
+	messageHandlers m_serviceMsgHandlers;
+	messageHandlers m_dataMsgHandlers;
 	std::mutex x_msgHandlers;											///< m_responders mutex.
 	
 	boost::asio::ip::tcp::socket m_socket;

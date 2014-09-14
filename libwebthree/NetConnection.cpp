@@ -14,31 +14,39 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file RLPConnection.cpp
+/** @file NetConnection.cpp
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #include <memory>
-#include "RLPConnection.h"
-#include "RLPMessage.h"
+#include "NetConnection.h"
+#include "NetMsg.h"
 
 using namespace std;
 using namespace dev;
 
-RLPConnection::RLPConnection(boost::asio::io_service& io_service): m_socket(io_service), m_stopped(true)
+NetConnection::NetConnection(boost::asio::io_service& _io_service): m_socket(_io_service), m_stopped(true)
+{
+	handshake();
+}
+
+NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, NetMsgServiceType _svc, messageHandler* _svcMsgHandler, messageHandler* _dataMsgHandler): NetConnection(_io_service, _ep, messageHandlers({make_pair(_svc,(_svcMsgHandler) ? make_shared<messageHandler>(*_svcMsgHandler) : nullptr)}), messageHandlers({make_pair(_svc,(_dataMsgHandler) ? make_shared<messageHandler>(*_dataMsgHandler) : nullptr)}))
 {
 }
 
-RLPConnection::RLPConnection(boost::asio::io_service& io_service, boost::asio::ip::tcp::endpoint _ep): m_socket(io_service)
+NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers): m_socket(_io_service), m_stopped(true)
 {
+	m_serviceMsgHandlers = _svcMsgHandlers;
+	m_dataMsgHandlers = _dataMsgHandlers;
+	
 	auto self(shared_from_this());
 	m_socket.async_connect(_ep, [self, this, _ep](boost::system::error_code const& ec)
 	{
 		if (ec)
 		{
-			clog(RPCConnect) << "RLPConnection async_connect error";
+			clog(RPCConnect) << "NetConnection async_connect error";
 			shutdown();
 		}
 		else
@@ -46,36 +54,31 @@ RLPConnection::RLPConnection(boost::asio::io_service& io_service, boost::asio::i
 	});
 }
 
-void RLPConnection::setMessageHandler(RLPMessageServiceType _serviceId, messageHandler _responder)
-{
-	
-}
-
-void RLPConnection::send(RLPMessageServiceType _svc, RLPMessageSequence _seq, RLPMessageType _type, RLP const& _msg)
+void NetConnection::send(NetMsgServiceType _svc, NetMsgSequence _seq, NetMsgType _type, RLP const& _msg)
 {
 	while (!m_stopped && !m_socket.is_open())
 		usleep(200);
 	
-	shared_ptr<RLPMessage> msg(new RLPMessage(_svc, _seq, _type, _msg));
+	shared_ptr<NetMsg> msg(new NetMsg(_svc, _seq, _type, _msg));
 	boost::asio::async_write(m_socket, boost::asio::buffer(msg->m_messageBytes), [msg](boost::system::error_code _ec, size_t _len){
 		if (_ec)
-				clog(RPCNote) << "RLPConnection::send error";
+				clog(RPCNote) << "NetConnection::send error";
 			else
-				clog(RPCNote) << "RLPConnection::send";
+				clog(RPCNote) << "NetConnection::send";
 	});
 }
 
-void RLPConnection::send(RLPMessage& _msg)
+void NetConnection::send(NetMsg& _msg)
 {
 	boost::asio::async_write(m_socket, boost::asio::buffer(_msg.payload()), [](boost::system::error_code _ec, size_t _len){
 		if (_ec)
-				clog(RPCNote) << "RLPConnection::send error";
+				clog(RPCNote) << "NetConnection::send error";
 			else
-				clog(RPCNote) << "RLPConnection::send";
+				clog(RPCNote) << "NetConnection::send";
 	});
 }
 
-bool RLPConnection::checkPacket(bytesConstRef _msg) const
+bool NetConnection::checkPacket(bytesConstRef _msg) const
 {
 	if (_msg.size() < 4)
 		return false;
@@ -88,7 +91,7 @@ bool RLPConnection::checkPacket(bytesConstRef _msg) const
 	return true;
 }
 
-void RLPConnection::handshake(size_t _rlpLen)
+void NetConnection::handshake(size_t _rlpLen)
 {
 	{
 		lock_guard<mutex> l(x_stopped);
@@ -98,13 +101,13 @@ void RLPConnection::handshake(size_t _rlpLen)
 			return;
 	}
 	
-	clog(RPCNote) << "RLPConnection::handshake";
+	clog(RPCNote) << "NetConnection::handshake";
 	
 	// read header
 	if (m_recvdBytes == 0)
 	{
 		// write version packet
-		shared_ptr<RLPMessage> version(new RLPMessage((RLPMessageServiceType)0, 0, (RLPMessageType)0, RLP("version")));
+		shared_ptr<NetMsg> version(new NetMsg((NetMsgServiceType)0, 0, (NetMsgType)0, RLP("version")));
 	
 		// as a special case, message is manually written as
 		// read/write isn't setup until connection is verified
@@ -154,11 +157,11 @@ void RLPConnection::handshake(size_t _rlpLen)
 		{
 			try
 			{
-				RLPMessage msg(bytesConstRef(m_recvBuffer.data(), _rlpLen));
+				NetMsg msg(bytesConstRef(m_recvBuffer.data() + 4, _rlpLen));
+				// todo: verify version
 			}
 			catch (...)
 			{
-				// bad message
 				shutdown();
 				return;
 			}
@@ -175,7 +178,7 @@ void RLPConnection::handshake(size_t _rlpLen)
 	});
 }
 
-void RLPConnection::doRead(size_t _rlpLen)
+void NetConnection::doRead(size_t _rlpLen)
 {
 	if (m_stopped)
 	{
@@ -203,16 +206,16 @@ void RLPConnection::doRead(size_t _rlpLen)
 		}
 		else if (!rlpLen)
 		{
-			clog(RPCNote) << "RLPConnection::doRead header";
+			clog(RPCNote) << "NetConnection::doRead header";
 			rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
 			if (rlpLen > 16*1024)
 			{
-				clog(RPCNote) << "RLPConnection::doRead MessageTooLarge";
+				clog(RPCNote) << "NetConnection::doRead MessageTooLarge";
 				return; // throw MessageTooLarge();
 			}
 			if (rlpLen < 3)
 			{
-				clog(RPCNote) << "RLPConnection::doRead MessageTooSmall";
+				clog(RPCNote) << "NetConnection::doRead MessageTooSmall";
 				return; // throw MessageTooSmall();
 			}
 			if (2*(rlpLen+4) > m_recvBuffer.size())
@@ -223,8 +226,24 @@ void RLPConnection::doRead(size_t _rlpLen)
 		{
 			try
 			{
-				clog(RPCNote) << "RLPConnection::doRead message";
-				RLPMessage msg(bytesConstRef(m_recvBuffer.data(), rlpLen));
+				clog(RPCNote) << "NetConnection::doRead message";
+				NetMsg msg(bytesConstRef(m_recvBuffer.data(), rlpLen));
+				if (msg.service())
+				{
+					messageHandlers &hs = msg.type() ? m_dataMsgHandlers : m_serviceMsgHandlers;
+
+					// If handler is found, get pointer and call
+					auto hit = hs.find(msg.service());
+					if (hit!=hs.end())
+					{
+						auto h = *hit->second.get();
+						if (h!=nullptr)
+							h(msg.type(), RLP(msg.payload()));
+					}
+					else
+						throw MessageServiceInvalid();
+				}
+				// else, control messages (ignored right now)
 			}
 			catch (...)
 			{
@@ -242,12 +261,12 @@ void RLPConnection::doRead(size_t _rlpLen)
 	});
 }
 
-bool RLPConnection::connectionOpen() const
+bool NetConnection::connectionOpen() const
 {
 	return m_stopped ? false : m_socket.is_open();
 }
 
-void RLPConnection::shutdown(bool _wait)
+void NetConnection::shutdown(bool _wait)
 {
 	m_stopped = true;
 	

@@ -23,7 +23,7 @@
 #pragma once
 
 #include <future>
-#include "RLPConnection.h"
+#include "NetConnectHandler.h"
 #include "WebThreeResponse.h"
 
 namespace dev
@@ -40,24 +40,29 @@ class WebThreeClient
 	
 public:
 	WebThreeClient(WebThreeServiceType _type);
-	~WebThreeClient() {};
+	~WebThreeClient();
 
-	/// Provided function will be passed RLP of incoming messages for the given service. Not thread-safe.
+	/// Provided function will be passed RLP of incoming service-messages for the given service. Not thread-safe.
+	void setServiceHandler(WebThreeServiceType _serviceId, std::function<void(RLP const& _rlp)> _responder);
+	
+	/// Provided function will be passed RLP of incoming data-messages for the given service. Not thread-safe.
 	/// @todo exception if responder already registered
 	void setMessageHandler(WebThreeServiceType _serviceId, std::function<void(RLP const& _rlp)> _responder);
 	
-	bytes request(RLPMessageType _type, RLP const& _request);
+	bytes request(NetMsgType _type, RLP const& _request);
 	
 private:
-	RLPMessageSequence nextSequence();
+	void startClient();
+	NetMsgSequence nextDataSequence();
 	
 	boost::asio::io_service m_io;
-	RLPConnection m_connection;
+	std::thread m_ioThread;											///< Thread for run()'ing boost IO service
+	NetConnection m_connection;
 	WebThreeServiceType m_serviceType;
-	std::atomic<RLPMessageSequence> m_clientSequence;
+	std::atomic<NetMsgSequence> m_clientSequence;
 
 	typedef std::promise<std::shared_ptr<WebThreeResponse>> promiseResponse;
-	std::vector<std::pair<RLPMessageSequence,promiseResponse*>> m_promises;
+	std::vector<std::pair<NetMsgSequence,promiseResponse*>> m_promises;
 		std::mutex x_promises;											///< Mutex concurrent access to m_promises.
 };
 

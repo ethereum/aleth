@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file RLPMessage.h
+/** @file NetMsg.h
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
@@ -35,26 +35,26 @@ class RLP;
  * @todo (notes) received on wire; sequence is parsed from RLP
  * @todo check RLP
  * @todo rename sequence to serviceSequence, implement dataSequence
- * @todo class WebThreeNotification: public RLPMessage; (requires serviceSequence tracking)
+ * @todo class WebThreeNotification: public NetMsg; (requires serviceSequence tracking)
  */
-class RLPMessage: public std::enable_shared_from_this<RLPMessage>
+class NetMsg: public std::enable_shared_from_this<NetMsg>
 {
-	friend class RLPConnection;
+	friend class NetConnection;
 	
 public:
 	// Egress constructor
-	RLPMessage(RLPMessageServiceType _service, RLPMessageSequence _seq, RLPMessageType _packetType, RLP const& _req);
-	~RLPMessage() {}
+	NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req);
+	~NetMsg() {}
 	
-	RLPMessageServiceType service() { return m_service; }
-	RLPMessageSequence sequence() { return m_sequence; }
-	RLPMessageType type() { return m_messageType; }
+	NetMsgServiceType service() { return m_service; }
+	NetMsgSequence sequence() { return m_sequence; }
+	NetMsgType type() { return m_messageType; }
 	bytes const& payload() { return m_messageBytes; }
 	
 private:
 	// Ingress constructor
-	RLPMessage(bytes const& _packetData);
-	RLPMessage(bytesConstRef _packetData);
+	NetMsg(bytes const& _packetData);
+	NetMsg(bytesConstRef _packetData);
 	
 //	/// @returns if payload size matches length from 4-byte header, size of RLP is valid, and sequenceId is valid
 //	bool check(bytesConstRef _netMsg) const {};
@@ -62,9 +62,9 @@ private:
 //	bytes payload(bytesConstRef _netMsg) const {};
 	bytes packetify(RLP const& _rlp) const;
 	
-	RLPMessageServiceType m_service;
-	RLPMessageSequence m_sequence;			///< Message sequence. Initial value is random and chosen by client.
-	RLPMessageType m_messageType;				///< Message type; omitted from header if 0.
+	NetMsgServiceType m_service;
+	NetMsgSequence m_sequence;			///< Message sequence. Initial value is random and chosen by client.
+	NetMsgType m_messageType;				///< Message type; omitted from header if 0.
 	bytes const m_messageBytes;	///< RLP Bytes of the entire message.
 };
 	
