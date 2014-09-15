@@ -49,7 +49,7 @@ public:
 	NetMsgServiceType service() { return m_service; }
 	NetMsgSequence sequence() { return m_sequence; }
 	NetMsgType type() { return m_messageType; }
-	bytes const& payload() { return m_messageBytes; }
+	bytes const& payload() const { return m_messageBytes; }
 	
 private:
 	// Ingress constructor

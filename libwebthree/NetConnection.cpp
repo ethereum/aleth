@@ -27,7 +27,7 @@
 using namespace std;
 using namespace dev;
 
-NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep): m_socket(_io_service), m_endpoint(_ep), m_stopped(true), m_originateConnection(false)
+NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep): m_socket(_io_service), m_endpoint(_ep), m_stopped(true), m_originateConnection(false), m_socketError()
 {
 }
 
@@ -35,7 +35,7 @@ NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::
 {
 }
 
-NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers): m_socket(_io_service), m_endpoint(_ep), m_stopped(true), m_serviceMsgHandlers(_svcMsgHandlers), m_dataMsgHandlers(_dataMsgHandlers), m_originateConnection(true)
+NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers): m_socket(_io_service), m_endpoint(_ep), m_serviceMsgHandlers(_svcMsgHandlers), m_dataMsgHandlers(_dataMsgHandlers), m_originateConnection(true), m_stopped(true), m_socketError()
 {
 }
 
@@ -59,7 +59,8 @@ void NetConnection::start()
 			m_socket.async_connect(m_endpoint, [self, this](boost::system::error_code const& _ec)
 			{
 				if (_ec)
-					closeSocket();
+					// todo: try until 5 seconds w/10ms sleep
+					shutdownWithError(_ec); // Connection failed
 				else
 					handshake();
 			});
@@ -83,14 +84,15 @@ void NetConnection::start()
 //	});
 //}
 
-void NetConnection::send(NetMsg& _msg)
+void NetConnection::send(NetMsg const& _msg)
 {
 	if (m_stopped)
 		return;
 	
-	boost::asio::async_write(m_socket, boost::asio::buffer(_msg.payload()), [](boost::system::error_code _ec, size_t _len){
+	auto self(shared_from_this());
+	boost::asio::async_write(m_socket, boost::asio::buffer(_msg.payload()), [self](boost::system::error_code _ec, size_t _len){
 		if (_ec)
-				clog(RPCNote) << "NetConnection::send error";
+				self->shutdownWithError(_ec); // send write failed
 			else
 				clog(RPCNote) << "NetConnection::send";
 	});
@@ -134,7 +136,7 @@ void NetConnection::handshake(size_t _rlpLen)
 		boost::asio::async_write(m_socket, boost::asio::buffer(version->payload()), [this, self, version](boost::system::error_code _ec, size_t _len)
 		{
 			if (_ec)
-				return closeSocket();
+				return shutdownWithError(_ec); // handshake write failed
 			
 			m_recvdBytes += _len;
 			// read length header
@@ -142,15 +144,15 @@ void NetConnection::handshake(size_t _rlpLen)
 			boost::asio::async_read(m_socket, boost::asio::buffer(m_recvBuffer), [this, self](boost::system::error_code _ec, size_t _len)
 			{
 				if (_ec)
-					return closeSocket();
+					return shutdownWithError(_ec); // handshake read-header failed
 				assert(_len == 4);
 				
 				m_recvdBytes += _len;
 				size_t rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
 				if (rlpLen > 16*1024)
-					return; // throw MessageTooLarge();
+					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooLarge();
 				if (rlpLen < 3)
-					return; // throw MessageTooSmall();
+					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooSmall();
 				m_recvBuffer.resize(2 * (rlpLen + 4));
 				assert(rlpLen > 0);
 				assert(rlpLen < 14);
@@ -166,7 +168,7 @@ void NetConnection::handshake(size_t _rlpLen)
 	m_socket.async_read_some(boost::asio::buffer(boost::asio::buffer(m_recvBuffer) + m_recvdBytes), [this, self, _rlpLen](boost::system::error_code _ec, size_t _len)
 	{
 		if (_ec)
-			return closeSocket();
+			return shutdownWithError(_ec); // handshake read-data failed
 		
 		if (_len && m_recvdBytes >= _rlpLen)
 		{
@@ -179,7 +181,7 @@ void NetConnection::handshake(size_t _rlpLen)
 			}
 			catch (...)
 			{
-				shutdown();
+				shutdownWithError(boost::asio::error::connection_reset); // handshake failed negotiation
 				return;
 			}
 			
@@ -199,40 +201,30 @@ void NetConnection::handshake(size_t _rlpLen)
 
 void NetConnection::doRead(size_t _rlpLen)
 {
-	if (m_stopped && !_rlpLen)
+	// Previously, shutdown wouldn't occur if _rlpLen was > 0, however with streaming protocols it's possible remote closes connection before writing a full response. Instead shutdown will defer until writes are complete (see send()).
+	if (m_stopped)
+		// if m_stopped is true it is certain shutdown already occurred
 		return closeSocket();
 	
 	auto self(shared_from_this());
 	m_socket.async_read_some(boost::asio::buffer(boost::asio::buffer(m_recvBuffer) + m_recvdBytes), [this, self, _rlpLen](boost::system::error_code _ec, size_t _len)
 	{
 		if (_ec)
-		{
-			shutdown();
-			return;
-		}
+			return shutdownWithError(_ec); // read header failed
 		
 		m_recvdBytes += _len;
 		
 		size_t rlpLen = _rlpLen;
 		if (!rlpLen && m_recvdBytes < 4)
-		{
-			doRead();
-			return;
-		}
+			return doRead();
 		else if (!rlpLen)
 		{
 			clog(RPCNote) << "NetConnection::doRead header";
 			rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
 			if (rlpLen > 16*1024)
-			{
-				clog(RPCNote) << "NetConnection::doRead MessageTooLarge";
-				return; // throw MessageTooLarge();
-			}
+				return shutdownWithError(boost::asio::error::connection_reset);
 			if (rlpLen < 3)
-			{
-				clog(RPCNote) << "NetConnection::doRead MessageTooSmall";
-				return; // throw MessageTooSmall();
-			}
+				return shutdownWithError(boost::asio::error::connection_reset);
 			
 			if (2*(rlpLen+4) > m_recvBuffer.size())
 				m_recvBuffer.resize(2*(rlpLen+4));
@@ -264,7 +256,7 @@ void NetConnection::doRead(size_t _rlpLen)
 			catch (...)
 			{
 				// bad message
-				shutdown();
+				shutdownWithError(boost::asio::error::connection_reset); // MessageInvalid
 				return;
 			}
 
@@ -277,9 +269,29 @@ void NetConnection::doRead(size_t _rlpLen)
 	});
 }
 
+bool NetConnection::connectionError() const
+{
+	lock_guard<mutex> l(x_socketError);
+	return m_socketError == boost::system::error_code();
+}
+
 bool NetConnection::connectionOpen() const
 {
 	return m_stopped ? false : m_socket.is_open();
+}
+
+void NetConnection::shutdownWithError(boost::system::error_code _ec)
+{
+	assert(_ec);
+
+	lock_guard<mutex> l(x_socketError);
+	if (m_socketError == boost::system::error_code())
+		return;
+		
+	m_socketError = _ec;
+	clog(RPCWarn) << "Socket shutdown due to error: " << _ec.message();
+	closeSocket();
+	shutdown(false);
 }
 
 void NetConnection::shutdown(bool _wait)
@@ -290,19 +302,13 @@ void NetConnection::shutdown(bool _wait)
 	else
 		return;
 	
-	// when m_stopped is true, doRead will eventually close socket
+	// when m_stopped is true, doRead will close socket
 	if (_wait)
 		while (m_socket.is_open())
 			usleep(200);
 	
 	m_recvBuffer.resize(0);
 	m_started = false;
-}
-
-void NetConnection::closeAndShutdown()
-{
-	closeSocket();
-	shutdown(false);
 }
 
 void NetConnection::closeSocket()

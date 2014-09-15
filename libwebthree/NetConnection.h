@@ -57,10 +57,13 @@ public:
 	boost::asio::ip::tcp::socket& socket();
 	
 	/// Send message
-	void send(NetMsg& _msg);
+	/// @todo Defer shutdown until send completes
+	void send(NetMsg const& _msg);
 	
 	/// @returns if connection is open; returns false if connection is shutting down
 	bool connectionOpen() const;
+	
+	bool connectionError() const;
 	
 	/// Gracefully shutdown connection
 	void shutdown(bool _wait = true);
@@ -81,15 +84,14 @@ private:
 	void handshake(size_t _rlpLen = 0);
 
 	
-	/// Immediately closes socket
-	void closeAndShutdown();
-	
+	/// Shutdown due to error
+	void shutdownWithError(boost::system::error_code _ec);
+
 	/// Close socket. Used by shutdown methods.
 	void closeSocket();
 	
 	messageHandlers m_serviceMsgHandlers;
 	messageHandlers m_dataMsgHandlers;
-	std::mutex x_msgHandlers;											///< m_responders mutex.
 	
 	boost::asio::ip::tcp::socket m_socket;
 	boost::asio::ip::tcp::endpoint m_endpoint;
@@ -97,8 +99,11 @@ private:
 	size_t m_recvdBytes = 0;						///< Incoming bytes of new message
 	
 	std::atomic<bool> m_stopped;				///< Set when connection is stopping or stopped. Handshake cannot occur unless m_stopped is true.
-	std::atomic<bool> m_started;				///< Atomically ensure connection is started once. Start cannot occur unless m_started is false.
+	std::atomic<bool> m_started;				///< Atomically ensure connection is started once. Start cannot occur unless m_started is false. Managed by start() and shutdown(bool).
 	bool m_originateConnection;
+	
+	boost::system::error_code m_socketError;
+	mutable std::mutex x_socketError;
 };
 
 
