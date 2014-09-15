@@ -32,34 +32,135 @@ using namespace std;
 using namespace dev;
 
 BOOST_AUTO_TEST_SUITE( rlpnet )
+
+BOOST_AUTO_TEST_CASE(test_rlpnet_connectionin)
+{
+	return;
+	boost::asio::io_service io;
+	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
+	NetConnection* n = new NetConnection(io, ep);
+	assert(!n->connectionOpen());
+	delete n;
+	
+	auto sharedconn = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+	sharedconn.reset();
+	
+	// nullptr handler
+	assert(!nullptr);
+	messageHandlers({make_pair(0,make_shared<messageHandler>(nullptr))});
+	
+	auto testNoConnection = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+	testNoConnection->start();
+	io.run();
+	testNoConnection.reset();
+	io.reset();
+}
+
+void acceptConnection(boost::asio::ip::tcp::acceptor& _a, boost::asio::io_service &io, boost::asio::ip::tcp::endpoint ep, std::atomic<int>& connected)
+{
+	static std::vector<shared_ptr<NetConnection > > conns;
+	std::vector<shared_ptr<NetConnection > >* cp = &conns;
+	
+	auto newConn = make_shared<NetConnection>(io, ep);
+	_a.async_accept(newConn->socket(), [newConn, &_a, &io, ep, cp, &connected](boost::system::error_code _ec)
+	{
+		if (!_ec)
+			newConn->start();
+		else
+			cout << "error accepting socket: " << _ec.message() << "\n";
+		connected++;
+		cp->push_back(newConn);
+		usleep(rand() % 250);
+		acceptConnection(_a, io, ep, connected);
+	});
+};
+
+BOOST_AUTO_TEST_CASE(test_rlpnet_rapid_connections)
+{
+	return;
+	boost::asio::io_service io;
+	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
+	
+	boost::asio::ip::tcp::acceptor acceptor(io, ep);
+	
+	auto connIn = make_shared<NetConnection>(io, ep);
+	std::atomic<int> acceptedConnections(0);
+	acceptConnection(acceptor, io, ep, acceptedConnections);
+	
+	std::thread ioThread([&]()
+						 {
+							 io.run();
+						 });
+	
+	for (auto i = 0; i < 20; i++)
+	{
+		auto connOut = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+		connOut->start();
+	}
+	
+	usleep(200000);
+	
+	io.stop();
+	usleep(1000); // boost/kqueue doesn't like halting 200 connections
+	ioThread.join();
+	
+	cout << "Connections: " << acceptedConnections;
+}
+
 BOOST_AUTO_TEST_CASE(test_rlpnet_connection)
 {
 	boost::asio::io_service io;
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
 	boost::asio::ip::tcp::acceptor acceptor(io, ep);
-
-	std::promise<bool> p_connAccepted;
-	std::future<bool> f_connAccepted = p_connAccepted.get_future();
 	
-	shared_ptr<NetConnection> connIn(new NetConnection(io));
-	acceptor.async_accept(connIn->socket(), [connIn, &p_connAccepted](boost::system::error_code _ec)
+	for (auto i = 0; i < 300; i++)
 	{
-		p_connAccepted.set_value(true);
-	});
-	connIn.reset();
-	
-	
-	NetConnection *connOut = new NetConnection(io, ep, 0, nullptr, nullptr);
-	while (!connOut->connectionOpen())
-		usleep(100);
-	delete connOut;
+		std::promise<bool> p_connAccepted;
+		std::future<bool> f_connAccepted = p_connAccepted.get_future();
+		
+// TODO: ensure connection disconnect is stopping read and handshake
+// TODO: determine how to ensure that IO/service/acceptor is completely reset.
+// TODO: determine if there is issue using promise/futures w/boost asio (perhaps todo w/diff threads)
+		
+// net handler lifecycle:
+		auto connIn = make_shared<NetConnection>(io, ep);
+		acceptor.async_accept(connIn->socket(), [connIn, &p_connAccepted](boost::system::error_code _ec)
+		{
+			if (!_ec)
+				connIn->start();
+			else
+				cout << "error accepting socket: " << _ec.message() << "\n";
+			p_connAccepted.set_value(true);
+		});
+		
+		std::thread ioThread([&]()
+		{
+			io.run();
+		});
 
-	// listening side
-	assert(f_connAccepted.get() == true);
-	
-	
-	// connecting side
-	
+		auto connOut = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+		connOut->start();
+		
+//		while (!connOut->connectionOpen());
+//		while (!connIn->connectionOpen());
+		
+		// listening side
+		assert(f_connAccepted.get() == true);
+
+		// must manually disconnect; destructor shutdown doesn't wait for pertinent IO to complete
+		connOut->shutdown();
+//		connIn->shutdown(); // other side shutsdown automatically (this is a TODO, moreso than a feature :-)
+
+		usleep(1000);
+		
+//		connIn.reset();
+//		connOut.reset();
+		
+		io.stop();
+		ioThread.join();
+		io.reset();
+	}
+
 }
 BOOST_AUTO_TEST_SUITE_END() // rlpnet
 

@@ -39,7 +39,7 @@ class NetConnection: public std::enable_shared_from_this<NetConnection>
 {
 public:
 	// Constructor for incoming connections.
-	NetConnection(boost::asio::io_service& _io_service);
+	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep);
 	
 	// Constructor for outgoing connections (multiple services).
 	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers);
@@ -48,10 +48,10 @@ public:
 	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, NetMsgServiceType _svc, messageHandler* _svcMsgHandler, messageHandler* _dataMsgHandler);
 	
 	// Destructor.
-	~NetConnection() {}
+	~NetConnection();
 	
 	/// Send handhsake and start connection read loop
-	void start() { handshake(); };
+	void start();
 	
 	/// Use at your own risk!
 	boost::asio::ip::tcp::socket& socket();
@@ -61,31 +61,44 @@ public:
 	
 	/// @returns if connection is open; returns false if connection is shutting down
 	bool connectionOpen() const;
-
-private:
-	/// Build and send message
-	void send(NetMsgServiceType _svc, NetMsgSequence _seq, NetMsgType _type, RLP const& _msg);
 	
+	/// Gracefully shutdown connection
+	void shutdown(bool _wait = true);
+
+protected:
+//	/// Build and send message
+//	void send(NetMsgServiceType _svc, NetMsgSequence _seq, NetMsgType _type, RLP const& _msg);
+	
+private:
 	/// @returns if RLP message size is valid and matches length from 4-byte header
 	/// @todo check service, sequence, packet type
 	bool checkPacket(bytesConstRef _netMsg) const;
 
-	void handshake(size_t _rlpLen = 0);
+	
 	void doRead(size_t _rlpLen = 0);
 	
-	/// Shutdown connection
-	void shutdown(bool _wait = true);
+	
+	void handshake(size_t _rlpLen = 0);
+
+	
+	/// Immediately closes socket
+	void closeAndShutdown();
+	
+	/// Close socket. Used by shutdown methods.
+	void closeSocket();
 	
 	messageHandlers m_serviceMsgHandlers;
 	messageHandlers m_dataMsgHandlers;
 	std::mutex x_msgHandlers;											///< m_responders mutex.
 	
 	boost::asio::ip::tcp::socket m_socket;
+	boost::asio::ip::tcp::endpoint m_endpoint;
 	bytes m_recvBuffer;						///< Buffer for bytes of new messages
-	size_t m_recvdBytes;						///< Incoming bytes of new message
+	size_t m_recvdBytes = 0;						///< Incoming bytes of new message
 	
-	std::atomic<bool> m_stopped;				///< Set when connection is stopping or stopped.
-	std::mutex x_stopped;
+	std::atomic<bool> m_stopped;				///< Set when connection is stopping or stopped. Handshake cannot occur unless m_stopped is true.
+	std::atomic<bool> m_started;				///< Atomically ensure connection is started once. Start cannot occur unless m_started is false.
+	bool m_originateConnection;
 };
 
 
