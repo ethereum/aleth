@@ -35,7 +35,8 @@ BOOST_AUTO_TEST_SUITE( rlpnet )
 
 BOOST_AUTO_TEST_CASE(test_rlpnet_connectionin)
 {
-	return;
+	cout << "test_rlpnet_connectionin\n";
+	
 	boost::asio::io_service io;
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
 	NetConnection* n = new NetConnection(io, ep);
@@ -58,19 +59,18 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connectionin)
 
 void acceptConnection(boost::asio::ip::tcp::acceptor& _a, boost::asio::io_service &io, boost::asio::ip::tcp::endpoint ep, std::atomic<int>& connected)
 {
-	return;
-	static std::vector<shared_ptr<NetConnection> > conns;
-	std::vector<shared_ptr<NetConnection> >* cp = &conns;
-	
 	auto newConn = make_shared<NetConnection>(io, ep);
-	_a.async_accept(newConn->socket(), [newConn, &_a, &io, ep, cp, &connected](boost::system::error_code _ec)
+	_a.async_accept(newConn->socket(), [newConn, &_a, &io, ep, &connected](boost::system::error_code _ec)
 	{
+		connected++;
 		if (!_ec)
 			newConn->start();
 		else
 			cout << "error accepting socket: " << _ec.message() << "\n";
-		connected++;
-		cp->push_back(newConn);
+
+		// Wait for connection to handshake or fail
+		while (!newConn->connectionError() && !newConn->connectionOpen());
+		
 		usleep(rand() % 250);
 		acceptConnection(_a, io, ep, connected);
 	});
@@ -78,9 +78,12 @@ void acceptConnection(boost::asio::ip::tcp::acceptor& _a, boost::asio::io_servic
 
 BOOST_AUTO_TEST_CASE(test_rlpnet_rapid_connections)
 {
+	// The method below is more stable than calling async_connect outside lambda
+	// Presumably, this is due to async_connect being called/executed within lambda's strand
+	cout << "test_rlpnet_rapid_connections\n";
+	
 	boost::asio::io_service io;
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
-	
 	boost::asio::ip::tcp::acceptor acceptor(io, ep);
 	
 	auto connIn = make_shared<NetConnection>(io, ep);
@@ -92,61 +95,82 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_rapid_connections)
 		io.run();
 	});
 	
-	for (auto i = 0; i < 20; i++)
+	std::vector<shared_ptr<NetConnection> > conns;
+	for (auto i = 0; i < 50; i++)
 	{
 		auto connOut = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
 		connOut->start();
+		conns.push_back(connOut);
 	}
 	
-	usleep(200000);
+	// tailend connections likely won't even start
+	for (auto c: conns)
+	{
+		c->shutdown();
+		while (c->connectionOpen() || !c->connectionError());
+	}
+	
+//	usleep(10000); // some will make it, others...
 	
 	io.stop();
-	usleep(1000); // boost/kqueue doesn't like halting 200 connections
 	ioThread.join();
 	
-	cout << "Connections: " << acceptedConnections;
+	acceptor.close();
+	connIn.reset();
+	io.reset();
+	
+	cout << "Connections: " << acceptedConnections << "\n";
 }
 
 BOOST_AUTO_TEST_CASE(test_rlpnet_connection)
 {
+	return;
+	cout << "test_rlpnet_connection\n";
+	
 	boost::asio::io_service io;
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
 	boost::asio::ip::tcp::acceptor acceptor(io, ep);
 	
+	std::thread ioThread([&]()
+	{
+		io.run();
+	});
+	
+	std::vector<shared_ptr<NetConnection> > conns;
 	for (auto i = 0; i < 300; i++)
 	{
-		std::promise<bool> p_connAccepted;
-		std::future<bool> f_connAccepted = p_connAccepted.get_future();
+		std::promise<bool>* p_connAccepted = new std::promise<bool>;
+		std::future<bool> f_connAccepted = p_connAccepted->get_future();
 
-// net handler lifecycle:
+// net handler lifecycle (with futures):
 		auto connIn = make_shared<NetConnection>(io, ep);
-		acceptor.async_accept(connIn->socket(), [connIn, &p_connAccepted](boost::system::error_code _ec)
+		conns.push_back(connIn);
+		
+		acceptor.async_accept(connIn->socket(), [connIn, p_connAccepted, &conns](boost::system::error_code _ec)
 		{
 			if (!_ec)
 				connIn->start();
 			else
 				cout << "error accepting socket: " << _ec.message() << "\n";
 			
-			// TODO: issue causing parallel operations setting each other's futures
 			try {
-				p_connAccepted.set_value(true);
+				p_connAccepted->set_value(true);
+				delete p_connAccepted;
 			} catch(...){
-				
+				delete p_connAccepted;
 			}
-		});
-		
-		std::thread ioThread([&]()
-		{
-			io.run();
 		});
 
 		auto connOut = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
 		connOut->start();
 
-		while (!connOut->connectionOpen() && !connOut->connectionError());
-		while (!connOut->connectionError());
-			if (connIn->connectionOpen())
-				break;
+		while (!connOut->connectionError() && !connOut->connectionOpen());
+//			if (connOut->connectionError())
+//				cout << "connOut connectionError()\n";
+		
+		while (!connIn->connectionError() && !connIn->connectionOpen());
+//			if (connIn->connectionError())
+//				cout << "connOut connectionError()\n";
 		
 		// listening side
 		if (connIn->connectionOpen() && connOut->connectionOpen())
@@ -156,15 +180,20 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connection)
 		connOut->shutdown();
 		connIn->shutdown();
 
-		// let there be a deallocation fight
-		connIn.reset();
-		connOut.reset();
-		
-		io.stop();
-		ioThread.join();
-		io.reset();
+//		io.stop();
+//		ioThread.join();
+//		io.reset();
 	}
+	
+	for (auto c: conns)
+		c.reset();
 
+	acceptor.close();
+	
+	io.stop();
+	ioThread.join();
+	
+	io.reset();
 }
 BOOST_AUTO_TEST_SUITE_END() // rlpnet
 

@@ -86,6 +86,7 @@ void NetConnection::start()
 
 void NetConnection::send(NetMsg const& _msg)
 {
+	// @todo return bool if message success (or equivalent socket codes, so user can check socket state)
 	if (m_stopped)
 		return;
 	
@@ -113,15 +114,6 @@ bool NetConnection::checkPacket(bytesConstRef _msg) const
 
 void NetConnection::handshake(size_t _rlpLen)
 {
-	if (!_rlpLen) // todo: refactor to handshake()/doHandshake(size_t)
-	{
-		// if m_stopped is true, set to false, returns true, continues
-		// if m_stopped is false, returns false, returns
-		bool yes = true;
-		if (!m_stopped.compare_exchange_strong(yes, false))
-			return;
-	}
-	
 	// read header
 	if (m_recvdBytes == 0)
 	{
@@ -145,6 +137,9 @@ void NetConnection::handshake(size_t _rlpLen)
 			{
 				if (_ec)
 					return shutdownWithError(_ec); // handshake read-header failed
+				if (_len == 0)
+					return shutdownWithError(boost::asio::error::connection_reset); // todo: reread
+				
 				assert(_len == 4);
 				
 				m_recvdBytes += _len;
@@ -178,6 +173,15 @@ void NetConnection::handshake(size_t _rlpLen)
 			{
 				NetMsg msg(bytesConstRef(m_recvBuffer.data() + 4, _rlpLen));
 				// todo: verify version
+
+				// todo: rename mutex
+				// it's possible for handshake to toggle
+				// following shutdown. icanhazflushhandlers?
+				lock_guard<mutex> l(x_socketError);
+				if (m_started)
+					m_stopped = false;
+				else
+					return;
 			}
 			catch (...)
 			{
@@ -271,8 +275,8 @@ void NetConnection::doRead(size_t _rlpLen)
 
 bool NetConnection::connectionError() const
 {
-	lock_guard<mutex> l(x_socketError);
-	return m_socketError == boost::system::error_code();
+	// Note: use of mutex here has issues
+	return !m_socketError;
 }
 
 bool NetConnection::connectionOpen() const
@@ -283,12 +287,15 @@ bool NetConnection::connectionOpen() const
 void NetConnection::shutdownWithError(boost::system::error_code _ec)
 {
 	assert(_ec);
+//	clog(RPCWarn) << "connectionError()" << _ec.message();
 
-	lock_guard<mutex> l(x_socketError);
-	if (m_socketError == boost::system::error_code())
-		return;
-		
-	m_socketError = _ec;
+	{
+		lock_guard<mutex> l(x_socketError);
+		if (m_socketError == boost::system::error_code())
+			return;
+		m_socketError = _ec;
+	}
+	
 	clog(RPCWarn) << "Socket shutdown due to error: " << _ec.message();
 	closeSocket();
 	shutdown(false);
@@ -296,19 +303,25 @@ void NetConnection::shutdownWithError(boost::system::error_code _ec)
 
 void NetConnection::shutdown(bool _wait)
 {
-	bool no = false;
-	if (m_started.compare_exchange_strong(no, true))
-		m_stopped = true;
-	else
-		return;
+	{
+		lock_guard<mutex> l(x_socketError);
+		bool yes = true;
+		if (!m_started.compare_exchange_strong(yes, false))
+			return;
+		
+		// if socket never left stopped-state (pre-handshake)
+		if (m_stopped)
+			return closeSocket();
+		else
+			m_stopped = true;
+	}
 	
 	// when m_stopped is true, doRead will close socket
 	if (_wait)
-		while (m_socket.is_open())
+		while (m_socket.is_open() && !connectionError())
 			usleep(200);
 	
 	m_recvBuffer.resize(0);
-	m_started = false;
 }
 
 void NetConnection::closeSocket()
