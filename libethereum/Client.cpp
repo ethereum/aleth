@@ -27,6 +27,9 @@
 #include <libethential/Log.h>
 #include "Defaults.h"
 #include "PeerServer.h"
+#include "BlockChainListener.h"
+
+
 using namespace std;
 using namespace eth;
 
@@ -62,7 +65,7 @@ void VersionChecker::setOk()
 	}
 }
 
-Client::Client(std::string const& _clientVersion, Address _us, std::string const& _dbPath, bool _forceClean, bool _dumping):
+Client::Client(std::string const& _clientVersion, Address _us, std::string const& _dbPath, bool _forceClean, BlockChainListener* _listener):
 	m_clientVersion(_clientVersion),
 	m_vc(_dbPath),
 	m_bc(_dbPath, !m_vc.ok() || _forceClean),
@@ -73,7 +76,8 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
-    m_dumping = _dumping;
+
+    m_listener = _listener;
 	m_vc.setOk();
 	work(true);
 }
@@ -477,14 +481,7 @@ void Client::work(bool _justQueue)
 		x_stateDB.unlock();
 
         h256s newBlocks;
-        if (m_dumping)
-        {
-            BlockChainListener *listener = new BlockChainListener();
-            newBlocks = m_bc.sync(m_bq, db, 100, listener);    // TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
-        }
-        else
-            newBlocks = m_bc.sync(m_bq, db, 100);
-
+        newBlocks = m_bc.sync(m_bq, db, 100, m_listener);    // TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
 
 		if (newBlocks.size())
 		{

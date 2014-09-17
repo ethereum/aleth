@@ -26,6 +26,8 @@
 #include <iostream>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
+#include "BlockChainDumpMaker.cpp"
+
 #if ETH_JSONRPC
 #include <jsonrpc/connectors/httpserver.h>
 #endif
@@ -308,7 +310,12 @@ int main(int argc, char** argv)
 
 	if (!clientName.empty())
 		clientName += "/";
-	Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath, false, dumping);
+
+    BlockChainListener *listener;
+    if (dumping)
+        listener = new BlockChainDumpMaker();
+
+	Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath, false, listener);
 
 	cout << credits();
 
