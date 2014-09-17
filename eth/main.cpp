@@ -117,7 +117,8 @@ void help()
         << "    -u,--public-ip <ip>  Force public ip to given (default; auto)." << endl
         << "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (Default: 8)." << endl
         << "    -x,--peers <number>  Attempt to connect to given number of peers (Default: 5)." << endl
-        << "    -V,--version  Show the version and exit." << endl;
+        << "    -V,--version  Show the version and exit." << endl
+        << "    --dump <on/off> Output state dmp after each block included" << endl;
         exit(0);
 }
 
@@ -187,6 +188,7 @@ int main(int argc, char** argv)
 	string publicIP;
 	bool upnp = true;
 	bool forceMining = false;
+    bool dumping = false;
 	string clientName;
 
 	// Init defaults
@@ -243,6 +245,19 @@ int main(int argc, char** argv)
 			us = KeyPair(h256(fromHex(argv[++i])));
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
+        else if (arg == "--dump" ){
+
+            string m = argv[++i];
+            if (isTrue(m))
+                dumping = true;
+            else if (isFalse(m))
+                dumping = false;
+            else
+            {
+                cerr << "Unknown dump option: " << m << " <on/off> are available" << endl;
+            }
+
+        }
 		else if ((arg == "-m" || arg == "--mining") && i + 1 < argc)
 		{
 			string m = argv[++i];
@@ -295,7 +310,8 @@ int main(int argc, char** argv)
 
 	if (!clientName.empty())
 		clientName += "/";
-    Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath);
+    Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath, false, dumping);
+
 	cout << credits();
 
 	c.setForceMining(forceMining);

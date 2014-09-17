@@ -62,7 +62,7 @@ void VersionChecker::setOk()
 	}
 }
 
-Client::Client(std::string const& _clientVersion, Address _us, std::string const& _dbPath, bool _forceClean):
+Client::Client(std::string const& _clientVersion, Address _us, std::string const& _dbPath, bool _forceClean, bool _dumping):
 	m_clientVersion(_clientVersion),
 	m_vc(_dbPath),
 	m_bc(_dbPath, !m_vc.ok() || _forceClean),
@@ -73,6 +73,7 @@ Client::Client(std::string const& _clientVersion, Address _us, std::string const
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
+    m_dumping = _dumping;
 	m_vc.setOk();
 	work(true);
 }
@@ -474,7 +475,17 @@ void Client::work(bool _justQueue)
 		cwork << "BQ ==> CHAIN ==> STATE";
 		OverlayDB db = m_stateDB;
 		x_stateDB.unlock();
-		h256s newBlocks = m_bc.sync(m_bq, db, 100);	// TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
+
+        h256s newBlocks;
+        if (m_dumping)
+        {
+            BlockChainListener *listener = new BlockChainListener();
+            newBlocks = m_bc.sync(m_bq, db, 100, listener);    // TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
+        }
+        else
+            newBlocks = m_bc.sync(m_bq, db, 100);
+
+
 		if (newBlocks.size())
 		{
 			for (auto i: newBlocks)

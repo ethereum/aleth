@@ -32,6 +32,7 @@
 #include <libethcore/Dagger.h>
 #include "Guards.h"
 #include "BlockChain.h"
+#include "BlockChainListener.h"
 #include "TransactionQueue.h"
 #include "State.h"
 #include "PeerNetwork.h"
@@ -168,7 +169,7 @@ class Client
 {
 public:
 	/// Constructor.
-	explicit Client(std::string const& _clientVersion, Address _us = Address(), std::string const& _dbPath = std::string(), bool _forceClean = false);
+	explicit Client(std::string const& _clientVersion, Address _us = Address(), std::string const& _dbPath = std::string(), bool _forceClean = false, bool _dumping = false);
 
 	/// Destructor.
 	~Client();
@@ -351,6 +352,7 @@ private:
 	bool m_paranoia = false;
 	bool m_doMine = false;					///< Are we supposed to be mining?
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
+    bool m_dumping = false;
 	MineProgress m_mineProgress;
 	std::list<MineInfo> m_mineHistory;
 	mutable bool m_restartMining = false;

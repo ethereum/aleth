@@ -163,7 +163,7 @@ bool contains(T const& _t, V const& _v)
 	return false;
 }
 
-h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max)
+h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max, BlockChainListener* _listener)
 {
 	vector<bytes> blocks;
 	_bq.drain(blocks);
@@ -173,7 +173,7 @@ h256s BlockChain::sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max
 	{
 		try
 		{
-			for (auto h: import(block, _stateDB))
+			for (auto h: import(block, _stateDB, _listener))
 				if (!_max--)
 					break;
 				else
@@ -202,7 +202,7 @@ h256s BlockChain::attemptImport(bytes const& _block, OverlayDB const& _stateDB) 
 	}
 }
 
-h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
+h256s BlockChain::import(bytes const& _block, OverlayDB const& _db, BlockChainListener* _listener)
 {
 	// VERIFY: populates from the block and checks the block is internally coherent.
 	BlockInfo bi;
@@ -257,6 +257,7 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 		// Check transactions are valid and that they result in a state equivalent to our state_root.
 		// Get total difficulty increase and update state, checking it.
 		State s(bi.coinbaseAddress, _db);
+
 		auto tdIncrease = s.enactOn(&_block, bi, *this);
 		auto b = s.bloom();
 		BlockBlooms bb;
@@ -296,6 +297,14 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 #if ETH_PARANOIA
 		checkConsistency();
 #endif
+
+        /// if --dump set dump to a file
+        if (_listener != nullptr)
+        {
+            clog(BlockChainNote) << "Dumping block #" << bi.number << " => " << bi.hash ;
+            _listener->onBlockImport(s, bi);
+        }
+
 	}
 #if ETH_CATCH
 	catch (Exception const& _e)

@@ -29,6 +29,8 @@
 #include "BlockDetails.h"
 #include "AddressState.h"
 #include "BlockQueue.h"
+#include "BlockChainListener.h"
+
 namespace ldb = leveldb;
 
 namespace eth
@@ -68,7 +70,7 @@ public:
 	void process();
 
 	/// Sync the chain with any incoming blocks. All blocks should, if processed in order
-	h256s sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
+	h256s sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max, BlockChainListener*_listener = nullptr);
 
 	/// Attempt to import the given block directly into the BlockChain and sync with the state DB.
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
@@ -76,7 +78,7 @@ public:
 
 	/// Import block into disk-backed DB
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
-	h256s import(bytes const& _block, OverlayDB const& _stateDB);
+	h256s import(bytes const& _block, OverlayDB const& _stateDB, BlockChainListener* _listener = nullptr);
 
 	/// Get the familial details concerning a block (or the most recent mined if none given). Thread-safe.
 	BlockDetails details(h256 _hash) const { return queryExtras<BlockDetails, 0>(_hash, m_details, x_details, NullBlockDetails); }
@@ -130,7 +132,8 @@ public:
 	 */
 	h256s treeRoute(h256 _from, h256 _to, h256* o_common = nullptr) const;
 
-private:
+    private:
+
 	template<class T, unsigned N> T queryExtras(h256 _h, std::map<h256, T>& _m, boost::shared_mutex& _x, T const& _n) const
 	{
 		{
