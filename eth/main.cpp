@@ -94,45 +94,45 @@ void interactiveHelp()
 void help()
 {
 	cout
-        << "Usage eth [OPTIONS] <remote-host>" << endl
-        << "Options:" << endl
-        << "    -a,--address <addr>  Set the coinbase (mining payout) address to addr (default: auto)." << endl
-        << "    -c,--client-name <name>  Add a name to your client's version string (default: blank)." << endl
-        << "    -d,--db-path <path>  Load database from path (default:  ~/.ethereum " << endl
-        << "                         <APPDATA>/Etherum or Library/Application Support/Ethereum)." << endl
+		<< "Usage eth [OPTIONS] <remote-host>" << endl
+		<< "Options:" << endl
+		<< "    -a,--address <addr>  Set the coinbase (mining payout) address to addr (default: auto)." << endl
+		<< "    -c,--client-name <name>  Add a name to your client's version string (default: blank)." << endl
+		<< "    -d,--db-path <path>  Load database from path (default:  ~/.ethereum " << endl
+		<< "                         <APPDATA>/Etherum or Library/Application Support/Ethereum)." << endl
 		<< "    -f,--force-mining  Mine even when there are no transaction to mine (Default: off)" << endl
 		<< "    -h,--help  Show this help message and exit." << endl
-        << "    -i,--interactive  Enter interactive mode (default: non-interactive)." << endl
+		<< "    -i,--interactive  Enter interactive mode (default: non-interactive)." << endl
 #if ETH_JSONRPC
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --json-rpc-port  Specify JSON-RPC server port (implies '-j', default: 8080)." << endl
 #endif
-        << "    -l,--listen <port>  Listen on the given port for incoming connected (default: 30303)." << endl
+		<< "    -l,--listen <port>  Listen on the given port for incoming connected (default: 30303)." << endl
 		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (Default: off)" << endl
 		<< "    -n,--upnp <on/off>  Use upnp for NAT (default: on)." << endl
-        << "    -o,--mode <full/peer>  Start a full node or a peer node (Default: full)." << endl
-        << "    -p,--port <port>  Connect to remote port (default: 30303)." << endl
-        << "    -r,--remote <host>  Connect to remote host (default: none)." << endl
-        << "    -s,--secret <secretkeyhex>  Set the secret key for use with send command (default: auto)." << endl
-        << "    -u,--public-ip <ip>  Force public ip to given (default; auto)." << endl
-        << "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (Default: 8)." << endl
-        << "    -x,--peers <number>  Attempt to connect to given number of peers (Default: 5)." << endl
-        << "    -V,--version  Show the version and exit." << endl
-        << "    --dump <on/off> Output state dmp after each block included" << endl;
-        exit(0);
+		<< "    -o,--mode <full/peer>  Start a full node or a peer node (Default: full)." << endl
+		<< "    -p,--port <port>  Connect to remote port (default: 30303)." << endl
+		<< "    -r,--remote <host>  Connect to remote host (default: none)." << endl
+		<< "    -s,--secret <secretkeyhex>  Set the secret key for use with send command (default: auto)." << endl
+		<< "    -u,--public-ip <ip>  Force public ip to given (default; auto)." << endl
+		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (Default: 8)." << endl
+		<< "    -x,--peers <number>  Attempt to connect to given number of peers (Default: 5)." << endl
+		<< "    -V,--version  Show the version and exit." << endl
+		<< "    --dump <on/off> Output state dmp after each block included" << endl;
+		exit(0);
 }
 
 string credits(bool _interactive = false)
 {
 	std::ostringstream cout;
 	cout
-        << "Ethereum (++) " << eth::EthVersion << endl
+		<< "Ethereum (++) " << eth::EthVersion << endl
 		<< "  Code by Gav Wood, (c) 2013, 2014." << endl
 		<< "  Based on a design by Vitalik Buterin." << endl << endl;
 
 	if (_interactive)
 	{
-        string vs = toString(eth::EthVersion);
+		string vs = toString(eth::EthVersion);
 		vs = vs.substr(vs.find_first_of('.') + 1)[0];
 		int pocnumber = stoi(vs);
 		string m_servers;
@@ -150,7 +150,7 @@ string credits(bool _interactive = false)
 
 void version()
 {
-    cout << "eth version " << eth::EthVersion << endl;
+	cout << "eth version " << eth::EthVersion << endl;
 	cout << "Build: " << ETH_QUOTED(ETH_BUILD_PLATFORM) << "/" << ETH_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
@@ -188,7 +188,7 @@ int main(int argc, char** argv)
 	string publicIP;
 	bool upnp = true;
 	bool forceMining = false;
-    bool dumping = false;
+	bool dumping = false;
 	string clientName;
 
 	// Init defaults
@@ -245,19 +245,17 @@ int main(int argc, char** argv)
 			us = KeyPair(h256(fromHex(argv[++i])));
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
-        else if (arg == "--dump" ){
+		else if (arg == "--dump" )
+		{
+			string m = argv[++i];
+			if (isTrue(m))
+				dumping = true;
+			else if (isFalse(m))
+				dumping = false;
+			else
+				cerr << "Unknown dump option: " << m << " <on/off> are available" << endl;
 
-            string m = argv[++i];
-            if (isTrue(m))
-                dumping = true;
-            else if (isFalse(m))
-                dumping = false;
-            else
-            {
-                cerr << "Unknown dump option: " << m << " <on/off> are available" << endl;
-            }
-
-        }
+		}
 		else if ((arg == "-m" || arg == "--mining") && i + 1 < argc)
 		{
 			string m = argv[++i];
@@ -310,7 +308,7 @@ int main(int argc, char** argv)
 
 	if (!clientName.empty())
 		clientName += "/";
-    Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath, false, dumping);
+	Client c("Ethereum(++)/" + clientName + "v" + eth::EthVersion + "/" ETH_QUOTED(ETH_BUILD_TYPE) "/" ETH_QUOTED(ETH_BUILD_PLATFORM), coinbase, dbPath, false, dumping);
 
 	cout << credits();
 
