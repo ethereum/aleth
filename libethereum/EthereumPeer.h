@@ -27,6 +27,7 @@
 #include <memory>
 #include <utility>
 #include <libdevcore/RLP.h>
+#include <libdevcore/Guards.h>
 #include <libethcore/CommonEth.h>
 #include <libp2p/Capability.h>
 #include "CommonNet.h"
@@ -67,6 +68,8 @@ private:
 
 	void giveUpOnFetch();
 
+	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
+	
 	unsigned m_protocolVersion;
 	u256 m_networkId;
 
@@ -80,8 +83,10 @@ private:
 
 	bool m_requireTransactions;
 
+	Mutex x_knownBlocks;
 	std::set<h256> m_knownBlocks;
 	std::set<h256> m_knownTransactions;
+	std::mutex x_knownTransactions;
 };
 
 }

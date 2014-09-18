@@ -29,6 +29,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
+#include <libdevcore/Worker.h>
 #include <libevm/FeeStructure.h>
 #include <libethcore/Dagger.h>
 #include <libp2p/Common.h>
@@ -108,14 +109,11 @@ struct WorkChannel: public LogChannel { static const char* name() { return "-W-"
 /**
  * @brief Main API hub for interfacing with Ethereum.
  */
-class Client: public MinerHost, public Interface
+class Client: public MinerHost, public Interface, Worker
 {
 	friend class Miner;
 
 public:
-	/// Original Constructor.
-	explicit Client(std::string const& _clientVersion, Address _us = Address(), std::string const& _dbPath = std::string(), bool _forceClean = false);
-
 	/// New-style Constructor.
 	explicit Client(p2p::Host* _host, std::string const& _dbPath = std::string(), bool _forceClean = false, u256 _networkId = 0);
 
@@ -195,32 +193,6 @@ public:
 	/// Get the object representing the current canonical blockchain.
 	BlockChain const& blockChain() const { return m_bc; }
 
-	// Misc stuff:
-
-	void setClientVersion(std::string const& _name) { m_clientVersion = _name; }
-
-	// Network stuff:
-
-	/// Get information on the current peer set.
-	std::vector<p2p::PeerInfo> peers();
-	/// Same as peers().size(), but more efficient.
-	size_t peerCount() const;
-	/// Same as peers().size(), but more efficient.
-	void setIdealPeerCount(size_t _n) const;
-
-	/// Start the network subsystem.
-	void startNetwork(unsigned short _listenPort = 30303, std::string const& _remoteHost = std::string(), unsigned short _remotePort = 30303, NodeMode _mode = NodeMode::Full, unsigned _peers = 5, std::string const& _publicIP = std::string(), bool _upnp = true, u256 _networkId = 0);
-	/// Connect to a particular peer.
-	void connect(std::string const& _seedHost, unsigned short _port = 30303);
-	/// Stop the network subsystem.
-	void stopNetwork();
-	/// Is the network subsystem up?
-	bool haveNetwork() { ReadGuard l(x_net); return !!m_net; }
-	/// Save peers
-	bytes savePeers();
-	/// Restore peers
-	void restorePeers(bytesConstRef _saved);
-
 	// Mining stuff:
 
 	/// Check block validity prior to mining.
@@ -246,7 +218,7 @@ public:
 	unsigned miningThreads() const { ReadGuard l(x_miners); return m_miners.size(); }
 	/// Start mining.
 	/// NOT thread-safe - call it & stopMining only from a single thread
-	void startMining() { ensureWorking(); ReadGuard l(x_miners); for (auto& m: m_miners) m.start(); }
+	void startMining() { startWorking(); ReadGuard l(x_miners); for (auto& m: m_miners) m.start(); }
 	/// Stop mining.
 	/// NOT thread-safe
 	void stopMining() { ReadGuard l(x_miners); for (auto& m: m_miners) m.stop(); }
@@ -267,15 +239,10 @@ public:
 	void killChain();
 
 private:
-	/// Ensure the worker thread is running. Needed for blockchain maintenance & mining.
-	void ensureWorking();
-
 	/// Do some work. Handles blockchain maintenance and mining.
-	/// @param _justQueue If true will only processing the transaction queues.
-	void work();
+	virtual void doWork();
 
-	/// Do some work on the network.
-	void workNet();
+	virtual void doneWorking();
 
 	/// Overrides for being a mining host.
 	virtual void setupState(State& _s);
@@ -300,7 +267,6 @@ private:
 	State asOf(int _h) const;
 	State asOf(unsigned _h) const;
 
-	std::string m_clientVersion;			///< Our end-application client's name/version.
 	VersionChecker m_vc;					///< Dummy object to check & update the protocol version.
 	BlockChain m_bc;						///< Maintains block database.
 	TransactionQueue m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
@@ -311,15 +277,7 @@ private:
 	State m_preMine;						///< The present state of the client.
 	State m_postMine;						///< The state of the client which we're mining (i.e. it'll have all the rewards added).
 
-	std::unique_ptr<std::thread> m_workNet;	///< The network thread.
-	std::atomic<ClientWorkState> m_workNetState;
-	mutable boost::shared_mutex x_net;		///< Lock for the network existance.
-	std::unique_ptr<p2p::Host> m_net;		///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-
-	std::weak_ptr<EthereumHost> m_extHost;	///< Our Ethereum Host. Don't do anything if we can't lock.
-
-	std::unique_ptr<std::thread> m_work;	///< The work thread.
-	std::atomic<ClientWorkState> m_workState;
+	std::weak_ptr<EthereumHost> m_host;	///< Our Ethereum Host. Don't do anything if we can't lock.
 
 	std::vector<Miner> m_miners;
 	mutable boost::shared_mutex x_miners;

@@ -29,6 +29,7 @@
 #include <utility>
 #include <thread>
 #include <libdevcore/Guards.h>
+#include <libdevcore/Worker.h>
 #include <libethcore/CommonEth.h>
 #include <libp2p/Common.h>
 #include "CommonNet.h"
@@ -45,17 +46,137 @@ namespace eth
 class TransactionQueue;
 class BlockQueue;
 
+using UnsignedRange = std::pair<unsigned, unsigned>;
+using UnsignedRanges = std::vector<UnsignedRange>;
+
+class RangeMask
+{
+public:
+	RangeMask() {}
+	RangeMask(unsigned _begin, unsigned _end): m_ranges({{_begin, _end}}) {}
+
+	RangeMask& operator+=(RangeMask const& _m)
+	{
+		for (auto const& i: _m.m_ranges)
+			operator+=(i);
+		return *this;
+	}
+	RangeMask& operator+=(UnsignedRange const& _m)
+	{
+		for (auto i = _m.first; i < _m.second;)
+		{
+			// for each number, we find the element equal or next lower. this must contain the value.
+			auto it = m_ranges.lower_bound(i);
+			auto uit = m_ranges.upper_bound(i + 1);
+			if (it == m_ranges.end() || it->second < i)
+				// lower range is too low to merge.
+				// if the next higher range is too high.
+				if (uit == m_ranges.end() || uit->first > _m.second)
+				{
+					// just create a new range
+					m_ranges[i] = _m.second;
+					break;
+				}
+				else
+				{
+					if (uit->first == i)
+						// move i to end of range
+						i = uit->second;
+					else
+					{
+						// merge with the next higher range
+						// move i to end of range
+						i = m_ranges[i] = uit->second;
+						i = uit->second;
+						m_ranges.erase(uit);
+					}
+				}
+			else if (it->second == i)
+			{
+				// if the next higher range is too high.
+				if (uit == m_ranges.end() || uit->first > _m.second)
+				{
+					// merge with the next lower range
+					m_ranges[it->first] = _m.second;
+					break;
+				}
+				else
+				{
+					// merge with both next lower & next higher.
+					i = m_ranges[it->first] = uit->second;
+					m_ranges.erase(uit);
+				}
+			}
+			else
+				i = it->second;
+		}
+		return *this;
+	}
+
+	RangeMask& operator+=(unsigned _i)
+	{
+		return operator+=(UnsignedRange(_i, _i + 1));
+	}
+
+	bool contains(unsigned _i) const
+	{
+		auto it = m_ranges.lower_bound(_i);
+		return it != m_ranges.end() && it->first <= _i && it->second > _i;
+	}
+
+private:
+	std::map<unsigned, unsigned> m_ranges;
+};
+
+#if 0
+class DownloadSub
+{
+	friend class DownloadMan;
+
+public:
+	h256s nextFetch();
+	void noteBlock(h256 _hash, bytesConstRef _data);
+
+private:
+	void resetFetch();		// Called by DownloadMan when we need to reset the download.
+
+	DownloadMan* m_man;
+
+	Mutex m_fetch;
+	h256s m_fetching;
+	h256s m_activeGet;
+	bool m_killFetch;
+	RangeMask m_attempted;
+};
+
+class DownloadMan
+{
+	friend class DownloadSub;
+
+public:
+	void resetToChain(h256s const& _chain);
+
+private:
+	void cancelFetch(DownloadSub* );
+	void noteBlock(h256 _hash, bytesConstRef _data);
+
+	h256s m_chain;
+	RangeMask m_complete;
+	std::map<DownloadSub*, UnsignedRange> m_fetching;
+};
+#endif
+
 /**
  * @brief The EthereumHost class
  * @warning None of this is thread-safe. You have been warned.
  */
-class EthereumHost: public p2p::HostCapability<EthereumPeer>
+class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 	friend class EthereumPeer;
 
 public:
 	/// Start server, but don't listen.
-	EthereumHost(BlockChain const& _ch, u256 _networkId);
+	EthereumHost(BlockChain const& _ch, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
 	/// Will block on network process events.
 	virtual ~EthereumHost();
@@ -63,9 +184,6 @@ public:
 	unsigned protocolVersion() const { return c_protocolVersion; }
 	u256 networkId() const { return m_networkId; }
 	void setNetworkId(u256 _n) { m_networkId = _n; }
-
-	/// Sync with the BlockChain. It might contain one of our mined blocks, we might have new candidates from the network.
-	bool sync(TransactionQueue&, BlockQueue& _bc);
 
 private:
 	/// Session wants to pass us a block that we might not have.
@@ -76,6 +194,12 @@ private:
 	/// Called when the peer can no longer provide us with any needed blocks.
 	void noteDoneBlocks();
 
+	/// Sync with the BlockChain. It might contain one of our mined blocks, we might have new candidates from the network.
+	void doWork();
+
+	/// Called by peer to add incoming transactions.
+	void addIncomingTransaction(bytes const& _bytes) { std::lock_guard<std::recursive_mutex> l(m_incomingLock); m_incomingTransactions.push_back(_bytes); }
+	
 	void maintainTransactions(TransactionQueue& _tq, h256 _currentBlock);
 	void maintainBlocks(BlockQueue& _bq, h256 _currentBlock);
 
@@ -90,7 +214,12 @@ private:
 	/// Initialises the network peer-state, doing the stuff that needs to be once-only. @returns true if it really was first.
 	bool ensureInitialised(TransactionQueue& _tq);
 
-	BlockChain const* m_chain = nullptr;
+	virtual void onStarting() { startWorking(); }
+	virtual void onStopping() { stopWorking(); }
+
+	BlockChain const& m_chain;
+	TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
+	BlockQueue& m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 
 	u256 m_networkId;
 
