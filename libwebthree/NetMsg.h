@@ -49,6 +49,7 @@ public:
 	NetMsgServiceType service() { return m_service; }
 	NetMsgSequence sequence() { return m_sequence; }
 	NetMsgType type() { return m_messageType; }
+	bytes const& rlp() { return m_rlpBytes; }
 	bytes const& payload() const { return m_messageBytes; }
 	
 private:
@@ -60,12 +61,13 @@ private:
 //	bool check(bytesConstRef _netMsg) const {};
 //	/// @returns RLP message
 //	bytes payload(bytesConstRef _netMsg) const {};
-	bytes packetify(RLP const& _rlp) const;
+	bytes packetify() const;
 	
 	NetMsgServiceType m_service;
 	NetMsgSequence m_sequence;			///< Message sequence. Initial value is random and chosen by client.
 	NetMsgType m_messageType;				///< Message type; omitted from header if 0.
-	bytes const m_messageBytes;	///< RLP Bytes of the entire message.
+	bytes m_rlpBytes;				///< RLP Payload.
+	bytes m_messageBytes;			///< Bytes of network message.
 };
 	
 }

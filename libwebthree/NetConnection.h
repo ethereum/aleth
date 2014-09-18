@@ -34,6 +34,7 @@ class NetMsg;
  * @brief Interface for listening on or connecting sockets for
  *
  * @todo Random sequence initialization.
+ * @todo protocol error handling (separate from network/shutdown errors)
  */
 class NetConnection: public std::enable_shared_from_this<NetConnection>
 {
@@ -54,7 +55,7 @@ public:
 	void start();
 	
 	/// Use at your own risk!
-	boost::asio::ip::tcp::socket& socket();
+	boost::asio::ip::tcp::socket* socket();
 	
 	/// Send message
 	/// @todo Defer shutdown until send completes
@@ -77,9 +78,8 @@ private:
 	/// @todo check service, sequence, packet type
 	bool checkPacket(bytesConstRef _netMsg) const;
 
-	
+	void doWrite();
 	void doRead(size_t _rlpLen = 0);
-	
 	
 	void handshake(size_t _rlpLen = 0);
 

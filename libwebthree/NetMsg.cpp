@@ -24,19 +24,34 @@
 
 using namespace dev;
 
-NetMsg::NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req): m_service(_service), m_sequence(_seq), m_messageType(_packetType), m_messageBytes(std::move(packetify(_req)))
+/*
+ *
+ * @todo Encapsulate and maintain header independent of payload in order to separate memory storage (to prevent copy and facilitate other storage options for large streams).
+ */
+NetMsg::NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req): m_service(_service), m_sequence(_seq), m_messageType(_packetType), m_rlpBytes(std::move(_req.data().toBytes())), m_messageBytes(std::move(packetify()))
 {
 }
 
-NetMsg::NetMsg(bytes const& _packetData): m_messageBytes(std::move(bytesConstRef(&_packetData).toBytes()))
+NetMsg::NetMsg(bytes const& _packetData): NetMsg(bytesConstRef(&_packetData))
 {
 }
 
 NetMsg::NetMsg(bytesConstRef _packetData): m_messageBytes(std::move(_packetData.toBytes()))
 {
+	RLP r(bytesConstRef(&m_messageBytes).cropped(4));
+	m_service = (unsigned)r[0].toInt();
+	m_sequence = (unsigned)r[1].toInt();
+	m_messageType = 0;
+	if (r.itemCountStrict() == 3)
+	{
+		m_rlpBytes = bytes(r[2].data().toBytes());
+	}
+	else
+		m_rlpBytes = bytes(r[3].data().toBytes());
+	// todo: else throw exception
 }
 
-bytes NetMsg::packetify(RLP const& _rlp) const
+bytes NetMsg::packetify() const
 {
 	int listSize = (!m_service || !m_messageType) ? 3 : 4;
 	
@@ -47,7 +62,7 @@ bytes NetMsg::packetify(RLP const& _rlp) const
 	s << m_sequence;
 	if (listSize == 4)
 		s << m_messageType;
-	s << _rlp.data().toBytes();
+	s.appendRaw(m_rlpBytes);
 	
 	bytes bytesout;
 	s.swapOut(bytesout);

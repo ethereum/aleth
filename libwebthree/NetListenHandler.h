@@ -22,11 +22,14 @@
 
 #pragma once
 
-#include <future>
+#include <thread>
 #include "NetConnection.h"
+#include "Common.h"
 
 namespace dev
 {
+	
+class NetConnection;
 	
 /**
  * @brief Interface for handling Network service connections.
@@ -36,7 +39,7 @@ namespace dev
 class NetListenHandler
 {
 public:
-	NetListenHandler(NetMsgServiceType _type, boost::asio::ip::tcp::endpoint _ep);
+	NetListenHandler(boost::asio::ip::tcp::endpoint _ep);
 	~NetListenHandler();
 
 	// template...
@@ -46,20 +49,14 @@ public:
 //	/// Will be passed incoming service-messages.
 //	virtual void serviceMsgHandler(NetMsg& _msg) { return; }
 
-	void send(NetMsgType _type, RLP const& _rlp);
-	
 private:
-	void run();
-	
 	NetMsgSequence nextDataSequence();
 
-	NetMsgServiceType m_serviceType;
 	std::atomic<NetMsgSequence> m_localDataSequence;
 	
 	boost::asio::io_service m_io;
+	boost::asio::ip::tcp::acceptor m_acceptor;
 	std::thread m_ioThread;
-	
-	NetConnection m_connection;
 
 	std::atomic<bool> m_stopped;
 	std::mutex x_stopped;
