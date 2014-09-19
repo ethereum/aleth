@@ -24,10 +24,6 @@
 
 using namespace dev;
 
-/*
- *
- * @todo Encapsulate and maintain header independent of payload in order to separate memory storage (to prevent copy and facilitate other storage options for large streams).
- */
 NetMsg::NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req): m_service(_service), m_sequence(_seq), m_messageType(_packetType), m_rlpBytes(std::move(_req.data().toBytes())), m_messageBytes(std::move(packetify()))
 {
 }

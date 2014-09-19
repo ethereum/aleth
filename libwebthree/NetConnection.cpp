@@ -58,59 +58,60 @@ void NetConnection::start()
 {
 	assert(m_started.load() == false);
 	bool no = false;
-	if (m_started.compare_exchange_strong(no, true))
+	if (!m_started.compare_exchange_strong(no, true))
+		return;
+	
+	if (!m_originateConnection)
+		handshake();
+	else
 	{
-		if (m_originateConnection)
+		clog(RPCConnect) << (void*)this << (m_originateConnection ? "[egress]" : "[ingress]") << "start()";
+		
+		auto self(shared_from_this());
+		m_socket.async_connect(m_endpoint, [self, this](boost::system::error_code const& _ec)
 		{
-			clog(RPCConnect) << (void*)this << (m_originateConnection ? "[egress]" : "[ingress]") << "start()";
-			
-			auto self(shared_from_this());
-			m_socket.async_connect(m_endpoint, [self, this](boost::system::error_code const& _ec)
-			{
-				if (_ec)
-					// todo: try until 5 seconds w/10ms sleep
-					shutdownWithError(_ec); // Connection failed
-				else
-					handshake();
-			});
-		}
-		else
-			handshake();
+			if (_ec)
+				// todo: retry times 3 w/250ms sleep
+				shutdownWithError(_ec); // Connection failed
+			else
+				handshake();
+		});
 	}
 }
 
 void NetConnection::send(NetMsg const& _msg)
 {
-	// @todo throw exception if connection went away
 	if (m_stopped)
 		return;
 	
 	auto self(shared_from_this());
-	boost::asio::async_write(m_socket, boost::asio::buffer(_msg.payload()), [self](boost::system::error_code _ec, size_t _len){
+	boost::asio::async_write(m_socket, boost::asio::buffer(_msg.payload()), [self](boost::system::error_code _ec, size_t _len)
+	{
 		if (_ec)
-				self->shutdownWithError(_ec); // send write failed
-			else
-				clog(RPCNote) << "NetConnection::send";
+			return self->shutdownWithError(_ec); // send write failed
+		
+		assert(_len);
+		clog(RPCNote) << "NetConnection::send";
 	});
 }
 
 void NetConnection::doWrite()
 {
-	
+	// implement write queue w/send()
 }
 
-bool NetConnection::checkPacket(bytesConstRef _msg) const
-{
-	if (_msg.size() < 4)
-		return false;
-	uint32_t len = ((_msg[0] * 256 + _msg[1]) * 256 + _msg[2]) * 256 + _msg[3];
-	if (_msg.size() != len + 4)
-		return false;
-	RLP r(_msg.cropped(4));
-	if (r.actualSize() != len)
-		return false;
-	return true;
-}
+//bool NetConnection::checkPacket(bytesConstRef _msg) const
+//{
+//	if (_msg.size() < 4)
+//		return false;
+//	uint32_t len = ((_msg[0] * 256 + _msg[1]) * 256 + _msg[2]) * 256 + _msg[3];
+//	if (_msg.size() != len + 4)
+//		return false;
+//	RLP r(_msg.cropped(4));
+//	if (r.actualSize() != len)
+//		return false;
+//	return true;
+//}
 
 void NetConnection::handshake(size_t _rlpLen)
 {
@@ -132,6 +133,8 @@ void NetConnection::handshake(size_t _rlpLen)
 			if (_ec)
 				return shutdownWithError(_ec); // handshake write failed
 
+			assert(_len);
+			
 			// read length header
 			m_recvBuffer.resize(4);
 			boost::asio::async_read(m_socket, boost::asio::buffer(m_recvBuffer), [this, self](boost::system::error_code _ec, size_t _len)
@@ -173,18 +176,18 @@ void NetConnection::handshake(size_t _rlpLen)
 			{
 				NetMsg msg(bytesConstRef(m_recvBuffer.data(), _rlpLen + 4));
 				if (RLP(msg.rlp()).toString() == "version")
-					clog(RPCNote) << (m_originateConnection ? "[egress]" : "[ingress]") << "Version verified!";
-				else
-					clog(RPCNote) << (m_originateConnection ? "[egress]" : "[ingress]") << "Version Failed! "; // << RLP(msg.payload()).toString();
+				{
+					// It's possible for handshake to finish following shutdown
+					lock_guard<mutex> l(x_socketError);
+					if (m_started)
+						m_stopped = false;
+					else
+						return;
 					
-
-				// todo: rename mutex
-				// It's possible for handshake to toggle following shutdown, thus
-				lock_guard<mutex> l(x_socketError);
-				if (m_started)
-					m_stopped = false;
+					clog(RPCNote) << (m_originateConnection ? "[egress]" : "[ingress]") << "Version verified!";
+				}
 				else
-					return;
+					clog(RPCNote) << (m_originateConnection ? "[egress]" : "[ingress]") << "Version Failed! ";
 			}
 			catch (std::exception const& _e)
 			{
@@ -219,7 +222,8 @@ void NetConnection::doRead(size_t _rlpLen)
 		
 		clog(RPCNote) << "NetConnection::doRead length header";
 		_rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
-		if (_rlpLen > 16*1024)
+		if (_rlpLen > 16*1024*1024)
+			// should be 16kB; larger messages to-be-chunk/streamed
 			return shutdownWithError(boost::asio::error::connection_reset);
 		if (_rlpLen < 3)
 			return shutdownWithError(boost::asio::error::connection_reset);

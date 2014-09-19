@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include "Common.h"
+#include "NetCommon.h"
 
 namespace dev
 {
@@ -30,44 +30,42 @@ namespace dev
 class RLP;
 	
 /**
- * @brief Used by WebThreeClient to send requests; message is immediately sent. NOT thread safe.
- * @todo implement send
- * @todo (notes) received on wire; sequence is parsed from RLP
- * @todo check RLP
- * @todo rename sequence to serviceSequence, implement dataSequence
- * @todo class WebThreeNotification: public NetMsg; (requires serviceSequence tracking)
+ * @brief Used by Net classes for sending and receiving network messages.
+ * @todo Encapsulate and maintain header independent of payload in order to separate memory storage (to prevent copy and facilitate other storage options for large streams).
  */
 class NetMsg: public std::enable_shared_from_this<NetMsg>
 {
+	/// NetConnection calls private constructors.
 	friend class NetConnection;
 	
 public:
-	// Egress constructor
+	/// Constructor for creating egress (outbound) messages
 	NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req);
 	~NetMsg() {}
 	
 	NetMsgServiceType service() { return m_service; }
 	NetMsgSequence sequence() { return m_sequence; }
 	NetMsgType type() { return m_messageType; }
-	bytes const& rlp() { return m_rlpBytes; }
-	bytes const& payload() const { return m_messageBytes; }
+	bytes rlp() { return m_rlpBytes; }
+	bytes payload() const { return m_messageBytes; }
+	
+	bool isControlMessage() const { return !m_service; }
+	bool isServiceMessage() const { return m_service && !m_messageType; }
+	bool isDataMessage() const { return m_service && m_messageType; }
 	
 private:
-	// Ingress constructor
+	/// Constructors for parsing ingress (inbound) messages
 	NetMsg(bytes const& _packetData);
 	NetMsg(bytesConstRef _packetData);
 	
-//	/// @returns if payload size matches length from 4-byte header, size of RLP is valid, and sequenceId is valid
-//	bool check(bytesConstRef _netMsg) const {};
-//	/// @returns RLP message
-//	bytes payload(bytesConstRef _netMsg) const {};
+	/// Used by constructor to parse m_messageBytes
 	bytes packetify() const;
 	
-	NetMsgServiceType m_service;
-	NetMsgSequence m_sequence;			///< Message sequence. Initial value is random and chosen by client.
-	NetMsgType m_messageType;				///< Message type; omitted from header if 0.
-	bytes m_rlpBytes;				///< RLP Payload.
-	bytes m_messageBytes;			///< Bytes of network message.
+	NetMsgServiceType m_service;			///< Service channel. Zero is reserved for control frames.
+	NetMsgSequence m_sequence;			///< Message sequence. Initial value is random and chosen by client. When message type is present the sequence is for data, else it is for service messages.
+	NetMsgType m_messageType;				///< Message type. Zero is omitted and indicates service message.
+	bytes m_rlpBytes;					///< RLP Payload.
+	bytes m_messageBytes;					///< Bytes of network message.
 };
 	
 }

@@ -138,7 +138,7 @@ void Ethereum::startRPCServer()
 	
 	{
 		lock_guard<mutex> l(x_client);
-		m_client = unique_ptr<Client>(new Client("+ethereum+"));
+//		m_client = unique_ptr<Client>(new Client("+ethereum+"));
 	}
 	clog(NetNote) << "Blockchain opened. Starting RPC Server.";
 	
@@ -334,60 +334,60 @@ std::vector<PeerInfo> Ethereum::peers()
 
 size_t Ethereum::peerCount() const
 {
-	while (true)
-		if (isServer())
-			return m_client->peerCount();
-		else
-			try
-			{
-				RLP r(sendRequest(RequestPeerCount, RLP(RLPEmptyList)));
-				try
-				{
-					size_t count = r[0].toInt();
-					return count;
-				}
-				catch (Exception const& _e)
-				{
-					
-				}
-			}
-			catch (RPCServerWentAway const&){} // try again
-			catch (std::exception const& _e)
-			{
-				// RPCRemoteException, RPCInvalidResponse, or other (BadCast)
-				throw _e;
-			}
+//	while (true)
+//		if (isServer())
+//			return m_client->peerCount();
+//		else
+//			try
+//			{
+//				RLP r(sendRequest(RequestPeerCount, RLP(RLPEmptyList)));
+//				try
+//				{
+//					size_t count = r[0].toInt();
+//					return count;
+//				}
+//				catch (Exception const& _e)
+//				{
+//					
+//				}
+//			}
+//			catch (RPCServerWentAway const&){} // try again
+//			catch (std::exception const& _e)
+//			{
+//				// RPCRemoteException, RPCInvalidResponse, or other (BadCast)
+//				throw _e;
+//			}
 }
 
 void Ethereum::connect(std::string const& _host, unsigned short _port)
 {
-	// RequestConnectionToPeer
-	while (true)
-		if (isServer())
-		{
-			if (!m_client->haveNetwork())
-				m_client->startNetwork(30303, _host, _port);
-			else
-				m_client->connect(_host, _port);
-			
-			return;
-		}
-		else
-			try
-			{
-				RLPStream s(2);
-				s.append(_host);
-				s.append(_port);
-
-				sendRequest(ConnectToPeer, RLP(s.out()));
-				return;
-			}
-			catch (RPCServerWentAway const&){} // try again
-			catch (std::exception const& _e)
-			{
-				// RPCRemoteException, RPCInvalidResponse, or other
-				throw _e;
-			}
+//	// RequestConnectionToPeer
+//	while (true)
+//		if (isServer())
+//		{
+//			if (!m_client->haveNetwork())
+//				m_client->startNetwork(30303, _host, _port);
+//			else
+//				m_client->connect(_host, _port);
+//			
+//			return;
+//		}
+//		else
+//			try
+//			{
+//				RLPStream s(2);
+//				s.append(_host);
+//				s.append(_port);
+//
+//				sendRequest(ConnectToPeer, RLP(s.out()));
+//				return;
+//			}
+//			catch (RPCServerWentAway const&){} // try again
+//			catch (std::exception const& _e)
+//			{
+//				// RPCRemoteException, RPCInvalidResponse, or other
+//				throw _e;
+//			}
 }
 
 void Ethereum::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)

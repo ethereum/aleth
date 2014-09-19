@@ -25,7 +25,7 @@
 
 #include <libwebthree/NetMsg.h>
 #include <libwebthree/NetConnection.h>
-#include <libwebthree/NetListenHandler.h>
+#include <libwebthree/NetHandler.h>
 #include <libwebthree/WebThreeServer.h>
 #include <libethereumx/Ethereum.h>
 
@@ -142,29 +142,29 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connections)
 	// Client Connections:
 	
 	// create first connection so IO has work
-	auto connOut = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+	auto connOut = make_shared<NetConnection>(acceptorIo, ep, 0, nullptr, nullptr);
 	connOut->start();
 	conns.push_back(connOut);
 	
-	std::thread ioThread([&]()
-	{
-		while (!stopThread)
-		{
-			clog(RPCNote) << "ioThread started";
-			
-			if (io.stopped())
-				io.reset();
-			io.run();
-			usleep(1000);
-		}
-		
-		clog(RPCNote) << "ioThread stopped";
-	});
+//	std::thread ioThread([&]()
+//	{
+//		while (!stopThread)
+//		{
+//			clog(RPCNote) << "ioThread started";
+//			
+//			if (io.stopped())
+//				io.reset();
+//			io.run();
+//			usleep(1000);
+//		}
+//		
+//		clog(RPCNote) << "ioThread stopped";
+//	});
 
 	for (auto i = 0; i < 256; i++)
 	{
 		usleep(2000);
-		auto connOut = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+		auto connOut = make_shared<NetConnection>(acceptorIo, ep, 0, nullptr, nullptr);
 		connOut->start();
 		conns.push_back(connOut);
 	}
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connections)
 	acceptorIoThread.join();
 	
 	io.stop();
-	ioThread.join();
+//	ioThread.join();
 
 	clog(RPCNote) << "Connections: " << acceptedConnections << "Failed: " << connErrs.size();
 	

@@ -23,26 +23,11 @@
 
 #pragma once
 
-#include <string>
-#include <chrono>
-#include <libdevcore/Common.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/RLP.h>
-
-#include <libdevcore/Exceptions.h>
+#include "NetCommon.h"
 
 namespace dev
 {
 
-struct RPCWarn: public LogChannel { static const char* name() { return "!X!"; } static const int verbosity = 0; };
-struct RPCNote: public LogChannel { static const char* name() { return "*X*"; } static const int verbosity = 1; };
-struct RPCMessageSummary: public LogChannel { static const char* name() { return "-X-"; } static const int verbosity = 2; };
-struct RPCConnect: public LogChannel { static const char* name() { return "+X+"; } static const int verbosity = 4; };
-
-typedef uint8_t NetMsgServiceType;
-typedef uint8_t NetMsgType;
-typedef uint16_t NetMsgSequence;
-	
 enum WebThreeServiceType : NetMsgServiceType
 {
 	WebThreeService = 0x01,
@@ -50,6 +35,7 @@ enum WebThreeServiceType : NetMsgServiceType
 	SwarmService,
 	WhisperService
 };
+	
 class WebThreeRequestTimeout: public Exception {};
 
 //enum EthereumRPCRequest : NetMsgType
@@ -70,12 +56,6 @@ class WebThreeRequestTimeout: public Exception {};
 //	RequestPeerCount,
 //	ConnectToPeer = 0x10
 //};
-	
-typedef std::function<void(NetMsgType _msgType, RLP const&)> messageHandler; // TODO move into Message
-typedef std::map<NetMsgServiceType,std::shared_ptr<messageHandler>> messageHandlers;
-	
-class MessageTooLarge: public Exception {};
-class MessageTooSmall: public Exception {};
-class MessageServiceInvalid: public Exception {};
+
 	
 }
