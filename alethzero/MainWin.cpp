@@ -39,6 +39,8 @@
 #include <libethereum/ExtVM.h>
 #include <libethereum/Client.h>
 #include <libethereum/EthereumHost.h>
+#include <libethereum/DownloadMan.h>
+#include "DownloadView.h"
 #include "MiningView.h"
 #include "BuildInfo.h"
 #include "MainWin.h"
@@ -97,26 +99,10 @@ Main::Main(QWidget *parent) :
 //		ui->log->addItem(QString::fromStdString(s));
 	};
 
-#if 0&&ETH_DEBUG
-	m_servers.append("192.168.0.10:30301");
-#else
-    int pocnumber = QString(dev::Version).section('.', 1, 1).toInt();
-	if (pocnumber == 5)
-        m_servers.push_back("54.72.69.180:30303");
-	else if (pocnumber == 6)
-		m_servers.push_back("54.76.56.74:30303");
-	else
-	{
-		connect(&m_webCtrl, &QNetworkAccessManager::finished, [&](QNetworkReply* _r)
-		{
-			m_servers = QString::fromUtf8(_r->readAll()).split("\n", QString::SkipEmptyParts);
-		});
-		QNetworkRequest r(QUrl("http://www.ethereum.org/servers.poc" + QString::number(pocnumber) + ".txt"));
-		r.setHeader(QNetworkRequest::UserAgentHeader, "Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1712.0 Safari/537.36");
-		m_webCtrl.get(r);
-		srand(time(0));
-	}
+#if ETH_DEBUG
+	m_servers.append("localhost:30300");
 #endif
+	m_servers.append(QString::fromStdString(Host::pocHost() + ":30303"));
 
     cerr << "State root: " << BlockChain::genesis().stateRoot << endl;
     cerr << "Block Hash: " << sha3(BlockChain::createGenesisBlock()) << endl;
@@ -141,7 +127,7 @@ Main::Main(QWidget *parent) :
 	
 	connect(ui->ourAccounts->model(), SIGNAL(rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int)), SLOT(ourAccountsRowsMoved()));
 
-	m_webThree.reset(new WebThreeDirect("AlethZero", getDataDir() + "/AlethZero", false, {"eth", "shh"}));
+	m_webThree.reset(new WebThreeDirect(string("AlethZero/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/AlethZero", false, {"eth", "shh"}));
 
 	connect(ui->webView, &QWebView::loadStarted, [this]()
 	{
@@ -192,7 +178,7 @@ Main::~Main()
 
 dev::p2p::NetworkPreferences Main::netPrefs() const
 {
-	return NetworkPreferences(ui->port->value(), ui->forceAddress->text().toStdString(), ui->upnp->isChecked(), false);
+	return NetworkPreferences(ui->port->value(), ui->forceAddress->text().toStdString(), ui->upnp->isChecked(), ui->localNetworking->isChecked());
 }
 
 void Main::onKeysChanged()
@@ -494,6 +480,7 @@ void Main::writeSettings()
 	s.setValue("upnp", ui->upnp->isChecked());
 	s.setValue("forceAddress", ui->forceAddress->text());
 	s.setValue("usePast", ui->usePast->isChecked());
+	s.setValue("localNetworking", ui->localNetworking->isChecked());
 	s.setValue("forceMining", ui->forceMining->isChecked());
 	s.setValue("paranoia", ui->paranoia->isChecked());
 	s.setValue("showAll", ui->showAll->isChecked());
@@ -543,6 +530,7 @@ void Main::readSettings(bool _skipGeometry)
 	ui->upnp->setChecked(s.value("upnp", true).toBool());
 	ui->forceAddress->setText(s.value("forceAddress", "").toString());
 	ui->usePast->setChecked(s.value("usePast", true).toBool());
+	ui->localNetworking->setChecked(s.value("localNetworking", true).toBool());
 	ui->forceMining->setChecked(s.value("forceMining", false).toBool());
 	on_forceMining_triggered();
 	ui->paranoia->setChecked(s.value("paranoia", false).toBool());
@@ -894,6 +882,9 @@ void Main::timerEvent(QTimerEvent*)
 	// refresh mining every 200ms
 	if (interval / 100 % 2 == 0)
 		refreshMining();
+
+	if (interval / 100 % 2 == 0 && m_webThree->ethereum()->isSyncing())
+		ui->downloadView->update();
 
 	if (m_logChanged)
 	{
@@ -1419,6 +1410,7 @@ void Main::on_killBlockchain_triggered()
 	writeSettings();
 	ui->mine->setChecked(false);
 	ui->net->setChecked(false);
+	web3()->stopNetwork();
 	ethereum()->killChain();
 	m_ethereum->setClient(ethereum());
 	readSettings(true);
@@ -1491,11 +1483,15 @@ void Main::on_net_triggered()
 		web3()->setNetworkPreferences(netPrefs());
 		ethereum()->setNetworkId(m_privateChain.size() ? sha3(m_privateChain.toStdString()) : 0);
 		web3()->startNetwork();
+		ui->downloadView->setDownloadMan(ethereum()->downloadMan());
 		if (m_peers.size() && ui->usePast->isChecked())
 			web3()->restorePeers(bytesConstRef((byte*)m_peers.data(), m_peers.size()));
 	}
 	else
+	{
+		ui->downloadView->setDownloadMan(nullptr);
 		web3()->stopNetwork();
+	}
 }
 
 void Main::on_connect_triggered()

@@ -83,6 +83,9 @@ void Client::setNetworkId(u256 _n)
 		h->setNetworkId(_n);
 }
 
+DownloadMan const* Client::downloadMan() const { if (auto h = m_host.lock()) return &(h->downloadMan()); return nullptr; }
+bool Client::isSyncing() const { if (auto h = m_host.lock()) return h->isSyncing(); return false; }
+
 void Client::doneWorking()
 {
 	// Synchronise the state according to the head of the block chain.
@@ -99,7 +102,37 @@ void Client::flushTransactions()
 
 void Client::killChain()
 {
-	// TODO
+	bool wasMining = isMining();
+	if (wasMining)
+		stopMining();
+	stopWorking();
+
+	m_tq.clear();
+	m_bq.clear();
+	m_miners.clear();
+	m_preMine = State();
+	m_postMine = State();
+
+	{
+		WriteGuard l(x_stateDB);
+		m_stateDB = OverlayDB();
+		m_stateDB = State::openDB(Defaults::dbPath(), true);
+	}
+	m_bc.reopen(Defaults::dbPath(), true);
+
+	m_preMine = State(Address(), m_stateDB);
+	m_postMine = State(Address(), m_stateDB);
+
+	if (auto h = m_host.lock())
+		h->reset();
+
+	doWork();
+
+	setMiningThreads(0);
+
+	startWorking();
+	if (wasMining)
+		startMining();
 }
 
 void Client::clearPending()
@@ -189,6 +222,17 @@ void Client::appendFromNewBlock(h256 _block, h256Set& o_changed) const
 	for (pair<h256, InstalledFilter> const& i: m_filters)
 		if ((unsigned)i.second.filter.latest() >= d.number && (unsigned)i.second.filter.earliest() <= d.number && i.second.filter.matches(d.bloom))
 			o_changed.insert(i.first);
+}
+
+void Client::setForceMining(bool _enable)
+{
+	 m_forceMining = _enable;
+	 if (!m_host.lock())
+	 {
+		 ReadGuard l(x_miners);
+		 for (auto& m: m_miners)
+			 m.noteStateChange();
+	 }
 }
 
 void Client::setMiningThreads(unsigned _threads)

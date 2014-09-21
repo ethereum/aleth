@@ -15,9 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file EthereumHost.cpp
- * @authors:
- *   Gav Wood <i@gavwood.com>
- *   Eric Lombrozo <elombrozo@gmail.com>
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
@@ -34,6 +32,7 @@
 #include "TransactionQueue.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
+#include "DownloadMan.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -41,7 +40,7 @@ using namespace p2p;
 
 EthereumHost::EthereumHost(BlockChain const& _ch, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
 	HostCapability<EthereumPeer>(),
-	Worker("ethsync"),
+	Worker		("ethsync"),
 	m_chain		(_ch),
 	m_tq		(_tq),
 	m_bq		(_bq),
@@ -54,30 +53,6 @@ EthereumHost::~EthereumHost()
 {
 	for (auto const& i: peers())
 		i->cap<EthereumPeer>()->giveUpOnFetch();
-}
-
-h256Set EthereumHost::neededBlocks(h256Set const& _exclude)
-{
-	Guard l(x_blocksNeeded);
-	h256Set ret;
-	if (m_blocksNeeded.size())
-	{
-		int s = m_blocksNeeded.size() - 1;
-		for (; ret.size() < c_maxBlocksAsk && s < (int)m_blocksNeeded.size() && s >= 0; --s)
-			if (!_exclude.count(m_blocksNeeded[s]))
-			{
-				auto it = m_blocksNeeded.begin() + s;
-				ret.insert(*it);
-				m_blocksOnWay.insert(*it);
-				m_blocksNeeded.erase(it);
-			}
-	}
-	if (!ret.size())
-		for (auto i = m_blocksOnWay.begin(); ret.size() < c_maxBlocksAsk && i != m_blocksOnWay.end() && !_exclude.count(*i); ++i)
-			ret.insert(*i);
-
-	clog(NetMessageSummary) << "Asking for" << ret.size() << "blocks that we don't yet have." << m_blocksNeeded.size() << "blocks still needed," << m_blocksOnWay.size() << "blocks on way.";
-	return ret;
 }
 
 bool EthereumHost::ensureInitialised(TransactionQueue& _tq)
@@ -95,23 +70,97 @@ bool EthereumHost::ensureInitialised(TransactionQueue& _tq)
 	return false;
 }
 
-void EthereumHost::noteDoneBlocks()
+void EthereumHost::noteHavePeerState(EthereumPeer* _who)
 {
-	if (m_blocksOnWay.empty())
+	clog(NetAllDetail) << "Have peer state.";
+
+	// if already downloading hash-chain, ignore.
+	if (m_grabbing != Grabbing::Nothing)
+	{
+		clog(NetAllDetail) << "Already downloading chain. Just set to help out.";
+		_who->ensureGettingChain();
+		return;
+	}
+
+	// otherwise check to see if we should be downloading...
+	_who->tryGrabbingHashChain();
+}
+
+void EthereumHost::updateGrabbing(Grabbing _g)
+{
+	m_grabbing = _g;
+	if (_g == Grabbing::Nothing)
+		readyForSync();
+	else if (_g == Grabbing::Chain)
+		for (auto j: peers())
+			j->cap<EthereumPeer>()->ensureGettingChain();
+}
+
+void EthereumHost::noteHaveChain(EthereumPeer* _from)
+{
+	auto td = _from->m_totalDifficulty;
+
+	if (_from->m_neededBlocks.empty())
+	{
+		_from->m_grabbing = Grabbing::Nothing;
+		updateGrabbing(Grabbing::Nothing);
+		return;
+	}
+
+	clog(NetNote) << "Hash-chain COMPLETE:" << _from->m_totalDifficulty << "vs" << m_chain.details().totalDifficulty << ";" << _from->m_neededBlocks.size() << " blocks, ends" << _from->m_neededBlocks.back().abridged();
+
+	if (td < m_chain.details().totalDifficulty || (td == m_chain.details().totalDifficulty && m_chain.currentHash() == _from->m_latestHash))
+	{
+		clog(NetNote) << "Difficulty of hashchain not HIGHER. Ignoring.";
+		_from->m_grabbing = Grabbing::Nothing;
+		updateGrabbing(Grabbing::Nothing);
+		return;
+	}
+
+	clog(NetNote) << "Difficulty of hashchain HIGHER. Replacing fetch queue [latest now" << _from->m_latestHash.abridged() << ", was" << m_latestBlockSent.abridged() << "]";
+
+	// Looks like it's the best yet for total difficulty. Set to download.
+	m_man.resetToChain(_from->m_neededBlocks);
+	m_latestBlockSent = _from->m_latestHash;
+
+	_from->m_grabbing = Grabbing::Chain;
+	updateGrabbing(Grabbing::Chain);
+}
+
+void EthereumHost::readyForSync()
+{
+	// start grabbing next hash chain if there is one.
+	for (auto j: peers())
+	{
+		j->cap<EthereumPeer>()->tryGrabbingHashChain();
+		if (j->cap<EthereumPeer>()->m_grabbing == Grabbing::Hashes)
+		{
+			m_grabbing = Grabbing::Hashes;
+			return;
+		}
+	}
+	clog(NetNote) << "No more peers to sync with.";
+}
+
+void EthereumHost::noteDoneBlocks(EthereumPeer* _who)
+{
+	if (m_man.isComplete())
 	{
 		// Done our chain-get.
-		if (m_blocksNeeded.size())
-			clog(NetNote) << "No more blocks coming. Missing" << m_blocksNeeded.size() << "blocks.";
-		else
-			clog(NetNote) << "No more blocks to get.";
-		m_latestBlockSent = m_chain.currentHash();
+		clog(NetNote) << "Chain download complete.";
+		updateGrabbing(Grabbing::Nothing);
+	}
+	if (_who->m_grabbing == Grabbing::Chain)
+	{
+		// Done our chain-get.
+		clog(NetNote) << "Chain download failed. Peer with blocks didn't have them all. This peer is bad and should be punished.";
+		// TODO: note that peer is BADBADBAD!
+		updateGrabbing(Grabbing::Nothing);
 	}
 }
 
 bool EthereumHost::noteBlock(h256 _hash, bytesConstRef _data)
 {
-	Guard l(x_blocksNeeded);
-	m_blocksOnWay.erase(_hash);
 	if (!m_chain.details(_hash))
 	{
 		lock_guard<recursive_mutex> l(m_incomingLock);
@@ -129,6 +178,7 @@ void EthereumHost::doWork()
 	maintainBlocks(m_bq, h);
 //	return netChange;
 	// TODO: Figure out what to do with netChange.
+	(void)netChange;
 }
 
 void EthereumHost::maintainTransactions(TransactionQueue& _tq, h256 _currentHash)
@@ -175,6 +225,19 @@ void EthereumHost::maintainTransactions(TransactionQueue& _tq, h256 _currentHash
 	}
 }
 
+void EthereumHost::reset()
+{
+	m_grabbing = Grabbing::Nothing;
+
+	m_man.resetToChain(h256s());
+
+	m_incomingTransactions.clear();
+	m_incomingBlocks.clear();
+
+	m_latestBlockSent = h256();
+	m_transactionsSent.clear();
+}
+
 void EthereumHost::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 {
 	// Import new blocks
@@ -187,14 +250,8 @@ void EthereumHost::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 		m_incomingBlocks.clear();
 	}
 
-	// If we've finished our initial sync...
-	{
-		Guard l(x_blocksNeeded);
-		if (m_blocksOnWay.size())
-			return;
-	}
-	// ...send any new blocks.
-	if (m_latestBlockSent != _currentHash)
+	// If we've finished our initial sync send any new blocks.
+	if (m_grabbing == Grabbing::Nothing && m_chain.details(m_latestBlockSent) && m_chain.details(m_latestBlockSent).totalDifficulty < m_chain.details(_currentHash).totalDifficulty)
 	{
 		RLPStream ts;
 		EthereumPeer::prep(ts);
@@ -221,33 +278,4 @@ void EthereumHost::maintainBlocks(BlockQueue& _bq, h256 _currentHash)
 		}
 		m_latestBlockSent = _currentHash;
 	}
-}
-
-void EthereumHost::noteHaveChain(EthereumPeer* _from)
-{
-	auto td = _from->m_totalDifficulty;
-
-	if (_from->m_neededBlocks.empty())
-		return;
-
-	clog(NetNote) << "Hash-chain COMPLETE:" << _from->m_totalDifficulty << "vs" << m_chain.details().totalDifficulty << "," << m_totalDifficultyOfNeeded << ";" << _from->m_neededBlocks.size() << " blocks, ends" << _from->m_neededBlocks.back().abridged();
-
-	if ((m_totalDifficultyOfNeeded && td < m_totalDifficultyOfNeeded) || td < m_chain.details().totalDifficulty)
-	{
-		clog(NetNote) << "Difficulty of hashchain LOWER. Ignoring.";
-		return;
-	}
-
-	clog(NetNote) << "Difficulty of hashchain HIGHER. Replacing fetch queue.";
-
-	// Looks like it's the best yet for total difficulty. Set to download.
-	{
-		Guard l(x_blocksNeeded);
-		m_blocksNeeded = _from->m_neededBlocks;
-		m_blocksOnWay.clear();
-		m_totalDifficultyOfNeeded = td;
-	}
-
-	for (auto j: peers())
-		j->cap<EthereumPeer>()->restartGettingChain();
 }

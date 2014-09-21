@@ -34,6 +34,7 @@
 #include <set>
 #include <chrono>
 #include <thread>
+#include <boost/algorithm/string.hpp>
 #include <libdevcore/Common.h>
 #include <libethcore/Exceptions.h>
 #include "Session.h"
@@ -76,7 +77,9 @@ Host::~Host()
 
 void Host::start()
 {
-	stop();
+	if (isWorking())
+		stop();
+
 	for (unsigned i = 0; i < 2; ++i)
 	{
 		bi::tcp::endpoint endpoint(bi::tcp::v4(), i ? 0 : m_netPrefs.listenPort);
@@ -103,6 +106,10 @@ void Host::start()
 
 	determinePublic(m_netPrefs.publicIP, m_netPrefs.upnp);
 	ensureAccepting();
+
+	m_incomingPeers.clear();
+	m_freePeers.clear();
+
 	m_lastPeersRequest = chrono::steady_clock::time_point::min();
 	clog(NetNote) << "Id:" << m_id.abridged();
 
@@ -129,6 +136,8 @@ void Host::stop()
 	if (m_socket.is_open())
 		m_socket.close();
 	disconnectPeers();
+
+	m_ioService.reset();
 }
 
 unsigned Host::protocolVersion() const
@@ -309,8 +318,14 @@ std::map<h512, bi::tcp::endpoint> Host::potentialPeers()
 		if (auto j = i.second.lock())
 		{
 			auto ep = j->endpoint();
+//			cnote << "Checking potential peer" << j->m_listenPort << j->endpoint() << isPrivateAddress(ep.address()) << ep.port() << j->m_id.abridged();
 			// Skip peers with a listen port of zero or are on a private network
 			bool peerOnNet = (j->m_listenPort != 0 && (!isPrivateAddress(ep.address()) || m_netPrefs.localNetworking));
+			if (!peerOnNet && m_incomingPeers.count(j->m_id))
+			{
+				ep = m_incomingPeers.at(j->m_id).first;
+				peerOnNet = (j->m_listenPort != 0 && (!isPrivateAddress(ep.address()) || m_netPrefs.localNetworking));
+			}
 			if (peerOnNet && ep.port() && j->m_id)
 				ret.insert(make_pair(i.first, ep));
 		}
@@ -347,18 +362,31 @@ void Host::ensureAccepting()
 	}
 }
 
+string Host::pocHost()
+{
+	vector<string> strs;
+	boost::split(strs, dev::Version, boost::is_any_of("."));
+	return "poc-" + strs[1] + ".ethdev.com";
+}
+
 void Host::connect(std::string const& _addr, unsigned short _port) noexcept
 {
-	try
-	{
-		// TODO: actual DNS lookup.
-		connect(bi::tcp::endpoint(bi::address::from_string(_addr), _port));
-	}
-	catch (exception const& e)
-	{
-		// Couldn't connect
-		clog(NetConnect) << "Bad host " << _addr << " (" << e.what() << ")";
-	}
+	for (int i = 0; i < 2; ++i)
+		try
+		{
+			if (i == 0)
+			{
+				bi::tcp::resolver r(m_ioService);
+				connect(r.resolve({_addr, toString(_port)})->endpoint());
+			}
+			else
+				connect(bi::tcp::endpoint(bi::address::from_string(_addr), _port));
+		}
+		catch (exception const& e)
+		{
+			// Couldn't connect
+			clog(NetConnect) << "Bad host " << _addr << " (" << e.what() << ")";
+		}
 }
 
 void Host::connect(bi::tcp::endpoint const& _ep)
@@ -424,7 +452,6 @@ void Host::growPeers()
 				m_lastPeersRequest = chrono::steady_clock::now();
 			}
 
-
 			if (!m_accepting)
 				ensureAccepting();
 
@@ -433,7 +460,8 @@ void Host::growPeers()
 
 		auto x = time(0) % m_freePeers.size();
 		m_incomingPeers[m_freePeers[x]].second++;
-		connect(m_incomingPeers[m_freePeers[x]].first);
+		if (!m_peers.count(m_freePeers[x]))
+			connect(m_incomingPeers[m_freePeers[x]].first);
 		m_freePeers.erase(m_freePeers.begin() + x);
 	}
 }
