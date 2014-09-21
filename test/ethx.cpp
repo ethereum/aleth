@@ -25,13 +25,34 @@
 
 #include <libwebthree/NetMsg.h>
 #include <libwebthree/NetConnection.h>
-#include <libwebthree/NetHandler.h>
+#include <libwebthree/NetEndpoint.h>
 #include <libwebthree/WebThreeServer.h>
 #include <libethereumx/Ethereum.h>
+
+#include "rpcprotocol.h"
+#include "rpcservice.h"
 
 using namespace std;
 using namespace dev;
 
+BOOST_AUTO_TEST_SUITE( netproto )
+
+BOOST_AUTO_TEST_CASE(test_netproto_simple)
+{
+	cout << "test_netproto_simple" << endl;
+	
+	shared_ptr<RPCService> s(new RPCService());
+	RPCProtocol p(s.get(), (NetConnection *)nullptr);
+	
+	std::string sA = s->a();
+	std::string pA = p.a();
+	assert(sA == pA);
+	assert(sA == "a");
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+	
 BOOST_AUTO_TEST_SUITE( rlpnet )
 
 BOOST_AUTO_TEST_CASE(test_rlpnet_messages)
@@ -65,7 +86,7 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_messages)
 BOOST_AUTO_TEST_CASE(test_rlpnet_connectionin)
 {
 	return;
-	cout << "test_rlpnet_connectionin\n";
+	cout << "test_rlpnet_connectionin" << endl;
 	
 	boost::asio::io_service io;
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
@@ -236,7 +257,7 @@ BOOST_AUTO_TEST_SUITE( webthree_net )
 BOOST_AUTO_TEST_CASE(test_webthree_net_eth)
 {
 	WebThreeServer s;
-	s.setMessageHandler(EthereumService, [=](NetMsgType _type, RLP const& _request){
+	s.setMessageHandler(EthereumService, [=](NetMsg const& _msg){
 		// handle eth requests
 	});
 }
@@ -244,7 +265,7 @@ BOOST_AUTO_TEST_CASE(test_webthree_net_eth)
 BOOST_AUTO_TEST_CASE(test_webthree_net_shh)
 {
 	WebThreeServer s;
-	s.setMessageHandler(EthereumService, [=](NetMsgType _type, RLP const& _request){
+	s.setMessageHandler(EthereumService, [=](NetMsg const& _msg){
 		// shh requests
 	});
 }
@@ -252,7 +273,7 @@ BOOST_AUTO_TEST_CASE(test_webthree_net_shh)
 BOOST_AUTO_TEST_CASE(test_webthree_net_bzz)
 {
 	WebThreeServer s;
-	s.setMessageHandler(EthereumService, [=](NetMsgType _type, RLP const& _request){
+	s.setMessageHandler(EthereumService, [=](NetMsg const& _msg){
 		// bzz requests
 	});
 }

@@ -100,7 +100,7 @@ void NetConnection::doWrite()
 	// implement write queue w/send()
 }
 
-//bool NetConnection::checkPacket(bytesConstRef _msg) const
+//bool NetConnection::checkPayloadLength(bytesConstRef _msg) const
 //{
 //	if (_msg.size() < 4)
 //		return false;
@@ -148,7 +148,7 @@ void NetConnection::handshake(size_t _rlpLen)
 				
 				m_recvdBytes += _len;
 				size_t rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
-				if (rlpLen > 16*1024)
+				if (rlpLen > 64*1024)
 					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooLarge();
 				if (rlpLen < 3)
 					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooSmall();
@@ -250,7 +250,7 @@ void NetConnection::doRead(size_t _rlpLen)
 				{
 					auto h = *hit->second.get();
 					if (h!=nullptr)
-						h(msg.type(), RLP(msg.payload()));
+						h(msg);
 				}
 				else
 					throw MessageServiceInvalid();

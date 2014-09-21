@@ -60,7 +60,7 @@ bytes WebThreeClient::request(NetMsgType _type, RLP const& _request)
 	if (s != future_status::ready)
 	{
 		// todo: mutex m_promises and remove promise
-		throw WebThreeRequestTimeout();
+//		throw WebThreeRequestTimeout();
 	}
 	
 	return std::move(f.get()->payload());

@@ -23,8 +23,8 @@
 #pragma once
 
 #include <future>
-#include "NetConnectHandler.h"
 #include "WebThreeResponse.h"
+#include "Common.h"
 
 namespace dev
 {

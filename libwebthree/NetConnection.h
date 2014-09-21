@@ -27,12 +27,14 @@
 
 namespace dev
 {
-
-class NetMsg;
 	
+class NetMsg;
+
 /**
- * @brief Interface for listening on or connecting sockets for
+ * @brief Interface for managing incoming/outgoing sockets.
  *
+ * @todo connectionHandler (ready, stopped, exception)
+ * @todo determine if
  * @todo send: implement queue; wait until m_stopped is false
  * @todo send: throw exception if connection went away
  * @todo sequence initialization.
@@ -44,7 +46,7 @@ class NetMsg;
 class NetConnection: public std::enable_shared_from_this<NetConnection>
 {
 	/// Accesses socket()
-	friend class NetHandler;
+	friend class NetEndpoint;
 	
 public:
 	/// Constructor for incoming connections.

@@ -38,15 +38,7 @@ class NetMsg;
  * @brief Server for interfacing between Ethereum systems (client, whisper, swarm).
  *
  * @todo: move logchannels to common
- * @todo: parameter for initializing acceptor by default
- * @todo: replace m_responders with something direct
- * @todo: handle null channel(for connection-specific messaging)
- * @todo: rename service sequence to notify sequence
- * @todo: document header, sequences, notification channels (0x00 packets are for notifying channels; header size is 4 instead of 3)
- * @todo: refactor for reflective interface
  * @todo: createServerProcess();  Creates ethereum process dedicated to providing RPC services.
- * @todo: handling exceptions (MessageTooLarge/Small/etc) thrown from boost work
- * @todo: disconnect message/packet (*only* for version mismatch)
  *
  */
 class WebThreeServer: public std::enable_shared_from_this<WebThreeServer>
@@ -62,7 +54,7 @@ public:
 
 	/// Provided function will be passed RLP of incoming messages for the given service. Not thread-safe.
 	/// @todo exception if responder already registered
-	void setMessageHandler(WebThreeServiceType _serviceId, std::function<void(NetMsgType _type, RLP const& _rlp)> _responder);
+	void setMessageHandler(WebThreeServiceType _serviceId, std::function<void(NetMsg const& _msg)> _responder);
 	
 private:
 	/// Start server.
