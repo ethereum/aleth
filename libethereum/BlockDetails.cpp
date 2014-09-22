@@ -14,40 +14,28 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
+/** @file BlockDetails.cpp
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#pragma once
+#include "BlockDetails.h"
 
-#include <set>
-#include <string>
-#include <memory>
+#include <libdevcore/Common.h>
+using namespace std;
+using namespace dev;
+using namespace dev::eth;
 
-struct UPNPUrls;
-struct IGDdatas;
-
-namespace eth
+BlockDetails::BlockDetails(RLP const& _r)
 {
+	number = _r[0].toInt<unsigned>();
+	totalDifficulty = _r[1].toInt<u256>();
+	parent = _r[2].toHash<h256>();
+	children = _r[3].toVector<h256>();
+	bloom = _r[4].toHash<h256>();
+}
 
-class UPnP
+bytes BlockDetails::rlp() const
 {
-public:
-	UPnP();
-	~UPnP();
-
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-	std::set<int> m_reg;
-	bool m_ok;
-	std::shared_ptr<struct UPNPUrls> m_urls;
-	std::shared_ptr<struct IGDdatas> m_data;
-};
-
+	return rlpList(number, totalDifficulty, parent, children, bloom);
 }

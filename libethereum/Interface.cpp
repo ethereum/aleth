@@ -14,22 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TrieDB.cpp
+/** @file Interface.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include <libethential/Common.h>
-#include "TrieDB.h"
-using namespace std;
-using namespace eth;
+#include "Interface.h"
 
-namespace eth
-{
-
-#if !ETH_LANGUAGES
-
-const h256 c_shaNull = sha3(rlp(""));
-
-#endif
-}
+#pragma GCC diagnostic ignored "-Wunused-variable"
+namespace { char dummy; };
