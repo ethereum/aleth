@@ -61,12 +61,12 @@ void NetConnection::start()
 	if (!m_started.compare_exchange_strong(no, true))
 		return;
 	
+	clog(RPCConnect) << (void*)this << (m_originateConnection ? "[egress]" : "[ingress]") << "start()";
+	
 	if (!m_originateConnection)
 		handshake();
 	else
 	{
-		clog(RPCConnect) << (void*)this << (m_originateConnection ? "[egress]" : "[ingress]") << "start()";
-		
 		auto self(shared_from_this());
 		m_socket.async_connect(m_endpoint, [self, this](boost::system::error_code const& _ec)
 		{

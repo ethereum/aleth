@@ -21,36 +21,40 @@
 
 #pragma once
 
+#include "NetService.h"
+#include "NetConnection.h"
+#include "NetMsg.h"
 #include "NetCommon.h"
 
 namespace dev
 {
-	
+
 class NetMsg;
-class NetConnection;
-	
-template <class T> // pass derived NetService class
+
+/**
+ * @brief NetProtocol objects are instantiated directly or by NetService in order to handle network messages and session state.
+ */
 class NetProtocol
 {
 public:
-	NetProtocol(T* _service, NetConnection* _conn): m_service(_service), m_connection(_conn) {};
+	NetProtocol(NetConnection* _conn): m_connection(_conn) {};
+	NetProtocol(NetConnection* _conn, NetServiceFace* _service): m_connection(_conn) {};
 	
-	virtual void connectionCreated() {};
-	// todo: check headers
 	virtual void receiveMessage(NetMsg _msg) = 0;
-	virtual bool sendMessage(NetMsg _msg) { return false; };
 	
 	NetMsgSequence nextDataSequence() { return m_localDataSequence++; }
+	NetConnection* connection() { return m_connection; }
 	
 protected:
-	NetMsgSequence nextServiceSequence() { return m_localServiceSequence++; }
-	std::atomic<NetMsgSequence> m_localServiceSequence;
+	NetMsgSequence nextSessionSequence() { return m_localSessionSequence++; }
+	
+	// Session sequences are used for wire-level
+	std::atomic<NetMsgSequence> m_localSessionSequence;
 	std::atomic<NetMsgSequence> m_localDataSequence;
 
-	std::atomic<NetMsgSequence> m_remoteServiceSequence;
+	std::atomic<NetMsgSequence> m_remoteSessionSequence;
 	std::atomic<NetMsgSequence> m_remoteDataSequence;
 	
-	T* m_service;
 	NetConnection* m_connection;
 };
 

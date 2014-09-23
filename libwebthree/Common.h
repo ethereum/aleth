@@ -35,27 +35,27 @@ enum WebThreeServiceType : NetMsgServiceType
 	SwarmService,
 	WhisperService
 };
-	
+
 class WebThreeRequestTimeout: public Exception {};
 
-//enum EthereumRPCRequest : NetMsgType
-//{
-//	EthereumRPC = 0x00,
-//	RequestSubmitTransaction,
-//	RequestCreateContract,
-//	RequestRLPInject,
-//	RequestFlushTransactions,
-//	RequestCallTransaction,
-//	RequestBalanceAt,
-//	RequestCountAt,
-//	RequestStateAt,
-//	RequestCodeAt,
-//	RequestStorageAt,
-//	RequestMessages,
-//	RequestPeers,
-//	RequestPeerCount,
-//	ConnectToPeer = 0x10
-//};
+enum EthereumRPCRequest : NetMsgType
+{
+	EthereumRPC = 0x00,
+	RequestSubmitTransaction,
+	RequestCreateContract,
+	RequestRLPInject,
+	RequestFlushTransactions,
+	RequestCallTransaction,
+	RequestBalanceAt,
+	RequestCountAt,
+	RequestStateAt,
+	RequestCodeAt,
+	RequestStorageAt,
+	RequestMessages,
+	RequestPeers,
+	RequestPeerCount,
+	ConnectToPeer = 0x10
+};
 
 	
 }

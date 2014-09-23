@@ -41,15 +41,53 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 {
 	cout << "test_netproto_simple" << endl;
 	
-	shared_ptr<RPCService> s(new RPCService());
-	RPCProtocol p(s.get(), (NetConnection *)nullptr);
+	EthereumRPCService s(nullptr);
+	EthereumRPCServer p((NetConnection *)nullptr, &s);
 	
-	std::string sA = s->a();
-	std::string pA = p.a();
+	std::string sA = s.test();
+	std::string pA = p.test();
 	assert(sA == pA);
 	assert(sA == "a");
+	
+	assert((NetMsgServiceType)2 == EthereumRPCService::serviceId());
+	
 }
 
+BOOST_AUTO_TEST_CASE(test_netendpoint)
+{
+	return;
+	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
+
+	shared_ptr<NetEndpoint> netEp(new NetEndpoint(ep));
+	netEp->start();
+	
+	auto testConn = make_shared<NetConnection>(netEp->get_io_service(), ep, 0, nullptr, nullptr);
+	testConn->start();
+	
+	while (!testConn->connectionOpen() && !testConn->connectionError());
+	
+	netEp->stop();
+	testConn.reset();
+	
+	netEp->start();
+	testConn.reset(new NetConnection(netEp->get_io_service(), ep, 0, nullptr, nullptr));
+	testConn->start();
+	while (!testConn->connectionOpen() && !testConn->connectionError());
+	netEp.reset();
+	testConn.reset();
+}
+	
+BOOST_AUTO_TEST_CASE(test_netservice)
+{
+	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
+	
+	shared_ptr<NetEndpoint> netEp(new NetEndpoint(ep));
+	
+//	shared_ptr<RPCService> rpc(new RPCService());
+//	netEp->registerService(rpc.get());
+//	netEp->start();
+}
+	
 BOOST_AUTO_TEST_SUITE_END()
 
 	

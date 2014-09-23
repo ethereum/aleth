@@ -29,18 +29,16 @@ namespace dev
 {
 	
 class NetMsg;
+class NetProtocol;
 
 /**
  * @brief Interface for managing incoming/outgoing sockets.
  *
+ * @todo handlers!
+ * @todo remove handler-constructors
+ * @todo make orignation-flag constructor-explicit
  * @todo connectionHandler (ready, stopped, exception)
- * @todo determine if
- * @todo send: implement queue; wait until m_stopped is false
- * @todo send: throw exception if connection went away
- * @todo sequence initialization.
- * @todo make socket() priavte (currently used by tests)
  * @todo protocol error handling (separate from network/shutdown errors)
- * @todo checkPacket: check service, sequence, packet type, handlers
  * @todo replace x_socketError in handshake
  */
 class NetConnection: public std::enable_shared_from_this<NetConnection>
@@ -61,6 +59,9 @@ public:
 	/// Destructor.
 	~NetConnection();
 	
+	void setServiceMessageHandler(NetMsgServiceType _svc, messageHandler _h);
+	void setDataMessageHandler(NetMsgServiceType _svc, messageHandler _h);
+	
 	/// Send handhsake and start connection read loop upon success.
 	void start();
 	
@@ -75,7 +76,7 @@ public:
 
 	/// @returns if connection closed with error
 	bool connectionError() const;
-	
+
 	/// Attempt to gracefully shutdown connection
 	void shutdown(bool _wait = true);
 

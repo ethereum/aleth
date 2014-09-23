@@ -22,40 +22,68 @@
 #pragma once
 
 #include "NetMsg.h"
+#include "NetConnection.h"
 
 namespace dev
 {
 
 class NetConnection;
-class NetEndpoint;
-	
-struct NetServiceType
-{
-	virtual NetMsgServiceType service() = 0;
-};
 
 /**
- * @brief NetService class is registered with an endpoint and upon doing so will be passed messages destined for it's service id.
+ * @brief NetService class by which connections can be registered in order to handle their messages; data messages received by the connection will be passed to a NetProtocol (T) instance, and by default, service messages will be passed to the service.
  *
- * NetMsgServiceType is used by Endpoint to map/match service of ingress messages; N is NetProtocol and is coupled to connections when connectionReady() is called (after handshake).
- *
- *	periodically call services to clean deallocated weak ptrs (maybe via endpoint)
+ * NetService binds connections to NetProtocol objects which handle network messages and session state. NetService implementations may also be used for non-application specific messages such as broadcasting when a disconnect will occur or distributing notifications across multiple connections.
  *
  */
-template <NetMsgServiceType T, class N>
-class NetService: public NetServiceType, public std::enable_shared_from_this<N>
+class NetServiceFace
 {
 	friend class NetEndpoint;
+	friend class NetConnection;
 	
 public:
-	virtual NetMsgServiceType service() { return T; }
+	static NetMsgServiceType serviceId();
+	
+protected:
+	/// Called by endpoint before connection is started.
+	void registerConnection(std::weak_ptr<NetConnection> _conn) {};
+	
+	/// Called from connection when service message is received.
+	void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn) {};
+};
+
+template <class T> // protocol
+class NetService: NetServiceFace
+{
+	friend class NetEndpoint;
+	friend class NetConnection;
+
+public:
+	static NetMsgServiceType serviceId() { return T::serviceId(); }
+
+	template <class S> void registerConnection(std::weak_ptr<NetConnection> _conn) {
+		if (auto p = _conn.lock())
+		{
+			m_connState.insert(std::make_pair(_conn, new T(_conn, (S*)this) ));
+			
+			NetConnection *c = p.get();
+			p->setServiceMessageHandler(T::serviceId(), [=](NetMsg const& _msg){
+				serviceMessageReceived(_msg, c);
+			});
+			
+			T* protocol = m_connState[_conn].get();
+			p->setDataMessageHandler(T::serviceId(), [_conn, protocol](NetMsg const& _msg){
+				protocol->receiveMessage(_msg);
+			});
+		}
+	}
 
 protected:
-	void connectionReady(std::shared_ptr<NetConnection> _conn) { m_connState.insert(std::make_pair(_conn,N(this))); }
+	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
+	{
+		clog(RPCNote) << "[" << T::serviceId() << "] serviceMessageReceived";
+	}
 	
-	void receivedMessage(std::shared_ptr<NetConnection> _conn, NetMsg _msg) { m_connState[_conn]->receiveMessage(_msg); }
-
-	std::map<std::weak_ptr<NetConnection>,N> m_connState;
+	std::map<std::weak_ptr<NetConnection>,std::unique_ptr<T>, std::owner_less<std::weak_ptr<NetConnection>>> m_connState;
 };
 
 }

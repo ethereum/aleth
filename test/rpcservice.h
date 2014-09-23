@@ -21,29 +21,25 @@
 
 #pragma once
 
+#include <libethereum/Interface.h>
 #include <libwebthree/NetService.h>
+#include <libwebthree/Common.h>
 #include "rpcprotocol.h"
 
 namespace dev
 {
-	class DirectInterface
-	{
-	public:
-		std::string a() { return "a"; }
-		std::string b() { return "b"; }
-		std::string c() { return "c"; }
-	};
+
+class EthereumRPCService: public NetService<EthereumRPCServer>
+{
+public:
+	EthereumRPCService(eth::Interface* _ethereum): m_ethereum(_ethereum) { }
+	std::string test() { return "a"; }
 	
-	class RPCService: public NetService<25, RPCService>
-	{
-	public:
-		RPCService(): m_directInterface() {}
-		
-		std::string a() { return m_directInterface.a(); }
-		std::string b() { return m_directInterface.b(); }
-		std::string c() { return m_directInterface.c(); }
-		
-	protected:
-		DirectInterface m_directInterface;
-	};
+	eth::Interface* ethereum() { return m_ethereum; }
+	
+protected:
+	eth::Interface* m_ethereum;
+};
+	
 }
+

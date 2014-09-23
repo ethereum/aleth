@@ -45,7 +45,6 @@ typedef uint8_t NetMsgType;
 typedef uint16_t NetMsgSequence;
 
 class NetMsg;
-//typedef std::function<void(std::weak_ptr<NetSession> _session)> sessionHandler;
 typedef std::function<void(NetMsg const& _msg)> messageHandler;
 typedef std::map<NetMsgServiceType,std::shared_ptr<messageHandler>> messageHandlers;
 	
