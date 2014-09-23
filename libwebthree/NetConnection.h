@@ -34,10 +34,7 @@ class NetProtocol;
 /**
  * @brief Interface for managing incoming/outgoing sockets.
  *
- * @todo handlers!
- * @todo remove handler-constructors
- * @todo make orignation-flag constructor-explicit
- * @todo connectionHandler (ready, stopped, exception)
+ * @todo write queue
  * @todo protocol error handling (separate from network/shutdown errors)
  * @todo replace x_socketError in handshake
  */

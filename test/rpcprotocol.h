@@ -53,7 +53,7 @@ class EthereumRPCClient: public NetProtocol, public eth::Interface
 {
 public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCClient(NetConnection* _conn, void *);
+	EthereumRPCClient(NetConnection* _conn, void *): NetProtocol(_conn) {}
 	
 	void receiveMessage(NetMsg _msg);
 	
@@ -73,6 +73,13 @@ public:
 	void inject(bytesConstRef _rlp);
 	void flushTransactions();
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
+	
+	u256 balanceAt(Address _a) const { return balanceAt(_a, m_default); }
+	u256 countAt(Address _a) const { return countAt(_a, m_default); }
+	u256 stateAt(Address _a, u256 _l) const { return stateAt(_a, _l, m_default); }
+	bytes codeAt(Address _a) const { return codeAt(_a, m_default); }
+	std::map<u256, u256> storageAt(Address _a) const { return storageAt(_a, m_default); }
+	
 	u256 balanceAt(Address _a, int _block) const;
 	u256 countAt(Address _a, int _block) const;
 	u256 stateAt(Address _a, u256 _l, int _block) const;

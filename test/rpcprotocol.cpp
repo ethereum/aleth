@@ -202,6 +202,8 @@ void EthereumRPCClient::receiveMessage(NetMsg _msg)
 	// client should look for Success,Exception, and promised responses
 	clog(RPCNote) << "[" << this->serviceId() << "] receiveMessage";
 	
+	// check for and set promise value
+	
 	RLP req(_msg.payload());
 	RLPStream resp;
 	switch (_msg.type())

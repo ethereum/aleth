@@ -28,6 +28,8 @@
 #include <libwebthree/NetEndpoint.h>
 #include <libwebthree/WebThreeServer.h>
 #include <libethereumx/Ethereum.h>
+#include <libp2p/Host.h>
+#include <libethereum/Client.h>
 
 #include "rpcprotocol.h"
 #include "rpcservice.h"
@@ -55,7 +57,6 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 
 BOOST_AUTO_TEST_CASE(test_netendpoint)
 {
-	return;
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
 
 	shared_ptr<NetEndpoint> netEp(new NetEndpoint(ep));
@@ -73,19 +74,35 @@ BOOST_AUTO_TEST_CASE(test_netendpoint)
 	testConn.reset(new NetConnection(netEp->get_io_service(), ep));
 	testConn->start();
 	while (!testConn->connectionOpen() && !testConn->connectionError());
+	testConn.reset();
+	netEp->stop();
 	netEp.reset();
 	testConn.reset();
 }
-	
+
 BOOST_AUTO_TEST_CASE(test_netservice)
 {
 	boost::asio::ip::tcp::endpoint ep(boost::asio::ip::address::from_string("127.0.0.1"), 30310);
+
+	p2p::Host net("test", p2p::NetworkPreferences());
+	unique_ptr<eth::Client> eth(new eth::Client(&net));
+	clog(RPCNote) << "Blockchain opened. Starting RPC Server.";
+	
+	unique_ptr<EthereumRPCService> server(new EthereumRPCService(eth.get()));
 	
 	shared_ptr<NetEndpoint> netEp(new NetEndpoint(ep));
+	netEp->registerService(server.get());
+	netEp->start();
 	
-//	shared_ptr<RPCService> rpc(new RPCService());
-//	netEp->registerService(rpc.get());
-//	netEp->start();
+	// rpc client requries connection and server
+	
+	auto clientConn = make_shared<NetConnection>(netEp->get_io_service(), ep);
+	clientConn->start();
+	EthereumRPCClient client(clientConn.get(), nullptr);
+	
+	Address a(fromHex("0x1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
+	u256 balance = client.balanceAt(a);
+	cout << "Got balanceAt: " << balance << endl;
 }
 	
 BOOST_AUTO_TEST_SUITE_END()
@@ -123,7 +140,6 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_messages)
 
 BOOST_AUTO_TEST_CASE(test_rlpnet_connectionin)
 {
-	return;
 	cout << "test_rlpnet_connectionin" << endl;
 	
 	boost::asio::io_service io;
@@ -316,6 +332,7 @@ BOOST_AUTO_TEST_SUITE_END() // webthree_net
 
 BOOST_AUTO_TEST_CASE(ethx_test_server_going_away)
 {
+	return;
 	using namespace dev::eth;
 	
 	cnote << "Testing EthereumX...";

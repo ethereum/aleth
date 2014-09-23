@@ -41,7 +41,7 @@ class NetServiceFace
 	friend class NetConnection;
 	
 public:
-	static NetMsgServiceType serviceId();
+	static NetMsgServiceType serviceId() {};
 	
 protected:
 	/// Called by endpoint before connection is started.
@@ -52,7 +52,7 @@ protected:
 };
 
 template <class T> // protocol
-class NetService: NetServiceFace
+class NetService: public NetServiceFace
 {
 	friend class NetEndpoint;
 	friend class NetConnection;
