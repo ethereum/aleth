@@ -74,7 +74,7 @@ void NetEndpoint::stop()
 void NetEndpoint::acceptConnection()
 {
 	// pointer is used to prevent dealloc issues w/boost
-	auto newConn = make_shared<NetConnection>(m_io, m_endpoint);
+	auto newConn = make_shared<NetConnection>(m_io);
 	m_connections.push_back(newConn);
 	
 	auto self = shared_from_this();

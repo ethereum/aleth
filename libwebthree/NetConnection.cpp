@@ -27,19 +27,13 @@
 using namespace std;
 using namespace dev;
 
-NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep): m_socket(_io_service), m_endpoint(_ep), m_stopped(true), m_originateConnection(false), m_socketError()
+NetConnection::NetConnection(boost::asio::io_service& _io_service): m_socket(_io_service), m_stopped(true), m_originateConnection(false), m_socketError()
 {
 	m_stopped = true;
 	m_started = false;
 }
 
-NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, NetMsgServiceType _svc, messageHandler* _svcMsgHandler, messageHandler* _dataMsgHandler): NetConnection(_io_service, _ep, messageHandlers({make_pair(_svc,(_svcMsgHandler) ? make_shared<messageHandler>(*_svcMsgHandler) : nullptr)}), messageHandlers({make_pair(_svc,(_dataMsgHandler) ? make_shared<messageHandler>(*_dataMsgHandler) : nullptr)}))
-{
-	m_stopped = true;
-	m_started = false;
-}
-
-NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers): m_socket(_io_service), m_endpoint(_ep), m_serviceMsgHandlers(_svcMsgHandlers), m_dataMsgHandlers(_dataMsgHandlers), m_originateConnection(true), m_stopped(true), m_socketError(), m_started(false)
+NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep): m_socket(_io_service), m_endpoint(_ep), m_stopped(true), m_originateConnection(true), m_socketError()
 {
 	m_stopped = true;
 	m_started = false;
@@ -48,6 +42,16 @@ NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::
 NetConnection::~NetConnection()
 {
 	shutdown(true);
+}
+
+void NetConnection::setServiceMessageHandler(NetMsgServiceType _svc, messageHandler _h)
+{
+	m_serviceMsgHandlers.insert(std::make_pair(_svc, _h));
+}
+
+void NetConnection::setDataMessageHandler(NetMsgServiceType _svc, messageHandler _h)
+{
+	m_dataMsgHandlers.insert(std::make_pair(_svc, _h));
 }
 
 boost::asio::ip::tcp::socket* NetConnection::socket() {
@@ -248,9 +252,7 @@ void NetConnection::doRead(size_t _rlpLen)
 				auto hit = hs.find(msg.service());
 				if (hit!=hs.end())
 				{
-					auto h = *hit->second.get();
-					if (h!=nullptr)
-						h(msg);
+					hit->second(msg);
 				}
 				else
 					throw MessageServiceInvalid();

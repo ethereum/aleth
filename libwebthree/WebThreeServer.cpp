@@ -111,7 +111,7 @@ void WebThreeServer::stopServer()
 
 void WebThreeServer::doAccept()
 {
-	shared_ptr<NetConnection> conn(new NetConnection(m_io, m_endpoint));
+	shared_ptr<NetConnection> conn(new NetConnection(m_io));
 	m_acceptor.async_accept(*conn->socket(), [this, conn](boost::system::error_code _ec)
 	{
 		clog(RPCConnect) << "WebThreeServer::doAccept new connection";

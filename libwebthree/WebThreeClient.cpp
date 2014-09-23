@@ -26,7 +26,7 @@
 using namespace std;
 using namespace dev;
 
-WebThreeClient::WebThreeClient(WebThreeServiceType _type): m_io(), m_connection(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310), _type, nullptr, nullptr), m_serviceType(_type)
+WebThreeClient::WebThreeClient(WebThreeServiceType _type): m_io(), m_connection(m_io, boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310)), m_serviceType(_type)
 {
 	startClient();
 }

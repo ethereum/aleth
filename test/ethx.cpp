@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(test_netendpoint)
 	shared_ptr<NetEndpoint> netEp(new NetEndpoint(ep));
 	netEp->start();
 	
-	auto testConn = make_shared<NetConnection>(netEp->get_io_service(), ep, 0, nullptr, nullptr);
+	auto testConn = make_shared<NetConnection>(netEp->get_io_service(), ep);
 	testConn->start();
 	
 	while (!testConn->connectionOpen() && !testConn->connectionError());
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(test_netendpoint)
 	testConn.reset();
 	
 	netEp->start();
-	testConn.reset(new NetConnection(netEp->get_io_service(), ep, 0, nullptr, nullptr));
+	testConn.reset(new NetConnection(netEp->get_io_service(), ep));
 	testConn->start();
 	while (!testConn->connectionOpen() && !testConn->connectionError());
 	netEp.reset();
@@ -132,14 +132,10 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connectionin)
 	assert(!n->connectionOpen());
 	delete n;
 	
-	auto sharedconn = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
-	sharedconn.reset();
+	auto sharedconn = make_shared<NetConnection>(io);
+	sharedconn.reset();;
 	
-	// nullptr handler
-	assert(!nullptr);
-	messageHandlers({make_pair(0,make_shared<messageHandler>(nullptr))});
-	
-	auto testNoConnection = make_shared<NetConnection>(io, ep, 0, nullptr, nullptr);
+	auto testNoConnection = make_shared<NetConnection>(io, ep);
 	testNoConnection->start();
 	io.run();
 	testNoConnection.reset();
@@ -150,7 +146,7 @@ void acceptConnection(boost::asio::ip::tcp::acceptor& _a, boost::asio::io_servic
 {
 	static std::vector<shared_ptr<NetConnection> > conns;
 	
-	auto newConn = make_shared<NetConnection>(acceptIo, ep);
+	auto newConn = make_shared<NetConnection>(acceptIo);
 	conns.push_back(newConn);
 	_a.async_accept(*newConn->socket(), [newConn, &_a, &acceptIo, ep, connected](boost::system::error_code _ec)
 	{
@@ -201,7 +197,7 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connections)
 	// Client Connections:
 	
 	// create first connection so IO has work
-	auto connOut = make_shared<NetConnection>(acceptorIo, ep, 0, nullptr, nullptr);
+	auto connOut = make_shared<NetConnection>(acceptorIo, ep);
 	connOut->start();
 	conns.push_back(connOut);
 	
@@ -223,7 +219,7 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_connections)
 	for (auto i = 0; i < 256; i++)
 	{
 		usleep(2000);
-		auto connOut = make_shared<NetConnection>(acceptorIo, ep, 0, nullptr, nullptr);
+		auto connOut = make_shared<NetConnection>(acceptorIo, ep);
 		connOut->start();
 		conns.push_back(connOut);
 	}

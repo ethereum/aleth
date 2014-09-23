@@ -48,17 +48,14 @@ class NetConnection: public std::enable_shared_from_this<NetConnection>
 	
 public:
 	/// Constructor for incoming connections.
+	NetConnection(boost::asio::io_service& _io_service);
+	
+	/// Constructor for outgoing connections.
 	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep);
-	
-	/// Constructor for outgoing connections (multiple services).
-	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, messageHandlers _svcMsgHandlers, messageHandlers _dataMsgHandlers);
-	
-	/// Constructor for outgoing connections (single service, twoway).
-	NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep, NetMsgServiceType _svc, messageHandler* _svcMsgHandler, messageHandler* _dataMsgHandler);
-	
+
 	/// Destructor.
 	~NetConnection();
-	
+
 	void setServiceMessageHandler(NetMsgServiceType _svc, messageHandler _h);
 	void setDataMessageHandler(NetMsgServiceType _svc, messageHandler _h);
 	

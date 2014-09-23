@@ -46,7 +46,7 @@ typedef uint16_t NetMsgSequence;
 
 class NetMsg;
 typedef std::function<void(NetMsg const& _msg)> messageHandler;
-typedef std::map<NetMsgServiceType,std::shared_ptr<messageHandler>> messageHandlers;
+typedef std::map<NetMsgServiceType,messageHandler> messageHandlers;
 	
 class MessageTooLarge: public Exception {};
 class MessageTooSmall: public Exception {};
