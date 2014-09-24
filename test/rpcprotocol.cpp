@@ -29,30 +29,26 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::p2p;
 
-EthereumRPCServer::EthereumRPCServer(NetConnection* _conn, EthereumRPCService *_service): NetProtocol(_conn), m_service(_service)
+EthereumRPCServer::EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_service(dynamic_cast<EthereumRPCService*>(_service))
 {
 	
 }
 
-NetMsgSequence EthereumRPCServer::sendRLPStream(RLPStream &s)
-{
-	NetMsg response((NetMsgServiceType)1, 0, 0, RLP(s.out()));
-	connection()->send(response);
-	return response.sequence();
-}
-
-void EthereumRPCServer::receiveMessage(NetMsg _msg)
+void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 {
 	clog(RPCNote) << "[" << this->serviceId() << "] receiveMessage";
 	
-	RLP req(_msg.payload());
+	RLP req(_msg.rlp());
 	RLPStream resp;
+	NetMsgType result;
 	switch (_msg.type())
 	{
 		case 255:
 		{
 			resp.appendList(1);
 			resp << m_service->test();
+			
+			result = 1;
 			break;
 		}
 			
@@ -66,8 +62,7 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 			u256 gp(req[5].toInt<u256>());
 			m_service->ethereum()->transact(s, v, d, data, g, gp);
 			
-			resp.appendList(1);
-			resp << 1;
+			result = 1;
 			break;
 		}
 			
@@ -80,30 +75,28 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 			u256 gp(req[4].toInt<u256>());
 			Address a(m_service->ethereum()->transact(s, e, data, g, gp));
 			
-			resp.appendList(2);
-			resp << 1;
+			result = 1;
+			resp.appendList(1);
 			resp << a;
-		}
 			break;
-			
+		}
+
 		case RequestRLPInject:
 		{
 			m_service->ethereum()->inject(req[0].toBytesConstRef());
 			
-			resp.appendList(1);
-			resp << 1;
+			result = 1;
 			break;
 		}
-			
+
 		case RequestFlushTransactions:
 		{
 			m_service->ethereum()->flushTransactions();
 			
-			resp.appendList(1);
-			resp << 1;
+			result = 1;
 			break;
 		}
-			
+
 		case RequestCallTransaction:
 		{
 			Secret s(req[0].toHash<Secret>());
@@ -114,18 +107,20 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 			u256 gp(req[5].toInt<u256>());
 			bytes b(m_service->ethereum()->call(s, v, d, data, g, gp));
 
-			resp.appendList(2);
-			resp << 1;
+			result = 1;
+			resp.appendList(1);
 			resp << b;
 			break;
 		}
-			
+
 		case RequestBalanceAt:
 		{
 			u256 b(m_service->ethereum()->balanceAt(Address(req[0].toHash<Address>()), req[1].toInt()));
 			
-			resp.appendList(2);
-			resp << 1;
+			clog(RPCNote) << "got balance: " << b;
+			
+			result = 1;
+			resp.appendList(1);
 			resp << b;
 			break;
 		}
@@ -135,8 +130,8 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 			int block = req[1].toInt();
 			u256 b(m_service->ethereum()->countAt(Address(req[0].toHash<Address>()), block));
 			
-			resp.appendList(2);
-			resp << 1;
+			result = 1;
+			resp.appendList(1);
 			resp << b;
 			break;
 		}
@@ -145,8 +140,8 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 		{
 			u256 b(m_service->ethereum()->stateAt(Address(req[0].toHash<Address>()), req[1].toInt<u256>(), req[2].toInt()));
 			
-			resp.appendList(2);
-			resp << 1;
+			result = 1;
+			resp.appendList(1);
 			resp << b;
 			break;
 		}
@@ -155,10 +150,9 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 		{
 			bytes b(m_service->ethereum()->codeAt(Address(req[0].toHash<Address>()), req[1].toInt()));
 			
-			resp.appendList(2);
-			resp << 1;
+			result = 1;
+			resp.appendList(1);
 			resp << b;
-			break;
 			break;
 		}
 			
@@ -166,43 +160,30 @@ void EthereumRPCServer::receiveMessage(NetMsg _msg)
 		{
 			std::map<u256, u256> store(m_service->ethereum()->storageAt(Address(req[0].toHash<Address>()), req[1].toInt()));
 
-			resp.appendList(2);
-			resp << 1;
+			result = 1;
+			resp.appendList(1);
 			resp.appendList(store.size());
 			for (auto s: store)
 				resp << s;
 			
 			break;
 		}
-			
+
 		case RequestMessages:
-		{
-			break;
-		}
-			
 		default:
-			resp.appendList(1);
-			resp << 2;
+			result = 2;
 	}
 	
-	sendRLPStream(resp);
-}
-
-
-
-NetMsgSequence EthereumRPCClient::sendRLPStream(RLPStream &s)
-{
-	NetMsg response((NetMsgServiceType)1, 0, 0, RLP(s.out()));
+	NetMsg response(serviceId(), _msg.sequence(), result, RLP(resp.out()));
 	connection()->send(response);
-	return response.sequence();
 }
 
-void EthereumRPCClient::receiveMessage(NetMsg _msg)
+void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
 {
 	// client should look for Success,Exception, and promised responses
 	clog(RPCNote) << "[" << this->serviceId() << "] receiveMessage";
 	
-	// check for and set promise value
+	// !! check promises and set value
 	
 	RLP req(_msg.payload());
 	RLPStream resp;
@@ -227,7 +208,7 @@ bytes EthereumRPCClient::performRequest(NetMsgType _type, RLPStream& _s)
 	promiseResponse p;
 	futureResponse f = p.get_future();
 
-	NetMsg msg((NetMsgServiceType)1, nextDataSequence(), _type, RLP(_s.out()));
+	NetMsg msg(serviceId(), nextDataSequence(), _type, RLP(_s.out()));
 	{
 		lock_guard<mutex> l(x_promises);
 		m_promises.insert(make_pair(msg.sequence(),&p));

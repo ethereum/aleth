@@ -82,6 +82,7 @@ private:
 //	/// @returns if RLP message size is valid and matches length from 4-byte header
 //	bool checkPacket(bytesConstRef _netMsg) const;
 
+	/// Together with send(), doWrite() handles the write queue. When connection is initializing writes will be queued until handshake is complete.
 	void doWrite();
 	
 	/// Continously read messages until shutdown. Messages are passed to appropriate service handler or, for control messages, handled directly.
@@ -108,8 +109,11 @@ private:
 	std::atomic<bool> m_started;				///< Atomically ensure connection is started once. Start cannot occur unless m_started is false. Managed by start() and shutdown(bool).
 	bool m_originateConnection;				///< True if connection is outbound, otherwise false.
 	
-	boost::system::error_code m_socketError;	///< Set when shutdown performed w/error.
 	mutable std::mutex x_socketError;			///< Mutex for error which can occur from host or IO thread.
+	boost::system::error_code m_socketError;	///< Set when shutdown performed w/error.
+	
+	std::mutex x_writeQueue;
+	std::deque<bytes> m_writeQueue;
 };
 
 

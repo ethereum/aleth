@@ -39,11 +39,12 @@ NetMsg::NetMsg(bytesConstRef _packetData): m_messageBytes(std::move(_packetData.
 	m_sequence = (unsigned)r[1].toInt();
 	m_messageType = 0;
 	if (r.itemCountStrict() == 3)
-	{
 		m_rlpBytes = bytes(r[2].data().toBytes());
-	}
 	else
+	{
+		m_messageType = r[2].toInt();
 		m_rlpBytes = bytes(r[3].data().toBytes());
+	}
 	// todo: else throw exception
 }
 

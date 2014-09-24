@@ -85,23 +85,32 @@ void NetConnection::start()
 
 void NetConnection::send(NetMsg const& _msg)
 {
-	if (m_stopped)
+	if (!m_started)
 		return;
-	
-	auto self(shared_from_this());
-	boost::asio::async_write(m_socket, boost::asio::buffer(_msg.payload()), [self](boost::system::error_code _ec, size_t _len)
-	{
-		if (_ec)
-			return self->shutdownWithError(_ec); // send write failed
-		
-		assert(_len);
-		clog(RPCNote) << "NetConnection::send";
-	});
+
+	lock_guard<mutex> l(x_writeQueue);
+	m_writeQueue.push_back(_msg.payload());
+	if (m_writeQueue.size() == 1 && !m_stopped)
+		doWrite();
 }
 
 void NetConnection::doWrite()
 {
-	// implement write queue w/send()
+	const bytes& bytes = m_writeQueue[0];
+	auto self(shared_from_this());
+	boost::asio::async_write(m_socket, boost::asio::buffer(bytes), [this, self](boost::system::error_code _ec, std::size_t /*length*/)
+	{
+		if (_ec)
+			return shutdownWithError(_ec);
+		else
+		{
+			lock_guard<mutex> l(x_writeQueue);
+			m_writeQueue.pop_front();
+			if (m_writeQueue.empty())
+				return;
+		}
+		doWrite();
+	});
 }
 
 //bool NetConnection::checkPayloadLength(bytesConstRef _msg) const
@@ -126,6 +135,7 @@ void NetConnection::handshake(size_t _rlpLen)
 		
 		// write version packet
 		RLPStream s;
+		s.appendList(1);
 		s << "version";
 		shared_ptr<NetMsg> version(new NetMsg((NetMsgServiceType)0, 0, (NetMsgType)0, RLP(s.out())));
 	
@@ -174,17 +184,24 @@ void NetConnection::handshake(size_t _rlpLen)
 			return shutdownWithError(_ec); // handshake read-data failed
 		
 		m_recvdBytes += _len;
-		if (m_recvdBytes >= _rlpLen)
+		if (m_recvdBytes >= _rlpLen + 4)
 		{
 			try
 			{
 				NetMsg msg(bytesConstRef(m_recvBuffer.data(), _rlpLen + 4));
-				if (RLP(msg.rlp()).toString() == "version")
+				if (RLP(msg.rlp())[0].toString() == "version")
 				{
 					// It's possible for handshake to finish following shutdown
 					lock_guard<mutex> l(x_socketError);
 					if (m_started)
+					{
+						// start writes if pending messages were created during handshake
+						lock_guard<mutex> l(x_writeQueue);
+						if (m_writeQueue.size() > 0)
+							doWrite();
+						
 						m_stopped = false;
+					}
 					else
 						return;
 					
@@ -236,14 +253,12 @@ void NetConnection::doRead(size_t _rlpLen)
 			m_recvBuffer.resize(4+2*_rlpLen);
 	}
 	
-	if (_rlpLen && m_recvdBytes >= _rlpLen)
+	if (_rlpLen && m_recvdBytes >= _rlpLen + 4)
 	{
-		// Handle message if data recvd > payload size
-		
 		try
 		{
 			clog(RPCNote) << "NetConnection::doRead message";
-			NetMsg msg(bytesConstRef(m_recvBuffer.data(), _rlpLen));
+			NetMsg msg(bytesConstRef(m_recvBuffer.data(), _rlpLen + 4));
 			if (msg.service())
 			{
 				messageHandlers &hs = msg.type() ? m_dataMsgHandlers : m_serviceMsgHandlers;
@@ -251,9 +266,7 @@ void NetConnection::doRead(size_t _rlpLen)
 				// If handler is found, get pointer and call
 				auto hit = hs.find(msg.service());
 				if (hit!=hs.end())
-				{
 					hit->second(msg);
-				}
 				else
 					throw MessageServiceInvalid();
 			}
@@ -268,7 +281,7 @@ void NetConnection::doRead(size_t _rlpLen)
 		
 		m_recvdBytes = m_recvdBytes - _rlpLen - 4;
 		if (m_recvdBytes)
-			memmove(m_recvBuffer.data(), m_recvBuffer.data() + _rlpLen + 4,m_recvdBytes);
+			memmove(m_recvBuffer.data(), m_recvBuffer.data() + _rlpLen + 4 - 1,m_recvdBytes);
 		
 		doRead();
 	}

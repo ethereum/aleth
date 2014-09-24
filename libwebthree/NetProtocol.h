@@ -40,7 +40,7 @@ public:
 	NetProtocol(NetConnection* _conn): m_connection(_conn) {};
 	NetProtocol(NetConnection* _conn, NetServiceFace* _service): m_connection(_conn) {};
 	
-	virtual void receiveMessage(NetMsg _msg) = 0;
+	virtual void receiveMessage(NetMsg const& _msg) = 0;
 	
 	NetMsgSequence nextDataSequence() { return m_localDataSequence++; }
 	NetConnection* connection() { return m_connection; }

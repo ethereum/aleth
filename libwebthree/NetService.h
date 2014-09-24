@@ -45,10 +45,10 @@ public:
 	
 protected:
 	/// Called by endpoint before connection is started.
-	void registerConnection(std::weak_ptr<NetConnection> _conn) {};
+	virtual void registerConnection(std::weak_ptr<NetConnection> _conn) = 0;
 	
 	/// Called from connection when service message is received.
-	void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn) {};
+	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn) = 0;
 };
 
 template <class T> // protocol
@@ -59,24 +59,24 @@ class NetService: public NetServiceFace
 
 public:
 	static NetMsgServiceType serviceId() { return T::serviceId(); }
-
-	template <class S> void registerConnection(std::weak_ptr<NetConnection> _conn) {
-		if (auto p = _conn.lock())
+	
+	void registerConnection(std::weak_ptr<NetConnection> _conn) {
+		if (auto cp = _conn.lock())
 		{
-			m_connState.insert(std::make_pair(_conn, new T(_conn, (S*)this) ));
+			NetConnection *c = cp.get();
+			m_connState.insert(std::make_pair(_conn, std::unique_ptr<T>(new T(c,this))));
 			
-			NetConnection *c = p.get();
-			p->setServiceMessageHandler(T::serviceId(), [=](NetMsg const& _msg){
+			c->setServiceMessageHandler(T::serviceId(), [=](NetMsg const& _msg){
 				serviceMessageReceived(_msg, c);
 			});
 			
 			T* protocol = m_connState[_conn].get();
-			p->setDataMessageHandler(T::serviceId(), [_conn, protocol](NetMsg const& _msg){
+			c->setDataMessageHandler(T::serviceId(), [_conn, protocol](NetMsg const& _msg){
 				protocol->receiveMessage(_msg);
 			});
 		}
 	}
-
+	
 protected:
 	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
 	{
@@ -85,6 +85,5 @@ protected:
 	
 	std::map<std::weak_ptr<NetConnection>,std::unique_ptr<T>, std::owner_less<std::weak_ptr<NetConnection>>> m_connState;
 };
-
 }
 

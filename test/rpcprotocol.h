@@ -31,16 +31,15 @@
 namespace dev
 {
 
-// inherit ethereum interface?
 class EthereumRPCService;
 class EthereumRPCServer: public NetProtocol
 {
 public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCServer(NetConnection* _conn, EthereumRPCService *_service);
+	
+	EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service);
 
-	NetMsgSequence sendRLPStream(RLPStream &s);
-	void receiveMessage(NetMsg _msg);
+	void receiveMessage(NetMsg const& _msg);
 	
 	std::string test() { return "a"; }
 protected:
@@ -55,9 +54,8 @@ public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
 	EthereumRPCClient(NetConnection* _conn, void *): NetProtocol(_conn) {}
 	
-	void receiveMessage(NetMsg _msg);
-	
-	NetMsgSequence sendRLPStream(RLPStream &s);
+	void receiveMessage(NetMsg const& _msg);
+
 	bytes performRequest(NetMsgType _type) { RLPStream s; s.appendList(0); return performRequest(_type, s); }
 	bytes performRequest(NetMsgType _type, RLPStream& _s);
 	

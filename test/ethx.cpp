@@ -100,9 +100,11 @@ BOOST_AUTO_TEST_CASE(test_netservice)
 	clientConn->start();
 	EthereumRPCClient client(clientConn.get(), nullptr);
 	
-	Address a(fromHex("0x1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
+	Address a(fromHex("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
 	u256 balance = client.balanceAt(a);
 	cout << "Got balanceAt: " << balance << endl;
+	
+	sleep(1);
 }
 	
 BOOST_AUTO_TEST_SUITE_END()
@@ -114,15 +116,16 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_messages)
 {
 	// service message:
 	RLPStream s;
+	s.appendList(1);
 	s << "version";
 	
 	NetMsg version((NetMsgServiceType)0, 0, (NetMsgType)0, RLP(s.out()));
 	
 	bytes rlpbytes = version.payload();
 	RLP rlp = RLP(bytesConstRef(&rlpbytes).cropped(4));
-	assert("version" == rlp[2].toString());
-	assert("version" == RLP(rlp[2].data().toBytes()).toString());
-	assert("version" == RLP(version.rlp()).toString());
+	assert("version" == rlp[2][0].toString());
+	assert("version" == RLP(rlp[2][0].data().toBytes()).toString());
+	assert("version" == RLP(version.rlp())[0].toString());
 	
 	// application message:
 	NetMsg appthing((NetMsgServiceType)1, 0, (NetMsgType)1, RLP(s.out()));

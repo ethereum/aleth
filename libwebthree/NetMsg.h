@@ -43,10 +43,10 @@ public:
 	NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req);
 	~NetMsg() {}
 	
-	NetMsgServiceType service() { return m_service; }
-	NetMsgSequence sequence() { return m_sequence; }
-	NetMsgType type() { return m_messageType; }
-	bytes rlp() { return m_rlpBytes; }
+	NetMsgServiceType service() const { return m_service; }
+	NetMsgSequence sequence() const { return m_sequence; }
+	NetMsgType type() const { return m_messageType; }
+	bytes rlp() const { return m_rlpBytes; }
 	bytes payload() const { return m_messageBytes; }
 	
 	bool isControlMessage() const { return !m_service; }
