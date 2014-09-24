@@ -97,14 +97,14 @@ BOOST_AUTO_TEST_CASE(test_netservice)
 	// rpc client requries connection and server
 	
 	auto clientConn = make_shared<NetConnection>(netEp->get_io_service(), ep);
-	clientConn->start();
 	EthereumRPCClient client(clientConn.get(), nullptr);
+	clientConn->start();
 	
 	Address a(fromHex("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
 	u256 balance = client.balanceAt(a);
 	cout << "Got balanceAt: " << balance << endl;
-	
-	sleep(1);
+
+	assert(balance.str() == "1606938044258990275541962092341162602522202993782792835301376");
 }
 	
 BOOST_AUTO_TEST_SUITE_END()

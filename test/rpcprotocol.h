@@ -52,7 +52,7 @@ class EthereumRPCClient: public NetProtocol, public eth::Interface
 {
 public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCClient(NetConnection* _conn, void *): NetProtocol(_conn) {}
+	EthereumRPCClient(NetConnection* _conn, void *);
 	
 	void receiveMessage(NetMsg const& _msg);
 

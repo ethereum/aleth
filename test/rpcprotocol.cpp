@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+#include <memory>
 #include <libwebthree/Common.h>
 #include <libwebthree/NetConnection.h>
 #include "rpcprotocol.h"
@@ -178,6 +179,14 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 	connection()->send(response);
 }
 
+EthereumRPCClient::EthereumRPCClient(NetConnection* _conn, void *): NetProtocol(_conn)
+{
+	_conn->setDataMessageHandler(serviceId(), [=](NetMsg const& _msg)
+	{
+		receiveMessage(_msg);
+	});
+}
+
 void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
 {
 	// client should look for Success,Exception, and promised responses
@@ -185,8 +194,7 @@ void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
 	
 	// !! check promises and set value
 	
-	RLP req(_msg.payload());
-	RLPStream resp;
+	RLP res(_msg.rlp());
 	switch (_msg.type())
 	{
 		case 0:
@@ -195,6 +203,8 @@ void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
 			
 		case 1:
 			// success/true (second item is result, unless bool/void)
+			if (auto p = m_promises[_msg.sequence()])
+				p->set_value(make_shared<NetMsg>(_msg));
 			break;
 			
 		case 2:
@@ -223,7 +233,7 @@ bytes EthereumRPCClient::performRequest(NetMsgType _type, RLPStream& _s)
 	}
 	if (s != future_status::ready)
 		throw WebThreeRequestTimeout();
-	return std::move(f.get()->payload());
+	return std::move(f.get()->rlp());
 }
 
 void EthereumRPCClient::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
@@ -266,7 +276,7 @@ u256 EthereumRPCClient::balanceAt(Address _a, int _block) const
 	RLPStream s(2);
 	s << _a << _block;
 	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestBalanceAt, s);
-	return u256(RLP(r).toInt<u256>());
+	return u256(RLP(r)[0].toInt<u256>());
 }
 
 u256 EthereumRPCClient::countAt(Address _a, int _block) const
