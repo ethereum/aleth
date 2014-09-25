@@ -33,13 +33,14 @@ class NetMsg;
 
 /**
  * @brief NetProtocol objects are instantiated directly or by NetService in order to handle network messages and session state.
+ * @todo Implement (virtual) receiveMessage directly to verify sequencing; pass message to pure virtual interpretMessage.
  */
 class NetProtocol
 {
 public:
 	NetProtocol(NetConnection* _conn): m_connection(_conn) {};
 	NetProtocol(NetConnection* _conn, NetServiceFace* _service): m_connection(_conn) {};
-	
+
 	virtual void receiveMessage(NetMsg const& _msg) = 0;
 	
 	NetMsgSequence nextDataSequence() { return m_localDataSequence++; }
@@ -56,6 +57,18 @@ protected:
 	std::atomic<NetMsgSequence> m_remoteDataSequence;
 	
 	NetConnection* m_connection;
+};
+	
+template <class T>
+class NetServiceProtocol: public NetProtocol
+{
+public:
+	NetServiceProtocol(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_netService(static_cast<T*>(_service)) {};
+	
+	T* getService() { return m_netService; }
+
+protected:
+	T* m_netService;
 };
 
 }

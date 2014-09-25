@@ -47,10 +47,13 @@ public:
 	
 	void start();
 	void stop();
-	
-	boost::asio::io_service& get_io_service() { return m_io; }
 
+	/// Called by external connections. Used by testing.
+	/// @todo replace with create-connection method
+	boost::asio::io_service& get_io_service() { return m_io; }
+	
 protected:
+	
 	std::map<NetMsgServiceType, NetServiceFace*> m_services;
 	std::vector<std::shared_ptr<NetConnection> > m_connections;
 	

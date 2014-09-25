@@ -43,16 +43,16 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 {
 	cout << "test_netproto_simple" << endl;
 	
-	EthereumRPCService s(nullptr);
-	EthereumRPCServer p((NetConnection *)nullptr, &s);
+	TestService s(nullptr);
+	TestProtocol p((NetConnection *)nullptr, &s);
+	assert(TestService::serviceId() == TestProtocol::serviceId());
 	
-	std::string sA = s.test();
-	std::string pA = p.test();
-	assert(sA == pA);
-	assert(sA == "a");
+	std::string sA = s.protocolServiceString();
+	std::string pA = p.protocolString();
+//	assert(sA == pA);
+//	assert(sA == "a");
 	
-	assert((NetMsgServiceType)2 == EthereumRPCService::serviceId());
-	
+//	assert((NetMsgServiceType)2 == EthereumRPCService::serviceId());
 }
 
 BOOST_AUTO_TEST_CASE(test_netendpoint)

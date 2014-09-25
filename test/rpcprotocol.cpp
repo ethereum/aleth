@@ -30,7 +30,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::p2p;
 
-EthereumRPCServer::EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_service(dynamic_cast<EthereumRPCService*>(_service))
+EthereumRPCServer::EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_service(static_cast<EthereumRPCService*>(_service))
 {
 	
 }
@@ -44,15 +44,6 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 	NetMsgType result;
 	switch (_msg.type())
 	{
-		case 255:
-		{
-			resp.appendList(1);
-			resp << m_service->test();
-			
-			result = 1;
-			break;
-		}
-			
 		case RequestSubmitTransaction:
 		{
 			Secret s(req[0].toHash<Secret>());

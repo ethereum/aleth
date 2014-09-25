@@ -24,21 +24,42 @@
 #include <libethereum/Interface.h>
 #include <libwebthree/NetService.h>
 #include <libwebthree/Common.h>
-#include "rpcprotocol.h"
 
 namespace dev
 {
 
+class EthereumRPCServer;
 class EthereumRPCService: public NetService<EthereumRPCServer>
 {
 public:
 	EthereumRPCService(eth::Interface* _ethereum): m_ethereum(_ethereum) { }
-	std::string test() { return "a"; }
 	
 	eth::Interface* ethereum() { return m_ethereum; }
 	
 protected:
 	eth::Interface* m_ethereum;
+};
+	
+
+class TestCoreTypesInterface
+{
+	std::string string() { return "string"; }
+	u256 u256() { return (uint64_t)1 << 63; }
+	h256 h256() { return FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF")); }
+	h256s h256s() { return std::vector<FixedHash<32>>({FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF"))}); }
+};
+
+class TestProtocol;
+class TestService: public NetService<TestProtocol>
+{
+public:
+	TestService(TestCoreTypesInterface* _interface): m_interface(_interface) {}
+	
+	std::string protocolServiceString() { return "protocolServiceString"; }
+	
+	TestCoreTypesInterface* interface() { return m_interface; }
+protected:
+	TestCoreTypesInterface* m_interface;
 };
 	
 }

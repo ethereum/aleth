@@ -30,18 +30,38 @@
 
 namespace dev
 {
+	
+	
+class TestService;
+class TestProtocol: NetServiceProtocol<TestService>
+{
+public:
+	static NetMsgServiceType serviceId() { return 255; }
+	
+	TestProtocol(NetConnection* _conn, NetServiceFace* _service): NetServiceProtocol(_conn, _service){}
+	
+	std::string protocolString() { return "protocolString"; }
+	
+	void receiveMessage(NetMsg const& _msg) {
+		switch(_msg.type())
+		{
+			case 255:
+				break;
+				
+			default:;
+				// drop message
+		}
+	}
+};
 
 class EthereumRPCService;
 class EthereumRPCServer: public NetProtocol
 {
 public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
-	
 	EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service);
-
 	void receiveMessage(NetMsg const& _msg);
-	
-	std::string test() { return "a"; }
+
 protected:
 	EthereumRPCService* m_service;
 };

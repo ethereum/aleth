@@ -39,7 +39,7 @@ class NetServiceFace
 {
 	friend class NetEndpoint;
 	friend class NetConnection;
-	
+
 public:
 	static NetMsgServiceType serviceId() {};
 	
@@ -66,10 +66,12 @@ public:
 			NetConnection *c = cp.get();
 			m_connState.insert(std::make_pair(_conn, std::unique_ptr<T>(new T(c,this))));
 			
+			// service messages to the service
 			c->setServiceMessageHandler(T::serviceId(), [=](NetMsg const& _msg){
 				serviceMessageReceived(_msg, c);
 			});
 			
+			// data messages go to the protocol
 			T* protocol = m_connState[_conn].get();
 			c->setDataMessageHandler(T::serviceId(), [_conn, protocol](NetMsg const& _msg){
 				protocol->receiveMessage(_msg);
