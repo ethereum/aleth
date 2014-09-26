@@ -23,13 +23,8 @@
 
 #pragma once
 
-#include <string>
-#include <chrono>
-#include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
-
-#include <libdevcore/Exceptions.h>
 
 namespace dev
 {
@@ -44,6 +39,14 @@ typedef uint8_t NetMsgServiceType;
 typedef uint8_t NetMsgType;
 typedef uint16_t NetMsgSequence;
 
+enum NetServices : NetMsgServiceType
+{
+	WebThreeService = 0x01,
+	EthereumService,
+	SwarmService,
+	WhisperService
+};
+	
 class NetMsg;
 typedef std::function<void(NetMsg const& _msg)> messageHandler;
 typedef std::map<NetMsgServiceType,messageHandler> messageHandlers;
@@ -51,5 +54,8 @@ typedef std::map<NetMsgServiceType,messageHandler> messageHandlers;
 class MessageTooLarge: public Exception {};
 class MessageTooSmall: public Exception {};
 class MessageServiceInvalid: public Exception {};
+
+class RPCException: public Exception {};
+class RPCRequestTimeout: public Exception {};
 	
 }

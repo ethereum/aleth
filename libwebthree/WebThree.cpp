@@ -29,6 +29,7 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperPeer.h>
+#include <libethereum/EthereumRPC.h>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -37,16 +38,31 @@ using namespace dev::shh;
 
 WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string const& _dbPath, bool _forceClean, std::set<std::string> const& _interfaces, NetworkPreferences const& _n):
 	m_clientVersion(_clientVersion),
-	m_net(_clientVersion, _n)
+	m_net(_clientVersion, _n),
+	m_rpcEndpoint(new NetEndpoint(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310)))
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 
+	bool startRpc = false;
 	if (_interfaces.count("eth"))
+	{
 		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _forceClean));
+		m_ethereumRpcService.reset(new EthereumRPC(m_ethereum.get()));
+		m_rpcEndpoint->registerService(m_ethereumRpcService.get());
+		startRpc = true;
+	}
 
 //	if (_interfaces.count("shh"))
+//	{
 //		m_whisper = new eth::Whisper(m_net.get());
+////		m_whisperRpcService.reset(new WhisperRPC(m_whisper.get()));
+////		m_rpcEndpoint.registerService(m_whisperRpcService.get());
+////		startRpc = true;
+//	}
+	
+	if (startRpc)
+		m_rpcEndpoint->start();
 }
 
 WebThreeDirect::~WebThreeDirect()
@@ -82,3 +98,33 @@ void WebThreeDirect::connect(std::string const& _seedHost, unsigned short _port)
 {
 	m_net.connect(_seedHost, _port);
 }
+
+WebThree::WebThree():
+	Worker("webthree-client"),
+	m_io(),
+	m_endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310),
+	m_connection(new NetConnection(m_io, m_endpoint))
+{
+	startWorking();
+	
+	m_ethereum = new EthereumRPCClient(m_connection.get());
+	// m_whisper = new WhisperRPCClient(m_connection.get());
+	m_connection->start();
+}
+
+WebThree::~WebThree()
+{
+	stopWorking();
+	
+	if (m_ethereum)
+		delete m_ethereum;
+}
+
+void WebThree::doWork()
+{
+	if (m_io.stopped())
+		m_io.reset();
+	m_io.poll();
+}
+
+

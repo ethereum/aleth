@@ -21,28 +21,14 @@
 
 #pragma once
 
-#include <libethereum/Interface.h>
-#include <libwebthree/NetService.h>
-#include <libwebthree/Common.h>
+#include <libdevnet/NetService.h>
 
 namespace dev
 {
 
-class EthereumRPCServer;
-class EthereumRPCService: public NetService<EthereumRPCServer>
-{
-public:
-	EthereumRPCService(eth::Interface* _ethereum): m_ethereum(_ethereum) { }
-	
-	eth::Interface* ethereum() { return m_ethereum; }
-	
-protected:
-	eth::Interface* m_ethereum;
-};
-	
-
 class TestCoreTypesInterface
 {
+public:
 	std::string string() { return "string"; }
 	u256 u256() { return (uint64_t)1 << 63; }
 	h256 h256() { return FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF")); }
@@ -52,10 +38,12 @@ class TestCoreTypesInterface
 class TestProtocol;
 class TestService: public NetService<TestProtocol>
 {
+	friend class TestProtocol;
+	
 public:
 	TestService(TestCoreTypesInterface* _interface): m_interface(_interface) {}
 	
-	std::string protocolServiceString() { return "protocolServiceString"; }
+	std::string serviceString() { return "serviceString"; }
 	
 	TestCoreTypesInterface* interface() { return m_interface; }
 protected:

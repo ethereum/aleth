@@ -43,10 +43,10 @@ class NetServiceFace
 public:
 	static NetMsgServiceType serviceId() {};
 	
-protected:
 	/// Called by endpoint before connection is started.
 	virtual void registerConnection(std::weak_ptr<NetConnection> _conn) = 0;
 	
+protected:
 	/// Called from connection when service message is received.
 	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn) = 0;
 };
@@ -80,7 +80,7 @@ public:
 	}
 	
 protected:
-	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
+	void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
 	{
 		clog(RPCNote) << "[" << T::serviceId() << "] serviceMessageReceived";
 	}

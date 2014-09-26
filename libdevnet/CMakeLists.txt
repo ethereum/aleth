@@ -3,7 +3,7 @@ cmake_policy(SET CMP0015 NEW)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
-set(EXECUTABLE webthree)
+set(EXECUTABLE devnet)
 
 file(GLOB HEADERS "*.h")
 if(ETH_STATIC)
@@ -14,21 +14,11 @@ endif()
 
 include_directories(..)
 
-target_link_libraries(${EXECUTABLE} ethereum)
-target_link_libraries(${EXECUTABLE} evm)
-target_link_libraries(${EXECUTABLE} lll)
-target_link_libraries(${EXECUTABLE} whisper)
-target_link_libraries(${EXECUTABLE} p2p)
-target_link_libraries(${EXECUTABLE} devnet)
-target_link_libraries(${EXECUTABLE} ethcore)
-target_link_libraries(${EXECUTABLE} devcrypto)
-target_link_libraries(${EXECUTABLE} secp256k1)
+target_link_libraries(${EXECUTABLE} devcore)
+
 if(MINIUPNPC_LS)
-target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
+	target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
 endif()
-target_link_libraries(${EXECUTABLE} ${LEVELDB_LS})
-target_link_libraries(${EXECUTABLE} ${CRYPTOPP_LS})
-target_link_libraries(${EXECUTABLE} gmp)
 
 if("${TARGET_PLATFORM}" STREQUAL "w64")
 	target_link_libraries(${EXECUTABLE} boost_system-mt-s)

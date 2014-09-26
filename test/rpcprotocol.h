@@ -21,148 +21,69 @@
 
 #pragma once
 
-#include <mutex>
-#include <future>
-#include <libwebthree/Common.h>
-#include <libwebthree/NetProtocol.h>
-#include <libethereum/Interface.h>
-#include <libp2p/Common.h>
+#include <libdevnet/NetProtocol.h>
+#include "rpcservice.h"
 
 namespace dev
 {
-	
-	
-class TestService;
-class TestProtocol: NetServiceProtocol<TestService>
+
+class TestProtocol: public NetRPCProtocol<TestService>
 {
 public:
 	static NetMsgServiceType serviceId() { return 255; }
-	
-	TestProtocol(NetConnection* _conn, NetServiceFace* _service): NetServiceProtocol(_conn, _service){}
-	
+	TestProtocol(NetConnection* _conn, NetServiceFace* _service): NetRPCProtocol(_conn, _service){}
+
 	std::string protocolString() { return "protocolString"; }
+
+	std::string getRemoteServiceString() {
+		bytes response(performRequest((NetMsgType)1));
+		return std::string((const char*)response.data());
+	}
 	
-	void receiveMessage(NetMsg const& _msg) {
-		switch(_msg.type())
-		{
-			case 255:
-				break;
-				
-			default:;
-				// drop message
-		}
+	std::string getRemoteInterfaceString() {
+		bytes response(performRequest((NetMsgType)2));
+		return std::string((const char*)response.data());
 	}
 };
 
-class EthereumRPCService;
-class EthereumRPCServer: public NetProtocol
-{
-public:
-	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service);
-	void receiveMessage(NetMsg const& _msg);
-
-protected:
-	EthereumRPCService* m_service;
-};
-
-	
-// client will probably need to use service as well, as endpoint registration will still be used to install multiple handlers for a single connection (ultimately this is so that 3 different protocols waiting on 8 different requets will all be deferred/blocked until reconnection completes)
-class EthereumRPCClient: public NetProtocol, public eth::Interface
-{
-public:
-	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCClient(NetConnection* _conn, void *);
-	
-	void receiveMessage(NetMsg const& _msg);
-
-	bytes performRequest(NetMsgType _type) { RLPStream s; s.appendList(0); return performRequest(_type, s); }
-	bytes performRequest(NetMsgType _type, RLPStream& _s);
-	
-protected:
-	typedef std::promise<std::shared_ptr<NetMsg> > promiseResponse;
-	typedef std::future<std::shared_ptr<NetMsg> > futureResponse;
-	std::map<NetMsgSequence,promiseResponse*> m_promises;
-	std::mutex x_promises;										///< Mutex concurrent access to m_promises.
-	
-public:
-	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	void inject(bytesConstRef _rlp);
-	void flushTransactions();
-	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	
-	u256 balanceAt(Address _a) const { return balanceAt(_a, m_default); }
-	u256 countAt(Address _a) const { return countAt(_a, m_default); }
-	u256 stateAt(Address _a, u256 _l) const { return stateAt(_a, _l, m_default); }
-	bytes codeAt(Address _a) const { return codeAt(_a, m_default); }
-	std::map<u256, u256> storageAt(Address _a) const { return storageAt(_a, m_default); }
-	
-	u256 balanceAt(Address _a, int _block) const;
-	u256 countAt(Address _a, int _block) const;
-	u256 stateAt(Address _a, u256 _l, int _block) const;
-	bytes codeAt(Address _a, int _block) const;
-	std::map<u256, u256> storageAt(Address _a, int _block) const;
-	
-	eth::PastMessages messages(unsigned _watchId) const {};
-	eth::PastMessages messages(eth::MessageFilter const& _filter) const {};
-	
-	/// Install, uninstall and query watches.
-	unsigned installWatch(eth::MessageFilter const& _filter) {};
-	unsigned installWatch(h256 _filterId) {};
-	void uninstallWatch(unsigned _watchId) {};
-	bool peekWatch(unsigned _watchId) const {};
-	bool checkWatch(unsigned _watchId) {};
-	
-	// TODO: Block query API.
-	
-	// [EXTRA API]:
-	
-	/// @returns The height of the chain.
-	unsigned number() const {};
-	
-	/// Get a map containing each of the pending transactions.
-	/// @TODO: Remove in favour of transactions().
-	eth::Transactions pending() const {};
-	
-	/// Differences between transactions.
-	eth::StateDiff diff(unsigned _txi, h256 _block) const {};
-	eth::StateDiff diff(unsigned _txi, int _block) const {};
-	
-	/// Get a list of all active addresses.
-	Addresses addresses() const { return addresses(m_default); }
-	Addresses addresses(int _block) const {};
-	
-	/// Get the remaining gas limit in this block.
-	u256 gasLimitRemaining() const {};
-	
-	// [MINING API]:
-	
-	/// Set the coinbase address.
-	void setAddress(Address _us) {};
-	/// Get the coinbase address.
-	Address address() const {};
-	
-	/// Stops mining and sets the number of mining threads (0 for automatic).
-	void setMiningThreads(unsigned _threads = 0) {};
-	/// Get the effective number of mining threads.
-	unsigned miningThreads() const {};
-	
-	/// Start mining.
-	/// NOT thread-safe - call it & stopMining only from a single thread
-	void startMining() {};
-	/// Stop mining.
-	/// NOT thread-safe
-	void stopMining() {};
-	/// Are we mining now?
-	bool isMining() {};
-	
-	/// Check the progress of the mining.
-	eth::MineProgress miningProgress() const {};
-	
-	
-	
-};
-
 }
+
+
+// WebThree API:
+//	std::vector<p2p::PeerInfo> peers();
+//	size_t peerCount() const;
+//	void connect(std::string const& _host, unsigned short _port);
+//std::vector<PeerInfo> RPCProtocol::peers()
+//{
+//	// RequestPeers
+//	std::vector<PeerInfo> peers;
+//	RLP response(RLP(performRequest(RequestPeers)));
+//	for (auto r: response[1])
+//	{
+//		unsigned short p = r[2].toInt();
+//		std::chrono::duration<int> t(r[3].toInt());
+//		peers.push_back(PeerInfo({r[0].toString(),r[1].toString(),p,t}));
+//	}
+//	lock_guard<mutex> l(x_peers);
+//	m_peers = peers;
+//	return peers;
+//}
+//
+//size_t RPCProtocol::peerCount() const
+//{
+//	lock_guard<mutex> l(x_peers);
+//	return m_peers.size();
+//}
+//
+//void RPCProtocol::connect(std::string const& _host, unsigned short _port)
+//{
+//	RLPStream s(2);
+//	s.append(_host);
+//	s.append(_port);
+//
+//	performRequest(ConnectToPeer, s);
+//}
+
+
+
 

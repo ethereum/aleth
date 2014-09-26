@@ -32,8 +32,10 @@
 #include <libdevcore/Exceptions.h>
 #include <libp2p/Host.h>
 
+#include <libdevnet/NetEndpoint.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libethereum/Client.h>
+#include <libethereum/EthereumRPC.h>
 
 namespace dev
 {
@@ -121,50 +123,29 @@ private:
 	std::unique_ptr<shh::WhisperHost> m_whisper;	///< Main interface for Whisper ("shh") protocol.
 
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
+	
+	std::shared_ptr<NetEndpoint> m_rpcEndpoint;
+	std::unique_ptr<EthereumRPC> m_ethereumRpcService;
 };
 
-
-
-// TODO, probably move into libdevrpc:
-
-class RPCSlave {};
-class RPCMaster {};
-
-// TODO, probably move into eth:
-
-class EthereumSlave: public eth::Interface
-{
-public:
-	EthereumSlave(RPCSlave*) {}
-
-	// TODO: implement all of the virtuals with the RLPClient link.
-};
-
-class EthereumMaster
-{
-public:
-	EthereumMaster(RPCMaster*) {}
-
-	// TODO: implement the master-end of whatever the RLPClient link will send over.
-};
 
 // TODO, probably move into shh:
-
+//
 class WhisperSlave: public shh::Interface
 {
 public:
-	WhisperSlave(RPCSlave*) {}
+	WhisperSlave() {}
 
 	// TODO: implement all of the virtuals with the RLPClient link.
 };
 
-class WhisperMaster
-{
-public:
-	WhisperMaster(RPCMaster*) {}
-
-	// TODO: implement the master-end of whatever the RLPClient link will send over.
-};
+//class WhisperMaster
+//{
+//public:
+//	WhisperMaster(RPCMaster*) {}
+//
+//	// TODO: implement the master-end of whatever the RLPClient link will send over.
+//};
 
 /**
  * @brief Main API hub for interfacing with Web 3 components.
@@ -172,7 +153,7 @@ public:
  * This does transparent local multiplexing, so you can have as many running on the
  * same machine all working from a single DB path.
  */
-class WebThree
+class WebThree: public Worker
 {
 public:
 	/// Constructor for public instance. This will be shared across the local machine.
@@ -207,12 +188,15 @@ public:
 	/// Restore peers
 	void restorePeers(bytesConstRef _saved);
 
+protected:
+	void doWork();
+	
 private:
-	EthereumSlave* m_ethereum = nullptr;
+	boost::asio::io_service m_io;
+	boost::asio::ip::tcp::endpoint m_endpoint;
+	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
+	EthereumRPCClient* m_ethereum = nullptr;
 	WhisperSlave* m_whisper = nullptr;
-
-	// TODO:
-	RPCSlave m_rpcSlave;
 };
 
 }
