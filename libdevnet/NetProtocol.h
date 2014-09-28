@@ -27,6 +27,12 @@
 namespace dev
 {
 
+// tood: namespacing
+enum RPCResponseMsgType : NetMsgType
+{
+	Success = 0x01
+};
+	
 class NetMsg;
 
 /**
@@ -71,41 +77,41 @@ public:
 protected:
 	T* m_service;
 };
-	
+
+
+/**
+ * @brief Template for implement RPC client/server protocol. Currently implements client interface which generates a sequence for every request and then waits for a response with a matching sequence. Although the user-request is blocking, the network protocol itself is asynchronous so that requests can be made concurrently.
+ * @TODO Pass flag and/or create template for server interface (reflects sequence id).
+ */
 template <class T>
 class NetRPCProtocol: public NetProtocol
 {
 public:
 	NetRPCProtocol(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_rpcService(static_cast<T*>(_service)) {};
 
-	virtual void receiveMessage(NetMsg const& _msg)
+	void receiveMessage(NetMsg const& _msg) final
 	{
-		// client should look for Success,Exception, and promised responses
 		switch (_msg.type())
 		{
-			case 0: // false and/or exception
-				// todo: derive NetMsg, so to encapsulate exception
-				break;
-				
-			case 1:
-				// success/true (second item is result, unless bool/void)
+			case Success:
+				// second item is result
 				if (auto p = m_promises[_msg.sequence()])
 					p->set_value(std::make_shared<NetMsg>(_msg));
 				break;
 				
 			case 2:
-				// exception (second item is result)
+				// exception
 				break;
 		}
 	}
 	
-	virtual bytes performRequest(NetMsgType _type)
+	bytes performRequest(NetMsgType _type)
 	{
 		RLPStream s(0);
 		return performRequest(_type, s);
 	}
 	
-	virtual bytes performRequest(NetMsgType _type, RLPStream& _s)
+	bytes performRequest(NetMsgType _type, RLPStream& _s)
 	{
 		promiseResponse p;
 		futureResponse f = p.get_future();
@@ -117,7 +123,7 @@ public:
 		}
 		connection()->send(msg);
 
-		auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(20 + (rand() % 15)));
+		auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(2));
 		
 		{
 			std::lock_guard<std::mutex> l(x_promises);

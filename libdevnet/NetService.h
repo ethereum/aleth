@@ -37,9 +37,6 @@ class NetConnection;
  */
 class NetServiceFace
 {
-	friend class NetEndpoint;
-	friend class NetConnection;
-
 public:
 	static NetMsgServiceType serviceId() {};
 	

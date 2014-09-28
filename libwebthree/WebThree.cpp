@@ -45,6 +45,13 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string co
 		Defaults::setDBPath(_dbPath);
 
 	bool startRpc = false;
+	
+//	// Can eth or shh run without m_net (p2p)?
+//	// Can p2p run alone?
+//	m_p2pRpcService.reset(new P2pRPC(&m_net));
+//	m_rpcEndpoint->registerService(m_p2pRpcService.get());
+//	startRpc = true;
+	
 	if (_interfaces.count("eth"))
 	{
 		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _forceClean));

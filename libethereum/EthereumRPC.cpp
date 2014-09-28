@@ -104,9 +104,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 		case RequestBalanceAt:
 		{
 			u256 b(m_service->ethereum()->balanceAt(Address(req[0].toHash<Address>()), req[1].toInt()));
-			
-			clog(RPCNote) << "got balance: " << b;
-			
+
 			result = 1;
 			resp.appendList(1);
 			resp << b;
@@ -158,6 +156,48 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 		}
 
 		case RequestMessages:
+			// eth::PastMessages messages(unsigned _watchId) const
+			// eth::PastMessages messages(eth::MessageFilter const& _filter) const
+			
+		// InstallWatch:
+			// unsigned installWatch(eth::MessageFilter const& _filter)
+			// unsigned installWatch(h256 _filterId)
+			
+		// UninstallWatch:
+			// void uninstallWatch(unsigned _watchId)
+		
+		// PeekWatch:
+			// bool peekWatch(unsigned _watchId) const
+		
+		// CheckWatch:
+			// bool checkWatch(unsigned _watchId)
+			
+		// Number:
+			// unsigned number() const
+			
+		// Pending:
+			// eth::Transactions pending() const
+			
+		// Diff:
+			// eth::StateDiff diff(unsigned _txi, h256/int _block) const
+			
+		// Addresses:
+			// Addresses addresses(int _block) const
+			
+		// GasLimitRemaining:
+			// u256 gasLimitRemaining() const
+			
+		// SetCoinbase:
+			// Should we store separate State for each client?
+			// void setAddress(Address _us)
+			
+		// GetCoinbase:
+			// Address address() const
+			
+		// SetMining: What to do here for apps?
+		// start/stop/isMining/miningProgress/config
+		// eth::MineProgress miningProgress() const
+
 		default:
 			result = 2;
 	}
@@ -184,18 +224,13 @@ void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
 	RLP res(_msg.rlp());
 	switch (_msg.type())
 	{
-		case 0:
-			// false
-			break;
-			
-		case 1:
-			// success/true (second item is result, unless bool/void)
+		case Success:
 			if (auto p = m_promises[_msg.sequence()])
 				p->set_value(make_shared<NetMsg>(_msg));
 			break;
 			
 		case 2:
-			// exception (second item is result)
+			// exception
 			break;
 	}
 }
@@ -212,8 +247,7 @@ bytes EthereumRPCClient::performRequest(NetMsgType _type, RLPStream& _s)
 	}
 	connection()->send(msg);
 
-	// What happens if we're disconnected???
-	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(20 + (rand() % 15)));
+	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(2));
 	{
 		lock_guard<mutex> l(x_promises);
 		m_promises.erase(msg.sequence());
@@ -305,3 +339,75 @@ std::map<u256, u256> EthereumRPCClient::storageAt(Address _a, int _block) const
 	
 	return store;
 }
+
+eth::PastMessages EthereumRPCClient::messages(unsigned _watchId) const
+{
+	
+}
+
+eth::PastMessages EthereumRPCClient::messages(eth::MessageFilter const& _filter) const
+{
+	
+}
+
+unsigned EthereumRPCClient::installWatch(eth::MessageFilter const& _filter)
+{
+	
+}
+
+unsigned EthereumRPCClient::installWatch(h256 _filterId)
+{
+	
+}
+
+void EthereumRPCClient::uninstallWatch(unsigned _watchId)
+{
+	
+}
+
+bool EthereumRPCClient::peekWatch(unsigned _watchId) const
+{
+	
+}
+
+bool EthereumRPCClient::checkWatch(unsigned _watchId)
+{
+	
+}
+
+unsigned EthereumRPCClient::number() const
+{
+	
+}
+
+eth::StateDiff EthereumRPCClient::diff(unsigned _txi, h256 _block) const
+{
+	
+}
+
+eth::StateDiff EthereumRPCClient::diff(unsigned _txi, int _block) const
+{
+	
+}
+
+Addresses EthereumRPCClient::addresses(int _block) const
+{
+}
+
+u256 EthereumRPCClient::gasLimitRemaining() const
+{
+	
+}
+
+void EthereumRPCClient::setAddress(Address _us)
+{
+	
+}
+
+Address EthereumRPCClient::address() const
+{
+
+}
+
+
+

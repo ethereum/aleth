@@ -53,6 +53,20 @@ namespace eth { class Interface; }
 namespace shh { class Interface; }
 namespace bzz { class Interface; }
 
+// TODO, move into shh:
+//
+class WhisperRPC
+{
+public:
+	WhisperRPC() {}
+};
+	
+class WhisperRPCClient: public shh::Interface
+{
+public:
+	WhisperRPCClient() {}
+};
+	
 /**
  * @brief Main API hub for interfacing with Web 3 components. This doesn't do any local multiplexing, so you can only have one
  * running on any given machine for the provided DB path.
@@ -126,26 +140,9 @@ private:
 	
 	std::shared_ptr<NetEndpoint> m_rpcEndpoint;
 	std::unique_ptr<EthereumRPC> m_ethereumRpcService;
+	std::unique_ptr<WhisperRPC> m_whisperRpcService;
 };
 
-
-// TODO, probably move into shh:
-//
-class WhisperSlave: public shh::Interface
-{
-public:
-	WhisperSlave() {}
-
-	// TODO: implement all of the virtuals with the RLPClient link.
-};
-
-//class WhisperMaster
-//{
-//public:
-//	WhisperMaster(RPCMaster*) {}
-//
-//	// TODO: implement the master-end of whatever the RLPClient link will send over.
-//};
 
 /**
  * @brief Main API hub for interfacing with Web 3 components.
@@ -196,7 +193,7 @@ private:
 	boost::asio::ip::tcp::endpoint m_endpoint;
 	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
 	EthereumRPCClient* m_ethereum = nullptr;
-	WhisperSlave* m_whisper = nullptr;
+	WhisperRPCClient* m_whisper = nullptr;
 };
 
 }

@@ -27,11 +27,10 @@
 
 namespace dev
 {
-
-enum EthereumRPCRequest : NetMsgType
+	
+enum EthRequestMsgType : NetMsgType
 {
-	EthereumRPCService = 0x00,
-	RequestSubmitTransaction,
+	RequestSubmitTransaction = 0x01,
 	RequestCreateContract,
 	RequestRLPInject,
 	RequestFlushTransactions,
@@ -42,10 +41,26 @@ enum EthereumRPCRequest : NetMsgType
 	RequestCodeAt,
 	RequestStorageAt,
 	RequestMessages,
-	RequestPeers,
-	RequestPeerCount,
-	ConnectToPeer = 0x10
+	InstallWatch,
+	UninstallWatch,
+	PeekWatch,
+	CheckWatch,
+	Number, // height
+	PendingTransactions,
+	Diff,
+	GetAddresses,
+	GasLimitRemaining,
+	SetCoinbase,
+	GetCoinbase,
+	// mining
 };
+	
+//enum P2pRequestMsgType : NetMsgType
+//{
+//	Peers = 0x01
+//	PeerCount
+//	ConnectToPeer
+//};
 	
 class EthereumRPCServer;
 	
@@ -65,6 +80,11 @@ protected:
 	
 	
 class EthereumRPC;
+
+/**
+ * @brief Provides protocol implementation for handling server-side of Ethereum RPC connections.
+ * All incoming (call) requests receive a response which has the same sequence id of the request.
+ */
 class EthereumRPCServer: public NetProtocol
 {
 public:
@@ -76,6 +96,10 @@ protected:
 	EthereumRPC* m_service;
 };
 
+/**
+ * @brief Provides protocol implementation and state for handling client-side of Ethereum RPC connections.
+ * @todo derive from NetRPCProtocol
+ */
 class EthereumRPCClient: public NetProtocol, public eth::Interface
 {
 public:
@@ -99,73 +123,41 @@ public:
 	void inject(bytesConstRef _rlp);
 	void flushTransactions();
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	
 	u256 balanceAt(Address _a) const { return balanceAt(_a, m_default); }
 	u256 countAt(Address _a) const { return countAt(_a, m_default); }
 	u256 stateAt(Address _a, u256 _l) const { return stateAt(_a, _l, m_default); }
 	bytes codeAt(Address _a) const { return codeAt(_a, m_default); }
 	std::map<u256, u256> storageAt(Address _a) const { return storageAt(_a, m_default); }
-	
 	u256 balanceAt(Address _a, int _block) const;
 	u256 countAt(Address _a, int _block) const;
 	u256 stateAt(Address _a, u256 _l, int _block) const;
 	bytes codeAt(Address _a, int _block) const;
 	std::map<u256, u256> storageAt(Address _a, int _block) const;
-	
-	eth::PastMessages messages(unsigned _watchId) const {};
-	eth::PastMessages messages(eth::MessageFilter const& _filter) const {};
-	
-	/// Install, uninstall and query watches.
-	unsigned installWatch(eth::MessageFilter const& _filter) {};
-	unsigned installWatch(h256 _filterId) {};
-	void uninstallWatch(unsigned _watchId) {};
-	bool peekWatch(unsigned _watchId) const {};
-	bool checkWatch(unsigned _watchId) {};
-	
-	// TODO: Block query API.
-	
-	// [EXTRA API]:
-	
-	/// @returns The height of the chain.
-	unsigned number() const {};
+	eth::PastMessages messages(unsigned _watchId) const;
+	eth::PastMessages messages(eth::MessageFilter const& _filter) const;
+	unsigned installWatch(eth::MessageFilter const& _filter);
+	unsigned installWatch(h256 _filterId);
+	void uninstallWatch(unsigned _watchId);
+	bool peekWatch(unsigned _watchId) const;
+	bool checkWatch(unsigned _watchId);
+	unsigned number() const;
 	
 	/// Get a map containing each of the pending transactions.
 	/// @TODO: Remove in favour of transactions().
 	eth::Transactions pending() const {};
-	
-	/// Differences between transactions.
-	eth::StateDiff diff(unsigned _txi, h256 _block) const {};
-	eth::StateDiff diff(unsigned _txi, int _block) const {};
-	
-	/// Get a list of all active addresses.
+	eth::StateDiff diff(unsigned _txi, h256 _block) const;
+	eth::StateDiff diff(unsigned _txi, int _block) const;
 	Addresses addresses() const { return addresses(m_default); }
-	Addresses addresses(int _block) const {};
+	Addresses addresses(int _block) const;
+	u256 gasLimitRemaining() const;
+	void setAddress(Address _us);
+	Address address() const;
 	
-	/// Get the remaining gas limit in this block.
-	u256 gasLimitRemaining() const {};
-	
-	// [MINING API]:
-	
-	/// Set the coinbase address.
-	void setAddress(Address _us) {};
-	/// Get the coinbase address.
-	Address address() const {};
-	
-	/// Stops mining and sets the number of mining threads (0 for automatic).
 	void setMiningThreads(unsigned _threads = 0) {};
-	/// Get the effective number of mining threads.
 	unsigned miningThreads() const {};
-	
-	/// Start mining.
-	/// NOT thread-safe - call it & stopMining only from a single thread
 	void startMining() {};
-	/// Stop mining.
-	/// NOT thread-safe
 	void stopMining() {};
-	/// Are we mining now?
 	bool isMining() {};
-	
-	/// Check the progress of the mining.
 	eth::MineProgress miningProgress() const {};
 	
 };
