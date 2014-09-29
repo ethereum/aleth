@@ -27,6 +27,23 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+MessageFilter::MessageFilter(bytesConstRef _r)
+{
+	RLP r(_r);
+	for (auto a: r[0])
+		m_from.insert(a.toHash<Address>());
+	for (auto a: r[1])
+		m_to.insert(a.toHash<Address>());
+	for (auto a: r[2])
+		m_stateAltered.insert(make_pair(a[0].toHash<Address>(),a[1].toInt<u256>()));
+	for (auto a: r[3])
+		m_altered.insert(a.toHash<Address>());
+	m_earliest = r[4].toInt<int>();
+	m_latest = r[5].toInt<int>();
+	m_max = r[6].toInt<unsigned>();
+	m_skip = r[7].toInt<unsigned>();
+}
+
 void MessageFilter::fillStream(RLPStream& _s) const
 {
 	_s.appendList(8) << m_from << m_to << m_stateAltered << m_altered << m_earliest << m_latest << m_max << m_skip;

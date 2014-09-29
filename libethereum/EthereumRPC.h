@@ -40,15 +40,17 @@ enum EthRequestMsgType : NetMsgType
 	RequestStateAt,
 	RequestCodeAt,
 	RequestStorageAt,
-	RequestMessages,
-	InstallWatch,
+	RequestMessagesWithWatchId,
+	RequestMessagesWithFilter,
+	InstallWatchWithFilter,
+	InstallWatchWithFilterId,
 	UninstallWatch,
 	PeekWatch,
 	CheckWatch,
 	Number, // height
 	PendingTransactions,
 	Diff,
-	GetAddresses,
+	GetAddresses, // todo: namespacing
 	GasLimitRemaining,
 	SetCoinbase,
 	GetCoinbase,
@@ -108,8 +110,8 @@ public:
 	
 	void receiveMessage(NetMsg const& _msg);
 
-	bytes performRequest(NetMsgType _type) { RLPStream s; s.appendList(0); return performRequest(_type, s); }
-	bytes performRequest(NetMsgType _type, RLPStream& _s);
+	bytes performRequest(EthRequestMsgType _type) { RLPStream s; s.appendList(0); return performRequest(_type, s); }
+	bytes performRequest(EthRequestMsgType _type, RLPStream& _s);
 	
 protected:
 	typedef std::promise<std::shared_ptr<NetMsg> > promiseResponse;
@@ -144,7 +146,7 @@ public:
 	
 	/// Get a map containing each of the pending transactions.
 	/// @TODO: Remove in favour of transactions().
-	eth::Transactions pending() const {};
+	eth::Transactions pending() const;
 	eth::StateDiff diff(unsigned _txi, h256 _block) const;
 	eth::StateDiff diff(unsigned _txi, int _block) const;
 	Addresses addresses() const { return addresses(m_default); }

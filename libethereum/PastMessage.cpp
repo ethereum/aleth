@@ -26,3 +26,26 @@ using namespace dev::eth;
 
 #pragma GCC diagnostic ignored "-Wunused-variable"
 namespace { char dummy; };
+
+PastMessage::PastMessage(bytesConstRef _r)
+{
+	RLP r(_r);
+	to = r[0].toHash<Address>();
+	from = r[1].toHash<Address>();
+	value = r[2].toHash<h256>();
+	input = r[3].toBytes();
+	output = r[4].toBytes();
+	if (r[5].itemCount() > 0)
+		for (auto p: r[5])
+			path.push_back(p.toInt<unsigned>());
+	origin = r[6].toHash<Address>();
+	coinbase = r[7].toHash<Address>();
+	block = r[8].toHash<h256>();
+	timestamp = r[9].toInt<u256>();
+	number = r[10].toInt<unsigned>();
+}
+
+void PastMessage::streamOut(RLPStream& _s) const {
+	_s.appendList(11) << to << from << value << input << output << path << origin << coinbase << block << timestamp << number;
+}
+

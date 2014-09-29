@@ -155,46 +155,151 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			break;
 		}
 
-		case RequestMessages:
-			// eth::PastMessages messages(unsigned _watchId) const
-			// eth::PastMessages messages(eth::MessageFilter const& _filter) const
+		case RequestMessagesWithWatchId:
+		{
+			unsigned watchId = req[0].toInt<unsigned>();
+			eth::PastMessages msgs = m_service->ethereum()->messages(watchId);
+			resp.appendList(msgs.size());
+			for (auto msg: msgs)
+				msg.streamOut(resp);
 			
-		// InstallWatch:
-			// unsigned installWatch(eth::MessageFilter const& _filter)
-			// unsigned installWatch(h256 _filterId)
+			result = 1;
+			break;
+		}
 			
-		// UninstallWatch:
-			// void uninstallWatch(unsigned _watchId)
-		
-		// PeekWatch:
-			// bool peekWatch(unsigned _watchId) const
-		
-		// CheckWatch:
-			// bool checkWatch(unsigned _watchId)
+		case RequestMessagesWithFilter:
+		{
+			MessageFilter filter(req[0].toBytesConstRef());
+			eth::PastMessages msgs = m_service->ethereum()->messages(filter);
+			resp.appendList(msgs.size());
+			for (auto msg: msgs)
+				msg.streamOut(resp);
 			
-		// Number:
-			// unsigned number() const
+			result = 1;
+			break;
+		}
 			
-		// Pending:
-			// eth::Transactions pending() const
+		case InstallWatchWithFilter:
+		{
+			auto ret = m_service->ethereum()->installWatch(MessageFilter(req[0].toBytesConstRef()));
+			resp.appendList(1) << ret;
 			
-		// Diff:
-			// eth::StateDiff diff(unsigned _txi, h256/int _block) const
+			result = 1;
+			break;
+		}
 			
-		// Addresses:
-			// Addresses addresses(int _block) const
+		case InstallWatchWithFilterId:
+		{
+			auto ret = m_service->ethereum()->installWatch(req[0].toHash<h256>());
+			resp.appendList(1) << ret;
 			
-		// GasLimitRemaining:
-			// u256 gasLimitRemaining() const
+			result = 1;
+			break;
+		}
 			
-		// SetCoinbase:
-			// Should we store separate State for each client?
-			// void setAddress(Address _us)
+		case UninstallWatch:
+		{
+			m_service->ethereum()->uninstallWatch(req[0].toInt<unsigned>());
 			
-		// GetCoinbase:
-			// Address address() const
+			result = 1;
+			break;
+		}
+
+		case PeekWatch:
+		{
+			auto ret = m_service->ethereum()->peekWatch(req[0].toInt<unsigned>());
+			resp.appendList(1) << ret;
 			
-		// SetMining: What to do here for apps?
+			result = 1;
+			break;
+		}
+			
+		case CheckWatch:
+		{
+			auto ret = m_service->ethereum()->checkWatch(req[0].toInt<unsigned>());
+			resp.appendList(1) << ret;
+			
+			result = 1;
+			break;
+		}
+
+		case Number:
+		{
+			auto ret = m_service->ethereum()->number();
+			resp.appendList(1) << ret;
+			
+			result = 1;
+			break;
+		}
+
+		case PendingTransactions:
+		{
+			auto txs = m_service->ethereum()->pending();
+			resp.appendList(txs.size());
+			for (auto tx: txs)
+				tx.fillStream(resp);
+
+			result = 1;
+			break;
+		}
+
+		case Diff:
+		{
+			auto sd = m_service->ethereum()->diff(req[0].toInt<unsigned>(),req[1].toHash<h256>());
+			resp.appendList(sd.accounts.size());
+			for (auto addrDiff: sd.accounts)
+			{
+				resp.appendList(2) << addrDiff.first;
+				resp.appendList(5);
+				resp << make_pair(addrDiff.second.exist.from(), addrDiff.second.exist.to());
+				resp << make_pair(addrDiff.second.balance.from(), addrDiff.second.balance.to());
+				resp << make_pair(addrDiff.second.nonce.from(), addrDiff.second.nonce.to());
+				resp.appendList(addrDiff.second.storage.size());
+				for (auto st: addrDiff.second.storage)
+					resp.appendList(2) << st.first << make_pair(st.second.from(), st.second.to());
+				resp << make_pair(addrDiff.second.code.from(), addrDiff.second.code.to());
+			}
+			
+			result = 1;
+			break;
+		}
+			
+		case GetAddresses:
+		{
+			auto ret = m_service->ethereum()->addresses(req[0].toInt<int>());
+			resp << ret;
+			
+			result = 1;
+			break;
+		}
+
+		case GasLimitRemaining:
+		{
+			auto ret = m_service->ethereum()->gasLimitRemaining();
+			resp << ret;
+			
+			result = 1;
+			break;
+		}
+
+		case SetCoinbase:
+		{
+			// Should we maintain separate State for each client?
+			
+			result = 2; // support TBD
+			break;
+		}
+			
+		case GetCoinbase:
+		{
+			auto ret = m_service->ethereum()->address();
+			resp << ret;
+			
+			result = 1;
+			break;
+		}
+
+		// SetMining: What to do here for apps? (also see SetCoinbase)
 		// start/stop/isMining/miningProgress/config
 		// eth::MineProgress miningProgress() const
 
@@ -235,7 +340,7 @@ void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
 	}
 }
 
-bytes EthereumRPCClient::performRequest(NetMsgType _type, RLPStream& _s)
+bytes EthereumRPCClient::performRequest(EthRequestMsgType _type, RLPStream& _s)
 {
 	promiseResponse p;
 	futureResponse f = p.get_future();
@@ -352,30 +457,50 @@ eth::PastMessages EthereumRPCClient::messages(eth::MessageFilter const& _filter)
 
 unsigned EthereumRPCClient::installWatch(eth::MessageFilter const& _filter)
 {
-	
+	RLPStream s;
+	_filter.fillStream(s);
+	bytes r = performRequest(InstallWatchWithFilter, s);
+	return RLP(r)[0].toInt<unsigned>();
 }
 
 unsigned EthereumRPCClient::installWatch(h256 _filterId)
 {
-	
+	RLPStream s(1);
+	s << _filterId;
+	bytes r = performRequest(InstallWatchWithFilterId, s);
+	return RLP(r)[0].toInt<unsigned>();
 }
 
 void EthereumRPCClient::uninstallWatch(unsigned _watchId)
 {
-	
+	RLPStream s(1);
+	s << _watchId;
+	performRequest(UninstallWatch, s);
 }
 
 bool EthereumRPCClient::peekWatch(unsigned _watchId) const
 {
-	
+	RLPStream s(1);
+	s << _watchId;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(PeekWatch, s);
+	return RLP(r)[0].toInt<bool>();
 }
 
 bool EthereumRPCClient::checkWatch(unsigned _watchId)
 {
-	
+	RLPStream s(1);
+	s << _watchId;
+	bytes r = performRequest(CheckWatch, s);
+	return RLP(r)[0].toInt<bool>();
 }
 
 unsigned EthereumRPCClient::number() const
+{
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(Number);
+	return RLP(r)[0].toInt<unsigned>();
+}
+
+eth::Transactions EthereumRPCClient::pending() const
 {
 	
 }
@@ -396,17 +521,21 @@ Addresses EthereumRPCClient::addresses(int _block) const
 
 u256 EthereumRPCClient::gasLimitRemaining() const
 {
-	
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(GasLimitRemaining);
+	return RLP(r)[0].toInt<u256>();
 }
 
 void EthereumRPCClient::setAddress(Address _us)
 {
-	
+	RLPStream s(1);
+	s << _us;
+	performRequest(SetCoinbase, s);
 }
 
 Address EthereumRPCClient::address() const
 {
-
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(GetCoinbase);
+	return RLP(r)[0].toHash<Address>();
 }
 
 
