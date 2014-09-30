@@ -112,47 +112,42 @@ public:
 	EthereumRPCClient(NetConnection* _conn): NetRPCClientProtocol(_conn) {}
 
 public:
-	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	void inject(bytesConstRef _rlp);
-	void flushTransactions();
-	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
-	u256 balanceAt(Address _a) const { return balanceAt(_a, m_default); }
-	u256 countAt(Address _a) const { return countAt(_a, m_default); }
-	u256 stateAt(Address _a, u256 _l) const { return stateAt(_a, _l, m_default); }
-	bytes codeAt(Address _a) const { return codeAt(_a, m_default); }
-	std::map<u256, u256> storageAt(Address _a) const { return storageAt(_a, m_default); }
-	u256 balanceAt(Address _a, int _block) const;
-	u256 countAt(Address _a, int _block) const;
-	u256 stateAt(Address _a, u256 _l, int _block) const;
-	bytes codeAt(Address _a, int _block) const;
-	std::map<u256, u256> storageAt(Address _a, int _block) const;
-	eth::PastMessages messages(unsigned _watchId) const;
-	eth::PastMessages messages(eth::MessageFilter const& _filter) const;
-	unsigned installWatch(eth::MessageFilter const& _filter);
-	unsigned installWatch(h256 _filterId);
-	void uninstallWatch(unsigned _watchId);
-	bool peekWatch(unsigned _watchId) const;
-	bool checkWatch(unsigned _watchId);
-	unsigned number() const;
+	virtual void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
+	virtual Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
+	virtual void inject(bytesConstRef _rlp);
+	virtual void flushTransactions();
+	virtual bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
+	virtual u256 balanceAt(Address _a, int _block) const;
+	virtual u256 countAt(Address _a, int _block) const;
+	virtual u256 stateAt(Address _a, u256 _l, int _block) const;
+	virtual bytes codeAt(Address _a, int _block) const;
+	virtual std::map<u256, u256> storageAt(Address _a, int _block) const;
+	virtual eth::PastMessages messages(unsigned _watchId) const;
+	virtual eth::PastMessages messages(eth::MessageFilter const& _filter) const;
+	virtual unsigned installWatch(eth::MessageFilter const& _filter);
+	virtual unsigned installWatch(h256 _filterId);
+	virtual void uninstallWatch(unsigned _watchId);
+	virtual bool peekWatch(unsigned _watchId) const;
+	virtual bool checkWatch(unsigned _watchId);
+	virtual unsigned number() const;
 	
 	/// Get a map containing each of the pending transactions.
 	/// @TODO: Remove in favour of transactions().
-	eth::Transactions pending() const;
-	eth::StateDiff diff(unsigned _txi, h256 _block) const;
-	eth::StateDiff diff(unsigned _txi, int _block) const;
-	Addresses addresses() const { return addresses(m_default); }
-	Addresses addresses(int _block) const;
-	u256 gasLimitRemaining() const;
-	void setAddress(Address _us);
-	Address address() const;
+	virtual eth::Transactions pending() const;
+	virtual eth::StateDiff diff(unsigned _txi, h256 _block) const;
+	virtual eth::StateDiff diff(unsigned _txi, int _block) const;
+	virtual Addresses addresses() const { return addresses(m_default); }
+	virtual Addresses addresses(int _block) const;
+	virtual u256 gasLimitRemaining() const;
+	virtual void setAddress(Address _us);
+	virtual Address address() const;
 	
-	void setMiningThreads(unsigned _threads = 0) {};
-	unsigned miningThreads() const {};
-	void startMining() {};
-	void stopMining() {};
-	bool isMining() {};
-	eth::MineProgress miningProgress() const {};
+	virtual void setMiningThreads(unsigned _threads = 0) {};
+	virtual unsigned miningThreads() const {};
+	virtual void startMining() {};
+	virtual void stopMining() {};
+	virtual bool isMining() {};
+	virtual eth::MineProgress miningProgress() const {};
 	
 };
 

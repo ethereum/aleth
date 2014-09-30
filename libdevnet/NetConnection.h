@@ -23,6 +23,7 @@
 #pragma once
 
 #include <boost/asio.hpp>
+#include <libdevcore/Guards.h>
 #include "NetCommon.h"
 
 namespace dev
@@ -105,10 +106,10 @@ private:
 	std::atomic<bool> m_started;				///< Atomically ensure connection is started once. Start cannot occur unless m_started is false. Managed by start() and shutdown(bool).
 	bool m_originateConnection;				///< True if connection is outbound, otherwise false.
 	
-	mutable std::mutex x_socketError;			///< Mutex for error which can occur from host or IO thread.
+	mutable Mutex x_socketError;			///< Mutex for error which can occur from host or IO thread.
 	boost::system::error_code m_socketError;	///< Set when shutdown performed w/error.
 	
-	std::mutex x_writeQueue;
+	Mutex x_writeQueue;
 	std::deque<bytes> m_writeQueue;
 };
 
