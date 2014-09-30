@@ -25,7 +25,11 @@
 using namespace std;
 using namespace dev;
 
-NetEndpoint::NetEndpoint(boost::asio::ip::tcp::endpoint _ep): Worker("endpoint"), m_io(), m_endpoint(_ep), m_acceptor(m_io)
+NetEndpoint::NetEndpoint(boost::asio::ip::tcp::endpoint _ep):
+	Worker("endpoint"),
+	m_io(),
+	m_endpoint(_ep),
+	m_acceptor(m_io)
 {
 }
 
@@ -52,7 +56,7 @@ void NetEndpoint::start()
 
 void NetEndpoint::doWork()
 {
-	// TODO: cleanup connections and deregister service
+	// TODO: cleanup connections and deregister service(s) (or make services immutable)
 	
 	if (m_io.stopped())
 		m_io.reset();
@@ -61,7 +65,7 @@ void NetEndpoint::doWork()
 
 void NetEndpoint::stop()
 {
-	// TODO: iterate and disconnect m_connections
+	// TODO: disconnect m_connections
 	
 	if (m_acceptor.is_open())
 		m_acceptor.cancel();
@@ -73,7 +77,7 @@ void NetEndpoint::stop()
 
 void NetEndpoint::acceptConnection()
 {
-	// pointer is used to prevent dealloc issues w/boost
+	// pointer is used to prevent some (not all) dealloc issues w/boost
 	auto newConn = make_shared<NetConnection>(m_io);
 	m_connections.push_back(newConn);
 	

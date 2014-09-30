@@ -345,7 +345,6 @@ if (NOT LANGUAGES)
 	add_subdirectory(libethcore)
 	add_subdirectory(libevm)
 	add_subdirectory(libethereum)
-	# add_subdirectory(libethereumx)   # TODO remove => libwebthree
 
 	add_subdirectory(libwebthree)
 	add_subdirectory(test)

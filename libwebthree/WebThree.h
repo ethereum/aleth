@@ -189,11 +189,11 @@ protected:
 	void doWork();
 	
 private:
-	boost::asio::io_service m_io;
-	boost::asio::ip::tcp::endpoint m_endpoint;
+	boost::asio::io_service m_io;					///< IO Service for rpc connection.
+	boost::asio::ip::tcp::endpoint m_endpoint;		///< Address/port of rpc host.
 	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
-	EthereumRPCClient* m_ethereum = nullptr;
-	WhisperRPCClient* m_whisper = nullptr;
+	EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
+	WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
 };
 
 }

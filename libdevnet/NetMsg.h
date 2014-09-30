@@ -31,7 +31,8 @@ class RLP;
 	
 /**
  * @brief Used by Net classes for sending and receiving network messages.
- * @todo Encapsulate and maintain header independent of payload in order to separate memory storage (to prevent copy and facilitate other storage options for large streams).
+ * @todo Encapsulate and maintain header independent of payload
+ * @todo Exception for malformed messages
  */
 class NetMsg: public std::enable_shared_from_this<NetMsg>
 {
@@ -39,18 +40,32 @@ class NetMsg: public std::enable_shared_from_this<NetMsg>
 	friend class NetConnection;
 	
 public:
-	/// Constructor for creating egress (outbound) messages
+	/// Constructor for new message.
 	NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req);
 	~NetMsg() {}
 	
+	/// Service ID of message.
 	NetMsgServiceType service() const { return m_service; }
+	
+	/// Sequence number of message.
 	NetMsgSequence sequence() const { return m_sequence; }
+	
+	/// Type of message.
 	NetMsgType type() const { return m_messageType; }
+	
+	/// RLP content of message.
 	bytes rlp() const { return m_rlpBytes; }
+	
+	/// NetMsg in raw bytes.
 	bytes payload() const { return m_messageBytes; }
 	
+	/// Whether message is control (only seen by network)
 	bool isControlMessage() const { return !m_service; }
+	
+	/// Whether message is service message (only seen by service handler)
 	bool isServiceMessage() const { return m_service && !m_messageType; }
+	
+	/// Whether message is data message (only seen by data handler)
 	bool isDataMessage() const { return m_service && m_messageType; }
 	
 private:

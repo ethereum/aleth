@@ -32,10 +32,18 @@ namespace dev
 class NetConnection;
 
 /**
- * @brief Endpoint for handling network connections. Connections are passed to registerConnection functions of each registered service. NetEndpoint will ensure that connection and message objects are retained when they're in use.
+ * @brief Endpoint for handling network connections. Connections are passed
+ * to registerConnection functions of each registered service. NetEndpoint 
+ * will ensure that connection and message objects are retained when they're 
+ * in use.
  *
- * NetEndpoint is responsible for the life of a connection. This enables service-based connections to ensure operations and maintain state information in a reliable manner. This also facilitates (one day...) robust and graceful shutdown of connections for any start/stop/deallocation/exception scenario.
+ * NetEndpoint is responsible for the life of a connection. This enables 
+ * service-based connections to ensure operations and maintain state 
+ * information in a reliable manner. This also facilitates (one day...) 
+ * robust and graceful shutdown of connections for any 
+ * start/stop/deallocation/exception scenario.
  *
+ * @todo add create-connection method, then remove get_io_service()
  */
 class NetEndpoint: public Worker, public std::enable_shared_from_this<NetEndpoint>
 {
@@ -43,31 +51,32 @@ public:
 	NetEndpoint(boost::asio::ip::tcp::endpoint _ep);
 	~NetEndpoint();
 
+	/// Adds a service to services map (serviceId:service). New connections are registered with services prior to starting I/O.
 	void registerService(NetServiceFace* _s) { m_services[_s->serviceId()] = _s; }
 	
+	/// Start accepting connections and running worker thread.
 	void start();
+	
+	/// Stop worker thread and accepting connections.
 	void stop();
 
-	/// Called by external connections. Used by testing.
-	/// @todo replace with create-connection method
+	/// Called by external connections to make shared-use of io service.
 	boost::asio::io_service& get_io_service() { return m_io; }
 	
 protected:
-	
-	std::map<NetMsgServiceType, NetServiceFace*> m_services;
-	std::vector<std::shared_ptr<NetConnection> > m_connections;
+	std::map<NetMsgServiceType, NetServiceFace*> m_services;		///< Services map (see registerService)
+	std::vector<std::shared_ptr<NetConnection>> m_connections;	///< List of connections.
 	
 private:
-	/// Run IO Service
+	/// Runs IO Service.
 	void doWork();
 	
 	/// Initially called when started and called continuously from asio block after new connection is accepted.
 	void acceptConnection();
 	
-	boost::asio::io_service m_io;
-	boost::asio::ip::tcp::endpoint m_endpoint;
-	boost::asio::ip::tcp::acceptor m_acceptor;
-	std::thread m_ioThread;
+	boost::asio::io_service m_io;								///< IO service run by doWork().
+	boost::asio::ip::tcp::endpoint m_endpoint;	///< Endpoint where connections are being accepted.
+	boost::asio::ip::tcp::acceptor m_acceptor;	///< Connection acceptor.						
 };
 
 }

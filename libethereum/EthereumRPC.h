@@ -67,7 +67,11 @@ enum EthRequestMsgType : NetMsgType
 class EthereumRPCServer;
 	
 /**
- * @brief Provides network RPC interface as a service endpoint. When EthereumRPC is added to an endpoint it will automatically assign callback methods for the EthereumRPC protocol, which, will interpret and handle RPC requests. As it's a NetService, EthereumRPC can alternatively be used by using registerConnection for each connection which needs to respond to EthereumRPC messages.
+ * @brief Provides network RPC interface as a service endpoint. When EthereumRPC 
+ * is added to an endpoint it will automatically assign callback methods for the 
+ * EthereumRPC protocol, which, will interpret and handle RPC requests. As it's a 
+ * NetService, EthereumRPC can alternatively be used by using registerConnection 
+ * for each connection which needs to respond to EthereumRPC messages.
  */
 class EthereumRPC: public NetService<EthereumRPCServer>
 {
@@ -84,8 +88,11 @@ protected:
 class EthereumRPC;
 
 /**
- * @brief Provides protocol implementation for handling server-side of Ethereum RPC connections. Each instance handles a single connection and is additionally passed a pointer to EthereumRPC service.
- * All incoming (call) requests receive a response which has the same sequence id of the request.
+ * @brief Provides protocol implementation for handling server-side of Ethereum RPC
+ * connections. Each instance handles a single connection and is additionally 
+ * passed a pointer to EthereumRPC service.
+ * All incoming (call) requests receive a response which have the same 
+ * sequence id of the request.
  */
 class EthereumRPCServer: public NetServiceProtocol<EthereumRPC>
 {
@@ -97,7 +104,6 @@ public:
 
 /**
  * @brief Provides protocol implementation and state for handling client-side of Ethereum RPC connections.
- * @todo derive from NetRPCProtocol
  */
 class EthereumRPCClient: public NetRPCClientProtocol<EthereumRPCClient>, public eth::Interface
 {

@@ -24,7 +24,12 @@
 
 using namespace dev;
 
-NetMsg::NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req): m_service(_service), m_sequence(_seq), m_messageType(_packetType), m_rlpBytes(std::move(_req.data().toBytes())), m_messageBytes(std::move(packetify()))
+NetMsg::NetMsg(NetMsgServiceType _service, NetMsgSequence _seq, NetMsgType _packetType, RLP const& _req):
+	m_service(_service),
+	m_sequence(_seq),
+	m_messageType(_packetType),
+	m_rlpBytes(std::move(_req.data().toBytes())),
+	m_messageBytes(std::move(packetify()))
 {
 }
 
@@ -45,7 +50,6 @@ NetMsg::NetMsg(bytesConstRef _packetData): m_messageBytes(std::move(_packetData.
 		m_messageType = r[2].toInt();
 		m_rlpBytes = bytes(r[3].data().toBytes());
 	}
-	// todo: else throw exception
 }
 
 bytes NetMsg::packetify() const

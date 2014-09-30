@@ -29,7 +29,6 @@
 namespace dev
 {
 
-// will be renamed if 'NetMessage' renamed or namespaced (EthMessage?)
 struct RPCWarn: public LogChannel { static const char* name() { return "!X!"; } static const int verbosity = 0; };
 struct RPCNote: public LogChannel { static const char* name() { return "*X*"; } static const int verbosity = 1; };
 struct RPCMessageSummary: public LogChannel { static const char* name() { return "-X-"; } static const int verbosity = 2; };

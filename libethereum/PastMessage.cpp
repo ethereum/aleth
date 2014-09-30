@@ -32,7 +32,7 @@ PastMessage::PastMessage(bytesConstRef _r)
 	RLP r(_r);
 	to = r[0].toHash<Address>();
 	from = r[1].toHash<Address>();
-	value = r[2].toHash<h256>();
+	value = r[2].toInt<u256>();
 	input = r[3].toBytes();
 	output = r[4].toBytes();
 	if (r[5].itemCount() > 0)

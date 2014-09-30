@@ -27,13 +27,22 @@
 using namespace std;
 using namespace dev;
 
-NetConnection::NetConnection(boost::asio::io_service& _io_service): m_socket(_io_service), m_stopped(true), m_originateConnection(false), m_socketError()
+NetConnection::NetConnection(boost::asio::io_service& _io_service): 
+	m_socket(_io_service),
+	m_stopped(true),
+	m_originateConnection(false),
+	m_socketError()
 {
 	m_stopped = true;
 	m_started = false;
 }
 
-NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep): m_socket(_io_service), m_endpoint(_ep), m_stopped(true), m_originateConnection(true), m_socketError()
+NetConnection::NetConnection(boost::asio::io_service& _io_service, boost::asio::ip::tcp::endpoint _ep): 
+	m_socket(_io_service),
+	m_endpoint(_ep),
+	m_stopped(true),
+	m_originateConnection(true),
+	m_socketError()
 {
 	m_stopped = true;
 	m_started = false;
@@ -112,19 +121,6 @@ void NetConnection::doWrite()
 		doWrite();
 	});
 }
-
-//bool NetConnection::checkPayloadLength(bytesConstRef _msg) const
-//{
-//	if (_msg.size() < 4)
-//		return false;
-//	uint32_t len = ((_msg[0] * 256 + _msg[1]) * 256 + _msg[2]) * 256 + _msg[3];
-//	if (_msg.size() != len + 4)
-//		return false;
-//	RLP r(_msg.cropped(4));
-//	if (r.actualSize() != len)
-//		return false;
-//	return true;
-//}
 
 void NetConnection::handshake(size_t _rlpLen)
 {

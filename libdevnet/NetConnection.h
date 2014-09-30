@@ -34,9 +34,8 @@ class NetProtocol;
 /**
  * @brief Interface for managing incoming/outgoing sockets.
  *
- * @todo write queue
- * @todo protocol error handling (separate from network/shutdown errors)
  * @todo replace x_socketError in handshake
+ * @todo protocol error handling (separate from network/shutdown errors)
  */
 class NetConnection: public std::enable_shared_from_this<NetConnection>
 {
@@ -59,9 +58,6 @@ public:
 	/// Send handhsake and start connection read loop upon success.
 	void start();
 	
-	/// Use at your own risk! (currently public for tests)
-	boost::asio::ip::tcp::socket* socket();
-	
 	/// Send message
 	void send(NetMsg const& _msg);
 	
@@ -75,9 +71,9 @@ public:
 	void shutdown(bool _wait = true);
 
 protected:
-//	/// Build and send message
-//	void send(NetMsgServiceType _svc, NetMsgSequence _seq, NetMsgType _type, RLP const& _msg);
-	
+	/// Used by endpoint when accepting new connections.
+	boost::asio::ip::tcp::socket* socket();
+
 private:
 //	/// @returns if RLP message size is valid and matches length from 4-byte header
 //	bool checkPacket(bytesConstRef _netMsg) const;
