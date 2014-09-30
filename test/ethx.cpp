@@ -127,9 +127,6 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 
 	assert(clientBalance == directBalance);
 	cout << "Got balanceAt: " << clientBalance << endl;
-	
-	
-	sleep(5);
 }
 	
 BOOST_AUTO_TEST_CASE(test_netservice)

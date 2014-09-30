@@ -215,7 +215,7 @@ void NetConnection::handshake(size_t _rlpLen)
 			
 			m_recvdBytes = m_recvdBytes - _rlpLen - 4;
 			if (m_recvdBytes)
-				memmove(m_recvBuffer.data(), m_recvBuffer.data() + (_rlpLen + 4 - 1), m_recvdBytes);
+				memmove(m_recvBuffer.data(), m_recvBuffer.data() + _rlpLen + 4, m_recvdBytes);
 			
 			doRead();
 			return;
@@ -278,7 +278,7 @@ void NetConnection::doRead(size_t _rlpLen)
 		
 		m_recvdBytes = m_recvdBytes - _rlpLen - 4;
 		if (m_recvdBytes)
-			memmove(m_recvBuffer.data(), m_recvBuffer.data() + _rlpLen + 4 - 1,m_recvdBytes);
+			memmove(m_recvBuffer.data(), m_recvBuffer.data() + _rlpLen + 4, m_recvdBytes);
 		
 		doRead();
 	}
@@ -290,7 +290,7 @@ void NetConnection::doRead(size_t _rlpLen)
 		m_socket.async_read_some(boost::asio::buffer(boost::asio::buffer(m_recvBuffer) + m_recvdBytes), [this, self, _rlpLen](boost::system::error_code _ec, size_t _len)
 		{
 			if (_ec)
-				return shutdownWithError(_ec); // read header failed
+				return shutdownWithError(_ec);
 			
 			assert(_len);
 			
