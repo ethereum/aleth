@@ -54,10 +54,10 @@ public:
 	NetMsgType type() const { return m_messageType; }
 	
 	/// RLP content of message.
-	bytes rlp() const { return m_rlpBytes; }
+	bytes const& rlp() const { return m_rlpBytes; }
 	
 	/// NetMsg in raw bytes.
-	bytes payload() const { return m_messageBytes; }
+	bytes const& payload() const { return m_messageBytes; }
 	
 	/// Whether message is control (only seen by network)
 	bool isControlMessage() const { return !m_service; }
