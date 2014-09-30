@@ -158,7 +158,9 @@ void NetConnection::handshake(size_t _rlpLen)
 				
 				m_recvdBytes += _len;
 				size_t rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
-				if (rlpLen > 64*1024)
+				
+				// todo: managed via service messages and flow-control, requiring message-chunking
+				if (rlpLen > 1024*1024*128)
 					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooLarge();
 				if (rlpLen < 3)
 					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooSmall();
