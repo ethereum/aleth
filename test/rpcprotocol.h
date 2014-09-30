@@ -27,11 +27,11 @@
 namespace dev
 {
 
-class TestProtocol: public NetRPCProtocol<TestService>
+class TestProtocol: public NetRPCClientProtocol<TestProtocol>
 {
 public:
 	static NetMsgServiceType serviceId() { return 255; }
-	TestProtocol(NetConnection* _conn, NetServiceFace* _service): NetRPCProtocol(_conn, _service){}
+	TestProtocol(NetConnection* _conn, NetServiceFace* _service): NetRPCClientProtocol(_conn, _service){}
 
 	std::string protocolString() { return "protocolString"; }
 

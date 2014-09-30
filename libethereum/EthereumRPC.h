@@ -48,12 +48,12 @@ enum EthRequestMsgType : NetMsgType
 	PeekWatch,
 	CheckWatch,
 	Number, // height
-	PendingTransactions,
+	PendingTransactions, // Pending
 	Diff,
 	GetAddresses, // todo: namespacing
 	GasLimitRemaining,
-	SetCoinbase,
-	GetCoinbase,
+	SetCoinbase, // SetAddress
+	GetCoinbase, // GetAddress
 	// mining
 };
 	
@@ -84,41 +84,27 @@ protected:
 class EthereumRPC;
 
 /**
- * @brief Provides protocol implementation for handling server-side of Ethereum RPC connections.
+ * @brief Provides protocol implementation for handling server-side of Ethereum RPC connections. Each instance handles a single connection and is additionally passed a pointer to EthereumRPC service.
  * All incoming (call) requests receive a response which has the same sequence id of the request.
  */
-class EthereumRPCServer: public NetProtocol
+class EthereumRPCServer: public NetServiceProtocol<EthereumRPC>
 {
 public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service);
+	EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service): NetServiceProtocol(_conn, _service) {};
 	void receiveMessage(NetMsg const& _msg);
-	
-protected:
-	EthereumRPC* m_service;
 };
 
 /**
  * @brief Provides protocol implementation and state for handling client-side of Ethereum RPC connections.
  * @todo derive from NetRPCProtocol
  */
-class EthereumRPCClient: public NetProtocol, public eth::Interface
+class EthereumRPCClient: public NetRPCClientProtocol<EthereumRPCClient>, public eth::Interface
 {
 public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
-	EthereumRPCClient(NetConnection* _conn, void* _unused=nullptr);
-	
-	void receiveMessage(NetMsg const& _msg);
+	EthereumRPCClient(NetConnection* _conn): NetRPCClientProtocol(_conn) {}
 
-	bytes performRequest(EthRequestMsgType _type) { RLPStream s; s.appendList(0); return performRequest(_type, s); }
-	bytes performRequest(EthRequestMsgType _type, RLPStream& _s);
-	
-protected:
-	typedef std::promise<std::shared_ptr<NetMsg> > promiseResponse;
-	typedef std::future<std::shared_ptr<NetMsg> > futureResponse;
-	std::map<NetMsgSequence,promiseResponse*> m_promises;
-	std::mutex x_promises;										///< Mutex concurrent access to m_promises.
-	
 public:
 	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
 	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo);

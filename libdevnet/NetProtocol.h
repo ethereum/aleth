@@ -45,11 +45,11 @@ class NetProtocol
 public:
 	NetProtocol(NetConnection* _conn): m_connection(_conn) {};
 	NetProtocol(NetConnection* _conn, NetServiceFace* _service): m_connection(_conn) {};
-
+	
 	virtual void receiveMessage(NetMsg const& _msg) = 0;
 	
 	NetMsgSequence nextDataSequence() { return m_localDataSequence++; }
-	NetConnection* connection() { return m_connection; }
+	NetConnection* connection() const { return m_connection; }
 	
 protected:
 	NetMsgSequence nextSessionSequence() { return m_localSessionSequence++; }
@@ -84,68 +84,76 @@ protected:
  * @TODO Pass flag and/or create template for server interface (reflects sequence id).
  */
 template <class T>
-class NetRPCProtocol: public NetProtocol
+class NetRPCClientProtocol: public NetProtocol
 {
 public:
-	NetRPCProtocol(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_rpcService(static_cast<T*>(_service)) {};
+	NetRPCClientProtocol(NetConnection* _conn);
+	NetRPCClientProtocol(NetConnection* _conn, NetServiceFace* _service): NetRPCClientProtocol(_conn) {};
 
-	void receiveMessage(NetMsg const& _msg) final
-	{
-		switch (_msg.type())
-		{
-			case Success:
-				// second item is result
-				if (auto p = m_promises[_msg.sequence()])
-					p->set_value(std::make_shared<NetMsg>(_msg));
-				break;
-				
-			case 2:
-				// exception
-				break;
-		}
-	}
+	static NetMsgServiceType serviceId() { return T::serviceId(); };
 	
-	bytes performRequest(NetMsgType _type)
+	void receiveMessage(NetMsg const& _msg)
 	{
-		RLPStream s(0);
-		return performRequest(_type, s);
+		clog(RPCNote) << "[" << serviceId() << "] receiveMessage";
+		if (auto p = m_promises[_msg.sequence()])
+			if (_msg.type() == Success)
+				p->set_value(std::make_shared<NetMsg>(_msg));
+//			else if (_msg.type() == 2) // exception
+//			else // malformed
 	}
-	
-	bytes performRequest(NetMsgType _type, RLPStream& _s)
-	{
-		promiseResponse p;
-		futureResponse f = p.get_future();
-		
-		NetMsg msg(T::serviceId(), nextDataSequence(), _type, RLP(_s.out()));
-		{
-			std::lock_guard<std::mutex> l(x_promises);
-			m_promises.insert(make_pair(msg.sequence(),&p));
-		}
-		connection()->send(msg);
 
-		auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(2));
-		
-		{
-			std::lock_guard<std::mutex> l(x_promises);
-			m_promises.erase(msg.sequence());
-		}
-		
-		if (s != std::future_status::ready)
-			throw RPCRequestTimeout();
-		
-		return std::move(f.get()->rlp());
-	}
-	
-	T* getRpcService() { return m_rpcService; }
+	bytes performRequest(NetMsgType _type);
+	bytes performRequest(NetMsgType _type, RLPStream& _s);
 
 protected:
-	T* m_rpcService;
-	
 	typedef std::promise<std::shared_ptr<NetMsg> > promiseResponse;
 	typedef std::future<std::shared_ptr<NetMsg> > futureResponse;
 	std::map<NetMsgSequence,promiseResponse*> m_promises;
 	std::mutex x_promises;										///< Mutex concurrent access to m_promises.
 };
+
+template <class T>
+NetRPCClientProtocol<T>::NetRPCClientProtocol(NetConnection* _conn):
+	NetProtocol(_conn)
+{
+	_conn->setDataMessageHandler(serviceId(), [=](NetMsg const& _msg)
+	{
+		receiveMessage(_msg);
+	});
+}
+	
+template <class T>
+bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type, RLPStream& _s)
+{
+	promiseResponse p;
+	futureResponse f = p.get_future();
+	
+	NetMsg msg(serviceId(), nextDataSequence(), _type, RLP(_s.out()));
+	{
+		std::lock_guard<std::mutex> l(x_promises);
+		m_promises.insert(make_pair(msg.sequence(),&p));
+	}
+	connection()->send(msg);
+	
+	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(connection()->connectionOpen() ? 2 : 10));
+	
+	{
+		std::lock_guard<std::mutex> l(x_promises);
+		m_promises.erase(msg.sequence());
+	}
+	
+	if (s != std::future_status::ready)
+		throw RPCRequestTimeout();
+	
+	return std::move(f.get()->rlp());
+}
+
+template <class T>
+bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type	)
+{
+	RLPStream s(0);
+	return performRequest(_type, s);
+}
 
 }
 

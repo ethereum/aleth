@@ -125,6 +125,8 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	WebThree client;
 	u256 clientBalance = client.ethereum()->balanceAt(a);
 
+	usleep(250000);
+	
 	assert(clientBalance == directBalance);
 	cout << "Got balanceAt: " << clientBalance << endl;
 }
@@ -147,7 +149,7 @@ BOOST_AUTO_TEST_CASE(test_netservice)
 	// rpc client requries connection and server
 	
 	auto clientConn = make_shared<NetConnection>(netEp->get_io_service(), ep);
-	EthereumRPCClient client(clientConn.get(), nullptr);
+	EthereumRPCClient client(clientConn.get());
 	clientConn->start();
 	
 	Address a(fromHex("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));

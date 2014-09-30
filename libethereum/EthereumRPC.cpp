@@ -26,11 +26,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-EthereumRPCServer::EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_service(static_cast<EthereumRPC*>(_service))
-{
-	
-}
-
 void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 {
 	clog(RPCNote) << "[" << this->serviceId() << "] receiveMessage";
@@ -311,56 +306,6 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 	connection()->send(response);
 }
 
-EthereumRPCClient::EthereumRPCClient(NetConnection* _conn, void *): NetProtocol(_conn)
-{
-	_conn->setDataMessageHandler(serviceId(), [=](NetMsg const& _msg)
-	{
-		receiveMessage(_msg);
-	});
-}
-
-void EthereumRPCClient::receiveMessage(NetMsg const& _msg)
-{
-	// client should look for Success,Exception, and promised responses
-	clog(RPCNote) << "[" << this->serviceId() << "] receiveMessage";
-	
-	// !! check promises and set value
-	
-	RLP res(_msg.rlp());
-	switch (_msg.type())
-	{
-		case Success:
-			if (auto p = m_promises[_msg.sequence()])
-				p->set_value(make_shared<NetMsg>(_msg));
-			break;
-			
-		case 2:
-			// exception
-			break;
-	}
-}
-
-bytes EthereumRPCClient::performRequest(EthRequestMsgType _type, RLPStream& _s)
-{
-	promiseResponse p;
-	futureResponse f = p.get_future();
-
-	NetMsg msg(serviceId(), nextDataSequence(), _type, RLP(_s.out()));
-	{
-		lock_guard<mutex> l(x_promises);
-		m_promises.insert(make_pair(msg.sequence(),&p));
-	}
-	connection()->send(msg);
-
-	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(2));
-	{
-		lock_guard<mutex> l(x_promises);
-		m_promises.erase(msg.sequence());
-	}
-	if (s != future_status::ready)
-		throw RPCRequestTimeout();
-	return std::move(f.get()->rlp());
-}
 
 void EthereumRPCClient::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
@@ -447,12 +392,28 @@ std::map<u256, u256> EthereumRPCClient::storageAt(Address _a, int _block) const
 
 eth::PastMessages EthereumRPCClient::messages(unsigned _watchId) const
 {
+	RLPStream s(1);
+	s << _watchId;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestMessagesWithWatchId, s);
 	
+	PastMessages p;
+	for (auto m: RLP(r))
+		p.push_back(PastMessage(m.toBytesConstRef()));
+	
+	return std::move(p);
 }
 
 eth::PastMessages EthereumRPCClient::messages(eth::MessageFilter const& _filter) const
 {
+	RLPStream s(1);
+	_filter.fillStream(s);
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestMessagesWithFilter, s);
 	
+	PastMessages p;
+	for (auto m: RLP(r))
+		p.push_back(PastMessage(m.toBytesConstRef()));
+	
+	return std::move(p);
 }
 
 unsigned EthereumRPCClient::installWatch(eth::MessageFilter const& _filter)
@@ -502,21 +463,56 @@ unsigned EthereumRPCClient::number() const
 
 eth::Transactions EthereumRPCClient::pending() const
 {
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(PendingTransactions);
 	
+	eth::Transactions txs;
+	for (auto tx: RLP(r))
+		txs.push_back(Transaction(tx.toBytesConstRef()));
+
+	return txs;
 }
 
 eth::StateDiff EthereumRPCClient::diff(unsigned _txi, h256 _block) const
 {
+	RLPStream s(2);
+	s << _txi << _block;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(Diff, s);
 	
+	eth::StateDiff sd;
+	for (auto i: RLP(r))
+	{
+		// 0 is address
+		Address addr = i[0].toHash<Address>();
+		RLP drlp = i[1];
+		AccountDiff d;
+		d.exist = eth::Diff<bool>(drlp[0][0].toInt<bool>(), drlp[0][1].toInt<bool>());
+		d.balance = eth::Diff<u256>(drlp[1][0].toInt<u256>(), drlp[1][1].toInt<u256>());
+		d.nonce = eth::Diff<u256>(drlp[2][0].toInt<u256>(), drlp[2][1].toInt<u256>());
+		for (auto stg: drlp[3])
+			d.storage[stg[0].toInt<u256>()] = eth::Diff<u256>(stg[1][0].toInt<u256>(),stg[1][0].toInt<u256>());
+		d.code = eth::Diff<bytes>(drlp[4][0].toBytes(), drlp[2][1].toBytes());
+		sd.accounts[addr] = d;
+	}
+
+	return std::move(sd);
 }
 
 eth::StateDiff EthereumRPCClient::diff(unsigned _txi, int _block) const
 {
-	
+	return diff(_txi,static_cast<h256>(_block));
 }
 
 Addresses EthereumRPCClient::addresses(int _block) const
 {
+	RLPStream s(1);
+	s << _block;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(GetAddresses, s);
+	
+	Addresses addrs;
+	for (auto a: RLP(r))
+		addrs.push_back(a.toHash<Address>());
+	
+	return std::move(addrs);
 }
 
 u256 EthereumRPCClient::gasLimitRemaining() const
