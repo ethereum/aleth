@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 	assert(pA == "protocolString");
 
 	// Access interface through service (used by protocol)
-	assert(s.interface()->string() == "string");
+	assert(s.interface()->stringTest() == "string");
 
 	// Client request test:
 	
@@ -123,11 +123,13 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	
 	WebThree client;
 	u256 clientBalance = client.ethereum()->balanceAt(a);
+	clientBalance = client.ethereum()->balanceAt(a);
 
-	usleep(250000);
-	
 	assert(clientBalance == directBalance);
 	cout << "Got balanceAt: " << clientBalance << endl;
+	
+	
+	sleep(5);
 }
 	
 BOOST_AUTO_TEST_CASE(test_netservice)
@@ -152,7 +154,7 @@ BOOST_AUTO_TEST_CASE(test_netservice)
 	clientConn->start();
 	
 	Address a(fromHex("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
-	u256 balance = client.balanceAt(a);
+	u256 balance = client.balanceAt(a, -1);
 	cout << "Got balanceAt: " << balance << endl;
 
 	assert(balance.str() == "1606938044258990275541962092341162602522202993782792835301376");

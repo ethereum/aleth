@@ -78,9 +78,11 @@ public:
 	}
 	
 protected:
-	void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
+	
+	/// By default, service messages for connections are passed here. Implementation should use service messages for global protocol-state and out-of-band messaging (ex: cancelling large transfer, sending notifications, coinbase changes).
+	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
 	{
-		clog(RPCNote) << "[" << T::serviceId() << "] serviceMessageReceived";
+		// drop message
 	}
 	
 	std::map<std::weak_ptr<NetConnection>,std::unique_ptr<T>, std::owner_less<std::weak_ptr<NetConnection>>> m_connState;

@@ -29,10 +29,10 @@ namespace dev
 class TestCoreTypesInterface
 {
 public:
-	std::string string() { return "string"; }
-	u256 u256() { return (uint64_t)1 << 63; }
-	h256 h256() { return FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF")); }
-	h256s h256s() { return std::vector<FixedHash<32>>({FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF"))}); }
+	std::string stringTest() { return "string"; }
+	u256 u256Test() { return (uint64_t)1 << 63; }
+	h256 h256Test() { return FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF")); }
+	h256s h256sTest() { return std::vector<FixedHash<32>>({FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF"))}); }
 };
 
 class TestProtocol;
