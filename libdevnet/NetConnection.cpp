@@ -159,8 +159,7 @@ void NetConnection::handshake(size_t _rlpLen)
 				m_recvdBytes += _len;
 				size_t rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
 				
-				// todo: managed via service messages and flow-control, requiring message-chunking
-				if (rlpLen > 1024*1024*128)
+				if (rlpLen > 1024*64)
 					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooLarge();
 				if (rlpLen < 3)
 					return shutdownWithError(boost::asio::error::connection_reset); // throw MessageTooSmall();
@@ -241,8 +240,8 @@ void NetConnection::doRead(size_t _rlpLen)
 		
 		clog(RPCNote) << "NetConnection::doRead length header";
 		_rlpLen = fromBigEndian<uint32_t>(bytesConstRef(m_recvBuffer.data(), 4));
-		if (_rlpLen > 16*1024*1024)
-			// should be 16kB; larger messages to-be-chunk/streamed
+		if (_rlpLen > 1024*1024*128)
+			// todo: managed via service messages and flow-control, requiring message-chunking
 			return shutdownWithError(boost::asio::error::connection_reset);
 		if (_rlpLen < 3)
 			return shutdownWithError(boost::asio::error::connection_reset);
