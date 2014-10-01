@@ -52,9 +52,9 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 	
 	/// Service<Protocol> && Protocol<Service>
 	TestService s(nullptr);
-	TestProtocol p((NetConnection *)nullptr, &s);
-	assert(TestProtocol::serviceId() == 255);
-	assert(TestService::serviceId() == TestProtocol::serviceId());
+	TestServiceProtocol p((NetConnection *)nullptr, &s);
+	assert(TestServiceProtocol::serviceId() == 255);
+	assert(TestService::serviceId() == TestServiceProtocol::serviceId());
 	
 	// sA: To be used by client request test...
 	std::string sA = s.serviceString();
@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 	assert(pA == "protocolString");
 
 	// Access interface through service (used by protocol)
-	assert(s.interface()->stringTest() == "string");
+	assert(s.m_interface->stringTest() == "string");
 
 	// Client request test:
 	
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 	
 	// Client connection
 	auto clientConn = make_shared<NetConnection>(netEp->get_io_service(), ep);
-	TestProtocol clientProtocol(clientConn.get(), nullptr);
+	TestRPCProtocol clientProtocol(clientConn.get());
 	clientConn->start();
 	
 	// wait for handshake

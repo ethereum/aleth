@@ -83,6 +83,7 @@ protected:
 	virtual void serviceMessageReceived(NetMsg const& _msg, NetConnection* _conn)
 	{
 		// drop message
+		clog(RPCMessageSummary) << "[" << (void*)_conn << "] serviceMessageReceived: " << RLP(_msg.rlp());
 	}
 	
 	std::map<std::weak_ptr<NetConnection>,std::unique_ptr<T>, std::owner_less<std::weak_ptr<NetConnection>>> m_connState;

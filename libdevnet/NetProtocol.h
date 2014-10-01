@@ -46,9 +46,8 @@ class NetMsg;
 class NetProtocol
 {
 public:
-	NetProtocol(NetConnection* _conn): m_connection(_conn) {};
-	NetProtocol(NetConnection* _conn, NetServiceFace* _service): m_connection(_conn) {};
-	
+	NetProtocol(NetConnection* _conn): m_connection(_conn) {}
+
 	/// Handlers for messages received by connections.
 	virtual void receiveMessage(NetMsg const& _msg) = 0;
 	
@@ -79,7 +78,7 @@ class NetServiceProtocol: public NetProtocol
 {
 public:
 	NetServiceProtocol(NetConnection* _conn, NetServiceFace* _service): NetProtocol(_conn), m_service(static_cast<T*>(_service)) {};
-	
+
 	virtual void receiveMessage(NetMsg const& _msg) = 0;
 	
 	T* getService() { return m_service; }
@@ -105,9 +104,6 @@ class NetRPCClientProtocol: public NetProtocol
 public:
 	/// Constructor. Sets data message handler of connection to receiveMessage.
 	NetRPCClientProtocol(NetConnection* _conn);
-	
-	/// Constructor. Sets data message handler of connection to receiveMessage.
-	NetRPCClientProtocol(NetConnection* _conn, NetServiceFace* _service): NetRPCClientProtocol(_conn) {};
 
 	static NetMsgServiceType serviceId() { return T::serviceId(); };
 	

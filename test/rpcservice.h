@@ -35,19 +35,18 @@ public:
 	h256s h256sTest() { return std::vector<FixedHash<32>>({FixedHash<32>(fromHex("FFFFFFFFFFFFFFFF"))}); }
 };
 
-class TestProtocol;
-class TestService: public NetService<TestProtocol>
+class TestServiceProtocol;
+class TestService: public NetService<TestServiceProtocol>
 {
-	friend class TestProtocol;
+	friend class TestServiceProtocol;
 	
 public:
+	TestService() {}
 	TestService(TestCoreTypesInterface* _interface): m_interface(_interface) {}
 	
-	std::string serviceString() { return "serviceString"; }
+	std::string serviceString() { return "protocolString"; }
 	
-	TestCoreTypesInterface* interface() { return m_interface; }
-protected:
-	TestCoreTypesInterface* m_interface;
+	TestCoreTypesInterface* m_interface = nullptr;
 };
 	
 }
