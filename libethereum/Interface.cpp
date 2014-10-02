@@ -14,40 +14,12 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
+/** @file Interface.cpp
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#pragma once
+#include "Interface.h"
 
-#include <set>
-#include <string>
-#include <memory>
-
-struct UPNPUrls;
-struct IGDdatas;
-
-namespace eth
-{
-
-class UPnP
-{
-public:
-	UPnP();
-	~UPnP();
-
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-	std::set<int> m_reg;
-	bool m_ok;
-	std::shared_ptr<struct UPNPUrls> m_urls;
-	std::shared_ptr<struct IGDdatas> m_data;
-};
-
-}
+#pragma GCC diagnostic ignored "-Wunused-variable"
+namespace { char dummy; };
