@@ -21,21 +21,16 @@
 
 #pragma once
 
-#include <thread>
-#include <mutex>
-#include <list>
-#include <atomic>
 #include <boost/utility.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/Guards.h>
 #include <libdevcore/Exceptions.h>
 #include <libp2p/Host.h>
 
 #include <libdevnet/NetEndpoint.h>
+#include <libethereum/EthereumRPC.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libethereum/Client.h>
-#include <libethereum/EthereumRPC.h>
 
 namespace dev
 {
@@ -61,11 +56,11 @@ public:
 	WhisperRPC() {}
 };
 	
-class WhisperRPCClient: public shh::Interface
-{
-public:
-	WhisperRPCClient() {}
-};
+//class WhisperRPCClient: public shh::Interface
+//{
+//public:
+//	WhisperRPCClient() {}
+//};
 	
 /**
  * @brief Main API hub for interfacing with Web 3 components. This doesn't do any local multiplexing, so you can only have one
@@ -90,7 +85,7 @@ public:
 	// The mainline interfaces:
 
 	eth::Client* ethereum() const { if (!m_ethereum) throw InterfaceNotSupported("eth"); return m_ethereum.get(); }
-	shh::WhisperHost* whisper() const { if (!m_whisper) throw InterfaceNotSupported("shh"); return m_whisper.get(); }
+	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) throw InterfaceNotSupported("shh"); return w; }
 	bzz::Interface* swarm() const { throw InterfaceNotSupported("bzz"); }
 
 	// Misc stuff:
@@ -134,7 +129,7 @@ private:
 	std::string m_clientVersion;					///< Our end-application client's name/version.
 
 	std::unique_ptr<eth::Client> m_ethereum;		///< Main interface for Ethereum ("eth") protocol.
-	std::unique_ptr<shh::WhisperHost> m_whisper;	///< Main interface for Whisper ("shh") protocol.
+	std::weak_ptr<shh::WhisperHost> m_whisper;	///< Main interface for Whisper ("shh") protocol.
 
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 	
@@ -162,7 +157,7 @@ public:
 	// The mainline interfaces.
 
 	eth::Interface* ethereum() const { if (!m_ethereum) throw InterfaceNotSupported("eth"); return m_ethereum; }
-	shh::Interface* whisper() const { if (!m_whisper) throw InterfaceNotSupported("shh"); return m_whisper; }
+	shh::Interface* whisper() const { throw InterfaceNotSupported("shh"); }
 	bzz::Interface* swarm() const { throw InterfaceNotSupported("bzz"); }
 
 	// Peer network stuff - forward through RPCSlave, probably with P2PNetworkSlave/Master classes like Whisper & Ethereum.
@@ -193,7 +188,7 @@ private:
 	boost::asio::ip::tcp::endpoint m_endpoint;		///< Address/port of rpc host.
 	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
 	EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
-	WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
+//	WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
 };
 
 }

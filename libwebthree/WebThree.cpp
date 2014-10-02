@@ -21,15 +21,10 @@
 
 #include "WebThree.h"
 
-#include <chrono>
-#include <thread>
-#include <boost/filesystem.hpp>
+#include <libwhisper/WhisperHost.h>
 #include <libdevcore/Log.h>
-#include <libp2p/Host.h>
 #include <libethereum/Defaults.h>
-#include <libethereum/EthereumHost.h>
-#include <libwhisper/WhisperPeer.h>
-#include <libethereum/EthereumRPC.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -60,13 +55,13 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string co
 		startRpc = true;
 	}
 
-//	if (_interfaces.count("shh"))
-//	{
-//		m_whisper = new eth::Whisper(m_net.get());
-////		m_whisperRpcService.reset(new WhisperRPC(m_whisper.get()));
-////		m_rpcEndpoint.registerService(m_whisperRpcService.get());
-////		startRpc = true;
-//	}
+	if (_interfaces.count("shh"))
+	{
+		m_whisper = m_net.registerCapability<WhisperHost>(new WhisperHost);
+//		m_whisperRpcService.reset(new WhisperRPC(m_whisper.get()));
+//		m_rpcEndpoint.registerService(m_whisperRpcService.get());
+//		startRpc = true;
+	}
 	
 	if (startRpc)
 		m_rpcEndpoint->start();

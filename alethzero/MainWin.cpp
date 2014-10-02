@@ -25,6 +25,7 @@
 #include <QtWidgets/QMessageBox>
 #include <QtWidgets/QInputDialog>
 #include <QtWebKitWidgets/QWebFrame>
+#include <QWebSettings>
 #include <QtGui/QClipboard>
 #include <QtCore/QtCore>
 #include <boost/algorithm/string.hpp>
@@ -135,11 +136,14 @@ Main::Main(QWidget *parent) :
 	{
 		// NOTE: no need to delete as QETH_INSTALL_JS_NAMESPACE adopts it.
 		m_ethereum = new QEthereum(this, ethereum(), owned());
+		m_whisper = new QWhisper(this, whisper());
 
+		QWebSettings::globalSettings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 		QWebFrame* f = ui->webView->page()->mainFrame();
 		f->disconnect(SIGNAL(javaScriptWindowObjectCleared()));
 		auto qeth = m_ethereum;
-		connect(f, &QWebFrame::javaScriptWindowObjectCleared, QETH_INSTALL_JS_NAMESPACE(f, qeth, this));
+		auto qshh = m_whisper;
+		connect(f, &QWebFrame::javaScriptWindowObjectCleared, QETH_INSTALL_JS_NAMESPACE(f, qeth, qshh, this));
 	});
 	
 	connect(ui->webView, &QWebView::loadFinished, [=]()
@@ -562,8 +566,7 @@ void Main::on_importKey_triggered()
 		if (std::find(m_myKeys.begin(), m_myKeys.end(), k) == m_myKeys.end())
 		{
 			m_myKeys.append(k);
-			m_keysChanged = true;
-			update();
+			keysChanged();
 		}
 		else
 			QMessageBox::warning(this, "Already Have Key", "Could not import the secret key: we already own this account.");
@@ -579,33 +582,39 @@ void Main::on_importKeyFile_triggered()
 	{
 		js::mValue val;
 		json_spirit::read_string(asString(contents(s.toStdString())), val);
-		js::mObject obj = val.get_obj();
-		KeyPair k;
-
+		auto obj = val.get_obj();
 		if (obj["encseed"].type() == js::str_type)
 		{
-			string encseedstr = obj["encseed"].get_str();
-			bytes encseed = fromHex(encseedstr);
-			Secret sec = sha3(encseed);
-			k = KeyPair(sec);
-			if (obj["ethaddr"].type() == js::str_type)
+			auto encseed = fromHex(obj["encseed"].get_str());
+			KeyPair k;
+			for (bool gotit = false; !gotit;)
 			{
-				Address a(obj["ethaddr"].get_str());
-				Address b = k.address();
-				if (a != b && QMessageBox::warning(this, "Key File Invalid", "Could not import the secret key: it doesn't agree with the given address.\nWould you like to attempt to import anyway?", QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
-					return;
+				gotit = true;
+				k = KeyPair::fromEncryptedSeed(&encseed, QInputDialog::getText(this, "Enter Password", "Enter the wallet's passphrase", QLineEdit::Password).toStdString());
+				if (obj["ethaddr"].type() == js::str_type)
+				{
+					Address a(obj["ethaddr"].get_str());
+					Address b = k.address();
+					if (a != b)
+					{
+						if (QMessageBox::warning(this, "Password Wrong", "Could not import the secret key: the password you gave appears to be wrong.", QMessageBox::Retry, QMessageBox::Cancel) == QMessageBox::Cancel)
+							return;
+						else
+							gotit = false;
+					}
+				}
 			}
+
+			if (std::find(m_myKeys.begin(), m_myKeys.end(), k) == m_myKeys.end())
+			{
+				m_myKeys.append(k);
+				keysChanged();
+			}
+			else
+				QMessageBox::warning(this, "Already Have Key", "Could not import the secret key: we already own this account.");
 		}
 		else
 			throw 0;
-		if (std::find(m_myKeys.begin(), m_myKeys.end(), k) == m_myKeys.end())
-		{
-			m_myKeys.append(k);
-			m_keysChanged = true;
-			update();
-		}
-		else
-			QMessageBox::warning(this, "Already Have Key", "Could not import the secret key: we already own this account.");
 	}
 	catch (...)
 	{
@@ -734,7 +743,7 @@ void Main::refreshNetwork()
 	ui->peerCount->setText(QString::fromStdString(toString(ps.size())) + " peer(s)");
 	ui->peers->clear();
 	for (PeerInfo const& i: ps)
-		ui->peers->addItem(QString("[%6] %3 ms - %1:%2 - %4 %5").arg(i.host.c_str()).arg(i.port).arg(chrono::duration_cast<chrono::milliseconds>(i.lastPing).count()).arg(i.clientVersion.c_str()).arg(QString::fromStdString(toString(i.caps))).arg(i.socket));
+		ui->peers->addItem(QString("[%7] %3 ms - %1:%2 - %4 %5 %6").arg(i.host.c_str()).arg(i.port).arg(chrono::duration_cast<chrono::milliseconds>(i.lastPing).count()).arg(i.clientVersion.c_str()).arg(QString::fromStdString(toString(i.caps))).arg(QString::fromStdString(toString(i.notes))).arg(i.socket));
 }
 
 void Main::refreshAll()
@@ -1588,6 +1597,11 @@ void Main::on_send_clicked()
 	statusBar()->showMessage("Couldn't make transaction: no single account contains at least the required amount.");
 }
 
+void Main::keysChanged()
+{
+	onBalancesChange();
+}
+
 void Main::on_debug_clicked()
 {
 	debugFinished();
@@ -1624,7 +1638,7 @@ void Main::on_debug_clicked()
 void Main::on_create_triggered()
 {
 	m_myKeys.append(KeyPair::create());
-	m_keysChanged = true;
+	keysChanged();
 }
 
 void Main::on_debugStep_triggered()
