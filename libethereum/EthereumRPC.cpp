@@ -108,8 +108,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			
 		case RequestCountAt:
 		{
-			int block = req[1].toInt();
-			u256 b(m_service->ethereum()->countAt(Address(req[0].toHash<Address>()), block));
+			u256 b(m_service->ethereum()->countAt(Address(req[0].toHash<Address>()), req[1].toInt()));
 			
 			result = 1;
 			resp.appendList(1);
@@ -302,6 +301,10 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			result = 2;
 	}
 	
+	if (!resp.out().size())
+		resp.appendList(0);
+
+	assert(resp.out().size());
 	NetMsg response(serviceId(), _msg.sequence(), result, RLP(resp.out()));
 	connection()->send(response);
 }
@@ -347,7 +350,7 @@ u256 EthereumRPCClient::balanceAt(Address _a, int _block) const
 	RLPStream s(2);
 	s << _a << _block;
 	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestBalanceAt, s);
-	return u256(RLP(r)[0].toInt<u256>());
+	return RLP(r)[0].toInt<u256>();
 }
 
 u256 EthereumRPCClient::countAt(Address _a, int _block) const
@@ -356,7 +359,7 @@ u256 EthereumRPCClient::countAt(Address _a, int _block) const
 	s << _a << _block;
 	RLP r(const_cast<EthereumRPCClient*>(this)->performRequest(RequestCountAt, s));
 	
-	return r.toInt<u256>();
+	return r[0].toInt<u256>();
 }
 
 u256 EthereumRPCClient::stateAt(Address _a, u256 _l, int _block) const
@@ -467,7 +470,7 @@ eth::Transactions EthereumRPCClient::pending() const
 	
 	eth::Transactions txs;
 	for (auto tx: RLP(r))
-		txs.push_back(Transaction(tx.toBytesConstRef()));
+		txs.push_back(Transaction(tx.data().toBytes()));
 
 	return txs;
 }

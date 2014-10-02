@@ -34,10 +34,106 @@
 #include "rpcservice.h"
 #include "rpcprotocol.h"
 
+#include "TestHelper.h"
+
 using namespace std;
 using namespace dev;
 
-// NOTE: Tests are currently selectively-disabled (return; at top), as acceptor holds socket even after acceptor/sockets are cancelled and closed (causing tests to lock and/or fail).
+BOOST_AUTO_TEST_SUITE( webthree )
+
+BOOST_AUTO_TEST_CASE(test_webthree)
+{
+	WebThreeDirect direct(string("Test/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/Test", true, {"eth", "shh"});
+	
+	Address orgAddr(fromHex("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
+	u256 directBalance = direct.ethereum()->balanceAt(orgAddr);
+	assert(directBalance.str() == "1606938044258990275541962092341162602522202993782792835301376");
+	
+	WebThree client;
+	
+	/// pendingTransactions (empty)
+	eth::Transactions pendingEmpty = client.ethereum()->pending();
+	assert(!pendingEmpty.size());
+	
+	/// Test balanceAt (this balance will be reduced by tests)
+	u256 clientBalance = client.ethereum()->balanceAt(orgAddr);
+	clientBalance = client.ethereum()->balanceAt(orgAddr);
+	assert(clientBalance == directBalance);
+	
+	// Raw transaction sending eth from orgAddr to address of k1 (below)
+	std::string txHex = "f87e808609184e72a00082271094db9bf2fce9595cb63ebe8458a43e6f6f09172dd7999f4f2726179a224501d762422c946590d91000000000000000801ba001e8ca3d264dd1a701cdf0f0f88e8cf67d694a64e1d83bcb880d809801462f3fa078fc4002d7587828b4f6c90f2fa8ecbe1efe39933c77eae7bd630bdfced26456";
+	
+	// Test keypair
+	// NOTE: This keypair was used to create the raw transaction above.
+	KeyPair k1(Secret(fromHex("9e4c7297c67a9e17f2cea38634baecb27e05805b51931a66765c5327968e1f47")));
+	
+	// Amount that is sent within raw transaction
+	u256 ueth = ((((u256(1000000000) * 1000000000) * 1000000000) * 1000000000) * 1000000000) * 1000000000;
+	u256 testAmount = ueth * 1000000;
+	
+	// Test countAt for addresses
+	assert(!client.ethereum()->countAt(orgAddr));
+	
+	// inject
+	bytes txBytes(fromHex(txHex));
+	client.ethereum()->inject(&txBytes);
+
+	// flushTransactions
+	client.ethereum()->flushTransactions();
+	
+	// pending (now +1)
+	assert(client.ethereum()->pending().size());
+	
+	// Now mine the transaction.
+	eth::mine(*direct.ethereum(), 1);
+	
+	// pending should be empty
+	assert(!client.ethereum()->pending().size());
+
+	// todo: block parameter of balanceAt/countAt
+	// orgAddr count goes up
+	assert(client.ethereum()->countAt(orgAddr));
+	
+	// check new balances
+	u256 expectSrcBal = directBalance - testAmount;
+	u256 expectDstBal = testAmount;
+
+	u256 newSrcBal = client.ethereum()->balanceAt(orgAddr);
+	u256 k1Bal = client.ethereum()->balanceAt(k1.address());
+	cout << "New source balance: " << newSrcBal;
+	cout << "Expected source balance: " << expectDstBal.str();
+	
+	// transaction uses gas so srcBal will be more/less than expected-gas.
+	assert(client.ethereum()->balanceAt(orgAddr) < expectSrcBal);
+	assert(client.ethereum()->balanceAt(orgAddr) >= expectSrcBal - 10000*10*eth::szabo);
+	assert(client.ethereum()->balanceAt(k1.address()) == expectDstBal);
+	
+	// New address to test w/transact() (change destination to source, new dest)
+	KeyPair k2 = KeyPair::create();
+
+	/// Test transact (transfer ether)
+	u256 test2Amount = testAmount / 2;
+	client.ethereum()->transact(k1.secret(), test2Amount , k2.address());;
+	client.ethereum()->flushTransactions();
+	eth::mine(*direct.ethereum(), 1);
+
+	u256 expectedK1Bal = k1Bal - test2Amount;
+	
+	assert(client.ethereum()->balanceAt(k1.address()) < expectedK1Bal);
+	assert(client.ethereum()->balanceAt(k1.address()) >= expectedK1Bal - 10000*10*eth::szabo);
+	assert(client.ethereum()->balanceAt(k2.address()) == test2Amount);
+	
+	assert(client.ethereum()->countAt(k1.address()));
+	
+	// Test create contract
+	// Address transact(Secret _secret, u256 _endowment, bytes const& _init, _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
+	
+	
+	
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
 
 BOOST_AUTO_TEST_SUITE( netproto )
 
@@ -111,22 +207,6 @@ BOOST_AUTO_TEST_CASE(test_netendpoint)
 	netEp->stop();
 	netEp.reset();
 	testConn.reset();
-}
-
-BOOST_AUTO_TEST_CASE(test_webthree)
-{
-	WebThreeDirect direct(string("Test/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/Test", false, {"eth", "shh"});
-	
-	Address a(fromHex("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"));
-	u256 directBalance = direct.ethereum()->balanceAt(a);
-	assert(directBalance.str() == "1606938044258990275541962092341162602522202993782792835301376");
-	
-	WebThree client;
-	u256 clientBalance = client.ethereum()->balanceAt(a);
-	clientBalance = client.ethereum()->balanceAt(a);
-
-	assert(clientBalance == directBalance);
-	cout << "Got balanceAt: " << clientBalance << endl;
 }
 	
 BOOST_AUTO_TEST_CASE(test_netservice)

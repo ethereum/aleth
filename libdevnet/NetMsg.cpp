@@ -63,6 +63,10 @@ bytes NetMsg::packetify() const
 	s << m_sequence;
 	if (listSize == 4)
 		s << m_messageType;
+	
+	if (m_messageType)
+		assert(m_rlpBytes.size() > 0);
+	
 	s.appendRaw(m_rlpBytes);
 	
 	bytes bytesout;
