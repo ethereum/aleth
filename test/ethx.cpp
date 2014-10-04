@@ -33,6 +33,7 @@
 #include <libwebthree/WebThree.h>
 #include "rpcservice.h"
 #include "rpcprotocol.h"
+#include <liblll/Compiler.h>
 
 #include "TestHelper.h"
 
@@ -64,7 +65,7 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	std::string txHex = "f87e808609184e72a00082271094db9bf2fce9595cb63ebe8458a43e6f6f09172dd7999f4f2726179a224501d762422c946590d91000000000000000801ba001e8ca3d264dd1a701cdf0f0f88e8cf67d694a64e1d83bcb880d809801462f3fa078fc4002d7587828b4f6c90f2fa8ecbe1efe39933c77eae7bd630bdfced26456";
 	
 	// Test keypair
-	// NOTE: This keypair was used to create the raw transaction above.
+	// NOTE: This keypair address is the destination of raw txHex transaction.
 	KeyPair k1(Secret(fromHex("9e4c7297c67a9e17f2cea38634baecb27e05805b51931a66765c5327968e1f47")));
 	
 	// Amount that is sent within raw transaction
@@ -103,9 +104,9 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	cout << "New source balance: " << newSrcBal;
 	cout << "Expected source balance: " << expectDstBal.str();
 	
-	// transaction uses gas so srcBal will be more/less than expected-gas.
+	// transaction uses gas so srcBal will be more/less than supplied gas (2x for contract+valuetx)
 	assert(client.ethereum()->balanceAt(orgAddr) < expectSrcBal);
-	assert(client.ethereum()->balanceAt(orgAddr) >= expectSrcBal - 10000*10*eth::szabo);
+	assert(client.ethereum()->balanceAt(orgAddr) >= expectSrcBal - 2*10000*10*eth::szabo);
 	assert(client.ethereum()->balanceAt(k1.address()) == expectDstBal);
 	
 	// New address to test w/transact() (change destination to source, new dest)
@@ -124,12 +125,49 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	assert(client.ethereum()->balanceAt(k2.address()) == test2Amount);
 	
 	assert(client.ethereum()->countAt(k1.address()));
-	
+
 	// Test create contract
-	// Address transact(Secret _secret, u256 _endowment, bytes const& _init, _gas = 10000, u256 _gasPrice = 10 * eth::szabo);
+	// compile contract
+	std::string kvContract("{[[69]] (caller) (return 0 (lll (when (= (caller) @@69) (for {} (< @i (calldatasize)) [i](+ @i 64) [[ (calldataload @i) ]] (calldataload (+ @i 32)) ) ) 0))}");
 	
+	vector<string> lllErrors;
+	bytes contractBytes(eth::compileLLL(kvContract, true, &lllErrors));
+	cout << "contract bytes: " << toHex(contractBytes);
+	// 33604557602a8060106000396000f200604556330e0f602a59366080530a0f602a59602060805301356080533557604060805301608054600958
+	assert(!lllErrors.size());
 	
+	Address contract(client.ethereum()->transact(k1.secret(), 10000, contractBytes));
+	cout << "Contract Address: " << toString(contract) << endl;
+//	assert(toString(contract) == "a9ef99de99567ed0627358a53ac8f771e3301cdf");
 	
+	client.ethereum()->flushTransactions();
+	eth::mine(*direct.ethereum(), 1);
+	
+	bytes codeAtBytes = client.ethereum()->codeAt(contract);
+	cout << "codeAt bytes: " << toHex(codeAtBytes);
+	
+	u256 state(client.ethereum()->stateAt(contract, 69));
+	cout << "stateAt: " << toString(Address(right160(state)));
+	assert(Address(right160(state)) == k1.address());
+	
+	// ASCII shall not die
+	client.ethereum()->transact(k1.secret(), 0, contract, asBytes("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtest"));
+	client.ethereum()->flushTransactions();
+	eth::mine(*direct.ethereum(), 1);
+
+	u256 at = (h256)asBytes("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+	u256 postTestState(client.ethereum()->stateAt(contract, at));
+	clog(RPCNote) << "postTestState: " << (h256)postTestState;
+	std::string sb((char*)((h256)postTestState).asBytes().data());
+	assert(sb == "test");
+	
+	std::map<u256, u256> storage(client.ethereum()->storageAt(contract));
+	u256 callerState = storage[69];
+	h256 testState = storage[at];
+	
+	assert(Address(right160(callerState)) == k1.address());
+	assert(std::string((char*)testState.data()) == std::string("test"));
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

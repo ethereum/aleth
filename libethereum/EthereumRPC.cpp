@@ -322,7 +322,8 @@ Address EthereumRPCClient::transact(Secret _secret, u256 _endowment, bytes const
 	RLPStream s(5);
 	s << _secret << _endowment << _init << _gas << _gasPrice;
 	
-	return Address(RLP(performRequest(RequestCreateContract, s)).toBytes());
+	RLP r = RLP(performRequest(RequestCreateContract, s));
+	return r[0].toHash<Address>();
 }
 
 void EthereumRPCClient::inject(bytesConstRef _rlp)
@@ -341,7 +342,10 @@ bytes EthereumRPCClient::call(Secret _secret, u256 _value, Address _dest, bytes 
 {
 	RLPStream s(6);
 	s << _secret << _value << _dest << _data << _gas << _gasPrice;
-	return RLP(performRequest(RequestCallTransaction, s)).toBytes();
+	
+	RLP r(performRequest(RequestCallTransaction, s));
+	
+	return r[0].data().toBytes();
 }
 
 
@@ -349,8 +353,8 @@ u256 EthereumRPCClient::balanceAt(Address _a, int _block) const
 {
 	RLPStream s(2);
 	s << _a << _block;
-	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestBalanceAt, s);
-	return RLP(r)[0].toInt<u256>();
+	RLP r = RLP(const_cast<EthereumRPCClient*>(this)->performRequest(RequestBalanceAt, s));
+	return r[0].toInt<u256>();
 }
 
 u256 EthereumRPCClient::countAt(Address _a, int _block) const
@@ -368,7 +372,7 @@ u256 EthereumRPCClient::stateAt(Address _a, u256 _l, int _block) const
 	s << _a << _l << _block;
 	RLP r(const_cast<EthereumRPCClient*>(this)->performRequest(RequestStateAt, s));
 	
-	return r.toInt<u256>();
+	return r[0].toInt<u256>();
 }
 
 bytes EthereumRPCClient::codeAt(Address _a, int _block) const
@@ -377,7 +381,7 @@ bytes EthereumRPCClient::codeAt(Address _a, int _block) const
 	s << _a << _block;
 	RLP r(const_cast<EthereumRPCClient*>(this)->performRequest(RequestCodeAt, s));
 	
-	return r.toBytes();
+	return r[0].data().toBytes();
 }
 
 std::map<u256, u256> EthereumRPCClient::storageAt(Address _a, int _block) const
@@ -387,7 +391,7 @@ std::map<u256, u256> EthereumRPCClient::storageAt(Address _a, int _block) const
 	RLPStream s(2);
 	s << _a << _block;
 	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestStorageAt, s);
-	for (auto s: RLP(r))
+	for (auto s: RLP(r)[0])
 		store.insert(make_pair( s[0].toInt<u256>(), s[1].toInt<u256>() ));
 	
 	return store;
