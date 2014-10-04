@@ -291,7 +291,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 		case GasLimitRemaining:
 		{
 			auto ret = m_service->ethereum()->gasLimitRemaining();
-			resp << ret;
+			resp.appendList(1) << ret;
 			
 			result = 1;
 			break;
@@ -299,24 +299,71 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 
 		case SetCoinbase:
 		{
-			// Should we maintain separate State for each client?
-			
-			result = 2; // support TBD
+			m_service->ethereum()->setAddress(req[0].toHash<Address>());
+			result = 1;
 			break;
 		}
 			
 		case GetCoinbase:
 		{
 			auto ret = m_service->ethereum()->address();
-			resp << ret;
+			resp.appendList(1) << ret;
 			
 			result = 1;
 			break;
 		}
 
-		// SetMining: What to do here for apps? (also see SetCoinbase)
-		// start/stop/isMining/miningProgress/config
-		// eth::MineProgress miningProgress() const
+		case SetMiningThreads:
+		{
+			m_service->ethereum()->setMiningThreads(req[0].toInt<unsigned>());
+			result = 1;
+			break;
+		}
+			
+		case GetMiningThreads:
+		{
+			auto ret = m_service->ethereum()->miningThreads();
+			resp.appendList(1) << ret;
+			
+			result = 1;
+			break;
+		}
+			
+		case StartMining:
+		{
+			// start/stopMining are not thread-safe
+			lock_guard<mutex> l(m_mining);
+			m_service->ethereum()->startMining();
+			result = 1;
+			break;
+		}
+			
+		case StopMining:
+		{
+			// start/stopMining are not thread-safe
+			lock_guard<mutex> l(m_mining);
+			m_service->ethereum()->stopMining();
+			result = 1;
+			break;
+		}
+			
+		case IsMining:
+		{
+			auto ret = m_service->ethereum()->isMining();
+			resp.appendList(1) << ret;
+			
+			result = 1;
+			break;
+		}
+			
+		case GetMineProgress:
+		{
+			auto ret = m_service->ethereum()->miningProgress();
+			
+			resp.appendList(5) << to_string(ret.requirement) << to_string(ret.best) << to_string(ret.current) << to_string(ret.hashes) << to_string(ret.ms);
+			result = 1;
+			break;
+		}
 
 		default:
 			result = 2;
@@ -582,5 +629,47 @@ Address EthereumRPCClient::address() const
 	return RLP(r)[0].toHash<Address>();
 }
 
+void EthereumRPCClient::setMiningThreads(unsigned _threads)
+{
+	RLPStream s(1);
+	s << _threads;
+	performRequest(SetMiningThreads, s);
+}
+
+unsigned EthereumRPCClient::miningThreads() const
+{
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(GetMiningThreads);
+	return RLP(r)[0].toInt<unsigned>();
+}
+
+void EthereumRPCClient::startMining()
+{
+	performRequest(StartMining);
+}
+
+void EthereumRPCClient::stopMining()
+{
+	performRequest(StopMining);
+}
+
+bool EthereumRPCClient::isMining()
+{
+	bytes r = performRequest(IsMining);
+	return RLP(r)[0].toInt<bool>();
+}
+
+eth::MineProgress EthereumRPCClient::miningProgress() const
+{
+	bytes b = const_cast<EthereumRPCClient*>(this)->performRequest(GetMineProgress);
+	RLP r(b);
+	MineProgress p;
+	p.requirement = stod(r[0].toString());
+	p.best = stod(r[1].toString());
+	p.current = stod(r[2].toString());
+	p.hashes = stod(r[3].toString());
+	p.ms = stod(r[4].toString());
+
+	return p;
+}
 
 

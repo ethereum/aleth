@@ -60,14 +60,13 @@ void fundTestKeyPair(WebThreeDirect &_w3) {
 }
 							  
 
-BOOST_AUTO_TEST_CASE(test_webthree_watches_api)
+BOOST_AUTO_TEST_CASE(test_webthree_watches_statediff_mining)
 {
 	/// SETUP
 	WebThreeDirect direct(string("Test/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/Test", true, {"eth", "shh"});
+	WebThree client;
 	KeyPair k1 = testKeyPair();
 
-	WebThree client;
-	
 	// test that client-installed watch works for client-preformed operation
 	unsigned watchid = client.ethereum()->installWatch(eth::MessageFilter().to(k1.address()));
 	// watches begin w/changes = 1
@@ -128,14 +127,33 @@ BOOST_AUTO_TEST_CASE(test_webthree_watches_api)
 		if (a == k2.address())
 			found = true;
 	assert(found);
-}
-
-BOOST_AUTO_TEST_CASE(test_webthree_mining_api)
-{
 	
+	// Test mining
+	assert(client.ethereum()->gasLimitRemaining() > 5);
+	assert(client.ethereum()->address() == Address());
+	
+	client.ethereum()->setAddress(k1.address());
+	assert(direct.ethereum()->address() == k1.address());
+	assert(client.ethereum()->address() == k1.address());
+	
+	assert(!client.ethereum()->isMining());
+	client.ethereum()->startMining();
+	
+	sleep(1);
+	eth::MineProgress cmp = client.ethereum()->miningProgress();
+	eth::MineProgress dmp = direct.ethereum()->miningProgress();
+	assert((int)cmp.current == (int)dmp.current && cmp.current > 0);
+	
+	assert(client.ethereum()->miningThreads());
+	assert(client.ethereum()->isMining());
+	client.ethereum()->stopMining();
+	assert(!client.ethereum()->isMining());
+	
+	client.ethereum()->setMiningThreads(2);
+	assert(client.ethereum()->miningThreads() == 2);
 }
 
-BOOST_AUTO_TEST_CASE(test_webthree_transactions_api)
+BOOST_AUTO_TEST_CASE(test_webthree_transactions)
 {
 	WebThreeDirect direct(string("Test/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/Test", true, {"eth", "shh"});
 	

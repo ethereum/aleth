@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <libdevnet/NetProtocol.h>
 #include <libethereum/Interface.h>
 
@@ -55,7 +56,12 @@ enum EthRequestMsgType : NetMsgType
 	GasLimitRemaining,
 	SetCoinbase, // SetAddress
 	GetCoinbase, // GetAddress
-	// mining
+	SetMiningThreads,
+	GetMiningThreads,
+	StartMining,
+	StopMining,
+	IsMining,
+	GetMineProgress
 };
 	
 //enum P2pRequestMsgType : NetMsgType
@@ -101,6 +107,9 @@ public:
 	static NetMsgServiceType serviceId() { return EthereumService; }
 	EthereumRPCServer(NetConnection* _conn, NetServiceFace* _service): NetServiceProtocol(_conn, _service) {};
 	void receiveMessage(NetMsg const& _msg);
+	
+protected:
+	std::mutex m_mining;
 };
 
 /**
@@ -143,13 +152,12 @@ public:
 	virtual void setAddress(Address _us);
 	virtual Address address() const;
 	
-	virtual void setMiningThreads(unsigned _threads = 0) {};
-	virtual unsigned miningThreads() const {};
-	virtual void startMining() {};
-	virtual void stopMining() {};
-	virtual bool isMining() {};
-	virtual eth::MineProgress miningProgress() const {};
-	
+	virtual void setMiningThreads(unsigned _threads = 0);
+	virtual unsigned miningThreads() const;
+	virtual void startMining();
+	virtual void stopMining();
+	virtual bool isMining();
+	virtual eth::MineProgress miningProgress() const;
 };
 
 	
