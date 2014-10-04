@@ -236,10 +236,31 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			result = 1;
 			break;
 		}
-
-		case Diff:
+			
+		case DiffBlock:
 		{
 			auto sd = m_service->ethereum()->diff(req[0].toInt<unsigned>(),req[1].toHash<h256>());
+			resp.appendList(sd.accounts.size());
+			for (auto addrDiff: sd.accounts)
+			{
+				resp.appendList(2) << addrDiff.first;
+				resp.appendList(5);
+				resp << make_pair(addrDiff.second.exist.from(), addrDiff.second.exist.to());
+				resp << make_pair(addrDiff.second.balance.from(), addrDiff.second.balance.to());
+				resp << make_pair(addrDiff.second.nonce.from(), addrDiff.second.nonce.to());
+				resp.appendList(addrDiff.second.storage.size());
+				for (auto st: addrDiff.second.storage)
+					resp.appendList(2) << st.first << make_pair(st.second.from(), st.second.to());
+				resp << make_pair(addrDiff.second.code.from(), addrDiff.second.code.to());
+			}
+			
+			result = 1;
+			break;
+		}
+			
+		case DiffPending:
+		{
+			auto sd = m_service->ethereum()->diff(req[0].toInt<unsigned>(),req[1].toInt<int>());
 			resp.appendList(sd.accounts.size());
 			for (auto addrDiff: sd.accounts)
 			{
@@ -483,7 +504,7 @@ eth::StateDiff EthereumRPCClient::diff(unsigned _txi, h256 _block) const
 {
 	RLPStream s(2);
 	s << _txi << _block;
-	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(Diff, s);
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(DiffBlock, s);
 	
 	eth::StateDiff sd;
 	for (auto i: RLP(r))
@@ -506,7 +527,27 @@ eth::StateDiff EthereumRPCClient::diff(unsigned _txi, h256 _block) const
 
 eth::StateDiff EthereumRPCClient::diff(unsigned _txi, int _block) const
 {
-	return diff(_txi,static_cast<h256>(_block));
+	RLPStream s(2);
+	s << _txi << _block;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(DiffPending, s);
+	
+	eth::StateDiff sd;
+	for (auto i: RLP(r))
+	{
+		// 0 is address
+		Address addr = i[0].toHash<Address>();
+		RLP drlp = i[1];
+		AccountDiff d;
+		d.exist = eth::Diff<bool>(drlp[0][0].toInt<bool>(), drlp[0][1].toInt<bool>());
+		d.balance = eth::Diff<u256>(drlp[1][0].toInt<u256>(), drlp[1][1].toInt<u256>());
+		d.nonce = eth::Diff<u256>(drlp[2][0].toInt<u256>(), drlp[2][1].toInt<u256>());
+		for (auto stg: drlp[3])
+			d.storage[stg[0].toInt<u256>()] = eth::Diff<u256>(stg[1][0].toInt<u256>(),stg[1][0].toInt<u256>());
+		d.code = eth::Diff<bytes>(drlp[4][0].toBytes(), drlp[2][1].toBytes());
+		sd.accounts[addr] = d;
+	}
+	
+	return std::move(sd);
 }
 
 Addresses EthereumRPCClient::addresses(int _block) const

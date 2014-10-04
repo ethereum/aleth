@@ -49,7 +49,8 @@ enum EthRequestMsgType : NetMsgType
 	CheckWatch,
 	Number, // height
 	PendingTransactions, // Pending
-	Diff,
+	DiffBlock,
+	DiffPending,
 	GetAddresses, // todo: namespacing
 	GasLimitRemaining,
 	SetCoinbase, // SetAddress

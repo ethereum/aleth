@@ -185,7 +185,11 @@ public:
 
 	/// Differences between transactions.
 	using Interface::diff;
+	
+	// @returns diff following transaction _txi in given block.
 	StateDiff diff(unsigned _txi, h256 _block) const;
+	
+	// @returns diff following transaction _txi in m_postMine.
 	StateDiff diff(unsigned _txi, int _block) const;
 
 	/// Get a list of all active addresses.

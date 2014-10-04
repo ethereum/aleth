@@ -96,12 +96,38 @@ BOOST_AUTO_TEST_CASE(test_webthree_watches_api)
 	client.ethereum()->uninstallWatch(watchid);
 	assert(client.ethereum()->peekWatch(watchid) == false);
 	
+	// Test diff() [block]
+	u256 block = fp.block;
+	eth::StateDiff sd = client.ethereum()->diff(0, block);
+	eth::AccountDiff ad = sd.accounts[k1.address()];
+	assert(ad.balance.to().str() == "1000000000000000000000000000000000000000000000000000000000000");
 	
-}
-
-BOOST_AUTO_TEST_CASE(test_webthree_state_api)
-{
+	// Create a pending tx
+	KeyPair k2 = eth::sha3("Alex's Address");
+	client.ethereum()->transact(k1.secret(), 10000 , k2.address());
+	client.ethereum()->flushTransactions();
 	
+	// Test addresses (default: m_preMine)
+	Addresses ads = client.ethereum()->addresses();
+	for (auto a: ads)
+		assert(a != k2.address());
+	
+	// Test diff() [pending]
+	sd = client.ethereum()->diff(0);
+	ad = sd.accounts[k2.address()];
+	assert(ad.balance.to() == 10000);
+	
+	// Test pending
+	eth::Transactions pending = client.ethereum()->pending();
+	assert(pending[0].sender() == k1.address());
+	
+	// Test addresses (pending)
+	ads = client.ethereum()->addresses(0); // pending
+	bool found = false;
+	for (auto a: ads)
+		if (a == k2.address())
+			found = true;
+	assert(found);
 }
 
 BOOST_AUTO_TEST_CASE(test_webthree_mining_api)
@@ -202,30 +228,42 @@ BOOST_AUTO_TEST_CASE(test_webthree_transactions_api)
 	client.ethereum()->flushTransactions();
 	eth::mine(*direct.ethereum(), 1);
 
+	// Test call (broken?)
+//	bytes directCall = direct.ethereum()->call(k1.secret(), 0, contract, asBytes("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtest"));
+//	bytes clientCall = client.ethereum()->call(k1.secret(), 0, contract, asBytes("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtest"));
+//	assert(directCall == clientCall);
+	
+	// Test codeAt (for now, just test that something is returned)
 	bytes codeAtBytes = client.ethereum()->codeAt(contract);
+	assert(codeAtBytes.size());
 	cout << "codeAt bytes: " << toHex(codeAtBytes);
 	
+	// Test stateAt
 	u256 state(client.ethereum()->stateAt(contract, 69));
 	cout << "stateAt: " << toString(Address(right160(state)));
 	assert(Address(right160(state)) == k1.address());
 	
-	// ASCII shall not die
+	// Test transact(); publish ASCII key-value pair +mine
 	client.ethereum()->transact(k1.secret(), 0, contract, asBytes("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAtest"));
 	client.ethereum()->flushTransactions();
 	eth::mine(*direct.ethereum(), 1);
 
+	// Test stateAt
 	u256 at = (h256)asBytes("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
 	u256 postTestState(client.ethereum()->stateAt(contract, at));
 	clog(RPCNote) << "postTestState: " << (h256)postTestState;
 	std::string sb((char*)((h256)postTestState).asBytes().data());
 	assert(sb == "test");
 	
+	// Test storageAt
 	std::map<u256, u256> storage(client.ethereum()->storageAt(contract));
 	u256 callerState = storage[69];
 	h256 testState = storage[at];
 	
 	assert(Address(right160(callerState)) == k1.address());
 	assert(std::string((char*)testState.data()) == std::string("test"));
+	
+	
 }
 
 BOOST_AUTO_TEST_SUITE_END()

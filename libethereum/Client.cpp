@@ -502,7 +502,7 @@ eth::State Client::state(unsigned _txi) const
 
 StateDiff Client::diff(unsigned _txi, int _block) const
 {
-	State st = state(_block);
+	State st = state(_block); // state(unsigned _txi)
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
