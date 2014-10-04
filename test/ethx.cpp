@@ -42,7 +42,74 @@ using namespace dev;
 
 BOOST_AUTO_TEST_SUITE( webthree )
 
-BOOST_AUTO_TEST_CASE(test_webthree)
+KeyPair testKeyPair() {
+	return KeyPair(Secret(fromHex("9e4c7297c67a9e17f2cea38634baecb27e05805b51931a66765c5327968e1f47")));
+}
+
+void fundTestKeyPair(WebThreeDirect &_w3) {
+	// TODO: could take ptr to Client instead of webthree
+	
+	// Raw transaction sending eth to address of testKeyPair
+	// (see testAmount in test_webthree_transactions_api)
+	std::string txHex = "f87e808609184e72a00082271094db9bf2fce9595cb63ebe8458a43e6f6f09172dd7999f4f2726179a224501d762422c946590d91000000000000000801ba001e8ca3d264dd1a701cdf0f0f88e8cf67d694a64e1d83bcb880d809801462f3fa078fc4002d7587828b4f6c90f2fa8ecbe1efe39933c77eae7bd630bdfced26456";
+	
+	bytes txBytes(fromHex(txHex));
+	_w3.ethereum()->inject(&txBytes);
+	_w3.ethereum()->flushTransactions();
+	eth::mine(*_w3.ethereum(), 1);
+}
+							  
+
+BOOST_AUTO_TEST_CASE(test_webthree_watches_api)
+{
+	/// SETUP
+	WebThreeDirect direct(string("Test/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/Test", true, {"eth", "shh"});
+	KeyPair k1 = testKeyPair();
+
+	WebThree client;
+	
+	// test that client-installed watch works for client-preformed operation
+	unsigned watchid = client.ethereum()->installWatch(eth::MessageFilter().to(k1.address()));
+	// watches begin w/changes = 1
+	assert(client.ethereum()->peekWatch(watchid) == true);
+	// reset watch
+	assert(client.ethereum()->checkWatch(watchid) == true);
+	// should be no changes
+	assert(client.ethereum()->peekWatch(watchid) == false);
+	
+	fundTestKeyPair(direct);
+
+	// watch changes should be +1
+	assert(client.ethereum()->peekWatch(watchid));
+	
+	// watch change should be in past messages
+	eth::PastMessages chgs = client.ethereum()->messages(watchid);
+	eth::PastMessage p = chgs[0];
+	assert(p.to == k1.address());
+
+	// recheck messages, via filter instead of watchid
+	eth::PastMessages fchgs = client.ethereum()->messages(eth::MessageFilter().to(k1.address()));
+	eth::PastMessage fp = chgs[0];
+	assert(fp.to == k1.address());
+	
+	// uninstall watch
+	client.ethereum()->uninstallWatch(watchid);
+	assert(client.ethereum()->peekWatch(watchid) == false);
+	
+	
+}
+
+BOOST_AUTO_TEST_CASE(test_webthree_state_api)
+{
+	
+}
+
+BOOST_AUTO_TEST_CASE(test_webthree_mining_api)
+{
+	
+}
+
+BOOST_AUTO_TEST_CASE(test_webthree_transactions_api)
 {
 	WebThreeDirect direct(string("Test/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir() + "/Test", true, {"eth", "shh"});
 	
@@ -66,7 +133,7 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	
 	// Test keypair
 	// NOTE: This keypair address is the destination of raw txHex transaction.
-	KeyPair k1(Secret(fromHex("9e4c7297c67a9e17f2cea38634baecb27e05805b51931a66765c5327968e1f47")));
+	KeyPair k1 = testKeyPair();
 	
 	// Amount that is sent within raw transaction
 	u256 ueth = ((((u256(1000000000) * 1000000000) * 1000000000) * 1000000000) * 1000000000) * 1000000000;
@@ -74,20 +141,11 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	
 	// Test countAt for addresses
 	assert(!client.ethereum()->countAt(orgAddr));
-	
-	// inject
-	bytes txBytes(fromHex(txHex));
-	client.ethereum()->inject(&txBytes);
 
-	// flushTransactions
-	client.ethereum()->flushTransactions();
+	fundTestKeyPair(direct);
 	
-	// pending (now +1)
-	assert(client.ethereum()->pending().size());
-	
-	// Now mine the transaction.
-	eth::mine(*direct.ethereum(), 1);
-	
+	assert(client.ethereum()->number());
+
 	// pending should be empty
 	assert(!client.ethereum()->pending().size());
 
@@ -117,6 +175,7 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	client.ethereum()->transact(k1.secret(), test2Amount , k2.address());;
 	client.ethereum()->flushTransactions();
 	eth::mine(*direct.ethereum(), 1);
+	assert(client.ethereum()->number() == 2);
 
 	u256 expectedK1Bal = k1Bal - test2Amount;
 	
@@ -142,7 +201,7 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	
 	client.ethereum()->flushTransactions();
 	eth::mine(*direct.ethereum(), 1);
-	
+
 	bytes codeAtBytes = client.ethereum()->codeAt(contract);
 	cout << "codeAt bytes: " << toHex(codeAtBytes);
 	
@@ -167,7 +226,6 @@ BOOST_AUTO_TEST_CASE(test_webthree)
 	
 	assert(Address(right160(callerState)) == k1.address());
 	assert(std::string((char*)testState.data()) == std::string("test"));
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

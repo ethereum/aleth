@@ -163,7 +163,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			
 		case RequestMessagesWithFilter:
 		{
-			MessageFilter filter(req[0].toBytesConstRef());
+			MessageFilter filter(req[0].data());
 			eth::PastMessages msgs = m_service->ethereum()->messages(filter);
 			resp.appendList(msgs.size());
 			for (auto msg: msgs)
@@ -175,7 +175,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			
 		case InstallWatchWithFilter:
 		{
-			auto ret = m_service->ethereum()->installWatch(MessageFilter(req[0].toBytesConstRef()));
+			auto ret = m_service->ethereum()->installWatch(MessageFilter(req[0].data()));
 			resp.appendList(1) << ret;
 			
 			result = 1;
@@ -405,7 +405,7 @@ eth::PastMessages EthereumRPCClient::messages(unsigned _watchId) const
 	
 	PastMessages p;
 	for (auto m: RLP(r))
-		p.push_back(PastMessage(m.toBytesConstRef()));
+		p.push_back(PastMessage(m.data()));
 	
 	return std::move(p);
 }
@@ -418,14 +418,14 @@ eth::PastMessages EthereumRPCClient::messages(eth::MessageFilter const& _filter)
 	
 	PastMessages p;
 	for (auto m: RLP(r))
-		p.push_back(PastMessage(m.toBytesConstRef()));
+		p.push_back(PastMessage(m.data()));
 	
 	return std::move(p);
 }
 
 unsigned EthereumRPCClient::installWatch(eth::MessageFilter const& _filter)
 {
-	RLPStream s;
+	RLPStream s(1);
 	_filter.fillStream(s);
 	bytes r = performRequest(InstallWatchWithFilter, s);
 	return RLP(r)[0].toInt<unsigned>();

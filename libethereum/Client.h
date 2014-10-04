@@ -153,13 +153,25 @@ public:
 	bytes codeAt(Address _a, int _block) const;
 	std::map<u256, u256> storageAt(Address _a, int _block) const;
 
+	/// Installs watch for provided filter
 	unsigned installWatch(MessageFilter const& _filter);
+	
+	/// Used by installWatch() and global Pending and ChainChanged watches.
 	unsigned installWatch(h256 _filterId);
+	
+	/// Removes watch and corresponding filter.
 	void uninstallWatch(unsigned _watchId);
+	
+	/// Returns true if watched changes occurred (does not reset watch).
 	bool peekWatch(unsigned _watchId) const { std::lock_guard<std::mutex> l(m_filterLock); try { return m_watches.at(_watchId).changes != 0; } catch (...) { return false; } }
+	
+	/// Returns true and resets watch if changes occurred.
 	bool checkWatch(unsigned _watchId) { std::lock_guard<std::mutex> l(m_filterLock); bool ret = false; try { ret = m_watches.at(_watchId).changes != 0; m_watches.at(_watchId).changes = 0; } catch (...) {} return ret; }
 
+	/// @returns past messages for _watchId (returned by installWatch)
 	PastMessages messages(unsigned _watchId) const { try { std::lock_guard<std::mutex> l(m_filterLock); return messages(m_filters.at(m_watches.at(_watchId).id).filter); } catch (...) { return PastMessages(); } }
+	
+	/// @returns change summary messages which match the filter argumemt. If the filter.latest() is >= the current blockchain number then pending transactions are included. Pending transactions will have an empty block hash and timestamp.
 	PastMessages messages(MessageFilter const& _filter) const;
 
 	// [EXTRA API]:
