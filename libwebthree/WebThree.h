@@ -29,6 +29,7 @@
 
 #include <libdevnet/NetEndpoint.h>
 #include <libethereum/EthereumRPC.h>
+#include <libp2p/P2PRPC.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libethereum/Client.h>
 
@@ -134,6 +135,7 @@ private:
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 	
 	std::shared_ptr<NetEndpoint> m_rpcEndpoint;
+	std::unique_ptr<P2PRPC> m_P2PRpcService;
 	std::unique_ptr<EthereumRPC> m_ethereumRpcService;
 	std::unique_ptr<WhisperRPC> m_whisperRpcService;
 };
@@ -155,7 +157,6 @@ public:
 	~WebThree();
 
 	// The mainline interfaces.
-
 	eth::Interface* ethereum() const { if (!m_ethereum) throw InterfaceNotSupported("eth"); return m_ethereum; }
 	shh::Interface* whisper() const { throw InterfaceNotSupported("shh"); }
 	bzz::Interface* swarm() const { throw InterfaceNotSupported("bzz"); }
@@ -187,6 +188,7 @@ private:
 	boost::asio::io_service m_io;					///< IO Service for rpc connection.
 	boost::asio::ip::tcp::endpoint m_endpoint;		///< Address/port of rpc host.
 	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
+	P2PRPCClient m_net;
 	EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
 //	WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
 };

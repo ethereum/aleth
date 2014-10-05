@@ -118,11 +118,14 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			
 		case RequestStateAt:
 		{
-			u256 b(m_service->ethereum()->stateAt(Address(req[0].toHash<Address>()), req[1].toInt<u256>(), req[2].toInt()));
+			u256 b(m_service->ethereum()->stateAt(Address(req[0].toHash<Address>()), req[1].toInt<u256>(), req[2].toInt<int>()));
 			
 			result = 1;
 			resp.appendList(1);
 			resp << b;
+
+			RLP(resp.out())[0];
+			
 			break;
 		}
 			
@@ -421,7 +424,9 @@ u256 EthereumRPCClient::balanceAt(Address _a, int _block) const
 {
 	RLPStream s(2);
 	s << _a << _block;
-	RLP r = RLP(const_cast<EthereumRPCClient*>(this)->performRequest(RequestBalanceAt, s));
+	bytes b(const_cast<EthereumRPCClient*>(this)->performRequest(RequestBalanceAt, s));
+	RLP r(b);
+	
 	return r[0].toInt<u256>();
 }
 
@@ -429,7 +434,8 @@ u256 EthereumRPCClient::countAt(Address _a, int _block) const
 {
 	RLPStream s(2);
 	s << _a << _block;
-	RLP r(const_cast<EthereumRPCClient*>(this)->performRequest(RequestCountAt, s));
+	bytes b(const_cast<EthereumRPCClient*>(this)->performRequest(RequestCountAt, s));
+	RLP r(b);
 	
 	return r[0].toInt<u256>();
 }
@@ -438,7 +444,8 @@ u256 EthereumRPCClient::stateAt(Address _a, u256 _l, int _block) const
 {
 	RLPStream s(3);
 	s << _a << _l << _block;
-	RLP r(const_cast<EthereumRPCClient*>(this)->performRequest(RequestStateAt, s));
+	bytes b(const_cast<EthereumRPCClient*>(this)->performRequest(RequestStateAt, s));
+	RLP r(b);
 	
 	return r[0].toInt<u256>();
 }

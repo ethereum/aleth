@@ -43,7 +43,8 @@ enum NetServices : NetMsgServiceType
 	WebThreeService = 0x01,
 	EthereumService,
 	SwarmService,
-	WhisperService
+	WhisperService,
+	P2PService
 };
 	
 class NetMsg;

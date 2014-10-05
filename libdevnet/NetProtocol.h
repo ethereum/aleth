@@ -46,7 +46,7 @@ class NetMsg;
 class NetProtocol
 {
 public:
-	NetProtocol(NetConnection* _conn): m_connection(_conn) {}
+	NetProtocol(NetConnection* _conn): m_connection(_conn) { m_localDataSequence = 1; }
 
 	/// Handlers for messages received by connections.
 	virtual void receiveMessage(NetMsg const& _msg) = 0;
@@ -112,8 +112,15 @@ public:
 	{
 		clog(RPCNote) << "[" << serviceId() << "] receiveMessage";
 		if (auto p = m_promises[_msg.sequence()])
+		{
 			if (_msg.type() == Success)
 				p->set_value(std::make_shared<NetMsg>(_msg));
+			else
+			{
+				// exception
+				_msg.type();
+			}
+		}
 //			else if (_msg.type() == 2) // exception
 //			else // malformed
 	}
@@ -154,7 +161,7 @@ bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type, RLPStream& _s)
 	}
 	connection()->send(msg);
 	
-	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(connection()->connectionOpen() ? 2 : 10));
+	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(connection()->connectionOpen() ? 30 : 10));
 	
 	{
 		std::lock_guard<std::mutex> l(x_promises);
@@ -163,7 +170,7 @@ bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type, RLPStream& _s)
 	
 	if (s != std::future_status::ready)
 		throw RPCRequestTimeout();
-	
+
 	return std::move(f.get()->rlp());
 }
 

@@ -40,12 +40,9 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string co
 		Defaults::setDBPath(_dbPath);
 
 	bool startRpc = false;
-	
-//	// Can eth or shh run without m_net (p2p)?
-//	// Can p2p run alone?
-//	m_p2pRpcService.reset(new P2pRPC(&m_net));
-//	m_rpcEndpoint->registerService(m_p2pRpcService.get());
-//	startRpc = true;
+
+	m_P2PRpcService.reset(new P2PRPC(&m_net));
+	m_rpcEndpoint->registerService(m_P2PRpcService.get());
 	
 	if (_interfaces.count("eth"))
 	{
@@ -105,10 +102,11 @@ WebThree::WebThree():
 	Worker("webthree-client"),
 	m_io(),
 	m_endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310),
-	m_connection(new NetConnection(m_io, m_endpoint))
+	m_connection(new NetConnection(m_io, m_endpoint)),
+	m_net(m_connection.get())
 {
 	startWorking();
-	
+
 	m_ethereum = new EthereumRPCClient(m_connection.get());
 	// m_whisper = new WhisperRPCClient(m_connection.get());
 	m_connection->start();
@@ -129,4 +127,33 @@ void WebThree::doWork()
 	m_io.poll();
 }
 
+std::vector<PeerInfo> WebThree::peers()
+{
+	return m_net.peers();
+}
+
+size_t WebThree::peerCount() const
+{
+	return m_net.peerCount();
+}
+
+void WebThree::connect(std::string const& _seedHost, unsigned short _port)
+{
+	m_net.connect(_seedHost, _port);
+}
+
+bool WebThree::haveNetwork()
+{
+	return m_net.haveNetwork();
+}
+
+bytes WebThree::savePeers()
+{
+	return m_net.savePeers();
+}
+
+void WebThree::restorePeers(bytesConstRef _saved)
+{
+	m_net.restorePeers(_saved);
+}
 

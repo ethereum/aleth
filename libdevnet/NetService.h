@@ -38,7 +38,7 @@ class NetConnection;
 class NetServiceFace
 {
 public:
-	static NetMsgServiceType serviceId() { return 0; };
+	virtual NetMsgServiceType serviceId() = 0;
 	
 	/// Called by endpoint before connection is started.
 	virtual void registerConnection(std::weak_ptr<NetConnection> _conn) = 0;
@@ -55,7 +55,7 @@ class NetService: public NetServiceFace
 	friend class NetConnection;
 
 public:
-	static NetMsgServiceType serviceId() { return T::serviceId(); }
+	NetMsgServiceType serviceId() { return T::serviceId(); }
 	
 	/// Called by endpoing before connection is started. Sets connection data-message handlers to protocol methods (protocol class is passed as template parameter). By default, sets service-message handler to drop messages.
 	void registerConnection(std::weak_ptr<NetConnection> _conn) {
