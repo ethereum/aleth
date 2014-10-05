@@ -36,13 +36,14 @@ namespace Ui {
 class Main;
 }
 
-namespace dev { class WebThreeDirect;
+namespace dev { class WebThree;
 namespace eth {
 class Client;
 class State;
 class MessageFilter;
 }
 namespace shh {
+class Inteface;
 class WhisperHost;
 }
 }
@@ -57,9 +58,9 @@ public:
 	explicit Main(QWidget *parent = 0);
 	~Main();
 
-	dev::WebThreeDirect* web3() const { return m_web3.get(); }
-	dev::eth::Client* ethereum() const;
-	std::shared_ptr<dev::shh::WhisperHost> whisper() const;
+	dev::WebThree* web3() const { return m_web3.get(); }
+	dev::eth::Interface* ethereum() const;
+	dev::shh::Interface* whisper() const;
 
 	QList<dev::KeyPair> const& owned() const { return m_myKeys; }
 	
@@ -118,7 +119,7 @@ private:
 
 	std::unique_ptr<Ui::Main> ui;
 
-	std::unique_ptr<dev::WebThreeDirect> m_web3;
+	std::unique_ptr<dev::WebThree> m_web3;
 
 	QList<dev::KeyPair> m_myKeys;
 

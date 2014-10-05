@@ -99,14 +99,14 @@ Main::Main(QWidget *parent) :
 	
 	connect(ui->ourAccounts->model(), SIGNAL(rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int)), SLOT(ourAccountsRowsMoved()));
 
-	m_web3.reset(new WebThreeDirect("Third", getDataDir() + "/Third", false, {"eth", "shh"}));
+	m_web3.reset(new WebThree(/*"Third", getDataDir() + "/Third", false, {"eth", "shh"}*/));
 	m_web3->connect(Host::pocHost());
 
 	connect(ui->webView, &QWebView::loadStarted, [this]()
 	{
 		// NOTE: no need to delete as QETH_INSTALL_JS_NAMESPACE adopts it.
 		m_ethereum = new QEthereum(this, ethereum(), owned());
-		m_whisper = new QWhisper(this, whisper());
+//		m_whisper = new QWhisper(this, whisper());
 
 		QWebFrame* f = ui->webView->page()->mainFrame();
 		f->disconnect(SIGNAL(javaScriptWindowObjectCleared()));
@@ -150,12 +150,12 @@ Main::~Main()
 	writeSettings();
 }
 
-eth::Client* Main::ethereum() const
+eth::Interface* Main::ethereum() const
 {
 	return m_web3->ethereum();
 }
 
-std::shared_ptr<dev::shh::WhisperHost> Main::whisper() const
+dev::shh::Interface* Main::whisper() const
 {
 	return m_web3->whisper();
 }
@@ -493,9 +493,12 @@ void Main::refreshAll()
 void Main::refreshBlockCount()
 {
 	cwatch << "refreshBlockCount()";
-	auto d = ethereum()->blockChain().details();
-	auto diff = BlockInfo(ethereum()->blockChain().block()).difficulty;
-	ui->blockCount->setText(QString("#%1 @%3 T%2 N%4 D%5").arg(d.number).arg(toLog2(d.totalDifficulty)).arg(toLog2(diff)).arg(dev::eth::c_protocolVersion).arg(dev::eth::c_databaseVersion));
+	auto number = ethereum()->number();
+	ui->blockCount->setText(QString("#%1 N%2 D%3").arg(number).arg(dev::eth::c_protocolVersion).arg(dev::eth::c_databaseVersion));
+	
+//	auto d = ethereum()->blockChain().details();
+//	auto diff = BlockInfo(ethereum()->blockChain().block()).difficulty;
+//	ui->blockCount->setText(QString("#%1 @%3 T%2 N%4 D%5").arg(number).arg(toLog2(d.totalDifficulty)).arg(toLog2(diff)).arg(dev::eth::c_protocolVersion).arg(dev::eth::c_databaseVersion));
 }
 
 void Main::timerEvent(QTimerEvent*)
@@ -504,12 +507,12 @@ void Main::timerEvent(QTimerEvent*)
 	// Runs much faster on slower dual-core processors
 	static int interval = 100;
 	
-	// refresh mining every 200ms
-	if (interval / 100 % 2 == 0)
+	// refresh mining every 500ms (
+	if (interval % 500 == 0)
 		refreshMining();
 
-	// refresh peer list every 1000ms, reset counter
-	if (interval == 1000)
+	// refresh peer list every 5000ms, reset counter
+	if (interval == 5000)
 	{
 		interval = 0;
 		ensureNetwork();
@@ -518,12 +521,14 @@ void Main::timerEvent(QTimerEvent*)
 	else
 		interval += 100;
 	
-	if (m_ethereum)
+	// refresh ethereum watches every 300 ms
+	if (m_ethereum && interval % 1250 == 0)
 		m_ethereum->poll();
 
-	for (auto const& i: m_handlers)
-		if (ethereum()->checkWatch(i.first))
-			i.second();
+	if (m_ethereum && interval % 625 == 0)
+		for (auto const& i: m_handlers)
+			if (ethereum()->checkWatch(i.first))
+				i.second();
 }
 
 void Main::ourAccountsRowsMoved()
@@ -553,7 +558,7 @@ void Main::ensureNetwork()
 {
 	string n = string("Third/v") + dev::Version;
 	n +=  "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM);
-	web3()->setClientVersion(n);
+//	web3()->setClientVersion(n);
 
 	int pocnumber = QString(dev::Version).section('.', 1, 1).toInt();
 	string defPeer;
@@ -564,7 +569,7 @@ void Main::ensureNetwork()
 
 	if (!web3()->haveNetwork())
 	{
-		web3()->startNetwork();
+//		web3()->startNetwork();
 		web3()->connect(defPeer);
 	}
 	else
