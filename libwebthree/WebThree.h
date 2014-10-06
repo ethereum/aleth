@@ -36,7 +36,7 @@
 namespace dev
 {
 
-class InterfaceNotSupported: public Exception { public: InterfaceNotSupported(std::string _f): m_f(_f) {} virtual std::string description() const { return "Interface " + m_f + " not supported."; } private: std::string m_f; };
+class InterfaceNotSupported: public Exception { public: InterfaceNotSupported(std::string _f): m_f(_f) {} virtual const char* what() const noexcept { return ("Interface " + m_f + " not supported.").c_str(); } private: std::string m_f; };
 
 enum WorkState
 {
@@ -85,9 +85,9 @@ public:
 
 	// The mainline interfaces:
 
-	eth::Client* ethereum() const { if (!m_ethereum) throw InterfaceNotSupported("eth"); return m_ethereum.get(); }
-	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) throw InterfaceNotSupported("shh"); return w; }
-	bzz::Interface* swarm() const { throw InterfaceNotSupported("bzz"); }
+	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
+	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
+	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
 
 	// Misc stuff:
 
@@ -157,9 +157,9 @@ public:
 	~WebThree();
 
 	// The mainline interfaces.
-	eth::Interface* ethereum() const { if (!m_ethereum) throw InterfaceNotSupported("eth"); return m_ethereum; }
-	shh::Interface* whisper() const { throw InterfaceNotSupported("shh"); }
-	bzz::Interface* swarm() const { throw InterfaceNotSupported("bzz"); }
+	eth::Interface* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum; }
+	shh::Interface* whisper() const { if (!m_whisper) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return m_whisper; }
+	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
 
 	// Peer network stuff - forward through RPCSlave, probably with P2PNetworkSlave/Master classes like Whisper & Ethereum.
 
