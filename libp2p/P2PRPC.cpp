@@ -74,7 +74,7 @@ void P2PRPCServer::receiveMessage(NetMsg const& _msg)
 			
 		case HaveNetwork:
 		{
-			auto ret = (bool)(m_service->net()->peerCount() > 0);
+			auto ret = (bool)(m_service->net()->peerCount() != 0);
 			resp.appendList(1) << ret;
 			result = 1;
 			break;

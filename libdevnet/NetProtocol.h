@@ -159,6 +159,8 @@ bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type, RLPStream& _s)
 		std::lock_guard<std::mutex> l(x_promises);
 		m_promises.insert(make_pair(msg.sequence(),&p));
 	}
+	
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 	connection()->send(msg);
 	
 	auto s = f.wait_until(std::chrono::steady_clock::now() + std::chrono::seconds(connection()->connectionOpen() ? 30 : 10));
@@ -171,6 +173,11 @@ bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type, RLPStream& _s)
 	if (s != std::future_status::ready)
 		throw RPCRequestTimeout();
 
+	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+	std::stringstream stream;
+	stream << "[" << std::dec << (int)msg.service() << "," << std::dec << (int)msg.sequence() << "," << std::dec << (int)msg.type() << "] " << std::dec << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+	clog(RPCNote) << stream.str();
+	
 	return std::move(f.get()->rlp());
 }
 

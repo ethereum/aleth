@@ -56,7 +56,9 @@ void Worker::stopWorking()
 		return;
 	cdebug << "Stopping" << m_name;
 	m_stop = true;
-	m_work->join();
+	
+	if (m_work->joinable())
+		m_work->join();
 	m_work.reset();
 	cdebug << "Stopped" << m_name;
 }

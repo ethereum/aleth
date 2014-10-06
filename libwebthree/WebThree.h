@@ -190,7 +190,7 @@ private:
 	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
 	P2PRPCClient m_net;
 	EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
-//	WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
+	shh::Interface* m_whisper = nullptr;			///< Whisper RPC Client
 };
 
 }

@@ -23,11 +23,13 @@
 
 
 #include <map>
+#include <deque>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtCore/QAbstractListModel>
 #include <QtCore/QMutex>
 #include <QtWidgets/QMainWindow>
 #include <libdevcore/RLP.h>
+#include <libdevcore/Worker.h>
 #include <libethcore/CommonEth.h>
 #include <libethereum/State.h>
 #include <libqethereum/QEthereum.h>
@@ -50,7 +52,7 @@ class WhisperHost;
 
 class QQuickView;
 
-class Main : public QMainWindow
+class Main : public QMainWindow, public dev::Worker
 {
 	Q_OBJECT
 	
@@ -89,7 +91,7 @@ signals:
 private:
 	QString pretty(dev::Address _a) const;
 	QString render(dev::Address _a) const;
-	dev::Address fromString(QString const& _a) const;
+//	dev::Address fromString(QString const& _a) const;
 	QString lookup(QString const& _n) const;
 
 	void readSettings(bool _skipGeometry = false);
@@ -103,19 +105,21 @@ private:
 	void onCurrenciesChange();
 	void onBalancesChange();
 
-	void installWatches();
 	void installCurrenciesWatch();
 	void installNameRegWatch();
 	void installBalancesWatch();
 
 	virtual void timerEvent(QTimerEvent*);
-	void ensureNetwork();
-
-	void refreshAll();
-	void refreshBlockCount();
-	void refreshBalances();
-	void refreshNetwork();
-	void refreshMining();
+	void ensureNetwork();		/// called by refreshNetwork
+	
+	virtual void doWork();		/// calls ensureNetwork, refreshMining, refreshWatches
+	void refreshNetwork();		/// called in background
+	void refreshMining();			/// called in background
+	void refreshWatches();		/// called in background
+	
+	void refreshAll();			/// called by user event
+	void refreshBlockCount();		/// called by user event
+	void refreshBalances();		/// called by user event
 
 	std::unique_ptr<Ui::Main> ui;
 
@@ -135,4 +139,10 @@ private:
 
 	QEthereum* m_ethereum = nullptr;
 	QWhisper* m_whisper = nullptr;
+
+	std::mutex x_netq;
+	std::deque<std::function<void()>> m_netq;	///< Queue for background updates to UI
+	
+	std::mutex x_uiq;
+	std::deque<std::function<void()>> m_uiq;	///< Queue for background updates to UI
 };

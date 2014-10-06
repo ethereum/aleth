@@ -393,7 +393,8 @@ Address EthereumRPCClient::transact(Secret _secret, u256 _endowment, bytes const
 	RLPStream s(5);
 	s << _secret << _endowment << _init << _gas << _gasPrice;
 	
-	RLP r = RLP(performRequest(RequestCreateContract, s));
+	bytes b(performRequest(RequestCreateContract, s));
+	RLP r = RLP(b);
 	return r[0].toHash<Address>();
 }
 
@@ -414,7 +415,8 @@ bytes EthereumRPCClient::call(Secret _secret, u256 _value, Address _dest, bytes 
 	RLPStream s(6);
 	s << _secret << _value << _dest << _data << _gas << _gasPrice;
 	
-	RLP r(performRequest(RequestCallTransaction, s));
+	bytes b(performRequest(RequestCallTransaction, s));
+	RLP r(b);
 	
 	return r[0].data().toBytes();
 }
@@ -454,7 +456,9 @@ bytes EthereumRPCClient::codeAt(Address _a, int _block) const
 {
 	RLPStream s(2);
 	s << _a << _block;
-	RLP r(const_cast<EthereumRPCClient*>(this)->performRequest(RequestCodeAt, s));
+	
+	bytes b(const_cast<EthereumRPCClient*>(this)->performRequest(RequestCodeAt, s));
+	RLP r(b);
 	
 	return r[0].data().toBytes();
 }
