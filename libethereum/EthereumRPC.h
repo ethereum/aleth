@@ -48,8 +48,8 @@ enum EthRequestMsgType : NetMsgType
 	UninstallWatch,
 	PeekWatch,
 	CheckWatch,
-	Number, // height
-	PendingTransactions, // Pending
+	Number,
+	PendingTransactions,
 	DiffBlock,
 	DiffPending,
 	GetAddresses, // todo: namespacing
@@ -139,6 +139,13 @@ public:
 	virtual void uninstallWatch(unsigned _watchId);
 	virtual bool peekWatch(unsigned _watchId) const;
 	virtual bool checkWatch(unsigned _watchId);
+	
+	virtual h256 hashFromNumber(unsigned _number) const {};
+	virtual eth::BlockInfo blockInfo(h256 _hash) const {};
+	virtual eth::BlockDetails blockDetails(h256 _hash) const {};
+	virtual eth::Transaction transaction(h256 _blockHash, unsigned _i) const {};
+	virtual eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const {};
+	
 	virtual unsigned number() const;
 	
 	/// Get a map containing each of the pending transactions.
@@ -148,6 +155,7 @@ public:
 	virtual eth::StateDiff diff(unsigned _txi, int _block) const;
 	virtual Addresses addresses() const { return addresses(m_default); }
 	virtual Addresses addresses(int _block) const;
+	
 	virtual u256 gasLimitRemaining() const;
 	virtual void setAddress(Address _us);
 	virtual Address address() const;
