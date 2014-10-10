@@ -14,11 +14,11 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file ethx.cpp
+/** @file web3.cpp
  * @author Alex Leverington <nessence@gmail.com>
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- * State test functions.
+ * Web3 lifecycle, ethereum interface, rpc
  */
 
 #include <boost/test/unit_test.hpp>
