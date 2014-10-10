@@ -48,6 +48,11 @@ enum EthRequestMsgType : NetMsgType
 	UninstallWatch,
 	PeekWatch,
 	CheckWatch,
+	GetHashFromNumber,
+	GetBlockInfo,
+	GetBlockDetails,
+	GetTransaction,
+	GetUncleInfo,
 	Number,
 	PendingTransactions,
 	DiffBlock,
@@ -114,6 +119,8 @@ protected:
 
 /**
  * @brief Provides protocol implementation and state for handling client-side of Ethereum RPC connections.
+ * @todo GetBlockInfo: whether to pass exception or return bytes()
+ * @todo GetTransactioN: test when transaction which does not exist
  */
 class EthereumRPCClient: public NetRPCClientProtocol<EthereumRPCClient>, public eth::Interface
 {
@@ -140,11 +147,11 @@ public:
 	virtual bool peekWatch(unsigned _watchId) const;
 	virtual bool checkWatch(unsigned _watchId);
 	
-	virtual h256 hashFromNumber(unsigned _number) const {};
-	virtual eth::BlockInfo blockInfo(h256 _hash) const {};
-	virtual eth::BlockDetails blockDetails(h256 _hash) const {};
-	virtual eth::Transaction transaction(h256 _blockHash, unsigned _i) const {};
-	virtual eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const {};
+	virtual h256 hashFromNumber(unsigned _number) const;
+	virtual eth::BlockInfo blockInfo(h256 _hash) const;
+	virtual eth::BlockDetails blockDetails(h256 _hash) const;
+	virtual eth::Transaction transaction(h256 _blockHash, unsigned _i) const;
+	virtual eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const;
 	
 	virtual unsigned number() const;
 	

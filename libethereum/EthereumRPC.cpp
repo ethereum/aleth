@@ -219,6 +219,67 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			result = 1;
 			break;
 		}
+		
+		case GetHashFromNumber:
+		{
+			auto ret = m_service->ethereum()->hashFromNumber(req[0].toInt<unsigned>());
+			resp.appendList(1) << ret;
+			
+			result = 1;
+			break;
+		}
+			
+		case GetBlockInfo:
+		{
+			try{
+				auto ret = m_service->ethereum()->blockInfo(req[0].toHash<h256>());
+				ret.fillStream(resp, true);
+				result = 1;
+			}
+			catch(InvalidBlockFormat)
+			{
+				// block not found
+				result = 2;
+			}
+			
+			result = 1;
+			break;
+		}
+			
+		case GetBlockDetails:
+		{
+			auto ret = m_service->ethereum()->blockDetails(req[0].toHash<h256>());
+			bytes b = ret.rlp();
+			resp.swapOut(b);
+
+			result = 1;
+			break;
+		}
+
+		case GetTransaction:
+		{
+			auto ret = m_service->ethereum()->transaction(req[0].toHash<h256>(), req[1].toInt<unsigned>());
+			ret.fillStream(resp);
+			
+			result = 1;
+			break;
+		}
+			
+		case GetUncleInfo:
+		{
+			try{
+				auto ret = m_service->ethereum()->uncle(req[0].toHash<h256>(), req[1].toInt<unsigned>());
+				ret.fillStream(resp, true);
+				result = 1;
+			}
+			catch(InvalidBlockFormat)
+			{
+				// block not found
+				result = 2;
+			}
+			
+			break;
+		}
 
 		case Number:
 		{
@@ -539,6 +600,48 @@ bool EthereumRPCClient::checkWatch(unsigned _watchId)
 	s << _watchId;
 	bytes r = performRequest(CheckWatch, s);
 	return RLP(r)[0].toInt<bool>();
+}
+
+
+h256 EthereumRPCClient::hashFromNumber(unsigned _number) const
+{
+	RLPStream s(1);
+	s << _number;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(GetHashFromNumber, s);
+	return RLP(r)[0].toHash<h256>();
+}
+
+eth::BlockInfo EthereumRPCClient::blockInfo(h256 _hash) const
+{
+	RLPStream s(1);
+	s << _hash;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(GetBlockInfo, s);
+	return BlockInfo(r);
+}
+
+eth::BlockDetails EthereumRPCClient::blockDetails(h256 _hash) const
+{
+	RLPStream s(1);
+	s << _hash;
+	bytes b = const_cast<EthereumRPCClient*>(this)->performRequest(GetBlockDetails, s);
+	RLP r(b);
+	return BlockDetails(r);
+}
+
+eth::Transaction EthereumRPCClient::transaction(h256 _blockHash, unsigned _i) const
+{
+	RLPStream s(2);
+	s << _blockHash << _i;
+	bytes b = const_cast<EthereumRPCClient*>(this)->performRequest(GetTransaction, s);
+	return Transaction(b);
+}
+												
+eth::BlockInfo EthereumRPCClient::uncle(h256 _blockHash, unsigned _i) const
+{
+	RLPStream s(2);
+	s << _blockHash << _i;
+	bytes b = const_cast<EthereumRPCClient*>(this)->performRequest(GetUncleInfo, s);
+	return BlockInfo(b);
 }
 
 unsigned EthereumRPCClient::number() const
