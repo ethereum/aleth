@@ -35,8 +35,8 @@ enum P2PRequestMsgType : NetMsgType
 	PeerCount,
 	ConnectToPeer,
 	HaveNetwork,
-	SavePeers,
-	RestorePeers
+	SaveNodes,
+	RestoreNodes
 };
 
 class P2PRPCServer;
@@ -90,8 +90,8 @@ public:
 	size_t peerCount() const;
 	void connect(std::string const& _seedHost, unsigned short _port);
 	bool haveNetwork();
-	bytes savePeers();
-	void restorePeers(bytesConstRef _saved);
+	bytes saveNodes();
+	void restoreNodes(bytesConstRef _saved);
 };
 
 }

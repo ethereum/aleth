@@ -176,10 +176,10 @@ public:
 	bool haveNetwork();
 
 	/// Save peers
-	dev::bytes savePeers();
+	dev::bytes saveNodes();
 
 	/// Restore peers
-	void restorePeers(bytesConstRef _saved);
+	void restoreNodes(bytesConstRef _saved);
 
 protected:
 	void doWork();

@@ -46,7 +46,7 @@ void P2PRPCServer::receiveMessage(NetMsg const& _msg)
 				resp << p.host;
 				resp << (unsigned)p.port;
 				resp << 1; // (unsigned)std::chrono::duration_cast<std::chrono::milliseconds>(p.lastPing).count();
-				resp << p.caps;		// std::set<std::string> caps;
+				resp << p.caps;
 				resp << p.socket;
 				resp.appendList(p.notes.size());
 				for (auto n: p.notes)
@@ -80,17 +80,17 @@ void P2PRPCServer::receiveMessage(NetMsg const& _msg)
 			break;
 		}
 			
-		case SavePeers:
+		case SaveNodes:
 		{
-			auto ret = m_service->net()->savePeers();
+			auto ret = m_service->net()->saveNodes();
 			resp.appendList(1) << ret;
 			result = 1;
 			break;
 		}
 			
-		case RestorePeers:
+		case RestoreNodes:
 		{
-			m_service->net()->restorePeers(req[0].data());
+			m_service->net()->restoreNodes(req[0].data());
 			result = 1;
 			break;
 		}
@@ -121,7 +121,7 @@ std::vector<PeerInfo> P2PRPCClient::peers()
 		pi.port = (short)p[2].toInt<unsigned>();
 		pi.lastPing = std::chrono::milliseconds(0 /*r[3].toInt<unsigned>()*/); // std::chrono::steady_clock::duration lastPing;
 		for (auto c: p[4])
-			pi.caps.insert(c.toString());
+			pi.caps.insert(CapDesc(c[0].toString(),c[1].toInt<u256>()));
 		pi.socket = p[5].toInt<unsigned>();
 		for (auto n: p[6])
 			pi.notes[n[0].toString()] = n[1].toString();
@@ -150,17 +150,17 @@ bool P2PRPCClient::haveNetwork()
 	return RLP(b)[0].toInt<bool>();
 }
 
-bytes P2PRPCClient::savePeers()
+bytes P2PRPCClient::saveNodes()
 {
-	bytes b = performRequest(SavePeers);
+	bytes b = performRequest(SaveNodes);
 	return std::move(RLP(b)[0].data().toBytes());
 }
 
-void P2PRPCClient::restorePeers(bytesConstRef _saved)
+void P2PRPCClient::restoreNodes(bytesConstRef _saved)
 {
 	RLPStream s(1);
 	s << _saved;
-	performRequest(RestorePeers, s);
+	performRequest(RestoreNodes, s);
 }
 
 

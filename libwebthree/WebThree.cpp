@@ -147,13 +147,13 @@ bool WebThree::haveNetwork()
 	return m_net.haveNetwork();
 }
 
-bytes WebThree::savePeers()
+bytes WebThree::saveNodes()
 {
-	return m_net.savePeers();
+	return m_net.saveNodes();
 }
 
-void WebThree::restorePeers(bytesConstRef _saved)
+void WebThree::restoreNodes(bytesConstRef _saved)
 {
-	m_net.restorePeers(_saved);
+	m_net.restoreNodes(_saved);
 }
 
