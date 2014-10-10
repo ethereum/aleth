@@ -612,7 +612,14 @@ int main(int argc, char** argv)
 					Transaction t = state.pending()[index];
 					state = state.fromPending(index);
 					bytes r = t.rlp();
-					e.setup(&r);
+					try
+					{
+						e.setup(&r);
+					}
+					catch(Exception const& _e)
+					{
+						cwarn << diagnostic_information(_e);
+					}
 
 					OnOpFunc oof;
 					if (format == "pretty")
@@ -627,7 +634,7 @@ int main(int argc, char** argv)
 							f << "    STORAGE" << endl;
 							for (auto const& i: ext->state().storage(ext->myAddress))
 								f << showbase << hex << i.first << ": " << i.second << endl;
-							f << dec << ext->level << " | " << ext->myAddress << " | #" << steps << " | " << hex << setw(4) << setfill('0') << vm->curPC() << " : " << dev::eth::instructionInfo(instr).name << " | " << dec << vm->gas() << " | -" << dec << gasCost << " | " << newMemSize << "x32";
+							f << dec << ext->depth << " | " << ext->myAddress << " | #" << steps << " | " << hex << setw(4) << setfill('0') << vm->curPC() << " : " << dev::eth::instructionInfo(instr).name << " | " << dec << vm->gas() << " | -" << dec << gasCost << " | " << newMemSize << "x32";
 						};
 					else if (format == "standard")
 						oof = [&](uint64_t, Instruction instr, bigint, bigint, void* vvm, void const* vextVM)

@@ -378,11 +378,10 @@ void Main::writeSettings()
 	}
 	s.setValue("address", b);
 	s.setValue("url", ui->urlEdit->text());
-	
-	bytes d = m_web3->savePeers();
+	bytes d = m_web3->saveNodes();
 	if (d.size())
-		m_peers = QByteArray((char*)d.data(), (int)d.size());
-	s.setValue("peers", m_peers);
+		m_nodes = QByteArray((char*)d.data(), (int)d.size());
+	s.setValue("peers", m_nodes);
 
 	s.setValue("geometry", saveGeometry());
 	s.setValue("windowState", saveState());
@@ -411,7 +410,7 @@ void Main::readSettings(bool _skipGeometry)
 		}
 	}
 	ethereum()->setAddress(m_myKeys.back().address());
-	m_peers = s.value("peers").toByteArray();
+	m_nodes = s.value("peers").toByteArray();
 	ui->urlEdit->setText(s.value("url", "about:blank").toString());	//http://gavwood.com/gavcoin.html
 	on_urlEdit_returnPressed();
 }
@@ -609,6 +608,12 @@ void Main::ensureNetwork()
 		if (m_peers.size())
 			m_web3->restorePeers(bytesConstRef((byte*)m_peers.data(), m_peers.size()));
 	}
+	else
+		if (!m_web3->peerCount())
+			m_web3->connect(defPeer);
+	
+	if (m_nodes.size())
+		m_web3->restoreNodes(bytesConstRef((byte*)m_nodes.data(), m_nodes.size()));
 }
 
 void Main::on_connect_triggered()

@@ -207,6 +207,12 @@ unsigned Main::installWatch(dev::h256 _tf, std::function<void()> const& _f)
 	return ret;
 }
 
+void Main::uninstallWatch(unsigned _w)
+{
+	ethereum()->uninstallWatch(_w);
+	m_handlers.erase(_w);
+}
+
 void Main::installWatches()
 {
 	installWatch(dev::eth::MessageFilter().altered(c_config, 0), [=](){ installNameRegWatch(); });
@@ -217,13 +223,13 @@ void Main::installWatches()
 
 void Main::installNameRegWatch()
 {
-	ethereum()->uninstallWatch(m_nameRegFilter);
+	uninstallWatch(m_nameRegFilter);
 	m_nameRegFilter = installWatch(dev::eth::MessageFilter().altered((u160)ethereum()->stateAt(c_config, 0)), [=](){ onNameRegChange(); });
 }
 
 void Main::installCurrenciesWatch()
 {
-	ethereum()->uninstallWatch(m_currenciesFilter);
+	uninstallWatch(m_currenciesFilter);
 	m_currenciesFilter = installWatch(dev::eth::MessageFilter().altered((u160)ethereum()->stateAt(c_config, 1)), [=](){ onCurrenciesChange(); });
 }
 
@@ -242,7 +248,7 @@ void Main::installBalancesWatch()
 			tf.altered(c, (u160)i.address());
 	}
 
-	ethereum()->uninstallWatch(m_balancesFilter);
+	uninstallWatch(m_balancesFilter);
 	m_balancesFilter = installWatch(tf, [=](){ onBalancesChange(); });
 }
 
@@ -500,7 +506,7 @@ void Main::writeSettings()
 	s.setValue("privateChain", m_privateChain);
 	s.setValue("verbosity", ui->verbosity->value());
 
-	bytes d = m_webThree->savePeers();
+	bytes d = m_webThree->saveNodes();
 	if (d.size())
 		m_peers = QByteArray((char*)d.data(), (int)d.size());
 	s.setValue("peers", m_peers);
@@ -866,7 +872,7 @@ void Main::refreshBlockChain()
 	string filter = ui->blockChainFilter->text().toLower().toStdString();
 	auto const& bc = ethereum()->blockChain();
 	unsigned i = (ui->showAll->isChecked() || !filter.empty()) ? (unsigned)-1 : 10;
-	for (auto h = bc.currentHash(); h != bc.genesisHash() && bc.details(h) && i; h = bc.details(h).parent, --i)
+	for (auto h = bc.currentHash(); bc.details(h) && i; h = bc.details(h).parent, --i)
 	{
 		auto d = bc.details(h);
 		auto bm = blockMatch(filter, d, h, bc);
@@ -906,6 +912,8 @@ void Main::refreshBlockChain()
 			}
 			n++;
 		}
+		if (h == bc.genesisHash())
+			break;
 	}
 
 	if (!ui->blocks->currentItem())
@@ -1132,7 +1140,10 @@ void Main::on_blocks_currentItemChanged()
 			s << "<br/>Bloom: <b>" << details.bloom << "</b>";
 			s << "<br/>Transactions: <b>" << block[1].itemCount() << "</b> @<b>" << info.transactionsRoot << "</b>";
 			s << "<br/>Uncles: <b>" << block[2].itemCount() << "</b> @<b>" << info.sha3Uncles << "</b>";
-			s << "<br/>Pre: <b>" << BlockInfo(ethereum()->blockChain().block(info.parentHash)).stateRoot << "</b>";
+			if (info.parentHash)
+				s << "<br/>Pre: <b>" << BlockInfo(ethereum()->blockChain().block(info.parentHash)).stateRoot << "</b>";
+			else
+				s << "<br/>Pre: <i>Nothing is before the Gensesis</i>";
 			for (auto const& i: block[1])
 				s << "<br/>" << sha3(i[0].data()).abridged() << ": <b>" << i[1].toHash<h256>() << "</b> [<b>" << i[2].toInt<u256>() << "</b> used]";
 			s << "<br/>Post: <b>" << info.stateRoot << "</b>";
@@ -1257,10 +1268,10 @@ void Main::populateDebugger(dev::bytesConstRef _r)
 				if (!m_codes.count(lastDataHash))
 					m_codes[lastDataHash] = ext.data.toBytes();
 			}
-			if (levels.size() < ext.level)
+			if (levels.size() < ext.depth)
 				levels.push_back(&m_history.back());
 			else
-				levels.resize(ext.level);
+				levels.resize(ext.depth);
 			m_history.append(WorldState({steps, ext.myAddress, vm.curPC(), inst, newMemSize, vm.gas(), lastHash, lastDataHash, vm.stack(), vm.memory(), gasCost, ext.state().storage(ext.myAddress), levels}));
 		};
 		m_currentExecution->go(onOp);
@@ -1539,10 +1550,10 @@ void Main::on_net_triggered()
 		web3()->setIdealPeerCount(ui->idealPeers->value());
 		web3()->setNetworkPreferences(netPrefs());
 		ethereum()->setNetworkId(m_privateChain.size() ? sha3(m_privateChain.toStdString()) : 0);
+		if (m_peers.size()/* && ui->usePast->isChecked()*/)
+			web3()->restoreNodes(bytesConstRef((byte*)m_peers.data(), m_peers.size()));
 		web3()->startNetwork();
 		ui->downloadView->setDownloadMan(ethereum()->downloadMan());
-		if (m_peers.size() && ui->usePast->isChecked())
-			web3()->restorePeers(bytesConstRef((byte*)m_peers.data(), m_peers.size()));
 	}
 	else
 	{
