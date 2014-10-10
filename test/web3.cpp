@@ -19,6 +19,8 @@
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  * Web3 lifecycle, ethereum interface, rpc
+ *
+ * @todo [ethereum rpc] test hashFromNumber, blockInfo, blockDetails, transaction, unccle
  */
 
 #include <boost/test/unit_test.hpp>
@@ -406,7 +408,8 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_messages)
 	bytes rlpbytes = version.payload();
 	RLP rlp = RLP(bytesConstRef(&rlpbytes).cropped(4));
 	assert("version" == rlp[2][0].toString());
-	assert("version" == RLP(rlp[2][0].data().toBytes()).toString());
+	bytes vb = rlp[2][0].data().toBytes();
+	assert("version" == RLP(vb).toString());
 	assert("version" == RLP(version.rlp())[0].toString());
 	
 	// application message:
@@ -418,7 +421,8 @@ BOOST_AUTO_TEST_CASE(test_rlpnet_messages)
 	assert("version" == rlp[3].toString());
 	
 	// converting to const storage (this fails)
-	RLP rlpFromBytes = RLP(rlp[3].data().toBytes());
+	bytes rlpb = rlp[3].data().toBytes();
+	RLP rlpFromBytes = RLP(rlpb);
 	assert("version" == rlpFromBytes.toString());
 
 }
