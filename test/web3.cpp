@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(test_netproto_simple)
 	TestService s(nullptr);
 	TestServiceProtocol p((NetConnection *)nullptr, &s);
 	assert(TestServiceProtocol::serviceId() == 255);
-	assert(TestService::serviceId() == TestServiceProtocol::serviceId());
+	assert(s.serviceId() == TestServiceProtocol::serviceId());
 	
 	// sA: To be used by client request test...
 	std::string sA = s.serviceString();

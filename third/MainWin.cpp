@@ -505,11 +505,14 @@ void Main::refreshBalances()
 
 void Main::doWork()
 {
-	for (auto f: m_netq)
+	std::deque<std::function<void()>> run;
 	{
 		lock_guard<mutex> l(x_netq);
-		f();
+		run = m_netq;
 	}
+	
+	for (auto f: run)
+		f();
 	
 	refreshNetwork();
 //	refreshMining();
@@ -589,7 +592,7 @@ void Main::on_ourAccounts_doubleClicked()
 
 void Main::ensureNetwork()
 {
-	if (!web3()->haveNetwork())
+	if (!web3()->haveNetwork() || !m_web3->peerCount())
 	{
 		string n = string("Third/v") + dev::Version;
 		n +=  "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM);
@@ -603,16 +606,10 @@ void Main::ensureNetwork()
 			defPeer = "54.76.56.74";
 		
 		web3()->connect(defPeer);
-	
-		if (m_peers.size())
-			m_web3->restorePeers(bytesConstRef((byte*)m_peers.data(), m_peers.size()));
 	}
-	else
-		if (!m_web3->peerCount())
-			m_web3->connect(defPeer);
-	
-	if (m_nodes.size())
-		m_web3->restoreNodes(bytesConstRef((byte*)m_nodes.data(), m_nodes.size()));
+
+//	if (m_nodes.size())
+//		m_web3->restoreNodes(bytesConstRef((byte*)m_nodes.data(), m_nodes.size()));
 }
 
 void Main::on_connect_triggered()

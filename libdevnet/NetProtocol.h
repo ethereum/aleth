@@ -89,8 +89,8 @@ protected:
 
 
 /**
- * @brief Template for implement RPC client/server protocol. Currently 
- * implements client interface which generates a sequence for every 
+ * @brief Template for implementing RPC client/server protocol.
+ * Implements client interface which generates a sequence for every
  * request and then waits for a response with a matching sequence. 
  * Although the user-request is blocking, the network protocol itself is 
  * asynchronous so that requests can be made concurrently.
