@@ -221,8 +221,10 @@ public:
 	template <class T, size_t N>
 	std::array<T, N> toArray() const
 	{
-		if (itemCount() != N || !isList())
-			BOOST_THROW_EXCEPTION(BadCast());
+		if (!isList())
+			BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("should be a list "));
+		if (itemCount() != N)
+			BOOST_THROW_EXCEPTION(BadCast() << IntNotEqualError(itemCount(), N));
 		std::array<T, N> ret;
 		for (unsigned i = 0; i < N; ++i)
 		{

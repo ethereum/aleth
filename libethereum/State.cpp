@@ -92,6 +92,12 @@ OverlayDB State::openDB(std::string _path, bool _killExisting)
 		_path = Defaults::get()->m_dbPath;
 	boost::filesystem::create_directory(_path);
 
+	if( !(boost::filesystem::exists(_path)))
+	{
+		cnote << "could not create/find directory " << _path;
+		BOOST_THROW_EXCEPTION(Exception() << errinfo_path(_path));
+	}
+
 	if (_killExisting)
 		boost::filesystem::remove_all(_path + "/state");
 
@@ -100,7 +106,7 @@ OverlayDB State::openDB(std::string _path, bool _killExisting)
 	ldb::DB* db = nullptr;
 	ldb::DB::Open(o, _path + "/state", &db);
 	if (!db)
-		BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
+		BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen() << errinfo_path(_path + "/state"));
 
 	cnote << "Opened state DB.";
 	return OverlayDB(db);
@@ -127,7 +133,8 @@ State::State(Address _coinbaseAddress, OverlayDB const& _db):
 	m_previousBlock = BlockChain::genesis();
 	resetCurrent();
 
-	assert(m_state.root() == m_previousBlock.stateRoot);
+	if (m_state.root() != m_previousBlock.stateRoot)
+		BOOST_THROW_EXCEPTION(InvalidStateRoot());
 
 	paranoia("end of normal construction.", true);
 }
@@ -576,9 +583,12 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 
 #if !ETH_RELEASE
 	BlockInfo bi(_block);
-	assert(m_previousBlock.hash == bi.parentHash);
-	assert(m_currentBlock.parentHash == bi.parentHash);
-	assert(rootHash() == m_previousBlock.stateRoot);
+	if (m_previousBlock.hash != bi.parentHash)
+		BOOST_THROW_EXCEPTION(InvalidParentHash());
+	if (m_currentBlock.parentHash != bi.parentHash)
+		BOOST_THROW_EXCEPTION(InvalidParentHash());
+	if (rootHash() != m_previousBlock.stateRoot)
+		BOOST_THROW_EXCEPTION(InvalidStateRoot());
 #endif
 
 	if (m_currentBlock.parentHash != m_previousBlock.hash)
@@ -779,7 +789,8 @@ void State::commitToMine(BlockChain const& _bc)
 		for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash(); ++gen, p = _bc.details(p).parent)
 		{
 			auto us = _bc.details(p).children;
-			assert(us.size() >= 1);	// must be at least 1 child of our grandparent - it's our own parent!
+			if (!us.size())
+				BOOST_THROW_EXCEPTION(EmptyContainer() << errinfo_comment("there must be at least 1 child of our grandparent - it's our own parent!"));
 			for (auto const& u: us)
 				if (!knownUncles.count(u))	// ignore any uncles/mainline blocks that we know about.
 				{
@@ -1287,7 +1298,8 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 		AddressState* cache = it != _s.m_cache.end() ? &it->second : nullptr;
 		string rlpString = dtr.count(i) ? trie.at(i) : "";
 		RLP r(rlpString);
-		assert(cache || r);
+		if (!cache && !r)
+			BOOST_THROW_EXCEPTION(EmptyContainer());
 
 		if (cache && !cache->isAlive())
 			_out << "XXX  " << i << std::endl;

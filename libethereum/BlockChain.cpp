@@ -406,8 +406,11 @@ h256s BlockChain::treeRoute(h256 _from, h256 _to, h256* o_common, bool _pre, boo
 	}
 	while (_from != _to)
 	{
-		assert(_from);
-		assert(_to);
+		if (!_from)
+			BOOST_THROW_EXCEPTION(EmptyContainer());
+		if (!_to)
+			BOOST_THROW_EXCEPTION(EmptyContainer());
+
 		_from = details(_from).parent;
 		_to = details(_to).parent;
 		if (_pre)
@@ -439,8 +442,10 @@ void BlockChain::checkConsistency()
 			if (p != h256())
 			{
 				auto dp = details(p);
-//				assert(contains(dp.children, h));		// WTF?
-				assert(dp.number == dh.number - 1);
+				if (!contains(dp.children, h))
+					BOOST_THROW_EXCEPTION(MissingMember() << errinfo_comment("dp.children is missing: ") << errinfo_member(h.abridged()));
+				if (dp.number != dh.number - 1)
+					BOOST_THROW_EXCEPTION(Exception() << IntNotEqualError(dp.number, dh.number - 1));
 			}
 		}
 	delete it;
