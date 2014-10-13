@@ -111,6 +111,7 @@ public:
 	void receiveMessage(NetMsg const& _msg)
 	{
 		clog(RPCNote) << "[" << serviceId() << "] receiveMessage";
+		std::lock_guard<std::mutex> l(x_promises);
 		if (auto p = m_promises[_msg.sequence()])
 		{
 			if (_msg.type() == Success)
