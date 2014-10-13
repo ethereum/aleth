@@ -564,7 +564,7 @@ void QEthereum::poll()
 
 // TODO: repot and hook all these up.
 
-QWhisper::QWhisper(QObject* _p, std::shared_ptr<dev::shh::Interface> const& _c): QObject(_p), m_face(_c)
+QWhisper::QWhisper(QObject* _p, dev::shh::Interface* const& _c): QObject(_p), m_face(_c)
 {
 }
 
@@ -575,12 +575,9 @@ QWhisper::~QWhisper()
 // probably want a better way of doing this. somehow guarantee that the face() will always be available as long as this object is.
 struct NoInterface: public Exception {};
 
-std::shared_ptr<dev::shh::Interface> QWhisper::face() const
+dev::shh::Interface* QWhisper::face() const
 {
-	auto ret = m_face.lock();
-	if (!ret)
-		throw NoInterface();
-	return ret;
+	return m_face;
 }
 
 void QWhisper::faceDieing()

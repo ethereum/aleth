@@ -28,6 +28,8 @@
 
 namespace dev
 {
+namespace eth
+{
 	
 enum EthRequestMsgType : NetMsgType
 {
@@ -177,7 +179,7 @@ public:
 
 	
 	
-	
+}
 }
 
 

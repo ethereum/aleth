@@ -28,6 +28,8 @@
 
 namespace dev
 {
+namespace p2p
+{
 	
 enum P2PRequestMsgType : NetMsgType
 {
@@ -95,5 +97,5 @@ public:
 };
 
 }
-
+}
 

@@ -20,23 +20,44 @@
  * @date 2014
  */
 
+#pragma once
+
+#include <libdevnet/NetProtocol.h>
+#include <libwhisper/WhisperHost.h>
+
 namespace dev
 {
 namespace shh
 {
 
-class WhisperRPC
+class WhisperRPCServer;
+class WhisperRPC;
+class WhisperRPCClient;
+	
+class WhisperRPC: public NetService<WhisperRPCServer>
 {
 public:
-	WhisperRPC() {}
+	WhisperRPC(shh::Interface* _i) {}
 };
-
-class WhisperRPCClient: public Interface
+	
+	
+class WhisperRPCServer: public NetServiceProtocol<WhisperRPC>
 {
 public:
+	static NetMsgServiceType serviceId() { return WhisperService; }
+	WhisperRPCServer(NetConnection* _conn, NetServiceFace* _service): NetServiceProtocol(_conn, _service) {}
+	void receiveMessage(NetMsg const& _msg) {}
+};
+	
+	
+class WhisperRPCClient: public NetRPCClientProtocol<WhisperRPCClient>, public Interface
+{
+public:
+	WhisperRPCClient(NetConnection* _conn): NetRPCClientProtocol(_conn) {}
+	
 	virtual void inject(shh::Message const& _m, shh::WhisperPeer* _from = nullptr) {}
 	
-	virtual unsigned installWatch(eth::MessageFilter const& _filter) {};
+	virtual unsigned installWatch(shh::MessageFilter const& _filter) {};
 	virtual unsigned installWatch(h256 _filterId) {};
 	virtual void uninstallWatch(unsigned _watchId) {};
 	virtual h256s peekWatch(unsigned _watchId) const {};
@@ -45,8 +66,6 @@ public:
 	virtual shh::Message message(h256 _m) const {};
 	
 	virtual void sendRaw(bytes const& _payload, bytes const& _topic, unsigned _ttl) {};
-	
-	WhisperRPCClient() {}
 };
 	
 }

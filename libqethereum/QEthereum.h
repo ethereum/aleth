@@ -217,11 +217,11 @@ class QWhisper: public QObject
 	Q_OBJECT
 
 public:
-	QWhisper(QObject* _p, std::shared_ptr<dev::shh::Interface> const& _c);
+	QWhisper(QObject* _p, dev::shh::Interface* const& _c);
 	virtual ~QWhisper();
 
-	std::shared_ptr<dev::shh::Interface> face() const;
-	void setFace(std::shared_ptr<dev::shh::Interface> const& _c) { m_face = _c; }
+	dev::shh::Interface* face() const;
+	void setFace(dev::shh::Interface* const& _c) { m_face = _c; }
 
 	/// Call when the face() is going to be deleted to make this object useless but safe.
 	void faceDieing();
@@ -247,7 +247,7 @@ signals:
 	void watchChanged(unsigned _w);
 
 private:
-	std::weak_ptr<dev::shh::Interface> m_face;
+	dev::shh::Interface* m_face = nullptr;
 	std::vector<unsigned> m_watches;
 };
 

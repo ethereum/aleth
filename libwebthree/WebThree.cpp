@@ -21,7 +21,7 @@
 
 #include "WebThree.h"
 
-#include <libwhisper/WhisperHost.h>
+#include <libwhisper/WhisperRPC.h>
 #include <libdevcore/Log.h>
 #include <libethereum/Defaults.h>
 
@@ -39,8 +39,6 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string co
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 
-	bool startRpc = false;
-
 	m_P2PRpcService.reset(new P2PRPC(&m_net));
 	m_rpcEndpoint->registerService(m_P2PRpcService.get());
 	
@@ -49,19 +47,16 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string co
 		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _forceClean));
 		m_ethereumRpcService.reset(new EthereumRPC(m_ethereum.get()));
 		m_rpcEndpoint->registerService(m_ethereumRpcService.get());
-		startRpc = true;
 	}
 
 	if (_interfaces.count("shh"))
 	{
 		m_whisper = m_net.registerCapability<WhisperHost>(new WhisperHost);
-//		m_whisperRpcService.reset(new WhisperRPC(m_whisper.get()));
-//		m_rpcEndpoint.registerService(m_whisperRpcService.get());
-//		startRpc = true;
+		m_whisperRpcService.reset(new WhisperRPC(m_whisper.get()));
+		m_rpcEndpoint->registerService(m_whisperRpcService.get());
 	}
 	
-	if (startRpc)
-		m_rpcEndpoint->start();
+	m_rpcEndpoint->start();
 }
 
 WebThreeDirect::~WebThreeDirect()
@@ -108,7 +103,7 @@ WebThree::WebThree():
 	startWorking();
 
 	m_ethereum = new EthereumRPCClient(m_connection.get());
-	// m_whisper = new WhisperRPCClient(m_connection.get());
+	m_whisper = new WhisperRPCClient(m_connection.get());
 	m_connection->start();
 }
 

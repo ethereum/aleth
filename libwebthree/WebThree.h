@@ -30,7 +30,7 @@
 #include <libdevnet/NetEndpoint.h>
 #include <libethereum/EthereumRPC.h>
 #include <libp2p/P2PRPC.h>
-#include <libwhisper/WhisperPeer.h>
+#include <libwhisper/WhisperRPC.h>
 #include <libethereum/Client.h>
 
 namespace dev
@@ -48,20 +48,6 @@ enum WorkState
 namespace eth { class Interface; }
 namespace shh { class Interface; }
 namespace bzz { class Interface; }
-
-// TODO, move into shh:
-//
-class WhisperRPC
-{
-public:
-	WhisperRPC() {}
-};
-	
-//class WhisperRPCClient: public shh::Interface
-//{
-//public:
-//	WhisperRPCClient() {}
-//};
 	
 /**
  * @brief Main API hub for interfacing with Web 3 components. This doesn't do any local multiplexing, so you can only have one
@@ -86,7 +72,7 @@ public:
 	// The mainline interfaces:
 
 	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
-	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
+	shh::WhisperHost* whisper() const { auto w = m_whisper.get(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
 	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
 
 	// Misc stuff:
@@ -135,14 +121,14 @@ private:
 	std::string m_clientVersion;					///< Our end-application client's name/version.
 
 	std::unique_ptr<eth::Client> m_ethereum;		///< Main interface for Ethereum ("eth") protocol.
-	std::weak_ptr<shh::WhisperHost> m_whisper;	///< Main interface for Whisper ("shh") protocol.
+	std::shared_ptr<shh::WhisperHost> m_whisper;	///< Main interface for Whisper ("shh") protocol.
 
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
 	
 	std::shared_ptr<NetEndpoint> m_rpcEndpoint;
-	std::unique_ptr<P2PRPC> m_P2PRpcService;
-	std::unique_ptr<EthereumRPC> m_ethereumRpcService;
-	std::unique_ptr<WhisperRPC> m_whisperRpcService;
+	std::unique_ptr<p2p::P2PRPC> m_P2PRpcService;
+	std::unique_ptr<eth::EthereumRPC> m_ethereumRpcService;
+	std::unique_ptr<shh::WhisperRPC> m_whisperRpcService;
 };
 
 
@@ -193,9 +179,9 @@ private:
 	boost::asio::io_service m_io;					///< IO Service for rpc connection.
 	boost::asio::ip::tcp::endpoint m_endpoint;		///< Address/port of rpc host.
 	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
-	P2PRPCClient m_net;
-	EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
-	shh::Interface* m_whisper = nullptr;			///< Whisper RPC Client
+	p2p::P2PRPCClient m_net;
+	eth::EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
+	shh::WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
 };
 
 }

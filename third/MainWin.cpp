@@ -107,7 +107,7 @@ Main::Main(QWidget *parent) :
 	{
 		// NOTE: no need to delete as QETH_INSTALL_JS_NAMESPACE adopts it.
 		m_ethereum = new QEthereum(this, ethereum(), owned());
-//		m_whisper = new QWhisper(this, whisper());
+		m_whisper = new QWhisper(this, whisper());
 
 		QWebFrame* f = ui->webView->page()->mainFrame();
 		f->disconnect(SIGNAL(javaScriptWindowObjectCleared()));
