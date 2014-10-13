@@ -91,7 +91,7 @@ public:
 	/// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
 	bool isEmpty() const { return m_root == c_shaNull && node(m_root).size(); }
 
-	h256 root() const { assert(node(m_root).size()); h256 ret = (m_root == c_shaNull ? h256() : m_root); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return ret; }	// patch the root in the case of the empty trie. TODO: handle this properly.
+	h256 root() const { if (!node(m_root).size()) BOOST_THROW_EXCEPTION(RootNotFound()); h256 ret = (m_root == c_shaNull ? h256() : m_root); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return ret; }	// patch the root in the case of the empty trie. TODO: handle this properly.
 
 	void debugPrint() {}
 
@@ -335,10 +335,13 @@ template <class DB> GenericTrieDB<DB>::iterator::iterator(GenericTrieDB const* _
 
 template <class DB> typename GenericTrieDB<DB>::iterator::value_type GenericTrieDB<DB>::iterator::at() const
 {
-	assert(m_trail.size());
+	if (!m_trail.size())
+		BOOST_THROW_EXCEPTION(EmptyContainer());
 	Node const& b = m_trail.back();
-	assert(b.key.size());
-	assert(!(b.key[0] & 0x10));	// should be an integer number of bytes (i.e. not an odd number of nibbles).
+	if(!b.key.size())
+		BOOST_THROW_EXCEPTION(EmptyContainer());
+	if(b.key[0] & 0x10)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << errinfo_comment("b.key[0] should be an integer number of bytes (i.e. not an odd number of nibbles)."));
 
 	RLP rlp(b.rlp);
 	if (rlp.itemCount() == 2)
@@ -418,7 +421,11 @@ template <class DB> void GenericTrieDB<DB>::iterator::next()
 		}
 
 		// ...here. should only get here if we're a list.
-		assert(rlp.isList() && rlp.itemCount() == 17);
+		if (!rlp.isList())
+			BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("rlp should be a list "));
+		else if (rlp.itemCount() != 17)
+			BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(17, rlp.itemCount()));
+
 		for (;; m_trail.back().incrementChild())
 			if (m_trail.back().child == 17)
 			{
@@ -450,7 +457,9 @@ template <class KeyType, class DB> typename TrieDB<KeyType, DB>::iterator::value
 {
 	auto p = Super::at();
 	value_type ret;
-	assert(p.first.size() == sizeof(KeyType));
+	if (p.first.size() != sizeof(KeyType))
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(sizeof(KeyType), p.first.size()));
+
 	memcpy(&ret.first, p.first.data(), sizeof(KeyType));
 	ret.second = p.second;
 	return ret;
@@ -460,7 +469,8 @@ template <class DB> void GenericTrieDB<DB>::init()
 {
 	m_root = insertNode(&RLPNull);
 //	std::cout << "Initialised root to " << m_root << std::endl;
-	assert(node(m_root).size());
+	if(!node(m_root).size())
+		BOOST_THROW_EXCEPTION(RootNotFound());
 }
 
 template <class DB> void GenericTrieDB<DB>::insert(bytesConstRef _key, bytesConstRef _value)
@@ -470,7 +480,8 @@ template <class DB> void GenericTrieDB<DB>::insert(bytesConstRef _key, bytesCons
 #endif
 
 	std::string rv = node(m_root);
-	assert(rv.size());
+	if(!rv.size())
+		BOOST_THROW_EXCEPTION(EmptyContainer());
 	bytes b = mergeAt(RLP(rv), NibbleSlice(_key), _value);
 
 	// mergeAt won't attempt to delete the node if it's less than 32 bytes
@@ -491,7 +502,10 @@ template <class DB> std::string GenericTrieDB<DB>::atAux(RLP const& _here, Nibbl
 	if (_here.isEmpty() || _here.isNull())
 		// not found.
 		return std::string();
-	assert(_here.isList() && (_here.itemCount() == 2 || _here.itemCount() == 17));
+
+	if (!_here.isList())
+		BOOST_THROW_EXCEPTION(BadType());
+
 	if (_here.itemCount() == 2)
 	{
 		auto k = keyOf(_here);
@@ -505,7 +519,7 @@ template <class DB> std::string GenericTrieDB<DB>::atAux(RLP const& _here, Nibbl
 			// not us.
 			return std::string();
 	}
-	else
+	else if (_here.itemCount() == 17)
 	{
 		if (_key.size() == 0)
 			return _here[16].toString();
@@ -515,6 +529,9 @@ template <class DB> std::string GenericTrieDB<DB>::atAux(RLP const& _here, Nibbl
 		else
 			return atAux(n.isList() ? n : RLP(node(n.toHash<h256>())), _key.mid(1));
 	}
+	else
+		BOOST_THROW_EXCEPTION(SizeMismatch() << errinfo_comment("_here.itemCount() should be 2 or 17 ") << errinfo_actualInt(_here.itemCount()));
+
 }
 
 template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, NibbleSlice _k, bytesConstRef _v, bool _inLine)
@@ -531,7 +548,9 @@ template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, NibbleSli
 	if (_orig.isEmpty())
 		return place(_orig, _k, _v);
 
-	assert(_orig.isList() && (_orig.itemCount() == 2 || _orig.itemCount() == 17));
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
 	if (_orig.itemCount() == 2)
 	{
 		// pair...
@@ -567,7 +586,7 @@ template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, NibbleSli
 			return mergeAt(RLP(branched), _k, _v, true);
 		}
 	}
-	else
+	else if (_orig.itemCount() == 17)
 	{
 		// branch...
 
@@ -589,6 +608,8 @@ template <class DB> bytes GenericTrieDB<DB>::mergeAt(RLP const& _orig, NibbleSli
 				r.append(_orig[i]);
 		return r.out();
 	}
+	else
+		BOOST_THROW_EXCEPTION(SizeMismatch() << errinfo_comment("_orig.itemCount() should be 2 or 17 ") << errinfo_actualInt(_orig.itemCount()));
 
 }
 
@@ -606,7 +627,8 @@ template <class DB> void GenericTrieDB<DB>::mergeAtAux(RLPStream& _out, RLP cons
 	{
 		s = node(_orig.toHash<h256>());
 		r = RLP(s);
-		assert(!r.isNull());
+		if(r.isNull())
+			BOOST_THROW_EXCEPTION(EmptyContainer());
 		isRemovable = true;
 	}
 	bytes b = mergeAt(r, _k, _v, !isRemovable);
@@ -654,7 +676,9 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
 	if (_orig.isEmpty())
 		return bytes();
 
-	assert(_orig.isList() && (_orig.itemCount() == 2 || _orig.itemCount() == 17));
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
 	if (_orig.itemCount() == 2)
 	{
 		// pair...
@@ -681,7 +705,7 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
 			// not found - no change.
 			return bytes();
 	}
-	else
+	else if (_orig.itemCount() == 17)
 	{
 		// branch...
 
@@ -741,6 +765,8 @@ template <class DB> bytes GenericTrieDB<DB>::deleteAt(RLP const& _orig, NibbleSl
 				return merge(rlp, used);
 		}
 	}
+	else
+		BOOST_THROW_EXCEPTION(SizeMismatch() << errinfo_comment("_orig.itemCount() should be 2 or 17 ") << errinfo_actualInt(_orig.itemCount()));
 
 }
 
@@ -770,14 +796,18 @@ template <class DB> bytes GenericTrieDB<DB>::place(RLP const& _orig, NibbleSlice
 	tdebug << "place " << _orig << _k;
 #endif
 
-
 	killNode(_orig);
 	if (_orig.isEmpty())
 		return (RLPStream(2) << hexPrefixEncode(_k, true) << _s).out();
 
-	assert(_orig.isList() && (_orig.itemCount() == 2 || _orig.itemCount() == 17));
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
 	if (_orig.itemCount() == 2)
 		return (RLPStream(2) << _orig[0] << _s).out();
+
+	else if (_orig.itemCount() != 17)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << errinfo_comment("_orig.itemCount() should be 2 or 17 ") << errinfo_actualInt(_orig.itemCount()));
 
 	auto s = RLPStream(17);
 	for (unsigned i = 0; i < 16; ++i)
@@ -798,9 +828,15 @@ template <class DB> bytes GenericTrieDB<DB>::remove(RLP const& _orig)
 
 	killNode(_orig);
 
-	assert(_orig.isList() && (_orig.itemCount() == 2 || _orig.itemCount() == 17));
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
 	if (_orig.itemCount() == 2)
 		return RLPNull;
+
+	else if (_orig.itemCount() != 17)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << errinfo_comment("_orig.itemCount() should be 2 or 17 ") << errinfo_actualInt(_orig.itemCount()));
+
 	RLPStream r(17);
 	for (unsigned i = 0; i < 16; ++i)
 		r << _orig[i];
@@ -824,9 +860,18 @@ template <class DB> bytes GenericTrieDB<DB>::cleve(RLP const& _orig, unsigned _s
 #endif
 
 	killNode(_orig);
-	assert(_orig.isList() && _orig.itemCount() == 2);
+
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
+	else if (_orig.itemCount() != 2)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(2, _orig.itemCount()));
+
 	auto k = keyOf(_orig);
-	assert(_s && _s <= k.size());
+
+	if (!_s || _s > k.size())
+		BOOST_THROW_EXCEPTION(OutOfRange() << errinfo_minInt(1) << errinfo_maxInt(k.size()) << errinfo_actualInt(_s));
+
 
 	RLPStream bottom(2);
 	bottom << hexPrefixEncode(k, isLeaf(_orig), /*ugh*/(int)_s) << _orig[1];
@@ -844,7 +889,12 @@ template <class DB> bytes GenericTrieDB<DB>::graft(RLP const& _orig)
 	tdebug << "graft " << _orig;
 #endif
 
-	assert(_orig.isList() && _orig.itemCount() == 2);
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
+	else if (_orig.itemCount() != 2)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(2, _orig.itemCount()));
+
 	std::string s;
 	RLP n;
 	if (_orig[1].isList())
@@ -857,7 +907,8 @@ template <class DB> bytes GenericTrieDB<DB>::graft(RLP const& _orig)
 		killNode(lh);
 		n = RLP(s);
 	}
-	assert(n.itemCount() == 2);
+	if (n.itemCount() != 2)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(2, n.itemCount()));
 
 	return (RLPStream(2) << hexPrefixEncode(keyOf(_orig), keyOf(n), isLeaf(n)) << n[1]).out();
 //	auto ret =
@@ -871,11 +922,17 @@ template <class DB> bytes GenericTrieDB<DB>::merge(RLP const& _orig, byte _i)
 	tdebug << "merge " << _orig << (int)_i;
 #endif
 
-	assert(_orig.isList() && _orig.itemCount() == 17);
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
+	else if (_orig.itemCount() != 17)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(17, _orig.itemCount()));
+
 	RLPStream s(2);
 	if (_i != 16)
 	{
-		assert(!_orig[_i].isEmpty());
+		if (_orig[_i].isEmpty())
+			BOOST_THROW_EXCEPTION(EmptyContainer());
 		s << hexPrefixEncode(bytesConstRef(&_i, 1), false, 1, 2, 0);
 	}
 	else
@@ -890,14 +947,20 @@ template <class DB> bytes GenericTrieDB<DB>::branch(RLP const& _orig)
 	tdebug << "branch " << _orig;
 #endif
 
-	assert(_orig.isList() && _orig.itemCount() == 2);
+	if (!_orig.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("Should be of type List "));
+
+	else if (_orig.itemCount() != 2)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(2, _orig.itemCount()));
+
 	killNode(_orig);
 
 	auto k = keyOf(_orig);
 	RLPStream r(17);
 	if (k.size() == 0)
 	{
-		assert(isLeaf(_orig));
+		if (!isLeaf(_orig))
+			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("_orig should be leaf "));
 		for (unsigned i = 0; i < 16; ++i)
 			r << "";
 		r << _orig[1];

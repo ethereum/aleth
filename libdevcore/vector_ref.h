@@ -1,9 +1,10 @@
+	// TODO missing license, author, date
 #pragma once
 
 #include <type_traits>
-#include <cassert>
 #include <vector>
 #include <string>
+#include "Exceptions.h"
 
 namespace dev
 {
@@ -30,7 +31,7 @@ public:
 	std::vector<mutable_value_type> toVector() const { return std::vector<mutable_value_type>(m_data, m_data + m_count); }
 	std::vector<unsigned char> toBytes() const { return std::vector<unsigned char>((unsigned char const*)m_data, m_data + m_count * sizeof(_T)); }
 	std::string toString() const { return std::string((char const*)m_data, ((char const*)m_data) + m_count * sizeof(_T)); }
-	template <class _T2> operator vector_ref<_T2>() const { assert(m_count * sizeof(_T) / sizeof(_T2) * sizeof(_T2) / sizeof(_T) == m_count); return vector_ref<_T2>((_T2*)m_data, m_count * sizeof(_T) / sizeof(_T2)); }
+	template <class _T2> operator vector_ref<_T2>() const { if (m_count * sizeof(_T) / sizeof(_T2) * sizeof(_T2) / sizeof(_T) != m_count) BOOST_THROW_EXCEPTION(SizeMismatch()); return vector_ref<_T2>((_T2*)m_data, m_count * sizeof(_T) / sizeof(_T2)); }
 
 	_T* data() const { return m_data; }
 	size_t count() const { return m_count; }
@@ -46,8 +47,8 @@ public:
 	_T const* begin() const { return m_data; }
 	_T const* end() const { return m_data + m_count; }
 
-	_T& operator[](size_t _i) { assert(m_data); assert(_i < m_count); return m_data[_i]; }
-	_T const& operator[](size_t _i) const { assert(m_data); assert(_i < m_count); return m_data[_i]; }
+	_T& operator[](size_t _i) { if (m_data == nullptr) BOOST_THROW_EXCEPTION(NullPointer()); if(_i >= m_count) BOOST_THROW_EXCEPTION(OutOfRange() << tooBigError(m_count, _i)); return m_data[_i]; }
+	_T const& operator[](size_t _i) const { if (m_data == nullptr) BOOST_THROW_EXCEPTION(NullPointer()); if(_i >= m_count) BOOST_THROW_EXCEPTION(OutOfRange() << tooBigError(m_count, _i)); return m_data[_i]; }
 
 	bool operator==(vector_ref<_T> const& _cmp) const { return m_data == _cmp.m_data && m_count == _cmp.m_count; }
 	bool operator!=(vector_ref<_T> const& _cmp) const { return !operator==(_cmp); }

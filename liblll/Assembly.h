@@ -24,6 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 #include <libevmface/Instruction.h>
 #include "Exceptions.h"
 
@@ -45,8 +46,8 @@ public:
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
 
-	AssemblyItem tag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(Tag, m_data); }
-	AssemblyItem pushTag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(PushTag, m_data); }
+	AssemblyItem tag() const;
+	AssemblyItem pushTag() const;
 
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }
@@ -94,7 +95,7 @@ public:
 	AssemblyItem const& back() { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
 
-	void onePath() { assert(!m_totalDeposit && !m_baseDeposit); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
+	void onePath();
 	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }
 	void donePaths() { donePath(); m_totalDeposit = m_baseDeposit = 0; }
 	void ignored() { m_baseDeposit = m_deposit; }

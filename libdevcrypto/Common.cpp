@@ -23,6 +23,7 @@
 #include <random>
 #include <secp256k1/secp256k1.h>
 #include "SHA3.h"
+#include <libdevcore/Exceptions.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -39,7 +40,8 @@ Address dev::toAddress(Secret _private)
 	if (!ok)
 		return Address();
 	ok = secp256k1_ecdsa_pubkey_create(pubkey, &pubkeylen, _private.data(), 0);
-	assert(pubkeylen == 65);
+	if (pubkeylen != 65)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(65, pubkeylen));
 	if (!ok)
 		return Address();
 	ok = secp256k1_ecdsa_pubkey_verify(pubkey, 65);
