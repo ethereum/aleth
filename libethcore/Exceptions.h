@@ -22,6 +22,8 @@
 #pragma once
 
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
@@ -32,6 +34,7 @@ namespace eth
 typedef boost::error_info<struct tag_field, std::string> errinfo_name;
 typedef boost::error_info<struct tag_field, int> errinfo_field;
 typedef boost::error_info<struct tag_data, std::string> errinfo_data;
+typedef boost::error_info<struct tag_path, std::string> errinfo_path;
 typedef boost::tuple<errinfo_field, errinfo_data> BadFieldError;
 
 struct DatabaseAlreadyOpen: virtual dev::Exception {};

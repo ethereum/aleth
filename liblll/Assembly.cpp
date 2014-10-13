@@ -27,6 +27,20 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+AssemblyItem AssemblyItem::tag() const
+{
+	if (m_type != PushTag && m_type != Tag)
+		BOOST_THROW_EXCEPTION(BadType());
+	 return AssemblyItem(Tag, m_data);
+}
+
+AssemblyItem AssemblyItem::pushTag() const
+{
+	if (m_type != PushTag && m_type != Tag)
+		BOOST_THROW_EXCEPTION(BadType());
+	return AssemblyItem(PushTag, m_data);
+}
+
 int AssemblyItem::deposit() const
 {
 	switch (m_type)
@@ -95,8 +109,10 @@ void Assembly::append(Assembly const& _a)
 	for (auto const& i: _a.m_subs)
 		m_subs.insert(i);
 
-	assert(!_a.m_baseDeposit);
-	assert(!_a.m_totalDeposit);
+	if (_a.m_baseDeposit)
+		BOOST_THROW_EXCEPTION(Exception());
+	if (_a.m_totalDeposit)
+		BOOST_THROW_EXCEPTION(Exception());
 }
 
 void Assembly::append(Assembly const& _a, int _deposit)
@@ -200,6 +216,14 @@ AssemblyItem const& Assembly::append(AssemblyItem const& _i)
 	m_deposit += _i.deposit();
 	m_items.push_back(_i);
 	return back();
+}
+
+void Assembly::onePath()
+{
+	if (m_totalDeposit || m_baseDeposit)
+		BOOST_THROW_EXCEPTION(Exception());
+	 m_baseDeposit = m_deposit;
+	 m_totalDeposit = INT_MAX;
 }
 
 void Assembly::injectStart(AssemblyItem const& _i)

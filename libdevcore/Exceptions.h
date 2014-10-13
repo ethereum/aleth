@@ -24,9 +24,9 @@
 #include <exception>
 #include <boost/exception/all.hpp>
 #include <boost/throw_exception.hpp>
-#include <libdevcrypto/Common.h>
-#include "CommonData.h"
-#include "FixedHash.h"
+//#include <libdevcrypto/Common.h>
+//#include "CommonData.h"
+//#include "FixedHash.h"
 
 namespace dev
 {
@@ -41,9 +41,25 @@ struct NoNetworking: virtual Exception {};
 struct NoUPnPDevice: virtual Exception {};
 struct RootNotFound: virtual Exception {};
 struct FileError: virtual Exception {};
+struct BadType: virtual Exception {};
+struct EmptyContainer: virtual Exception {};
+struct SizeMismatch: virtual Exception {};
+struct MissingMember: virtual Exception {};
+struct NullPointer: virtual Exception {};
+struct OutOfRange: virtual Exception {};
+struct BadHash: virtual Exception {};
 
 // error information to be added to exceptions
 typedef boost::error_info<struct tag_invalidSymbol, char> errinfo_invalidSymbol;
-typedef boost::error_info<struct tag_comment, Address> errinfo_wrongAddress;
+typedef boost::error_info<struct tag_comment, std::string> errinfo_wrongAddress;
 typedef boost::error_info<struct tag_comment, std::string> errinfo_comment;
+typedef boost::error_info<struct tag_member, std::string> errinfo_member;
+
+typedef boost::error_info<struct tag_expectedInt, int> errinfo_expectedInt;
+typedef boost::error_info<struct tag_expectedInt, int> errinfo_maxInt;
+typedef boost::error_info<struct tag_expectedInt, int> errinfo_minInt;
+typedef boost::error_info<struct tag_actualInt, int> errinfo_actualInt;
+typedef boost::tuple<errinfo_expectedInt, errinfo_actualInt> IntNotEqualError;
+typedef boost::tuple<errinfo_maxInt, errinfo_actualInt> tooBigError;
+typedef boost::tuple<errinfo_minInt, errinfo_actualInt> tooSmallError;
 }
