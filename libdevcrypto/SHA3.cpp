@@ -21,6 +21,7 @@
 
 #include "SHA3.h"
 #include "CryptoHeaders.h"
+#include <libdevcore/Exceptions.h>
 
 using namespace std;
 using namespace dev;
@@ -54,7 +55,8 @@ void sha3(bytesConstRef _input, bytesRef _output)
 {
 	CryptoPP::SHA3_256 ctx;
 	ctx.Update((byte*)_input.data(), _input.size());
-	assert(_output.size() >= 32);
+	if (_output.size() < 32)
+		BOOST_THROW_EXCEPTION(OutOfRange() << tooSmallError(32, _output.size()));
 	ctx.Final(_output.data());
 }
 
@@ -62,7 +64,8 @@ void ripemd160(bytesConstRef _input, bytesRef _output)
 {
 	CryptoPP::RIPEMD160 ctx;
 	ctx.Update((byte*)_input.data(), _input.size());
-	assert(_output.size() >= 32);
+	if (_output.size() < 32)
+		BOOST_THROW_EXCEPTION(OutOfRange() << tooSmallError(32, _output.size()));
 	ctx.Final(_output.data());
 }
 
@@ -70,7 +73,8 @@ void sha256(bytesConstRef _input, bytesRef _output)
 {
 	CryptoPP::SHA256 ctx;
 	ctx.Update((byte*)_input.data(), _input.size());
-	assert(_output.size() >= 32);
+	if (_output.size() < 32)
+		BOOST_THROW_EXCEPTION(OutOfRange() << tooSmallError(32, _output.size()));
 	ctx.Final(_output.data());
 }
 

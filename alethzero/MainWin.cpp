@@ -1141,7 +1141,8 @@ void Main::on_blocks_currentItemChanged()
 	if (auto item = ui->blocks->currentItem())
 	{
 		auto hba = item->data(Qt::UserRole).toByteArray();
-		assert(hba.size() == 32);
+		if (hba.size() != 32)
+			BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(32, hba.size()));
 		auto h = h256((byte const*)hba.data(), h256::ConstructFromPointer);
 		auto details = ethereum()->blockChain().details(h);
 		auto blockData = ethereum()->blockChain().block(h);
@@ -1223,7 +1224,8 @@ void Main::on_debugCurrent_triggered()
 	if (auto item = ui->blocks->currentItem())
 	{
 		auto hba = item->data(Qt::UserRole).toByteArray();
-		assert(hba.size() == 32);
+		if (hba.size() != 32)
+			BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(32, hba.size()));
 		auto h = h256((byte const*)hba.data(), h256::ConstructFromPointer);
 
 		if (!item->data(Qt::UserRole + 1).isNull())
@@ -1245,7 +1247,8 @@ void Main::on_debugDumpState_triggered(int _add)
 	if (auto item = ui->blocks->currentItem())
 	{
 		auto hba = item->data(Qt::UserRole).toByteArray();
-		assert(hba.size() == 32);
+		if (hba.size() != 32)
+			BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(32, hba.size()));
 		auto h = h256((byte const*)hba.data(), h256::ConstructFromPointer);
 
 		if (!item->data(Qt::UserRole + 1).isNull())
@@ -1315,7 +1318,8 @@ void Main::on_contracts_currentItemChanged()
 	if (auto item = ui->contracts->currentItem())
 	{
 		auto hba = item->data(Qt::UserRole).toByteArray();
-		assert(hba.size() == 20);
+		if (hba.size() != 20)
+			BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(20, hba.size()));
 		auto address = h160((byte const*)hba.data(), h160::ConstructFromPointer);
 
 		stringstream s;
@@ -1975,7 +1979,8 @@ void Main::updateDebugger()
 				m_lastData = ws.callData;
 				if (ws.callData)
 				{
-					assert(m_codes.count(ws.callData));
+					if (!m_codes.count(ws.callData))
+						BOOST_THROW_EXCEPTION(MissingMember() << errinfo_member("ws.callData") );
 					ui->debugCallData->setHtml(QString::fromStdString(dev::memDump(m_codes[ws.callData], 16, true)));
 				}
 				else
@@ -1987,7 +1992,8 @@ void Main::updateDebugger()
 				stack.prepend("<div>" + prettyU256(i) + "</div>");
 			ui->debugStack->setHtml(stack);
 			ui->debugMemory->setHtml(QString::fromStdString(dev::memDump(ws.memory, 16, true)));
-			assert(m_codes.count(ws.code));
+			if (!m_codes.count(ws.code))
+				BOOST_THROW_EXCEPTION(MissingMember() << errinfo_member("ws.code") );
 
 			if (m_codes[ws.code].size() >= (unsigned)ws.curPC)
 			{

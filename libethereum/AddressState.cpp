@@ -28,3 +28,15 @@ using namespace dev::eth;
 #pragma GCC diagnostic ignored "-Wunused-variable"
 namespace { char dummy; };
 
+bytes const& AddressState::code() const
+{
+	if (m_codeHash != EmptySHA3 && m_codeHash && !m_codeCache.size())
+		BOOST_THROW_EXCEPTION(Exception() << errinfo_comment("Can't get the code"));
+	return m_codeCache;
+}
+
+void AddressState::noteCode(bytesConstRef _code)
+{
+	if (sha3(_code) != m_codeHash)
+		BOOST_THROW_EXCEPTION(BadHash() << errinfo_comment("m_code_hash does not match hash of code ")); m_codeCache = _code.toBytes();
+}

@@ -94,7 +94,10 @@ Address toAddress(Secret _private)
 	if (!ok)
 		return Address();
 	ok = secp256k1_ecdsa_pubkey_create(pubkey, &pubkeylen, _private.data(), 0);
-	assert(pubkeylen == 65);
+
+	if (pubkeylen != 65)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(65, pubkeylen));
+
 	if (!ok)
 		return Address();
 	ok = secp256k1_ecdsa_pubkey_verify(pubkey, 65);

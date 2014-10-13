@@ -66,7 +66,10 @@ inline std::ostream& operator<<(std::ostream& _out, NibbleSlice const& _m)
 
 inline bool isLeaf(RLP const& _twoItem)
 {
-	assert(_twoItem.isList() && _twoItem.itemCount() == 2);
+	if (!_twoItem.isList())
+		BOOST_THROW_EXCEPTION(BadType() << errinfo_comment("_twoItem should be a List "));
+	else if (_twoItem.itemCount() != 2)
+		BOOST_THROW_EXCEPTION(SizeMismatch() << IntNotEqualError(2, _twoItem.itemCount()));
 	auto pl = _twoItem[0].payload();
 	return (pl[0] & 0x20) != 0;
 }

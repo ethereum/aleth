@@ -3,9 +3,17 @@
 
 int main(int argc, char *argv[])
 {
-	QApplication a(argc, argv);
-	Main w;
-	w.show();
+	try
+	{
+		QApplication a(argc, argv);
+		Main w;
+		w.show();
 	
-	return a.exec();
+		return a.exec();
+	}
+	catch(...)
+	{
+		std::cerr << "Unhandled exception!" << std::endl <<
+				 boost::current_exception_diagnostic_information();
+	}
 }

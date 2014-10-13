@@ -346,6 +346,7 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 	catch (...)
 	{
 		// TODO: Some sort of notification of failure.
+		cwarn << current_exception_diagnostic_information();
 	}
 	return out;
 }

@@ -97,7 +97,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 			{
 				cnote << "not able to call to : " << myAddress << "\n";
 				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(myAddress));
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(myAddress)));
 				return false;
 			}
 		}
@@ -123,7 +123,7 @@ bool FakeExtVM::call(Address _receiveAddress, u256 _value, bytesConstRef _data, 
 			{
 				cnote << "not able to call to : " << (_codeAddressOverride ? _codeAddressOverride : _receiveAddress) << "\n";
 				cnote << "in FakeExtVM you can only make a call to " << na << "\n";
-				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(_codeAddressOverride ? _codeAddressOverride : _receiveAddress));
+				BOOST_THROW_EXCEPTION(FakeExtVMFailure() << errinfo_comment("Address not callable in FakeExtVM\n") << errinfo_wrongAddress(toString(_codeAddressOverride ? _codeAddressOverride : _receiveAddress)));
 				return false;
 			}
 		}
