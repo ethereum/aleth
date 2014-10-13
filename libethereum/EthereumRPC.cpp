@@ -28,11 +28,14 @@ using namespace dev::eth;
 
 void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 {
-	clog(RPCNote) << "[" << this->serviceId() << "] receiveMessage";
+	clog(RPCNote) << "[" << std::dec << (int)this->serviceId() << "] receiveMessage";
 	
 	RLP req(_msg.rlp());
 	RLPStream resp;
 	NetMsgType result;
+	
+	std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+	
 	switch (_msg.type())
 	{
 		case RequestSubmitTransaction:
@@ -431,6 +434,15 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 
 		default:
 			result = 2;
+	}
+
+	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+	auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+	if (time > 200)
+	{
+		std::stringstream stream;
+		stream << "[" << std::dec << (int)serviceId() << "," << std::dec << (int)_msg.sequence() << "," << std::dec << (int)result << "] " << std::dec << time;
+		clog(RPCWarn) << stream.str();
 	}
 	
 	if (!resp.out().size())

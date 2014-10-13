@@ -174,9 +174,13 @@ bytes NetRPCClientProtocol<T>::performRequest(NetMsgType _type, RLPStream& _s)
 		throw RPCRequestTimeout();
 
 	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-	std::stringstream stream;
-	stream << "[" << std::dec << (int)msg.service() << "," << std::dec << (int)msg.sequence() << "," << std::dec << (int)msg.type() << "] " << std::dec << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-	clog(RPCNote) << stream.str();
+	auto time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+	if (time > 200)
+	{
+		std::stringstream stream;
+		stream << "[" << std::dec << (int)msg.service() << "," << std::dec << (int)msg.sequence() << "," << std::dec << (int)msg.type() << "] " << std::dec << time;
+		clog(RPCWarn) << stream.str();
+	}
 	
 	return std::move(f.get()->rlp());
 }
