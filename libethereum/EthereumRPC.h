@@ -177,9 +177,6 @@ public:
 	virtual eth::MineProgress miningProgress() const;
 };
 
-	
-	
 }
 }
-
 

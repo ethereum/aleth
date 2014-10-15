@@ -107,7 +107,6 @@ void P2PRPCServer::receiveMessage(NetMsg const& _msg)
 	connection()->send(response);
 }
 
-
 std::vector<PeerInfo> P2PRPCClient::peers()
 {
 	std::vector<PeerInfo> peers;
@@ -162,5 +161,4 @@ void P2PRPCClient::restoreNodes(bytesConstRef _saved)
 	s << _saved;
 	performRequest(RestoreNodes, s);
 }
-
 

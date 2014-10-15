@@ -35,7 +35,8 @@ public:
 	
 	std::string protocolString() { return "protocolString"; }
 	
-	void receiveMessage(NetMsg const& _msg) {
+	void receiveMessage(NetMsg const& _msg)
+	{
 		switch (_msg.type()) {
 			case 1:
 				this->getService()->m_interface->stringTest();
@@ -55,12 +56,14 @@ public:
 
 	std::string protocolString() { return "protocolString"; }
 
-	std::string getRemoteServiceString() {
+	std::string getRemoteServiceString()
+	{
 		bytes response(performRequest((NetMsgType)1));
 		return std::string((const char*)response.data());
 	}
 	
-	std::string getRemoteInterfaceString() {
+	std::string getRemoteInterfaceString()
+	{
 		bytes response(performRequest((NetMsgType)2));
 		return std::string((const char*)response.data());
 	}

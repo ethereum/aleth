@@ -453,7 +453,6 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 	connection()->send(response);
 }
 
-
 void EthereumRPCClient::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
 	RLPStream s(6);
@@ -493,7 +492,6 @@ bytes EthereumRPCClient::call(Secret _secret, u256 _value, Address _dest, bytes 
 	
 	return r[0].data().toBytes();
 }
-
 
 u256 EthereumRPCClient::balanceAt(Address _a, int _block) const
 {
@@ -613,7 +611,6 @@ bool EthereumRPCClient::checkWatch(unsigned _watchId)
 	bytes r = performRequest(CheckWatch, s);
 	return RLP(r)[0].toInt<bool>();
 }
-
 
 h256 EthereumRPCClient::hashFromNumber(unsigned _number) const
 {
@@ -797,5 +794,4 @@ eth::MineProgress EthereumRPCClient::miningProgress() const
 
 	return p;
 }
-
 
