@@ -100,15 +100,6 @@
     <ClCompile Include="..\libdevcrypto\TrieDB.cpp">
       <Filter>libdevcrypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\libethcore\BlockInfo.cpp">
-      <Filter>libethcore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\libethcore\CommonEth.cpp">
-      <Filter>libethcore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\libethcore\Dagger.cpp">
-      <Filter>libethcore</Filter>
-    </ClCompile>
     <ClCompile Include="..\libdevcore\CommonData.cpp">
       <Filter>libdevcore</Filter>
     </ClCompile>
@@ -129,9 +120,6 @@
     </ClCompile>
     <ClCompile Include="..\libdevcore\_libdevcore.cpp">
       <Filter>libdevcore</Filter>
-    </ClCompile>
-    <ClCompile Include="..\libethcore\_libethcore.cpp">
-      <Filter>libethcore</Filter>
     </ClCompile>
     <ClCompile Include="..\libevm\_libevm.cpp">
       <Filter>libevm</Filter>
@@ -190,7 +178,22 @@
     <ClCompile Include="..\libwebthree\WebThree.cpp">
       <Filter>libwebthree</Filter>
     </ClCompile>
+    <ClCompile Include="..\libethcore\BlockInfo.cpp">
+      <Filter>libethcore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libethcore\CommonEth.cpp">
+      <Filter>libethcore</Filter>
+    </ClCompile>
     <ClCompile Include="..\libethcore\Exceptions.cpp">
+      <Filter>libethcore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libethcore\ProofOfWork.cpp">
+      <Filter>libethcore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libethcore\_libethcore.cpp">
+      <Filter>libethcore</Filter>
+    </ClCompile>
+    <ClCompile Include="..\libethcore\ARPow.cpp">
       <Filter>libethcore</Filter>
     </ClCompile>
   </ItemGroup>
@@ -309,24 +312,6 @@
     <ClInclude Include="..\libdevcrypto\TrieDB.h">
       <Filter>libdevcrypto</Filter>
     </ClInclude>
-    <ClInclude Include="..\libethcore\All.h">
-      <Filter>libethcore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libethcore\BlockInfo.h">
-      <Filter>libethcore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libethcore\CommonEth.h">
-      <Filter>libethcore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libethcore\CryptoHeaders.h">
-      <Filter>libethcore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libethcore\Dagger.h">
-      <Filter>libethcore</Filter>
-    </ClInclude>
-    <ClInclude Include="..\libethcore\Exceptions.h">
-      <Filter>libethcore</Filter>
-    </ClInclude>
     <ClInclude Include="..\libdevcore\All.h">
       <Filter>libdevcore</Filter>
     </ClInclude>
@@ -416,6 +401,27 @@
     </ClInclude>
     <ClInclude Include="..\libwebthree\webthree.h">
       <Filter>libwebthree</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\All.h">
+      <Filter>libethcore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\BlockInfo.h">
+      <Filter>libethcore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\CommonEth.h">
+      <Filter>libethcore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\CryptoHeaders.h">
+      <Filter>libethcore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\Exceptions.h">
+      <Filter>libethcore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\ProofOfWork.h">
+      <Filter>libethcore</Filter>
+    </ClInclude>
+    <ClInclude Include="..\libethcore\ARPow.h">
+      <Filter>libethcore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
