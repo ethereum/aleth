@@ -33,7 +33,7 @@ using namespace dev::eth;
 
 u256 dev::eth::c_genesisDifficulty = (u256)1 << 17;
 
-BlockInfo::BlockInfo(): timestamp(Invalid256)
+BlockInfo::BlockInfo() noexcept: timestamp(Invalid256)
 {
 }
 
@@ -152,7 +152,7 @@ void BlockInfo::verifyInternals(bytesConstRef _block) const
 		BOOST_THROW_EXCEPTION(InvalidUnclesHash());
 }
 
-void BlockInfo::populateFromParent(BlockInfo const& _parent)
+void BlockInfo::populateFromParent(BlockInfo const& _parent) noexcept
 {
 	stateRoot = _parent.stateRoot;
 	parentHash = _parent.hash;
@@ -162,7 +162,7 @@ void BlockInfo::populateFromParent(BlockInfo const& _parent)
 	difficulty = calculateDifficulty(_parent);
 }
 
-u256 BlockInfo::calculateGasLimit(BlockInfo const& _parent) const
+u256 BlockInfo::calculateGasLimit(BlockInfo const& _parent)  const noexcept
 {
 	if (!parentHash)
 		return 1000000;
@@ -170,7 +170,7 @@ u256 BlockInfo::calculateGasLimit(BlockInfo const& _parent) const
 		return max<u256>(125000, (_parent.gasLimit * (1024 - 1) + (_parent.gasUsed * 6 / 5)) / 1024);
 }
 
-u256 BlockInfo::calculateDifficulty(BlockInfo const& _parent) const
+u256 BlockInfo::calculateDifficulty(BlockInfo const& _parent) const noexcept
 {
 	if (!parentHash)
 		return c_genesisDifficulty;

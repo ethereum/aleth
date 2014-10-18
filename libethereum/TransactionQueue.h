@@ -40,8 +40,8 @@ class BlockChain;
 class TransactionQueue
 {
 public:
-	bool attemptImport(bytesConstRef _tx) { try { import(_tx); return true; } catch (...) { return false; } }
-	bool attemptImport(bytes const& _tx) { return attemptImport(&_tx); }
+	bool attemptImport(bytesConstRef _tx) noexcept { try { import(_tx); return true; } catch (...) { return false; } }
+	bool attemptImport(bytes const& _tx) noexcept { return attemptImport(&_tx); }
 	bool import(bytesConstRef _tx);
 
 	void drop(h256 _txHash);

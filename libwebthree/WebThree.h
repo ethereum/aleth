@@ -38,7 +38,7 @@
 namespace dev
 {
 
-class InterfaceNotSupported: public Exception { public: InterfaceNotSupported(std::string _f): m_f(_f) {} virtual const char* what() const noexcept { return ("Interface " + m_f + " not supported.").c_str(); } private: std::string m_f; };
+class InterfaceNotSupported: public Exception { public: InterfaceNotSupported(std::string _f): m_f(_f) {} virtual const char* what() const noexcept {static std::string s_what; s_what ="Interface " + m_f + " not supported."; return s_what.c_str(); } private: std::string m_f; };
 
 enum WorkState
 {

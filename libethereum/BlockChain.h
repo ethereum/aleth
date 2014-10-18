@@ -92,8 +92,8 @@ public:
 	bool isKnown(h256 _hash) const;
 
 	/// Get the familial details concerning a block (or the most recent mined if none given). Thread-safe.
-	BlockDetails details(h256 _hash) const { return queryExtras<BlockDetails, 0>(_hash, m_details, x_details, NullBlockDetails); }
-	BlockDetails details() const { return details(currentHash()); }
+	BlockDetails details(h256 _hash) const noexcept { return queryExtras<BlockDetails, 0>(_hash, m_details, x_details, NullBlockDetails); }
+	BlockDetails details() const noexcept { return details(currentHash()); }
 
 	/// Get the transactions' bloom filters of a block (or the most recent mined if none given). Thread-safe.
 	BlockBlooms blooms(h256 _hash) const { return queryExtras<BlockBlooms, 1>(_hash, m_blooms, x_blooms, NullBlockBlooms); }
@@ -104,21 +104,29 @@ public:
 	BlockTraces traces() const { return traces(currentHash()); }
 
 	/// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.
-	bytes block(h256 _hash) const;
-	bytes block() const { return block(currentHash()); }
+	bytes block(h256 _hash) const noexcept;
+	bytes block() const noexcept { return block(currentHash()); }
 
 	/// Get a number for the given hash (or the most recent mined if none given). Thread-safe.
 	unsigned number(h256 _hash) const { return details(_hash).number; }
 	unsigned number() const { return number(currentHash()); }
 
+	/// Get a given block (RLP format). Thread-safe (unless an error message claims that it is not).
+	h256 currentHash() const noexcept;
+	// Actually, because of my implementation we would have to remove the thread safe label. Alternativley I could implement a not thread safe variant
+	// of this function and check with a try catch block at every occurence of this function wether we can use the safe variant or if
+	// we would have to use the not thread safe variant. But there are quite a lot usages, ...
+	// The same holds for all thread safe functions, since their guards may throw.
+
+
 	/// Get a given block (RLP format). Thread-safe.
-	h256 currentHash() const { ReadGuard l(x_lastBlockHash); return m_lastBlockHash; }
+	h256 currentHash_notThreadSafe() const noexcept{ return m_lastBlockHash; }
 
 	/// Get the hash of the genesis block. Thread-safe.
-	h256 genesisHash() const { return m_genesisHash; }
+	h256 genesisHash() const noexcept { return m_genesisHash; }
 
 	/// Get the hash of a block of a given number. Slow; try not to use it too much.
-	h256 numberHash(unsigned _n) const;
+	h256 numberHash(unsigned _n) const noexcept;
 
 	/// Get all blocks not allowed as uncles given a parent (i.e. featured as uncles/main in parent, parent + 1, ... parent + 5).
 	/// @returns set including the header-hash of every parent (including @a _parent) up to and including generation +5
@@ -152,26 +160,34 @@ private:
 	void open(std::string _path, bool _killExisting = false);
 	void close();
 
-	template<class T, unsigned N> T queryExtras(h256 _h, std::map<h256, T>& _m, boost::shared_mutex& _x, T const& _n) const
+	template<class T, unsigned N> T queryExtras(h256 _h, std::map<h256, T>& _m, boost::shared_mutex& _x, T const& _n) const noexcept
 	{
+		try
 		{
-			ReadGuard l(_x);
-			auto it = _m.find(_h);
-			if (it != _m.end())
-				return it->second;
-		}
+			{
+				ReadGuard l(_x);
+				auto it = _m.find(_h);
+				if (it != _m.end())
+					return it->second;
+			}
 
-		std::string s;
-		m_extrasDB->Get(m_readOptions, toSlice(_h, N), &s);
-		if (s.empty())
+			std::string s;
+			m_extrasDB->Get(m_readOptions, toSlice(_h, N), &s);
+			if (s.empty())
+			{
+				//			cout << "Not found in DB: " << _h << endl;
+				return _n;
+			}
+
+			WriteGuard l(_x);
+			auto ret = _m.insert(std::make_pair(_h, T(RLP(s))));
+			return ret.first->second;
+		}
+		catch(...)
 		{
-	//			cout << "Not found in DB: " << _h << endl;
+			std::cerr << "Could not get queryExtras " << boost::current_exception_diagnostic_information();
 			return _n;
 		}
-
-		WriteGuard l(_x);
-		auto ret = _m.insert(std::make_pair(_h, T(RLP(s))));
-		return ret.first->second;
 	}
 
 	void checkConsistency();

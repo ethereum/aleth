@@ -58,23 +58,31 @@ void VersionChecker::setOk()
 	}
 }
 
-Client::Client(p2p::Host* _extNet, std::string const& _dbPath, bool _forceClean, u256 _networkId):
+Client::Client(p2p::Host* _extNet, std::string const& _dbPath, bool _forceClean, u256 _networkId) noexcept:
 	Worker("eth"),
 	m_vc(_dbPath),
-	m_bc(_dbPath, !m_vc.ok() || _forceClean),
-	m_stateDB(State::openDB(_dbPath, !m_vc.ok() || _forceClean)),
-	m_preMine(Address(), m_stateDB),
-	m_postMine(Address(), m_stateDB)
+	m_bc(_dbPath, !m_vc.ok() || _forceClean)
 {
-	m_host = _extNet->registerCapability(new EthereumHost(m_bc, m_tq, m_bq, _networkId));
+	try
+	{
+		m_stateDB = State::openDB(_dbPath, !m_vc.ok() || _forceClean);
+		m_preMine = State(Address(), m_stateDB);
+		m_postMine = State(Address(), m_stateDB);
+		m_host = _extNet->registerCapability(new EthereumHost(m_bc, m_tq, m_bq, _networkId));
 
-	setMiningThreads();
-	if (_dbPath.size())
-		Defaults::setDBPath(_dbPath);
-	m_vc.setOk();
-	doWork();
+		setMiningThreads();
+		if (_dbPath.size())
+			Defaults::setDBPath(_dbPath);
+		m_vc.setOk();
+		doWork();
 
-	startWorking();
+		startWorking();
+	}
+	catch(...)
+	{
+		cerr << "Could not construct client!\n" << boost::current_exception_diagnostic_information();
+		exit(1); // anything else we can do?
+	}
 }
 
 Client::~Client()
@@ -100,7 +108,7 @@ void Client::doneWorking()
 	m_postMine = m_preMine;
 }
 
-void Client::flushTransactions()
+void Client::flushTransactions() noexcept
 {
 	doWork();
 }
@@ -162,42 +170,67 @@ void Client::clearPending()
 	noteChanged(changeds);
 }
 
-unsigned Client::installWatch(h256 _h)
+unsigned Client::installWatch(h256 _h) noexcept
 {
-	auto ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-	m_watches[ret] = ClientWatch(_h);
-	cwatch << "+++" << ret << _h;
-	return ret;
+	try
+	{
+		auto ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
+		m_watches[ret] = ClientWatch(_h);
+		cwatch << "+++" << ret << _h;
+		return ret;
+	}
+	catch(...)
+	{
+		cerr << "Could not install watch\n";
+		cerr << boost::current_exception_diagnostic_information();
+		return 0;
+	}
 }
 
-unsigned Client::installWatch(MessageFilter const& _f)
+unsigned Client::installWatch(MessageFilter const& _f) noexcept
 {
-	lock_guard<mutex> l(m_filterLock);
+	try
+	{
+		lock_guard<mutex> l(m_filterLock);
 
-	h256 h = _f.sha3();
+		h256 h = _f.sha3();
 
-	if (!m_filters.count(h))
-		m_filters.insert(make_pair(h, _f));
+		if (!m_filters.count(h))
+			m_filters.insert(make_pair(h, _f));
 
-	return installWatch(h);
+		return installWatch(h);
+	}
+	catch(...)
+	{
+		cerr << "Could not install watch\n";
+		cerr << boost::current_exception_diagnostic_information();
+		return 0;
+	}
 }
 
-void Client::uninstallWatch(unsigned _i)
+void Client::uninstallWatch(unsigned _i) noexcept
 {
 	cwatch << "XXX" << _i;
+	try
+	{
+		lock_guard<mutex> l(m_filterLock);
 
-	lock_guard<mutex> l(m_filterLock);
+		auto it = m_watches.find(_i);
+		if (it == m_watches.end())
+			return;
+		auto id = it->second.id;
+		m_watches.erase(it);
 
-	auto it = m_watches.find(_i);
-	if (it == m_watches.end())
-		return;
-	auto id = it->second.id;
-	m_watches.erase(it);
-
-	auto fit = m_filters.find(id);
-	if (fit != m_filters.end())
-		if (!--fit->second.refCount)
-			m_filters.erase(fit);
+		auto fit = m_filters.find(id);
+		if (fit != m_filters.end())
+			if (!--fit->second.refCount)
+				m_filters.erase(fit);
+	}
+	catch(...)
+	{
+		cerr <<  "Could not uninstall watch\n";
+		cerr << boost::current_exception_diagnostic_information();
+	}
 }
 
 void Client::noteChanged(h256Set const& _filters)
@@ -237,26 +270,90 @@ void Client::setForceMining(bool _enable)
 		 m.noteStateChange();
 }
 
-void Client::setMiningThreads(unsigned _threads)
+void Client::setMiningThreads(unsigned _threads) noexcept
 {
 	stopMining();
 
 	auto t = _threads ? _threads : thread::hardware_concurrency();
-	WriteGuard l(x_miners);
-	m_miners.clear();
-	m_miners.resize(t);
-	unsigned i = 0;
-	for (auto& m: m_miners)
-		m.setup(this, i++);
+	try
+	{
+		WriteGuard l(x_miners);
+		m_miners.clear();
+		m_miners.resize(t);
+		unsigned i = 0;
+		for (auto& m: m_miners)
+			m.setup(this, i++);
+	}
+	catch(...)
+	{
+		cerr << "Could not set mining threads, try again\n" << boost::current_exception_diagnostic_information();
+	}
 }
 
-MineProgress Client::miningProgress() const
+unsigned Client::miningThreads() const noexcept
+{
+	try
+	{
+		ReadGuard l(x_miners);
+	}
+	catch(...)
+	{
+		std::cerr << "Can not guarantee thread safety getting mining threads\n" << boost::current_exception_diagnostic_information();
+	}
+
+	return m_miners.size();
+}
+
+void Client::stopMining() noexcept
+{
+	try
+	{
+		ReadGuard l(x_miners);
+		for (auto& m: m_miners)
+			m.stop();
+	}
+	catch(...)
+	{
+		std::cerr << "Could not stop mining, try again\n";
+		std::cerr << boost::current_exception_diagnostic_information();
+	}
+}
+
+void Client::startMining() noexcept
+{
+	try
+	{
+		startWorking();
+		ReadGuard l(x_miners);
+		for (auto& m: m_miners)
+			m.start();
+	}
+	catch(...)
+	{
+		std::cerr << "Unable to start mining!\n" << boost::current_exception_diagnostic_information();
+		try
+		{
+			stopMining();
+		}
+		catch(...){}
+	}
+}
+
+MineProgress Client::miningProgress() const noexcept
 {
 	MineProgress ret;
-	ReadGuard l(x_miners);
-	for (auto& m: m_miners)
-		ret.combine(m.miningProgress());
-	return ret;
+	try
+	{
+		ReadGuard l(x_miners);
+		for (auto& m: m_miners)
+			ret.combine(m.miningProgress());
+		return ret;
+	}
+	catch(...)
+	{
+		cerr << "Could not get information on mining progress\n" << boost::current_exception_diagnostic_information();
+		return MineProgress();
+	}
 }
 
 std::list<MineInfo> Client::miningHistory()
@@ -303,7 +400,16 @@ void Client::setupState(State& _s)
 
 void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
-	startWorking();
+	try
+	{
+		startWorking();
+	}
+	catch(...)
+	{
+		cerr << "Exception thrown on attempt to startWorking()\n";
+		cerr << boost::current_exception_diagnostic_information();
+		exit(1);
+	}
 
 	Transaction t;
 //	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
@@ -318,10 +424,27 @@ void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _
 	t.data = _data;
 	t.sign(_secret);
 	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
+	try
+	{
+		if (!m_tq.attemptImport(t.rlp()))
+			cnote << "Failed to import transaction into transaction queue\n";
+	}
+	catch(const RLPException& _e)
+	{
+		cerr << "Could not cretae RLP of transaction. \n";
+		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << boost::diagnostic_information(_e);
+		// is this enough, or should we do something about it?
+	}
+	catch(...)
+	{
+		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << boost::current_exception_diagnostic_information();
+		// is this enough, or should we do something about it?
+	}
 }
 
-bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
+bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) noexcept
 {
 	bytes out;
 	try
@@ -345,14 +468,29 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 	}
 	catch (...)
 	{
-		// TODO: Some sort of notification of failure.
+		cnote << "Failed call: \n" <<\
+				 "to: " << _dest << "\n" <<\
+				 "value: " << _value << "\n" <<\
+				 "data: " << _data << "\n" <<\
+				 "gas: " << _gas << "\n" <<\
+				 "gas price: " << _gasPrice << "\n" <<\
+				 boost::current_exception_diagnostic_information();
 	}
 	return out;
 }
 
 Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
 {
-	startWorking();
+	try
+	{
+		startWorking();
+	}
+	catch(...)
+	{
+		cerr << "Exception thrown on attempt to startWorking()\n";
+		cerr << boost::current_exception_diagnostic_information();
+		exit(1);
+	}
 
 	Transaction t;
 	{
@@ -366,108 +504,162 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 	t.data = _init;
 	t.sign(_secret);
 	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
-	return right160(sha3(rlpList(t.sender(), t.nonce)));
+	try
+	{
+		if (!m_tq.attemptImport(t.rlp()))
+			cnote << "Failed to import transaction into transaction queue\n";
+		return right160(sha3(rlpList(t.sender(), t.nonce)));
+	}
+	catch(const RLPException& _e)
+	{
+		cerr << "Could not cretae RLP of transaction. \n";
+		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << boost::diagnostic_information(_e);
+		// is this enough, or should we exit here?
+		return right160(h256());
+	}
+	catch(...)
+	{
+		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << boost::current_exception_diagnostic_information();
+		return right160(h256());
+	}
 }
 
-void Client::inject(bytesConstRef _rlp)
+void Client::inject(bytesConstRef _rlp) noexcept
 {
-	startWorking();
+	try
+	{
+		startWorking();
+	}
+	catch(...)
+	{
+		cerr << "Exception thrown on attempt to startWorking()\n";
+		cerr << boost::current_exception_diagnostic_information();
+		exit(1);
+	}
 
-	m_tq.attemptImport(_rlp);
+	try
+	{
+		if (!m_tq.attemptImport(_rlp))
+			cnote << "Failed to import transaction into transaction queue\n";
+	}
+	catch(const RLPException& _e)
+	{
+		cerr << "Could not cretae RLP of transaction. \n";
+		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << boost::diagnostic_information(_e);
+		// is this enough, or should we do something about it?
+	}
+	catch(...)
+	{
+		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << boost::current_exception_diagnostic_information();
+	}
 }
 
-void Client::doWork()
+void Client::doWork() noexcept
 {
 	// TODO: Use condition variable rather than polling.
 
-	cworkin << "WORK";
-	h256Set changeds;
-
+	// TODO: more fine grained exception handling, may be we can handle some exceptions ...
+	try
 	{
-		ReadGuard l(x_miners);
-		for (auto& m: m_miners)
-			if (m.isComplete())
+
+		cworkin << "WORK";
+		h256Set changeds;
+
+		{
+			ReadGuard l(x_miners);
+			for (auto& m: m_miners)
+				if (m.isComplete())
+				{
+					cwork << "CHAIN <== postSTATE";
+					h256s hs;
+					{
+						WriteGuard l(x_stateDB);
+						hs = m_bc.attemptImport(m.blockData(), m_stateDB);
+					}
+					if (hs.size())
+					{
+						for (auto h: hs)
+							appendFromNewBlock(h, changeds);
+						changeds.insert(ChainChangedFilter);
+						//changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
+					}
+					for (auto& m: m_miners)
+						m.noteStateChange();
+				}
+		}
+
+		// Synchronise state to block chain.
+		// This should remove any transactions on our queue that are included within our state.
+		// It also guarantees that the state reflects the longest (valid!) chain on the block chain.
+		//   This might mean reverting to an earlier state and replaying some blocks, or, (worst-case:
+		//   if there are no checkpoints before our fork) reverting to the genesis block and replaying
+		//   all blocks.
+		// Resynchronise state with block chain & trans
+		bool rsm = false;
+		{
+			WriteGuard l(x_stateDB);
+			cwork << "BQ ==> CHAIN ==> STATE";
+			OverlayDB db = m_stateDB;
+			x_stateDB.unlock();
+			h256s newBlocks = m_bc.sync(m_bq, db, 100);	// TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
+			if (newBlocks.size())
 			{
-				cwork << "CHAIN <== postSTATE";
-				h256s hs;
-				{
-					WriteGuard l(x_stateDB);
-					hs = m_bc.attemptImport(m.blockData(), m_stateDB);
-				}
-				if (hs.size())
-				{
-					for (auto h: hs)
-						appendFromNewBlock(h, changeds);
-					changeds.insert(ChainChangedFilter);
-					//changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
-				}
-				for (auto& m: m_miners)
-					m.noteStateChange();
+				for (auto i: newBlocks)
+					appendFromNewBlock(i, changeds);
+				changeds.insert(ChainChangedFilter);
 			}
-	}
+			x_stateDB.lock();
+			if (newBlocks.size())
+				m_stateDB = db;
 
-	// Synchronise state to block chain.
-	// This should remove any transactions on our queue that are included within our state.
-	// It also guarantees that the state reflects the longest (valid!) chain on the block chain.
-	//   This might mean reverting to an earlier state and replaying some blocks, or, (worst-case:
-	//   if there are no checkpoints before our fork) reverting to the genesis block and replaying
-	//   all blocks.
-	// Resynchronise state with block chain & trans
-	bool rsm = false;
+			cwork << "preSTATE <== CHAIN";
+			if (m_preMine.sync(m_bc) || m_postMine.address() != m_preMine.address())
+			{
+				if (isMining())
+					cnote << "New block on chain: Restarting mining operation.";
+				m_postMine = m_preMine;
+				rsm = true;
+				changeds.insert(PendingChangedFilter);
+				// TODO: Move transactions pending from m_postMine back to transaction queue.
+			}
+
+			// returns h256s as blooms, once for each transaction.
+			cwork << "postSTATE <== TQ";
+			h256s newPendingBlooms = m_postMine.sync(m_tq);
+			if (newPendingBlooms.size())
+			{
+				for (auto i: newPendingBlooms)
+					appendFromNewPending(i, changeds);
+				changeds.insert(PendingChangedFilter);
+
+				if (isMining())
+					cnote << "Additional transaction ready: Restarting mining operation.";
+				rsm = true;
+			}
+		}
+		if (rsm)
+		{
+			ReadGuard l(x_miners);
+			for (auto& m: m_miners)
+				m.noteStateChange();
+		}
+
+		cwork << "noteChanged" << changeds.size() << "items";
+		noteChanged(changeds);
+		cworkout << "WORK";
+
+		this_thread::sleep_for(chrono::milliseconds(100));
+	}
+	catch(...)
 	{
-		WriteGuard l(x_stateDB);
-		cwork << "BQ ==> CHAIN ==> STATE";
-		OverlayDB db = m_stateDB;
-		x_stateDB.unlock();
-		h256s newBlocks = m_bc.sync(m_bq, db, 100);	// TODO: remove transactions from m_tq nicely rather than relying on out of date nonce later on.
-		if (newBlocks.size())
-		{
-			for (auto i: newBlocks)
-				appendFromNewBlock(i, changeds);
-			changeds.insert(ChainChangedFilter);
-		}
-		x_stateDB.lock();
-		if (newBlocks.size())
-			m_stateDB = db;
-
-		cwork << "preSTATE <== CHAIN";
-		if (m_preMine.sync(m_bc) || m_postMine.address() != m_preMine.address())
-		{
-			if (isMining())
-				cnote << "New block on chain: Restarting mining operation.";
-			m_postMine = m_preMine;
-			rsm = true;
-			changeds.insert(PendingChangedFilter);
-			// TODO: Move transactions pending from m_postMine back to transaction queue.
-		}
-
-		// returns h256s as blooms, once for each transaction.
-		cwork << "postSTATE <== TQ";
-		h256s newPendingBlooms = m_postMine.sync(m_tq);
-		if (newPendingBlooms.size())
-		{
-			for (auto i: newPendingBlooms)
-				appendFromNewPending(i, changeds);
-			changeds.insert(PendingChangedFilter);
-
-			if (isMining())
-				cnote << "Additional transaction ready: Restarting mining operation.";
-			rsm = true;
-		}
+		// most exceptions should have been caught earlier
+		cerr << "Client failed working: " << boost::current_exception_diagnostic_information();
+		exit(1);
 	}
-	if (rsm)
-	{
-		ReadGuard l(x_miners);
-		for (auto& m: m_miners)
-			m.noteStateChange();
-	}
-
-	cwork << "noteChanged" << changeds.size() << "items";
-	noteChanged(changeds);
-	cworkout << "WORK";
-
-	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
 unsigned Client::numberOf(int _n) const
@@ -509,152 +701,247 @@ eth::State Client::state(unsigned _txi) const
 	return m_postMine.fromPending(_txi);
 }
 
-StateDiff Client::diff(unsigned _txi, int _block) const
+StateDiff Client::diff(unsigned _txi, int _block) const noexcept
 {
-	State st = state(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-StateDiff Client::diff(unsigned _txi, h256 _block) const
-{
-	State st = state(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-std::vector<Address> Client::addresses(int _block) const
-{
-	vector<Address> ret;
-	for (auto const& i: asOf(_block).addresses())
-		ret.push_back(i.first);
-	return ret;
-}
-
-u256 Client::balanceAt(Address _a, int _block) const
-{
-	return asOf(_block).balance(_a);
-}
-
-std::map<u256, u256> Client::storageAt(Address _a, int _block) const
-{
-	return asOf(_block).storage(_a);
-}
-
-u256 Client::countAt(Address _a, int _block) const
-{
-	return asOf(_block).transactionsFrom(_a);
-}
-
-u256 Client::stateAt(Address _a, u256 _l, int _block) const
-{
-	return asOf(_block).storage(_a, _l);
-}
-
-bytes Client::codeAt(Address _a, int _block) const
-{
-	return asOf(_block).code(_a);
-}
-
-Transaction Client::transaction(h256 _blockHash, unsigned _i) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	return Transaction(b[1][_i].data());
-}
-
-BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	return BlockInfo::fromHeader(b[2][_i].data());
-}
-
-PastMessages Client::messages(MessageFilter const& _f) const
-{
-	PastMessages ret;
-	unsigned begin = min<unsigned>(m_bc.number(), (unsigned)_f.latest());
-	unsigned end = min(begin, (unsigned)_f.earliest());
-	unsigned m = _f.max();
-	unsigned s = _f.skip();
-
-	// Handle pending transactions differently as they're not on the block chain.
-	if (begin == m_bc.number())
+	State st;
+	try
 	{
-		ReadGuard l(x_stateDB);
-		for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
+		 st = state(_block);
+	}
+	catch(...)
+	{
+		cerr << "Could not create state from block: " << _block << endl;
+		cerr << boost::current_exception_diagnostic_information();
+		return StateDiff(); // or exit?
+	}
+	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
+}
+
+StateDiff Client::diff(unsigned _txi, h256 _block) const noexcept
+{
+	State st;
+	try
+	{
+		 st = state(_block);
+	}
+	catch(...)
+	{
+		cerr << "Could not create state from block: " << _block.abridged() << endl;
+		cerr << boost::current_exception_diagnostic_information();
+		return StateDiff(); // or exit?
+	}
+	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
+}
+
+std::vector<Address> Client::addresses(int _block) const noexcept
+{
+	try
+	{
+		vector<Address> ret;
+		for (auto const& i: asOf(_block).addresses())
+			ret.push_back(i.first);
+		return ret;
+	}
+	catch(...) // this can only be reached if a guard throws.
+	{
+		cerr << "Could get addresses of block: " << _block << endl;
+		cerr << boost::current_exception_diagnostic_information();
+		return std::vector<Address>();
+	}
+}
+
+u256 Client::balanceAt(Address _a, int _block) const noexcept
+{
+	try
+	{
+		return asOf(_block).balance(_a);
+	}
+	catch(...)
+	{
+		cerr << "Could not get balance of address " << _a.abridged() << " in block " << _block << endl;
+		return u256();
+	}
+}
+
+std::map<u256, u256> Client::storageAt(Address _a, int _block) const noexcept
+{
+	try
+	{
+		return asOf(_block).storage(_a);
+	}
+	catch(...)
+	{
+		cerr << "Could not get storage of address " << _a.abridged() << " in block " << _block << endl;
+		return std::map<u256,u256>();
+	}
+}
+
+u256 Client::countAt(Address _a, int _block) const noexcept
+{
+	try
+	{
+		return asOf(_block).transactionsFrom(_a);
+	}
+	catch(...)
+	{
+		cerr << "Could not get count of address " << _a.abridged() << " in block " << _block << endl;
+		return u256();
+	}
+
+}
+
+u256 Client::stateAt(Address _a, u256 _l, int _block) const noexcept
+{
+	try
+	{
+		return asOf(_block).storage(_a, _l);
+	}
+	catch(...)
+	{
+		cerr << "Could not get state of address " << _a.abridged() << " in block " << _block << endl;
+		return u256();
+	}
+}
+
+bytes Client::codeAt(Address _a, int _block) const noexcept
+{
+	try
+	{
+		return asOf(_block).code(_a);
+	}
+	catch(...)
+	{
+		cerr << "Could not get code of address " << _a.abridged() << " in block " << _block << endl;
+		return bytes();
+	}
+}
+
+Transaction Client::transaction(h256 _blockHash, unsigned _i) const noexcept
+{
+	bytes bl = m_bc.block(_blockHash);
+	RLP b(bl);
+	try
+	{
+		return Transaction(b[1][_i].data());
+	}
+	catch(...)
+	{
+		cerr << "Could not get transaction. " << boost::current_exception_diagnostic_information();
+		return Transaction();
+	}
+}
+
+BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const noexcept
+{
+	bytes bl = m_bc.block(_blockHash);
+	RLP b(bl);
+	try
+	{
+		return BlockInfo::fromHeader(b[2][_i].data());
+	}
+	catch(...)
+	{
+		cerr << "Could not get block info of uncle. " << boost::current_exception_diagnostic_information();
+		return BlockInfo();
+	}
+}
+
+PastMessages Client::messages(MessageFilter const& _f) const noexcept
+{
+	try
+	{
+		PastMessages ret;
+		unsigned begin = min<unsigned>(m_bc.number(), (unsigned)_f.latest());
+		unsigned end = min(begin, (unsigned)_f.earliest());
+		unsigned m = _f.max();
+		unsigned s = _f.skip();
+
+		// Handle pending transactions differently as they're not on the block chain.
+		if (begin == m_bc.number())
 		{
-			// Might have a transaction that contains a matching message.
-			Manifest const& ms = m_postMine.changesFromPending(i);
-			PastMessages pm = _f.matches(ms, i);
-			if (pm.size())
+			ReadGuard l(x_stateDB);
+			for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
 			{
-				auto ts = time(0);
-				for (unsigned j = 0; j < pm.size() && ret.size() != m; ++j)
-					if (s)
-						s--;
-					else
-						// Have a transaction that contains a matching message.
-						ret.insert(ret.begin(), pm[j].polish(h256(), ts, m_bc.number() + 1, m_postMine.address()));
+				// Might have a transaction that contains a matching message.
+				Manifest const& ms = m_postMine.changesFromPending(i);
+				PastMessages pm = _f.matches(ms, i);
+				if (pm.size())
+				{
+					auto ts = time(0);
+					for (unsigned j = 0; j < pm.size() && ret.size() != m; ++j)
+						if (s)
+							s--;
+						else
+							// Have a transaction that contains a matching message.
+							ret.insert(ret.begin(), pm[j].polish(h256(), ts, m_bc.number() + 1, m_postMine.address()));
+				}
 			}
 		}
-	}
 
 #if ETH_DEBUG
-	unsigned skipped = 0;
-	unsigned falsePos = 0;
+		unsigned skipped = 0;
+		unsigned falsePos = 0;
 #endif
-	auto h = m_bc.numberHash(begin);
-	unsigned n = begin;
-	for (; ret.size() != m && n != end; n--, h = m_bc.details(h).parent)
-	{
-		auto d = m_bc.details(h);
-#if ETH_DEBUG
-		int total = 0;
-#endif
-		if (_f.matches(d.bloom))
+		auto h = m_bc.numberHash(begin);
+		unsigned n = begin;
+		for (; ret.size() != m && n != end; n--, h = m_bc.details(h).parent)
 		{
-			// Might have a block that contains a transaction that contains a matching message.
-			auto bs = m_bc.blooms(h).blooms;
-			Manifests ms;
-			BlockInfo bi;
-			for (unsigned i = 0; i < bs.size(); ++i)
-				if (_f.matches(bs[i]))
-				{
-					// Might have a transaction that contains a matching message.
-					if (ms.empty())
-						ms = m_bc.traces(h).traces;
-					Manifest const& changes = ms[i];
-					PastMessages pm = _f.matches(changes, i);
-					if (pm.size())
+			auto d = m_bc.details(h);
+#if ETH_DEBUG
+			int total = 0;
+#endif
+			if (_f.matches(d.bloom))
+			{
+				// Might have a block that contains a transaction that contains a matching message.
+				auto bs = m_bc.blooms(h).blooms;
+				Manifests ms;
+				BlockInfo bi;
+				for (unsigned i = 0; i < bs.size(); ++i)
+					if (_f.matches(bs[i]))
 					{
+						// Might have a transaction that contains a matching message.
+						if (ms.empty())
+							ms = m_bc.traces(h).traces;
+						Manifest const& changes = ms[i];
+						PastMessages pm = _f.matches(changes, i);
+						if (pm.size())
+						{
 #if ETH_DEBUG
-						total += pm.size();
+							total += pm.size();
 #endif
-						if (!bi)
-							bi.populate(m_bc.block(h));
-						auto ts = bi.timestamp;
-						auto cb = bi.coinbaseAddress;
-						for (unsigned j = 0; j < pm.size() && ret.size() != m; ++j)
-							if (s)
-								s--;
-							else
-								// Have a transaction that contains a matching message.
-								ret.push_back(pm[j].polish(h, ts, n, cb));
+							if (!bi)
+								bi.populate(m_bc.block(h));
+							auto ts = bi.timestamp;
+							auto cb = bi.coinbaseAddress;
+							for (unsigned j = 0; j < pm.size() && ret.size() != m; ++j)
+								if (s)
+									s--;
+								else
+									// Have a transaction that contains a matching message.
+									ret.push_back(pm[j].polish(h, ts, n, cb));
+						}
 					}
-				}
 #if ETH_DEBUG
-			if (!total)
-				falsePos++;
-		}
-		else
-			skipped++;
+				if (!total)
+					falsePos++;
+			}
+			else
+				skipped++;
 #else
+			}
+#endif
+			if (n == end)
+				break;
 		}
-#endif
-		if (n == end)
-			break;
-	}
 #if ETH_DEBUG
-//	cdebug << (begin - n) << "searched; " << skipped << "skipped; " << falsePos << "false +ves";
+		//	cdebug << (begin - n) << "searched; " << skipped << "skipped; " << falsePos << "false +ves";
 #endif
-	return ret;
+		return ret;
+	}
+	catch (...)
+	{
+		cerr << "Could not get messages\n";
+		cerr << boost::current_exception_diagnostic_information();
+		return PastMessages();
+	}
 }

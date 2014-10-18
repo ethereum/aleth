@@ -85,25 +85,66 @@ const std::map<unsigned, PrecompiledAddress> State::c_precompiled =
 	{ 2, { 100, sha256Code }},
 	{ 3, { 100, ripemd160Code }}
 };
+void State::setAddress(Address _coinbaseAddress) noexcept
+{
+	m_ourAddress = _coinbaseAddress;
+	try
+	{
+		resetCurrent();
+	}
+	catch(...)
+	{
+		std::cerr << "Could not reset current state. " << boost::current_exception_diagnostic_information();
+		if (m_currentBlock.coinbaseAddress == _coinbaseAddress)
+			return;
+		else
+		{
+			std::cerr << "Could not set coin base address.\n";
+			exit(1); // or continue
+		}
+	}
+}
 
 OverlayDB State::openDB(std::string _path, bool _killExisting)
 {
-	if (_path.empty())
-		_path = Defaults::get()->m_dbPath;
-	boost::filesystem::create_directory(_path);
+	// TODO where should exceptions of this function be catched? This is called in constructor of WebThreeDirect
+	try
+	{
+		try
+		{
+			if (_path.empty())
+				_path = Defaults::get()->m_dbPath;
+			boost::filesystem::create_directory(_path);
+		}
+		catch(Exception)
+		{
+			cerr << "ERROR: Could not create directory: " << _path << "\n Choose a path and make sure permissions are correct and restart." << endl;
+			cerr << boost::current_exception_diagnostic_information() << endl;
+			exit(1);
+		}
 
-	if (_killExisting)
-		boost::filesystem::remove_all(_path + "/state");
+		if (_killExisting)
+			boost::filesystem::remove_all(_path + "/state");
 
-	ldb::Options o;
-	o.create_if_missing = true;
-	ldb::DB* db = nullptr;
-	ldb::DB::Open(o, _path + "/state", &db);
-	if (!db)
-		BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
+		ldb::Options o;
+		o.create_if_missing = true;
+		ldb::DB* db = nullptr;
+		ldb::DB::Open(o, _path + "/state", &db);
+		if (!db)
+			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
+		// could one handle that case by killing the database and recreate it?
 
-	cnote << "Opened state DB.";
-	return OverlayDB(db);
+		cnote << "Opened state DB.";
+		return OverlayDB(db);
+	}
+
+	catch(...)
+	{
+		// TODO: Slightly nicer handling? :-) or rethrow and catch somewhere else?
+		cerr << "ERROR: Could not open Database at: " << _path << "\n Choose a path and make sure permissions are correct and restart." << endl;
+		cerr << boost::current_exception_diagnostic_information() << endl;
+		exit(1);
+	}
 }
 
 State::State(Address _coinbaseAddress, OverlayDB const& _db):
@@ -112,49 +153,80 @@ State::State(Address _coinbaseAddress, OverlayDB const& _db):
 	m_ourAddress(_coinbaseAddress),
 	m_blockReward(c_blockReward)
 {
-	secp256k1_start();
+	try
+	{
+		secp256k1_start();
 
-	// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
-	m_state.init();
+		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
+		m_state.init();
 
-	paranoia("beginning of normal construction.", true);
+		paranoia("beginning of normal construction.", true);
 
-	dev::eth::commit(genesisState(), m_db, m_state);
-	m_db.commit();
+		dev::eth::commit(genesisState(), m_db, m_state);
+		m_db.commit();
 
-	paranoia("after DB commit of normal construction.", true);
+		paranoia("after DB commit of normal construction.", true);
 
-	m_previousBlock = BlockChain::genesis();
-	resetCurrent();
+		m_previousBlock = BlockChain::genesis();
+		resetCurrent();
 
-	assert(m_state.root() == m_previousBlock.stateRoot);
+		if (assertsEqual(m_state.root(), m_previousBlock.stateRoot))
+		{
+			cerr << "State root is not equal to state root of previous block at state construction\n";
+			exit(1);
+		}
 
-	paranoia("end of normal construction.", true);
+		paranoia("end of normal construction.", true);
+	}
+	catch(...)
+	{
+		cerr << "Construction of state failed\n";
+		cerr << boost::current_exception_diagnostic_information() << endl;
+		exit(1);
+	}
 }
 
-State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h):
+State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h) noexcept:
 	m_db(_db),
 	m_state(&m_db),
 	m_blockReward(c_blockReward)
 {
-	secp256k1_start();
+	try
+	{
+		secp256k1_start();
 
-	// TODO THINK: is this necessary?
-	m_state.init();
+		// TODO THINK: is this necessary?
+		m_state.init();
 
-	auto b = _bc.block(_h);
-	BlockInfo bi;
-	BlockInfo bip;
-	if (_h)
-		bi.populate(b);
-	if (bi && bi.number)
-		bip.populate(_bc.block(bi.parentHash));
-	if (!_h || !bip)
-		return;
-	m_ourAddress = bi.coinbaseAddress;
+		auto b = _bc.block(_h);
+		BlockInfo bi;
+		BlockInfo bip;
+		try
+		{
+			if (_h)
+				bi.populate(b);
+			if (bi && bi.number)
+				bip.populate(_bc.block(bi.parentHash));
+		}
+		catch(const Exception& _e)
+		{
+			cerr << "Could not populate black header\n";
+			cerr << boost::diagnostic_information(_e) << endl;
+		}
 
-	sync(_bc, bi.parentHash, bip);
-	enact(&b);
+		if (!_h || !bip)
+			return;
+		m_ourAddress = bi.coinbaseAddress;
+
+		sync(_bc, bi.parentHash, bip);
+		enact(&b);
+	}
+	catch(...)
+	{
+		cerr << "Construction of state failed\n";
+		cerr << boost::current_exception_diagnostic_information() << endl;
+		exit(1);
+	}
 }
 
 State::State(State const& _s):
@@ -190,7 +262,16 @@ void State::paranoia(std::string const& _when, bool _enforceRefs) const
 State& State::operator=(State const& _s)
 {
 	m_db = _s.m_db;
-	m_state.open(&m_db, _s.m_state.root());
+	try
+	{
+		m_state.open(&m_db, _s.m_state.root());
+	}
+	catch(const RootNotFound& _e)
+	{
+		cerr << "Unable to copy state. Could not find root\n";
+		cerr << boost::diagnostic_information(_e);
+		exit(1);
+	}
 	m_transactions = _s.m_transactions;
 	m_transactionSet = _s.m_transactionSet;
 	m_cache = _s.m_cache;
@@ -289,7 +370,7 @@ struct CachedAddressState
 	OverlayDB const* o;
 };
 
-StateDiff State::diff(State const& _c) const
+StateDiff State::diff(State const& _c) const noexcept
 {
 	StateDiff ret;
 
@@ -297,32 +378,46 @@ StateDiff State::diff(State const& _c) const
 	std::set<Address> trieAds;
 	std::set<Address> trieAdsD;
 
-	auto trie = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
-	auto trieD = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&_c.m_db), _c.rootHash());
-
-	for (auto i: trie)
-		ads.insert(i.first), trieAds.insert(i.first);
-	for (auto i: trieD)
-		ads.insert(i.first), trieAdsD.insert(i.first);
-	for (auto i: m_cache)
-		ads.insert(i.first);
-	for (auto i: _c.m_cache)
-		ads.insert(i.first);
-
-	for (auto i: ads)
+	try
 	{
-		auto it = m_cache.find(i);
-		auto itD = _c.m_cache.find(i);
-		CachedAddressState source(trieAds.count(i) ? trie.at(i) : "", it != m_cache.end() ? &it->second : nullptr, &m_db);
-		CachedAddressState dest(trieAdsD.count(i) ? trieD.at(i) : "", itD != _c.m_cache.end() ? &itD->second : nullptr, &_c.m_db);
-		AccountDiff acd = source.diff(dest);
-		if (acd.changed())
-			ret.accounts[i] = acd;
+		auto trie = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
+		auto trieD = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&_c.m_db), _c.rootHash());
+
+		for (auto i: trie)
+			ads.insert(i.first), trieAds.insert(i.first);
+		for (auto i: trieD)
+			ads.insert(i.first), trieAdsD.insert(i.first);
+		for (auto i: m_cache)
+			ads.insert(i.first);
+		for (auto i: _c.m_cache)
+			ads.insert(i.first);
+
+		for (auto i: ads)
+		{
+			auto it = m_cache.find(i);
+			auto itD = _c.m_cache.find(i);
+			CachedAddressState source(trieAds.count(i) ? trie.at(i) : "", it != m_cache.end() ? &it->second : nullptr, &m_db);
+			CachedAddressState dest(trieAdsD.count(i) ? trieD.at(i) : "", itD != _c.m_cache.end() ? &itD->second : nullptr, &_c.m_db);
+			AccountDiff acd = source.diff(dest);
+			if (acd.changed())
+				ret.accounts[i] = acd;
+		}
+	}
+	catch(const RootNotFound& _e)
+	{
+		cerr << "Could not find root\n";
+		cerr << boost::diagnostic_information(_e);
+	}
+	catch(...)
+	{
+		cerr << "Could not get diff of state\n";
+		cerr << boost::current_exception_diagnostic_information();
+		// should we rethrow, or is it enough to make an error message and return an empty StateDiff ?
 	}
 
 	return ret;
 }
-
+// should this function return a bool for success or failure, so it can be handled at the place where it is called? I would like to have this function noexcept
 void State::ensureCached(Address _a, bool _requireCode, bool _forceCreate) const
 {
 	ensureCached(m_cache, _a, _requireCode, _forceCreate);
@@ -342,7 +437,18 @@ void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bo
 		if (state.isNull())
 			s = AddressState(0, 0, h256(), EmptySHA3);
 		else
-			s = AddressState(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].isEmpty() ? EmptySHA3 : state[3].toHash<h256>());
+		{
+			try
+			{
+				s = AddressState(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].isEmpty() ? EmptySHA3 : state[3].toHash<h256>());
+			}
+			catch(const BadCast& _e)
+			{
+				cerr << "BadCast: unable to get address state\n";
+				cerr << boost::diagnostic_information(_e);
+				exit(1); // is there anyway of handling it better? My suggestion (see comment above) to return a bool for success or failure)
+			}
+		}
 		bool ok;
 		tie(it, ok) = _cache.insert(make_pair(_a, s));
 	}
@@ -352,7 +458,22 @@ void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bo
 
 void State::commit()
 {
-	dev::eth::commit(m_cache, m_db, m_state);
+	try
+	{
+		dev::eth::commit(m_cache, m_db, m_state);
+	}
+	catch(Exception& _e)
+	{
+		cerr << "Could not commit state changes\n";
+		// TODO is this fixable with something like that:
+		// this->resetCurrent();
+		// m_db.rollback();
+		// or do we have to
+		// exit(1);
+		_e << errinfo_comment("Unable to commit changes to the state and the database\n");
+		throw;
+	}
+
 	m_cache.clear();
 }
 
@@ -456,16 +577,24 @@ u256 State::enactOn(bytesConstRef _block, BlockInfo const& _bi, BlockChain const
 	return enact(_block, &_bc);
 }
 
-map<Address, u256> State::addresses() const
+map<Address, u256> State::addresses() const noexcept
 {
-	map<Address, u256> ret;
-	for (auto i: m_cache)
-		if (i.second.isAlive())
-			ret[i.first] = i.second.balance();
-	for (auto const& i: m_state)
-		if (m_cache.find(i.first) == m_cache.end())
-			ret[i.first] = RLP(i.second)[1].toInt<u256>();
-	return ret;
+	try
+	{
+		map<Address, u256> ret;
+		for (auto i: m_cache)
+			if (i.second.isAlive())
+				ret[i.first] = i.second.balance();
+		for (auto const& i: m_state)
+			if (m_cache.find(i.first) == m_cache.end())
+				ret[i.first] = RLP(i.second)[1].toInt<u256>();
+		return ret;
+	}
+	catch(...)
+	{
+		cerr << "Could not get adressess. " << boost::current_exception_diagnostic_information();
+		return map<Address, u256>();
+	}
 }
 
 void State::resetCurrent()
@@ -485,7 +614,23 @@ void State::resetCurrent()
 	// TODO: check.
 
 	m_lastTx = m_db;
-	m_state.setRoot(m_previousBlock.stateRoot);
+	try
+	{
+		m_state.setRoot(m_previousBlock.stateRoot);
+	}
+	catch(const Exception)
+	{
+
+		// TODO: Slightly nicer handling? :-)
+		cerr << "Not able to reset current state! State root of previous block not found!";
+		cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
+		cerr << boost::current_exception_diagnostic_information() << endl;
+		exit(1);
+
+		// TODO: can we handle this in some meaningful way?
+		// should I rethrow? If yes, where should it be catched to not make it to the top.
+		// This function is called by the client (setAddress), which is part of the web3 API.
+	}
 
 	paranoia("begin resetCurrent", true);
 }
@@ -1242,20 +1387,30 @@ h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas,
 	return newAddress;
 }
 
-State State::fromPending(unsigned _i) const
+State State::fromPending(unsigned _i) const noexcept
 {
 	State ret = *this;
-	ret.m_cache.clear();
-	_i = min<unsigned>(_i, m_transactions.size());
-	if (!_i)
-		ret.m_state.setRoot(m_previousBlock.stateRoot);
-	else
-		ret.m_state.setRoot(m_transactions[_i - 1].stateRoot);
-	while (ret.m_transactions.size() > _i)
+	try
 	{
-		ret.m_transactionSet.erase(ret.m_transactions.back().transaction.sha3());
-		ret.m_transactions.pop_back();
+		ret.m_cache.clear();
+		_i = min<unsigned>(_i, m_transactions.size());
+		if (!_i)
+			ret.m_state.setRoot(m_previousBlock.stateRoot);
+		else
+			ret.m_state.setRoot(m_transactions[_i - 1].stateRoot);
+		while (ret.m_transactions.size() > _i)
+		{
+			ret.m_transactionSet.erase(ret.m_transactions.back().transaction.sha3());
+			ret.m_transactions.pop_back();
+		}
 	}
+	catch(...)
+	{
+		cerr << "Could not get pending state " << boost::current_exception_diagnostic_information();
+		// should we exit, return the current state or return an empty state?
+		return State();
+	}
+
 	return ret;
 }
 
