@@ -105,9 +105,8 @@ void State::setAddress(Address _coinbaseAddress) noexcept
 	}
 }
 
-OverlayDB State::openDB(std::string _path, bool _killExisting)
+OverlayDB State::openDB(std::string _path, bool _killExisting) noexcept
 {
-	// TODO where should exceptions of this function be catched? This is called in constructor of WebThreeDirect
 	try
 	{
 		try
@@ -140,7 +139,7 @@ OverlayDB State::openDB(std::string _path, bool _killExisting)
 
 	catch(...)
 	{
-		// TODO: Slightly nicer handling? :-) or rethrow and catch somewhere else?
+		// TODO: Slightly nicer handling? :-) or rethrow and catch somewhere else? (its called in the constructor of the client)
 		cerr << "ERROR: Could not open Database at: " << _path << "\n Choose a path and make sure permissions are correct and restart." << endl;
 		cerr << boost::current_exception_diagnostic_information() << endl;
 		exit(1);
@@ -642,7 +641,8 @@ void State::resetCurrent()
 
 		// TODO: can we handle this in some meaningful way?
 		// should I rethrow? If yes, where should it be catched to not make it to the top.
-		// This function is called by the client (setAddress), which is part of the web3 API.
+		// This function is called by the client (setAddress) as well as the constructor
+		// of the client through the constructor of the state.
 	}
 
 	paranoia("begin resetCurrent", true);
@@ -1089,6 +1089,22 @@ u256 State::transactionsFrom(Address _id) const
 		return 0;
 	else
 		return it->second.nonce();
+}
+
+Transactions State::pending() const noexcept
+{
+	try
+	{
+		Transactions ret;
+		for (auto const& t: m_transactions)
+			ret.push_back(t.transaction);
+		return ret;
+	}
+	catch(...)
+	{
+		cerr << "Could not get pending transactions! " << boost::current_exception_diagnostic_information();
+		return Transactions();
+	}
 }
 
 u256 State::storage(Address _id, u256 _memory) const

@@ -121,11 +121,11 @@ public:
 	virtual ~Client();
 
 	/// Submits the given message-call transaction.
-	virtual void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
+	virtual void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo) noexcept;
 
 	/// Submits a new contract-creation transaction.
 	/// @returns the new contract's address (assuming it all goes through).
-	virtual Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
+	virtual Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo) noexcept;
 
 	/// Injects the RLP-encoded transaction given by the _rlp into the transaction queue directly.
 	virtual void inject(bytesConstRef _rlp) noexcept;
@@ -165,11 +165,11 @@ public:
 	// [EXTRA API]:
 
 	/// @returns the length of the chain.
-	virtual unsigned number() const noexcept{ try {return m_bc.number();} catch(...){std::cerr << "Could not get number of block\n" << boost::current_exception_diagnostic_information(); return 0;} }
+	virtual unsigned number() const noexcept{ return m_bc.number(); }
 
 	/// Get a map containing each of the pending transactions.
 	/// @TODO: Remove in favour of transactions().
-	virtual Transactions pending() const { return m_postMine.pending(); }
+	virtual Transactions pending() const noexcept { return m_postMine.pending(); }
 
 	virtual h256 hashFromNumber(unsigned _number) const noexcept { return m_bc.numberHash(_number); }
 	virtual BlockInfo blockInfo(h256 _hash) const noexcept { return BlockInfo(m_bc.block(_hash)); }
@@ -232,19 +232,8 @@ public:
 	virtual void stopMining() noexcept;
 
 	/// Are we mining now?
-	virtual bool isMining() noexcept
-	{
-		try
-		{
-			ReadGuard l(x_miners);
-			return m_miners.size() && m_miners[0].isRunning();
-		}
-		catch(...)
-		{
-			std::cerr << "Can figure out if client is mining\n" << boost::current_exception_diagnostic_information();
-			return 0; // exit? since 0 is may be the wrong answer
-		}
-	}
+	virtual bool isMining() noexcept;
+
 	/// Check the progress of the mining.
 	virtual MineProgress miningProgress() const noexcept;
 	/// Get and clear the mining history.

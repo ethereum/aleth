@@ -61,11 +61,11 @@ void VersionChecker::setOk()
 Client::Client(p2p::Host* _extNet, std::string const& _dbPath, bool _forceClean, u256 _networkId) noexcept:
 	Worker("eth"),
 	m_vc(_dbPath),
-	m_bc(_dbPath, !m_vc.ok() || _forceClean)
+	m_bc(_dbPath, !m_vc.ok() || _forceClean),
+	m_stateDB(State::openDB(_dbPath, !m_vc.ok() || _forceClean))
 {
 	try
 	{
-		m_stateDB = State::openDB(_dbPath, !m_vc.ok() || _forceClean);
 		m_preMine = State(Address(), m_stateDB);
 		m_postMine = State(Address(), m_stateDB);
 		m_host = _extNet->registerCapability(new EthereumHost(m_bc, m_tq, m_bq, _networkId));
@@ -265,7 +265,7 @@ void Client::appendFromNewPending(h256 _bloom, h256Set& o_changed) const
 
 void Client::appendFromNewBlock(h256 _block, h256Set& o_changed) const
 {
-	auto d = m_bc.details(_block);
+	BlockDetails d = m_bc.details(_block);
 
 	lock_guard<mutex> l(m_filterLock);
 	for (pair<h256, InstalledFilter> const& i: m_filters)
@@ -350,6 +350,20 @@ void Client::startMining() noexcept
 	}
 }
 
+bool Client::isMining() noexcept
+{
+	try
+	{
+		ReadGuard l(x_miners);
+		return m_miners.size() && m_miners[0].isRunning();
+	}
+	catch(...)
+	{
+		std::cerr << "Can figure out if client is mining\n" << boost::current_exception_diagnostic_information();
+		return 0; // exit? since 0 is may be the wrong answer
+	}
+}
+
 MineProgress Client::miningProgress() const noexcept
 {
 	MineProgress ret;
@@ -409,49 +423,50 @@ void Client::setupState(State& _s)
 		_s.commitToMine(m_bc);
 }
 
-void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
+void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) noexcept
 {
 	try
 	{
 		startWorking();
-	}
-	catch(...)
-	{
-		cerr << "Exception thrown on attempt to startWorking()\n";
-		cerr << boost::current_exception_diagnostic_information();
-		exit(1);
-	}
-
-	Transaction t;
+		Transaction t;
 //	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-	{
-		ReadGuard l(x_stateDB);
-		t.nonce = m_postMine.transactionsFrom(toAddress(_secret));
-	}
-	t.value = _value;
-	t.gasPrice = _gasPrice;
-	t.gas = _gas;
-	t.receiveAddress = _dest;
-	t.data = _data;
-	t.sign(_secret);
-	cnote << "New transaction " << t;
-	try
-	{
+
+		{
+			ReadGuard l(x_stateDB);
+			t.nonce = m_postMine.transactionsFrom(toAddress(_secret));
+		}
+
+		t.value = _value;
+		t.gasPrice = _gasPrice;
+		t.gas = _gas;
+		t.receiveAddress = _dest;
+		t.data = _data;
+
+		t.sign(_secret);
+		cnote << "New transaction " << t;
 		if (!m_tq.attemptImport(t.rlp()))
-			cnote << "Failed to import transaction into transaction queue\n";
+		{
+			cnote << "Unable to execute the transaction. Failed to import transaction into transaction queue\n";
+			return;
+		}
+	}
+	catch(InvalidSignature& _e)
+	{
+		cerr << "Unable to sign the transaction, invalid signature! " << boost::diagnostic_information(_e);
+		return;
 	}
 	catch(const RLPException& _e)
 	{
-		cerr << "Could not cretae RLP of transaction. \n";
+		cerr << "Unable to execute the transaction. Could not cretae RLP of transaction. \n";
 		cerr << "Failed to import transaction into transaction queue\n";
 		cerr << boost::diagnostic_information(_e);
-		// is this enough, or should we do something about it?
+		return;
 	}
 	catch(...)
 	{
-		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << "Unable to execute the transaction. Failed to import transaction into transaction queue\n";
 		cerr << boost::current_exception_diagnostic_information();
-		// is this enough, or should we do something about it?
+		return;
 	}
 }
 
@@ -490,48 +505,46 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 	return out;
 }
 
-Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
+Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) noexcept
 {
 	try
 	{
 		startWorking();
-	}
-	catch(...)
-	{
-		cerr << "Exception thrown on attempt to startWorking()\n";
-		cerr << boost::current_exception_diagnostic_information();
-		exit(1);
-	}
+		Transaction t;
+		{
+			ReadGuard l(x_stateDB);
+			t.nonce = m_postMine.transactionsFrom(toAddress(_secret));
+		}
+		t.value = _endowment;
+		t.gasPrice = _gasPrice;
+		t.gas = _gas;
+		t.receiveAddress = Address();
+		t.data = _init;
+		t.sign(_secret);
+		cnote << "New transaction " << t;
 
-	Transaction t;
-	{
-		ReadGuard l(x_stateDB);
-		t.nonce = m_postMine.transactionsFrom(toAddress(_secret));
-	}
-	t.value = _endowment;
-	t.gasPrice = _gasPrice;
-	t.gas = _gas;
-	t.receiveAddress = Address();
-	t.data = _init;
-	t.sign(_secret);
-	cnote << "New transaction " << t;
-	try
-	{
 		if (!m_tq.attemptImport(t.rlp()))
+		{
 			cnote << "Failed to import transaction into transaction queue\n";
+			return right160(h256());
+		}
 		return right160(sha3(rlpList(t.sender(), t.nonce)));
+	}
+	catch(InvalidSignature& _e)
+	{
+		cerr << "Unable to sign the transaction, invalid signature! " << boost::diagnostic_information(_e);
+		return right160(h256());
 	}
 	catch(const RLPException& _e)
 	{
-		cerr << "Could not cretae RLP of transaction. \n";
+		cerr << "Unable to execute the transaction. Could not cretae RLP of transaction. \n";
 		cerr << "Failed to import transaction into transaction queue\n";
 		cerr << boost::diagnostic_information(_e);
-		// is this enough, or should we exit here?
 		return right160(h256());
 	}
 	catch(...)
 	{
-		cerr << "Failed to import transaction into transaction queue\n";
+		cerr << "Unable to execute the transaction. Failed to import transaction into transaction queue\n";
 		cerr << boost::current_exception_diagnostic_information();
 		return right160(h256());
 	}
@@ -594,7 +607,17 @@ void Client::doWork() noexcept
 					if (hs.size())
 					{
 						for (auto h: hs)
-							appendFromNewBlock(h, changeds);
+						{
+							try
+							{
+								appendFromNewBlock(h, changeds);
+							}
+							catch(...)
+							{
+								cerr << "Could not append from new block! " << boost::current_exception_diagnostic_information();
+								throw; // can we handle this?
+							}
+						}
 						changeds.insert(ChainChangedFilter);
 						//changeds.insert(PendingChangedFilter);	// if we mined the new block, then we've probably reset the pending transactions.
 					}
@@ -669,7 +692,7 @@ void Client::doWork() noexcept
 	{
 		// most exceptions should have been caught earlier
 		cerr << "Client failed working: " << boost::current_exception_diagnostic_information();
-		exit(1);
+		exit(1); // or just ignore it ?
 	}
 }
 

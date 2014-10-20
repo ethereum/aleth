@@ -110,19 +110,11 @@ public:
 	bytes block() const noexcept { return block(currentHash()); }
 
 	/// Get a number for the given hash (or the most recent mined if none given). Thread-safe.
-	unsigned number(h256 _hash) const { return details(_hash).number; }
-	unsigned number() const { return number(currentHash()); }
+	unsigned number(h256 _hash) const noexcept { return details(_hash).number; }
+	unsigned number() const noexcept { return number(currentHash()); }
 
-	/// Get a given block (RLP format). Thread-safe (unless an error message claims that it is not).
+	/// Get a given block (RLP format). Thread-safe
 	h256 currentHash() const noexcept;
-	// Actually, because of my implementation we would have to remove the thread safe label. Alternativley I could implement a not thread safe variant
-	// of this function and check with a try catch block at every occurence of this function wether we can use the safe variant or if
-	// we would have to use the not thread safe variant. But there are quite a lot usages, ...
-	// The same holds for all thread safe functions, since their guards may throw.
-
-
-	/// Get a given block (RLP format). Thread-safe.
-	h256 currentHash_notThreadSafe() const noexcept{ return m_lastBlockHash; }
 
 	/// Get the hash of the genesis block. Thread-safe.
 	h256 genesisHash() const noexcept { return m_genesisHash; }

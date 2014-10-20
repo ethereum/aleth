@@ -111,7 +111,7 @@ public:
 	Address address() const noexcept { return m_ourAddress; }
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
-	static OverlayDB openDB(std::string _path, bool _killExisting = false);
+	static OverlayDB openDB(std::string _path, bool _killExisting = false) noexcept;
 	static OverlayDB openDB(bool _killExisting = false) { return openDB(std::string(), _killExisting); }
 	OverlayDB const& db() const { return m_db; }
 
@@ -237,7 +237,7 @@ public:
 	h256 rootHash() const { return m_state.root(); }
 
 	/// Get the list of pending transactions.
-	Transactions pending() const { Transactions ret; for (auto const& t: m_transactions) ret.push_back(t.transaction); return ret; }
+	Transactions pending() const noexcept;
 
 	/// Get the list of pending transactions.
 	Manifest changesFromPending(unsigned _i) const { return m_transactions[_i].changes; }
