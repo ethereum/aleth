@@ -71,9 +71,9 @@ public:
 	bytes extraData;
 	h256 nonce;
 
-	BlockInfo() BOOST_NOEXCEPT_OR_NOTHROW;
-	explicit BlockInfo(bytes const& _block): BlockInfo(&_block) {}
-	explicit BlockInfo(bytesConstRef _block);
+	BlockInfo() noexcept;
+	explicit BlockInfo(bytes const& _block) noexcept: BlockInfo(&_block) {}
+	explicit BlockInfo(bytesConstRef _block) noexcept;
 
 	static h256 headerHash(bytes const& _block) { return headerHash(&_block); }
 	static h256 headerHash(bytesConstRef _block);

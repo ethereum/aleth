@@ -617,8 +617,6 @@ void State::resetCurrent()
 	m_currentBlock = BlockInfo();
 	m_currentBlock.coinbaseAddress = m_ourAddress;
 	m_currentBlock.timestamp = time(0);
-	m_currentBlock.transactionsRoot = h256();
-	m_currentBlock.sha3Uncles = h256();
 	m_currentBlock.minGasPrice = 10 * szabo;
 	m_currentBlock.populateFromParent(m_previousBlock);
 
@@ -628,6 +626,8 @@ void State::resetCurrent()
 	m_lastTx = m_db;
 	try
 	{
+		m_currentBlock.transactionsRoot = h256();
+		m_currentBlock.sha3Uncles = h256();
 		m_state.setRoot(m_previousBlock.stateRoot);
 	}
 	catch(const Exception)

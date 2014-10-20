@@ -37,9 +37,20 @@ BlockInfo::BlockInfo() noexcept: timestamp(Invalid256)
 {
 }
 
-BlockInfo::BlockInfo(bytesConstRef _block)
+BlockInfo::BlockInfo(bytesConstRef _block) noexcept
 {
-	populate(_block);
+	try
+	{
+		populate(_block);
+	}
+	catch(InvalidBlockFormat const _e)
+	{
+		cerr << "Could not populate block: Invalid block format\n" << boost::diagnostic_information(_e);
+	}
+	catch(...)
+	{
+		cerr << "Could not populate block: \n" << boost::current_exception_diagnostic_information();
+	}
 }
 
 BlockInfo BlockInfo::fromHeader(bytesConstRef _block)

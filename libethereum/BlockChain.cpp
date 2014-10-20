@@ -541,15 +541,6 @@ h256 BlockChain::numberHash(unsigned _n) const noexcept
 	if (!_n)
 		return genesisHash();
 	h256 ret = currentHash();
-	try
-	{
-		for (; _n < details().number; ++_n, ret = details(ret).parent) {}
-	}
-	catch(...)
-	{
-		cerr << "Could not get numberHash, try with only one thread running\n";
-		cerr << boost::current_exception_diagnostic_information();
-	}
-
+	for (; _n < details().number; ++_n, ret = details(ret).parent) {}
 	return ret;
 }

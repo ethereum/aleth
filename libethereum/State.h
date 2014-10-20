@@ -181,7 +181,7 @@ public:
 		{
 			return m_currentBlock.gasLimit - gasUsed();
 		}
-		catch(...) // can only throw if std::vector::back() throws
+		catch(...) // can only throw if std::vector::back() throws, very unlikely
 		{
 			std::cerr << "Could not get remaining gas limit " << boost::current_exception_diagnostic_information(); exit(1);
 		}

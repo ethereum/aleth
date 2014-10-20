@@ -186,7 +186,7 @@ unsigned Client::installWatch(h256 _h) noexcept
 	try
 	{
 		auto ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-		m_watches[ret] = ClientWatch(_h);
+		m_watches[ret] = ClientWatch(_h); // only possibility to throw (not enough memory to store value, very unlikely)
 		cwatch << "+++" << ret << _h;
 		return ret;
 	}
@@ -360,7 +360,7 @@ bool Client::isMining() noexcept
 	catch(...)
 	{
 		std::cerr << "Can figure out if client is mining\n" << boost::current_exception_diagnostic_information();
-		return 0; // exit? since 0 is may be the wrong answer
+		return 0; // exit? since 0 is likely the wrong answer
 	}
 }
 
@@ -450,15 +450,14 @@ void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _
 			return;
 		}
 	}
-	catch(InvalidSignature& _e)
+	catch(const InvalidSignature& _e)
 	{
-		cerr << "Unable to sign the transaction, invalid signature! " << boost::diagnostic_information(_e);
+		cerr << "Unable to execute the transaction, invalid signature! " << boost::diagnostic_information(_e);
 		return;
 	}
 	catch(const RLPException& _e)
 	{
 		cerr << "Unable to execute the transaction. Could not cretae RLP of transaction. \n";
-		cerr << "Failed to import transaction into transaction queue\n";
 		cerr << boost::diagnostic_information(_e);
 		return;
 	}
@@ -492,6 +491,11 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 		u256 gasUsed = temp.execute(t.data, &out, false);
 		(void)gasUsed; // TODO: do something with gasused which it returns.
 	}
+	catch(const InvalidSignature& _e)
+	{
+		cerr << "Unable to execute the call, invalid signature! " << boost::diagnostic_information(_e);
+		return bytes();
+	}
 	catch (...)
 	{
 		cnote << "Failed call: \n" <<\
@@ -501,6 +505,7 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 				 "gas: " << _gas << "\n" <<\
 				 "gas price: " << _gasPrice << "\n" <<\
 				 boost::current_exception_diagnostic_information();
+		return bytes();
 	}
 	return out;
 }
@@ -530,15 +535,14 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 		}
 		return right160(sha3(rlpList(t.sender(), t.nonce)));
 	}
-	catch(InvalidSignature& _e)
+	catch(const InvalidSignature& _e)
 	{
-		cerr << "Unable to sign the transaction, invalid signature! " << boost::diagnostic_information(_e);
+		cerr << "Unable to execute the transaction, invalid signature! " << boost::diagnostic_information(_e);
 		return right160(h256());
 	}
 	catch(const RLPException& _e)
 	{
 		cerr << "Unable to execute the transaction. Could not cretae RLP of transaction. \n";
-		cerr << "Failed to import transaction into transaction queue\n";
 		cerr << boost::diagnostic_information(_e);
 		return right160(h256());
 	}
@@ -558,27 +562,15 @@ void Client::inject(bytesConstRef _rlp) noexcept
 	}
 	catch(...)
 	{
-		cerr << "Exception thrown on attempt to startWorking()\n";
+		cerr << "Could not inject rlp as transaction. Exception thrown on attempt to startWorking()\n";
 		cerr << boost::current_exception_diagnostic_information();
-		exit(1);
+		return;
 	}
 
-	try
+	if (!m_tq.attemptImport(_rlp))
 	{
-		if (!m_tq.attemptImport(_rlp))
-			cnote << "Failed to import transaction into transaction queue\n";
-	}
-	catch(const RLPException& _e)
-	{
-		cerr << "Could not cretae RLP of transaction. \n";
-		cerr << "Failed to import transaction into transaction queue\n";
-		cerr << boost::diagnostic_information(_e);
-		// is this enough, or should we do something about it?
-	}
-	catch(...)
-	{
-		cerr << "Failed to import transaction into transaction queue\n";
-		cerr << boost::current_exception_diagnostic_information();
+		cnote << "Failed to import transaction into transaction queue\n";
+		return;
 	}
 }
 
@@ -586,13 +578,11 @@ void Client::doWork() noexcept
 {
 	// TODO: Use condition variable rather than polling.
 
-	// TODO: more fine grained exception handling, may be we can handle some exceptions ...
+	// TODO: more fine grained exception handling, may be there are more exceptions we can handle ...
 	try
 	{
-
 		cworkin << "WORK";
 		h256Set changeds;
-
 		{
 			ReadGuard l(x_miners);
 			for (auto& m: m_miners)
@@ -692,7 +682,7 @@ void Client::doWork() noexcept
 	{
 		// most exceptions should have been caught earlier
 		cerr << "Client failed working: " << boost::current_exception_diagnostic_information();
-		exit(1); // or just ignore it ?
+		exit(1); // or can we ignore it ?
 	}
 }
 
@@ -852,10 +842,10 @@ bytes Client::codeAt(Address _a, int _block) const noexcept
 
 Transaction Client::transaction(h256 _blockHash, unsigned _i) const noexcept
 {
-	bytes bl = m_bc.block(_blockHash);
-	RLP b(bl);
 	try
 	{
+		bytes bl = m_bc.block(_blockHash);
+		RLP b(bl);
 		return Transaction(b[1][_i].data());
 	}
 	catch(...)
@@ -867,10 +857,10 @@ Transaction Client::transaction(h256 _blockHash, unsigned _i) const noexcept
 
 BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const noexcept
 {
-	bytes bl = m_bc.block(_blockHash);
-	RLP b(bl);
 	try
 	{
+		bytes bl = m_bc.block(_blockHash);
+		RLP b(bl);
 		return BlockInfo::fromHeader(b[2][_i].data());
 	}
 	catch(...)
@@ -882,6 +872,7 @@ BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const noexcept
 
 PastMessages Client::messages(MessageFilter const& _f) const noexcept
 {
+	// TODO more fine grained exception handling
 	try
 	{
 		PastMessages ret;
