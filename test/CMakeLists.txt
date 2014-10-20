@@ -7,7 +7,8 @@ include_directories(..)
 link_directories(../libethcore)
 link_directories(../libethereum)
 
-add_executable(testeth ${SRC_LIST})
+file(GLOB HEADERS "*.h")
+add_executable(testeth ${SRC_LIST} ${HEADERS})
 add_executable(createRandomTest createRandomTest.cpp vm.cpp)
 
 target_link_libraries(testeth ethereum)
@@ -20,8 +21,6 @@ target_link_libraries(createRandomTest ethereum)
 target_link_libraries(createRandomTest ethcore)
 target_link_libraries(createRandomTest boost_chrono)
 target_link_libraries(createRandomTest boost_unit_test_framework)
-
-
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static-libgcc -static-libstdc++")

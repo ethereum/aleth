@@ -63,7 +63,7 @@ class InvalidNonce: virtual public dev::Exception { public: InvalidNonce(u256 _r
 class InvalidBlockNonce: virtual public dev::Exception { public: InvalidBlockNonce(h256 _h = h256(), h256 _n = h256(), u256 _d = 0): h(_h), n(_n), d(_d) {} h256 h; h256 n; u256 d; virtual const char* what() const noexcept; };
 struct InvalidParentHash: virtual dev::Exception {};
 struct InvalidNumber: virtual dev::Exception {};
-struct InvalidContractAddress: virtual dev::Exception {};
+struct InvalidContractAddress: virtual public dev::Exception {};
 
 }
 }
