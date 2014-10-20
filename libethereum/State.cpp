@@ -100,7 +100,7 @@ void State::setAddress(Address _coinbaseAddress) noexcept
 		else
 		{
 			std::cerr << "Could not set coin base address.\n";
-			exit(1); // or continue
+			exit(1); // or continue?
 		}
 	}
 }
@@ -269,7 +269,7 @@ State& State::operator=(State const& _s)
 	{
 		cerr << "Unable to copy state. Could not find root\n";
 		cerr << boost::diagnostic_information(_e);
-		exit(1);
+		exit(1); // anything else that can be done?
 	}
 	m_transactions = _s.m_transactions;
 	m_transactionSet = _s.m_transactionSet;

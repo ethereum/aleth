@@ -105,10 +105,10 @@ public:
 	void populate(bytes const& _block, bool _checkNonce = true) { populate(&_block, _checkNonce); }
 	void verifyInternals(bytesConstRef _block) const;
 	void verifyParent(BlockInfo const& _parent) const;
-	void populateFromParent(BlockInfo const& parent) BOOST_NOEXCEPT_OR_NOTHROW;
+	void populateFromParent(BlockInfo const& parent) noexcept;
 
-	u256 calculateDifficulty(BlockInfo const& _parent) const BOOST_NOEXCEPT_OR_NOTHROW;
-	u256 calculateGasLimit(BlockInfo const& _parent) const BOOST_NOEXCEPT_OR_NOTHROW;
+	u256 calculateDifficulty(BlockInfo const& _parent) const noexcept;
+	u256 calculateGasLimit(BlockInfo const& _parent) const noexcept;
 
 	/// No-nonce sha3 of the header only.
 	h256 headerHashWithoutNonce() const;

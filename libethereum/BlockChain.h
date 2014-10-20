@@ -113,7 +113,7 @@ public:
 	unsigned number(h256 _hash) const noexcept { return details(_hash).number; }
 	unsigned number() const noexcept { return number(currentHash()); }
 
-	/// Get a given block (RLP format). Thread-safe
+	/// Get a given block (RLP format). Thread-safe.
 	h256 currentHash() const noexcept;
 
 	/// Get the hash of the genesis block. Thread-safe.
@@ -179,8 +179,8 @@ private:
 		}
 		catch(...)
 		{
-			std::cerr << "Could not get queryExtras " << boost::current_exception_diagnostic_information();
-			return _n;
+			std::cerr << "Could not query Extras " << boost::current_exception_diagnostic_information();
+			return _n; // re throw?
 		}
 	}
 

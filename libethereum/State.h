@@ -107,7 +107,6 @@ public:
 	/// Set the coinbase address for any transactions we do.
 	/// This causes a complete reset of current block.
 	void setAddress(Address _coinbaseAddress) noexcept;
-
 	Address address() const noexcept { return m_ourAddress; }
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
@@ -371,7 +370,6 @@ void commit(std::map<Address, AddressState> const& _cache, DB& _db, TrieDB<Addre
 						storageDB.insert(j.first, rlp(j.second));
 					else
 						storageDB.remove(j.first);
-
 				s.append(storageDB.root(), false, true);
 			}
 

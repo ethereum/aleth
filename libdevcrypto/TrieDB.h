@@ -91,10 +91,10 @@ public:
 
 	h256 root() const
 	{
-		if (asserts(node(m_root).size()))
+		if (!node(m_root).size())
 		{
 			std::cerr << "Could not get root, node(m_root) is empty\n";
-			throw RootNotFound();
+			BOOST_THROW_EXCEPTION(RootNotFound());
 		}
 		h256 ret = (m_root == c_shaNull ? h256() : m_root);
 		/*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/
@@ -616,10 +616,10 @@ template <class DB> void GenericTrieDB<DB>::init()
 {
 	m_root = insertNode(&RLPNull);
 //	std::cout << "Initialised root to " << m_root << std::endl;
-	if (asserts(node(m_root).size()))
+	if (!node(m_root).size())
 	{
 		std::cerr << "Could not initialize root\n";
-		exit(1);
+		BOOST_THROW_EXCEPTION(RootNotFound());
 	}
 
 }
