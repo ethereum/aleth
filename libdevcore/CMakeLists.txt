@@ -27,6 +27,8 @@ if("${TARGET_PLATFORM}" STREQUAL "w64")
 	target_link_libraries(${EXECUTABLE} ws2_32)
 	target_link_libraries(${EXECUTABLE} mswsock)
 	target_link_libraries(${EXECUTABLE} shlwapi)
+elseif (EMSCRIPTEN)
+	target_link_libraries(${EXECUTABLE} ${Boost_THREAD_LIBRARY} ${Boost_SYSTEM_LIBRARY})
 elseif (APPLE)
 	# Latest mavericks boost libraries only come with -mt
 	target_link_libraries(${EXECUTABLE} boost_system-mt)

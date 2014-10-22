@@ -1,0 +1,47 @@
+<html>
+<head>
+<script src="soljs.js"></script>
+</head>
+<body>
+<h3>Solidity &quot;just-in-time&quot; compiler</h3>
+Source code on the left, compiled code and AST on the right (or error).<br/>
+Do not use tabs - they will cause the caret for parser errors to be wrongly aligned.
+<table width="100%">
+<tr>
+<td width="50%" style="vertical-align:top;">
+<textarea id="input" cols="80" rows="80">
+contract ExampleContract
+{
+  function fun()
+  {
+	2 + 3 - 8 == 9 && true == false;
+  }
+}
+</textarea>
+</td><td style="vertical-align:top;">
+<pre id="output"></pre>
+</td>
+</tr>
+</table>
+<script>
+var compileString = Module.cwrap("compileString", "string", ["string"]);
+var previousInput = '';
+var inputArea = document.querySelector('#input');
+var outputArea = document.querySelector('#output');
+var keyPress = function() {
+  var input = inputArea.value;
+  if (input == previousInput)
+	return;
+  previousInput = input;
+  outputArea.innerHTML = compileString(input);
+}
+
+if (inputArea.addEventListener)
+  inputArea.addEventListener('input', keyPress, false);
+else if (inputArea.attachEvent)
+  inputArea.attachEvent('onpropertychange', keyPress);
+
+keyPress();
+</script>
+</body>
+</html>

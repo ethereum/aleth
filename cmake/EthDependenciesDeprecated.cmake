@@ -2,13 +2,17 @@
 
 # deprecated. TODO will rewrite to proper CMake packages
 
-
-
 if("${TARGET_PLATFORM}" STREQUAL "w64")
 #	set(MINIUPNPC_LS /usr/x86_64-w64-mingw32/lib/libminiupnpc.a)
 	set(LEVELDB_LS leveldb)
 	set(CRYPTOPP_LS cryptopp)
 	set(CRYPTOPP_ID /usr/x86_64-w64-mingw32/include/cryptopp)
+elseif(EMSCRIPTEN)
+	# hardcode library locations, they are really hard to find
+	include_directories(../boost_1_56_0)
+	set(Boost_THREAD_LIBRARY ${CMAKE_SOURCE_DIR}/../boost_1_56_0/bin.v2/libs/thread/build/gcc/release/link-static/runtime-link-static/threading-multi/libboost_thread.a)
+	set(Boost_SYSTEM_LIBRARY ${CMAKE_SOURCE_DIR}/../boost_1_56_0/bin.v2/libs/system/build/gcc/release/link-static/runtime-link-static/libboost_system.a)
+	set(Boost_REGEX_LIBRARY ${CMAKE_SOURCE_DIR}/../boost_1_56_0/bin.v2/libs/regex/build/gcc/release/link-static/runtime-link-static/libboost_regex.a)
 else()
 	# Look for available Crypto++ version and if it is >= 5.6.2
 	find_path(ID cryptlib.h
