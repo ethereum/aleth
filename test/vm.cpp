@@ -621,10 +621,12 @@ void executeTests(const string& _name)
 	if (ptestPath == NULL)
 	{
 		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests/vmtests";
+		testPath = "../../../tests";
 	}
 	else
 		testPath = ptestPath;
+
+	testPath += "/vmtests";
 
 #ifdef FILL_TESTS
 	try
@@ -654,7 +656,7 @@ void executeTests(const string& _name)
 		cnote << "Testing VM..." << _name;
 		json_spirit::mValue v;
 		string s = asString(contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
 		dev::test::doTests(v, false);
 	}
@@ -715,4 +717,10 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
+
+BOOST_AUTO_TEST_CASE(vmRandom)
+{
+	dev::test::executeTests("random");
+}
+
 
