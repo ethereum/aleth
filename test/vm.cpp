@@ -512,12 +512,10 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		bytes output;
-		u256 gas;
+		VM vm(fev.gas);
 		try
 		{
-			VM vm(fev.gas);
-			output = vm.go(fev).toVector();
-			gas = vm.gas(); // Get the remaining gas
+			output = vm.go(fev).toVector();			
 		}
 		catch (Exception const& _e)
 		{
@@ -554,7 +552,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			o["post"] = mValue(fev.exportState());
 			o["callcreates"] = fev.exportCallCreates();
 			o["out"] = "0x" + toHex(output);
-			fev.push(o, "gas", gas);
+			fev.push(o, "gas", vm.gas());
 		}
 		else
 		{
@@ -578,7 +576,7 @@ void doTests(json_spirit::mValue& v, bool _fillin)
 			else
 				BOOST_CHECK(output == fromHex(o["out"].get_str()));
 
-			BOOST_CHECK(test.toInt(o["gas"]) == gas);
+			BOOST_CHECK(test.toInt(o["gas"]) == vm.gas());
 			BOOST_CHECK(test.addresses == fev.addresses);
 			BOOST_CHECK(test.callcreates == fev.callcreates);
 		}
