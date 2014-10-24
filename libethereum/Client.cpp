@@ -41,7 +41,7 @@ VersionChecker::VersionChecker(string const& _dbPath):
 	m_ok = RLP(protocolContents).toInt<unsigned>(RLP::LaisezFaire) == c_protocolVersion && RLP(databaseContents).toInt<unsigned>(RLP::LaisezFaire) == c_databaseVersion;
 }
 
-void VersionChecker::setOk()
+void VersionChecker::setOk() noexcept
 {
 	if (!m_ok)
 	{
@@ -53,8 +53,20 @@ void VersionChecker::setOk()
 		{
 			cwarn << "Unhandled exception! Failed to create directory: " << m_path << "\n" << boost::current_exception_diagnostic_information();
 		}
-		writeFile(m_path + "/protocol", rlp(c_protocolVersion));
-		writeFile(m_path + "/database", rlp(c_databaseVersion));
+		try
+		{
+			writeFile(m_path + "/protocol", rlp(c_protocolVersion));
+			writeFile(m_path + "/database", rlp(c_databaseVersion));
+		}
+		catch(RLPException const& _e)
+		{
+			cerr << "RLP exception, could not write version to file.\n" << boost::diagnostic_information(_e);
+		}
+		catch(...)
+		{
+			cerr << "unable to write file to path " << m_path << endl;
+			cerr << boost::current_exception_diagnostic_information();
+		}
 	}
 }
 
@@ -78,7 +90,7 @@ Client::Client(p2p::Host* _extNet, std::string const& _dbPath, bool _forceClean,
 
 		startWorking();
 	}
-	catch(...)
+	catch(...) // only exceptions left shoule be bad_allocs (from new) or guards throwing.
 	{
 		cerr << "Could not construct client!\n" << boost::current_exception_diagnostic_information();
 		exit(1); // anything else we can do?
@@ -210,6 +222,25 @@ unsigned Client::installWatch(MessageFilter const& _f) noexcept
 			m_filters.insert(make_pair(h, _f));
 
 		return installWatch(h);
+	}
+	catch( RLPException const& _e)
+	{
+		cerr << "RLP exception\n";
+		cerr << "Could not install watch\n";
+		cerr << boost::diagnostic_information(_e);
+		return 0;
+	}
+	catch( Exception const& _e)
+	{
+		cerr << "Could not install watch\n";
+		cerr << boost::diagnostic_information(_e);
+		return 0;
+	}
+	catch( std::exception const& _e)
+	{
+		cerr << "std exception. what: " << _e.what() << endl;
+		cerr << "Could not install watch\n";
+		return 0;
 	}
 	catch(...)
 	{

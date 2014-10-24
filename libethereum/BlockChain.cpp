@@ -525,13 +525,15 @@ h256 BlockChain::currentHash() const noexcept
 	try
 	{
 		ReadGuard l(x_lastBlockHash);
+		return m_lastBlockHash;
 	}
 	catch(...)
 	{
 		std::cerr << "Failed securing thread safety! Try again with only one active thread, or continue with the not thread safe result\n" <<\
 					 boost::current_exception_diagnostic_information();
+		return m_lastBlockHash;
 	}
-	return m_lastBlockHash;
+
 }
 
 

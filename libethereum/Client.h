@@ -67,7 +67,7 @@ class VersionChecker
 public:
 	VersionChecker(std::string const& _dbPath);
 
-	void setOk();
+	void setOk() noexcept;
 	bool ok() const noexcept{ return m_ok; }
 
 private:
