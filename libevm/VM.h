@@ -22,6 +22,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <boost/exception/all.hpp>
 #include <libdevcore/Exceptions.h>
 #include <libethcore/CommonEth.h>
 #include <libevmface/Instruction.h>
@@ -41,7 +42,7 @@ struct BreakPointHit: virtual VMException {};
 struct BadInstruction: virtual VMException {};
 struct BadJumpDestination: virtual VMException {};
 struct OutOfGas: virtual VMException {};
-class StackTooSmall: virtual public VMException { public: StackTooSmall(u256 _req, u256 _got): req(_req), got(_got) {} u256 req; u256 got; };
+struct StackTooSmall: virtual VMException {};
 
 // Convert from a 256-bit integer stack/memory entry into a 160-bit Address hash.
 // Currently we just pull out the right (low-order in BE) 160-bits.
@@ -71,7 +72,7 @@ public:
 	template <class Ext>
 	bytesConstRef go(Ext& _ext, OnOpFunc const& _onOp = OnOpFunc(), uint64_t _steps = (uint64_t)-1);
 
-	void require(u256 _n) { if (m_stack.size() < _n) BOOST_THROW_EXCEPTION(StackTooSmall(_n, m_stack.size())); }
+	void require(u256 _n) { if (m_stack.size() < _n) BOOST_THROW_EXCEPTION(StackTooSmall() << RequirementNotMetError(_n, m_stack.size())); }
 	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
 	u256 gas() const { return m_gas; }
 	u256 curPC() const { return m_curPC; }

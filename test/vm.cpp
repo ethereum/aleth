@@ -751,3 +751,4 @@ BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
 	dev::test::executeTests("vmSystemOperationsTest");
 }
+

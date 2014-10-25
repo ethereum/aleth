@@ -71,9 +71,9 @@ public:
 	bytes extraData;
 	h256 nonce;
 
-	BlockInfo();
-	explicit BlockInfo(bytes const& _block): BlockInfo(&_block) {}
-	explicit BlockInfo(bytesConstRef _block);
+	BlockInfo() noexcept;
+	explicit BlockInfo(bytes const& _block) noexcept: BlockInfo(&_block) {}
+	explicit BlockInfo(bytesConstRef _block) noexcept;
 
 	static h256 headerHash(bytes const& _block) { return headerHash(&_block); }
 	static h256 headerHash(bytesConstRef _block);
@@ -105,10 +105,10 @@ public:
 	void populate(bytes const& _block, bool _checkNonce = true) { populate(&_block, _checkNonce); }
 	void verifyInternals(bytesConstRef _block) const;
 	void verifyParent(BlockInfo const& _parent) const;
-	void populateFromParent(BlockInfo const& parent);
+	void populateFromParent(BlockInfo const& parent) noexcept;
 
-	u256 calculateDifficulty(BlockInfo const& _parent) const;
-	u256 calculateGasLimit(BlockInfo const& _parent) const;
+	u256 calculateDifficulty(BlockInfo const& _parent) const noexcept;
+	u256 calculateGasLimit(BlockInfo const& _parent) const noexcept;
 
 	/// No-nonce sha3 of the header only.
 	h256 headerHashWithoutNonce() const;

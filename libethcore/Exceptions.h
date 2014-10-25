@@ -29,7 +29,7 @@ namespace eth
 {
 
 // information to add to exceptions
-typedef boost::error_info<struct tag_field, std::string> errinfo_name;
+typedef boost::error_info<struct tag_name, std::string> errinfo_name;
 typedef boost::error_info<struct tag_field, int> errinfo_field;
 typedef boost::error_info<struct tag_data, std::string> errinfo_data;
 typedef boost::tuple<errinfo_field, errinfo_data> BadFieldError;

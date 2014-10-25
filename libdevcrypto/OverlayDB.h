@@ -38,7 +38,7 @@ namespace dev
 class OverlayDB: public MemoryDB
 {
 public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
+	OverlayDB(ldb::DB* _db = nullptr) noexcept: m_db(_db) {}
 	~OverlayDB();
 
 	ldb::DB* db() const { return m_db.get(); }

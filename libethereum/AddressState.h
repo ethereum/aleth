@@ -36,17 +36,17 @@ class AddressState
 {
 public:
 	AddressState(): m_isAlive(false), m_nonce(0), m_balance(0) {}
-	AddressState(u256 _nonce, u256 _balance, h256 _contractRoot, h256 _codeHash): m_isAlive(true), m_nonce(_nonce), m_balance(_balance), m_storageRoot(_contractRoot), m_codeHash(_codeHash) {}
+	AddressState(u256 _nonce, u256 _balance, h256 _contractRoot, h256 _codeHash) noexcept : m_isAlive(true), m_nonce(_nonce), m_balance(_balance), m_storageRoot(_contractRoot), m_codeHash(_codeHash) {}
 
 	void kill() { m_isAlive = false; m_storageOverlay.clear(); m_codeHash = EmptySHA3; m_storageRoot = h256(); m_balance = 0; m_nonce = 0; }
-	bool isAlive() const { return m_isAlive; }
+	bool isAlive() const noexcept { return m_isAlive; }
 
 	u256& balance() { return m_balance; }
 	u256 const& balance() const { return m_balance; }
 	void addBalance(bigint _i) { m_balance = (u256)((bigint)m_balance + _i); }
 
-	u256& nonce() { return m_nonce; }
-	u256 const& nonce() const { return m_nonce; }
+	u256& nonce() noexcept { return m_nonce; }
+	u256 const& nonce() const noexcept { return m_nonce; }
 	void incNonce() { m_nonce++; }
 
 	h256 baseRoot() const { return m_storageRoot; }

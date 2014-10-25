@@ -89,7 +89,17 @@ public:
 	/// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
 	bool isEmpty() const { return m_root == c_shaNull && node(m_root).size(); }
 
-	h256 root() const { assert(node(m_root).size()); h256 ret = (m_root == c_shaNull ? h256() : m_root); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return ret; }	// patch the root in the case of the empty trie. TODO: handle this properly.
+	h256 root() const
+	{
+		if (!node(m_root).size())
+		{
+			std::cerr << "Could not get root, node(m_root) is empty\n";
+			BOOST_THROW_EXCEPTION(RootNotFound());
+		}
+		h256 ret = (m_root == c_shaNull ? h256() : m_root);
+		/*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/
+		return ret;
+	}	// patch the root in the case of the empty trie. TODO: handle this properly.
 
 	void debugPrint() {}
 
@@ -606,7 +616,12 @@ template <class DB> void GenericTrieDB<DB>::init()
 {
 	m_root = insertNode(&RLPNull);
 //	std::cout << "Initialised root to " << m_root << std::endl;
-	assert(node(m_root).size());
+	if (!node(m_root).size())
+	{
+		std::cerr << "Could not initialize root\n";
+		BOOST_THROW_EXCEPTION(RootNotFound());
+	}
+
 }
 
 template <class DB> void GenericTrieDB<DB>::insert(bytesConstRef _key, bytesConstRef _value)

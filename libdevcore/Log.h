@@ -55,7 +55,7 @@ extern std::map<std::type_info const*, bool> g_logOverride;
 /// Associate a name with each thread for nice logging.
 struct ThreadLocalLogName
 {
-	ThreadLocalLogName(std::string _name) { m_name.reset(new std::string(_name)); };
+	ThreadLocalLogName(std::string _name) { m_name.reset(new std::string(_name)); }
 	boost::thread_specific_ptr<std::string> m_name;
 };
 

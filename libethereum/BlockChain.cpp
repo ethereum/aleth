@@ -483,35 +483,61 @@ bool BlockChain::isKnown(h256 _hash) const
 	return !!d.size();
 }
 
-bytes BlockChain::block(h256 _hash) const
+bytes BlockChain::block(h256 _hash) const noexcept
 {
 	if (_hash == m_genesisHash)
 		return m_genesisBlock;
 
+	try
 	{
-		ReadGuard l(x_cache);
-		auto it = m_cache.find(_hash);
-		if (it != m_cache.end())
-			return it->second;
+		{
+			ReadGuard l(x_cache);
+			auto it = m_cache.find(_hash);
+			if (it != m_cache.end())
+				return it->second;
+		}
+
+		string d;
+		m_db->Get(m_readOptions, ldb::Slice((char const*)&_hash, 32), &d);
+
+		if (!d.size())
+		{
+			cwarn << "Couldn't find requested block:" << _hash.abridged();
+			return bytes();
+		}
+
+		WriteGuard l(x_cache);
+		m_cache[_hash].resize(d.size());
+		memcpy(m_cache[_hash].data(), d.data(), d.size());
+
+		return m_cache[_hash];
 	}
-
-	string d;
-	m_db->Get(m_readOptions, ldb::Slice((char const*)&_hash, 32), &d);
-
-	if (!d.size())
+	catch(...)
 	{
-		cwarn << "Couldn't find requested block:" << _hash.abridged();
+		cwarn << "Couldn't get requested block:" << _hash.abridged();
+		cerr << boost::current_exception_diagnostic_information();
 		return bytes();
 	}
-
-	WriteGuard l(x_cache);
-	m_cache[_hash].resize(d.size());
-	memcpy(m_cache[_hash].data(), d.data(), d.size());
-
-	return m_cache[_hash];
 }
 
-h256 BlockChain::numberHash(unsigned _n) const
+h256 BlockChain::currentHash() const noexcept
+{
+	try
+	{
+		ReadGuard l(x_lastBlockHash);
+		return m_lastBlockHash;
+	}
+	catch(...)
+	{
+		std::cerr << "Failed securing thread safety! Try again with only one active thread, or continue with the not thread safe result\n" <<\
+					 boost::current_exception_diagnostic_information();
+		return m_lastBlockHash;
+	}
+
+}
+
+
+h256 BlockChain::numberHash(unsigned _n) const noexcept
 {
 	if (!_n)
 		return genesisHash();
