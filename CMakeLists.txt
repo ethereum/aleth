@@ -13,6 +13,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 function(createDefaultCacheConfig)
 	set(HEADLESS OFF CACHE BOOL "Do not compile GUI (AlethZero)")
 	set(LANGUAGES OFF CACHE BOOL "Limit build to Serpent/LLL tools")
+	set(EMSCRIPTEN OFF CACHE BOOL "Compile for emscripten (fixed library paths, implies LANGUAGES)")
 	set(VMTRACE OFF CACHE BOOL "VM tracing and run-time checks (useful for cross-implementation VM debugging)")
 	set(PARANOIA OFF CACHE BOOL "Additional run-time checks")
 endfunction()
@@ -20,6 +21,11 @@ endfunction()
 
 # propagates CMake configuration options to the compiler
 function(configureProject)
+	if (EMSCRIPTEN)
+		set(LANGUAGES ON PARENT_SCOPE)
+		add_definitions(-DETH_EMSCRIPTEN)
+	endif ()
+
 	if (LANGUAGES)
 		add_definitions(-DETH_LANGUAGES)
 	endif ()
@@ -75,7 +81,7 @@ cmake_policy(SET CMP0015 NEW)
 
 createDefaultCacheConfig()
 configureProject()
-message("-- LANGUAGES: ${LANGUAGES}; VMTRACE: ${VMTRACE}; PARANOIA: ${PARANOIA}; HEADLESS: ${HEADLESS}")
+message("-- LANGUAGES: ${LANGUAGES}; VMTRACE: ${VMTRACE}; PARANOIA: ${PARANOIA}; HEADLESS: ${HEADLESS}; EMSCRIPTEN ${EMSCRIPTEN}")
 
 
 # Default TARGET_PLATFORM to "linux".
@@ -118,6 +124,9 @@ endif()
 
 add_subdirectory(lllc)
 add_subdirectory(solc)
+if(EMSCRIPTEN)
+	add_subdirectory(soljs)
+endif()
 add_subdirectory(sc)
 if (NOT LANGUAGES)
 	add_subdirectory(secp256k1)

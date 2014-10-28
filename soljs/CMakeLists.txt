@@ -5,11 +5,12 @@ file(GLOB HEADERS "*.h")
 
 include_directories(..)
 
-set(EXECUTABLE solc)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s EXPORTED_FUNCTIONS='[\"_compileString\"]'")
+
+set(EXECUTABLE soljs)
 
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 target_link_libraries(${EXECUTABLE} solidity)
-
-install( TARGETS ${EXECUTABLE} DESTINATION bin )
+target_link_libraries(${EXECUTABLE} devcore)
 

@@ -47,7 +47,13 @@ enum {
 	DEBUG_BREAK_PREFER_BUILTIN_TRAP_TO_SIGTRAP = 0,
 };
 
-#if defined(__i386__) || defined(__x86_64__)
+#if defined(ETH_EMSCRIPTEN)
+enum { HAVE_TRAP_INSTRUCTION = 1, };
+static void __inline__ trap_instruction(void)
+{
+	asm("debugger");
+}
+#elif (defined(__i386__) || defined(__x86_64__))
 enum { HAVE_TRAP_INSTRUCTION = 1, };
 __attribute__((gnu_inline, always_inline))
 static void __inline__ trap_instruction(void)
