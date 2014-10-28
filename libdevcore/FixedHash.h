@@ -158,7 +158,7 @@ public:
 		return ret;
 	}
 
-	template <unsigned P, unsigned M> inline FixedHash& shiftBloom(FixedHash<M> const& _h) { return (*this |= _h.nbloom<P, N>(0)); }
+	template <unsigned P, unsigned M> inline FixedHash& shiftBloom(FixedHash<M> const& _h) { return (*this |= _h.nbloom<P, N>()); }
 
 	template <unsigned P, unsigned M> inline FixedHash<M> nbloom() const
 	{
