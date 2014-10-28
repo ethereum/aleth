@@ -33,13 +33,14 @@
 #include <libsolidity/Exceptions.h>
 #include <libsolidity/SourceReferenceFormatter.h>
 
+using namespace std;
 using namespace dev;
 using namespace solidity;
 
-std::string compile(std::string _input)
+bool compile(string _input, ostream& o_output)
 {
 	ASTPointer<ContractDefinition> ast;
-	std::shared_ptr<Scanner> scanner = std::make_shared<Scanner>(CharStream(_input));
+	shared_ptr<Scanner> scanner = make_shared<Scanner>(CharStream(_input));
 	Parser parser;
 	try
 	{
@@ -47,45 +48,38 @@ std::string compile(std::string _input)
 	}
 	catch (ParserError const& exception)
 	{
-		std::ostringstream error;
-		SourceReferenceFormatter::printExceptionInformation(error, exception, "Parser error", *scanner);
-		return error.str();
+		SourceReferenceFormatter::printExceptionInformation(o_output, exception, "Parser error", *scanner);
+		return false;
 	}
 
-	dev::solidity::NameAndTypeResolver resolver;
+	NameAndTypeResolver resolver;
 	try
 	{
 		resolver.resolveNamesAndTypes(*ast.get());
 	}
 	catch (DeclarationError const& exception)
 	{
-		std::ostringstream error;
-		SourceReferenceFormatter::printExceptionInformation(error, exception, "Parser error", *scanner);
-		return error.str();
+		SourceReferenceFormatter::printExceptionInformation(o_output, exception, "Parser error", *scanner);
+		return false;
 	}
 	catch (TypeError const& exception)
 	{
-		std::ostringstream error;
-		SourceReferenceFormatter::printExceptionInformation(error, exception, "Parser error", *scanner);
-		return error.str();
+		SourceReferenceFormatter::printExceptionInformation(o_output, exception, "Parser error", *scanner);
+		return false;
 	}
 
-	std::ostringstream output;
-	output << "Syntax tree for the contract:" << std::endl;
-	dev::solidity::ASTPrinter printer(ast, _input);
-	printer.print(output);
+	o_output << "Syntax tree for the contract:" << endl;
+	ASTPrinter printer(ast, _input);
+	printer.print(o_output);
 
-	return output.str();
+	return true;
 }
 
-
-static std::string outputBuffer;
-
-extern "C"
+extern "C" char const* compileString(char const* _input)
 {
-extern char const* compileString(char const* _input)
-{
-	outputBuffer = compile(_input);
+	static string outputBuffer;
+	ostringstream outputStream;
+	compile(_input, outputStream);
+	outputBuffer = outputStream.str();
 	return outputBuffer.c_str();
-}
 }

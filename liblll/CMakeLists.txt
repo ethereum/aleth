@@ -20,15 +20,13 @@ target_link_libraries(${EXECUTABLE} devcore)
 
 
 if("${TARGET_PLATFORM}" STREQUAL "w64")
+	# @todo these are probably already provided by devcore and evmface
 	target_link_libraries(${EXECUTABLE} boost_system-mt-s)
 	target_link_libraries(${EXECUTABLE} boost_thread_win32-mt-s)
 	target_link_libraries(${EXECUTABLE} iphlpapi)
 	target_link_libraries(${EXECUTABLE} ws2_32)
 	target_link_libraries(${EXECUTABLE} mswsock)
 	target_link_libraries(${EXECUTABLE} shlwapi)
-elseif (APPLE)
-elseif (UNIX)
-else ()
 endif ()
 
 install( TARGETS ${EXECUTABLE} ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
