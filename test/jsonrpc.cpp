@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-//#if ETH_JSONRPC
+#if ETH_JSONRPC
 
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
@@ -241,4 +241,4 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 }
 	BOOST_AUTO_TEST_SUITE_END()
 }
-//#endif
+#endif
