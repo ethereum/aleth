@@ -216,7 +216,7 @@ static Json::Value toJson(h256 const& _h, shh::Envelope const& _e, shh::Message 
 }
 
 
-WebThreeStubServer::WebThreeStubServer(jsonrpc::AbstractServerConnector* _conn, WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts):
+WebThreeStubServer::WebThreeStubServer(jsonrpc::AbstractServerConnector& _conn, WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts):
 	AbstractWebThreeStubServer(_conn),
 	m_web3(_web3)
 {
