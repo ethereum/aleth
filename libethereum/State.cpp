@@ -1199,6 +1199,8 @@ bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderA
 			*_gas -= it->second.gas;
 			it->second.exec(_data, _out);
 		}
+		else
+			*_gas = 0;
 	}
 	else if (addressHasCode(_codeAddress))
 	{
