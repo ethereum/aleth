@@ -1,38 +1,60 @@
 /*
  This file is part of cpp-ethereum.
-
+ 
  cpp-ethereum is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
  the Free Software Foundation, either version 3 of the License, or
  (at your option) any later version.
-
+ 
  cpp-ethereum is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
+ 
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file SHA3MAC.h
+/** @file AES.cpp
  * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
- *
- * SHA3 MAC
  */
 
-#pragma once
+#include "CryptoPP.h"
+#include "AES.h"
 
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
+using namespace std;
+using namespace dev;
+using namespace dev::crypto;
+using namespace dev::crypto::aes;
+using namespace CryptoPP;
 
-namespace dev
+struct aes::Aes128Ctr
 {
-namespace crypto
-{
+	Aes128Ctr(h128 _k)
+	{
+		mode.SetKeyWithIV(_k.data(), sizeof(h128), Nonce::get().data());
+	}
+	CTR_Mode<AES>::Encryption mode;
+};
 
-void sha3mac(bytesConstRef _secret, bytesConstRef _plain, bytesRef _output);
+Stream::Stream(StreamType, h128 _ckey):
+	m_cSecret(_ckey)
+{
+	cryptor = new Aes128Ctr(_ckey);
+}
+
+Stream::~Stream()
+{
+	delete cryptor;
+}
+
+void Stream::update(bytesRef)
+{
 
 }
+
+size_t Stream::streamOut(bytes&)
+{
+	return 0;
 }
 
