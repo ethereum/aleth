@@ -42,6 +42,7 @@ function(configureProject)
 endfunction()
 
 
+
 function(createBuildInfo)
 	# Set build platform; to be written to BuildInfo.h
 	if (CMAKE_COMPILER_IS_MINGW)
@@ -66,6 +67,8 @@ function(createBuildInfo)
 	set(SRC_LIST BuildInfo.h)
 endfunction()
 
+
+
 ######################################################################################################
 
 
@@ -88,19 +91,15 @@ if ("${TARGET_PLATFORM}" STREQUAL "linux")
 	set(CMAKE_THREAD_LIBS_INIT pthread)
 endif ()
 
-# Set default build type to Release w/debug info
-# if(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-#    set(CMAKE_BUILD_TYPE RelWithDebInfo)
-# endif()
-
-
 include(EthCompilerSettings)
 message("-- CXXFLAGS: ${CMAKE_CXX_FLAGS}")
 
-#add_definitions("-DETH_BUILD_TYPE=${ETH_BUILD_TYPE}")
-#add_definitions("-DETH_BUILD_PLATFORM=${ETH_BUILD_PLATFORM}")
+
+# this must be an include, as a function it would messs up with variable scope!
+include(EthDependencies)
 
 
+# TODO this will go away soon!
 include(EthDependenciesDeprecated)
 
 createBuildInfo()
@@ -119,7 +118,7 @@ endif()
 add_subdirectory(lllc)
 add_subdirectory(solc)
 add_subdirectory(sc)
-if (JSONRPC_LS)
+if (JSON_RPC_CPP_FOUND)
 	add_subdirectory(libweb3jsonrpc)
 endif()
 if (NOT LANGUAGES)
@@ -134,13 +133,13 @@ if (NOT LANGUAGES)
 #	add_subdirectory(libethereumx)	 # TODO remove
 
 	add_subdirectory(libwebthree)
-	add_subdirectory(test)
-	add_subdirectory(eth)
+    add_subdirectory(test)
+    add_subdirectory(eth)
 	if("x${CMAKE_BUILD_TYPE}" STREQUAL "xDebug")
 		add_subdirectory(exp)
 	endif ()
 	if(NOT ("${TARGET_PLATFORM}" STREQUAL "w64"))
-		add_subdirectory(neth)
+        	add_subdirectory(neth)
 	endif ()
 	if(QTQML)
 		add_definitions(-DETH_QTQML)
@@ -150,13 +149,17 @@ if (NOT LANGUAGES)
 		if ("${TARGET_PLATFORM}" STREQUAL "w64")
 			cmake_policy(SET CMP0020 NEW)
 		endif ()
-		if (NOT JSONRPC_LS)
+        if (NOT JSON_RPC_CPP_FOUND)
 			message(FATAL_ERROR "Alethzero requires jsonrpc.")
 		endif()
 
 		add_subdirectory(libjsqrc)
-		add_subdirectory(libqethereum)
-		add_subdirectory(alethzero)
+        add_subdirectory(libqethereum)
+        if (NOT JSON_RPC_CPP_FOUND)
+            message (FATAL_ERROR "AlethZero requires json-rpc-cpp!")
+        else()
+            add_subdirectory(alethzero)
+        endif()
 		add_subdirectory(third)
 		if(QTQML)
 			#add_subdirectory(iethxi)

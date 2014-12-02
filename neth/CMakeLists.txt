@@ -4,6 +4,7 @@ aux_source_directory(. SRC_LIST)
 
 include_directories(..)
 include_directories(${LEVELDB_ID})
+include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
 
 set(EXECUTABLE neth)
 
@@ -17,9 +18,8 @@ if(MINIUPNPC_LS)
 target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
 endif()
 target_link_libraries(${EXECUTABLE} ${LEVELDB_LS})
-target_link_libraries(${EXECUTABLE} ${CRYPTOPP_LS})
-if(JSONRPC_LS)
-target_link_libraries(${EXECUTABLE} web3jsonrpc)
+if(JSON_RPC_CPP_FOUND)
+    target_link_libraries(${EXECUTABLE} web3jsonrpc)
 endif()
 
 if ("${TARGET_PLATFORM}" STREQUAL "w64")

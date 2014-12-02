@@ -155,7 +155,7 @@ Main::Main(QWidget *parent) :
 
 	// w3stubserver, on dealloc, deletes m_qwebConnector
 	m_qwebConnector = new QWebThreeConnector(); // owned by WebThreeStubServer
-	m_server.reset(new OurWebThreeStubServer(m_qwebConnector, *web3(), keysAsVector(m_myKeys)));
+	m_server.reset(new OurWebThreeStubServer(*m_qwebConnector, *web3(), keysAsVector(m_myKeys)));
 	connect(&*m_server, SIGNAL(onNewId(QString)), SLOT(addNewId(QString)));
 	m_server->setIdentities(keysAsVector(owned()));
 	m_server->StartListening();

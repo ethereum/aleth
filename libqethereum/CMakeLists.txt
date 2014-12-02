@@ -9,6 +9,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 aux_source_directory(. SRC_LIST)
 
 include_directories(..)
+include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
 link_directories(../libethereum)
 
 # Find Qt5 for Apple and update src_list for windows
@@ -59,7 +60,7 @@ endif()
 
 include_directories(/)
 qt5_use_modules(${EXECUTABLE} Core Gui WebKit WebKitWidgets Widgets Network Quick Qml)
-target_link_libraries(${EXECUTABLE} ethereum secp256k1 ${CRYPTOPP_LS} ${JSONRPC_LS})
+target_link_libraries(${EXECUTABLE} ethereum secp256k1 ${JSON_RPC_CPP_LIBRARIES})
 
 if (APPLE)
 	if (${ADDFRAMEWORKS})

@@ -634,6 +634,7 @@ LogEntries Client::logs(LogFilter const& _f) const
 			}
 #if ETH_DEBUG
 		else
+#if ETH_DEBUG
 			skipped++;
 #endif
 		if (n == end)
