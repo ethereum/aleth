@@ -47,6 +47,7 @@ class MessageFilter;
 }}
 
 class QQuickView;
+class OurWebThreeStubServer;
 
 struct WorldState
 {
@@ -77,13 +78,14 @@ public:
 	dev::eth::Client* ethereum() const { return m_webThree->ethereum(); }
 	dev::shh::WhisperHost* whisper() const { return m_webThree->whisper(); }
 
-	QList<dev::KeyPair> const& owned() const { return m_myKeys; }
+	QList<dev::KeyPair> owned() const { return m_myIdentities + m_myKeys; }
 	
 public slots:
 	void load(QString _file);
 	void note(QString _entry);
 	void debug(QString _entry);
 	void warn(QString _entry);
+	QString contents(QString _file);
 
 	void onKeysChanged();
 
@@ -149,6 +151,12 @@ private slots:
 	void on_turboMining_triggered();
 	void on_go_triggered();
 	void on_importKeyFile_triggered();
+	void on_post_clicked();
+	void on_newIdentity_triggered();
+
+	void refreshWhisper();
+	void refreshBlockChain();
+	void addNewId(QString _ids);
 
 signals:
 	void poll();
@@ -181,7 +189,7 @@ private:
 	dev::u256 value() const;
 	dev::u256 gasPrice() const;
 
-	unsigned installWatch(dev::eth::MessageFilter const& _tf, std::function<void()> const& _f);
+	unsigned installWatch(dev::eth::LogFilter const& _tf, std::function<void()> const& _f);
 	unsigned installWatch(dev::h256 _tf, std::function<void()> const& _f);
 	void uninstallWatch(unsigned _w);
 
@@ -202,12 +210,12 @@ private:
 
 	void refreshNetwork();
 	void refreshMining();
+	void refreshWhispers();
 
 	void refreshAll();
 	void refreshPending();
 	void refreshAccounts();
 	void refreshDestination();
-	void refreshBlockChain();
 	void refreshBlockCount();
 	void refreshBalances();
 
@@ -223,6 +231,7 @@ private:
 	QByteArray m_peers;
 	QStringList m_servers;
 	QList<dev::KeyPair> m_myKeys;
+	QList<dev::KeyPair> m_myIdentities;
 	QString m_privateChain;
 	dev::bytes m_data;
 	dev::Address m_nameReg;
@@ -247,6 +256,7 @@ private:
 	QString m_logHistory;
 	bool m_logChanged = true;
 
-	QEthereum* m_ethereum = nullptr;
-	QWhisper* m_whisper = nullptr;
+	QWebThreeConnector* m_qwebConnector;
+	std::unique_ptr<OurWebThreeStubServer> m_server;
+	QWebThree* m_qweb = nullptr;
 };

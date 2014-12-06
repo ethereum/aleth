@@ -42,7 +42,7 @@ namespace dev { class WebThree;
 namespace eth {
 class Client;
 class State;
-class MessageFilter;
+class LogFilter;
 }
 namespace shh {
 class Inteface;
@@ -51,6 +51,7 @@ class WhisperHost;
 }
 
 class QQuickView;
+class WebThreeStubServer;
 
 class Main : public QMainWindow, public dev::Worker
 {
@@ -64,7 +65,7 @@ public:
 	dev::eth::Interface* ethereum() const;
 	dev::shh::Interface* whisper() const;
 
-	QList<dev::KeyPair> const& owned() const { return m_myKeys; }
+	QList<dev::KeyPair> owned() const { return m_myKeys + m_myIdentities;}
 	
 public slots:
 	void note(QString _entry);
@@ -97,7 +98,7 @@ private:
 	void readSettings(bool _skipGeometry = false);
 	void writeSettings();
 
-	unsigned installWatch(dev::eth::MessageFilter const& _tf, std::function<void()> const& _f);
+	unsigned installWatch(dev::eth::LogFilter const& _tf, std::function<void()> const& _f);
 	unsigned installWatch(dev::h256 _tf, std::function<void()> const& _f);
 
 	void onNewBlock();
@@ -126,6 +127,7 @@ private:
 	std::unique_ptr<dev::WebThree> m_web3;
 
 	QList<dev::KeyPair> m_myKeys;
+	QList<dev::KeyPair> m_myIdentities;
 
 	std::map<unsigned, std::function<void()>> m_handlers;
 	unsigned m_nameRegFilter = (unsigned)-1;
@@ -137,6 +139,7 @@ private:
 
 	QNetworkAccessManager m_webCtrl;
 
+//<<<<<<< HEAD
 	QEthereum* m_ethereum = nullptr;
 	QWhisper* m_whisper = nullptr;
 
@@ -145,4 +148,9 @@ private:
 	
 	std::mutex x_uiq;
 	std::deque<std::function<void()>> m_uiq;	///< Queue for background updates to UI
+//=======
+	std::unique_ptr<WebThreeStubServer> m_server;
+	QWebThreeConnector m_qwebConnector;
+	QWebThree* m_qweb = nullptr;
+//>>>>>>> develop
 };

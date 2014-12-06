@@ -37,7 +37,7 @@ using namespace dev::shh;
 WhisperPeer::WhisperPeer(Session* _s, HostCapabilityFace* _h, unsigned _i): Capability(_s, _h, _i)
 {
 	RLPStream s;
-	sealAndSend(prep(s, StatusPacket, 1) << host()->protocolVersion());
+	sealAndSend(prep(s, StatusPacket, 1) << version());
 }
 
 WhisperPeer::~WhisperPeer()
@@ -59,7 +59,7 @@ bool WhisperPeer::interpret(unsigned _id, RLP const& _r)
 
 		clogS(NetMessageSummary) << "Status: " << protocolVersion;
 
-		if (protocolVersion != host()->protocolVersion())
+		if (protocolVersion != version())
 			disable("Invalid protocol version.");
 
 		if (session()->id() < host()->host()->id())
@@ -71,8 +71,7 @@ bool WhisperPeer::interpret(unsigned _id, RLP const& _r)
 		unsigned n = 0;
 		for (auto i: _r)
 			if (n++)
-				host()->inject(Message(i), this);
-		sendMessages();
+				host()->inject(Envelope(i), this);
 		break;
 	}
 	default:
@@ -83,27 +82,25 @@ bool WhisperPeer::interpret(unsigned _id, RLP const& _r)
 
 void WhisperPeer::sendMessages()
 {
-	RLPStream amalg;
-	unsigned n = 0;
-
-	Guard l(x_unseen);
-	while (m_unseen.size())
+	if (m_unseen.size())
 	{
-		auto p = *m_unseen.begin();
-		m_unseen.erase(m_unseen.begin());
-		host()->streamMessage(p.second, amalg);
-		n++;
-	}
-
-	if (n)
-	{
+		RLPStream amalg;
+		unsigned msgCount;
+		{
+			Guard l(x_unseen);
+			msgCount = m_unseen.size();
+			while (m_unseen.size())
+			{
+				auto p = *m_unseen.begin();
+				m_unseen.erase(m_unseen.begin());
+				host()->streamMessage(p.second, amalg);
+			}
+		}
+		
 		RLPStream s;
-		prep(s, MessagesPacket, n).appendRaw(amalg.out(), n);
+		prep(s, MessagesPacket, msgCount).appendRaw(amalg.out(), msgCount);
 		sealAndSend(s);
 	}
-	else
-		// just pause if no messages to send
-		this_thread::sleep_for(chrono::milliseconds(100));
 }
 
 void WhisperPeer::noteNewMessage(h256 _h, Message const& _m)

@@ -47,6 +47,7 @@ namespace p2p
 using NodeId = h512;
 
 bool isPrivateAddress(bi::address const& _addressToCheck);
+bool isLocalHostAddress(bi::address const& _addressToCheck);
 
 class UPnP;
 class Capability;
@@ -126,6 +127,8 @@ struct PeerInfo
 	unsigned socket;
 	std::map<std::string, std::string> notes;
 };
+
+using PeerInfos = std::vector<PeerInfo>;
 
 }
 }

@@ -30,14 +30,12 @@
 #include <jsonrpc/connectors/httpserver.h>
 #endif
 #include <libdevcrypto/FileSystem.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include <libethereum/All.h>
 #if ETH_JSONRPC
-#include <eth/EthStubServer.h>
-#include <eth/EthStubServer.cpp>
-#include <eth/abstractethstubserver.h>
-#include <eth/CommonJS.h>
-#include <eth/CommonJS.cpp>
+#include <libweb3jsonrpc/WebThreeStubServer.h>
+#include <libweb3jsonrpc/abstractwebthreestubserver.h>
+#include <libdevcore/CommonJS.h>
 #endif
 #include <libwebthree/WebThree.h>
 #include "BuildInfo.h"
@@ -477,11 +475,11 @@ int main(int argc, char** argv)
 		c.startMining();
 
 #if ETH_JSONRPC
-	auto_ptr<EthStubServer> jsonrpcServer;
+	shared_ptr<WebThreeStubServer> jsonrpcServer;
 	if (jsonrpc > -1)
 	{
-		jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(jsonrpc), web3));
-		jsonrpcServer->setKeys({us});
+		jsonrpcServer = make_shared<WebThreeStubServer>(new jsonrpc::HttpServer(jsonrpc), web3, vector<KeyPair>({us}));
+		jsonrpcServer->setIdentities({us});
 		jsonrpcServer->StartListening();
 	}
 #endif
@@ -554,8 +552,8 @@ int main(int argc, char** argv)
 		{
 			if (jsonrpc < 0)
 				jsonrpc = 8080;
-			jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(jsonrpc), web3));
-			jsonrpcServer->setKeys({us});
+			jsonrpcServer = make_shared<WebThreeStubServer>(new jsonrpc::HttpServer(jsonrpc), web3, vector<KeyPair>({us}));
+			jsonrpcServer->setIdentities({us});
 			jsonrpcServer->StartListening();
 		}
 		else if (cmd == "jsonstop")
@@ -605,7 +603,7 @@ int main(int argc, char** argv)
 			vector<string> l;
 			l.push_back("Amount");
 			stringstream label;
-			label << "Gas price (" << info.minGasPrice << ")";
+			label << "Gas price";
 			l.push_back(label.str());
 			l.push_back("Gas");
 			vector<string> b;
@@ -648,14 +646,12 @@ int main(int argc, char** argv)
 				ssbd << bbd;
 				cnote << ssbd.str();
 				int ssize = fields[4].length();
-				u256 minGas = (u256)Client::txGas(data.size(), 0);
+				u256 minGas = (u256)Client::txGas(data, 0);
 				if (size < 40)
 				{
 					if (size > 0)
 						cwarn << "Invalid address length:" << size;
 				}
-				else if (gasPrice < info.minGasPrice)
-					cwarn << "Minimum gas price is" << info.minGasPrice;
 				else if (gas < minGas)
 					cwarn << "Minimum gas amount is" << minGas;
 				else if (ssize < 40)
@@ -704,9 +700,9 @@ int main(int argc, char** argv)
 					auto h = bc.currentHash();
 					auto blockData = bc.block(h);
 					BlockInfo info(blockData);
-					u256 minGas = (u256)Client::txGas(0, 0);
+					u256 minGas = (u256)Client::txGas(bytes(), 0);
 					Address dest = h160(fromHex(fields[0]));
-					c.transact(us.secret(), amount, dest, bytes(), minGas, info.minGasPrice);
+					c.transact(us.secret(), amount, dest, bytes(), minGas);
 				}
 			}
 		}
@@ -720,7 +716,7 @@ int main(int argc, char** argv)
 			vector<string> l;
 			l.push_back("Endowment");
 			stringstream label;
-			label << "Gas price (" << info.minGasPrice << ")";
+			label << "Gas price";
 			l.push_back(label.str());
 			l.push_back("Gas");
 			vector<string> b;
@@ -765,16 +761,14 @@ int main(int argc, char** argv)
 					cnote << "Init:";
 					cnote << ssc.str();
 				}
-				u256 minGas = (u256)Client::txGas(init.size(), 0);
+				u256 minGas = (u256)Client::txGas(init, 0);
 				if (endowment < 0)
 					cwarn << "Invalid endowment";
-				else if (gasPrice < info.minGasPrice)
-					cwarn << "Minimum gas price is" << info.minGasPrice;
 				else if (gas < minGas)
 					cwarn << "Minimum gas amount is" << minGas;
 				else
 				{
-					c.transact(us.secret(), endowment, init, gas, gasPrice);
+					c.transact(us.secret(), endowment, init, gas);
 				}
 			}
 		}
@@ -805,7 +799,7 @@ int main(int argc, char** argv)
 
 					cnote << "Saved" << rechex << "to" << outFile;
 				}
-				catch (dev::eth::InvalidTrie const& _e)
+				catch (dev::InvalidTrie const& _e)
 				{
 					cwarn << "Corrupted trie.\n" << diagnostic_information(_e);
 				}
@@ -845,18 +839,18 @@ int main(int argc, char** argv)
 			for (auto const& i: RLP(b)[1])
 			{
 				Transaction t(i[0].data());
-				auto s = t.receiveAddress ?
+				auto s = t.receiveAddress() ?
 					boost::format("  %1% %2%> %3%: %4% [%5%]") %
 						toString(t.safeSender()) %
-						(c.codeAt(t.receiveAddress, 0).size() ? '*' : '-') %
-						toString(t.receiveAddress) %
-						toString(formatBalance(t.value)) %
-						toString((unsigned)t.nonce) :
+						(c.codeAt(t.receiveAddress(), 0).size() ? '*' : '-') %
+						toString(t.receiveAddress()) %
+						toString(formatBalance(t.value())) %
+						toString((unsigned)t.nonce()) :
 					boost::format("  %1% +> %2%: %3% [%4%]") %
 						toString(t.safeSender()) %
-						toString(right160(sha3(rlpList(t.safeSender(), t.nonce)))) %
-						toString(formatBalance(t.value)) %
-						toString((unsigned)t.nonce);
+						toString(right160(sha3(rlpList(t.safeSender(), t.nonce())))) %
+						toString(formatBalance(t.value())) %
+						toString((unsigned)t.nonce());
 				mvwaddnstr(blockswin, y++, x, s.str().c_str(), qwidth - 2);
 				if (y > qheight - 2)
 					break;
@@ -870,18 +864,18 @@ int main(int argc, char** argv)
 		y = 1;
 		for (Transaction const& t: c.pending())
 		{
-			auto s = t.receiveAddress ?
+			auto s = t.receiveAddress() ?
 				boost::format("%1% %2%> %3%: %4% [%5%]") %
 					toString(t.safeSender()) %
-					(c.codeAt(t.receiveAddress, 0).size() ? '*' : '-') %
-					toString(t.receiveAddress) %
-					toString(formatBalance(t.value)) %
-					toString((unsigned)t.nonce) :
+					(c.codeAt(t.receiveAddress(), 0).size() ? '*' : '-') %
+					toString(t.receiveAddress()) %
+					toString(formatBalance(t.value())) %
+					toString((unsigned)t.nonce()) :
 				boost::format("%1% +> %2%: %3% [%4%]") %
 					toString(t.safeSender()) %
-					toString(right160(sha3(rlpList(t.safeSender(), t.nonce)))) %
-					toString(formatBalance(t.value)) %
-					toString((unsigned)t.nonce);
+					toString(right160(sha3(rlpList(t.safeSender(), t.nonce())))) %
+					toString(formatBalance(t.value())) %
+					toString((unsigned)t.nonce());
 			mvwaddnstr(pendingwin, y++, x, s.str().c_str(), qwidth);
 			if (y > height * 1 / 5 - 4)
 				break;

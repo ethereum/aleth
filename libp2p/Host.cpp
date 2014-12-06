@@ -34,6 +34,7 @@
 #include <set>
 #include <chrono>
 #include <thread>
+#include <mutex>
 #include <boost/algorithm/string.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
@@ -46,26 +47,168 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-// Addresses we will skip during network interface discovery
-// Use a vector as the list is small
-// Why this and not names?
-// Under MacOSX loopback (127.0.0.1) can be named lo0 and br0 are bridges (0.0.0.0)
-static const set<bi::address> c_rejectAddresses = {
-	{bi::address_v4::from_string("127.0.0.1")},
-	{bi::address_v6::from_string("::1")},
-	{bi::address_v4::from_string("0.0.0.0")},
-	{bi::address_v6::from_string("::")}
-};
+std::vector<bi::address> Host::getInterfaceAddresses()
+{
+	std::vector<bi::address> addresses;
+	
+#ifdef _WIN32
+	WSAData wsaData;
+	if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
+		BOOST_THROW_EXCEPTION(NoNetworking());
+	
+	char ac[80];
+	if (gethostname(ac, sizeof(ac)) == SOCKET_ERROR)
+	{
+		clog(NetWarn) << "Error " << WSAGetLastError() << " when getting local host name.";
+		WSACleanup();
+		BOOST_THROW_EXCEPTION(NoNetworking());
+	}
+	
+	struct hostent* phe = gethostbyname(ac);
+	if (phe == 0)
+	{
+		clog(NetWarn) << "Bad host lookup.";
+		WSACleanup();
+		BOOST_THROW_EXCEPTION(NoNetworking());
+	}
+	
+	for (int i = 0; phe->h_addr_list[i] != 0; ++i)
+	{
+		struct in_addr addr;
+		memcpy(&addr, phe->h_addr_list[i], sizeof(struct in_addr));
+		char *addrStr = inet_ntoa(addr);
+		bi::address address(bi::address::from_string(addrStr));
+		if (!isLocalHostAddress(address))
+			addresses.push_back(address.to_v4());
+	}
+	
+	WSACleanup();
+#else
+	ifaddrs* ifaddr;
+	if (getifaddrs(&ifaddr) == -1)
+		BOOST_THROW_EXCEPTION(NoNetworking());
+	
+	for (auto ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
+	{
+		if (!ifa->ifa_addr || string(ifa->ifa_name) == "lo0")
+			continue;
+		
+		if (ifa->ifa_addr->sa_family == AF_INET)
+		{
+			in_addr addr = ((struct sockaddr_in *)ifa->ifa_addr)->sin_addr;
+			boost::asio::ip::address_v4 address(boost::asio::detail::socket_ops::network_to_host_long(addr.s_addr));
+			if (!isLocalHostAddress(address))
+				addresses.push_back(address);
+		}
+		else if (ifa->ifa_addr->sa_family == AF_INET6)
+		{
+			sockaddr_in6* sockaddr = ((struct sockaddr_in6 *)ifa->ifa_addr);
+			in6_addr addr = sockaddr->sin6_addr;
+			boost::asio::ip::address_v6::bytes_type bytes;
+			memcpy(&bytes[0], addr.s6_addr, 16);
+			boost::asio::ip::address_v6 address(bytes, sockaddr->sin6_scope_id);
+			if (!isLocalHostAddress(address))
+				addresses.push_back(address);
+		}
+	}
+	
+	if (ifaddr!=NULL)
+		freeifaddrs(ifaddr);
+	
+#endif
+	
+	return std::move(addresses);
+}
+
+int Host::listen4(bi::tcp::acceptor* _acceptor, unsigned short _listenPort)
+{
+	int retport = -1;
+	for (unsigned i = 0; i < 2; ++i)
+	{
+		// try to connect w/listenPort, else attempt net-allocated port
+		bi::tcp::endpoint endpoint(bi::tcp::v4(), i ? 0 : _listenPort);
+		try
+		{
+			_acceptor->open(endpoint.protocol());
+			_acceptor->set_option(ba::socket_base::reuse_address(true));
+			_acceptor->bind(endpoint);
+			_acceptor->listen();
+			retport = _acceptor->local_endpoint().port();
+			break;
+		}
+		catch (...)
+		{
+			if (i)
+			{
+				// both attempts failed
+				cwarn << "Couldn't start accepting connections on host. Something very wrong with network?\n" << boost::current_exception_diagnostic_information();
+			}
+			
+			// first attempt failed
+			_acceptor->close();
+			continue;
+		}
+	}
+	return retport;
+}
+
+bi::tcp::endpoint Host::traverseNAT(std::vector<bi::address> const& _ifAddresses, unsigned short _listenPort, bi::address& o_upnpifaddr)
+{
+	asserts(_listenPort != 0);
+	
+	UPnP* upnp = nullptr;
+	try
+	{
+		upnp = new UPnP;
+	}
+	// let m_upnp continue as null - we handle it properly.
+	catch (NoUPnPDevice) {}
+	
+	bi::tcp::endpoint upnpep;
+	if (upnp && upnp->isValid())
+	{
+		bi::address paddr;
+		int extPort = 0;
+		for (auto const& addr: _ifAddresses)
+			if (addr.is_v4() && isPrivateAddress(addr) && (extPort = upnp->addRedirect(addr.to_string().c_str(), _listenPort)))
+			{
+				paddr = addr;
+				break;
+			}
+
+		auto eip = upnp->externalIP();
+		bi::address eipaddr(bi::address::from_string(eip));
+		if (extPort && eip != string("0.0.0.0") && !isPrivateAddress(eipaddr))
+		{
+			clog(NetNote) << "Punched through NAT and mapped local port" << _listenPort << "onto external port" << extPort << ".";
+			clog(NetNote) << "External addr:" << eip;
+			o_upnpifaddr = paddr;
+			upnpep = bi::tcp::endpoint(eipaddr, (unsigned short)extPort);
+		}
+		else
+			clog(NetWarn) << "Couldn't punch through NAT (or no NAT in place).";
+		
+		if (upnp)
+			delete upnp;
+	}
+
+	return upnpep;
+}
 
 Host::Host(std::string const& _clientVersion, NetworkPreferences const& _n, bool _start):
-	Worker("p2p"),
+	Worker("p2p", 0),
 	m_clientVersion(_clientVersion),
 	m_netPrefs(_n),
-	m_acceptor(m_ioService),
-	m_socket(m_ioService),
+	m_ifAddresses(getInterfaceAddresses()),
+	m_ioService(new ba::io_service(2)),
+	m_acceptor(new bi::tcp::acceptor(*m_ioService)),
+	m_socket(new bi::tcp::socket(*m_ioService)),
 	m_key(KeyPair::create())
 {
-	populateAddresses();
+	for (auto address: m_ifAddresses)
+		if (address.is_v4())
+			clog(NetNote) << "IP Address: " << address << " = " << (isPrivateAddress(address) ? "[LOCAL]" : "[PEER]");
+	
 	clog(NetNote) << "Id:" << id().abridged();
 	if (_start)
 		start();
@@ -73,71 +216,40 @@ Host::Host(std::string const& _clientVersion, NetworkPreferences const& _n, bool
 
 Host::~Host()
 {
-	stop();
+	quit();
 }
 
 void Host::start()
 {
-	if (isWorking())
-		stop();
-
-	for (unsigned i = 0; i < 2; ++i)
-	{
-		bi::tcp::endpoint endpoint(bi::tcp::v4(), i ? 0 : m_netPrefs.listenPort);
-		try
-		{
-			m_acceptor.open(endpoint.protocol());
-			m_acceptor.set_option(ba::socket_base::reuse_address(true));
-			m_acceptor.bind(endpoint);
-			m_acceptor.listen();
-			m_listenPort = i ? m_acceptor.local_endpoint().port() : m_netPrefs.listenPort;
-			break;
-		}
-		catch (...)
-		{
-			if (i)
-			{
-				cwarn << "Couldn't start accepting connections on host. Something very wrong with network?\n" << boost::current_exception_diagnostic_information();
-				return;
-			}
-			m_acceptor.close();
-			continue;
-		}
-	}
-
-	determinePublic(m_netPrefs.publicIP, m_netPrefs.upnp);
-	ensureAccepting();
-
-	if (!m_public.address().is_unspecified() && (m_nodes.empty() || m_nodes[m_nodesList[0]]->id != id()))
-		noteNode(id(), m_public, Origin::Perfect, false);
-
-	clog(NetNote) << "Id:" << id().abridged();
-
-	for (auto const& h: m_capabilities)
-		h.second->onStarting();
-
 	startWorking();
 }
 
 void Host::stop()
 {
-	for (auto const& h: m_capabilities)
-		h.second->onStopping();
-
-	stopWorking();
-
-	if (m_acceptor.is_open())
 	{
-		if (m_accepting)
-			m_acceptor.cancel();
-		m_acceptor.close();
-		m_accepting = false;
+		// prevent m_run from being set to false at same time as set to true by start()
+		Guard l(x_runTimer);
+		// once m_run is false the scheduler will shutdown network and stopWorking()
+		m_run = false;
 	}
-	if (m_socket.is_open())
-		m_socket.close();
-	disconnectPeers();
+	
+	// we know shutdown is complete when m_timer is reset
+	while (m_timer)
+		this_thread::sleep_for(chrono::milliseconds(50));
+	stopWorking();
+}
 
+void Host::quit()
+{
+	// called to force io_service to kill any remaining tasks it might have -
+	// such tasks may involve socket reads from Capabilities that maintain references
+	// to resources we're about to free.
+	if (isWorking())
+		stop();
+	m_acceptor.reset();
+	m_socket.reset();
 	m_ioService.reset();
+	// m_acceptor & m_socket are DANGEROUS now.
 }
 
 unsigned Host::protocolVersion() const
@@ -166,29 +278,6 @@ void Host::registerPeer(std::shared_ptr<Session> _s, CapDescs const& _caps)
 		}
 }
 
-void Host::disconnectPeers()
-{
-	for (unsigned n = 0;; n = 0)
-	{
-		{
-			RecursiveGuard l(x_peers);
-			for (auto i: m_peers)
-				if (auto p = i.second.lock())
-				{
-					p->disconnect(ClientQuit);
-					n++;
-				}
-		}
-		if (!n)
-			break;
-		m_ioService.poll();
-		this_thread::sleep_for(chrono::milliseconds(100));
-	}
-
-	delete m_upnp;
-	m_upnp = nullptr;
-}
-
 void Host::seal(bytes& _b)
 {
 	_b[0] = 0x22;
@@ -202,160 +291,19 @@ void Host::seal(bytes& _b)
 	_b[7] = len & 0xff;
 }
 
-void Host::determinePublic(string const& _publicAddress, bool _upnp)
-{
-	if (_upnp)
-		try
-		{
-			m_upnp = new UPnP;
-		}
-		catch (NoUPnPDevice) {}	// let m_upnp continue as null - we handle it properly.
-
-	bi::tcp::resolver r(m_ioService);
-	if (m_upnp && m_upnp->isValid() && m_peerAddresses.size())
-	{
-		clog(NetNote) << "External addr:" << m_upnp->externalIP();
-		int p;
-		for (auto const& addr : m_peerAddresses)
-			if ((p = m_upnp->addRedirect(addr.to_string().c_str(), m_listenPort)))
-				break;
-		if (p)
-			clog(NetNote) << "Punched through NAT and mapped local port" << m_listenPort << "onto external port" << p << ".";
-		else
-		{
-			// couldn't map
-			clog(NetWarn) << "Couldn't punch through NAT (or no NAT in place). Assuming" << m_listenPort << "is local & external port.";
-			p = m_listenPort;
-		}
-
-		auto eip = m_upnp->externalIP();
-		if (eip == string("0.0.0.0") && _publicAddress.empty())
-			m_public = bi::tcp::endpoint(bi::address(), (unsigned short)p);
-		else
-		{
-			m_public = bi::tcp::endpoint(bi::address::from_string(_publicAddress.empty() ? eip : _publicAddress), (unsigned short)p);
-			m_addresses.push_back(m_public.address());
-		}
-	}
-	else
-	{
-		// No UPnP - fallback on given public address or, if empty, the assumed peer address.
-		m_public = bi::tcp::endpoint(_publicAddress.size() ? bi::address::from_string(_publicAddress)
-									: m_peerAddresses.size() ? m_peerAddresses[0]
-									: bi::address(), m_listenPort);
-		m_addresses.push_back(m_public.address());
-	}
-}
-
-void Host::populateAddresses()
-{
-#ifdef _WIN32
-	WSAData wsaData;
-	if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
-		BOOST_THROW_EXCEPTION(NoNetworking());
-
-	char ac[80];
-	if (gethostname(ac, sizeof(ac)) == SOCKET_ERROR)
-	{
-		clog(NetWarn) << "Error " << WSAGetLastError() << " when getting local host name.";
-		WSACleanup();
-		BOOST_THROW_EXCEPTION(NoNetworking());
-	}
-
-	struct hostent* phe = gethostbyname(ac);
-	if (phe == 0)
-	{
-		clog(NetWarn) << "Bad host lookup.";
-		WSACleanup();
-		BOOST_THROW_EXCEPTION(NoNetworking());
-	}
-
-	for (int i = 0; phe->h_addr_list[i] != 0; ++i)
-	{
-		struct in_addr addr;
-		memcpy(&addr, phe->h_addr_list[i], sizeof(struct in_addr));
-		char *addrStr = inet_ntoa(addr);
-		bi::address ad(bi::address::from_string(addrStr));
-		m_addresses.push_back(ad.to_v4());
-		bool isLocal = std::find(c_rejectAddresses.begin(), c_rejectAddresses.end(), ad) != c_rejectAddresses.end();
-		if (!isLocal)
-			m_peerAddresses.push_back(ad.to_v4());
-		clog(NetNote) << "Address: " << ac << " = " << m_addresses.back() << (isLocal ? " [LOCAL]" : " [PEER]");
-	}
-
-	WSACleanup();
-#else
-	ifaddrs* ifaddr;
-	if (getifaddrs(&ifaddr) == -1)
-		BOOST_THROW_EXCEPTION(NoNetworking());
-
-	bi::tcp::resolver r(m_ioService);
-
-	for (ifaddrs* ifa = ifaddr; ifa; ifa = ifa->ifa_next)
-	{
-		if (!ifa->ifa_addr)
-			continue;
-		if (ifa->ifa_addr->sa_family == AF_INET)
-		{
-			char host[NI_MAXHOST];
-			if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST))
-				continue;
-			try
-			{
-				auto it = r.resolve({host, "30303"});
-				bi::tcp::endpoint ep = it->endpoint();
-				bi::address ad = ep.address();
-				m_addresses.push_back(ad.to_v4());
-				bool isLocal = std::find(c_rejectAddresses.begin(), c_rejectAddresses.end(), ad) != c_rejectAddresses.end();
-				if (!isLocal)
-					m_peerAddresses.push_back(ad.to_v4());
-				clog(NetNote) << "Address: " << host << " = " << m_addresses.back() << (isLocal ? " [LOCAL]" : " [PEER]");
-			}
-			catch (...)
-			{
-				clog(NetNote) << "Couldn't resolve: " << host;
-			}
-		}
-		else if (ifa->ifa_addr->sa_family == AF_INET6)
-		{
-			char host[NI_MAXHOST];
-			if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in6), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST))
-				continue;
-			try
-			{
-				auto it = r.resolve({host, "30303"});
-				bi::tcp::endpoint ep = it->endpoint();
-				bi::address ad = ep.address();
-				m_addresses.push_back(ad.to_v6());
-				bool isLocal = std::find(c_rejectAddresses.begin(), c_rejectAddresses.end(), ad) != c_rejectAddresses.end();
-				if (!isLocal)
-					m_peerAddresses.push_back(ad);
-				clog(NetNote) << "Address: " << host << " = " << m_addresses.back() << (isLocal ? " [LOCAL]" : " [PEER]");
-			}
-			catch (...)
-			{
-				clog(NetNote) << "Couldn't resolve: " << host;
-			}
-		}
-	}
-
-	freeifaddrs(ifaddr);
-#endif
-}
-
 shared_ptr<Node> Host::noteNode(NodeId _id, bi::tcp::endpoint _a, Origin _o, bool _ready, NodeId _oldId)
 {
 	RecursiveGuard l(x_peers);
-	if (_a.port() < 30300 && _a.port() > 30303)
-		cwarn << "Wierd port being recorded!";
+	if (_a.port() < 30300 || _a.port() > 30305)
+		cwarn << "Weird port being recorded: " << _a.port();
 
-	if (_a.port() >= 49152)
+	if (_a.port() >= /*49152*/32768)
 	{
 		cwarn << "Private port being recorded - setting to 0";
 		_a = bi::tcp::endpoint(_a.address(), 0);
 	}
 
-	cnote << "Node:" << _id.abridged() << _a << (_ready ? "ready" : "used") << _oldId.abridged() << (m_nodes.count(_id) ? "[have]" : "[NEW]");
+//	cnote << "Node:" << _id.abridged() << _a << (_ready ? "ready" : "used") << _oldId.abridged() << (m_nodes.count(_id) ? "[have]" : "[NEW]");
 
 	// First check for another node with the same connection credentials, and put it in oldId if found.
 	if (!_oldId)
@@ -402,7 +350,7 @@ shared_ptr<Node> Host::noteNode(NodeId _id, bi::tcp::endpoint _a, Origin _o, boo
 	else
 		m_private -= i;
 
-	cnote << m_nodes[_id]->index << ":" << m_ready;
+//	cnote << m_nodes[_id]->index << ":" << m_ready;
 
 	m_hadNewNodes = true;
 
@@ -420,24 +368,91 @@ Nodes Host::potentialPeers(RangeMask<unsigned> const& _known)
 	return ret;
 }
 
+void Host::determinePublic(string const& _publicAddress, bool _upnp)
+{
+	m_peerAddresses.clear();
+	
+	// no point continuing if there are no interface addresses or valid listen port
+	if (!m_ifAddresses.size() || m_listenPort < 1)
+		return;
+
+	// populate interfaces we'll listen on (eth listens on all interfaces); ignores local
+	for (auto addr: m_ifAddresses)
+		if ((m_netPrefs.localNetworking || !isPrivateAddress(addr)) && !isLocalHostAddress(addr))
+			m_peerAddresses.insert(addr);
+	
+	// if user supplied address is a public address then we use it
+	// if user supplied address is private, and localnetworking is enabled, we use it
+	bi::address reqpublicaddr(bi::address(_publicAddress.empty() ? bi::address() : bi::address::from_string(_publicAddress)));
+	bi::tcp::endpoint reqpublic(reqpublicaddr, m_listenPort);
+	bool isprivate = isPrivateAddress(reqpublicaddr);
+	bool ispublic = !isprivate && !isLocalHostAddress(reqpublicaddr);
+	if (!reqpublicaddr.is_unspecified() && (ispublic || (isprivate && m_netPrefs.localNetworking)))
+	{
+		if (!m_peerAddresses.count(reqpublicaddr))
+			m_peerAddresses.insert(reqpublicaddr);
+		m_public = reqpublic;
+		return;
+	}
+	
+	// if address wasn't provided, then use first public ipv4 address found
+	for (auto addr: m_peerAddresses)
+		if (addr.is_v4() && !isPrivateAddress(addr))
+		{
+			m_public = bi::tcp::endpoint(*m_peerAddresses.begin(), m_listenPort);
+			return;
+		}
+	
+	// or find address via upnp
+	if (_upnp)
+	{
+		bi::address upnpifaddr;
+		bi::tcp::endpoint upnpep = traverseNAT(m_ifAddresses, m_listenPort, upnpifaddr);
+		if (!upnpep.address().is_unspecified() && !upnpifaddr.is_unspecified())
+		{
+			if (!m_peerAddresses.count(upnpep.address()))
+				m_peerAddresses.insert(upnpep.address());
+			m_public = upnpep;
+			return;
+		}
+	}
+
+	// or if no address provided, use private ipv4 address if local networking is enabled
+	if (reqpublicaddr.is_unspecified())
+		if (m_netPrefs.localNetworking)
+			for (auto addr: m_peerAddresses)
+				if (addr.is_v4() && isPrivateAddress(addr))
+				{
+					m_public = bi::tcp::endpoint(addr, m_listenPort);
+					return;
+				}
+	
+	// otherwise address is unspecified
+	m_public = bi::tcp::endpoint(bi::address(), m_listenPort);
+}
+
 void Host::ensureAccepting()
 {
+	// return if there's no io-server (quit called) or we're not listening
+	if (!m_ioService || m_listenPort < 1)
+		return;
+
 	if (!m_accepting)
 	{
 		clog(NetConnect) << "Listening on local port " << m_listenPort << " (public: " << m_public << ")";
 		m_accepting = true;
-		m_acceptor.async_accept(m_socket, [=](boost::system::error_code ec)
+		m_acceptor->async_accept(*m_socket, [=](boost::system::error_code ec)
 		{
 			if (!ec)
 			{
 				try
 				{
 					try {
-						clog(NetConnect) << "Accepted connection from " << m_socket.remote_endpoint();
+						clog(NetConnect) << "Accepted connection from " << m_socket->remote_endpoint();
 					} catch (...){}
-					bi::address remoteAddress = m_socket.remote_endpoint().address();
+					bi::address remoteAddress = m_socket->remote_endpoint().address();
 					// Port defaults to 0 - we let the hello tell us which port the peer listens to
-					auto p = std::make_shared<Session>(this, std::move(m_socket), bi::tcp::endpoint(remoteAddress, 0));
+					auto p = std::make_shared<Session>(this, std::move(*m_socket), bi::tcp::endpoint(remoteAddress, 0));
 					p->start();
 				}
 				catch (Exception const& _e)
@@ -465,13 +480,17 @@ string Host::pocHost()
 
 void Host::connect(std::string const& _addr, unsigned short _port) noexcept
 {
+	// if there's no ioService, it means we've had quit() called - bomb out - we're not allowed in here.
+	if (!m_ioService)
+		return;
+
 	for (int i = 0; i < 2; ++i)
 	{
 		try
 		{
 			if (i == 0)
 			{
-				bi::tcp::resolver r(m_ioService);
+				bi::tcp::resolver r(*m_ioService);
 				connect(r.resolve({_addr, toString(_port)})->endpoint());
 			}
 			else
@@ -493,8 +512,12 @@ void Host::connect(std::string const& _addr, unsigned short _port) noexcept
 
 void Host::connect(bi::tcp::endpoint const& _ep)
 {
+	// if there's no ioService, it means we've had quit() called - bomb out - we're not allowed in here.
+	if (!m_ioService)
+		return;
+
 	clog(NetConnect) << "Attempting single-shot connection to " << _ep;
-	bi::tcp::socket* s = new bi::tcp::socket(m_ioService);
+	bi::tcp::socket* s = new bi::tcp::socket(*m_ioService);
 	s->async_connect(_ep, [=](boost::system::error_code const& ec)
 	{
 		if (ec)
@@ -509,30 +532,45 @@ void Host::connect(bi::tcp::endpoint const& _ep)
 	});
 }
 
-void Node::connect(Host* _h)
+void Host::connect(std::shared_ptr<Node> const& _n)
 {
-	clog(NetConnect) << "Attempting connection to node" << id.abridged() << "@" << address << "from" << _h->id().abridged();
-	lastAttempted = std::chrono::system_clock::now();
-	failedAttempts++;
-	_h->m_ready -= index;
-	bi::tcp::socket* s = new bi::tcp::socket(_h->m_ioService);
-	s->async_connect(address, [=](boost::system::error_code const& ec)
+	// if there's no ioService, it means we've had quit() called - bomb out - we're not allowed in here.
+	if (!m_ioService)
+		return;
+	
+	// prevent concurrently connecting to a node; todo: better abstraction
+	Node *nptr = _n.get();
+	{
+		Guard l(x_pendingNodeConns);
+		if (m_pendingNodeConns.count(nptr))
+			return;
+		m_pendingNodeConns.insert(nptr);
+	}
+	
+	clog(NetConnect) << "Attempting connection to node" << _n->id.abridged() << "@" << _n->address << "from" << id().abridged();
+	_n->lastAttempted = std::chrono::system_clock::now();
+	_n->failedAttempts++;
+	m_ready -= _n->index;
+	bi::tcp::socket* s = new bi::tcp::socket(*m_ioService);
+	s->async_connect(_n->address, [=](boost::system::error_code const& ec)
 	{
 		if (ec)
 		{
-			clog(NetConnect) << "Connection refused to node" << id.abridged() << "@" << address << "(" << ec.message() << ")";
-			lastDisconnect = TCPError;
-			lastAttempted = std::chrono::system_clock::now();
-			_h->m_ready += index;
+			clog(NetConnect) << "Connection refused to node" << _n->id.abridged() << "@" << _n->address << "(" << ec.message() << ")";
+			_n->lastDisconnect = TCPError;
+			_n->lastAttempted = std::chrono::system_clock::now();
+			m_ready += _n->index;
 		}
 		else
 		{
-			clog(NetConnect) << "Connected to" << id.abridged() << "@" << address;
-			lastConnected = std::chrono::system_clock::now();
-			auto p = make_shared<Session>(_h, std::move(*s), _h->node(id), true);		// true because we don't care about ids matched for now. Once we have permenant IDs this will matter a lot more and we can institute a safer mechanism.
+			clog(NetConnect) << "Connected to" << _n->id.abridged() << "@" << _n->address;
+			_n->lastConnected = std::chrono::system_clock::now();
+			auto p = make_shared<Session>(this, std::move(*s), node(_n->id), true);		// true because we don't care about ids matched for now. Once we have permenant IDs this will matter a lot more and we can institute a safer mechanism.
 			p->start();
 		}
 		delete s;
+		Guard l(x_pendingNodeConns);
+		m_pendingNodeConns.erase(nptr);
 	});
 }
 
@@ -594,17 +632,14 @@ void Host::growPeers()
 		if (ns.size())
 			for (Node const& i: ns)
 			{
-				m_nodes[i.id]->connect(this);
+				connect(m_nodes[i.id]);
 				if (!--morePeers)
 					return;
 			}
 		else
-		{
-			ensureAccepting();
 			for (auto const& i: m_peers)
 				if (auto p = i.second.lock())
 					p->ensureNodesRequested();
-		}
 	}
 }
 
@@ -612,23 +647,26 @@ void Host::prunePeers()
 {
 	RecursiveGuard l(x_peers);
 	// We'll keep at most twice as many as is ideal, halfing what counts as "too young to kill" until we get there.
-	for (unsigned old = 15000; m_peers.size() > m_idealPeerCount * 2 && old > 100; old /= 2)
-		while (m_peers.size() > m_idealPeerCount)
+	set<NodeId> dc;
+	for (unsigned old = 15000; m_peers.size() - dc.size() > m_idealPeerCount * 2 && old > 100; old /= 2)
+		if (m_peers.size() - dc.size() > m_idealPeerCount)
 		{
 			// look for worst peer to kick off
 			// first work out how many are old enough to kick off.
 			shared_ptr<Session> worst;
 			unsigned agedPeers = 0;
 			for (auto i: m_peers)
-				if (auto p = i.second.lock())
-					if (/*(m_mode != NodeMode::Host || p->m_caps != 0x01) &&*/ chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
-					{
-						++agedPeers;
-						if ((!worst || p->rating() < worst->rating() || (p->rating() == worst->rating() && p->m_connect > worst->m_connect)))	// kill older ones
-							worst = p;
-					}
+				if (!dc.count(i.first))
+					if (auto p = i.second.lock())
+						if (/*(m_mode != NodeMode::Host || p->m_caps != 0x01) &&*/ chrono::steady_clock::now() > p->m_connect + chrono::milliseconds(old))	// don't throw off new peers; peer-servers should never kick off other peer-servers.
+						{
+							++agedPeers;
+							if ((!worst || p->rating() < worst->rating() || (p->rating() == worst->rating() && p->m_connect > worst->m_connect)))	// kill older ones
+								worst = p;
+						}
 			if (!worst || agedPeers <= m_idealPeerCount)
 				break;
+			dc.insert(worst->id());
 			worst->disconnect(TooManyPeers);
 		}
 
@@ -640,8 +678,12 @@ void Host::prunePeers()
 			i = m_peers.erase(i);
 }
 
-std::vector<PeerInfo> Host::peers(bool _updatePing) const
+PeerInfos Host::peers(bool _updatePing) const
 {
+	// if there's no ioService, it means we've had quit() called - bomb out - we're not allowed in here.
+	if (!m_ioService)
+		return PeerInfos();
+
 	RecursiveGuard l(x_peers);
     if (_updatePing)
 	{
@@ -656,30 +698,152 @@ std::vector<PeerInfo> Host::peers(bool _updatePing) const
 	return ret;
 }
 
+void Host::run(boost::system::error_code const& error)
+{
+	m_lastTick += c_timerInterval;
+	
+	if (error || !m_ioService)
+	{
+		// timer died or io service went away, so stop here
+		m_timer.reset();
+		return;
+	}
+
+	// network running
+	if (m_run)
+	{
+		if (m_lastTick >= c_timerInterval * 10)
+		{
+			growPeers();
+			prunePeers();
+			m_lastTick = 0;
+		}
+		
+		if (m_hadNewNodes)
+		{
+			for (auto p: m_peers)
+				if (auto pp = p.second.lock())
+					pp->serviceNodesRequest();
+			
+			m_hadNewNodes = false;
+		}
+		
+		if (chrono::steady_clock::now() - m_lastPing > chrono::seconds(30))	// ping every 30s.
+		{
+			for (auto p: m_peers)
+				if (auto pp = p.second.lock())
+					if (chrono::steady_clock::now() - pp->m_lastReceived > chrono::seconds(60))
+						pp->disconnect(PingTimeout);
+			pingAll();
+		}
+		
+		auto runcb = [this](boost::system::error_code const& error) -> void { run(error); };
+		m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
+		m_timer->async_wait(runcb);
+		
+		return;
+	}
+	
+	// network stopping
+	if (!m_run)
+	{
+		// close acceptor
+		if (m_acceptor->is_open())
+		{
+			if (m_accepting)
+				m_acceptor->cancel();
+			m_acceptor->close();
+			m_accepting = false;
+		}
+		
+		// stop capabilities (eth: stops syncing or block/tx broadcast)
+		for (auto const& h: m_capabilities)
+			h.second->onStopping();
+		
+		// disconnect peers
+		for (unsigned n = 0;; n = 0)
+		{
+			{
+				RecursiveGuard l(x_peers);
+				for (auto i: m_peers)
+					if (auto p = i.second.lock())
+						if (p->isOpen())
+						{
+							p->disconnect(ClientQuit);
+							n++;
+						}
+			}
+			if (!n)
+				break;
+			this_thread::sleep_for(chrono::milliseconds(100));
+		}
+		
+		if (m_socket->is_open())
+			m_socket->close();
+		
+		// m_run is false, so we're stopping; kill timer
+		m_lastTick = 0;
+		
+		// causes parent thread's stop() to continue which calls stopWorking()
+		m_timer.reset();
+		
+		// stop ioservice (stops blocking worker thread, allowing thread to join)
+		if (!!m_ioService)
+			m_ioService->stop();
+		return;
+	}
+}
+			
+void Host::startedWorking()
+{
+	if (!m_timer)
+	{
+		// no timer means this is first run and network must be started
+		// (run once when host worker thread calls startedWorking())
+		
+		{
+			// prevent m_run from being set to true at same time as set to false by stop()
+			// don't release mutex until m_timer is set so in case stop() is called at same
+			// time, stop will wait on m_timer and graceful network shutdown.
+			Guard l(x_runTimer);
+			// reset io service and create deadline timer
+			m_timer.reset(new boost::asio::deadline_timer(*m_ioService));
+			m_run = true;
+		}
+		m_ioService->reset();
+		
+		// try to open acceptor (todo: ipv6)
+		m_listenPort = listen4(m_acceptor.get(), m_netPrefs.listenPort);
+		
+		// start capability threads
+		for (auto const& h: m_capabilities)
+			h.second->onStarting();
+		
+		// determine public IP, but only if we're able to listen for connections
+		// todo: GUI when listen is unavailable in UI
+		if (m_listenPort)
+		{
+			determinePublic(m_netPrefs.publicIP, m_netPrefs.upnp);
+			ensureAccepting();
+		}
+		
+		// if m_public address is valid then add us to node list
+		// todo: abstract empty() and emplace logic
+		if (!m_public.address().is_unspecified() && (m_nodes.empty() || m_nodes[m_nodesList[0]]->id != id()))
+			noteNode(id(), m_public, Origin::Perfect, false);
+		
+		clog(NetNote) << "Id:" << id().abridged();
+	}
+	
+	run(boost::system::error_code());
+}
+
 void Host::doWork()
 {
-	growPeers();
-	prunePeers();
-
-	if (m_hadNewNodes)
-	{
-		for (auto p: m_peers)
-			if (auto pp = p.second.lock())
-				pp->serviceNodesRequest();
-
-		m_hadNewNodes = false;
-	}
-
-	if (chrono::steady_clock::now() - m_lastPing > chrono::seconds(30))	// ping every 30s.
-	{
-		for (auto p: m_peers)
-			if (auto pp = p.second.lock())
-				if (chrono::steady_clock::now() - pp->m_lastReceived > chrono::seconds(60))
-					pp->disconnect(PingTimeout);
-		pingAll();
-	}
-
-	m_ioService.poll();
+	// no ioService means we've had quit() called - bomb out - we're not allowed in here.
+	if (asserts(!!m_ioService))
+		return;
+	m_ioService->run();
 }
 
 void Host::pingAll()
@@ -701,7 +865,7 @@ bytes Host::saveNodes() const
 		{
 			Node const& n = *(i.second);
 			// TODO: PoC-7: Figure out why it ever shares these ports.//n.address.port() >= 30300 && n.address.port() <= 30305 &&
-			if (!n.dead && n.address.port() > 0 && n.address.port() < 49152 && n.id != id() && !isPrivateAddress(n.address.address()))
+			if (!n.dead && chrono::system_clock::now() - n.lastConnected < chrono::seconds(3600 * 48) && n.address.port() > 0 && n.address.port() < /*49152*/32768 && n.id != id() && !isPrivateAddress(n.address.address()))
 			{
 				nodes.appendList(10);
 				if (n.address.address().is_v4())
@@ -709,8 +873,8 @@ bytes Host::saveNodes() const
 				else
 					nodes << n.address.address().to_v6().to_bytes();
 				nodes << n.address.port() << n.id << (int)n.idOrigin
-					<< std::chrono::duration_cast<std::chrono::seconds>(n.lastConnected.time_since_epoch()).count()
-					<< std::chrono::duration_cast<std::chrono::seconds>(n.lastAttempted.time_since_epoch()).count()
+					<< chrono::duration_cast<chrono::seconds>(n.lastConnected.time_since_epoch()).count()
+					<< chrono::duration_cast<chrono::seconds>(n.lastAttempted.time_since_epoch()).count()
 					<< n.failedAttempts << (unsigned)n.lastDisconnect << n.score << n.rating;
 				count++;
 			}

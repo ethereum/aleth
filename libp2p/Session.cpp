@@ -335,7 +335,7 @@ bool Session::interpret(RLP const& _r)
 			if (!ep.port())
 				goto CONTINUE;	// Zero port? Don't think so.
 
-			if (ep.port() >= 49152)
+			if (ep.port() >= /*49152*/32768)
 				goto CONTINUE;	// Private port according to IANA.
 
 			// TODO: PoC-7:
@@ -344,7 +344,7 @@ bool Session::interpret(RLP const& _r)
 //				goto CONTINUE;	// Wierd port.
 
 			// Avoid our random other addresses that they might end up giving us.
-			for (auto i: m_server->m_addresses)
+			for (auto i: m_server->m_peerAddresses)
 				if (ep.address() == i && ep.port() == m_server->listenPort())
 					goto CONTINUE;
 
@@ -475,7 +475,6 @@ void Session::drop(DisconnectReason _reason)
 {
 	if (m_dropped)
 		return;
-	cerr << (void*)this << " dropped" << endl;
 	if (m_socket.is_open())
 		try
 		{
@@ -582,7 +581,7 @@ void Session::doRead()
 								// error - bad protocol
 								clogS(NetWarn) << "Couldn't interpret packet." << RLP(r);
 								// Just wasting our bandwidth - perhaps reduce rating?
-								return;
+								//return;
 							}
 						}
 						memmove(m_incoming.data(), m_incoming.data() + tlen, m_incoming.size() - tlen);

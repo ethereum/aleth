@@ -37,9 +37,9 @@ BlockInfo::BlockInfo(): timestamp(Invalid256)
 {
 }
 
-BlockInfo::BlockInfo(bytesConstRef _block)
+BlockInfo::BlockInfo(bytesConstRef _block, bool _checkNonce)
 {
-	populate(_block);
+	populate(_block, _checkNonce);
 }
 
 BlockInfo BlockInfo::fromHeader(bytesConstRef _block)
@@ -52,15 +52,15 @@ BlockInfo BlockInfo::fromHeader(bytesConstRef _block)
 h256 BlockInfo::headerHashWithoutNonce() const
 {
 	RLPStream s;
-	fillStream(s, false);
+	streamRLP(s, false);
 	return sha3(s.out());
 }
 
-void BlockInfo::fillStream(RLPStream& _s, bool _nonce) const
+void BlockInfo::streamRLP(RLPStream& _s, bool _nonce) const
 {
-	_s.appendList(_nonce ? 13 : 12) << parentHash << sha3Uncles << coinbaseAddress;
-	_s.append(stateRoot, false, true).append(transactionsRoot, false, true);
-	_s << difficulty << number << minGasPrice << gasLimit << gasUsed << timestamp << extraData;
+	_s.appendList(_nonce ? 14 : 13)
+		<< parentHash << sha3Uncles << coinbaseAddress << stateRoot << transactionsRoot << receiptsRoot << logBloom
+		<< difficulty << number << gasLimit << gasUsed << timestamp << extraData;
 	if (_nonce)
 		_s << nonce;
 }
@@ -72,7 +72,7 @@ h256 BlockInfo::headerHash(bytesConstRef _block)
 
 void BlockInfo::populateFromHeader(RLP const& _header, bool _checkNonce)
 {
-	hash = dev::eth::sha3(_header.data());
+	hash = dev::sha3(_header.data());
 
 	int field = 0;
 	try
@@ -82,17 +82,18 @@ void BlockInfo::populateFromHeader(RLP const& _header, bool _checkNonce)
 		coinbaseAddress = _header[field = 2].toHash<Address>();
 		stateRoot = _header[field = 3].toHash<h256>();
 		transactionsRoot = _header[field = 4].toHash<h256>();
-		difficulty = _header[field = 5].toInt<u256>();
-		number = _header[field = 6].toInt<u256>();
-		minGasPrice = _header[field = 7].toInt<u256>();
-		gasLimit = _header[field = 8].toInt<u256>();
-		gasUsed = _header[field = 9].toInt<u256>();
-		timestamp = _header[field = 10].toInt<u256>();
-		extraData = _header[field = 11].toBytes();
-		nonce = _header[field = 12].toHash<h256>();
+		receiptsRoot = _header[field = 5].toHash<h256>();
+		logBloom = _header[field = 6].toHash<h512>();
+		difficulty = _header[field = 7].toInt<u256>();
+		number = _header[field = 8].toInt<u256>();
+		gasLimit = _header[field = 9].toInt<u256>();
+		gasUsed = _header[field = 10].toInt<u256>();
+		timestamp = _header[field = 11].toInt<u256>();
+		extraData = _header[field = 12].toBytes();
+		nonce = _header[field = 13].toHash<h256>();
 	}
 
-	catch (Exception & _e)
+	catch (Exception const& _e)
 	{
 		_e << errinfo_name("invalid block header format") << BadFieldError(field, toHex(_header[field].data().toBytes()));
 		throw;
@@ -138,15 +139,12 @@ void BlockInfo::verifyInternals(bytesConstRef _block) const
 	{
 		bytes k = rlp(i);
 		t.insert(&k, tr.data());
-		u256 gp = tr[0][1].toInt<u256>();
+		u256 gp = tr[1].toInt<u256>();
 		mgp = min(mgp, gp);
 		++i;
 	}
 	if (transactionsRoot != t.root())
 		BOOST_THROW_EXCEPTION(InvalidTransactionsHash(t.root(), transactionsRoot));
-
-	if (minGasPrice > mgp)
-		BOOST_THROW_EXCEPTION(InvalidMinGasPrice(minGasPrice, mgp));
 
 	if (sha3Uncles != sha3(root[2].data()))
 		BOOST_THROW_EXCEPTION(InvalidUnclesHash());
@@ -179,8 +177,7 @@ u256 BlockInfo::calculateDifficulty(BlockInfo const& _parent) const
 }
 
 void BlockInfo::verifyParent(BlockInfo const& _parent) const
-{
-	// Check difficulty is correct given the two timestamps.
+{	// Check difficulty is correct given the two timestamps.
 	if (difficulty != calculateDifficulty(_parent))
 		BOOST_THROW_EXCEPTION(InvalidDifficulty());
 

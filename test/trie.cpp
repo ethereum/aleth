@@ -28,10 +28,10 @@
 #include "TrieHash.h"
 #include "MemTrie.h"
 #include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
 
 namespace js = json_spirit;
 
@@ -48,11 +48,18 @@ static unsigned fac(unsigned _i)
 }
 }
 
+BOOST_AUTO_TEST_SUITE(TrieTests)
+
 BOOST_AUTO_TEST_CASE(trie_tests)
 {
+	string testPath = test::getTestPath();
+
+
+	testPath += "/TrieTests";
+
 	cnote << "Testing Trie...";
 	js::mValue v;
-	string s = asString(contents("../../../tests/trietest.json"));
+	string s = asString(contents(testPath + "/trietest.json"));
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'trietest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
@@ -236,6 +243,51 @@ BOOST_AUTO_TEST_CASE(moreTrieTests)
 	}
 }
 
+BOOST_AUTO_TEST_CASE(trieLowerBound)
+{
+	cnote << "Stress-testing Trie.lower_bound...";
+	{
+		MemoryDB dm;
+		EnforceRefs e(dm, true);
+		GenericTrieDB<MemoryDB> d(&dm);
+		d.init();	// initialise as empty tree.
+		for (int a = 0; a < 20; ++a)
+		{
+			StringMap m;
+			for (int i = 0; i < 50; ++i)
+			{
+				auto k = randomWord();
+				auto v = toString(i);
+				m[k] = v;
+				d.insert(k, v);
+			}
+
+			for (auto i: d)
+			{
+				auto it = d.lower_bound(i.first);
+				for (auto iit = d.begin(); iit != d.end(); ++iit)
+					if ((*iit).first.toString() >= i.first.toString())
+					{
+						BOOST_REQUIRE(it == iit);
+						break;
+					}
+			}
+			for (unsigned i = 0; i < 100; ++i)
+			{
+				auto k = randomWord();
+				auto it = d.lower_bound(k);
+				for (auto iit = d.begin(); iit != d.end(); ++iit)
+					if ((*iit).first.toString() >= k)
+					{
+						BOOST_REQUIRE(it == iit);
+						break;
+					}
+			}
+
+		}
+	}
+}
+
 BOOST_AUTO_TEST_CASE(trieStess)
 {
 	cnote << "Stress-testing Trie...";
@@ -308,4 +360,7 @@ BOOST_AUTO_TEST_CASE(trieStess)
 		}
 	}
 }
+
+BOOST_AUTO_TEST_SUITE_END()
+
 

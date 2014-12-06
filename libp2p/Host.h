@@ -97,8 +97,6 @@ struct Node
 			else
 				return score < _n.score;
 	}
-
-	void connect(Host* _h);
 };
 
 using Nodes = std::vector<Node>;
@@ -123,16 +121,24 @@ class Host: public Worker
 	friend class HostCapabilityFace;
 	friend struct Node;
 
+	/// Static network interface methods
+public:
+	/// @returns public and private interface addresses
+	static std::vector<bi::address> getInterfaceAddresses();
+	
+	/// Try to bind and listen on _listenPort, else attempt net-allocated port.
+	static int listen4(bi::tcp::acceptor* _acceptor, unsigned short _listenPort);
+	
+	/// Return public endpoint of upnp interface. If successful o_upnpifaddr will be a private interface address and endpoint will contain public address and port.
+	static bi::tcp::endpoint traverseNAT(std::vector<bi::address> const& _ifAddresses, unsigned short _listenPort, bi::address& o_upnpifaddr);
+	
 public:
 	/// Start server, listening for connections on the given port.
 	Host(std::string const& _clientVersion, NetworkPreferences const& _n = NetworkPreferences(), bool _start = false);
 
 	/// Will block on network process events.
 	virtual ~Host();
-
-	/// Closes all peers.
-	void disconnectPeers();
-
+	
 	/// Basic peer network protocol version.
 	unsigned protocolVersion() const;
 
@@ -147,15 +153,16 @@ public:
 	static std::string pocHost();
 	void connect(std::string const& _addr, unsigned short _port = 30303) noexcept;
 	void connect(bi::tcp::endpoint const& _ep);
+	void connect(std::shared_ptr<Node> const& _n);
 
-	/// @returns true iff we have the a peer of the given id.
+	/// @returns true iff we have a peer of the given id.
 	bool havePeer(NodeId _id) const;
 
 	/// Set ideal number of peers.
 	void setIdealPeerCount(unsigned _n) { m_idealPeerCount = _n; }
 
 	/// Get peer information.
-	std::vector<PeerInfo> peers(bool _updatePing = false) const;
+	PeerInfos peers(bool _updatePing = false) const;
 
 	/// Get number of peers connected; equivalent to, but faster than, peers().size().
 	size_t peerCount() const { RecursiveGuard l(x_peers); return m_peers.size(); }
@@ -174,11 +181,19 @@ public:
 
 	Nodes nodes() const { RecursiveGuard l(x_peers); Nodes ret; for (auto const& i: m_nodes) ret.push_back(*i.second); return ret; }
 
-	void setNetworkPreferences(NetworkPreferences const& _p) { stop(); m_netPrefs = _p; start(); }
+	void setNetworkPreferences(NetworkPreferences const& _p) { auto had = isStarted(); if (had) stop(); m_netPrefs = _p; if (had) start(); }
 
+	/// Start network. @threadsafe
 	void start();
+	
+	/// Stop network. @threadsafe
 	void stop();
-	bool isStarted() const { return isWorking(); }
+	
+	/// @returns if network is running.
+	bool isStarted() const { return m_run; }
+
+	/// Reset acceptor, socket, and IO service. Called by deallocator. Maybe called by implementation when ordered deallocation is required.
+	void quit();
 
 	NodeId id() const { return m_key.pub(); }
 
@@ -187,36 +202,52 @@ public:
 	std::shared_ptr<Node> node(NodeId _id) const { if (m_nodes.count(_id)) return m_nodes.at(_id); return std::shared_ptr<Node>(); }
 
 private:
-	void seal(bytes& _b);
-	void populateAddresses();
+	/// Populate m_peerAddresses with available public addresses.
 	void determinePublic(std::string const& _publicAddress, bool _upnp);
+	
 	void ensureAccepting();
+	
+	void seal(bytes& _b);
 
 	void growPeers();
 	void prunePeers();
 
-	/// Conduct I/O, polling, syncing, whatever.
-	/// Ideally all time-consuming I/O is done in a background thread or otherwise asynchronously, but you get this call every 100ms or so anyway.
-	/// This won't touch alter the blockchain.
+	/// Called by Worker. Not thread-safe; to be called only by worker.
+	virtual void startedWorking();
+	/// Called by startedWorking. Not thread-safe; to be called only be worker callback.
+	void run(boost::system::error_code const& error);			///< Run network. Called serially via ASIO deadline timer. Manages connection state transitions.
+
+	/// Run network
 	virtual void doWork();
 
-	std::shared_ptr<Node> noteNode(NodeId _id, bi::tcp::endpoint _a, Origin _o, bool _ready, NodeId _oldId = h256());
+	std::shared_ptr<Node> noteNode(NodeId _id, bi::tcp::endpoint _a, Origin _o, bool _ready, NodeId _oldId = NodeId());
 	Nodes potentialPeers(RangeMask<unsigned> const& _known);
 
+	bool m_run = false;													///< Whether network is running.
+	std::mutex x_runTimer;													///< Start/stop mutex.
+	
 	std::string m_clientVersion;											///< Our version string.
 
-	NetworkPreferences m_netPrefs;											///< Network settings.
+	NetworkPreferences m_netPrefs;										///< Network settings.
+	
+	/// Interface addresses (private, public)
+	std::vector<bi::address> m_ifAddresses;									///< Interface addresses.
 
-	static const int NetworkStopped = -1;									///< The value meaning we're not actually listening.
-	int m_listenPort = NetworkStopped;										///< What port are we listening on?
+	int m_listenPort = -1;												///< What port are we listening on. -1 means binding failed or acceptor hasn't been initialized.
 
-	ba::io_service m_ioService;												///< IOService for network stuff.
-	bi::tcp::acceptor m_acceptor;											///< Listening acceptor.
-	bi::tcp::socket m_socket;												///< Listening socket.
+	std::unique_ptr<ba::io_service> m_ioService;							///< IOService for network stuff.
+	std::unique_ptr<bi::tcp::acceptor> m_acceptor;							///< Listening acceptor.
+	std::unique_ptr<bi::tcp::socket> m_socket;								///< Listening socket.
+	
+	std::unique_ptr<boost::asio::deadline_timer> m_timer;					///< Timer which, when network is running, calls scheduler() every c_timerInterval ms.
+	static const unsigned c_timerInterval = 100;							///< Interval which m_timer is run when network is connected.
+	unsigned m_lastTick = 0;											///< Used by run() for scheduling; must not be mutated outside of run().
+	
+	std::set<Node*> m_pendingNodeConns;									/// Used only by connect(Node&) to limit concurrently connecting to same node. See connect(shared_ptr<Node>const&).
+	Mutex x_pendingNodeConns;
 
-	UPnP* m_upnp = nullptr;													///< UPnP helper.
-	bi::tcp::endpoint m_public;												///< Our public listening endpoint.
-	KeyPair m_key;															///< Our unique ID.
+	bi::tcp::endpoint m_public;											///< Our public listening endpoint.
+	KeyPair m_key;														///< Our unique ID.
 
 	bool m_hadNewNodes = false;
 
@@ -234,13 +265,11 @@ private:
 	std::vector<NodeId> m_nodesList;
 
 	RangeMask<unsigned> m_ready;											///< Indices into m_nodesList over to which nodes we are not currently connected, connecting or otherwise ignoring.
-	RangeMask<unsigned> m_private;											///< Indices into m_nodesList over to which nodes are private.
+	RangeMask<unsigned> m_private;										///< Indices into m_nodesList over to which nodes are private.
 
-	unsigned m_idealPeerCount = 5;											///< Ideal number of peers to be connected to.
-
-	// Our addresses.
-	std::vector<bi::address> m_addresses;									///< Addresses for us.
-	std::vector<bi::address> m_peerAddresses;								///< Addresses that peers (can) know us by.
+	unsigned m_idealPeerCount = 5;										///< Ideal number of peers to be connected to.
+	
+	std::set<bi::address> m_peerAddresses;									///< Public addresses that peers (can) know us by.
 
 	// Our capabilities.
 	std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;	///< Each of the capabilities we support.
