@@ -72,7 +72,7 @@ public:
 	// The mainline interfaces:
 
 	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
-	shh::WhisperHost* whisper() const { auto w = m_whisper.get(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
+	shh::WhisperHost* whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w.get(); }
 	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
 
 	// Misc stuff:
@@ -123,22 +123,14 @@ public:
 private:
 	std::string m_clientVersion;					///< Our end-application client's name/version.
 
-//<<<<<<< HEAD
-	std::unique_ptr<eth::Client> m_ethereum;		///< Main interface for Ethereum ("eth") protocol.
-	std::weak_ptr<shh::WhisperHost> m_whisper;	///< Main interface for Whisper ("shh") protocol.
-
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
+	std::unique_ptr<eth::Client> m_ethereum;		///< Main interface for Ethereum ("eth") protocol.
+	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Main interface for Whisper ("shh") protocol.
 	
 	std::shared_ptr<NetEndpoint> m_rpcEndpoint;
 	std::unique_ptr<p2p::P2PRPC> m_P2PRpcService;
 	std::unique_ptr<eth::EthereumRPC> m_ethereumRpcService;
 	std::unique_ptr<shh::WhisperRPC> m_whisperRpcService;
-//=======
-//	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-//
-//	std::unique_ptr<eth::Client> m_ethereum;		///< Main interface for Ethereum ("eth") protocol.
-//	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Main interface for Whisper ("shh") protocol.
-//>>>>>>> develop
 };
 
 

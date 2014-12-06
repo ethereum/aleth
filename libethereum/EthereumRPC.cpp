@@ -155,25 +155,25 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			break;
 		}
 
-		case RequestMessagesWithWatchId:
+		case RequestLogsWithWatchId:
 		{
 			unsigned watchId = req[0].toInt<unsigned>();
-			eth::PastMessages msgs = m_service->ethereum()->messages(watchId);
+			eth::LogEntries msgs = m_service->ethereum()->logs(watchId);
 			resp.appendList(msgs.size());
 			for (auto msg: msgs)
-				msg.streamOut(resp);
+				msg.streamRLP(resp);
 			
 			result = 1;
 			break;
 		}
 			
-		case RequestMessagesWithFilter:
+		case RequestLogsWithFilter:
 		{
-			MessageFilter filter(req[0].data());
-			eth::PastMessages msgs = m_service->ethereum()->messages(filter);
+			LogFilter filter(req[0].data());
+			eth::LogEntries msgs = m_service->ethereum()->logs(filter);
 			resp.appendList(msgs.size());
 			for (auto msg: msgs)
-				msg.streamOut(resp);
+				msg.streamRLP(resp);
 			
 			result = 1;
 			break;
@@ -181,7 +181,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			
 		case InstallWatchWithFilter:
 		{
-			auto ret = m_service->ethereum()->installWatch(MessageFilter(req[0].data()));
+			auto ret = m_service->ethereum()->installWatch(LogFilter(req[0].data()));
 			resp.appendList(1) << ret;
 			
 			result = 1;
@@ -236,7 +236,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 		{
 			try{
 				auto ret = m_service->ethereum()->blockInfo(req[0].toHash<h256>());
-				ret.fillStream(resp, true);
+				ret.streamRLP(resp, true);
 				result = 1;
 			}
 			catch(InvalidBlockFormat)
@@ -262,7 +262,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 		case GetTransaction:
 		{
 			auto ret = m_service->ethereum()->transaction(req[0].toHash<h256>(), req[1].toInt<unsigned>());
-			ret.fillStream(resp);
+			ret.streamRLP(resp);
 			
 			result = 1;
 			break;
@@ -272,7 +272,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 		{
 			try{
 				auto ret = m_service->ethereum()->uncle(req[0].toHash<h256>(), req[1].toInt<unsigned>());
-				ret.fillStream(resp, true);
+				ret.streamRLP(resp, true);
 				result = 1;
 			}
 			catch(InvalidBlockFormat)
@@ -298,7 +298,7 @@ void EthereumRPCServer::receiveMessage(NetMsg const& _msg)
 			auto txs = m_service->ethereum()->pending();
 			resp.appendList(txs.size());
 			for (auto tx: txs)
-				tx.fillStream(resp);
+				tx.streamRLP(resp);
 
 			result = 1;
 			break;
@@ -547,36 +547,36 @@ std::map<u256, u256> EthereumRPCClient::storageAt(Address _a, int _block) const
 	return store;
 }
 
-eth::PastMessages EthereumRPCClient::messages(unsigned _watchId) const
+eth::LogEntries EthereumRPCClient::logs(unsigned _watchId) const
 {
 	RLPStream s(1);
 	s << _watchId;
-	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestMessagesWithWatchId, s);
-	
-	PastMessages p;
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestLogsWithWatchId, s);
+
+	LogEntries p;
 	for (auto m: RLP(r))
-		p.push_back(PastMessage(m.data()));
-	
+		p.push_back(LogEntry(m));
+
 	return std::move(p);
 }
 
-eth::PastMessages EthereumRPCClient::messages(eth::MessageFilter const& _filter) const
+eth::LogEntries EthereumRPCClient::logs(eth::LogFilter const& _filter) const
 {
 	RLPStream s(1);
-	_filter.fillStream(s);
-	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestMessagesWithFilter, s);
-	
-	PastMessages p;
+	_filter.streamRLP(s);
+	bytes r = const_cast<EthereumRPCClient*>(this)->performRequest(RequestLogsWithFilter, s);
+
+	LogEntries p;
 	for (auto m: RLP(r))
-		p.push_back(PastMessage(m.data()));
-	
+		p.push_back(LogEntry(m));
+
 	return std::move(p);
 }
 
-unsigned EthereumRPCClient::installWatch(eth::MessageFilter const& _filter)
+unsigned EthereumRPCClient::installWatch(eth::LogFilter const& _filter)
 {
 	RLPStream s(1);
-	_filter.fillStream(s);
+	_filter.streamRLP(s);
 	bytes r = performRequest(InstallWatchWithFilter, s);
 	return RLP(r)[0].toInt<unsigned>();
 }

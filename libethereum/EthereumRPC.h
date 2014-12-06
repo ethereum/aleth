@@ -43,8 +43,10 @@ enum EthRequestMsgType : NetMsgType
 	RequestStateAt,
 	RequestCodeAt,
 	RequestStorageAt,
-	RequestMessagesWithWatchId,
-	RequestMessagesWithFilter,
+//	RequestMessagesWithWatchId,
+//	RequestMessagesWithFilter,
+	RequestLogsWithWatchId,
+	RequestLogsWithFilter,
 	InstallWatchWithFilter,
 	InstallWatchWithFilterId,
 	UninstallWatch,
@@ -141,9 +143,13 @@ public:
 	virtual u256 stateAt(Address _a, u256 _l, int _block) const;
 	virtual bytes codeAt(Address _a, int _block) const;
 	virtual std::map<u256, u256> storageAt(Address _a, int _block) const;
-	virtual eth::PastMessages messages(unsigned _watchId) const;
-	virtual eth::PastMessages messages(eth::MessageFilter const& _filter) const;
-	virtual unsigned installWatch(eth::MessageFilter const& _filter);
+//	virtual eth::PastMessages messages(unsigned _watchId) const;
+//	virtual eth::PastMessages messages(eth::MessageFilter const& _filter) const;
+	
+	virtual eth::LogEntries logs(unsigned _watchId) const;
+	virtual eth::LogEntries logs(eth::LogFilter const& _filter) const;
+	
+	virtual unsigned installWatch(eth::LogFilter const& _filter);
 	virtual unsigned installWatch(h256 _filterId);
 	virtual void uninstallWatch(unsigned _watchId);
 	virtual bool peekWatch(unsigned _watchId) const;

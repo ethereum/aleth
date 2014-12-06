@@ -141,7 +141,7 @@ private:
 
 //<<<<<<< HEAD
 	QEthereum* m_ethereum = nullptr;
-	QWhisper* m_whisper = nullptr;
+//	QWhisper* m_whisper = nullptr;
 
 	std::mutex x_netq;
 	std::deque<std::function<void()>> m_netq;	///< Queue for background updates to UI

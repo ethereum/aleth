@@ -78,6 +78,7 @@ class LogFilter
 {
 public:
 	LogFilter(int _earliest = 0, int _latest = -1, unsigned _max = 10, unsigned _skip = 0): m_earliest(_earliest), m_latest(_latest), m_max(_max), m_skip(_skip) {}
+	LogFilter(bytesConstRef _r);
 
 	void streamRLP(RLPStream& _s) const;
 	h256 sha3() const;

@@ -52,7 +52,8 @@ WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string co
 	if (_interfaces.count("shh"))
 	{
 		m_whisper = m_net.registerCapability<WhisperHost>(new WhisperHost);
-		m_whisperRpcService.reset(new WhisperRPC(m_whisper.get()));
+		if (auto w = m_whisper.lock())
+			m_whisperRpcService.reset(new WhisperRPC(w.get()));
 		m_rpcEndpoint->registerService(m_whisperRpcService.get());
 	}
 	
@@ -125,7 +126,7 @@ WebThree::WebThree():
 	startWorking();
 
 	m_ethereum = new EthereumRPCClient(m_connection.get());
-	m_whisper = new WhisperRPCClient(m_connection.get());
+//	m_whisper = new WhisperRPCClient(m_connection.get());
 	m_connection->start();
 }
 

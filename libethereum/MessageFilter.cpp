@@ -171,7 +171,18 @@ bool MessageFilter::matches(Manifest const& _m, vector<unsigned> _p, Address _o,
 	return ret;
 }
 
-
+LogFilter::LogFilter(bytesConstRef _r)
+{
+	RLP r(_r);
+	for (auto a: r[0])
+		m_addresses.insert(a.toHash<Address>());
+	for (auto a: r[1])
+		m_topics.insert(a.toHash<h256>());
+	m_earliest = r[2].toInt<int>();
+	m_latest = r[3].toInt<int>();
+	m_max = r[4].toInt<unsigned>();
+	m_skip = r[5].toInt<unsigned>();
+}
 
 void LogFilter::streamRLP(RLPStream& _s) const
 {

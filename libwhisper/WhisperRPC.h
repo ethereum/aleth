@@ -55,17 +55,16 @@ class WhisperRPCClient: public NetRPCClientProtocol<WhisperRPCClient>, public In
 public:
 	WhisperRPCClient(NetConnection* _conn): NetRPCClientProtocol(_conn) {}
 	
-	virtual void inject(shh::Message const& _m, shh::WhisperPeer* _from = nullptr) {}
+	virtual void inject(shh::Envelope const& _m, shh::WhisperPeer* _from = nullptr) {}
 	
-	virtual unsigned installWatch(shh::MessageFilter const& _filter) {};
-	virtual unsigned installWatch(h256 _filterId) {};
+	virtual unsigned installWatch(shh::TopicFilter const& _filter) {};
+	virtual unsigned installWatchOnId(h256 _filterId) {};
 	virtual void uninstallWatch(unsigned _watchId) {};
 	virtual h256s peekWatch(unsigned _watchId) const {};
 	virtual h256s checkWatch(unsigned _watchId) {};
+	virtual h256s watchMessages(unsigned _watchId) {};
 	
-	virtual shh::Message message(h256 _m) const {};
-	
-	virtual void sendRaw(bytes const& _payload, bytes const& _topic, unsigned _ttl) {};
+	virtual shh::Envelope envelope(h256 _m) {};
 };
 	
 }
