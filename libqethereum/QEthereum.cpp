@@ -149,6 +149,29 @@ void QWebThree::onDataProcessed(QString _json, QString _addInfo)
 			}
 		}
 		return;
+//<<<<<<< HEAD
+//	for (auto w: m_watches)
+//		if (m_client->checkWatch(w))
+//			emit watchChanged(w);
+//}
+//
+//// TODO: repot and hook all these up.
+//
+//QWhisper::QWhisper(QObject* _p, dev::shh::Interface* const& _c): QObject(_p), m_face(_c)
+//{
+//}
+//
+//QWhisper::~QWhisper()
+//{
+//}
+//
+//// probably want a better way of doing this. somehow guarantee that the face() will always be available as long as this object is.
+//struct NoInterface: public Exception {};
+//
+//dev::shh::Interface* QWhisper::face() const
+//{
+//	return m_face;
+//=======
 	}
 	
 	if (!_addInfo.compare("shh_changed"))
@@ -178,6 +201,7 @@ void QWebThree::onDataProcessed(QString _json, QString _addInfo)
 		emit onNewId(f["result"].toString());
 
 	response(formatOutput(f));
+//>>>>>>> develop
 }
 
 QWebThreeConnector::QWebThreeConnector()

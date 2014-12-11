@@ -3,31 +3,22 @@ cmake_policy(SET CMP0015 NEW)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
+set(EXECUTABLE devnet)
 
-set(EXECUTABLE ethereumx)
-
-# set(CMAKE_INSTALL_PREFIX ../lib)
+file(GLOB HEADERS "*.h")
 if(ETH_STATIC)
-	add_library(${EXECUTABLE} STATIC ${SRC_LIST})
+	add_library(${EXECUTABLE} STATIC ${SRC_LIST} ${HEADERS})
 else()
-	add_library(${EXECUTABLE} SHARED ${SRC_LIST})
+	add_library(${EXECUTABLE} SHARED ${SRC_LIST} ${HEADERS})
 endif()
-
-file(GLOB HEADERS "*.h") 
 
 include_directories(..)
 
-target_link_libraries(${EXECUTABLE} ethereum)
-target_link_libraries(${EXECUTABLE} evm)
-target_link_libraries(${EXECUTABLE} lll)
-target_link_libraries(${EXECUTABLE} ethcore)
-target_link_libraries(${EXECUTABLE} secp256k1)
+target_link_libraries(${EXECUTABLE} devcore)
+
 if(MINIUPNPC_LS)
-target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
+	target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LS})
 endif()
-target_link_libraries(${EXECUTABLE} ${LEVELDB_LS})
-target_link_libraries(${EXECUTABLE} ${CRYPTOPP_LS})
-target_link_libraries(${EXECUTABLE} gmp)
 
 if("${TARGET_PLATFORM}" STREQUAL "w64")
 	target_link_libraries(${EXECUTABLE} boost_system-mt-s)

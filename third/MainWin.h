@@ -23,11 +23,13 @@
 
 
 #include <map>
+#include <deque>
 #include <QtNetwork/QNetworkAccessManager>
 #include <QtCore/QAbstractListModel>
 #include <QtCore/QMutex>
 #include <QtWidgets/QMainWindow>
 #include <libdevcore/RLP.h>
+#include <libdevcore/Worker.h>
 #include <libethcore/CommonEth.h>
 #include <libethereum/State.h>
 #include <libqethereum/QEthereum.h>
@@ -36,13 +38,14 @@ namespace Ui {
 class Main;
 }
 
-namespace dev { class WebThreeDirect;
+namespace dev { class WebThree;
 namespace eth {
 class Client;
 class State;
 class LogFilter;
 }
 namespace shh {
+class Inteface;
 class WhisperHost;
 }
 }
@@ -50,7 +53,7 @@ class WhisperHost;
 class QQuickView;
 class WebThreeStubServer;
 
-class Main : public QMainWindow
+class Main : public QMainWindow, public dev::Worker
 {
 	Q_OBJECT
 	
@@ -58,9 +61,9 @@ public:
 	explicit Main(QWidget *parent = 0);
 	~Main();
 
-	dev::WebThreeDirect* web3() const { return m_web3.get(); }
-	dev::eth::Client* ethereum() const;
-	std::shared_ptr<dev::shh::WhisperHost> whisper() const;
+	dev::WebThree* web3() const { return m_web3.get(); }
+	dev::eth::Interface* ethereum() const;
+	dev::shh::Interface* whisper() const;
 
 	QList<dev::KeyPair> owned() const { return m_myKeys + m_myIdentities;}
 	
@@ -89,7 +92,7 @@ signals:
 private:
 	QString pretty(dev::Address _a) const;
 	QString render(dev::Address _a) const;
-	dev::Address fromString(QString const& _a) const;
+//	dev::Address fromString(QString const& _a) const;
 	QString lookup(QString const& _n) const;
 
 	void readSettings(bool _skipGeometry = false);
@@ -103,23 +106,25 @@ private:
 	void onCurrenciesChange();
 	void onBalancesChange();
 
-	void installWatches();
 	void installCurrenciesWatch();
 	void installNameRegWatch();
 	void installBalancesWatch();
 
 	virtual void timerEvent(QTimerEvent*);
-	void ensureNetwork();
-
-	void refreshAll();
-	void refreshBlockCount();
-	void refreshBalances();
-	void refreshNetwork();
-	void refreshMining();
+	void ensureNetwork();		/// called by refreshNetwork
+	
+	virtual void doWork();		/// calls ensureNetwork, refreshMining, refreshWatches
+	void refreshNetwork();		/// called in background
+	void refreshMining();			/// called in background
+	void refreshWatches();		/// called in background
+	
+	void refreshAll();			/// called by user event
+	void refreshBlockCount();		/// called by user event
+	void refreshBalances();		/// called by user event
 
 	std::unique_ptr<Ui::Main> ui;
 
-	std::unique_ptr<dev::WebThreeDirect> m_web3;
+	std::unique_ptr<dev::WebThree> m_web3;
 
 	QList<dev::KeyPair> m_myKeys;
 	QList<dev::KeyPair> m_myIdentities;
@@ -134,7 +139,18 @@ private:
 
 	QNetworkAccessManager m_webCtrl;
 
+//<<<<<<< HEAD
+	QEthereum* m_ethereum = nullptr;
+//	QWhisper* m_whisper = nullptr;
+
+	std::mutex x_netq;
+	std::deque<std::function<void()>> m_netq;	///< Queue for background updates to UI
+	
+	std::mutex x_uiq;
+	std::deque<std::function<void()>> m_uiq;	///< Queue for background updates to UI
+//=======
 	std::unique_ptr<WebThreeStubServer> m_server;
 	QWebThreeConnector m_qwebConnector;
 	QWebThree* m_qweb = nullptr;
+//>>>>>>> develop
 };

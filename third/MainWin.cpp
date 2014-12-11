@@ -20,6 +20,7 @@
  */
 
 #include <fstream>
+#include <mutex>
 #include <QtNetwork/QNetworkReply>
 #include <QtWidgets/QFileDialog>
 #include <QtWidgets/QMessageBox>
@@ -114,7 +115,7 @@ Main::Main(QWidget *parent) :
 	
 	connect(ui->ourAccounts->model(), SIGNAL(rowsMoved(const QModelIndex &, int, int, const QModelIndex &, int)), SLOT(ourAccountsRowsMoved()));
 
-	m_web3.reset(new WebThreeDirect("Third", getDataDir() + "/Third", false, {"eth", "shh"}));
+	m_web3.reset(new WebThree(/*"Third", getDataDir() + "/Third", false, {"eth", "shh"}*/));
 	m_web3->connect(Host::pocHost());
 
 	m_server = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(&m_qwebConnector, *web3(), keysAsVector(m_myKeys)));
@@ -145,7 +146,9 @@ Main::Main(QWidget *parent) :
 	
 	readSettings();
 
-	installWatches();
+	installWatch(dev::eth::MessageFilter().altered(c_config, 0), [=](){ installNameRegWatch(); });
+	installWatch(dev::eth::MessageFilter().altered(c_config, 1), [=](){ installCurrenciesWatch(); });
+	installWatch(dev::eth::ChainChangedFilter, [=](){ onNewBlock(); });
 
 	startTimer(100);
 
@@ -157,22 +160,26 @@ Main::Main(QWidget *parent) :
 			s.setValue("splashMessage", false);
 		}
 	}
+	
+	startWorking();
 }
 
 Main::~Main()
 {
+	stopWorking();
+	
 	// Must do this here since otherwise m_ethereum'll be deleted (and therefore clearWatches() called by the destructor)
 	// *after* the client is dead.
 	m_qweb->clientDieing();
 	writeSettings();
 }
 
-eth::Client* Main::ethereum() const
+eth::Interface* Main::ethereum() const
 {
 	return m_web3->ethereum();
 }
 
-std::shared_ptr<dev::shh::WhisperHost> Main::whisper() const
+dev::shh::Interface* Main::whisper() const
 {
 	return m_web3->whisper();
 }
@@ -196,6 +203,15 @@ unsigned Main::installWatch(dev::h256 _tf, std::function<void()> const& _f)
 	return ret;
 }
 
+//<<<<<<< HEAD
+void Main::installNameRegWatch()
+{
+	lock_guard<mutex> l(x_netq);
+	m_netq.push_back([&](){
+		ethereum()->uninstallWatch(m_nameRegFilter);
+		m_nameRegFilter = installWatch(dev::eth::LogFilter().topic(ethereum()->stateAt(c_config, 0)), [=](){ onNameRegChange(); });
+	});
+//=======
 void Main::installWatches()
 {
 	installWatch(dev::eth::LogFilter().topic((u256)(u160)c_config).topic((u256)0), [=](){ installNameRegWatch(); });
@@ -203,32 +219,67 @@ void Main::installWatches()
 	installWatch(dev::eth::ChainChangedFilter, [=](){ onNewBlock(); });
 }
 
-void Main::installNameRegWatch()
-{
-	ethereum()->uninstallWatch(m_nameRegFilter);
-	m_nameRegFilter = installWatch(dev::eth::LogFilter().topic(ethereum()->stateAt(c_config, 0)), [=](){ onNameRegChange(); });
-}
+//void Main::installNameRegWatch()
+//{
+//	ethereum()->uninstallWatch(m_nameRegFilter);
+//	m_nameRegFilter = installWatch(dev::eth::LogFilter().topic(ethereum()->stateAt(c_config, 0)), [=](){ onNameRegChange(); });
+//>>>>>>> develop
+//}
 
 void Main::installCurrenciesWatch()
 {
-	ethereum()->uninstallWatch(m_currenciesFilter);
-	m_currenciesFilter = installWatch(dev::eth::LogFilter().topic(ethereum()->stateAt(c_config, 1)), [=](){ onCurrenciesChange(); });
+//<<<<<<< HEAD
+	lock_guard<mutex> l(x_netq);
+	m_netq.push_back([&]()
+	{
+		ethereum()->uninstallWatch(m_currenciesFilter);
+		m_currenciesFilter = installWatch(dev::eth::LogFilter().topic(ethereum()->stateAt(c_config, 1)), [=](){ onCurrenciesChange(); });
+	});
+//=======
+//	ethereum()->uninstallWatch(m_currenciesFilter);
+//	m_currenciesFilter = installWatch(dev::eth::LogFilter().topic(ethereum()->stateAt(c_config, 1)), [=](){ onCurrenciesChange(); });
+//>>>>>>> develop
 }
 
 void Main::installBalancesWatch()
 {
-	dev::eth::LogFilter tf;
-
-	vector<Address> altCoins;
-	Address coinsAddr = right160(ethereum()->stateAt(c_config, 1));
-	for (unsigned i = 0; i < ethereum()->stateAt(coinsAddr, 0); ++i)
-		altCoins.push_back(right160(ethereum()->stateAt(coinsAddr, i + 1)));
-	for (auto i: m_myKeys)
-		for (auto c: altCoins)
-			tf.address(c).topic((u256)(u160)i.address());
-
-	ethereum()->uninstallWatch(m_balancesFilter);
-	m_balancesFilter = installWatch(tf, [=](){ onBalancesChange(); });
+//<<<<<<< HEAD
+	lock_guard<mutex> l(x_netq);
+	m_netq.push_back([&]()
+	{
+		dev::eth::LogFilter tf;
+		
+		vector<Address> altCoins;
+		Address coinsAddr = right160(ethereum()->stateAt(c_config, 1));
+		for (unsigned i = 0; i < ethereum()->stateAt(coinsAddr, 0); ++i)
+			altCoins.push_back(right160(ethereum()->stateAt(coinsAddr, i + 1)));
+//		for (auto i: m_myKeys)
+//		{
+//			tf.altered(i.address());
+//			for (auto c: altCoins)
+//				tf.altered(c, (u160)i.address());
+//		}
+		for (auto i: m_myKeys)
+			for (auto c: altCoins)
+				tf.address(c).topic((u256)(u160)i.address());
+		
+		ethereum()->uninstallWatch(m_balancesFilter);
+		m_balancesFilter = installWatch(tf, [=](){ onBalancesChange(); });
+	});
+//=======
+//	dev::eth::LogFilter tf;
+//
+//	vector<Address> altCoins;
+//	Address coinsAddr = right160(ethereum()->stateAt(c_config, 1));
+//	for (unsigned i = 0; i < ethereum()->stateAt(coinsAddr, 0); ++i)
+//		altCoins.push_back(right160(ethereum()->stateAt(coinsAddr, i + 1)));
+//	for (auto i: m_myKeys)
+//		for (auto c: altCoins)
+//			tf.address(c).topic((u256)(u160)i.address());
+//
+//	ethereum()->uninstallWatch(m_balancesFilter);
+//	m_balancesFilter = installWatch(tf, [=](){ onBalancesChange(); });
+//>>>>>>> develop
 }
 
 void Main::onNameRegChange()
@@ -288,6 +339,7 @@ QString Main::pretty(dev::Address _a) const
 {
 	h256 n;
 
+	// todo: blocking
 	if (h160 nameReg = (u160)ethereum()->stateAt(c_config, 0))
 		n = ethereum()->stateAt(nameReg, (u160)(_a));
 
@@ -302,28 +354,29 @@ QString Main::render(dev::Address _a) const
 	return QString::fromStdString(_a.abridged());
 }
 
-Address Main::fromString(QString const& _a) const
-{
-	if (_a == "(Create Contract)")
-		return Address();
-
-	string sn = _a.toStdString();
-	if (sn.size() > 32)
-		sn.resize(32);
-	h256 n;
-	memcpy(n.data(), sn.data(), sn.size());
-	memset(n.data() + sn.size(), 0, 32 - sn.size());
-	if (_a.size())
-	{
-		if (h160 nameReg = (u160)ethereum()->stateAt(c_config, 0))
-			if (h256 a = ethereum()->stateAt(nameReg, n))
-				return right160(a);
-	}
-	if (_a.size() == 40)
-		return Address(fromHex(_a.toStdString()));
-	else
-		return Address();
-}
+// note used, blocking
+//Address Main::fromString(QString const& _a) const
+//{
+//	if (_a == "(Create Contract)")
+//		return Address();
+//
+//	string sn = _a.toStdString();
+//	if (sn.size() > 32)
+//		sn.resize(32);
+//	h256 n;
+//	memcpy(n.data(), sn.data(), sn.size());
+//	memset(n.data() + sn.size(), 0, 32 - sn.size());
+//	if (_a.size())
+//	{
+//		if (h160 nameReg = (u160)ethereum()->stateAt(c_config, 0))
+//			if (h256 a = ethereum()->stateAt(nameReg, n))
+//				return right160(a);
+//	}
+//	if (_a.size() == 40)
+//		return Address(fromHex(_a.toStdString()));
+//	else
+//		return Address();
+//}
 
 QString Main::lookup(QString const& _a) const
 {
@@ -343,6 +396,7 @@ QString Main::lookup(QString const& _a) const
 	memcpy(n2.data(), sn2.data(), sn2.size());
 */
 
+	// todo: blocking
 	h256 ret;
 	if (h160 dnsReg = (u160)ethereum()->stateAt(c_config, 4, 0))
 		ret = ethereum()->stateAt(dnsReg, n);
@@ -377,7 +431,6 @@ void Main::writeSettings()
 	}
 	s.setValue("address", b);
 	s.setValue("url", ui->urlEdit->text());
-
 	bytes d = m_web3->saveNodes();
 	if (d.size())
 		m_nodes = QByteArray((char*)d.data(), (int)d.size());
@@ -460,7 +513,12 @@ void Main::on_urlEdit_returnPressed()
 void Main::refreshMining()
 {
 	dev::eth::MineProgress p = ethereum()->miningProgress();
-	ui->mineStatus->setText(ethereum()->isMining() ? QString("%1s @ %2kH/s").arg(p.ms / 1000).arg(p.ms ? p.hashes / p.ms : 0) : "Not mining");
+	
+	lock_guard<mutex> l(x_uiq);
+	m_uiq.push_back([this,p]()
+	{
+		ui->mineStatus->setText(ethereum()->isMining() ? QString("%1s @ %2kH/s").arg(p.ms / 1000).arg(p.ms ? p.hashes / p.ms : 0) : "Not mining");
+	});
 }
 
 void Main::refreshBalances()
@@ -468,6 +526,7 @@ void Main::refreshBalances()
 	cwatch << "refreshBalances()";
 	// update all the balance-dependent stuff.
 	ui->ourAccounts->clear();
+	
 	u256 totalBalance = 0;
 	map<Address, pair<QString, u256>> altCoins;
 	Address coinsAddr = right160(ethereum()->stateAt(c_config, 1));
@@ -475,11 +534,17 @@ void Main::refreshBalances()
 		altCoins[right160(ethereum()->stateAt(coinsAddr, ethereum()->stateAt(coinsAddr, i + 1)))] = make_pair(fromRaw(ethereum()->stateAt(coinsAddr, i + 1)), 0);
 	for (auto i: m_myKeys)
 	{
+		// blocking
+		// todo: move balance into map for deferred updates
 		u256 b = ethereum()->balanceAt(i.address());
+		
+		// todo: add to uiq
 		(new QListWidgetItem(QString("%2: %1 [%3]").arg(formatBalance(b).c_str()).arg(render(i.address())).arg((unsigned)ethereum()->countAt(i.address())), ui->ourAccounts))
 			->setData(Qt::UserRole, QByteArray((char const*)i.address().data(), Address::size));
 		totalBalance += b;
 
+		// blocking
+		// todo: move altCoins into map for deferred updates
 		for (auto& c: altCoins)
 			c.second.second += (u256)ethereum()->stateAt(c.first, (u160)i.address());
 	}
@@ -488,14 +553,40 @@ void Main::refreshBalances()
 	for (auto const& c: altCoins)
 		if (c.second.second)
 			b += QString::fromStdString(toString(c.second.second)) + " " + c.second.first.toUpper() + " | ";
+	
 	ui->balance->setText(b + QString::fromStdString(formatBalance(totalBalance)));
+}
+
+void Main::doWork()
+{
+	std::deque<std::function<void()>> run;
+	{
+		lock_guard<mutex> l(x_netq);
+		run = m_netq;
+	}
+	
+	for (auto f: run)
+		f();
+	
+	refreshNetwork();
+//	refreshMining();
+	
+	if (m_ethereum)
+		refreshWatches();
+	
+	usleep(500*1000);
 }
 
 void Main::refreshNetwork()
 {
+	ensureNetwork();
 	auto ps = m_web3->peers();
-
-	ui->peerCount->setText(QString::fromStdString(toString(ps.size())) + " peer(s)");
+	
+	lock_guard<mutex> l(x_uiq);
+	m_uiq.push_back([this, ps]()
+	{
+		ui->peerCount->setText(QString::fromStdString(toString(ps.size())) + " peer(s)");
+	});
 }
 
 void Main::refreshAll()
@@ -504,40 +595,57 @@ void Main::refreshAll()
 	refreshBalances();
 }
 
+void Main::refreshWatches()
+{
+	m_ethereum->poll();
+
+	for (auto const& i: m_handlers)
+		if (ethereum()->checkWatch(i.first))
+		{
+			lock_guard<mutex> l(x_uiq);
+			m_uiq.push_back(i.second);
+		}
+}
+
 void Main::refreshBlockCount()
 {
 	cwatch << "refreshBlockCount()";
-	auto d = ethereum()->blockChain().details();
-	auto diff = BlockInfo(ethereum()->blockChain().block()).difficulty;
-	ui->blockCount->setText(QString("#%1 @%3 T%2 N%4 D%5").arg(d.number).arg(toLog2(d.totalDifficulty)).arg(toLog2(diff)).arg(dev::eth::c_protocolVersion).arg(dev::eth::c_databaseVersion));
+	auto number = ethereum()->number();
+	ui->blockCount->setText(QString("#%1 N%2 D%3").arg(number).arg(dev::eth::c_protocolVersion).arg(dev::eth::c_databaseVersion));
 }
 
 void Main::timerEvent(QTimerEvent*)
 {
-	// 7/18, Alex: aggregating timers, prelude to better threading?
-	// Runs much faster on slower dual-core processors
-	static int interval = 100;
-	
-	// refresh mining every 200ms
-	if (interval / 100 % 2 == 0)
-		refreshMining();
-
-	// refresh peer list every 1000ms, reset counter
-	if (interval == 1000)
-	{
-		interval = 0;
-		ensureNetwork();
-		refreshNetwork();
-	}
-	else
-		interval += 100;
-	
-	if (m_qweb)
-		m_qweb->poll();
-
-	for (auto const& i: m_handlers)
-		if (ethereum()->checkWatch(i.first))
-			i.second();
+//<<<<<<< HEAD
+	lock_guard<mutex> l(x_uiq);
+	for (auto f: m_uiq)
+		f();
+//=======
+//	// 7/18, Alex: aggregating timers, prelude to better threading?
+//	// Runs much faster on slower dual-core processors
+//	static int interval = 100;
+//	
+//	// refresh mining every 200ms
+//	if (interval / 100 % 2 == 0)
+//		refreshMining();
+//
+//	// refresh peer list every 1000ms, reset counter
+//	if (interval == 1000)
+//	{
+//		interval = 0;
+//		ensureNetwork();
+//		refreshNetwork();
+//	}
+//	else
+//		interval += 100;
+//	
+//	if (m_qweb)
+//		m_qweb->poll();
+//
+//	for (auto const& i: m_handlers)
+//		if (ethereum()->checkWatch(i.first))
+//			i.second();
+//>>>>>>> develop
 }
 
 void Main::ourAccountsRowsMoved()
@@ -566,27 +674,24 @@ void Main::on_ourAccounts_doubleClicked()
 
 void Main::ensureNetwork()
 {
-	string n = string("Third/v") + dev::Version;
-	n +=  "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM);
-	web3()->setClientVersion(n);
-
-	int pocnumber = QString(dev::Version).section('.', 1, 1).toInt();
-	string defPeer;
-	if (pocnumber == 5)
-		defPeer = "54.72.69.180";
-	else if (pocnumber == 6)
-		defPeer = "54.76.56.74";
-
-	if (!web3()->haveNetwork())
+	if (!web3()->haveNetwork() || !m_web3->peerCount())
 	{
-		web3()->startNetwork();
+		string n = string("Third/v") + dev::Version;
+		n +=  "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM);
+		//	web3()->setClientVersion(n);
+		
+		int pocnumber = QString(dev::Version).section('.', 1, 1).toInt();
+		string defPeer;
+		if (pocnumber == 5)
+			defPeer = "54.72.69.180";
+		else if (pocnumber == 6)
+			defPeer = "54.76.56.74";
+		
 		web3()->connect(defPeer);
 	}
-	else
-		if (!m_web3->peerCount())
-			m_web3->connect(defPeer);
-	if (m_nodes.size())
-		m_web3->restoreNodes(bytesConstRef((byte*)m_nodes.data(), m_nodes.size()));
+
+//	if (m_nodes.size())
+//		m_web3->restoreNodes(bytesConstRef((byte*)m_nodes.data(), m_nodes.size()));
 }
 
 void Main::on_connect_triggered()

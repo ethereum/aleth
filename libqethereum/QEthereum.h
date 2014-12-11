@@ -59,6 +59,29 @@ class QWebThreeConnector: public QObject, public jsonrpc::AbstractServerConnecto
 	Q_OBJECT
 	
 public:
+//<<<<<<< HEAD
+//	QWhisper(QObject* _p, dev::shh::Interface* const& _c);
+//	virtual ~QWhisper();
+//
+//	dev::shh::Interface* face() const;
+//	void setFace(dev::shh::Interface* const& _c) { m_face = _c; }
+//
+//	/// Call when the face() is going to be deleted to make this object useless but safe.
+//	void faceDieing();
+//
+//	Q_INVOKABLE QWhisper* self() { return this; }
+//
+//	/// Basic message send.
+//	Q_INVOKABLE void send(QString /*dev::Address*/ _dest, QString /*ev::KeyPair*/ _from, QString /*dev::h256 const&*/ _topic, QString /*dev::bytes const&*/ _payload);
+//
+//	// Watches interface
+//
+//	Q_INVOKABLE unsigned newWatch(QString _json);
+//	Q_INVOKABLE QString watchMessages(unsigned _w);
+//	Q_INVOKABLE void killWatch(unsigned _w);
+//	void clearWatches();
+//
+//=======
 	QWebThreeConnector();
 	virtual ~QWebThreeConnector();
 	
@@ -68,6 +91,7 @@ public:
 	virtual bool StopListening();
 	virtual bool SendResponse(std::string const& _response, void* _addInfo = NULL);
 	
+//>>>>>>> develop
 public slots:
 	void onProcessData(QString const& _json, QString const& _addInfo);
 
@@ -75,8 +99,13 @@ signals:
 	void dataProcessed(QString const& _json, QString const& _addInfo);
 	
 private:
+//<<<<<<< HEAD
+//	dev::shh::Interface* m_face = nullptr;
+//	std::vector<unsigned> m_watches;
+//=======
 	QWebThree* m_qweb = nullptr;
 	bool m_isListening;
+//>>>>>>> develop
 };
 
 #define QETH_INSTALL_JS_NAMESPACE(_frame, _env, qweb) [_frame, _env, qweb]() \

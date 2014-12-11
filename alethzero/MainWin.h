@@ -76,7 +76,7 @@ public:
 
 	dev::WebThreeDirect* web3() const { return m_webThree.get(); }
 	dev::eth::Client* ethereum() const { return m_webThree->ethereum(); }
-	std::shared_ptr<dev::shh::WhisperHost> whisper() const { return m_webThree->whisper(); }
+	dev::shh::WhisperHost* whisper() const { return m_webThree->whisper(); }
 
 	QList<dev::KeyPair> owned() const { return m_myIdentities + m_myKeys; }
 	

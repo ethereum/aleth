@@ -21,18 +21,16 @@
 
 #pragma once
 
-#include <thread>
-#include <mutex>
-#include <list>
-#include <atomic>
 #include <boost/utility.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/Guards.h>
 #include <libdevcore/Exceptions.h>
 #include <libp2p/Host.h>
 
-#include <libwhisper/WhisperHost.h>
+#include <libdevnet/NetEndpoint.h>
+#include <libethereum/EthereumRPC.h>
+#include <libp2p/P2PRPC.h>
+#include <libwhisper/WhisperRPC.h>
 #include <libethereum/Client.h>
 
 namespace dev
@@ -50,7 +48,7 @@ enum WorkState
 namespace eth { class Interface; }
 namespace shh { class Interface; }
 namespace bzz { class Interface; }
-
+	
 /**
  * @brief Main API hub for interfacing with Web 3 components. This doesn't do any local multiplexing, so you can only have one
  * running on any given machine for the provided DB path.
@@ -74,7 +72,7 @@ public:
 	// The mainline interfaces:
 
 	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
-	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
+	shh::WhisperHost* whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w.get(); }
 	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
 
 	// Misc stuff:
@@ -123,53 +121,15 @@ private:
 	std::string m_clientVersion;					///< Our end-application client's name/version.
 
 	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-
 	std::unique_ptr<eth::Client> m_ethereum;		///< Main interface for Ethereum ("eth") protocol.
 	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Main interface for Whisper ("shh") protocol.
+	
+	std::shared_ptr<NetEndpoint> m_rpcEndpoint;
+	std::unique_ptr<p2p::P2PRPC> m_P2PRpcService;
+	std::unique_ptr<eth::EthereumRPC> m_ethereumRpcService;
+	std::unique_ptr<shh::WhisperRPC> m_whisperRpcService;
 };
 
-
-
-// TODO, probably move into libdevrpc:
-
-class RPCSlave {};
-class RPCMaster {};
-
-// TODO, probably move into eth:
-
-class EthereumSlave: public eth::Interface
-{
-public:
-	EthereumSlave(RPCSlave*) {}
-
-	// TODO: implement all of the virtuals with the RLPClient link.
-};
-
-class EthereumMaster
-{
-public:
-	EthereumMaster(RPCMaster*) {}
-
-	// TODO: implement the master-end of whatever the RLPClient link will send over.
-};
-
-// TODO, probably move into shh:
-
-class WhisperSlave: public shh::Interface
-{
-public:
-	WhisperSlave(RPCSlave*) {}
-
-	// TODO: implement all of the virtuals with the RLPClient link.
-};
-
-class WhisperMaster
-{
-public:
-	WhisperMaster(RPCMaster*) {}
-
-	// TODO: implement the master-end of whatever the RLPClient link will send over.
-};
 
 /**
  * @brief Main API hub for interfacing with Web 3 components.
@@ -177,7 +137,7 @@ public:
  * This does transparent local multiplexing, so you can have as many running on the
  * same machine all working from a single DB path.
  */
-class WebThree
+class WebThree: public Worker
 {
 public:
 	/// Constructor for public instance. This will be shared across the local machine.
@@ -187,7 +147,6 @@ public:
 	~WebThree();
 
 	// The mainline interfaces.
-
 	eth::Interface* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum; }
 	shh::Interface* whisper() const { if (!m_whisper) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return m_whisper; }
 	bzz::Interface* swarm() const { BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz")); }
@@ -207,17 +166,21 @@ public:
 	bool haveNetwork();
 
 	/// Save peers
-	dev::bytes savePeers();
+	dev::bytes saveNodes();
 
 	/// Restore peers
-	void restorePeers(bytesConstRef _saved);
+	void restoreNodes(bytesConstRef _saved);
 
+protected:
+	void doWork();
+	
 private:
-	EthereumSlave* m_ethereum = nullptr;
-	WhisperSlave* m_whisper = nullptr;
-
-	// TODO:
-	RPCSlave m_rpcSlave;
+	boost::asio::io_service m_io;					///< IO Service for rpc connection.
+	boost::asio::ip::tcp::endpoint m_endpoint;		///< Address/port of rpc host.
+	std::shared_ptr<NetConnection> m_connection;	///< Connection shared by rpc clients.
+	p2p::P2PRPCClient m_net;
+	eth::EthereumRPCClient* m_ethereum = nullptr;		///< Ethereum RPC Client
+	shh::WhisperRPCClient* m_whisper = nullptr;			///< Whisper RPC Client
 };
 
 }

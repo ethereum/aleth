@@ -45,7 +45,9 @@
 #include <libethereum/Client.h>
 #include <libethereum/EthereumHost.h>
 #include <libethereum/DownloadMan.h>
+#include <libwhisper/WhisperHost.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
+#include <libqethereum/QEthereum.h>
 #include "DownloadView.h"
 #include "MiningView.h"
 #include "BuildInfo.h"
@@ -163,9 +165,14 @@ Main::Main(QWidget *parent) :
 	connect(ui->webView, &QWebView::loadStarted, [this]()
 	{
 		// NOTE: no need to delete as QETH_INSTALL_JS_NAMESPACE adopts it.
+//<<<<<<< HEAD
+//		m_ethereum = new QEthereum(this, ethereum(), owned());
+//		m_whisper = new QWhisper(this, static_cast<shh::Interface*>(m_webThree->whisper()));
+//=======
 		m_qweb = new QWebThree(this);
 		auto qweb = m_qweb;
 		m_qwebConnector->setQWeb(qweb);
+//>>>>>>> develop
 
 		QWebSettings::globalSettings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 		QWebFrame* f = ui->webView->page()->mainFrame();

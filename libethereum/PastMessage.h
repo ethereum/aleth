@@ -36,6 +36,9 @@ struct PastMessage
 
 	PastMessage& polish(h256 _b, u256 _ts, unsigned _n, Address _coinbase) { block = _b; timestamp = _ts; number = _n; coinbase = _coinbase; return *this; }
 
+	PastMessage(bytesConstRef _r);
+	void streamOut(RLPStream& _s) const;
+
 	Address to;					///< The receiving address of the transaction. Address() in the case of a creation.
 	Address from;				///< The receiving address of the transaction. Address() in the case of a creation.
 	u256 value;					///< The value associated with the call.

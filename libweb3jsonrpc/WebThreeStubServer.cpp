@@ -238,7 +238,7 @@ dev::eth::Interface* WebThreeStubServer::client() const
 	return m_web3.ethereum();
 }
 
-std::shared_ptr<dev::shh::Interface> WebThreeStubServer::face() const
+dev::shh::Interface* WebThreeStubServer::face() const
 {
 	return m_web3.whisper();
 }

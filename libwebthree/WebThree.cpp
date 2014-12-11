@@ -21,14 +21,10 @@
 
 #include "WebThree.h"
 
-#include <chrono>
-#include <thread>
-#include <boost/filesystem.hpp>
+#include <libwhisper/WhisperRPC.h>
 #include <libdevcore/Log.h>
-#include <libp2p/Host.h>
 #include <libethereum/Defaults.h>
-#include <libethereum/EthereumHost.h>
-#include <libwhisper/WhisperHost.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -37,16 +33,31 @@ using namespace dev::shh;
 
 WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string const& _dbPath, bool _forceClean, std::set<std::string> const& _interfaces, NetworkPreferences const& _n):
 	m_clientVersion(_clientVersion),
-	m_net(_clientVersion, _n)
+	m_net(_clientVersion, _n),
+	m_rpcEndpoint(new NetEndpoint(boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310)))
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 
+	m_P2PRpcService.reset(new P2PRPC(&m_net));
+	m_rpcEndpoint->registerService(m_P2PRpcService.get());
+	
 	if (_interfaces.count("eth"))
+	{
 		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _forceClean));
+		m_ethereumRpcService.reset(new EthereumRPC(m_ethereum.get()));
+		m_rpcEndpoint->registerService(m_ethereumRpcService.get());
+	}
 
 	if (_interfaces.count("shh"))
+	{
 		m_whisper = m_net.registerCapability<WhisperHost>(new WhisperHost);
+		if (auto w = m_whisper.lock())
+			m_whisperRpcService.reset(new WhisperRPC(w.get()));
+		m_rpcEndpoint->registerService(m_whisperRpcService.get());
+	}
+	
+	m_rpcEndpoint->start();
 }
 
 WebThreeDirect::~WebThreeDirect()
@@ -104,3 +115,63 @@ void WebThreeDirect::connect(std::string const& _seedHost, unsigned short _port)
 {
 	m_net.connect(_seedHost, _port);
 }
+
+WebThree::WebThree():
+	Worker("webthree-client"),
+	m_io(),
+	m_endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30310),
+	m_connection(new NetConnection(m_io, m_endpoint)),
+	m_net(m_connection.get())
+{
+	startWorking();
+
+	m_ethereum = new EthereumRPCClient(m_connection.get());
+//	m_whisper = new WhisperRPCClient(m_connection.get());
+	m_connection->start();
+}
+
+WebThree::~WebThree()
+{
+	stopWorking();
+	
+	if (m_ethereum)
+		delete m_ethereum;
+}
+
+void WebThree::doWork()
+{
+	if (m_io.stopped())
+		m_io.reset();
+	m_io.poll();
+}
+
+std::vector<PeerInfo> WebThree::peers()
+{
+	return m_net.peers();
+}
+
+size_t WebThree::peerCount() const
+{
+	return m_net.peerCount();
+}
+
+void WebThree::connect(std::string const& _seedHost, unsigned short _port)
+{
+	m_net.connect(_seedHost, _port);
+}
+
+bool WebThree::haveNetwork()
+{
+	return m_net.haveNetwork();
+}
+
+bytes WebThree::saveNodes()
+{
+	return m_net.saveNodes();
+}
+
+void WebThree::restoreNodes(bytesConstRef _saved)
+{
+	m_net.restoreNodes(_saved);
+}
+

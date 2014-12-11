@@ -120,7 +120,7 @@ public:
 
 private:
 	dev::eth::Interface* client() const;
-	std::shared_ptr<dev::shh::Interface> face() const;
+	dev::shh::Interface* face() const;
 	dev::WebThreeDirect& m_web3;
 	std::map<dev::Address, dev::KeyPair> m_accounts;
 	
