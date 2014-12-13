@@ -14,33 +14,38 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Manifest.cpp
+/** @file TransactionReceipt.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Manifest.h"
+#include "TransactionReceipt.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-Manifest::Manifest(bytesConstRef _r)
+TransactionReceipt::TransactionReceipt(bytesConstRef _rlp)
 {
-	RLP r(_r);
-	from = r[0].toHash<Address>();
-	to = r[1].toHash<Address>();
-	value = r[2].toInt<u256>();
-	altered = r[3].toVector<u256>();
-	input = r[4].toBytes();
-	output = r[5].toBytes();
-	for (auto const& i: r[6])
-		internal.emplace_back(i.data());
+	RLP r(_rlp);
+	m_stateRoot = (h256)r[0];
+	m_gasUsed = (u256)r[1];
+	m_bloom = (LogBloom)r[2];
+	for (auto const& i: r[3])
+		m_log.emplace_back(i);
 }
 
-void Manifest::streamRLP(RLPStream& _s) const
+TransactionReceipt::TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries const& _log):
+	m_stateRoot(_root),
+	m_gasUsed(_gasUsed),
+	m_bloom(eth::bloom(_log)),
+	m_log(_log)
+{}
+
+void TransactionReceipt::streamRLP(RLPStream& _s) const
 {
-	_s.appendList(7) << from << to << value << altered << input << output;
-	_s.appendList(internal.size());
-	for (auto const& i: internal)
-		i.streamRLP(_s);
+	_s.appendList(4) << m_stateRoot << m_gasUsed << m_bloom;
+	_s.appendList(m_log.size());
+	for (LogEntry const& l: m_log)
+		l.streamRLP(_s);
 }

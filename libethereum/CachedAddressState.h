@@ -14,23 +14,47 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CryptoHeaders.h
- * @author Tim Hughes <tim@twistedfury.com>
+/** @file CachedAddressState.h
+ * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
+
 #pragma once
 
-// need to leave this one disabled
-#pragma GCC diagnostic ignored "-Wunused-function"
+#include <string>
+#include <libdevcore/Common.h>
+#include <libdevcore/RLP.h>
+#include "AccountDiff.h"
 
-#pragma warning(push)
-#pragma warning(disable:4100 4244)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include <sha.h>
-#include <sha3.h>
-#include <ripemd.h>
-#include <secp256k1/secp256k1.h>
-#pragma warning(pop)
-#pragma GCC diagnostic pop
+namespace dev
+{
+
+class OverlayDB;
+
+namespace eth
+{
+
+class Account;
+
+class CachedAddressState
+{
+public:
+	CachedAddressState(std::string const& _rlp, Account const* _s, OverlayDB const* _o): m_rS(_rlp), m_r(m_rS), m_s(_s), m_o(_o) {}
+
+	bool exists() const;
+	u256 balance() const;
+	u256 nonce() const;
+	bytes code() const;
+	std::map<u256, u256> storage() const;
+	AccountDiff diff(CachedAddressState const& _c);
+
+private:
+	std::string m_rS;
+	RLP m_r;
+	Account const* m_s;
+	OverlayDB const* m_o;
+};
+
+}
+
+}

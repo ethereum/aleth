@@ -14,15 +14,29 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file PastMessage.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
 
-#include "PastMessage.h"
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
+#include "VMFactory.h"
+#include "VM.h"
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-namespace { char dummy; };
+namespace dev
+{
+namespace eth
+{
+namespace
+{
+	VMKind g_kind = VMKind::Interpreter;
+}
+
+void VMFactory::setKind(VMKind _kind)
+{
+	g_kind = _kind;
+}
+
+std::unique_ptr<VMFace> VMFactory::create(u256 _gas)
+{
+	asserts(g_kind == VMKind::Interpreter && "Only interpreter supported for now");
+	return std::unique_ptr<VMFace>(new VM(_gas));
+}
+
+}
+}
