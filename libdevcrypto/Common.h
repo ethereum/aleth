@@ -14,8 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CommonEth.h
+/** @file Common.h
  * @author Gav Wood <i@gavwood.com>
+ * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
  *
  * Ethereum-specific data structures & algorithms.
@@ -25,6 +26,7 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {
@@ -37,6 +39,12 @@ using Secret = h256;
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
 using Public = h512;
 
+/// A signature: 65 bytes: r: [0, 32), s: [32, 64), v: 64.
+/// @NOTE This is not endian-specific; it's just a bunch of bytes.
+using Signature = h520;
+
+struct SignatureStruct { h256 r; h256 s; byte v; };
+
 /// An Ethereum address: 20 bytes.
 /// @NOTE This is not endian-specific; it's just a bunch of bytes.
 using Address = h160;
@@ -44,9 +52,30 @@ using Address = h160;
 /// A vector of Ethereum addresses.
 using Addresses = h160s;
 
-/// Convert a private key into the public key equivalent.
-/// @returns 0 if it's not a valid private key.
-Address toAddress(h256 _private);
+/// A vector of Ethereum addresses.
+using AddressSet = std::set<h160>;
+
+/// A vector of secrets.
+using Secrets = h256s;
+
+/// Convert a secret key into the public key equivalent.
+/// @returns 0 if it's not a valid secret key.
+Address toAddress(Secret _secret);
+
+/// Encrypts plain text using Public key.
+void encrypt(Public _k, bytesConstRef _plain, bytes& o_cipher);
+
+/// Decrypts cipher using Secret key.
+bool decrypt(Secret _k, bytesConstRef _cipher, bytes& o_plaintext);
+	
+/// Recovers Public key from signed message hash.
+Public recover(Signature _sig, h256 _hash);
+	
+/// Returns siganture of message hash.
+Signature sign(Secret _k, h256 _hash);
+	
+/// Verify signature.
+bool verify(Public _k, Signature _s, h256 _hash);
 
 /// Simple class that represents a "key pair".
 /// All of the data of the class can be regenerated from the secret key (m_secret) alone.
@@ -85,5 +114,21 @@ private:
 	Public m_public;
 	Address m_address;
 };
+
+namespace crypto
+{
+struct InvalidState: public dev::Exception {};
+
+/**
+ * @brief Generator for nonce material
+ */
+struct Nonce
+{
+	static h256 get(bool _commit = false);
+private:
+	Nonce() {}
+	~Nonce();
+};
+}
 
 }

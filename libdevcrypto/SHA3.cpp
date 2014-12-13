@@ -20,18 +20,17 @@
  */
 
 #include "SHA3.h"
-#include "CryptoHeaders.h"
 
+#include <libdevcore/RLP.h>
+#include "CryptoPP.h"
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
 
 namespace dev
 {
-namespace eth
-{
 
 h256 EmptySHA3 = sha3(bytesConstRef());
+h256 EmptyListSHA3 = sha3(RLPEmptyList);
 
 std::string sha3(std::string const& _input, bool _hex)
 {
@@ -53,6 +52,22 @@ std::string sha3(std::string const& _input, bool _hex)
 void sha3(bytesConstRef _input, bytesRef _output)
 {
 	CryptoPP::SHA3_256 ctx;
+	ctx.Update((byte*)_input.data(), _input.size());
+	assert(_output.size() >= 32);
+	ctx.Final(_output.data());
+}
+
+void ripemd160(bytesConstRef _input, bytesRef _output)
+{
+	CryptoPP::RIPEMD160 ctx;
+	ctx.Update((byte*)_input.data(), _input.size());
+	assert(_output.size() >= 32);
+	ctx.Final(_output.data());
+}
+
+void sha256(bytesConstRef _input, bytesRef _output)
+{
+	CryptoPP::SHA256 ctx;
 	ctx.Update((byte*)_input.data(), _input.size());
 	assert(_output.size() >= 32);
 	ctx.Final(_output.data());
@@ -101,5 +116,4 @@ bytes aesDecrypt(bytesConstRef _ivCipher, std::string const& _password, unsigned
 	}
 }
 
-}
 }

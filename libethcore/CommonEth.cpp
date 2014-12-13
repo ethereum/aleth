@@ -34,8 +34,8 @@ namespace dev
 namespace eth
 {
 
-const unsigned c_protocolVersion = 33;
-const unsigned c_databaseVersion = 2;
+const unsigned c_protocolVersion = 39;
+const unsigned c_databaseVersion = 4;
 
 static const vector<pair<u256, string>> g_units =
 {
@@ -100,7 +100,7 @@ Address toAddress(Secret _private)
 	ok = secp256k1_ecdsa_pubkey_verify(pubkey, 65);
 	if (!ok)
 		return Address();
-	auto ret = right160(dev::eth::sha3(bytesConstRef(&(pubkey[1]), 64)));
+	auto ret = right160(dev::sha3(bytesConstRef(&(pubkey[1]), 64)));
 #if ETH_ADDRESS_DEBUG
 	cout << "---- ADDRESS -------------------------------" << endl;
 	cout << "SEC: " << _private << endl;

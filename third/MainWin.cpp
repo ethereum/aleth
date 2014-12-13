@@ -30,7 +30,6 @@
 #include <boost/algorithm/string.hpp>
 #include <libserpent/funcs.h>
 #include <libserpent/util.h>
-#include <libethcore/Dagger.h>
 #include <libdevcrypto/FileSystem.h>
 #include <liblll/Compiler.h>
 #include <liblll/CodeFragment.h>
@@ -40,6 +39,7 @@
 #include <libethereum/Client.h>
 #include <libethereum/EthereumHost.h>
 #include <libwebthree/WebThree.h>
+#include <libweb3jsonrpc/WebThreeStubServer.h>
 #include "BuildInfo.h"
 #include "MainWin.h"
 #include "ui_Main.h"
@@ -73,6 +73,20 @@ static QString fromRaw(dev::h256 _n, unsigned* _inc = nullptr)
 	return QString();
 }
 
+static std::vector<dev::KeyPair> keysAsVector(QList<dev::KeyPair> const& keys)
+{
+	auto list = keys.toStdList();
+	return {std::begin(list), std::end(list)};
+}
+
+static QString contentsOfQResource(std::string const& res)
+{
+	QFile file(QString::fromStdString(res));
+	if (!file.open(QFile::ReadOnly))
+		return "";
+	QTextStream in(&file);
+	return in.readAll();
+}
 
 Address c_config = Address("661005d2720d855f1d9976f88bb10c1a3398c77f");
 
@@ -84,9 +98,10 @@ Main::Main(QWidget *parent) :
 	ui->setupUi(this);
 
     cerr << "State root: " << BlockChain::genesis().stateRoot << endl;
-    cerr << "Block Hash: " << sha3(BlockChain::createGenesisBlock()) << endl;
-    cerr << "Block RLP: " << RLP(BlockChain::createGenesisBlock()) << endl;
-    cerr << "Block Hex: " << toHex(BlockChain::createGenesisBlock()) << endl;
+	auto gb = BlockChain::createGenesisBlock();
+	cerr << "Block Hash: " << sha3(gb) << endl;
+	cerr << "Block RLP: " << RLP(gb) << endl;
+	cerr << "Block Hex: " << toHex(gb) << endl;
 	cerr << "Network protocol version: " << dev::eth::c_protocolVersion << endl;
 	cerr << "Client database version: " << dev::eth::c_databaseVersion << endl;
 
@@ -102,22 +117,25 @@ Main::Main(QWidget *parent) :
 	m_web3.reset(new WebThreeDirect("Third", getDataDir() + "/Third", false, {"eth", "shh"}));
 	m_web3->connect(Host::pocHost());
 
+	m_server = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(&m_qwebConnector, *web3(), keysAsVector(m_myKeys)));
+	m_server->setIdentities(keysAsVector(owned()));
+	m_server->StartListening();
+	
 	connect(ui->webView, &QWebView::loadStarted, [this]()
 	{
 		// NOTE: no need to delete as QETH_INSTALL_JS_NAMESPACE adopts it.
-		m_ethereum = new QEthereum(this, ethereum(), owned());
-		m_whisper = new QWhisper(this, whisper());
+		m_qweb = new QWebThree(this);
+		auto qweb = m_qweb;
+		m_qwebConnector.setQWeb(qweb);
 
 		QWebFrame* f = ui->webView->page()->mainFrame();
 		f->disconnect(SIGNAL(javaScriptWindowObjectCleared()));
-		auto qeth = m_ethereum;
-		auto qshh = m_whisper;
-		connect(f, &QWebFrame::javaScriptWindowObjectCleared, QETH_INSTALL_JS_NAMESPACE(f, qeth, qshh, this));
+		connect(f, &QWebFrame::javaScriptWindowObjectCleared, QETH_INSTALL_JS_NAMESPACE(f, this, qweb));
 	});
 	
 	connect(ui->webView, &QWebView::loadFinished, [=]()
 	{
-		m_ethereum->poll();
+		m_qweb->poll();
 	});
 	
 	connect(ui->webView, &QWebView::titleChanged, [=]()
@@ -145,8 +163,7 @@ Main::~Main()
 {
 	// Must do this here since otherwise m_ethereum'll be deleted (and therefore clearWatches() called by the destructor)
 	// *after* the client is dead.
-	m_ethereum->clientDieing();
-
+	m_qweb->clientDieing();
 	writeSettings();
 }
 
@@ -364,10 +381,10 @@ void Main::writeSettings()
 	s.setValue("address", b);
 	s.setValue("url", ui->urlEdit->text());
 
-	bytes d = m_web3->savePeers();
+	bytes d = m_web3->saveNodes();
 	if (d.size())
-		m_peers = QByteArray((char*)d.data(), (int)d.size());
-	s.setValue("peers", m_peers);
+		m_nodes = QByteArray((char*)d.data(), (int)d.size());
+	s.setValue("peers", m_nodes);
 
 	s.setValue("geometry", saveGeometry());
 	s.setValue("windowState", saveState());
@@ -396,7 +413,7 @@ void Main::readSettings(bool _skipGeometry)
 		}
 	}
 	ethereum()->setAddress(m_myKeys.back().address());
-	m_peers = s.value("peers").toByteArray();
+	m_nodes = s.value("peers").toByteArray();
 	ui->urlEdit->setText(s.value("url", "about:blank").toString());	//http://gavwood.com/gavcoin.html
 	on_urlEdit_returnPressed();
 }
@@ -518,8 +535,8 @@ void Main::timerEvent(QTimerEvent*)
 	else
 		interval += 100;
 	
-	if (m_ethereum)
-		m_ethereum->poll();
+	if (m_qweb)
+		m_qweb->poll();
 
 	for (auto const& i: m_handlers)
 		if (ethereum()->checkWatch(i.first))
@@ -538,8 +555,9 @@ void Main::ourAccountsRowsMoved()
 				myKeys.push_back(i);
 	}
 	m_myKeys = myKeys;
-	if (m_ethereum)
-		m_ethereum->setAccounts(myKeys);
+
+	if (m_server.get())
+		m_server->setAccounts(keysAsVector(myKeys));
 }
 
 void Main::on_ourAccounts_doubleClicked()
@@ -570,8 +588,8 @@ void Main::ensureNetwork()
 	else
 		if (!m_web3->peerCount())
 			m_web3->connect(defPeer);
-	if (m_peers.size())
-		m_web3->restorePeers(bytesConstRef((byte*)m_peers.data(), m_peers.size()));
+	if (m_nodes.size())
+		m_web3->restoreNodes(bytesConstRef((byte*)m_nodes.data(), m_nodes.size()));
 }
 
 void Main::on_connect_triggered()

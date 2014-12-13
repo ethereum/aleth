@@ -30,14 +30,12 @@
 #include <jsonrpc/connectors/httpserver.h>
 #endif
 #include <libdevcrypto/FileSystem.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include <libethereum/All.h>
 #if ETH_JSONRPC
-#include <eth/EthStubServer.h>
-#include <eth/EthStubServer.cpp>
-#include <eth/abstractethstubserver.h>
-#include <eth/CommonJS.h>
-#include <eth/CommonJS.cpp>
+#include <libweb3jsonrpc/WebThreeStubServer.h>
+#include <libweb3jsonrpc/abstractwebthreestubserver.h>
+#include <libdevcore/CommonJS.h>
 #endif
 #include <libwebthree/WebThree.h>
 #include "BuildInfo.h"
@@ -477,11 +475,11 @@ int main(int argc, char** argv)
 		c.startMining();
 
 #if ETH_JSONRPC
-	auto_ptr<EthStubServer> jsonrpcServer;
+	auto_ptr<WebThreeStubServer> jsonrpcServer;
 	if (jsonrpc > -1)
 	{
-		jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(jsonrpc), web3));
-		jsonrpcServer->setKeys({us});
+		jsonrpcServer = auto_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::HttpServer(jsonrpc), web3, {us}));
+		jsonrpcServer->setIdentities({us});
 		jsonrpcServer->StartListening();
 	}
 #endif
@@ -554,8 +552,8 @@ int main(int argc, char** argv)
 		{
 			if (jsonrpc < 0)
 				jsonrpc = 8080;
-			jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(jsonrpc), web3));
-			jsonrpcServer->setKeys({us});
+			jsonrpcServer = auto_ptr<WebThreeStubServer>(new WebThreeStubServer(new jsonrpc::HttpServer(jsonrpc), web3, {us}));
+			jsonrpcServer->setIdentities({us});
 			jsonrpcServer->StartListening();
 		}
 		else if (cmd == "jsonstop")
@@ -805,9 +803,9 @@ int main(int argc, char** argv)
 
 					cnote << "Saved" << rechex << "to" << outFile;
 				}
-				catch (dev::eth::InvalidTrie)
+				catch (dev::InvalidTrie const& _e)
 				{
-					cwarn << "Corrupted trie.";
+					cwarn << "Corrupted trie.\n" << diagnostic_information(_e);
 				}
 			}
 		}
@@ -845,18 +843,18 @@ int main(int argc, char** argv)
 			for (auto const& i: RLP(b)[1])
 			{
 				Transaction t(i[0].data());
-				auto s = t.receiveAddress ?
+				auto s = t.receiveAddress() ?
 					boost::format("  %1% %2%> %3%: %4% [%5%]") %
 						toString(t.safeSender()) %
-						(c.codeAt(t.receiveAddress, 0).size() ? '*' : '-') %
-						toString(t.receiveAddress) %
-						toString(formatBalance(t.value)) %
-						toString((unsigned)t.nonce) :
+						(c.codeAt(t.receiveAddress(), 0).size() ? '*' : '-') %
+						toString(t.receiveAddress()) %
+						toString(formatBalance(t.value())) %
+						toString((unsigned)t.nonce()) :
 					boost::format("  %1% +> %2%: %3% [%4%]") %
 						toString(t.safeSender()) %
-						toString(right160(sha3(rlpList(t.safeSender(), t.nonce)))) %
-						toString(formatBalance(t.value)) %
-						toString((unsigned)t.nonce);
+						toString(right160(sha3(rlpList(t.safeSender(), t.nonce())))) %
+						toString(formatBalance(t.value())) %
+						toString((unsigned)t.nonce());
 				mvwaddnstr(blockswin, y++, x, s.str().c_str(), qwidth - 2);
 				if (y > qheight - 2)
 					break;
@@ -870,18 +868,18 @@ int main(int argc, char** argv)
 		y = 1;
 		for (Transaction const& t: c.pending())
 		{
-			auto s = t.receiveAddress ?
+			auto s = t.receiveAddress() ?
 				boost::format("%1% %2%> %3%: %4% [%5%]") %
 					toString(t.safeSender()) %
-					(c.codeAt(t.receiveAddress, 0).size() ? '*' : '-') %
-					toString(t.receiveAddress) %
-					toString(formatBalance(t.value)) %
-					toString((unsigned)t.nonce) :
+					(c.codeAt(t.receiveAddress(), 0).size() ? '*' : '-') %
+					toString(t.receiveAddress()) %
+					toString(formatBalance(t.value())) %
+					toString((unsigned)t.nonce()) :
 				boost::format("%1% +> %2%: %3% [%4%]") %
 					toString(t.safeSender()) %
-					toString(right160(sha3(rlpList(t.safeSender(), t.nonce)))) %
-					toString(formatBalance(t.value)) %
-					toString((unsigned)t.nonce);
+					toString(right160(sha3(rlpList(t.safeSender(), t.nonce())))) %
+					toString(formatBalance(t.value())) %
+					toString((unsigned)t.nonce());
 			mvwaddnstr(pendingwin, y++, x, s.str().c_str(), qwidth);
 			if (y > height * 1 / 5 - 4)
 				break;

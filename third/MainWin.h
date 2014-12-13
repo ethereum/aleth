@@ -48,6 +48,7 @@ class WhisperHost;
 }
 
 class QQuickView;
+class WebThreeStubServer;
 
 class Main : public QMainWindow
 {
@@ -61,7 +62,7 @@ public:
 	dev::eth::Client* ethereum() const;
 	std::shared_ptr<dev::shh::WhisperHost> whisper() const;
 
-	QList<dev::KeyPair> const& owned() const { return m_myKeys; }
+	QList<dev::KeyPair> owned() const { return m_myKeys + m_myIdentities;}
 	
 public slots:
 	void note(QString _entry);
@@ -121,17 +122,19 @@ private:
 	std::unique_ptr<dev::WebThreeDirect> m_web3;
 
 	QList<dev::KeyPair> m_myKeys;
+	QList<dev::KeyPair> m_myIdentities;
 
 	std::map<unsigned, std::function<void()>> m_handlers;
 	unsigned m_nameRegFilter = (unsigned)-1;
 	unsigned m_currenciesFilter = (unsigned)-1;
 	unsigned m_balancesFilter = (unsigned)-1;
 
-	QByteArray m_peers;
+	QByteArray m_nodes;
 	QStringList m_servers;
 
 	QNetworkAccessManager m_webCtrl;
 
-	QEthereum* m_ethereum = nullptr;
-	QWhisper* m_whisper = nullptr;
+	std::unique_ptr<WebThreeStubServer> m_server;
+	QWebThreeConnector m_qwebConnector;
+	QWebThree* m_qweb = nullptr;
 };

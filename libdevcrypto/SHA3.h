@@ -29,8 +29,6 @@
 
 namespace dev
 {
-namespace eth
-{
 
 // SHA-3 convenience routines.
 
@@ -58,9 +56,19 @@ inline h256 sha3(bytes const& _input) { return sha3(bytesConstRef((bytes*)&_inpu
 /// Calculate SHA3-256 hash of the given input (presented as a binary-filled string), returning as a 256-bit hash.
 inline h256 sha3(std::string const& _input) { return sha3(bytesConstRef(_input)); }
 
+/// Calculate SHA3-256 hash of the given input (presented as a FixedHash), returns a 256-bit hash.
+template<unsigned N> inline h256 sha3(FixedHash<N> const& _input) { return sha3(_input.ref()); }
+
 extern h256 EmptySHA3;
+
+extern h256 EmptyListSHA3;
+
+// Other crypto convenience routines
 
 bytes aesDecrypt(bytesConstRef _cipher, std::string const& _password, unsigned _rounds = 2000, bytesConstRef _salt = bytesConstRef());
 
-}
+void sha256(bytesConstRef _input, bytesRef _output);
+
+void ripemd160(bytesConstRef _input, bytesRef _output);
+
 }

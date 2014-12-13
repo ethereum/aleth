@@ -2,7 +2,6 @@
 
 #include "BlockInfo.h"
 #include "CommonEth.h"
-#include "Dagger.h"
-#include "CryptoHeaders.h"
+#include "ProofOfWork.h"
 #include "Exceptions.h"
 

@@ -28,13 +28,16 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
+
+#if defined(clogS)
+#undef clogS
+#endif
 #define clogS(X) dev::LogOutputStream<X, true>(false) << "| " << std::setw(2) << session()->socketId() << "] "
 
-WhisperPeer::WhisperPeer(Session* _s, HostCapabilityFace* _h): Capability(_s, _h)
+WhisperPeer::WhisperPeer(Session* _s, HostCapabilityFace* _h, unsigned _i): Capability(_s, _h, _i)
 {
 	RLPStream s;
-	prep(s);
-	sealAndSend(s.appendList(2) << StatusPacket << host()->protocolVersion());
+	sealAndSend(prep(s, StatusPacket, 1) << version());
 }
 
 WhisperPeer::~WhisperPeer()
@@ -46,9 +49,9 @@ WhisperHost* WhisperPeer::host() const
 	return static_cast<WhisperHost*>(Capability::hostCapability());
 }
 
-bool WhisperPeer::interpret(RLP const& _r)
+bool WhisperPeer::interpret(unsigned _id, RLP const& _r)
 {
-	switch (_r[0].toInt<unsigned>())
+	switch (_id)
 	{
 	case StatusPacket:
 	{
@@ -56,7 +59,7 @@ bool WhisperPeer::interpret(RLP const& _r)
 
 		clogS(NetMessageSummary) << "Status: " << protocolVersion;
 
-		if (protocolVersion != host()->protocolVersion())
+		if (protocolVersion != version())
 			disable("Invalid protocol version.");
 
 		if (session()->id() < host()->host()->id())
@@ -68,7 +71,7 @@ bool WhisperPeer::interpret(RLP const& _r)
 		unsigned n = 0;
 		for (auto i: _r)
 			if (n++)
-				host()->inject(Message(i), this);
+				host()->inject(Envelope(i), this);
 		sendMessages();
 		break;
 	}
@@ -83,26 +86,27 @@ void WhisperPeer::sendMessages()
 	RLPStream amalg;
 	unsigned n = 0;
 
-	Guard l(x_unseen);
-	while (m_unseen.size())
 	{
-		auto p = *m_unseen.begin();
-		m_unseen.erase(m_unseen.begin());
-		host()->streamMessage(p.second, amalg);
-		n++;
+		Guard l(x_unseen);
+		while (m_unseen.size())
+		{
+			auto p = *m_unseen.begin();
+			m_unseen.erase(m_unseen.begin());
+			host()->streamMessage(p.second, amalg);
+			n++;
+		}
 	}
 
-	if (n)
+	if (!n)
+		// pause for a bit if no messages to send - this is horrible and broken.
+		// the message subsystem should really just keep pumping out messages while m_unseen.size() and there's bandwidth for them.
+		this_thread::sleep_for(chrono::milliseconds(20));
+
 	{
 		RLPStream s;
-		prep(s);
-		s.appendList(n + 1) << MessagesPacket;
-		s.appendRaw(amalg.out(), n);
+		prep(s, MessagesPacket, n).appendRaw(amalg.out(), n);
 		sealAndSend(s);
 	}
-	else
-		// just pause if no messages to send
-		this_thread::sleep_for(chrono::milliseconds(100));
 }
 
 void WhisperPeer::noteNewMessage(h256 _h, Message const& _m)

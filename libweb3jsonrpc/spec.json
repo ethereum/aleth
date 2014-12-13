@@ -1,0 +1,55 @@
+[
+            { "method": "eth_coinbase", "params": [], "order": [], "returns" : "" },
+            { "method": "eth_setCoinbase", "params": [""], "order": [], "returns" : true },
+            { "method": "eth_listening", "params": [], "order": [], "returns" : false },
+            { "method": "eth_setListening", "params": [false], "order" : [], "returns" : true },
+            { "method": "eth_mining", "params": [], "order": [], "returns" : false },
+            { "method": "eth_setMining", "params": [false], "order" : [], "returns" : true },
+            { "method": "eth_gasPrice", "params": [], "order": [], "returns" : "" },
+            { "method": "eth_accounts", "params": [], "order": [], "returns" : [] },
+            { "method": "eth_peerCount", "params": [], "order": [], "returns" : 0 },
+            { "method": "eth_defaultBlock", "params": [], "order": [], "returns" : 0},
+            { "method": "eth_setDefaultBlock", "params": [0], "order": [], "returns" : true},
+            { "method": "eth_number", "params": [], "order": [], "returns" : 0},
+
+            { "method": "eth_balanceAt", "params": [""], "order": [], "returns" : ""},
+            { "method": "eth_stateAt", "params": ["", ""], "order": [], "returns": ""},
+            { "method": "eth_countAt", "params": [""], "order": [], "returns" : 0.0},
+            { "method": "eth_codeAt", "params": [""], "order": [], "returns": ""},
+
+            { "method": "eth_transact", "params": [{}], "order": [], "returns": ""},
+            { "method": "eth_call", "params": [{}], "order": [], "returns": ""},
+
+            { "method": "eth_blockByHash", "params": [""],"order": [], "returns": {}},
+            { "method": "eth_blockByNumber", "params": [0],"order": [], "returns": {}},
+            { "method": "eth_transactionByHash", "params": ["", 0], "order": [], "returns": {}},
+            { "method": "eth_transactionByNumber", "params": [0, 0], "order": [], "returns": {}},
+            { "method": "eth_uncleByHash", "params": ["", 0], "order": [], "returns": {}},
+            { "method": "eth_uncleByNumber", "params": [0, 0], "order": [], "returns": {}},
+
+            { "method": "eth_lll", "params": [""], "order": [], "returns": ""},
+            { "method": "eth_compile", "params": [""], "order": [], "returns": ""},
+
+            { "method": "eth_newFilter", "params": [{}], "order": [], "returns": 0},
+            { "method": "eth_newFilterString", "params": [""], "order": [], "returns": 0},
+            { "method": "eth_uninstallFilter", "params": [0], "order": [], "returns": true},
+            { "method": "eth_changed", "params": [0], "order": [], "returns": false},
+            { "method": "eth_getMessages", "params": [0], "order": [], "returns": []},
+
+            { "method": "db_put", "params": ["", "", ""], "order": [], "returns": true},
+            { "method": "db_get", "params": ["", ""], "order": [], "returns": ""},
+            { "method": "db_putString", "params": ["", "", ""], "order": [], "returns": true},
+            { "method": "db_getString", "params": ["", ""], "order": [], "returns": ""},
+
+            { "method": "shh_post", "params": [{}], "order": [], "returns": true},
+            { "method": "shh_newIdentity", "params": [], "order": [], "returns": ""},
+            { "method": "shh_haveIdentity", "params": [""], "order": [], "returns": false},
+            { "method": "shh_newGroup", "params": ["", ""], "order": [], "returns": ""},
+            { "method": "shh_addToGroup", "params": ["", ""], "order": [], "returns": ""},
+            
+            { "method": "shh_newFilter", "params": [{}], "order": [], "returns": 0},
+            { "method": "shh_uninstallFilter", "params": [0], "order": [], "returns": true},
+            { "method": "shh_changed", "params": [0], "order": [], "returns": []}
+            
+]
+

@@ -36,7 +36,9 @@ using namespace p2p;
 VersionChecker::VersionChecker(string const& _dbPath):
 	m_path(_dbPath.size() ? _dbPath : Defaults::dbPath())
 {
-	m_ok = RLP(contents(m_path + "/protocol")).toInt<unsigned>(RLP::LaisezFaire) == c_protocolVersion && RLP(contents(m_path + "/database")).toInt<unsigned>(RLP::LaisezFaire) == c_databaseVersion;
+	auto protocolContents = contents(m_path + "/protocol");
+	auto databaseContents = contents(m_path + "/database");
+	m_ok = RLP(protocolContents).toInt<unsigned>(RLP::LaisezFaire) == c_protocolVersion && RLP(databaseContents).toInt<unsigned>(RLP::LaisezFaire) == c_databaseVersion;
 }
 
 void VersionChecker::setOk()
@@ -47,7 +49,10 @@ void VersionChecker::setOk()
 		{
 			boost::filesystem::create_directory(m_path);
 		}
-		catch (...) {}
+		catch (...)
+		{
+			cwarn << "Unhandled exception! Failed to create directory: " << m_path << "\n" << boost::current_exception_diagnostic_information();
+		}
 		writeFile(m_path + "/protocol", rlp(c_protocolVersion));
 		writeFile(m_path + "/database", rlp(c_databaseVersion));
 	}
@@ -83,8 +88,19 @@ void Client::setNetworkId(u256 _n)
 		h->setNetworkId(_n);
 }
 
-DownloadMan const* Client::downloadMan() const { if (auto h = m_host.lock()) return &(h->downloadMan()); return nullptr; }
-bool Client::isSyncing() const { if (auto h = m_host.lock()) return h->isSyncing(); return false; }
+DownloadMan const* Client::downloadMan() const
+{
+	if (auto h = m_host.lock())
+		return &(h->downloadMan());
+	return nullptr;
+}
+
+bool Client::isSyncing() const
+{
+	if (auto h = m_host.lock())
+		return h->isSyncing();
+	return false;
+}
 
 void Client::doneWorking()
 {
@@ -143,7 +159,7 @@ void Client::clearPending()
 		if (!m_postMine.pending().size())
 			return;
 		for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
-			appendFromNewPending(m_postMine.bloom(i), changeds);
+			appendFromNewPending(m_postMine.oldBloom(i), changeds);
 		changeds.insert(PendingChangedFilter);
 		m_postMine = m_preMine;
 	}
@@ -227,12 +243,9 @@ void Client::appendFromNewBlock(h256 _block, h256Set& o_changed) const
 void Client::setForceMining(bool _enable)
 {
 	 m_forceMining = _enable;
-	 if (!m_host.lock())
-	 {
-		 ReadGuard l(x_miners);
-		 for (auto& m: m_miners)
-			 m.noteStateChange();
-	 }
+	 ReadGuard l(x_miners);
+	 for (auto& m: m_miners)
+		 m.noteStateChange();
 }
 
 void Client::setMiningThreads(unsigned _threads)
@@ -303,41 +316,38 @@ void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _
 {
 	startWorking();
 
-	Transaction t;
-//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+	u256 n;
 	{
 		ReadGuard l(x_stateDB);
-		t.nonce = m_postMine.transactionsFrom(toAddress(_secret));
+		n = m_postMine.transactionsFrom(toAddress(_secret));
 	}
-	t.value = _value;
-	t.gasPrice = _gasPrice;
-	t.gas = _gas;
-	t.receiveAddress = _dest;
-	t.data = _data;
-	t.sign(_secret);
+	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
 	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
 }
 
 bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
-	State temp;
-	Transaction t;
-//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-	{
-		ReadGuard l(x_stateDB);
-		temp = m_postMine;
-		t.nonce = temp.transactionsFrom(toAddress(_secret));
-	}
-	t.value = _value;
-	t.gasPrice = _gasPrice;
-	t.gas = _gas;
-	t.receiveAddress = _dest;
-	t.data = _data;
-	t.sign(_secret);
 	bytes out;
-	u256 gasUsed = temp.execute(t.data, &out, false);
-	(void)gasUsed; // TODO: do something with gasused which it returns.
+	try
+	{
+		u256 n;
+		State temp;
+	//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+		{
+			ReadGuard l(x_stateDB);
+			temp = m_postMine;
+			n = temp.transactionsFrom(toAddress(_secret));
+		}
+		Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+		u256 gasUsed = temp.execute(t.data(), &out, false);
+		(void)gasUsed; // TODO: do something with gasused which it returns.
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
 	return out;
 }
 
@@ -345,20 +355,15 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 {
 	startWorking();
 
-	Transaction t;
+	u256 n;
 	{
 		ReadGuard l(x_stateDB);
-		t.nonce = m_postMine.transactionsFrom(toAddress(_secret));
+		n = m_postMine.transactionsFrom(toAddress(_secret));
 	}
-	t.value = _endowment;
-	t.gasPrice = _gasPrice;
-	t.gas = _gas;
-	t.receiveAddress = Address();
-	t.data = _init;
-	t.sign(_secret);
+	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
 	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
-	return right160(sha3(rlpList(t.sender(), t.nonce)));
+	return right160(sha3(rlpList(t.sender(), t.nonce())));
 }
 
 void Client::inject(bytesConstRef _rlp)
@@ -543,6 +548,20 @@ u256 Client::stateAt(Address _a, u256 _l, int _block) const
 bytes Client::codeAt(Address _a, int _block) const
 {
 	return asOf(_block).code(_a);
+}
+
+Transaction Client::transaction(h256 _blockHash, unsigned _i) const
+{
+	auto bl = m_bc.block(_blockHash);
+	RLP b(bl);
+	return Transaction(b[1][_i].data());
+}
+
+BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const
+{
+	auto bl = m_bc.block(_blockHash);
+	RLP b(bl);
+	return BlockInfo::fromHeader(b[2][_i].data());
 }
 
 PastMessages Client::messages(MessageFilter const& _f) const

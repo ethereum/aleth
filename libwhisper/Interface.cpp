@@ -29,19 +29,12 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
 
+#if defined(clogS)
+#undef clogS
+#endif
 #define clogS(X) dev::LogOutputStream<X, true>(false) << "| " << std::setw(2) << session()->socketId() << "] "
 
-bool MessageFilter::matches(Message const& _m) const
+unsigned Interface::installWatch(TopicMask const& _mask)
 {
-	for (auto const& t: m_topicMasks)
-	{
-		if (t.first.size() != t.second.size() || _m.topic.size() < t.first.size())
-			continue;
-		for (unsigned i = 0; i < t.first.size(); ++i)
-			if (((t.first[i] ^ _m.topic[i]) & t.second[i]) != 0)
-				goto NEXT;
-		return true;
-		NEXT:;
-	}
-	return false;
+	return installWatch(TopicFilter(_mask));
 }

@@ -26,6 +26,28 @@ Node astnode(std::string val, std::vector<Node> args, Metadata met) {
     return o;
 }
 
+//AST node constructors for a specific number of children
+Node astnode(std::string val, Node a, Metadata met) {
+    std::vector<Node> args;
+    args.push_back(a);
+    return astnode(val, args, met);
+}
+
+Node astnode(std::string val, Node a, Node b, Metadata met) {
+    std::vector<Node> args;
+    args.push_back(a);
+    args.push_back(b);
+    return astnode(val, args, met);
+}
+
+Node astnode(std::string val, Node a, Node b, Node c, Metadata met) {
+    std::vector<Node> args;
+    args.push_back(a);
+    args.push_back(b);
+    args.push_back(c);
+    return astnode(val, args, met);
+}
+
 // Print token list
 std::string printTokens(std::vector<Node> tokens) {
     std::string s = "";
@@ -137,7 +159,7 @@ std::string strToNumeric(std::string inp) {
     }
     else if (inp.substr(0,2) == "0x") {
 		for (unsigned i = 2; i < inp.length(); i++) {
-            int dig = std::string("0123456789abcdef").find(inp[i]);
+            int dig = std::string("0123456789abcdef0123456789ABCDEF").find(inp[i]) % 16;
             if (dig < 0) return "";
             o = decimalAdd(decimalMul(o,"16"), unsignedToDecimal(dig));
         }

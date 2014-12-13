@@ -1,3 +1,5 @@
+eth = web3.eth;
+
 env.note('Creating Config...')
 var configCode = eth.lll("
 {
@@ -52,6 +54,14 @@ eth.transact({ 'code': nameRegCode }, function(a) { nameReg = a; });
 
 env.note('Register NameReg...')
 eth.transact({ 'to': config, 'data': ['0', nameReg] });
+
+var nameRegJeff;
+
+env.note('Create NameRegJeff...')
+eth.transact({ 'code': nameRegCode }, function(a) { nameRegJeff = a; });
+
+env.note('Register NameRegJeff...')
+eth.transact({ 'to': config, 'data': ['4', nameReg] });
 
 var dnsRegCode = '0x60006000546000600053602001546000600053604001546020604060206020600073661005d2720d855f1d9976f88bb10c1a3398c77f6103e8f17f7265676973746572000000000000000000000000000000000000000000000000600053606001600060200201547f446e735265670000000000000000000000000000000000000000000000000000600053606001600160200201546000600060006000604060606000600053604001536103e8f1327f6f776e65720000000000000000000000000000000000000000000000000000005761011663000000e46000396101166000f20060006000547f72656769737465720000000000000000000000000000000000000000000000006000602002350e0f630000006d596000600160200235560e0f630000006c59600032560e0f0f6300000057596000325657600260200235600160200235576001602002353257007f64657265676973746572000000000000000000000000000000000000000000006000602002350e0f63000000b95960016020023532560e0f63000000b959600032576000600160200235577f6b696c6c000000000000000000000000000000000000000000000000000000006000602002350e0f630000011559327f6f776e6572000000000000000000000000000000000000000000000000000000560e0f63000001155932ff00';
 
@@ -277,25 +287,25 @@ eth.transact({ 'to': config, 'data': ['3', exchange] });
 
 
 env.note('Register my name...')
-eth.transact({ 'to': nameReg, 'data': [ eth.fromAscii('register'), eth.fromAscii('Gav') ] });
+eth.transact({ 'to': nameReg, 'data': [ web3.fromAscii('register'), web3.fromAscii('Gav') ] });
 
 env.note('Dole out ETH to other address...')
-eth.transact({ 'value': '100000000000000000000', 'to': eth.secretToAddress(eth.keys[1]) });
+eth.transact({ 'value': '100000000000000000000', 'to': eth.accounts[1] });
 
 env.note('Register my other name...')
-eth.transact({ 'from': eth.keys[1], 'to': nameReg, 'data': [ eth.fromAscii('register'), eth.fromAscii("Gav Would") ] });
+eth.transact({ 'from': eth.keys[1], 'to': nameReg, 'data': [ web3.fromAscii('register'), web3.fromAscii("Gav Would") ] });
 
 env.note('Approve Exchange...')
-eth.transact({ 'to': gavCoin, 'data': [ eth.fromAscii('approve'), exchange ] });
+eth.transact({ 'to': gavCoin, 'data': [ web3.fromAscii('approve'), exchange ] });
 
 env.note('Approve Exchange on other address...')
-eth.transact({ 'from': eth.keys[1], 'to': gavCoin, 'data': [ eth.fromAscii('approve'), exchange ] });
+eth.transact({ 'from': eth.keys[1], 'to': gavCoin, 'data': [ web3.fromAscii('approve'), exchange ] });
 
 env.note('Make offer 5000GAV/5ETH...')
-eth.transact({ 'to': exchange, 'data': [eth.fromAscii('new'), gavCoin, '5000', '0', '5000000000000000000'] });
+eth.transact({ 'to': exchange, 'data': [web3.fromAscii('new'), gavCoin, '5000', '0', '5000000000000000000'] });
 
 env.note('Register gav.eth...')
-eth.transact({ 'to': dnsReg, 'data': [eth.fromAscii('register'), eth.fromAscii('gav'), eth.fromAscii('opensecrecy.com')] });
+eth.transact({ 'to': dnsReg, 'data': [web3.fromAscii('register'), web3.fromAscii('gav'), web3.fromAscii('opensecrecy.com')] });
 
 env.note('All done.')
 

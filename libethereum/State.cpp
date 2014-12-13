@@ -25,9 +25,9 @@
 #include <time.h>
 #include <random>
 #include <secp256k1/secp256k1.h>
-#include <libevmface/Instruction.h>
+#include <libdevcore/CommonIO.h>
+#include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Dagger.h>
 #include <libevm/VM.h>
 #include "BlockChain.h"
 #include "Defaults.h"
@@ -39,6 +39,53 @@ using namespace dev::eth;
 #define ctrace clog(StateTrace)
 
 static const u256 c_blockReward = 1500 * finney;
+
+void ecrecoverCode(bytesConstRef _in, bytesRef _out)
+{
+	struct inType
+	{
+		h256 hash;
+		h256 v;
+		h256 r;
+		h256 s;
+	} in;
+
+	h256 ret;
+
+	memcpy(&in, _in.data(), min(_in.size(), sizeof(in)));
+
+	byte pubkey[65];
+	int pubkeylen = 65;
+	secp256k1_start();
+	if (secp256k1_ecdsa_recover_compact(in.hash.data(), 32, in.r.data(), pubkey, &pubkeylen, 0, (int)(u256)in.v - 27))
+		ret = dev::sha3(bytesConstRef(&(pubkey[1]), 64));
+
+	memset(ret.data(), 0, 12);
+	memcpy(_out.data(), &ret, min(_out.size(), sizeof(ret)));
+}
+
+void sha256Code(bytesConstRef _in, bytesRef _out)
+{
+	h256 ret;
+	sha256(_in, bytesRef(ret.data(), 32));
+	memcpy(_out.data(), &ret, min(_out.size(), sizeof(ret)));
+}
+
+void ripemd160Code(bytesConstRef _in, bytesRef _out)
+{
+	h256 ret;
+	ripemd160(_in, bytesRef(ret.data(), 32));
+	memset(_out.data(), 0, std::min<int>(12, _out.size()));
+	if (_out.size() > 12)
+		memcpy(_out.data() + 12, &ret, min(_out.size() - 12, sizeof(ret)));
+}
+
+const std::map<unsigned, PrecompiledAddress> State::c_precompiled =
+{
+	{ 1, { 500, ecrecoverCode }},
+	{ 2, { 100, sha256Code }},
+	{ 3, { 100, ripemd160Code }}
+};
 
 OverlayDB State::openDB(std::string _path, bool _killExisting)
 {
@@ -54,7 +101,7 @@ OverlayDB State::openDB(std::string _path, bool _killExisting)
 	ldb::DB* db = nullptr;
 	ldb::DB::Open(o, _path + "/state", &db);
 	if (!db)
-		throw DatabaseAlreadyOpen();
+		BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
 
 	cnote << "Opened state DB.";
 	return OverlayDB(db);
@@ -115,6 +162,7 @@ State::State(State const& _s):
 	m_db(_s.m_db),
 	m_state(&m_db, _s.m_state.root()),
 	m_transactions(_s.m_transactions),
+	m_receipts(_s.m_receipts),
 	m_transactionSet(_s.m_transactionSet),
 	m_cache(_s.m_cache),
 	m_previousBlock(_s.m_previousBlock),
@@ -133,7 +181,7 @@ void State::paranoia(std::string const& _when, bool _enforceRefs) const
 	if (!isTrieGood(_enforceRefs, false))
 	{
 		cwarn << "BAD TRIE" << _when;
-		throw InvalidTrie();
+		BOOST_THROW_EXCEPTION(InvalidTrie());
 	}
 #else
 	(void)_when;
@@ -146,6 +194,7 @@ State& State::operator=(State const& _s)
 	m_db = _s.m_db;
 	m_state.open(&m_db, _s.m_state.root());
 	m_transactions = _s.m_transactions;
+	m_receipts = _s.m_receipts;
 	m_transactionSet = _s.m_transactionSet;
 	m_cache = _s.m_cache;
 	m_previousBlock = _s.m_previousBlock;
@@ -161,9 +210,22 @@ State::~State()
 {
 }
 
+Address State::nextActiveAddress(Address _a) const
+{
+	auto it = m_state.lower_bound(_a);
+	if ((*it).first == _a)
+		++it;
+	if (it == m_state.end())
+		// exchange comments if we want to wraparound
+//		it = m_state.begin();
+		return Address();
+	return (*it).first;
+}
+
+// TODO: repot
 struct CachedAddressState
 {
-	CachedAddressState(std::string const& _rlp, AddressState const* _s, OverlayDB const* _o): rS(_rlp), r(rS), s(_s), o(_o) {}
+	CachedAddressState(std::string const& _rlp, Account const* _s, OverlayDB const* _o): rS(_rlp), r(rS), s(_s), o(_o) {}
 
 	bool exists() const
 	{
@@ -198,7 +260,7 @@ struct CachedAddressState
 				ret[j.first] = RLP(j.second).toInt<u256>();
 		}
 		if (s)
-			for (auto const& j: s->storage())
+			for (auto const& j: s->storageOverlay())
 				if ((!ret.count(j.first) && j.second) || (ret.count(j.first) && ret.at(j.first) != j.second))
 					ret[j.first] = j.second;
 		return ret;
@@ -239,7 +301,7 @@ struct CachedAddressState
 
 	std::string rS;
 	RLP r;
-	AddressState const* s;
+	Account const* s;
 	OverlayDB const* o;
 };
 
@@ -263,6 +325,9 @@ StateDiff State::diff(State const& _c) const
 	for (auto i: _c.m_cache)
 		ads.insert(i.first);
 
+	cnote << *this;
+	cnote << _c;
+
 	for (auto i: ads)
 	{
 		auto it = m_cache.find(i);
@@ -282,7 +347,7 @@ void State::ensureCached(Address _a, bool _requireCode, bool _forceCreate) const
 	ensureCached(m_cache, _a, _requireCode, _forceCreate);
 }
 
-void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bool _requireCode, bool _forceCreate) const
+void State::ensureCached(std::map<Address, Account>& _cache, Address _a, bool _requireCode, bool _forceCreate) const
 {
 	auto it = _cache.find(_a);
 	if (it == _cache.end())
@@ -292,11 +357,11 @@ void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bo
 		if (stateBack.empty() && !_forceCreate)
 			return;
 		RLP state(stateBack);
-		AddressState s;
+		Account s;
 		if (state.isNull())
-			s = AddressState(0, 0, h256(), EmptySHA3);
+			s = Account(0, Account::NormalCreation);
 		else
-			s = AddressState(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].isEmpty() ? EmptySHA3 : state[3].toHash<h256>());
+			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>());
 		bool ok;
 		tie(it, ok) = _cache.insert(make_pair(_a, s));
 	}
@@ -334,7 +399,7 @@ bool State::sync(BlockChain const& _bc, h256 _block, BlockInfo const& _bi)
 			{
 				// TODO: Slightly nicer handling? :-)
 				cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-				cerr << _e.description() << endl;
+				cerr << diagnostic_information(_e) << endl;
 			}
 			catch (std::exception const& _e)
 			{
@@ -386,6 +451,7 @@ bool State::sync(BlockChain const& _bc, h256 _block, BlockInfo const& _bi)
 		{
 			// TODO: Slightly nicer handling? :-)
 			cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
+			cerr << boost::current_exception_diagnostic_information() << endl;
 			exit(1);
 		}
 
@@ -424,6 +490,7 @@ map<Address, u256> State::addresses() const
 void State::resetCurrent()
 {
 	m_transactions.clear();
+	m_receipts.clear();
 	m_transactionSet.clear();
 	m_cache.clear();
 	m_currentBlock = BlockInfo();
@@ -454,7 +521,7 @@ bool State::cull(TransactionQueue& _tq) const
 			try
 			{
 				Transaction t(i.second);
-				if (t.nonce <= transactionsFrom(t.sender()))
+				if (t.nonce() <= transactionsFrom(t.sender()))
 				{
 					_tq.drop(i.first);
 					ret = true;
@@ -487,7 +554,7 @@ h256s State::sync(TransactionQueue& _tq, bool* o_transactionQueueChanged)
 				{
 					uncommitToMine();
 					execute(i.second);
-					ret.push_back(m_transactions.back().changes.bloom());
+					ret.push_back(m_receipts.back().changes().bloom());
 					_tq.noteGood(i);
 					++goodTxs;
 				}
@@ -502,6 +569,14 @@ h256s State::sync(TransactionQueue& _tq, bool* o_transactionQueueChanged)
 					}
 					else
 						_tq.setFuture(i);
+				}
+				catch (Exception const& _e)
+				{
+					// Something else went wrong - drop it.
+					_tq.drop(i.first);
+					if (o_transactionQueueChanged)
+						*o_transactionQueueChanged = true;
+					cwarn << "Sync went wrong\n" << diagnostic_information(_e);
 				}
 				catch (std::exception const&)
 				{
@@ -520,14 +595,14 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 	// m_currentBlock is assumed to be prepopulated and reset.
 
 #if !ETH_RELEASE
-	BlockInfo bi(_block);
+	BlockInfo bi(_block, _checkNonce);
 	assert(m_previousBlock.hash == bi.parentHash);
 	assert(m_currentBlock.parentHash == bi.parentHash);
 	assert(rootHash() == m_previousBlock.stateRoot);
 #endif
 
 	if (m_currentBlock.parentHash != m_previousBlock.hash)
-		throw InvalidParentHash();
+		BOOST_THROW_EXCEPTION(InvalidParentHash());
 
 	// Populate m_currentBlock with the correct values.
 	m_currentBlock.populate(_block, _checkNonce);
@@ -537,35 +612,54 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 //	cnote << m_state;
 
 	MemoryDB tm;
-	GenericTrieDB<MemoryDB> transactionManifest(&tm);
-	transactionManifest.init();
+	GenericTrieDB<MemoryDB> transactionsTrie(&tm);
+	transactionsTrie.init();
+
+	MemoryDB rm;
+	GenericTrieDB<MemoryDB> receiptsTrie(&rm);
+	receiptsTrie.init();
 
 	// All ok with the block generally. Play back the transactions now...
 	unsigned i = 0;
 	for (auto const& tr: RLP(_block)[1])
 	{
+		RLPStream k;
+		k << i;
+
+		transactionsTrie.insert(&k.out(), tr.data());
+
 //		cnote << m_state.root() << m_state;
 //		cnote << *this;
-		execute(tr[0].data());
+		execute(tr.data());
+
+		RLPStream receiptrlp;
+		m_receipts.back().streamRLP(receiptrlp);
+		receiptsTrie.insert(&k.out(), &receiptrlp.out());
+/*
 		if (tr[1].toHash<h256>() != m_state.root())
 		{
 			// Invalid state root
 			cnote << m_state.root() << "\n" << m_state;
 			cnote << *this;
 			cnote << "INVALID: " << tr[1].toHash<h256>();
-			throw InvalidTransactionStateRoot();
+			BOOST_THROW_EXCEPTION(InvalidTransactionStateRoot());
 		}
 		if (tr[2].toInt<u256>() != gasUsed())
-			throw InvalidTransactionGasUsed();
-		bytes k = rlp(i);
-		transactionManifest.insert(&k, tr.data());
+			BOOST_THROW_EXCEPTION(InvalidTransactionGasUsed());
+*/
 		++i;
 	}
 
-	if (m_currentBlock.transactionsRoot && transactionManifest.root() != m_currentBlock.transactionsRoot)
+	if (transactionsTrie.root() != m_currentBlock.transactionsRoot)
 	{
 		cwarn << "Bad transactions state root!";
-		throw InvalidTransactionStateRoot();
+		BOOST_THROW_EXCEPTION(InvalidTransactionsStateRoot());
+	}
+
+	if (receiptsTrie.root() != m_currentBlock.receiptsRoot)
+	{
+		cwarn << "Bad receipts state root!";
+		BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());
 	}
 
 	// Initialise total difficulty calculation.
@@ -578,16 +672,16 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 	for (auto const& i: RLP(_block)[2])
 	{
 		if (knownUncles.count(sha3(i.data())))
-			throw UncleInChain(knownUncles, sha3(i.data()));
+			BOOST_THROW_EXCEPTION(UncleInChain(knownUncles, sha3(i.data()) ));
 
 		BlockInfo uncle = BlockInfo::fromHeader(i.data());
 		if (nonces.count(uncle.nonce))
-			throw DuplicateUncleNonce();
+			BOOST_THROW_EXCEPTION(DuplicateUncleNonce());
 		if (_bc)
 		{
 			BlockInfo uncleParent(_bc->block(uncle.parentHash));
 			if ((bigint)uncleParent.number < (bigint)m_currentBlock.number - 6)
-				throw UncleTooOld();
+				BOOST_THROW_EXCEPTION(UncleTooOld());
 			uncle.verifyParent(uncleParent);
 		}
 
@@ -611,7 +705,7 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 		cnote << *this;
 		// Rollback the trie.
 		m_db.rollback();
-		throw InvalidStateRoot();
+		BOOST_THROW_EXCEPTION(InvalidStateRoot());
 	}
 
 	return tdIncrease;
@@ -630,9 +724,7 @@ void State::cleanup(bool _fullCommit)
 		m_previousBlock = m_currentBlock;
 	}
 	else
-	{
 		m_db.rollback();
-	}
 
 	resetCurrent();
 }
@@ -645,7 +737,7 @@ void State::uncommitToMine()
 		if (!m_transactions.size())
 			m_state.setRoot(m_previousBlock.stateRoot);
 		else
-			m_state.setRoot(m_transactions[m_transactions.size() - 1].stateRoot);
+			m_state.setRoot(m_receipts[m_receipts.size() - 1].stateRoot());
 		m_db = m_lastTx;
 		paranoia("Uncommited to mine", true);
 		m_currentBlock.sha3Uncles = h256();
@@ -662,7 +754,7 @@ bool State::amIJustParanoid(BlockChain const& _bc)
 	// Compile block:
 	RLPStream block;
 	block.appendList(3);
-	m_currentBlock.fillStream(block, true);
+	m_currentBlock.streamRLP(block, true);
 	block.appendRaw(m_currentTxs);
 	block.appendRaw(m_currentUncles);
 
@@ -677,23 +769,33 @@ bool State::amIJustParanoid(BlockChain const& _bc)
 		s.cleanup(false);
 		return true;
 	}
-	catch (Exception const& e)
+	catch (Exception const& _e)
 	{
-		cwarn << "Bad block: " << e.description();
+		cwarn << "Bad block: " << diagnostic_information(_e);
 	}
-	catch (std::exception const& e)
+	catch (std::exception const& _e)
 	{
-		cwarn << "Bad block: " << e.what();
+		cwarn << "Bad block: " << _e.what();
 	}
 
 	return false;
 }
 
-h256 State::bloom() const
+h256 State::oldBloom() const
 {
 	h256 ret = m_currentBlock.coinbaseAddress.bloom();
-	for (auto const& i: m_transactions)
-		ret |= i.changes.bloom();
+	for (auto const& i: m_receipts)
+		ret |= i.changes().bloom();
+	return ret;
+}
+
+LogBloom State::logBloom() const
+{
+	LogBloom ret;
+	auto sa = sha3(m_currentBlock.coinbaseAddress.ref());
+	ret.shiftBloom<3>(sa);
+	for (TransactionReceipt const& i: m_receipts)
+		ret |= i.bloom();
 	return ret;
 }
 
@@ -729,7 +831,7 @@ void State::commitToMine(BlockChain const& _bc)
 				if (!knownUncles.count(u))	// ignore any uncles/mainline blocks that we know about.
 				{
 					BlockInfo ubi(_bc.block(u));
-					ubi.fillStream(unclesData, true);
+					ubi.streamRLP(unclesData, true);
 					++unclesCount;
 					uncleAddresses.push_back(ubi.coinbaseAddress);
 				}
@@ -737,8 +839,12 @@ void State::commitToMine(BlockChain const& _bc)
 	}
 
 	MemoryDB tm;
-	GenericTrieDB<MemoryDB> transactionReceipts(&tm);
-	transactionReceipts.init();
+	GenericTrieDB<MemoryDB> transactionsTrie(&tm);
+	transactionsTrie.init();
+
+	MemoryDB rm;
+	GenericTrieDB<MemoryDB> receiptsTrie(&rm);
+	receiptsTrie.init();
 
 	RLPStream txs;
 	txs.appendList(m_transactions.size());
@@ -747,17 +853,25 @@ void State::commitToMine(BlockChain const& _bc)
 	{
 		RLPStream k;
 		k << i;
-		RLPStream v;
-		m_transactions[i].fillStream(v);
-		transactionReceipts.insert(&k.out(), &v.out());
-		txs.appendRaw(v.out());
+
+		RLPStream receiptrlp;
+		m_receipts[i].streamRLP(receiptrlp);
+		receiptsTrie.insert(&k.out(), &receiptrlp.out());
+
+		RLPStream txrlp;
+		m_transactions[i].streamRLP(txrlp);
+		transactionsTrie.insert(&k.out(), &txrlp.out());
+
+		txs.appendRaw(txrlp.out());
 	}
 
 	txs.swapOut(m_currentTxs);
 
 	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
 
-	m_currentBlock.transactionsRoot = transactionReceipts.root();
+	m_currentBlock.transactionsRoot = transactionsTrie.root();
+	m_currentBlock.receiptsRoot = receiptsTrie.root();
+	m_currentBlock.logBloom = logBloom();
 	m_currentBlock.sha3Uncles = sha3(m_currentUncles);
 
 	// Apply rewards last of all.
@@ -781,10 +895,14 @@ MineInfo State::mine(unsigned _msTimeout, bool _turbo)
 	m_currentBlock.difficulty = m_currentBlock.calculateDifficulty(m_previousBlock);
 
 	// TODO: Miner class that keeps dagger between mine calls (or just non-polling mining).
-	auto ret = m_dagger.mine(/*out*/m_currentBlock.nonce, m_currentBlock.headerHashWithoutNonce(), m_currentBlock.difficulty, _msTimeout, true, _turbo);
+	auto ret = m_pow.mine(/*out*/m_currentBlock.nonce, m_currentBlock.headerHashWithoutNonce(), m_currentBlock.difficulty, _msTimeout, true, _turbo);
 
 	if (!ret.completed)
 		m_currentBytes.clear();
+	else
+	{
+		cnote << "Completed" << m_currentBlock.headerHashWithoutNonce().abridged() << m_currentBlock.nonce.abridged() << m_currentBlock.difficulty << ProofOfWork::verify(m_currentBlock.headerHashWithoutNonce(), m_currentBlock.nonce, m_currentBlock.difficulty);
+	}
 
 	return ret;
 }
@@ -797,7 +915,7 @@ void State::completeMine()
 	// Compile block:
 	RLPStream ret;
 	ret.appendList(3);
-	m_currentBlock.fillStream(ret, true);
+	m_currentBlock.streamRLP(ret, true);
 	ret.appendRaw(m_currentTxs);
 	ret.appendRaw(m_currentUncles);
 	ret.swapOut(m_currentBytes);
@@ -807,6 +925,7 @@ void State::completeMine()
 	// Quickly reset the transactions.
 	// TODO: Leave this in a better state than this limbo, or at least record that it's in limbo.
 	m_transactions.clear();
+	m_receipts.clear();
 	m_transactionSet.clear();
 	m_lastTx = m_db;
 }
@@ -842,8 +961,12 @@ void State::noteSending(Address _id)
 {
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
-		m_cache[_id] = AddressState(1, 0, h256(), EmptySHA3);
+	if (asserts(it != m_cache.end()))
+	{
+		cwarn << "Sending from non-existant account. How did it pay!?!";
+		// this is impossible. but we'll continue regardless...
+		m_cache[_id] = Account(1, 0);
+	}
 	else
 		it->second.incNonce();
 }
@@ -853,7 +976,7 @@ void State::addBalance(Address _id, u256 _amount)
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
 	if (it == m_cache.end())
-		m_cache[_id] = AddressState(0, _amount, h256(), EmptySHA3);
+		m_cache[_id] = Account(_amount, Account::NormalCreation);
 	else
 		it->second.addBalance(_amount);
 }
@@ -863,7 +986,7 @@ void State::subBalance(Address _id, bigint _amount)
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
 	if (it == m_cache.end() || (bigint)it->second.balance() < _amount)
-		throw NotEnoughCash();
+		BOOST_THROW_EXCEPTION(NotEnoughCash());
 	else
 		it->second.addBalance(-_amount);
 }
@@ -888,8 +1011,8 @@ u256 State::storage(Address _id, u256 _memory) const
 		return 0;
 
 	// See if it's in the account's storage cache.
-	auto mit = it->second.storage().find(_memory);
-	if (mit != it->second.storage().end())
+	auto mit = it->second.storageOverlay().find(_memory);
+	if (mit != it->second.storageOverlay().end())
 		return mit->second;
 
 	// Not in the storage cache - go to the DB.
@@ -917,7 +1040,7 @@ map<u256, u256> State::storage(Address _id) const
 		}
 
 		// Then merge cached storage over the top.
-		for (auto const& i: it->second.storage())
+		for (auto const& i: it->second.storageOverlay())
 			if (i.second)
 				ret[i.first] = i.second;
 			else
@@ -934,7 +1057,7 @@ h256 State::storageRoot(Address _id) const
 		RLP r(s);
 		return r[2].toHash<h256>();
 	}
-	return h256();
+	return EmptyTrie;
 }
 
 bytes const& State::code(Address _contract) const
@@ -966,7 +1089,7 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 				RLP r(i.second);
 				TrieDB<h256, OverlayDB> storageDB(const_cast<OverlayDB*>(&m_db), r[2].toHash<h256>());	// promise not to alter OverlayDB.
 				for (auto const& j: storageDB) { (void)j; }
-				if (!e && r[3].toHash<h256>() && m_db.lookup(r[3].toHash<h256>()).empty())
+				if (!e && r[3].toHash<h256>() != EmptySHA3 && m_db.lookup(r[3].toHash<h256>()).empty())
 					return false;
 			}
 		}
@@ -1004,10 +1127,10 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 
 #if ETH_PARANOIA
 	ctrace << "Executing" << e.t() << "on" << h;
-	ctrace << toHex(e.t().rlp(true));
+	ctrace << toHex(e.t().rlp());
 #endif
 
-	e.go();
+	e.go(e.simpleTrace());
 	e.finalize();
 
 #if ETH_PARANOIA
@@ -1032,13 +1155,13 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 
 	paranoia("after execution commit.", true);
 
-	if (e.t().receiveAddress)
+	if (e.t().receiveAddress())
 	{
 		EnforceRefs r(m_db, true);
-		if (storageRoot(e.t().receiveAddress) && m_db.lookup(storageRoot(e.t().receiveAddress)).empty())
+		if (storageRoot(e.t().receiveAddress()) && m_db.lookup(storageRoot(e.t().receiveAddress())).empty())
 		{
 			cwarn << "TRIE immediately after execution; no node for receiveAddress";
-			throw InvalidTrie();
+			BOOST_THROW_EXCEPTION(InvalidTrie());
 		}
 	}
 #endif
@@ -1046,12 +1169,13 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 	// TODO: CHECK TRIE after level DB flush to make sure exactly the same.
 
 	// Add to the user-originated transactions that we've executed.
-	m_transactions.push_back(TransactionReceipt(e.t(), rootHash(), startGasUsed + e.gasUsed(), ms));
+	m_transactions.push_back(e.t());
+	m_receipts.push_back(TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs(), ms));
 	m_transactionSet.insert(e.t().sha3());
 	return e.gasUsed();
 }
 
-bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256* _gas, bytesRef _out, Address _originAddress, std::set<Address>* o_suicides, PostList* o_posts, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
+bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256* _gas, bytesRef _out, Address _originAddress, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
 	if (!_originAddress)
 		_originAddress = _senderAddress;
@@ -1067,7 +1191,19 @@ bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderA
 		o_ms->input = _data.toBytes();
 	}
 
-	if (addressHasCode(_codeAddress))
+	auto it = !(_codeAddress & ~h160(0xffffffff)) ? c_precompiled.find((unsigned)(u160)_codeAddress) : c_precompiled.end();
+	if (it != c_precompiled.end())
+	{
+		if (*_gas < it->second.gas)
+		{
+			*_gas = 0;
+			return false;
+		}
+
+		*_gas -= it->second.gas;
+		it->second.exec(_data, _out);
+	}
+	else if (addressHasCode(_codeAddress))
 	{
 		VM vm(*_gas);
 		ExtVM evm(*this, _receiveAddress, _senderAddress, _originAddress, _value, _gasPrice, _data, &code(_codeAddress), o_ms, _level);
@@ -1077,45 +1213,45 @@ bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderA
 		{
 			auto out = vm.go(evm, _onOp);
 			memcpy(_out.data(), out.data(), std::min(out.size(), _out.size()));
-			if (o_suicides)
-				for (auto i: evm.suicides)
-					o_suicides->insert(i);
-			if (o_posts)
-				for (auto i: evm.posts)
-					o_posts->push_back(i);
+			if (o_sub)
+				*o_sub += evm.sub;
 			if (o_ms)
 				o_ms->output = out.toBytes();
-		}
-		catch (OutOfGas const& /*_e*/)
-		{
-			clog(StateChat) << "Out of Gas! Reverting.";
-			revert = true;
+			*_gas = vm.gas();
 		}
 		catch (VMException const& _e)
 		{
-			clog(StateChat) << "VM Exception: " << _e.description();
+			clog(StateChat) << "Safe VM Exception: " << diagnostic_information(_e);
+			revert = true;
+			*_gas = 0;
 		}
 		catch (Exception const& _e)
 		{
-			clog(StateChat) << "Exception in VM: " << _e.description();
+			cwarn << "Unexpected exception in VM: " << diagnostic_information(_e) << ". This is exceptionally bad.";
+			// TODO: use fallback known-safe VM.
 		}
 		catch (std::exception const& _e)
 		{
-			clog(StateChat) << "std::exception in VM: " << _e.what();
+			cwarn << "Unexpected exception in VM: " << _e.what() << ". This is exceptionally bad.";
+			// TODO: use fallback known-safe VM.
 		}
 
 		// Write state out only in the case of a non-excepted transaction.
 		if (revert)
 			evm.revert();
 
-		*_gas = vm.gas();
-
 		return !revert;
+	}
+	else
+	{
+		// non-contract call
+		if (o_sub)
+			o_sub->logs.push_back(LogEntry(_receiveAddress, {u256((u160)_senderAddress) + 1}, bytes()));
 	}
 	return true;
 }
 
-h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, std::set<Address>* o_suicides, PostList* o_posts, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
+h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, SubState* o_sub, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
 	if (!_origin)
 		_origin = _sender;
@@ -1129,11 +1265,9 @@ h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas,
 	}
 
 	Address newAddress = right160(sha3(rlpList(_sender, transactionsFrom(_sender) - 1)));
-	while (addressInUse(newAddress))
-		newAddress = (u160)newAddress + 1;
 
 	// Set up new account...
-	m_cache[newAddress] = AddressState(0, balance(newAddress) + _endowment, h256(), h256());
+	m_cache[newAddress] = Account(balance(newAddress) + _endowment, Account::ContractConception);
 
 	// Execute init code.
 	VM vm(*_gas);
@@ -1146,42 +1280,40 @@ h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas,
 		out = vm.go(evm, _onOp);
 		if (o_ms)
 			o_ms->output = out.toBytes();
-		if (o_suicides)
-			for (auto i: evm.suicides)
-				o_suicides->insert(i);
-		if (o_posts)
-			for (auto i: evm.posts)
-				o_posts->push_back(i);
-	}
-	catch (OutOfGas const& /*_e*/)
-	{
-		clog(StateChat) << "Out of Gas! Reverting.";
-		revert = true;
+		if (o_sub)
+			*o_sub += evm.sub;
+		*_gas = vm.gas();
 	}
 	catch (VMException const& _e)
 	{
-		clog(StateChat) << "VM Exception: " << _e.description();
+		clog(StateChat) << "Safe VM Exception: " << diagnostic_information(_e);
+		revert = true;
+		*_gas = 0;
 	}
 	catch (Exception const& _e)
 	{
-		clog(StateChat) << "Exception in VM: " << _e.description();
+		// TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
+		cwarn << "Unexpected exception in VM. There may be a bug in this implementation. " << diagnostic_information(_e);
 	}
 	catch (std::exception const& _e)
 	{
-		clog(StateChat) << "std::exception in VM: " << _e.what();
+		// TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
+		cwarn << "Unexpected std::exception in VM. This is probably unrecoverable. " << _e.what();
 	}
 
-	// TODO: CHECK: IS THIS CORRECT?! (esp. given account created prior to revertion init.)
+	// TODO: CHECK: AUDIT: IS THIS CORRECT?! (esp. given account created prior to revertion init.)
 
 	// Write state out only in the case of a non-out-of-gas transaction.
 	if (revert)
+	{
 		evm.revert();
-
-	// Set code.
-	if (addressInUse(newAddress))
-		m_cache[newAddress].setCode(out);
-
-	*_gas = vm.gas();
+		m_cache.erase(newAddress);
+		newAddress = Address();
+	}
+	else
+		// Set code.
+		if (addressInUse(newAddress))
+			m_cache[newAddress].setCode(out);
 
 	return newAddress;
 }
@@ -1194,11 +1326,12 @@ State State::fromPending(unsigned _i) const
 	if (!_i)
 		ret.m_state.setRoot(m_previousBlock.stateRoot);
 	else
-		ret.m_state.setRoot(m_transactions[_i - 1].stateRoot);
+		ret.m_state.setRoot(m_receipts[_i - 1].stateRoot());
 	while (ret.m_transactions.size() > _i)
 	{
-		ret.m_transactionSet.erase(ret.m_transactions.back().transaction.sha3());
+		ret.m_transactionSet.erase(ret.m_transactions.back().sha3());
 		ret.m_transactions.pop_back();
+		ret.m_receipts.pop_back();
 	}
 	return ret;
 }
@@ -1228,9 +1361,9 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 	for (auto i: d)
 	{
 		auto it = _s.m_cache.find(i);
-		AddressState* cache = it != _s.m_cache.end() ? &it->second : nullptr;
-		auto rlpString = trie.at(i);
-		RLP r(dtr.count(i) ? rlpString : "");
+		Account* cache = it != _s.m_cache.end() ? &it->second : nullptr;
+		string rlpString = dtr.count(i) ? trie.at(i) : "";
+		RLP r(rlpString);
 		assert(cache || r);
 
 		if (cache && !cache->isAlive())
@@ -1243,7 +1376,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 
 			stringstream contout;
 
-			if ((!cache || cache->codeBearing()) && (!r || r[3].toHash<h256>() != EmptySHA3))
+			if ((cache && cache->codeBearing()) || (!cache && r && (h256)r[3] != EmptySHA3))
 			{
 				std::map<u256, u256> mem;
 				std::set<u256> back;
@@ -1256,7 +1389,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 						mem[j.first] = RLP(j.second).toInt<u256>(), back.insert(j.first);
 				}
 				if (cache)
-					for (auto const& j: cache->storage())
+					for (auto const& j: cache->storageOverlay())
 					{
 						if ((!mem.count(j.first) && j.second) || (mem.count(j.first) && mem.at(j.first) != j.second))
 							mem[j.first] = j.second, delta.insert(j.first);
@@ -1272,7 +1405,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 				else
 					contout << r[2].toHash<h256>();
 				if (cache && cache->isFreshCode())
-					contout << " $" << cache->code();
+					contout << " $" << toHex(cache->code());
 				else
 					contout << " $" << (cache ? cache->codeHash() : r[3].toHash<h256>());
 
