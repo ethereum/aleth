@@ -22,6 +22,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <boost/exception/all.hpp>
 #include <libdevcore/Exceptions.h>
 #include <libethcore/CommonEth.h>
 #include <libevmcore/Instruction.h>
@@ -35,6 +36,17 @@ namespace dev
 namespace eth
 {
 
+<<<<<<< HEAD
+=======
+struct VMException: virtual Exception {};
+struct StepsDone: virtual VMException {};
+struct BreakPointHit: virtual VMException {};
+struct BadInstruction: virtual VMException {};
+struct BadJumpDestination: virtual VMException {};
+struct OutOfGas: virtual VMException {};
+struct StackTooSmall: virtual VMException {};
+
+>>>>>>> origin
 // Convert from a 256-bit integer stack/memory entry into a 160-bit Address hash.
 // Currently we just pull out the right (low-order in BE) 160-bits.
 inline Address asAddress(u256 _item)
@@ -56,7 +68,11 @@ public:
 
 	virtual bytesConstRef go(ExtVMFace& _ext, OnOpFunc const& _onOp = {}, uint64_t _steps = (uint64_t)-1) override final;
 
+<<<<<<< HEAD
 	void require(u256 _n) { if (m_stack.size() < _n) { if (m_onFail) m_onFail(); BOOST_THROW_EXCEPTION(StackTooSmall() << RequirementError((bigint)_n, (bigint)m_stack.size())); } }
+=======
+	void require(u256 _n) { if (m_stack.size() < _n) BOOST_THROW_EXCEPTION(StackTooSmall() << RequirementNotMetError(_n, m_stack.size())); }
+>>>>>>> origin
 	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
 
 	u256 curPC() const { return m_curPC; }

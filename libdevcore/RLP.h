@@ -66,10 +66,10 @@ public:
 	RLP() {}
 
 	/// Construct a node of value given in the bytes.
-	explicit RLP(bytesConstRef _d): m_data(_d) {}
+	explicit RLP(bytesConstRef _d) noexcept: m_data(_d) {}
 
 	/// Construct a node of value given in the bytes.
-	explicit RLP(bytes const& _d): m_data(&_d) {}
+	explicit RLP(bytes const& _d) noexcept: m_data(&_d) {}
 
 	/// Construct a node to read RLP data in the bytes given.
 	RLP(byte const* _b, unsigned _s): m_data(bytesConstRef(_b, _s)) {}

@@ -31,10 +31,11 @@ using namespace dev::eth;
 
 u256 dev::eth::c_genesisDifficulty = (u256)1 << 17;
 
-BlockInfo::BlockInfo(): timestamp(Invalid256)
+BlockInfo::BlockInfo() noexcept: timestamp(Invalid256)
 {
 }
 
+<<<<<<< HEAD
 BlockInfo::BlockInfo(bytesConstRef _block, bool _checkNonce)
 {
 	populate(_block, _checkNonce);
@@ -57,6 +58,22 @@ void BlockInfo::setEmpty()
 	extraData.clear();
 	nonce = h256();
 	hash = headerHash(WithNonce);
+=======
+BlockInfo::BlockInfo(bytesConstRef _block) noexcept
+{
+	try
+	{
+		populate(_block);
+	}
+	catch(InvalidBlockFormat const _e)
+	{
+		cerr << "Could not populate block: Invalid block format\n" << boost::diagnostic_information(_e);
+	}
+	catch(...)
+	{
+		cerr << "Could not populate block: \n" << boost::current_exception_diagnostic_information();
+	}
+>>>>>>> origin
 }
 
 BlockInfo BlockInfo::fromHeader(bytesConstRef _block)
@@ -167,7 +184,7 @@ void BlockInfo::verifyInternals(bytesConstRef _block) const
 		BOOST_THROW_EXCEPTION(InvalidUnclesHash());
 }
 
-void BlockInfo::populateFromParent(BlockInfo const& _parent)
+void BlockInfo::populateFromParent(BlockInfo const& _parent) noexcept
 {
 	stateRoot = _parent.stateRoot;
 	parentHash = _parent.hash;
@@ -177,7 +194,7 @@ void BlockInfo::populateFromParent(BlockInfo const& _parent)
 	difficulty = calculateDifficulty(_parent);
 }
 
-u256 BlockInfo::calculateGasLimit(BlockInfo const& _parent) const
+u256 BlockInfo::calculateGasLimit(BlockInfo const& _parent)  const noexcept
 {
 	if (!parentHash)
 		return 1000000;
@@ -185,7 +202,7 @@ u256 BlockInfo::calculateGasLimit(BlockInfo const& _parent) const
 		return max<u256>(125000, (_parent.gasLimit * (1024 - 1) + (_parent.gasUsed * 6 / 5)) / 1024);
 }
 
-u256 BlockInfo::calculateDifficulty(BlockInfo const& _parent) const
+u256 BlockInfo::calculateDifficulty(BlockInfo const& _parent) const noexcept
 {
 	if (!parentHash)
 		return c_genesisDifficulty;

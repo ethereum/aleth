@@ -103,13 +103,13 @@ public:
 	void stop() { stopWorking(); }
 
 	/// Call to notify Miner of a state change.
-	void noteStateChange() { m_miningStatus = Preparing; }
+	void noteStateChange() noexcept { m_miningStatus = Preparing; }
 
 	/// @returns true iff the mining has been start()ed. It may still not be actually mining, depending on the host's turbo() & force().
 	bool isRunning() { return isWorking(); }
 
 	/// @returns true if mining is complete.
-	bool isComplete() const { return m_miningStatus == Mined; }
+	bool isComplete() const noexcept{ return m_miningStatus == Mined; }
 
 	/// @returns the internal State object.
 	bytes const& blockData() { return m_mineState.blockData(); }
