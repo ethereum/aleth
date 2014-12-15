@@ -66,8 +66,8 @@ class VersionChecker
 public:
 	VersionChecker(std::string const& _dbPath);
 
-	void setOk() noexcept;
-	bool ok() const noexcept{ return m_ok; }
+	void setOk();
+	bool ok() const { return m_ok; }
 
 private:
 	bool m_ok;
@@ -90,7 +90,7 @@ static const h256 ChainChangedFilter = u256(1);
 struct ClientWatch
 {
 	ClientWatch() {}
-	explicit ClientWatch(h256 _id) noexcept: id(_id) {}
+	explicit ClientWatch(h256 _id): id(_id) {}
 
 	h256 id;
 	unsigned changes = 1;
@@ -114,26 +114,26 @@ class Client: public MinerHost, public Interface, Worker
 
 public:
 	/// New-style Constructor.
-	explicit Client(p2p::Host* _host, std::string const& _dbPath = std::string(), bool _forceClean = false, u256 _networkId = 0) noexcept;
+	explicit Client(p2p::Host* _host, std::string const& _dbPath = std::string(), bool _forceClean = false, u256 _networkId = 0);
 
 	/// Destructor.
 	virtual ~Client();
 
 	/// Submits the given message-call transaction.
-	virtual void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo) noexcept;
+	virtual void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
 
 	/// Submits a new contract-creation transaction.
 	/// @returns the new contract's address (assuming it all goes through).
-	virtual Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo) noexcept;
+	virtual Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
 
 	/// Injects the RLP-encoded transaction given by the _rlp into the transaction queue directly.
-	virtual void inject(bytesConstRef _rlp) noexcept;
+	virtual void inject(bytesConstRef _rlp);
 
 	/// Blocks until all pending transactions have been processed.
-	virtual void flushTransactions() noexcept;
+	virtual void flushTransactions();
 
 	/// Makes the given call. Nothing is recorded into the state.
-	virtual bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo) noexcept;
+	virtual bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo);
 
 	// Informational stuff
 
@@ -145,13 +145,12 @@ public:
 	using Interface::codeAt;
 	using Interface::storageAt;
 
-	virtual u256 balanceAt(Address _a, int _block) const noexcept;
-	virtual u256 countAt(Address _a, int _block) const noexcept;
-	virtual u256 stateAt(Address _a, u256 _l, int _block) const noexcept;
-	virtual bytes codeAt(Address _a, int _block) const noexcept;
-	virtual std::map<u256, u256> storageAt(Address _a, int _block) const noexcept;
+	virtual u256 balanceAt(Address _a, int _block) const;
+	virtual u256 countAt(Address _a, int _block) const;
+	virtual u256 stateAt(Address _a, u256 _l, int _block) const;
+	virtual bytes codeAt(Address _a, int _block) const;
+	virtual std::map<u256, u256> storageAt(Address _a, int _block) const;
 
-<<<<<<< HEAD
 	virtual unsigned installWatch(LogFilter const& _filter);
 	virtual unsigned installWatch(h256 _filterId);
 	virtual void uninstallWatch(unsigned _watchId);
@@ -160,44 +159,33 @@ public:
 
 	virtual LogEntries logs(unsigned _watchId) const { try { std::lock_guard<std::mutex> l(m_filterLock); return logs(m_filters.at(m_watches.at(_watchId).id).filter); } catch (...) { return LogEntries(); } }
 	virtual LogEntries logs(LogFilter const& _filter) const;
-=======
-	virtual unsigned installWatch(MessageFilter const& _filter) noexcept;
-	virtual unsigned installWatch(h256 _filterId) noexcept;
-	virtual void uninstallWatch(unsigned _watchId) noexcept;
-	// comment to be removed: std::lock_guard<std::mutex> l(m_filterLock) may throw, therefore I shifted the start of the try block
-	virtual bool peekWatch(unsigned _watchId) const noexcept { try { std::lock_guard<std::mutex> l(m_filterLock); return m_watches.at(_watchId).changes != 0; } catch (...) {std::cerr << "Could not peek watch\n" << boost::current_exception_diagnostic_information(); return false; } }
-	virtual bool checkWatch(unsigned _watchId) noexcept {bool ret = false; try {  std::lock_guard<std::mutex> l(m_filterLock);  ret = m_watches.at(_watchId).changes != 0; m_watches.at(_watchId).changes = 0; } catch (...) {std::cerr << "Could not check watch\n" << boost::current_exception_diagnostic_information();} return ret; }
-
-	virtual PastMessages messages(unsigned _watchId) const noexcept { try { std::lock_guard<std::mutex> l(m_filterLock); return messages(m_filters.at(m_watches.at(_watchId).id).filter); } catch (...) { return PastMessages(); } }
-	virtual PastMessages messages(MessageFilter const& _filter) const noexcept;
->>>>>>> origin
 
 	// [EXTRA API]:
 
 	/// @returns the length of the chain.
-	virtual unsigned number() const noexcept{ return m_bc.number(); }
+	virtual unsigned number() const { return m_bc.number(); }
 
 	/// Get a map containing each of the pending transactions.
 	/// @TODO: Remove in favour of transactions().
-	virtual Transactions pending() const noexcept { return m_postMine.pending(); }
+	virtual Transactions pending() const { return m_postMine.pending(); }
 
-	virtual h256 hashFromNumber(unsigned _number) const noexcept { return m_bc.numberHash(_number); }
-	virtual BlockInfo blockInfo(h256 _hash) const noexcept { return BlockInfo(m_bc.block(_hash)); }
-	virtual BlockDetails blockDetails(h256 _hash) const noexcept { return m_bc.details(_hash); }
-	virtual Transaction transaction(h256 _blockHash, unsigned _i) const noexcept;
-	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const noexcept;
+	virtual h256 hashFromNumber(unsigned _number) const { return m_bc.numberHash(_number); }
+	virtual BlockInfo blockInfo(h256 _hash) const { return BlockInfo(m_bc.block(_hash)); }
+	virtual BlockDetails blockDetails(h256 _hash) const { return m_bc.details(_hash); }
+	virtual Transaction transaction(h256 _blockHash, unsigned _i) const;
+	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const;
 
 	/// Differences between transactions.
 	using Interface::diff;
-	virtual StateDiff diff(unsigned _txi, h256 _block) const noexcept;
-	virtual StateDiff diff(unsigned _txi, int _block) const noexcept;
+	virtual StateDiff diff(unsigned _txi, h256 _block) const;
+	virtual StateDiff diff(unsigned _txi, int _block) const;
 
 	/// Get a list of all active addresses.
 	using Interface::addresses;
-	virtual std::vector<Address> addresses(int _block) const noexcept;
+	virtual std::vector<Address> addresses(int _block) const;
 
 	/// Get the remaining gas limit in this block.
-	virtual u256 gasLimitRemaining() const noexcept { return m_postMine.gasLimitRemaining(); }
+	virtual u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }
 
 	// [PRIVATE API - only relevant for base clients, not available in general]
 
@@ -226,26 +214,23 @@ public:
 	void setTurboMining(bool _enable = true) { m_turboMining = _enable; }
 
 	/// Set the coinbase address.
-	virtual void setAddress(Address _us) noexcept { m_preMine.setAddress(_us); }
+	virtual void setAddress(Address _us) { m_preMine.setAddress(_us); }
 	/// Get the coinbase address.
-	virtual Address address() const noexcept { return m_preMine.address(); }
+	virtual Address address() const { return m_preMine.address(); }
 	/// Stops mining and sets the number of mining threads (0 for automatic).
-	virtual void setMiningThreads(unsigned _threads = 0) noexcept;
+	virtual void setMiningThreads(unsigned _threads = 0);
 	/// Get the effective number of mining threads.
-	virtual unsigned miningThreads() const noexcept;
+	virtual unsigned miningThreads() const { ReadGuard l(x_miners); return m_miners.size(); }
 	/// Start mining.
 	/// NOT thread-safe - call it & stopMining only from a single thread
-	virtual void startMining() noexcept;
-
+	virtual void startMining() { startWorking(); ReadGuard l(x_miners); for (auto& m: m_miners) m.start(); }
 	/// Stop mining.
 	/// NOT thread-safe
-	virtual void stopMining() noexcept;
-
+	virtual void stopMining() { ReadGuard l(x_miners); for (auto& m: m_miners) m.stop(); }
 	/// Are we mining now?
-	virtual bool isMining() noexcept;
-
+	virtual bool isMining() { ReadGuard l(x_miners); return m_miners.size() && m_miners[0].isRunning(); }
 	/// Check the progress of the mining.
-	virtual MineProgress miningProgress() const noexcept;
+	virtual MineProgress miningProgress() const;
 	/// Get and clear the mining history.
 	std::list<MineInfo> miningHistory();
 
@@ -262,7 +247,7 @@ public:
 
 private:
 	/// Do some work. Handles blockchain maintenance and mining.
-	virtual void doWork() noexcept;
+	virtual void doWork();
 
 	virtual void doneWorking();
 

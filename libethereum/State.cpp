@@ -43,114 +43,24 @@ using namespace dev::eth;
 
 static const u256 c_blockReward = 1500 * finney;
 
-<<<<<<< HEAD
 OverlayDB State::openDB(std::string _path, bool _killExisting)
-=======
-void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 {
-	struct inType
-	{
-		h256 hash;
-		h256 v;
-		h256 r;
-		h256 s;
-	} in;
+	if (_path.empty())
+		_path = Defaults::get()->m_dbPath;
+	boost::filesystem::create_directory(_path);
 
-	h256 ret;
+	if (_killExisting)
+		boost::filesystem::remove_all(_path + "/state");
 
-	memcpy(&in, _in.data(), min(_in.size(), sizeof(in)));
+	ldb::Options o;
+	o.create_if_missing = true;
+	ldb::DB* db = nullptr;
+	ldb::DB::Open(o, _path + "/state", &db);
+	if (!db)
+		BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
 
-	byte pubkey[65];
-	int pubkeylen = 65;
-	secp256k1_start();
-	if (secp256k1_ecdsa_recover_compact(in.hash.data(), 32, in.r.data(), pubkey, &pubkeylen, 0, (int)(u256)in.v - 27))
-		ret = dev::sha3(bytesConstRef(&(pubkey[1]), 64));
-
-	memcpy(_out.data(), &ret, min(_out.size(), sizeof(ret)));
-}
-
-void sha256Code(bytesConstRef _in, bytesRef _out)
-{
-	h256 ret;
-	sha256(_in, bytesRef(ret.data(), 32));
-	memcpy(_out.data(), &ret, min(_out.size(), sizeof(ret)));
-}
-
-void ripemd160Code(bytesConstRef _in, bytesRef _out)
-{
-	h256 ret;
-	ripemd160(_in, bytesRef(ret.data(), 32));
-	memset(_out.data(), 0, std::min<int>(12, _out.size()));
-	if (_out.size() > 12)
-		memcpy(_out.data() + 12, &ret, min(_out.size() - 12, sizeof(ret)));
-}
-
-const std::map<unsigned, PrecompiledAddress> State::c_precompiled =
-{
-	{ 1, { 500, ecrecoverCode }},
-	{ 2, { 100, sha256Code }},
-	{ 3, { 100, ripemd160Code }}
-};
-void State::setAddress(Address _coinbaseAddress) noexcept
-{
-	m_ourAddress = _coinbaseAddress;
-	try
-	{
-		resetCurrent();
-	}
-	catch(...)
-	{
-		std::cerr << "Could not reset current state. " << boost::current_exception_diagnostic_information();
-		if (m_currentBlock.coinbaseAddress == _coinbaseAddress)
-			return;
-		else
-		{
-			std::cerr << "Could not set coin base address.\n";
-			exit(1); // or continue?
-		}
-	}
-}
-
-OverlayDB State::openDB(std::string _path, bool _killExisting) noexcept
->>>>>>> origin
-{
-	try
-	{
-		try
-		{
-			if (_path.empty())
-				_path = Defaults::get()->m_dbPath;
-			boost::filesystem::create_directory(_path);
-		}
-		catch(Exception)
-		{
-			cerr << "ERROR: Could not create directory: " << _path << "\n Choose a path and make sure permissions are correct and restart." << endl;
-			cerr << boost::current_exception_diagnostic_information() << endl;
-			exit(1);
-		}
-
-		if (_killExisting)
-			boost::filesystem::remove_all(_path + "/state");
-
-		ldb::Options o;
-		o.create_if_missing = true;
-		ldb::DB* db = nullptr;
-		ldb::DB::Open(o, _path + "/state", &db);
-		if (!db)
-			BOOST_THROW_EXCEPTION(DatabaseAlreadyOpen());
-		// could one handle that case by killing the database and recreate it?
-
-		cnote << "Opened state DB.";
-		return OverlayDB(db);
-	}
-
-	catch(...)
-	{
-		// TODO: Slightly nicer handling? :-) or rethrow and catch somewhere else? (its called in the constructor of the client)
-		cerr << "ERROR: Could not open Database at: " << _path << "\n Choose a path and make sure permissions are correct and restart." << endl;
-		cerr << boost::current_exception_diagnostic_information() << endl;
-		exit(1);
-	}
+	cnote << "Opened state DB.";
+	return OverlayDB(db);
 }
 
 State::State(Address _coinbaseAddress, OverlayDB const& _db, BaseState _bs):
@@ -159,30 +69,17 @@ State::State(Address _coinbaseAddress, OverlayDB const& _db, BaseState _bs):
 	m_ourAddress(_coinbaseAddress),
 	m_blockReward(c_blockReward)
 {
-<<<<<<< HEAD
 	// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
 	m_state.init();
-=======
-	try
-	{
-		secp256k1_start();
 
-		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
-		m_state.init();
->>>>>>> origin
+	paranoia("beginning of normal construction.", true);
 
-		paranoia("beginning of normal construction.", true);
-
-<<<<<<< HEAD
 	if (_bs == BaseState::Genesis)
 	{
-=======
->>>>>>> origin
 		dev::eth::commit(genesisState(), m_db, m_state);
 		m_db.commit();
 
 		paranoia("after DB commit of normal construction.", true);
-<<<<<<< HEAD
 		m_previousBlock = BlockChain::genesis();
 	}
 	else
@@ -191,34 +88,17 @@ State::State(Address _coinbaseAddress, OverlayDB const& _db, BaseState _bs):
 	}
 
 	resetCurrent();
-=======
 
-		m_previousBlock = BlockChain::genesis();
-		resetCurrent();
->>>>>>> origin
+	assert(m_state.root() == m_previousBlock.stateRoot);
 
-		if (assertsEqual(m_state.root(), m_previousBlock.stateRoot))
-		{
-			cerr << "State root is not equal to state root of previous block at state construction\n";
-			exit(1);
-		}
-
-		paranoia("end of normal construction.", true);
-	}
-	catch(...)
-	{
-		cerr << "Construction of state failed\n";
-		cerr << boost::current_exception_diagnostic_information() << endl;
-		exit(1);
-	}
+	paranoia("end of normal construction.", true);
 }
 
-State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h) noexcept:
+State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h):
 	m_db(_db),
 	m_state(&m_db),
 	m_blockReward(c_blockReward)
 {
-<<<<<<< HEAD
 	// TODO THINK: is this necessary?
 	m_state.init();
 
@@ -235,44 +115,6 @@ State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h) noexcept:
 
 	sync(_bc, bi.parentHash, bip);
 	enact(&b);
-=======
-	try
-	{
-		secp256k1_start();
-
-		// TODO THINK: is this necessary?
-		m_state.init();
-
-		auto b = _bc.block(_h);
-		BlockInfo bi;
-		BlockInfo bip;
-		try
-		{
-			if (_h)
-				bi.populate(b);
-			if (bi && bi.number)
-				bip.populate(_bc.block(bi.parentHash));
-		}
-		catch(const Exception& _e)
-		{
-			cerr << "Could not populate black header\n";
-			cerr << boost::diagnostic_information(_e) << endl;
-		}
-
-		if (!_h || !bip)
-			return;
-		m_ourAddress = bi.coinbaseAddress;
-
-		sync(_bc, bi.parentHash, bip);
-		enact(&b);
-	}
-	catch(...)
-	{
-		cerr << "Construction of state failed\n";
-		cerr << boost::current_exception_diagnostic_information() << endl;
-		exit(1);
-	}
->>>>>>> origin
 }
 
 State::State(State const& _s):
@@ -309,16 +151,7 @@ void State::paranoia(std::string const& _when, bool _enforceRefs) const
 State& State::operator=(State const& _s)
 {
 	m_db = _s.m_db;
-	try
-	{
-		m_state.open(&m_db, _s.m_state.root());
-	}
-	catch(const RootNotFound& _e)
-	{
-		cerr << "Unable to copy state. Could not find root\n";
-		cerr << boost::diagnostic_information(_e);
-		exit(1); // anything else that can be done?
-	}
+	m_state.open(&m_db, _s.m_state.root());
 	m_transactions = _s.m_transactions;
 	m_receipts = _s.m_receipts;
 	m_transactionSet = _s.m_transactionSet;
@@ -348,94 +181,7 @@ Address State::nextActiveAddress(Address _a) const
 	return (*it).first;
 }
 
-<<<<<<< HEAD
 StateDiff State::diff(State const& _c) const
-=======
-// TODO: repot
-struct CachedAddressState
-{
-	CachedAddressState(std::string const& _rlp, AddressState const* _s, OverlayDB const* _o): rS(_rlp), r(rS), s(_s), o(_o) {}
-
-	bool exists() const
-	{
-		return (r && (!s || s->isAlive())) || (s && s->isAlive());
-	}
-
-	u256 balance() const
-	{
-		return r ? s ? s->balance() : r[1].toInt<u256>() : 0;
-	}
-
-	u256 nonce() const
-	{
-		return r ? s ? s->nonce() : r[0].toInt<u256>() : 0;
-	}
-
-	bytes code() const
-	{
-		if (s && s->codeCacheValid())
-			return s->code();
-		h256 h = r ? s ? s->codeHash() : r[3].toHash<h256>() : EmptySHA3;
-		return h == EmptySHA3 ? bytes() : asBytes(o->lookup(h));
-	}
-
-	std::map<u256, u256> storage() const
-	{
-		std::map<u256, u256> ret;
-		if (r)
-		{
-			TrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(o), r[2].toHash<h256>());		// promise we won't alter the overlay! :)
-			for (auto const& j: memdb)
-				ret[j.first] = RLP(j.second).toInt<u256>();
-		}
-		if (s)
-			for (auto const& j: s->storage())
-				if ((!ret.count(j.first) && j.second) || (ret.count(j.first) && ret.at(j.first) != j.second))
-					ret[j.first] = j.second;
-		return ret;
-	}
-
-	AccountDiff diff(CachedAddressState const& _c)
-	{
-		AccountDiff ret;
-		ret.exist = Diff<bool>(exists(), _c.exists());
-		ret.balance = Diff<u256>(balance(), _c.balance());
-		ret.nonce = Diff<u256>(nonce(), _c.nonce());
-		ret.code = Diff<bytes>(code(), _c.code());
-		auto st = storage();
-		auto cst = _c.storage();
-		auto it = st.begin();
-		auto cit = cst.begin();
-		while (it != st.end() || cit != cst.end())
-		{
-			if (it != st.end() && cit != cst.end() && it->first == cit->first && (it->second || cit->second) && (it->second != cit->second))
-				ret.storage[it->first] = Diff<u256>(it->second, cit->second);
-			else if (it != st.end() && (cit == cst.end() || it->first < cit->first) && it->second)
-				ret.storage[it->first] = Diff<u256>(it->second, 0);
-			else if (cit != cst.end() && (it == st.end() || it->first > cit->first) && cit->second)
-				ret.storage[cit->first] = Diff<u256>(0, cit->second);
-			if (it == st.end())
-				++cit;
-			else if (cit == cst.end())
-				++it;
-			else if (it->first < cit->first)
-				++it;
-			else if (it->first > cit->first)
-				++cit;
-			else
-				++it, ++cit;
-		}
-		return ret;
-	}
-
-	std::string rS;
-	RLP r;
-	AddressState const* s;
-	OverlayDB const* o;
-};
-
-StateDiff State::diff(State const& _c) const noexcept
->>>>>>> origin
 {
 	StateDiff ret;
 
@@ -443,7 +189,6 @@ StateDiff State::diff(State const& _c) const noexcept
 	std::set<Address> trieAds;
 	std::set<Address> trieAdsD;
 
-<<<<<<< HEAD
 	auto trie = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
 	auto trieD = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&_c.m_db), _c.rootHash());
 
@@ -468,48 +213,11 @@ StateDiff State::diff(State const& _c) const noexcept
 		AccountDiff acd = source.diff(dest);
 		if (acd.changed())
 			ret.accounts[i] = acd;
-=======
-	try
-	{
-		auto trie = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
-		auto trieD = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&_c.m_db), _c.rootHash());
-
-		for (auto i: trie)
-			ads.insert(i.first), trieAds.insert(i.first);
-		for (auto i: trieD)
-			ads.insert(i.first), trieAdsD.insert(i.first);
-		for (auto i: m_cache)
-			ads.insert(i.first);
-		for (auto i: _c.m_cache)
-			ads.insert(i.first);
-
-		for (auto i: ads)
-		{
-			auto it = m_cache.find(i);
-			auto itD = _c.m_cache.find(i);
-			CachedAddressState source(trieAds.count(i) ? trie.at(i) : "", it != m_cache.end() ? &it->second : nullptr, &m_db);
-			CachedAddressState dest(trieAdsD.count(i) ? trieD.at(i) : "", itD != _c.m_cache.end() ? &itD->second : nullptr, &_c.m_db);
-			AccountDiff acd = source.diff(dest);
-			if (acd.changed())
-				ret.accounts[i] = acd;
-		}
-	}
-	catch(const RootNotFound& _e)
-	{
-		cerr << "Could not find root\n";
-		cerr << boost::diagnostic_information(_e);
-	}
-	catch(...)
-	{
-		cerr << "Could not get diff of state\n";
-		cerr << boost::current_exception_diagnostic_information();
-		// should we rethrow, or is it enough to make an error message and return an empty StateDiff ?
->>>>>>> origin
 	}
 
 	return ret;
 }
-// should this function return a bool for success or failure, so it can be handled at the place where it is called? I would like to have this function noexcept
+
 void State::ensureCached(Address _a, bool _requireCode, bool _forceCreate) const
 {
 	ensureCached(m_cache, _a, _requireCode, _forceCreate);
@@ -529,22 +237,7 @@ void State::ensureCached(std::map<Address, Account>& _cache, Address _a, bool _r
 		if (state.isNull())
 			s = Account(0, Account::NormalCreation);
 		else
-<<<<<<< HEAD
 			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>());
-=======
-		{
-			try
-			{
-				s = AddressState(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].isEmpty() ? EmptySHA3 : state[3].toHash<h256>());
-			}
-			catch(const BadCast& _e)
-			{
-				cerr << "BadCast: unable to get address state\n";
-				cerr << boost::diagnostic_information(_e);
-				exit(1); // is there anyway of handling it better? My suggestion (see comment above) to return a bool for success or failure)
-			}
-		}
->>>>>>> origin
 		bool ok;
 		tie(it, ok) = _cache.insert(make_pair(_a, s));
 	}
@@ -554,22 +247,7 @@ void State::ensureCached(std::map<Address, Account>& _cache, Address _a, bool _r
 
 void State::commit()
 {
-	try
-	{
-		dev::eth::commit(m_cache, m_db, m_state);
-	}
-	catch(Exception& _e)
-	{
-		cerr << "Could not commit state changes\n";
-		// TODO is this fixable with something like that:
-		// this->resetCurrent();
-		// m_db.rollback();
-		// or do we have to
-		// exit(1);
-		_e << errinfo_comment("Unable to commit changes to the state and the database\n");
-		throw;
-	}
-
+	dev::eth::commit(m_cache, m_db, m_state);
 	m_cache.clear();
 }
 
@@ -673,24 +351,16 @@ u256 State::enactOn(bytesConstRef _block, BlockInfo const& _bi, BlockChain const
 	return enact(_block, &_bc);
 }
 
-map<Address, u256> State::addresses() const noexcept
+map<Address, u256> State::addresses() const
 {
-	try
-	{
-		map<Address, u256> ret;
-		for (auto i: m_cache)
-			if (i.second.isAlive())
-				ret[i.first] = i.second.balance();
-		for (auto const& i: m_state)
-			if (m_cache.find(i.first) == m_cache.end())
-				ret[i.first] = RLP(i.second)[1].toInt<u256>();
-		return ret;
-	}
-	catch(...)
-	{
-		cerr << "Could not get adressess. " << boost::current_exception_diagnostic_information();
-		return map<Address, u256>();
-	}
+	map<Address, u256> ret;
+	for (auto i: m_cache)
+		if (i.second.isAlive())
+			ret[i.first] = i.second.balance();
+	for (auto const& i: m_state)
+		if (m_cache.find(i.first) == m_cache.end())
+			ret[i.first] = RLP(i.second)[1].toInt<u256>();
+	return ret;
 }
 
 void State::resetCurrent()
@@ -702,38 +372,15 @@ void State::resetCurrent()
 	m_currentBlock = BlockInfo();
 	m_currentBlock.coinbaseAddress = m_ourAddress;
 	m_currentBlock.timestamp = time(0);
-<<<<<<< HEAD
 	m_currentBlock.transactionsRoot = h256();
 	m_currentBlock.sha3Uncles = h256();
-=======
-	m_currentBlock.minGasPrice = 10 * szabo;
->>>>>>> origin
 	m_currentBlock.populateFromParent(m_previousBlock);
 
 	// Update timestamp according to clock.
 	// TODO: check.
 
 	m_lastTx = m_db;
-	try
-	{
-		m_currentBlock.transactionsRoot = h256();
-		m_currentBlock.sha3Uncles = h256();
-		m_state.setRoot(m_previousBlock.stateRoot);
-	}
-	catch(const Exception)
-	{
-
-		// TODO: Slightly nicer handling? :-)
-		cerr << "Not able to reset current state! State root of previous block not found!";
-		cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-		cerr << boost::current_exception_diagnostic_information() << endl;
-		exit(1);
-
-		// TODO: can we handle this in some meaningful way?
-		// should I rethrow? If yes, where should it be catched to not make it to the top.
-		// This function is called by the client (setAddress) as well as the constructor
-		// of the client through the constructor of the state.
-	}
+	m_state.setRoot(m_previousBlock.stateRoot);
 
 	paranoia("begin resetCurrent", true);
 }
@@ -1244,22 +891,6 @@ u256 State::transactionsFrom(Address _id) const
 		return it->second.nonce();
 }
 
-Transactions State::pending() const noexcept
-{
-	try
-	{
-		Transactions ret;
-		for (auto const& t: m_transactions)
-			ret.push_back(t.transaction);
-		return ret;
-	}
-	catch(...)
-	{
-		cerr << "Could not get pending transactions! " << boost::current_exception_diagnostic_information();
-		return Transactions();
-	}
-}
-
 u256 State::storage(Address _id, u256 _memory) const
 {
 	ensureCached(_id, false, false);
@@ -1435,7 +1066,6 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 	return e.gasUsed();
 }
 
-<<<<<<< HEAD
 State State::fromPending(unsigned _i) const
 {
 	State ret = *this;
@@ -1450,168 +1080,7 @@ State State::fromPending(unsigned _i) const
 		ret.m_transactionSet.erase(ret.m_transactions.back().sha3());
 		ret.m_transactions.pop_back();
 		ret.m_receipts.pop_back();
-=======
-bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256* _gas, bytesRef _out, Address _originAddress, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
-{
-	if (!_originAddress)
-		_originAddress = _senderAddress;
-
-//	cnote << "Transferring" << formatBalance(_value) << "to receiver.";
-	addBalance(_receiveAddress, _value);
-
-	if (o_ms)
-	{
-		o_ms->from = _senderAddress;
-		o_ms->to = _receiveAddress;
-		o_ms->value = _value;
-		o_ms->input = _data.toBytes();
 	}
-
-	auto it = !(_codeAddress & ~h160(0xffffffff)) ? c_precompiled.find((unsigned)(u160)_codeAddress) : c_precompiled.end();
-	if (it != c_precompiled.end())
-	{
-		if (*_gas >= it->second.gas)
-		{
-			*_gas -= it->second.gas;
-			it->second.exec(_data, _out);
-		}
-	}
-	else if (addressHasCode(_codeAddress))
-	{
-		VM vm(*_gas);
-		ExtVM evm(*this, _receiveAddress, _senderAddress, _originAddress, _value, _gasPrice, _data, &code(_codeAddress), o_ms, _level);
-		bool revert = false;
-
-		try
-		{
-			auto out = vm.go(evm, _onOp);
-			memcpy(_out.data(), out.data(), std::min(out.size(), _out.size()));
-			if (o_suicides)
-				for (auto i: evm.suicides)
-					o_suicides->insert(i);
-			if (o_ms)
-				o_ms->output = out.toBytes();
-		}
-		catch (OutOfGas const& /*_e*/)
-		{
-			clog(StateChat) << "Out of Gas! Reverting.";
-			revert = true;
-		}
-		catch (VMException const& _e)
-		{
-			clog(StateChat) << "VM Exception: " << diagnostic_information(_e);
-		}
-		catch (Exception const& _e)
-		{
-			clog(StateChat) << "Exception in VM: " << diagnostic_information(_e);
-		}
-		catch (std::exception const& _e)
-		{
-			clog(StateChat) << "std::exception in VM: " << _e.what();
-		}
-
-		// Write state out only in the case of a non-excepted transaction.
-		if (revert)
-			evm.revert();
-
-		*_gas = vm.gas();
-
-		return !revert;
-	}
-	return true;
-}
-
-h160 State::create(Address _sender, u256 _endowment, u256 _gasPrice, u256* _gas, bytesConstRef _code, Address _origin, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
-{
-	if (!_origin)
-		_origin = _sender;
-
-	if (o_ms)
-	{
-		o_ms->from = _sender;
-		o_ms->to = Address();
-		o_ms->value = _endowment;
-		o_ms->input = _code.toBytes();
-	}
-
-	Address newAddress = right160(sha3(rlpList(_sender, transactionsFrom(_sender) - 1)));
-
-	// Set up new account...
-	m_cache[newAddress] = AddressState(0, balance(newAddress) + _endowment, h256(), h256());
-
-	// Execute init code.
-	VM vm(*_gas);
-	ExtVM evm(*this, newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _code, o_ms, _level);
-	bool revert = false;
-	bytesConstRef out;
-
-	try
-	{
-		out = vm.go(evm, _onOp);
-		if (o_ms)
-			o_ms->output = out.toBytes();
-		if (o_suicides)
-			for (auto i: evm.suicides)
-				o_suicides->insert(i);
-	}
-	catch (OutOfGas const& /*_e*/)
-	{
-		clog(StateChat) << "Out of Gas! Reverting.";
-		revert = true;
-	}
-	catch (VMException const& _e)
-	{
-		clog(StateChat) << "VM Exception: " << diagnostic_information(_e);
-	}
-	catch (Exception const& _e)
-	{
-		clog(StateChat) << "Exception in VM: " << diagnostic_information(_e);
-	}
-	catch (std::exception const& _e)
-	{
-		clog(StateChat) << "std::exception in VM: " << _e.what();
-	}
-
-	// TODO: CHECK: IS THIS CORRECT?! (esp. given account created prior to revertion init.)
-
-	// Write state out only in the case of a non-out-of-gas transaction.
-	if (revert)
-		evm.revert();
-
-	// Set code.
-	if (addressInUse(newAddress))
-		m_cache[newAddress].setCode(out);
-
-	*_gas = vm.gas();
-
-	return newAddress;
-}
-
-State State::fromPending(unsigned _i) const noexcept
-{
-	State ret = *this;
-	try
-	{
-		ret.m_cache.clear();
-		_i = min<unsigned>(_i, m_transactions.size());
-		if (!_i)
-			ret.m_state.setRoot(m_previousBlock.stateRoot);
-		else
-			ret.m_state.setRoot(m_transactions[_i - 1].stateRoot);
-		while (ret.m_transactions.size() > _i)
-		{
-			ret.m_transactionSet.erase(ret.m_transactions.back().transaction.sha3());
-			ret.m_transactions.pop_back();
-		}
->>>>>>> origin
-	}
-	catch(...)
-	{
-		cerr << "Could not get pending state " << boost::current_exception_diagnostic_information();
-		// should we exit, return the current state or return an empty state?
-		return State();
-	}
-
 	return ret;
 }
 

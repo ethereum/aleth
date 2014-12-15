@@ -71,7 +71,7 @@ public:
 	State(Address _coinbaseAddress = Address(), OverlayDB const& _db = OverlayDB(), BaseState _bs = BaseState::Genesis);
 
 	/// Construct state object from arbitrary point in blockchain.
-	State(OverlayDB const& _db, BlockChain const& _bc, h256 _hash) noexcept;
+	State(OverlayDB const& _db, BlockChain const& _bc, h256 _hash);
 
 	/// Copy state object.
 	State(State const& _s);
@@ -83,16 +83,16 @@ public:
 
 	/// Set the coinbase address for any transactions we do.
 	/// This causes a complete reset of current block.
-	void setAddress(Address _coinbaseAddress) noexcept;
-	Address address() const noexcept { return m_ourAddress; }
+	void setAddress(Address _coinbaseAddress) { m_ourAddress = _coinbaseAddress; resetCurrent(); }
+	Address address() const { return m_ourAddress; }
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
-	static OverlayDB openDB(std::string _path, bool _killExisting = false) noexcept;
+	static OverlayDB openDB(std::string _path, bool _killExisting = false);
 	static OverlayDB openDB(bool _killExisting = false) { return openDB(std::string(), _killExisting); }
 	OverlayDB const& db() const { return m_db; }
 
 	/// @returns the set containing all addresses currently in use in Ethereum.
-	std::map<Address, u256> addresses() const noexcept;
+	std::map<Address, u256> addresses() const;
 
 	/// @returns the address b such that b > @a _a .
 	Address nextActiveAddress(Address _a) const;
@@ -153,17 +153,7 @@ public:
 	u256 execute(bytesConstRef _rlp, bytes* o_output = nullptr, bool _commit = true);
 
 	/// Get the remaining gas limit in this block.
-	u256 gasLimitRemaining() const noexcept
-	{
-		try
-		{
-			return m_currentBlock.gasLimit - gasUsed();
-		}
-		catch(...) // can only throw if std::vector::back() throws, very unlikely
-		{
-			std::cerr << "Could not get remaining gas limit " << boost::current_exception_diagnostic_information(); exit(1);
-		}
-	}
+	u256 gasLimitRemaining() const { return m_currentBlock.gasLimit - gasUsed(); }
 
 	/// Check if the address is in use.
 	bool addressInUse(Address _address) const;
@@ -218,14 +208,10 @@ public:
 	h256 rootHash() const { return m_state.root(); }
 
 	/// Get the list of pending transactions.
-<<<<<<< HEAD
 	Transactions const& pending() const { return m_transactions; }
 
 	/// Get the transaction receipt for the transaction of the given index.
 	TransactionReceipt const& receipt(unsigned _i) const { return m_receipts[_i]; }
-=======
-	Transactions pending() const noexcept;
->>>>>>> origin
 
 	/// Get the list of pending transactions.
 	LogEntries const& log(unsigned _i) const { return m_receipts[_i].log(); }
@@ -239,13 +225,13 @@ public:
 	/// Get the State immediately after the given number of pending transactions have been applied.
 	/// If (_i == 0) returns the initial state of the block.
 	/// If (_i == pending().size()) returns the final state of the block, prior to rewards.
-	State fromPending(unsigned _i) const noexcept;
+	State fromPending(unsigned _i) const;
 
 	/// @returns the StateDiff caused by the pending transaction of index @a _i.
-	StateDiff pendingDiff(unsigned _i) const noexcept{ return fromPending(_i).diff(fromPending(_i + 1)); }
+	StateDiff pendingDiff(unsigned _i) const { return fromPending(_i).diff(fromPending(_i + 1)); }
 
 	/// @return the difference between this state (origin) and @a _c (destination).
-	StateDiff diff(State const& _c) const noexcept;
+	StateDiff diff(State const& _c) const;
 
 	/// Sync our state with the block chain.
 	/// This basically involves wiping ourselves if we've been superceded and rebuilding from the transaction queue.

@@ -42,25 +42,17 @@ void OverlayDB::setDB(ldb::DB* _db, bool _clearOverlay)
 
 void OverlayDB::commit()
 {
-	try
+	if (m_db)
 	{
-		if (m_db)
+//		cnote << "Committing nodes to disk DB:";
+		for (auto const& i: m_over)
 		{
-			//		cnote << "Committing nodes to disk DB:";
-			for (auto const& i: m_over)
-			{
-				//			cnote << i.first << "#" << m_refCount[i.first];
-				if (m_refCount[i.first])
-					m_db->Put(m_writeOptions, ldb::Slice((char const*)i.first.data(), i.first.size), ldb::Slice(i.second.data(), i.second.size()));
-			}
-			m_over.clear();
-			m_refCount.clear();
+//			cnote << i.first << "#" << m_refCount[i.first];
+			if (m_refCount[i.first])
+				m_db->Put(m_writeOptions, ldb::Slice((char const*)i.first.data(), i.first.size), ldb::Slice(i.second.data(), i.second.size()));
 		}
-	}
-	catch(...)
-	{
-		cerr << "Unable to commit to database!" << boost::current_exception_diagnostic_information();
-		throw;
+		m_over.clear();
+		m_refCount.clear();
 	}
 }
 

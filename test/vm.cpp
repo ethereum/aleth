@@ -514,7 +514,4 @@ BOOST_AUTO_TEST_CASE(userDefinedFileVM)
 	dev::test::userDefinedTest("--vmtest", dev::test::doVMTests);
 }
 
-<<<<<<< HEAD
 BOOST_AUTO_TEST_SUITE_END()
-=======
->>>>>>> origin
