@@ -14,48 +14,31 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TransactionReceipt.h
+/** @file Precompiled.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#include <array>
 #include <map>
-#include <libdevcore/Common.h>
-#include <libdevcore/RLP.h>
-#include <libevm/ExtVMFace.h>
+#include <functional>
+#include <libdevcore/CommonData.h>
 
 namespace dev
 {
-
 namespace eth
 {
 
-class TransactionReceipt
+/// Information structure regarding an account that is precompiled (i.e. 1, 2, 3).
+struct PrecompiledAddress
 {
-public:
-	TransactionReceipt(bytesConstRef _rlp);
-	TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries const& _log);
-
-	h256 const& stateRoot() const { return m_stateRoot; }
-	u256 const& gasUsed() const { return m_gasUsed; }
-	LogBloom const& bloom() const { return m_bloom; }
-	LogEntries const& log() const { return m_log; }
-
-	void streamRLP(RLPStream& _s) const;
-
-	bytes rlp() const { RLPStream s; streamRLP(s); return s.out(); }
-
-private:
-	h256 m_stateRoot;
-	u256 m_gasUsed;
-	LogBloom m_bloom;
-	LogEntries m_log;
+	std::function<bigint(bytesConstRef)> gas;
+	std::function<bytes(bytesConstRef)> exec;
 };
 
-using TransactionReceipts = std::vector<TransactionReceipt>;
+/// Info on precompiled contract accounts baked into the protocol.
+std::map<unsigned, PrecompiledAddress> const& precompiled();
 
 }
 }
