@@ -2,7 +2,7 @@
 #
 # Find the gmp includes and library
 # 
-# if you nee to add a custom library search path, do it via via CMAKE_FIND_ROOT_PATH 
+# if you nee to add a custom library search path, do it via via CMAKE_PREFIX_PATH 
 # 
 # This module defines
 #  GMP_INCLUDE_DIRS, where to find header, etc.
@@ -14,13 +14,13 @@ find_path(
 	GMP_INCLUDE_DIR 
 	NAMES gmp.h
 	DOC "gmp include dir"
-	)
+)
 
 find_library(
 	GMP_LIBRARY
 	NAMES gmp
 	DOC "gmp library"
-	)
+)
 
 set(GMP_INCLUDE_DIRS ${GMP_INCLUDE_DIR})
 set(GMP_LIBRARIES ${GMP_LIBRARY})
