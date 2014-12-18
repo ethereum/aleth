@@ -435,7 +435,7 @@ h512s State::sync(TransactionQueue& _tq, bool* o_transactionQueueChanged)
 					++goodTxs;
 //					cnote << "TX took:" << t.elapsed() * 1000;
 				}
-				catch (InvalidNonce const& in)
+				catch (InvalidNonce& in)
 				{
 					if (in.required > in.candidate)
 					{
