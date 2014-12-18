@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CodeFragment.h
+/** @file Assembly.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
@@ -24,7 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <libdevcore/Common.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include "Exceptions.h"
 
 namespace dev
@@ -32,7 +32,7 @@ namespace dev
 namespace eth
 {
 
-enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, Tag, PushData };
+enum AssemblyItemType { UndefinedItem, Operation, Push, PushString, PushTag, PushSub, PushSubSize, PushProgramSize, Tag, PushData, NoOptimizeBegin, NoOptimizeEnd };
 
 class Assembly;
 
@@ -45,12 +45,15 @@ public:
 	AssemblyItem(Instruction _i): m_type(Operation), m_data((byte)_i) {}
 	AssemblyItem(AssemblyItemType _type, u256 _data = 0): m_type(_type), m_data(_data) {}
 
-	AssemblyItem tag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(Tag, m_data); }
-	AssemblyItem pushTag() const { assert(m_type == PushTag || m_type == Tag); return AssemblyItem(PushTag, m_data); }
+	AssemblyItem tag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(Tag, m_data); }
+	AssemblyItem pushTag() const { if (asserts(m_type == PushTag || m_type == Tag)) BOOST_THROW_EXCEPTION(Exception()); return AssemblyItem(PushTag, m_data); }
 
 	AssemblyItemType type() const { return m_type; }
 	u256 data() const { return m_data; }
 
+	/// @returns an upper bound for the number of bytes required by this item, assuming that
+	/// the value of a jump tag takes @a _addressLength bytes.
+	unsigned bytesRequired(unsigned _addressLength) const;
 	int deposit() const;
 
 	bool match(AssemblyItem const& _i) const { return _i.m_type == UndefinedItem || (m_type == _i.m_type && (m_type != Operation || m_data == _i.m_data)); }
@@ -83,6 +86,9 @@ public:
 	AssemblyItem const& append(std::string const& _data) { return append(newPushString(_data)); }
 	AssemblyItem const& append(bytes const& _data) { return append(newData(_data)); }
 	AssemblyItem appendSubSize(Assembly const& _a) { auto ret = newSub(_a); append(newPushSubSize(ret.data())); return ret; }
+	/// Pushes the final size of the current assembly itself. Use this when the code is modified
+	/// after compilation and CODESIZE is not an option.
+	void appendProgramSize() { append(AssemblyItem(PushProgramSize)); }
 
 	AssemblyItem appendJump() { auto ret = append(newPushTag()); append(Instruction::JUMP); return ret; }
 	AssemblyItem appendJumpI() { auto ret = append(newPushTag()); append(Instruction::JUMPI); return ret; }
@@ -94,7 +100,7 @@ public:
 	AssemblyItem const& back() { return m_items.back(); }
 	std::string backString() const { return m_items.size() && m_items.back().m_type == PushString ? m_strings.at((h256)m_items.back().m_data) : std::string(); }
 
-	void onePath() { assert(!m_totalDeposit && !m_baseDeposit); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
+	void onePath() { if (asserts(!m_totalDeposit && !m_baseDeposit)) BOOST_THROW_EXCEPTION(InvalidDeposit()); m_baseDeposit = m_deposit; m_totalDeposit = INT_MAX; }
 	void otherPath() { donePath(); m_totalDeposit = m_deposit; m_deposit = m_baseDeposit; }
 	void donePaths() { donePath(); m_totalDeposit = m_baseDeposit = 0; }
 	void ignored() { m_baseDeposit = m_deposit; }
@@ -104,14 +110,18 @@ public:
 
 	void injectStart(AssemblyItem const& _i);
 
-	std::string out() const { std::stringstream ret; streamOut(ret); return ret.str(); }
+	std::string out() const { std::stringstream ret; streamRLP(ret); return ret.str(); }
+
 	int deposit() const { return m_deposit; }
+	void adjustDeposit(int _adjustment) { m_deposit += _adjustment; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
+	void setDeposit(int _deposit) { m_deposit = _deposit; if (asserts(m_deposit >= 0)) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
+
 	bytes assemble() const;
 	Assembly& optimise(bool _enable);
-	std::ostream& streamOut(std::ostream& _out, std::string const& _prefix = "") const;
+	std::ostream& streamRLP(std::ostream& _out, std::string const& _prefix = "") const;
 
 private:
-	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) throw InvalidDeposit(); }
+	void donePath() { if (m_totalDeposit != INT_MAX && m_totalDeposit != m_deposit) BOOST_THROW_EXCEPTION(InvalidDeposit()); }
 	unsigned bytesRequired() const;
 
 	unsigned m_usedTags = 0;
@@ -127,7 +137,7 @@ private:
 
 inline std::ostream& operator<<(std::ostream& _out, Assembly const& _a)
 {
-	_a.streamOut(_out);
+	_a.streamRLP(_out);
 	return _out;
 }
 

@@ -27,13 +27,46 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+unsigned AssemblyItem::bytesRequired(unsigned _addressLength) const
+{
+	switch (m_type)
+	{
+	case Operation:
+	case Tag: // 1 byte for the JUMPDEST
+		return 1;
+	case PushString:
+		return 33;
+	case Push:
+		return 1 + max<unsigned>(1, dev::bytesRequired(m_data));
+	case PushSubSize:
+	case PushProgramSize:
+		return 4;		// worst case: a 16MB program
+	case PushTag:
+	case PushData:
+	case PushSub:
+		return 1 + _addressLength;
+	case NoOptimizeBegin:
+	case NoOptimizeEnd:
+		return 0;
+	default:
+		break;
+	}
+	BOOST_THROW_EXCEPTION(InvalidOpcode());
+}
+
 int AssemblyItem::deposit() const
 {
 	switch (m_type)
 	{
 	case Operation:
 		return instructionInfo((Instruction)(byte)m_data).ret - instructionInfo((Instruction)(byte)m_data).args;
-	case Push: case PushString: case PushTag: case PushData: case PushSub: case PushSubSize:
+	case Push:
+	case PushString:
+	case PushTag:
+	case PushData:
+	case PushSub:
+	case PushSubSize:
+	case PushProgramSize:
 		return 1;
 	case Tag:
 		return 0;
@@ -51,27 +84,7 @@ unsigned Assembly::bytesRequired() const
 			ret += i.second.size();
 
 		for (AssemblyItem const& i: m_items)
-			switch (i.m_type)
-			{
-			case Operation:
-				ret++;
-				break;
-			case PushString:
-				ret += 33;
-				break;
-			case Push:
-				ret += 1 + max<unsigned>(1, dev::bytesRequired(i.m_data));
-				break;
-			case PushSubSize:
-				ret += 4;		// worst case: a 16MB program
-				break;
-			case PushTag:
-			case PushData:
-			case PushSub:
-				ret += 1 + br;
-			case Tag:;
-			default:;
-			}
+			ret += i.bytesRequired(br);
 		if (dev::bytesRequired(ret) <= br)
 			return ret;
 	}
@@ -102,7 +115,7 @@ void Assembly::append(Assembly const& _a)
 void Assembly::append(Assembly const& _a, int _deposit)
 {
 	if (_deposit > _a.m_deposit)
-		throw InvalidDeposit();
+		BOOST_THROW_EXCEPTION(InvalidDeposit());
 	else
 	{
 		append(_a);
@@ -129,7 +142,7 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 			_out << " PUSH[tag" << i.data() << "]";
 			break;
 		case Tag:
-			_out << " tag" << i.data() << ":";
+			_out << " tag" << i.data() << ": JUMPDEST";
 			break;
 		case PushData:
 			_out << " PUSH*[" << hex << (unsigned)i.data() << "]";
@@ -140,14 +153,25 @@ ostream& dev::eth::operator<<(ostream& _out, AssemblyItemsConstRef _i)
 		case PushSubSize:
 			_out << " PUSHss[" << hex << h256(i.data()).abridged() << "]";
 			break;
+		case PushProgramSize:
+			_out << " PUSHSIZE";
+			break;
+		case NoOptimizeBegin:
+			_out << " DoNotOptimze{{";
+			break;
+		case NoOptimizeEnd:
+			_out << " DoNotOptimze}}";
+			break;
 		case UndefinedItem:
 			_out << " ???";
-		default:;
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 	return _out;
 }
 
-ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
+ostream& Assembly::streamRLP(ostream& _out, string const& _prefix) const
 {
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
@@ -171,13 +195,23 @@ ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
 		case PushSubSize:
 			_out << _prefix << "  PUSH #[$" << h256(i.m_data).abridged() << "]" << endl;
 			break;
+		case PushProgramSize:
+			_out << _prefix << "  PUSHSIZE" << endl;
+			break;
 		case Tag:
-			_out << _prefix << "tag" << i.m_data << ": " << endl;
+			_out << _prefix << "tag" << i.m_data << ": " << endl << _prefix << "  JUMPDEST" << endl;
 			break;
 		case PushData:
 			_out << _prefix << "  PUSH [" << hex << (unsigned)i.m_data << "]" << endl;
 			break;
-		default:;
+		case NoOptimizeBegin:
+			_out << _prefix << "DoNotOptimze{{" << endl;
+			break;
+		case NoOptimizeEnd:
+			_out << _prefix << "DoNotOptimze}}" << endl;
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
 	if (m_data.size() || m_subs.size())
@@ -189,7 +223,7 @@ ostream& Assembly::streamOut(ostream& _out, string const& _prefix) const
 		for (auto const& i: m_subs)
 		{
 			_out << _prefix << "  " << hex << (unsigned)(u256)i.first << ": " << endl;
-			i.second.streamOut(_out, _prefix + "  ");
+			i.second.streamRLP(_out, _prefix + "  ");
 		}
 	}
 	return _out;
@@ -217,6 +251,24 @@ inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
 	return true;
 }
 
+inline bool popCountIncreased(AssemblyItemsConstRef _pre, AssemblyItems const& _post)
+{
+	auto isPop = [](AssemblyItem const& _item) -> bool { return _item.match(AssemblyItem(Instruction::POP)); };
+	return count_if(begin(_post), end(_post), isPop) > count_if(begin(_pre), end(_pre), isPop);
+}
+
+//@todo this has to move to a special optimizer class soon
+template<class Iterator>
+unsigned bytesRequiredBySlice(Iterator _begin, Iterator _end)
+{
+	// this is only used in the optimizer, so we can provide a guess for the address length
+	unsigned addressLength = 4;
+	unsigned size = 0;
+	for (; _begin != _end; ++_begin)
+		size += _begin->bytesRequired(addressLength);
+	return size;
+}
+
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
@@ -224,7 +276,15 @@ Assembly& Assembly::optimise(bool _enable)
 {
 	if (!_enable)
 		return *this;
-	map<Instruction, function<u256(u256, u256)>> c_simple =
+	auto signextend = [](u256 a, u256 b) -> u256
+	{
+		if (a >= 31)
+			return b;
+		unsigned testBit = unsigned(a) * 8 + 7;
+		u256 mask = (u256(1) << testBit) - 1;
+		return boost::multiprecision::bit_test(b, testBit) ? b | ~mask : b & mask;
+	};
+	map<Instruction, function<u256(u256, u256)>> const c_simple =
 	{
 		{ Instruction::SUB, [](u256 a, u256 b)->u256{return a - b;} },
 		{ Instruction::DIV, [](u256 a, u256 b)->u256{return a / b;} },
@@ -232,17 +292,23 @@ Assembly& Assembly::optimise(bool _enable)
 		{ Instruction::MOD, [](u256 a, u256 b)->u256{return a % b;} },
 		{ Instruction::SMOD, [](u256 a, u256 b)->u256{return s2u(u2s(a) % u2s(b));} },
 		{ Instruction::EXP, [](u256 a, u256 b)->u256{return (u256)boost::multiprecision::powm((bigint)a, (bigint)b, bigint(2) << 256);} },
+		{ Instruction::SIGNEXTEND, signextend },
 		{ Instruction::LT, [](u256 a, u256 b)->u256{return a < b ? 1 : 0;} },
 		{ Instruction::GT, [](u256 a, u256 b)->u256{return a > b ? 1 : 0;} },
 		{ Instruction::SLT, [](u256 a, u256 b)->u256{return u2s(a) < u2s(b) ? 1 : 0;} },
 		{ Instruction::SGT, [](u256 a, u256 b)->u256{return u2s(a) > u2s(b) ? 1 : 0;} },
 		{ Instruction::EQ, [](u256 a, u256 b)->u256{return a == b ? 1 : 0;} },
 	};
-	map<Instruction, function<u256(u256, u256)>> c_associative =
+	map<Instruction, function<u256(u256, u256)>> const c_associative =
 	{
 		{ Instruction::ADD, [](u256 a, u256 b)->u256{return a + b;} },
 		{ Instruction::MUL, [](u256 a, u256 b)->u256{return a * b;} },
+		{ Instruction::AND, [](u256 a, u256 b)->u256{return a & b;} },
+		{ Instruction::OR, [](u256 a, u256 b)->u256{return a | b;} },
+		{ Instruction::XOR, [](u256 a, u256 b)->u256{return a ^ b;} },
 	};
+	std::vector<pair<AssemblyItem, u256>> const c_identities =
+	{ { Instruction::ADD, 0}, { Instruction::MUL, 1}, { Instruction::MOD, 0}, { Instruction::OR, 0}, { Instruction::XOR, 0} };
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules =
 	{
 		{ { Push, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
@@ -250,8 +316,9 @@ Assembly& Assembly::optimise(bool _enable)
 		{ { PushString, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { PushSub, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { PushSubSize, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
+		{ { PushProgramSize, Instruction::POP }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 		{ { Push, PushTag, Instruction::JUMPI }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data()) return { m[1], Instruction::JUMP }; else return {}; } },
-		{ { Instruction::NOT, Instruction::NOT }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
+		{ { Instruction::ISZERO, Instruction::ISZERO }, [](AssemblyItemsConstRef) -> AssemblyItems { return {}; } },
 	};
 
 	for (auto const& i: c_simple)
@@ -260,8 +327,49 @@ Assembly& Assembly::optimise(bool _enable)
 	{
 		rules.push_back({ { Push, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[1].data(), m[0].data()) }; } });
 		rules.push_back({ { Push, i.first, Push, i.first }, [&](AssemblyItemsConstRef m) -> AssemblyItems { return { i.second(m[2].data(), m[0].data()), i.first }; } });
-		rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [&](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {}; else return m.toVector(); }});
 	}
+	for (auto const& i: c_identities)
+		rules.push_back({{Push, i.first}, [&](AssemblyItemsConstRef m) -> AssemblyItems
+							{ return m[0].data() == i.second ? AssemblyItems() : m.toVector(); }});
+	// jump to next instruction
+	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
+
+	// pop optimization, do not compute values that are popped again anyway
+	rules.push_back({ { AssemblyItem(UndefinedItem), Instruction::POP }, [](AssemblyItemsConstRef m) -> AssemblyItems
+					  {
+						  if (m[0].type() != Operation)
+							return m.toVector();
+						  Instruction instr = Instruction(byte(m[0].data()));
+						  if (Instruction::DUP1 <= instr && instr <= Instruction::DUP16)
+							return {};
+						  InstructionInfo info = instructionInfo(instr);
+						  if (info.sideEffects || info.additional != 0 || info.ret != 1)
+							  return m.toVector();
+						  return AssemblyItems(info.args, Instruction::POP);
+					  } });
+	// compute constants close to powers of two by expressions
+	auto computeConstants = [](AssemblyItemsConstRef m) -> AssemblyItems
+	{
+		u256 const& c = m[0].data();
+		unsigned const minBits = 4 * 8;
+		if (c < (bigint(1) << minBits))
+			return m.toVector(); // we need at least "PUSH1 <bits> PUSH1 <2> EXP"
+		if (c == u256(-1))
+			return {u256(0), Instruction::NOT};
+		for (unsigned bits = minBits; bits < 256; ++bits)
+		{
+			bigint const diff = c - (bigint(1) << bits);
+			if (abs(diff) > 0xff)
+				continue;
+			AssemblyItems powerOfTwo{u256(bits), u256(2), Instruction::EXP};
+			if (diff == 0)
+				return powerOfTwo;
+			return AssemblyItems{u256(abs(diff))} + powerOfTwo +
+				   AssemblyItems{diff > 0 ? Instruction::ADD : Instruction::SUB};
+		}
+		return m.toVector();
+	};
+	rules.push_back({{Push}, computeConstants});
 
 	copt << *this;
 
@@ -269,24 +377,41 @@ Assembly& Assembly::optimise(bool _enable)
 	for (unsigned count = 1; count > 0; total += count)
 	{
 		count = 0;
-		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 		{
+			if (m_items[i].type() == NoOptimizeBegin)
+			{
+				while (i < m_items.size() && m_items[i].type() != NoOptimizeEnd)
+					++i;
+				continue;
+			}
 			for (auto const& r: rules)
 			{
 				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
-				if (matches(&r.first, vr))
+				if (matches(vr, &r.first))
 				{
 					auto rw = r.second(vr);
-					if (rw.size() < vr.size())
+					unsigned const vrSize = bytesRequiredBySlice(vr.begin(), vr.end());
+					unsigned const rwSize = bytesRequiredBySlice(rw.begin(), rw.end());
+					//@todo check the actual size (including constant sizes)
+					if (rwSize < vrSize || (rwSize == vrSize && popCountIncreased(vr, rw)))
 					{
 						copt << vr << "matches" << AssemblyItemsConstRef(&r.first) << "becomes...";
-						for (unsigned j = 0; j < vr.size(); ++j)
+						copt << AssemblyItemsConstRef(&rw);
+						if (rw.size() > vr.size())
+						{
+							// create hole in the vector
+							unsigned sizeIncrease = rw.size() - vr.size();
+							m_items.resize(m_items.size() + sizeIncrease, AssemblyItem(UndefinedItem));
+							move_backward(m_items.begin() + i, m_items.end() - sizeIncrease, m_items.end());
+						}
+
+						for (unsigned j = 0; j < max(rw.size(), vr.size()); ++j)
 							if (j < rw.size())
 								m_items[i + j] = rw[j];
 							else
 								m_items.erase(m_items.begin() + i + rw.size());
-						copt << AssemblyItemsConstRef(&rw);
+
 						count++;
 						copt << "Now:\n" << m_items;
 					}
@@ -297,6 +422,8 @@ Assembly& Assembly::optimise(bool _enable)
 				bool o = false;
 				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
 				{
+					if (m_items[i + 1].type() == NoOptimizeBegin)
+						break;
 					m_items.erase(m_items.begin() + i + 1);
 					o = true;
 				}
@@ -308,6 +435,7 @@ Assembly& Assembly::optimise(bool _enable)
 			}
 		}
 
+		map<u256, unsigned> tags;
 		for (unsigned i = 0; i < m_items.size(); ++i)
 			if (m_items[i].type() == Tag)
 				tags.insert(make_pair(m_items[i].data(), i));
@@ -350,15 +478,21 @@ bytes Assembly::assemble() const
 	bytes ret;
 
 	unsigned totalBytes = bytesRequired();
-	ret.reserve(totalBytes);
 	vector<unsigned> tagPos(m_usedTags);
 	map<unsigned, unsigned> tagRef;
 	multimap<h256, unsigned> dataRef;
+	vector<unsigned> sizeRef; ///< Pointers to code locations where the size of the program is inserted
 	unsigned bytesPerTag = dev::bytesRequired(totalBytes);
 	byte tagPush = (byte)Instruction::PUSH1 - 1 + bytesPerTag;
 
 	for (auto const& i: m_subs)
 		m_data[i.first] = i.second.assemble();
+
+	unsigned bytesRequiredIncludingData = bytesRequired();
+	unsigned bytesPerDataRef = dev::bytesRequired(bytesRequiredIncludingData);
+	byte dataRefPush = (byte)Instruction::PUSH1 - 1 + bytesPerDataRef;
+	ret.reserve(bytesRequiredIncludingData);
+	// m_data must not change from here on
 
 	for (AssemblyItem const& i: m_items)
 		switch (i.m_type)
@@ -397,9 +531,9 @@ bytes Assembly::assemble() const
 		}
 		case PushData: case PushSub:
 		{
-			ret.push_back(tagPush);
+			ret.push_back(dataRefPush);
 			dataRef.insert(make_pair((h256)i.m_data, ret.size()));
-			ret.resize(ret.size() + bytesPerTag);
+			ret.resize(ret.size() + bytesPerDataRef);
 			break;
 		}
 		case PushSubSize:
@@ -412,10 +546,22 @@ bytes Assembly::assemble() const
 			toBigEndian(s, byr);
 			break;
 		}
+		case PushProgramSize:
+		{
+			ret.push_back(dataRefPush);
+			sizeRef.push_back(ret.size());
+			ret.resize(ret.size() + bytesPerDataRef);
+			break;
+		}
 		case Tag:
 			tagPos[(unsigned)i.m_data] = ret.size();
+			ret.push_back((byte)Instruction::JUMPDEST);
 			break;
-		default:;
+		case NoOptimizeBegin:
+		case NoOptimizeEnd:
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
 		}
 
 	for (auto const& i: tagRef)
@@ -434,13 +580,18 @@ bytes Assembly::assemble() const
 			{
 				for (auto it = its.first; it != its.second; ++it)
 				{
-					bytesRef r(ret.data() + it->second, bytesPerTag);
+					bytesRef r(ret.data() + it->second, bytesPerDataRef);
 					toBigEndian(ret.size(), r);
 				}
 				for (auto b: i.second)
 					ret.push_back(b);
 			}
 		}
+	}
+	for (unsigned pos: sizeRef)
+	{
+		bytesRef r(ret.data() + pos, bytesPerDataRef);
+		toBigEndian(ret.size(), r);
 	}
 	return ret;
 }

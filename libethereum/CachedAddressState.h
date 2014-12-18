@@ -14,33 +14,47 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Manifest.cpp
+/** @file CachedAddressState.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Manifest.h"
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
+#pragma once
 
-Manifest::Manifest(bytesConstRef _r)
+#include <string>
+#include <libdevcore/Common.h>
+#include <libdevcore/RLP.h>
+#include "AccountDiff.h"
+
+namespace dev
 {
-	RLP r(_r);
-	from = r[0].toHash<Address>();
-	to = r[1].toHash<Address>();
-	value = r[2].toInt<u256>();
-	altered = r[3].toVector<u256>();
-	input = r[4].toBytes();
-	output = r[5].toBytes();
-	for (auto const& i: r[6])
-		internal.emplace_back(i.data());
+
+class OverlayDB;
+
+namespace eth
+{
+
+class Account;
+
+class CachedAddressState
+{
+public:
+	CachedAddressState(std::string const& _rlp, Account const* _s, OverlayDB const* _o): m_rS(_rlp), m_r(m_rS), m_s(_s), m_o(_o) {}
+
+	bool exists() const;
+	u256 balance() const;
+	u256 nonce() const;
+	bytes code() const;
+	std::map<u256, u256> storage() const;
+	AccountDiff diff(CachedAddressState const& _c);
+
+private:
+	std::string m_rS;
+	RLP m_r;
+	Account const* m_s;
+	OverlayDB const* m_o;
+};
+
 }
 
-void Manifest::streamOut(RLPStream& _s) const
-{
-	_s.appendList(7) << from << to << value << altered << input << output;
-	_s.appendList(internal.size());
-	for (auto const& i: internal)
-		i.streamOut(_s);
 }
