@@ -14,48 +14,47 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file TransactionReceipt.h
+/** @file CachedAddressState.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#include <array>
-#include <map>
+#include <string>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
-#include <libevm/ExtVMFace.h>
+#include "AccountDiff.h"
 
 namespace dev
 {
 
+class OverlayDB;
+
 namespace eth
 {
 
-class TransactionReceipt
+class Account;
+
+class CachedAddressState
 {
 public:
-	TransactionReceipt(bytesConstRef _rlp);
-	TransactionReceipt(h256 _root, u256 _gasUsed, LogEntries const& _log);
+	CachedAddressState(std::string const& _rlp, Account const* _s, OverlayDB const* _o): m_rS(_rlp), m_r(m_rS), m_s(_s), m_o(_o) {}
 
-	h256 const& stateRoot() const { return m_stateRoot; }
-	u256 const& gasUsed() const { return m_gasUsed; }
-	LogBloom const& bloom() const { return m_bloom; }
-	LogEntries const& log() const { return m_log; }
-
-	void streamRLP(RLPStream& _s) const;
-
-	bytes rlp() const { RLPStream s; streamRLP(s); return s.out(); }
+	bool exists() const;
+	u256 balance() const;
+	u256 nonce() const;
+	bytes code() const;
+	std::map<u256, u256> storage() const;
+	AccountDiff diff(CachedAddressState const& _c);
 
 private:
-	h256 m_stateRoot;
-	u256 m_gasUsed;
-	LogBloom m_bloom;
-	LogEntries m_log;
+	std::string m_rS;
+	RLP m_r;
+	Account const* m_s;
+	OverlayDB const* m_o;
 };
 
-using TransactionReceipts = std::vector<TransactionReceipt>;
-
 }
+
 }
