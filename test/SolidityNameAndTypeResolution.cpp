@@ -311,6 +311,7 @@ BOOST_AUTO_TEST_CASE(forward_function_reference)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+<<<<<<< HEAD:test/SolidityNameAndTypeResolution.cpp
 BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 {
 	char const* text = "contract First {\n"
@@ -321,6 +322,8 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+=======
+>>>>>>> dbba2e04d99531c0428b5580f553ead2a0e9a16f:test/SolidityNameAndTypeResolution.cpp
 BOOST_AUTO_TEST_SUITE_END()
 
 }
