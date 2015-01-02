@@ -14,15 +14,47 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CommonNet.cpp
+/** @file CachedAddressState.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "CommonNet.h"
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
+#pragma once
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-namespace { char dummy; };
+#include <string>
+#include <libdevcore/Common.h>
+#include <libdevcore/RLP.h>
+#include "AccountDiff.h"
+
+namespace dev
+{
+
+class OverlayDB;
+
+namespace eth
+{
+
+class Account;
+
+class CachedAddressState
+{
+public:
+	CachedAddressState(std::string const& _rlp, Account const* _s, OverlayDB const* _o): m_rS(_rlp), m_r(m_rS), m_s(_s), m_o(_o) {}
+
+	bool exists() const;
+	u256 balance() const;
+	u256 nonce() const;
+	bytes code() const;
+	std::map<u256, u256> storage() const;
+	AccountDiff diff(CachedAddressState const& _c);
+
+private:
+	std::string m_rS;
+	RLP m_r;
+	Account const* m_s;
+	OverlayDB const* m_o;
+};
+
+}
+
+}

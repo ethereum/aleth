@@ -14,15 +14,31 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CommonNet.cpp
+/** @file Precompiled.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "CommonNet.h"
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
+#pragma once
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-namespace { char dummy; };
+#include <map>
+#include <functional>
+#include <libdevcore/CommonData.h>
+
+namespace dev
+{
+namespace eth
+{
+
+/// Information structure regarding an account that is precompiled (i.e. 1, 2, 3).
+struct PrecompiledAddress
+{
+	std::function<bigint(bytesConstRef)> gas;
+	std::function<bytes(bytesConstRef)> exec;
+};
+
+/// Info on precompiled contract accounts baked into the protocol.
+std::map<unsigned, PrecompiledAddress> const& precompiled();
+
+}
+}
