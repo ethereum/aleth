@@ -536,7 +536,7 @@ u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 			cwarn << j << ": ";
 			cwarn << "RLP: " << RLP(b);
 			cwarn << "Hex: " << toHex(b);
-			cwarn << TransactionReceipt(&b);
+			// cwarn << TransactionReceipt(&b);
 		}
 		BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());
 	}
