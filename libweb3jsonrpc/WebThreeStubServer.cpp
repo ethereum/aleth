@@ -266,7 +266,7 @@ std::string WebThreeStubServer::shh_addToGroup(std::string const& _group, std::s
 
 std::string WebThreeStubServer::eth_balanceAt(string const& _address)
 {
-	int block = 0;
+	int block = client() ? client()->getDefault() : 0;
 	return toJS(client()->balanceAt(jsToAddress(_address), block));
 }
 
@@ -362,7 +362,7 @@ bool WebThreeStubServer::eth_changed(int const& _id)
 
 std::string WebThreeStubServer::eth_codeAt(string const& _address)
 {
-	int block = 0;
+	int block = client() ? client()->getDefault() : 0;
 	return client() ? jsFromBinary(client()->codeAt(jsToAddress(_address), block)) : "";
 }
 
@@ -373,7 +373,7 @@ std::string WebThreeStubServer::eth_coinbase()
 
 double WebThreeStubServer::eth_countAt(string const& _address)
 {
-	int block = 0;
+	int block = client() ? client()->getDefault() : 0;
 	return client() ? (double)(uint64_t)client()->countAt(jsToAddress(_address), block) : 0;
 }
 
@@ -646,7 +646,7 @@ bool WebThreeStubServer::shh_uninstallFilter(int const& _id)
 
 std::string WebThreeStubServer::eth_stateAt(string const& _address, string const& _storage)
 {
-	int block = 0;
+	int block = client() ? client()->getDefault() : 0;
 	return client() ? toJS(client()->stateAt(jsToAddress(_address), jsToU256(_storage), block)) : "";
 }
 
