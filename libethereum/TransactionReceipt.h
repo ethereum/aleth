@@ -57,8 +57,8 @@ private:
 
 using TransactionReceipts = std::vector<TransactionReceipt>;
 
-}
-
 std::ostream& operator<<(std::ostream& _out, eth::TransactionReceipt const& _r);
+
+}
 
 }
