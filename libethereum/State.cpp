@@ -19,6 +19,7 @@
  * @date 2014
  */
 
+#include "TransactionReceipt.h"
 #include "State.h"
 
 #include <ctime>
