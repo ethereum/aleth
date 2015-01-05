@@ -146,8 +146,10 @@ BOOST_AUTO_TEST_CASE(trie_tests_ordered)
 			if (find(keysToBeDeleted.begin(), keysToBeDeleted.end(), k.first) != keysToBeDeleted.end() && k.second.empty())
 				t.remove(k.first);
 			else
+			{
 				t.insert(k.first, k.second);
-			BOOST_REQUIRE(t.check(true));
+				BOOST_REQUIRE(t.check(true));
+			}
 		}
 
 		BOOST_REQUIRE(!o["root"].is_null());
