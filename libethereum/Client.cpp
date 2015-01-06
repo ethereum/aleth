@@ -27,6 +27,7 @@
 #include <libdevcore/Log.h>
 #include <libp2p/Host.h>
 #include "Defaults.h"
+#include "Executive.h"
 #include "EthereumHost.h"
 using namespace std;
 using namespace dev;
@@ -179,7 +180,7 @@ void Client::clearPending()
 		if (!m_postMine.pending().size())
 			return;
 		for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
-			appendFromNewPending(m_postMine.bloom(i), changeds);
+			appendFromNewPending(m_postMine.logBloom(i), changeds);
 		changeds.insert(PendingChangedFilter);
 		m_postMine = m_preMine;
 	}
@@ -210,7 +211,11 @@ unsigned Client::installWatch(h256 _h) noexcept
 	}
 }
 
+<<<<<<< HEAD
 unsigned Client::installWatch(MessageFilter const& _f) noexcept
+=======
+unsigned Client::installWatch(LogFilter const& _f)
+>>>>>>> upstream/develop
 {
 	try
 	{
@@ -281,13 +286,14 @@ void Client::noteChanged(h256Set const& _filters)
 	for (auto& i: m_watches)
 		if (_filters.count(i.second.id))
 		{
-			cwatch << "!!!" << i.first << i.second.id;
+//			cwatch << "!!!" << i.first << i.second.id;
 			i.second.changes++;
 		}
 }
 
-void Client::appendFromNewPending(h256 _bloom, h256Set& o_changed) const
+void Client::appendFromNewPending(LogBloom _bloom, h256Set& o_changed) const
 {
+	// TODO: more precise check on whether the txs match.
 	lock_guard<mutex> l(m_filterLock);
 	for (pair<h256, InstalledFilter> const& i: m_filters)
 		if ((unsigned)i.second.filter.latest() > m_bc.number() && i.second.filter.matches(_bloom))
@@ -296,11 +302,16 @@ void Client::appendFromNewPending(h256 _bloom, h256Set& o_changed) const
 
 void Client::appendFromNewBlock(h256 _block, h256Set& o_changed) const
 {
+<<<<<<< HEAD
 	BlockDetails d = m_bc.details(_block);
+=======
+	// TODO: more precise check on whether the txs match.
+	auto d = m_bc.info(_block);
+>>>>>>> upstream/develop
 
 	lock_guard<mutex> l(m_filterLock);
 	for (pair<h256, InstalledFilter> const& i: m_filters)
-		if ((unsigned)i.second.filter.latest() >= d.number && (unsigned)i.second.filter.earliest() <= d.number && i.second.filter.matches(d.bloom))
+		if ((unsigned)i.second.filter.latest() >= d.number && (unsigned)i.second.filter.earliest() <= d.number && i.second.filter.matches(d.logBloom))
 			o_changed.insert(i.first);
 }
 
@@ -456,6 +467,7 @@ void Client::setupState(State& _s)
 
 void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) noexcept
 {
+<<<<<<< HEAD
 	try
 	{
 		startWorking();
@@ -498,6 +510,19 @@ void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _
 		cerr << boost::current_exception_diagnostic_information();
 		return;
 	}
+=======
+	startWorking();
+
+	u256 n;
+	{
+		ReadGuard l(x_stateDB);
+		n = m_postMine.transactionsFrom(toAddress(_secret));
+	}
+	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+	cnote << "New transaction " << t;
+	m_tq.attemptImport(t.rlp());
+>>>>>>> upstream/develop
 }
 
 bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) noexcept
@@ -505,21 +530,16 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 	bytes out;
 	try
 	{
+		u256 n;
 		State temp;
-		Transaction t;
 	//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
 		{
 			ReadGuard l(x_stateDB);
 			temp = m_postMine;
-			t.nonce = temp.transactionsFrom(toAddress(_secret));
+			n = temp.transactionsFrom(toAddress(_secret));
 		}
-		t.value = _value;
-		t.gasPrice = _gasPrice;
-		t.gas = _gas;
-		t.receiveAddress = _dest;
-		t.data = _data;
-		t.sign(_secret);
-		u256 gasUsed = temp.execute(t.data, &out, false);
+		Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+		u256 gasUsed = temp.execute(m_bc, t.rlp(), &out, false);
 		(void)gasUsed; // TODO: do something with gasused which it returns.
 	}
 	catch(const InvalidSignature& _e)
@@ -541,7 +561,35 @@ bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _dat
 	return out;
 }
 
+<<<<<<< HEAD
 Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) noexcept
+=======
+bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
+{
+	try
+	{
+		State temp;
+//		cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+		{
+			ReadGuard l(x_stateDB);
+			temp = m_postMine;
+		}
+		Executive e(temp, LastHashes(), 0);
+		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
+		{
+			e.go();
+			return e.out().toBytes();
+		}
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return bytes();
+}
+
+Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
+>>>>>>> upstream/develop
 {
 	try
 	{
@@ -559,6 +607,7 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 		t.sign(_secret);
 		cnote << "New transaction " << t;
 
+<<<<<<< HEAD
 		if (!m_tq.attemptImport(t.rlp()))
 		{
 			cnote << "Failed to import transaction into transaction queue\n";
@@ -583,6 +632,17 @@ Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u2
 		cerr << boost::current_exception_diagnostic_information();
 		return right160(h256());
 	}
+=======
+	u256 n;
+	{
+		ReadGuard l(x_stateDB);
+		n = m_postMine.transactionsFrom(toAddress(_secret));
+	}
+	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
+	cnote << "New transaction " << t;
+	m_tq.attemptImport(t.rlp());
+	return right160(sha3(rlpList(t.sender(), t.nonce())));
+>>>>>>> upstream/develop
 }
 
 void Client::inject(bytesConstRef _rlp) noexcept
@@ -703,9 +763,20 @@ void Client::doWork() noexcept
 				m.noteStateChange();
 		}
 
+<<<<<<< HEAD
 		cwork << "noteChanged" << changeds.size() << "items";
 		noteChanged(changeds);
 		cworkout << "WORK";
+=======
+		// returns h256s as blooms, once for each transaction.
+		cwork << "postSTATE <== TQ";
+		h512s newPendingBlooms = m_postMine.sync(m_bc, m_tq);
+		if (newPendingBlooms.size())
+		{
+			for (auto i: newPendingBlooms)
+				appendFromNewPending(i, changeds);
+			changeds.insert(PendingChangedFilter);
+>>>>>>> upstream/develop
 
 		this_thread::sleep_for(chrono::milliseconds(100));
 	}
@@ -901,10 +972,23 @@ BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const noexcept
 	}
 }
 
+<<<<<<< HEAD
 PastMessages Client::messages(MessageFilter const& _f) const noexcept
 {
 	// TODO more fine grained exception handling
 	try
+=======
+LogEntries Client::logs(LogFilter const& _f) const
+{
+	LogEntries ret;
+	unsigned begin = min<unsigned>(m_bc.number(), (unsigned)_f.latest());
+	unsigned end = min(begin, (unsigned)_f.earliest());
+	unsigned m = _f.max();
+	unsigned s = _f.skip();
+
+	// Handle pending transactions differently as they're not on the block chain.
+	if (begin == m_bc.number())
+>>>>>>> upstream/develop
 	{
 		PastMessages ret;
 		unsigned begin = min<unsigned>(m_bc.number(), (unsigned)_f.latest());
@@ -915,6 +999,7 @@ PastMessages Client::messages(MessageFilter const& _f) const noexcept
 		// Handle pending transactions differently as they're not on the block chain.
 		if (begin == m_bc.number())
 		{
+<<<<<<< HEAD
 			ReadGuard l(x_stateDB);
 			for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
 			{
@@ -931,10 +1016,23 @@ PastMessages Client::messages(MessageFilter const& _f) const noexcept
 							// Have a transaction that contains a matching message.
 							ret.insert(ret.begin(), pm[j].polish(h256(), ts, m_bc.number() + 1, m_postMine.address()));
 				}
+=======
+			// Might have a transaction that contains a matching log.
+			TransactionReceipt const& tr = m_postMine.receipt(i);
+			LogEntries le = _f.matches(tr);
+			if (le.size())
+			{
+				for (unsigned j = 0; j < le.size() && ret.size() != m; ++j)
+					if (s)
+						s--;
+					else
+						ret.insert(ret.begin(), le[j]);
+>>>>>>> upstream/develop
 			}
 		}
 
 #if ETH_DEBUG
+<<<<<<< HEAD
 		unsigned skipped = 0;
 		unsigned falsePos = 0;
 #endif
@@ -943,9 +1041,20 @@ PastMessages Client::messages(MessageFilter const& _f) const noexcept
 		for (; ret.size() != m && n != end; n--, h = m_bc.details(h).parent)
 		{
 			auto d = m_bc.details(h);
+=======
+	// fill these params
+	unsigned skipped = 0;
+	unsigned falsePos = 0;
+#endif
+	auto h = m_bc.numberHash(begin);
+	unsigned n = begin;
+	for (; ret.size() != m && n != end; n--, h = m_bc.details(h).parent)
+	{
+>>>>>>> upstream/develop
 #if ETH_DEBUG
 			int total = 0;
 #endif
+<<<<<<< HEAD
 			if (_f.matches(d.bloom))
 			{
 				// Might have a block that contains a transaction that contains a matching message.
@@ -954,6 +1063,16 @@ PastMessages Client::messages(MessageFilter const& _f) const noexcept
 				BlockInfo bi;
 				for (unsigned i = 0; i < bs.size(); ++i)
 					if (_f.matches(bs[i]))
+=======
+		// check block bloom
+		if (_f.matches(m_bc.info(h).logBloom))
+			for (TransactionReceipt receipt: m_bc.receipts(h).receipts)
+			{
+				if (_f.matches(receipt.bloom()))
+				{
+					LogEntries le = _f.matches(receipt);
+					if (le.size())
+>>>>>>> upstream/develop
 					{
 						// Might have a transaction that contains a matching message.
 						if (ms.empty())
@@ -963,6 +1082,7 @@ PastMessages Client::messages(MessageFilter const& _f) const noexcept
 						if (pm.size())
 						{
 #if ETH_DEBUG
+<<<<<<< HEAD
 							total += pm.size();
 #endif
 							if (!bi)
@@ -975,22 +1095,44 @@ PastMessages Client::messages(MessageFilter const& _f) const noexcept
 								else
 									// Have a transaction that contains a matching message.
 									ret.push_back(pm[j].polish(h, ts, n, cb));
+=======
+						total += le.size();
+#endif
+						for (unsigned j = 0; j < le.size() && ret.size() != m; ++j)
+						{
+							if (s)
+								s--;
+							else
+								ret.insert(ret.begin(), le[j]);
+>>>>>>> upstream/develop
 						}
 					}
 #if ETH_DEBUG
 				if (!total)
 					falsePos++;
+<<<<<<< HEAD
 			}
 			else
 				skipped++;
 #else
 			}
+=======
+#endif
+			}
+#if ETH_DEBUG
+		else
+			skipped++;
+>>>>>>> upstream/develop
 #endif
 			if (n == end)
 				break;
 		}
 #if ETH_DEBUG
+<<<<<<< HEAD
 		//	cdebug << (begin - n) << "searched; " << skipped << "skipped; " << falsePos << "false +ves";
+=======
+	cdebug << (begin - n) << "searched; " << skipped << "skipped; " << falsePos << "false +ves";
+>>>>>>> upstream/develop
 #endif
 		return ret;
 	}

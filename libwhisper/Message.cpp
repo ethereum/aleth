@@ -34,33 +34,36 @@ Message::Message(Envelope const& _e, Secret const& _s)
 		if (_s)
 			if (!decrypt(_s, &(_e.data()), b))
 				return;
-		populate(_s ? b : _e.data());
-		m_to = KeyPair(_s).pub();
+		if (populate(_s ? b : _e.data()))
+			m_to = KeyPair(_s).pub();
 	}
 	catch (...)	// Invalid secret? TODO: replace ... with InvalidSecret
 	{
 	}
 }
 
-void Message::populate(bytes const& _data)
+bool Message::populate(bytes const& _data)
 {
 	if (!_data.size())
-		return;
+		return false;
 
 	byte flags = _data[0];
-	if (!!(flags & ContainsSignature) && _data.size() > sizeof(Signature) + 1)	// has a signature
+	if (!!(flags & ContainsSignature) && _data.size() >= sizeof(Signature) + 1)	// has a signature
 	{
 		bytesConstRef payload = bytesConstRef(&_data).cropped(1, _data.size() - sizeof(Signature) - 1);
 		h256 h = sha3(payload);
 		Signature const& sig = *(Signature const*)&(_data[1 + payload.size()]);
 		m_from = recover(sig, h);
+		if (!m_from)
+			return false;
 		m_payload = payload.toBytes();
 	}
 	else
 		m_payload = bytesConstRef(&_data).cropped(1).toBytes();
+	return true;
 }
 
-Envelope Message::seal(Secret _from, Topic const& _topic, unsigned _ttl, unsigned _workToProve)
+Envelope Message::seal(Secret _from, Topic const& _topic, unsigned _ttl, unsigned _workToProve) const
 {
 	Envelope ret(time(0) + _ttl, _ttl, _topic);
 
@@ -86,20 +89,24 @@ Envelope Message::seal(Secret _from, Topic const& _topic, unsigned _ttl, unsigne
 	return ret;
 }
 
+Envelope::Envelope(RLP const& _m)
+{
+	m_expiry = _m[0].toInt<unsigned>();
+	m_ttl = _m[1].toInt<unsigned>();
+	m_topic = _m[2].toVector<FixedHash<4>>();
+	m_data = _m[3].toBytes();
+	m_nonce = _m[4].toInt<u256>();
+}
+
 Message Envelope::open(Secret const& _s) const
 {
 	return Message(*this, _s);
 }
 
-Message Envelope::open() const
-{
-	return Message(*this);
-}
-
 unsigned Envelope::workProved() const
 {
 	h256 d[2];
-	d[0] = sha3NoNonce();
+	d[0] = sha3(WithoutNonce);
 	d[1] = m_nonce;
 	return dev::sha3(bytesConstRef(d[0].data(), 64)).firstBitSet();
 }
@@ -108,7 +115,7 @@ void Envelope::proveWork(unsigned _ms)
 {
 	// PoW
 	h256 d[2];
-	d[0] = sha3NoNonce();
+	d[0] = sha3(WithoutNonce);
 	uint32_t& n = *(uint32_t*)&(d[1][28]);
 	unsigned bestBitSet = 0;
 	bytesConstRef chuck(d[0].data(), 64);

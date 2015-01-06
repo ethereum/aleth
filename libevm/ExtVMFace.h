@@ -24,7 +24,10 @@
 #include <set>
 #include <functional>
 #include <libdevcore/Common.h>
-#include <libevmface/Instruction.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/RLP.h>
+#include <libdevcrypto/SHA3.h>
+#include <libevmcore/Instruction.h>
 #include <libethcore/CommonEth.h>
 #include <libethcore/BlockInfo.h>
 
@@ -33,16 +36,66 @@ namespace dev
 namespace eth
 {
 
-struct Post
+struct LogEntry
 {
-	Address from;
-	Address to;
-	u256 value;
+	LogEntry() {}
+	LogEntry(RLP const& _r) { address = (Address)_r[0]; topics = _r[1].toVector<h256>(); data = _r[2].toBytes(); }
+	LogEntry(Address const& _address, h256s const& _ts, bytes&& _d): address(_address), topics(_ts), data(std::move(_d)) {}
+
+	void streamRLP(RLPStream& _s) const { _s.appendList(3) << address << topics << data; }
+
+	LogBloom bloom() const
+	{
+		LogBloom ret;
+		ret.shiftBloom<3, 32>(sha3(address.ref()));
+		for (auto t: topics)
+			ret.shiftBloom<3, 32>(sha3(t.ref()));
+		return ret;
+	}
+
+	Address address;
+	h256s topics;
 	bytes data;
-	u256 gas;
 };
 
-using OnOpFunc = std::function<void(uint64_t /*steps*/, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, void/*VM*/*, void/*ExtVM*/ const*)>;
+using LogEntries = std::vector<LogEntry>;
+
+inline LogBloom bloom(LogEntries const& _logs)
+{
+	LogBloom ret;
+	for (auto const& l: _logs)
+		ret |= l.bloom();
+	return ret;
+}
+
+struct SubState
+{
+	std::set<Address> suicides;	///< Any accounts that have suicided.
+	LogEntries logs;			///< Any logs.
+	u256 refunds;				///< Refund counter of SSTORE nonzero->zero.
+
+	SubState& operator+=(SubState const& _s)
+	{
+		suicides += _s.suicides;
+		refunds += _s.refunds;
+		logs += _s.logs;
+		return *this;
+	}
+
+	void clear()
+	{
+		suicides.clear();
+		logs.clear();
+		refunds = 0;
+	}
+};
+
+class ExtVMFace;
+class VM;
+
+using LastHashes = std::vector<h256>;
+
+using OnOpFunc = std::function<void(uint64_t /*steps*/, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, VM*, ExtVMFace const*)>;
 
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
@@ -54,7 +107,7 @@ public:
 	ExtVMFace() = default;
 
 	/// Full constructor.
-	ExtVMFace(Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, unsigned _depth);
+	ExtVMFace(Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes const& _code, BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, LastHashes const& _lh, unsigned _depth);
 
 	virtual ~ExtVMFace() = default;
 
@@ -80,16 +133,22 @@ public:
 	virtual u256 txCount(Address) { return 0; }
 
 	/// Suicide the associated contract and give proceeds to the given address.
-	virtual void suicide(Address) { suicides.insert(myAddress); }
+	virtual void suicide(Address) { sub.suicides.insert(myAddress); }
 
 	/// Create a new (contract) account.
-	virtual h160 create(u256, u256*, bytesConstRef, OnOpFunc const&) { return h160(); }
+	virtual h160 create(u256, u256&, bytesConstRef, OnOpFunc const&) { return h160(); }
 
 	/// Make a new message call.
-	virtual bool call(Address, u256, bytesConstRef, u256*, bytesRef, OnOpFunc const&, Address, Address) { return false; }
+	virtual bool call(Address, u256, bytesConstRef, u256&, bytesRef, OnOpFunc const&, Address, Address) { return false; }
+
+	/// Revert any changes made (by any of the other calls).
+	virtual void log(h256s&& _topics, bytesConstRef _data) { sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes())); }
 
 	/// Revert any changes made (by any of the other calls).
 	virtual void revert() {}
+
+	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
+	h256 prevhash(u256 _number) { return _number < currentBlock.number && _number > (std::max<u256>(257, currentBlock.number) - 257) ? lastHashes[(unsigned)(currentBlock.number - 1 - _number)] : h256(); }	// TODO: CHECK!!!
 
 	/// Get the code at the given location in code ROM.
 	byte getCode(u256 _n) const { return _n < code.size() ? code[(size_t)_n] : 0; }
@@ -100,11 +159,12 @@ public:
 	u256 value;					///< Value (in Wei) that was passed to this address.
 	u256 gasPrice;				///< Price of gas (that we already paid).
 	bytesConstRef data;			///< Current input data.
-	bytesConstRef code;			///< Current code that is executing.
-	BlockInfo previousBlock;	///< The previous block's information.
+	bytes code;					///< Current code that is executing.
+	LastHashes lastHashes;		///< Most recent 256 blocks' hashes.
+	BlockInfo previousBlock;	///< The previous block's information.	TODO: PoC-8: REMOVE
 	BlockInfo currentBlock;		///< The current block's information.
-	std::set<Address> suicides;	///< Any accounts that have suicided.
-	unsigned depth;				///< Depth of the present call.
+	SubState sub;				///< Sub-band VM state (suicides, refund counter, logs).
+	unsigned depth = 0;			///< Depth of the present call.
 };
 
 }

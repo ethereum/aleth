@@ -25,7 +25,7 @@
 #include <map>
 #include <boost/noncopyable.hpp>
 
-#include <libsolidity/Scope.h>
+#include <libsolidity/DeclarationContainer.h>
 #include <libsolidity/ASTVisitor.h>
 
 namespace dev
@@ -33,32 +33,53 @@ namespace dev
 namespace solidity
 {
 
-//! Resolves name references, resolves all types and checks that all operations are valid for the
-//! inferred types. An exception is throw on the first error.
+/**
+ * Resolves name references, types and checks types of all expressions.
+ * Specifically, it checks that all operations are valid for the inferred types.
+ * An exception is throw on the first error.
+ */
 class NameAndTypeResolver: private boost::noncopyable
 {
 public:
-	NameAndTypeResolver() {}
-
+	explicit NameAndTypeResolver(std::vector<Declaration const*> const& _globals);
+	/// Registers all declarations found in the source unit.
+	void registerDeclarations(SourceUnit& _sourceUnit);
+	/// Resolves all names and types referenced from the given contract.
 	void resolveNamesAndTypes(ContractDefinition& _contract);
-	Declaration* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
+	/// Check all type requirements in the given contract.
+	void checkTypeRequirements(ContractDefinition& _contract);
+	/// Updates the given global declaration (used for "this"). Not to be used with declarations
+	/// that create their own scope.
+	void updateDeclaration(Declaration const& _declaration);
+
+	/// Resolves the given @a _name inside the scope @a _scope. If @a _scope is omitted,
+	/// the global scope is used (i.e. the one containing only the contract).
+	/// @returns a pointer to the declaration on success or nullptr on failure.
+	Declaration const* resolveName(ASTString const& _name, Declaration const* _scope = nullptr) const;
+
+	/// Resolves a name in the "current" scope. Should only be called during the initial
+	/// resolving phase.
+	Declaration const* getNameFromCurrentScope(ASTString const& _name, bool _recursive = true);
 
 private:
 	void reset();
 
-	//! Maps nodes declaring a scope to scopes, i.e. ContractDefinition, FunctionDeclaration and
-	//! StructDefinition (@todo not yet implemented), where nullptr denotes the global scope.
-	std::map<ASTNode*, Scope> m_scopes;
+	/// Maps nodes declaring a scope to scopes, i.e. ContractDefinition and FunctionDeclaration,
+	/// where nullptr denotes the global scope. Note that structs are not scope since they do
+	/// not contain code.
+	std::map<ASTNode const*, DeclarationContainer> m_scopes;
 
-	Scope* m_currentScope;
+	DeclarationContainer* m_currentScope;
 };
 
-//! Traverses the given AST upon construction and fills _scopes with all declarations inside the
-//! AST.
+/**
+ * Traverses the given AST upon construction and fills _scopes with all declarations inside the
+ * AST.
+ */
 class DeclarationRegistrationHelper: private ASTVisitor
 {
 public:
-	DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes, ASTNode& _astRoot);
+	DeclarationRegistrationHelper(std::map<ASTNode const*, DeclarationContainer>& _scopes, ASTNode& _astRoot);
 
 private:
 	bool visit(ContractDefinition& _contract);
@@ -67,23 +88,27 @@ private:
 	void endVisit(StructDefinition& _struct);
 	bool visit(FunctionDefinition& _function);
 	void endVisit(FunctionDefinition& _function);
+	void endVisit(VariableDefinition& _variableDefinition);
 	bool visit(VariableDeclaration& _declaration);
-	void endVisit(VariableDeclaration& _declaration);
 
-	void enterNewSubScope(ASTNode& _node);
+	void enterNewSubScope(Declaration const& _declaration);
 	void closeCurrentScope();
 	void registerDeclaration(Declaration& _declaration, bool _opensScope);
 
-	std::map<ASTNode*, Scope>& m_scopes;
-	Scope* m_currentScope;
+	std::map<ASTNode const*, DeclarationContainer>& m_scopes;
+	Declaration const* m_currentScope;
+	FunctionDefinition* m_currentFunction;
 };
 
-//! Resolves references to declarations (of variables and types) and also establishes the link
-//! between a return statement and the return parameter list.
+/**
+ * Resolves references to declarations (of variables and types) and also establishes the link
+ * between a return statement and the return parameter list.
+ */
 class ReferencesResolver: private ASTVisitor
 {
 public:
-	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver, ParameterList* _returnParameters);
+	ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
+					   ParameterList* _returnParameters, bool _allowLazyTypes = true);
 
 private:
 	virtual void endVisit(VariableDeclaration& _variable) override;
@@ -94,6 +119,7 @@ private:
 
 	NameAndTypeResolver& m_resolver;
 	ParameterList* m_returnParameters;
+	bool m_allowLazyTypes;
 };
 
 }

@@ -21,10 +21,10 @@
  */
 
 #include <libsolidity/NameAndTypeResolver.h>
-
 #include <libsolidity/AST.h>
 #include <libsolidity/Exceptions.h>
-#include <boost/assert.hpp>
+
+using namespace std;
 
 namespace dev
 {
@@ -32,12 +32,23 @@ namespace solidity
 {
 
 
+NameAndTypeResolver::NameAndTypeResolver(std::vector<Declaration const*> const& _globals)
+{
+	for (Declaration const* declaration: _globals)
+		m_scopes[nullptr].registerDeclaration(*declaration);
+}
+
+void NameAndTypeResolver::registerDeclarations(SourceUnit& _sourceUnit)
+{
+	// The helper registers all declarations in m_scopes as a side-effect of its construction.
+	DeclarationRegistrationHelper registrar(m_scopes, _sourceUnit);
+}
+
 void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 {
-	reset();
-	DeclarationRegistrationHelper registrar(m_scopes, _contract);
 	m_currentScope = &m_scopes[&_contract];
-	//@todo structs
+	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
+		ReferencesResolver resolver(*structDef, *this, nullptr);
 	for (ASTPointer<VariableDeclaration> const& variable: _contract.getStateVariables())
 		ReferencesResolver resolver(*variable, *this, nullptr);
 	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
@@ -46,31 +57,38 @@ void NameAndTypeResolver::resolveNamesAndTypes(ContractDefinition& _contract)
 		ReferencesResolver referencesResolver(*function, *this,
 											  function->getReturnParameterList().get());
 	}
-	// First, the parameter types of all functions need to be resolved before we can check
-	// the types, since it is possible to call functions that are only defined later
-	// in the source.
-	for (ASTPointer<FunctionDefinition> const& function: _contract.getDefinedFunctions())
-	{
-		m_currentScope = &m_scopes[function.get()];
-		function->getBody().checkTypeRequirements();
-	}
+	m_currentScope = &m_scopes[nullptr];
 }
 
-void NameAndTypeResolver::reset()
+void NameAndTypeResolver::checkTypeRequirements(ContractDefinition& _contract)
 {
-	m_scopes.clear();
-	m_currentScope = nullptr;
+	for (ASTPointer<StructDefinition> const& structDef: _contract.getDefinedStructs())
+		structDef->checkValidityOfMembers();
+	_contract.checkTypeRequirements();
 }
 
-Declaration* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
+void NameAndTypeResolver::updateDeclaration(Declaration const& _declaration)
+{
+	m_scopes[nullptr].registerDeclaration(_declaration, true);
+	solAssert(_declaration.getScope() == nullptr, "Updated declaration outside global scope.");
+}
+
+Declaration const* NameAndTypeResolver::resolveName(ASTString const& _name, Declaration const* _scope) const
+{
+	auto iterator = m_scopes.find(_scope);
+	if (iterator == end(m_scopes))
+		return nullptr;
+	return iterator->second.resolveName(_name, false);
+}
+
+Declaration const* NameAndTypeResolver::getNameFromCurrentScope(ASTString const& _name, bool _recursive)
 {
 	return m_currentScope->resolveName(_name, _recursive);
 }
 
-
-DeclarationRegistrationHelper::DeclarationRegistrationHelper(std::map<ASTNode*, Scope>& _scopes,
+DeclarationRegistrationHelper::DeclarationRegistrationHelper(map<ASTNode const*, DeclarationContainer>& _scopes,
 															 ASTNode& _astRoot):
-	m_scopes(_scopes), m_currentScope(&m_scopes[nullptr])
+	m_scopes(_scopes), m_currentScope(nullptr)
 {
 	_astRoot.accept(*this);
 }
@@ -100,12 +118,22 @@ void DeclarationRegistrationHelper::endVisit(StructDefinition&)
 bool DeclarationRegistrationHelper::visit(FunctionDefinition& _function)
 {
 	registerDeclaration(_function, true);
+	m_currentFunction = &_function;
 	return true;
 }
 
 void DeclarationRegistrationHelper::endVisit(FunctionDefinition&)
 {
+	m_currentFunction = nullptr;
 	closeCurrentScope();
+}
+
+void DeclarationRegistrationHelper::endVisit(VariableDefinition& _variableDefinition)
+{
+	// Register the local variables with the function
+	// This does not fit here perfectly, but it saves us another AST visit.
+	solAssert(m_currentFunction, "Variable definition without function.");
+	m_currentFunction->addLocalVariable(_variableDefinition.getDeclaration());
 }
 
 bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
@@ -114,37 +142,35 @@ bool DeclarationRegistrationHelper::visit(VariableDeclaration& _declaration)
 	return true;
 }
 
-void DeclarationRegistrationHelper::endVisit(VariableDeclaration&)
+void DeclarationRegistrationHelper::enterNewSubScope(Declaration const& _declaration)
 {
-}
-
-void DeclarationRegistrationHelper::enterNewSubScope(ASTNode& _node)
-{
-	std::map<ASTNode*, Scope>::iterator iter;
+	map<ASTNode const*, DeclarationContainer>::iterator iter;
 	bool newlyAdded;
-	std::tie(iter, newlyAdded) = m_scopes.emplace(&_node, Scope(m_currentScope));
-	BOOST_ASSERT(newlyAdded);
-	m_currentScope = &iter->second;
+	tie(iter, newlyAdded) = m_scopes.emplace(&_declaration, DeclarationContainer(m_currentScope, &m_scopes[m_currentScope]));
+	solAssert(newlyAdded, "Unable to add new scope.");
+	m_currentScope = &_declaration;
 }
 
 void DeclarationRegistrationHelper::closeCurrentScope()
 {
-	BOOST_ASSERT(m_currentScope != nullptr);
-	m_currentScope = m_currentScope->getOuterScope();
+	solAssert(m_currentScope, "Closed non-existing scope.");
+	m_currentScope = m_scopes[m_currentScope].getEnclosingDeclaration();
 }
 
 void DeclarationRegistrationHelper::registerDeclaration(Declaration& _declaration, bool _opensScope)
 {
-	BOOST_ASSERT(m_currentScope != nullptr);
-	if (!m_currentScope->registerDeclaration(_declaration))
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Identifier already declared."));
+	if (!m_scopes[m_currentScope].registerDeclaration(_declaration))
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_declaration.getLocation())
+												 << errinfo_comment("Identifier already declared."));
+	//@todo the exception should also contain the location of the first declaration
+	_declaration.setScope(m_currentScope);
 	if (_opensScope)
 		enterNewSubScope(_declaration);
 }
 
 ReferencesResolver::ReferencesResolver(ASTNode& _root, NameAndTypeResolver& _resolver,
-									   ParameterList* _returnParameters):
-	m_resolver(_resolver), m_returnParameters(_returnParameters)
+									   ParameterList* _returnParameters, bool _allowLazyTypes):
+	m_resolver(_resolver), m_returnParameters(_returnParameters), m_allowLazyTypes(_allowLazyTypes)
 {
 	_root.accept(*this);
 }
@@ -153,42 +179,45 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 {
 	// endVisit because the internal type needs resolving if it is a user defined type
 	// or mapping
-	if (_variable.getTypeName() != nullptr)
+	if (_variable.getTypeName())
+	{
 		_variable.setType(_variable.getTypeName()->toType());
+		if (!_variable.getType())
+			BOOST_THROW_EXCEPTION(_variable.getTypeName()->createTypeError("Invalid type name"));
+	}
+	else if (!m_allowLazyTypes)
+		BOOST_THROW_EXCEPTION(_variable.createTypeError("Explicit type needed."));
 	// otherwise we have a "var"-declaration whose type is resolved by the first assignment
 }
 
 bool ReferencesResolver::visit(Return& _return)
 {
-	BOOST_ASSERT(m_returnParameters != nullptr);
+	solAssert(m_returnParameters, "Return parameters not set.");
 	_return.setFunctionReturnParameters(*m_returnParameters);
 	return true;
 }
 
 bool ReferencesResolver::visit(Mapping&)
 {
-	// @todo
 	return true;
 }
 
 bool ReferencesResolver::visit(UserDefinedTypeName& _typeName)
 {
-	Declaration* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
-	if (declaration == nullptr)
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Undeclared identifier."));
-	StructDefinition* referencedStruct = dynamic_cast<StructDefinition*>(declaration);
-	//@todo later, contracts are also valid types
-	if (referencedStruct == nullptr)
-		BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("Identifier does not name a type name."));
-	_typeName.setReferencedStruct(*referencedStruct);
+	Declaration const* declaration = m_resolver.getNameFromCurrentScope(_typeName.getName());
+	if (!declaration)
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_typeName.getLocation())
+												 << errinfo_comment("Undeclared identifier."));
+	_typeName.setReferencedDeclaration(*declaration);
 	return false;
 }
 
 bool ReferencesResolver::visit(Identifier& _identifier)
 {
-	Declaration* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
-	if (declaration == nullptr)
-		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_comment("Undeclared identifier."));
+	Declaration const* declaration = m_resolver.getNameFromCurrentScope(_identifier.getName());
+	if (!declaration)
+		BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(_identifier.getLocation())
+												 << errinfo_comment("Undeclared identifier."));
 	_identifier.setReferencedDeclaration(*declaration);
 	return false;
 }

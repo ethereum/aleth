@@ -25,6 +25,8 @@
 #include <mutex>
 #include <list>
 #include <atomic>
+#include <string>
+#include <array>
 #include <boost/utility.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
@@ -36,8 +38,7 @@
 #include "TransactionQueue.h"
 #include "State.h"
 #include "CommonNet.h"
-#include "PastMessage.h"
-#include "MessageFilter.h"
+#include "LogFilter.h"
 #include "Miner.h"
 #include "Interface.h"
 
@@ -79,9 +80,9 @@ static const int GenesisBlock = INT_MIN;
 
 struct InstalledFilter
 {
-	InstalledFilter(MessageFilter const& _f): filter(_f) {}
+	InstalledFilter(LogFilter const& _f): filter(_f) {}
 
-	MessageFilter filter;
+	LogFilter filter;
 	unsigned refCount = 1;
 };
 
@@ -105,6 +106,35 @@ struct WorkChannel: public LogChannel { static const char* name() { return "-W-"
 #define cwork dev::LogOutputStream<dev::eth::WorkChannel, true>()
 #define cworkin dev::LogOutputStream<dev::eth::WorkInChannel, true>()
 #define cworkout dev::LogOutputStream<dev::eth::WorkOutChannel, true>()
+
+template <class T> struct ABISerialiser {};
+template <unsigned N> struct ABISerialiser<FixedHash<N>> { static bytes serialise(FixedHash<N> const& _t) { return _t.asBytes(); } };
+template <> struct ABISerialiser<u256> { static bytes serialise(u256 const& _t) { return h256(_t).asBytes(); } };
+template <> struct ABISerialiser<u160> { static bytes serialise(u160 const& _t) { return h160(_t).asBytes(); } };
+template <> struct ABISerialiser<string32> { static bytes serialise(string32 const& _t) { return bytesConstRef((byte const*)_t.data(), 32).toBytes(); } };
+
+inline bytes abiInAux() { return {}; }
+template <class T, class ... U> bytes abiInAux(T const& _t, U const& ... _u)
+{
+	return ABISerialiser<T>::serialise(_t) + abiInAux(_u ...);
+}
+
+template <class ... T> bytes abiIn(byte _id, T const& ... _t)
+{
+	return bytes(1, _id) + abiInAux(_t ...);
+}
+
+template <class T> struct ABIDeserialiser {};
+template <unsigned N> struct ABIDeserialiser<FixedHash<N>> { static FixedHash<N> deserialise(bytesConstRef& io_t) { FixedHash<N> ret; io_t.cropped(0, N).populate(ret.ref()); return ret; } };
+template <> struct ABIDeserialiser<u256> { static u256 deserialise(bytesConstRef& io_t) { u256 ret = fromBigEndian<u256>(io_t.cropped(0, 32)); io_t = io_t.cropped(32); return ret; } };
+template <> struct ABIDeserialiser<u160> { static u256 deserialise(bytesConstRef& io_t) { u160 ret = fromBigEndian<u160>(io_t.cropped(0, 20)); io_t = io_t.cropped(20); return ret; } };
+template <> struct ABIDeserialiser<string32> { static string32 deserialise(bytesConstRef& io_t) { string32 ret; io_t.cropped(0, 32).populate(vector_ref<char>(ret.data(), 32)); io_t = io_t.cropped(32); return ret; } };
+
+template <class T> T abiOut(bytes const& _data)
+{
+	bytesConstRef o(&_data);
+	return ABIDeserialiser<T>::deserialise(o);
+}
 
 /**
  * @brief Main API hub for interfacing with Ethereum.
@@ -136,6 +166,9 @@ public:
 	/// Makes the given call. Nothing is recorded into the state.
 	virtual bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo) noexcept;
 
+	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
+	virtual bytes call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether);
+
 	// Informational stuff
 
 	// [NEW API]
@@ -152,6 +185,7 @@ public:
 	virtual bytes codeAt(Address _a, int _block) const noexcept;
 	virtual std::map<u256, u256> storageAt(Address _a, int _block) const noexcept;
 
+<<<<<<< HEAD
 	virtual unsigned installWatch(MessageFilter const& _filter) noexcept;
 	virtual unsigned installWatch(h256 _filterId) noexcept;
 	virtual void uninstallWatch(unsigned _watchId) noexcept;
@@ -161,6 +195,16 @@ public:
 
 	virtual PastMessages messages(unsigned _watchId) const noexcept { try { std::lock_guard<std::mutex> l(m_filterLock); return messages(m_filters.at(m_watches.at(_watchId).id).filter); } catch (...) { return PastMessages(); } }
 	virtual PastMessages messages(MessageFilter const& _filter) const noexcept;
+=======
+	virtual unsigned installWatch(LogFilter const& _filter);
+	virtual unsigned installWatch(h256 _filterId);
+	virtual void uninstallWatch(unsigned _watchId);
+	virtual bool peekWatch(unsigned _watchId) const { std::lock_guard<std::mutex> l(m_filterLock); try { return m_watches.at(_watchId).changes != 0; } catch (...) { return false; } }
+	virtual bool checkWatch(unsigned _watchId) { std::lock_guard<std::mutex> l(m_filterLock); bool ret = false; try { ret = m_watches.at(_watchId).changes != 0; m_watches.at(_watchId).changes = 0; } catch (...) {} return ret; }
+
+	virtual LogEntries logs(unsigned _watchId) const { try { std::lock_guard<std::mutex> l(m_filterLock); return logs(m_filters.at(m_watches.at(_watchId).id).filter); } catch (...) { return LogEntries(); } }
+	virtual LogEntries logs(LogFilter const& _filter) const;
+>>>>>>> upstream/develop
 
 	// [EXTRA API]:
 
@@ -263,7 +307,7 @@ private:
 
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
 	/// Insert any filters that are activated into @a o_changed.
-	void appendFromNewPending(h256 _pendingTransactionBloom, h256Set& o_changed) const;
+	void appendFromNewPending(LogBloom _pendingTransactionBloom, h256Set& o_changed) const;
 
 	/// Collate the changed filters for the hash of the given block.
 	/// Insert any filters that are activated into @a o_changed.
@@ -289,7 +333,7 @@ private:
 	State m_preMine;						///< The present state of the client.
 	State m_postMine;						///< The state of the client which we're mining (i.e. it'll have all the rewards added).
 
-	std::weak_ptr<EthereumHost> m_host;	///< Our Ethereum Host. Don't do anything if we can't lock.
+	std::weak_ptr<EthereumHost> m_host;		///< Our Ethereum Host. Don't do anything if we can't lock.
 
 	std::vector<Miner> m_miners;
 	mutable boost::shared_mutex x_miners;

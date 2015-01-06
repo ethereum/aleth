@@ -34,12 +34,15 @@ namespace solidity
 {
 
 class ASTNode;
+class SourceUnit;
+class ImportDirective;
 class Declaration;
 class ContractDefinition;
 class StructDefinition;
 class ParameterList;
 class FunctionDefinition;
 class VariableDeclaration;
+class MagicVariableDeclaration;
 class TypeName;
 class ElementaryTypeName;
 class UserDefinedTypeName;
@@ -49,15 +52,18 @@ class Block;
 class IfStatement;
 class BreakableStatement;
 class WhileStatement;
+class ForStatement;
 class Continue;
 class Break;
 class Return;
 class VariableDefinition;
+class ExpressionStatement;
 class Expression;
 class Assignment;
 class UnaryOperation;
 class BinaryOperation;
 class FunctionCall;
+class NewExpression;
 class MemberAccess;
 class IndexAccess;
 class PrimaryExpression;

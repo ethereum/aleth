@@ -75,7 +75,11 @@ Session::~Session()
 	try
 	{
 		if (m_socket.is_open())
+		{
+			boost::system::error_code ec;
+			m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 			m_socket.close();
+		}
 	}
 	catch (...){}
 }
@@ -191,7 +195,7 @@ bool Session::interpret(RLP const& _r)
 		// "'operator<<' should be declared prior to the call site or in an associated namespace of one of its arguments"
 		stringstream capslog;
 		for (auto cap: caps)
-			capslog << "(" << hex << cap.first << "," << hex << cap.second << ")";
+			capslog << "(" << cap.first << "," << dec << cap.second << ")";
 
 		clogS(NetMessageSummary) << "Hello: " << clientVersion << "V[" << m_protocolVersion << "]" << id.abridged() << showbase << capslog.str() << dec << listenPort;
 
@@ -344,7 +348,7 @@ bool Session::interpret(RLP const& _r)
 //				goto CONTINUE;	// Wierd port.
 
 			// Avoid our random other addresses that they might end up giving us.
-			for (auto i: m_server->m_addresses)
+			for (auto i: m_server->m_peerAddresses)
 				if (ep.address() == i && ep.port() == m_server->listenPort())
 					goto CONTINUE;
 
@@ -475,11 +479,12 @@ void Session::drop(DisconnectReason _reason)
 {
 	if (m_dropped)
 		return;
-	cerr << (void*)this << " dropped" << endl;
 	if (m_socket.is_open())
 		try
 		{
 			clogS(NetConnect) << "Closing " << m_socket.remote_endpoint() << "(" << reasonOf(_reason) << ")";
+			boost::system::error_code ec;
+			m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 			m_socket.close();
 		}
 		catch (...) {}

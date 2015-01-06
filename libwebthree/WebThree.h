@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Client.h
+/** @file WebThree.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
@@ -92,9 +92,6 @@ public:
 	/// Connect to a particular peer.
 	void connect(std::string const& _seedHost, unsigned short _port = 30303);
 
-	/// Is the network subsystem up?
-	bool haveNetwork() { return peerCount() != 0; }
-
 	/// Save peers
 	dev::bytes saveNodes();
 
@@ -118,6 +115,9 @@ public:
 
 	/// Stop the network subsystem.
 	void stopNetwork() { m_net.stop(); }
+	
+	/// Is network working? there may not be any peers yet.
+	bool isNetworkStarted() { return m_net.isStarted(); }
 
 private:
 	std::string m_clientVersion;					///< Our end-application client's name/version.

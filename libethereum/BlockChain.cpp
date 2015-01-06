@@ -52,9 +52,9 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
 	return _out;
 }
 
-std::map<Address, AddressState> const& dev::eth::genesisState()
+std::map<Address, Account> const& dev::eth::genesisState()
 {
-	static std::map<Address, AddressState> s_ret;
+	static std::map<Address, Account> s_ret;
 	if (s_ret.empty())
 		// Initialise.
 		for (auto i: vector<string>({
@@ -67,11 +67,11 @@ std::map<Address, AddressState> const& dev::eth::genesisState()
 			"6c386a4b26f73c802f34673f7248bb118f97424a",
 			"e4157b34ea9615cfbde6b4fda419828124b70c78"
 		}))
-			s_ret[Address(fromHex(i))] = AddressState(0, u256(1) << 200, h256(), EmptySHA3);
+			s_ret[Address(fromHex(i))] = Account(u256(1) << 200, Account::NormalCreation);
 	return s_ret;
 }
 
-BlockInfo* BlockChain::s_genesis = nullptr;
+std::unique_ptr<BlockInfo> BlockChain::s_genesis;
 boost::shared_mutex BlockChain::x_genesis;
 
 ldb::Slice dev::eth::toSlice(h256 _h, unsigned _sub)
@@ -101,8 +101,8 @@ bytes BlockChain::createGenesisBlock()
 		stateRoot = state.root();
 	}
 
-	block.appendList(13) << h256() << bytes() << h160();
-	block.append(stateRoot, false, true) << bytes() << c_genesisDifficulty << 0 << 0 << 1000000 << 0 << (unsigned)0 << string() << sha3(bytes(1, 42));
+	block.appendList(14)
+		<< h256() << EmptyListSHA3 << h160() << stateRoot << EmptyTrie << EmptyTrie << LogBloom() << c_genesisDifficulty << 0 << 1000000 << 0 << (unsigned)0 << string() << sha3(bytes(1, 42));
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);
 	return block.out();
@@ -145,7 +145,7 @@ void BlockChain::open(std::string _path, bool _killExisting)
 	if (!details(m_genesisHash))
 	{
 		// Insert details of genesis block.
-		m_details[m_genesisHash] = BlockDetails(0, c_genesisDifficulty, h256(), {}, h256());
+		m_details[m_genesisHash] = BlockDetails(0, c_genesisDifficulty, h256(), {});
 		auto r = m_details[m_genesisHash].rlp();
 		m_extrasDB->Put(m_writeOptions, ldb::Slice((char const*)&m_genesisHash, 32), (ldb::Slice)dev::ref(r));
 	}
@@ -168,8 +168,6 @@ void BlockChain::close()
 	delete m_db;
 	m_lastBlockHash = m_genesisHash;
 	m_details.clear();
-	m_blooms.clear();
-	m_traces.clear();
 	m_cache.clear();
 }
 
@@ -305,13 +303,12 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 		// Get total difficulty increase and update state, checking it.
 		State s(bi.coinbaseAddress, _db);
 		auto tdIncrease = s.enactOn(&_block, bi, *this);
-		auto b = s.bloom();
-		BlockBlooms bb;
-		BlockTraces bt;
+		BlockLogBlooms blb;
+		BlockReceipts br;
 		for (unsigned i = 0; i < s.pending().size(); ++i)
 		{
-			bt.traces.push_back(s.changesFromPending(i));
-			bb.blooms.push_back(s.changesFromPending(i).bloom());
+			blb.blooms.push_back(s.receipt(i).bloom());
+			br.receipts.push_back(s.receipt(i));
 		}
 		s.cleanup(true);
 		td = pd.totalDifficulty + tdIncrease;
@@ -322,22 +319,22 @@ h256s BlockChain::import(bytes const& _block, OverlayDB const& _db)
 		// All ok - insert into DB
 		{
 			WriteGuard l(x_details);
-			m_details[newHash] = BlockDetails((unsigned)pd.number + 1, td, bi.parentHash, {}, b);
+			m_details[newHash] = BlockDetails((unsigned)pd.number + 1, td, bi.parentHash, {});
 			m_details[bi.parentHash].children.push_back(newHash);
 		}
 		{
-			WriteGuard l(x_blooms);
-			m_blooms[newHash] = bb;
+			WriteGuard l(x_logBlooms);
+			m_logBlooms[newHash] = blb;
 		}
 		{
-			WriteGuard l(x_traces);
-			m_traces[newHash] = bt;
+			WriteGuard l(x_receipts);
+			m_receipts[newHash] = br;
 		}
 
 		m_extrasDB->Put(m_writeOptions, toSlice(newHash), (ldb::Slice)dev::ref(m_details[newHash].rlp()));
 		m_extrasDB->Put(m_writeOptions, toSlice(bi.parentHash), (ldb::Slice)dev::ref(m_details[bi.parentHash].rlp()));
-		m_extrasDB->Put(m_writeOptions, toSlice(newHash, 1), (ldb::Slice)dev::ref(m_blooms[newHash].rlp()));
-		m_extrasDB->Put(m_writeOptions, toSlice(newHash, 2), (ldb::Slice)dev::ref(m_traces[newHash].rlp()));
+		m_extrasDB->Put(m_writeOptions, toSlice(newHash, 3), (ldb::Slice)dev::ref(m_logBlooms[newHash].rlp()));
+		m_extrasDB->Put(m_writeOptions, toSlice(newHash, 4), (ldb::Slice)dev::ref(m_receipts[newHash].rlp()));
 		m_db->Put(m_writeOptions, toSlice(newHash), (ldb::Slice)ref(_block));
 
 #if ETH_PARANOIA

@@ -27,6 +27,7 @@
 #include <memory>
 #include <utility>
 #include <libdevcore/RLP.h>
+#include <libdevcore/Worker.h>
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/SHA3.h>
 #include "Common.h"
@@ -38,7 +39,7 @@ namespace dev
 namespace shh
 {
 
-class WhisperHost: public HostCapability<WhisperPeer>, public Interface
+class WhisperHost: public HostCapability<WhisperPeer>, public Interface, public Worker
 {
 	friend class WhisperPeer;
 
@@ -46,26 +47,38 @@ public:
 	WhisperHost();
 	virtual ~WhisperHost();
 
-	unsigned protocolVersion() const { return 0; }
+	unsigned protocolVersion() const { return 1; }
 
-	virtual void inject(Envelope const& _e, WhisperPeer* _from = nullptr);
+	virtual void inject(Envelope const& _e, WhisperPeer* _from = nullptr) override;
 
 	using Interface::installWatch;
-	virtual unsigned installWatch(TopicFilter const& _filter);
-	virtual unsigned installWatchOnId(h256 _filterId);
-	virtual void uninstallWatch(unsigned _watchId);
-	virtual h256s peekWatch(unsigned _watchId) const { dev::Guard l(m_filterLock); try { return m_watches.at(_watchId).changes; } catch (...) { return h256s(); } }
-	virtual h256s checkWatch(unsigned _watchId) { dev::Guard l(m_filterLock); h256s ret; try { ret = m_watches.at(_watchId).changes; m_watches.at(_watchId).changes.clear(); } catch (...) {} return ret; }
+	virtual unsigned installWatch(TopicFilter const& _filter) override;
+	virtual unsigned installWatchOnId(h256 _filterId) override;
+	virtual void uninstallWatch(unsigned _watchId) override;
+	virtual h256s peekWatch(unsigned _watchId) const override { dev::Guard l(m_filterLock); try { return m_watches.at(_watchId).changes; } catch (...) { return h256s(); } }
+	virtual h256s checkWatch(unsigned _watchId) override { cleanup(); dev::Guard l(m_filterLock); h256s ret; try { ret = m_watches.at(_watchId).changes; m_watches.at(_watchId).changes.clear(); } catch (...) {} return ret; }
+	virtual h256s watchMessages(unsigned _watchId) override;
 
-	virtual Envelope envelope(h256 _m) const { try { dev::ReadGuard l(x_messages); return m_messages.at(_m); } catch (...) { return Envelope(); } }
+	virtual Envelope envelope(h256 _m) const override { try { dev::ReadGuard l(x_messages); return m_messages.at(_m); } catch (...) { return Envelope(); } }
+
+	std::map<h256, Envelope> all() const { ReadGuard l(x_messages); return m_messages; }
+
+	void cleanup();
+
+protected:
+	void doWork();
 
 private:
+	virtual void onStarting() { startWorking(); }
+	virtual void onStopping() { stopWorking(); }
+
 	void streamMessage(h256 _m, RLPStream& _s) const;
 
 	void noteChanged(h256 _messageHash, h256 _filter);
 
 	mutable dev::SharedMutex x_messages;
 	std::map<h256, Envelope> m_messages;
+	std::multimap<unsigned, h256> m_expiryQueue;
 
 	mutable dev::Mutex m_filterLock;
 	std::map<h256, InstalledFilter> m_filters;

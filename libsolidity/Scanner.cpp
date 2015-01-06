@@ -52,8 +52,10 @@
 
 #include <algorithm>
 #include <tuple>
-
+#include <libsolidity/Utils.h>
 #include <libsolidity/Scanner.h>
+
+using namespace std;
 
 namespace dev
 {
@@ -62,34 +64,34 @@ namespace solidity
 
 namespace
 {
-bool IsDecimalDigit(char c)
+bool isDecimalDigit(char c)
 {
 	return '0' <= c && c <= '9';
 }
-bool IsHexDigit(char c)
+bool isHexDigit(char c)
 {
-	return IsDecimalDigit(c)
+	return isDecimalDigit(c)
 		   || ('a' <= c && c <= 'f')
 		   || ('A' <= c && c <= 'F');
 }
-bool IsLineTerminator(char c)
+bool isLineTerminator(char c)
 {
 	return c == '\n';
 }
-bool IsWhiteSpace(char c)
+bool isWhiteSpace(char c)
 {
-	return c == ' ' || c == '\n' || c == '\t';
+	return c == ' ' || c == '\n' || c == '\t' || c == '\r';
 }
-bool IsIdentifierStart(char c)
+bool isIdentifierStart(char c)
 {
 	return c == '_' || c == '$' || ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
-bool IsIdentifierPart(char c)
+bool isIdentifierPart(char c)
 {
-	return IsIdentifierStart(c) || IsDecimalDigit(c);
+	return isIdentifierStart(c) || isDecimalDigit(c);
 }
 
-int HexValue(char c)
+int hexValue(char c)
 {
 	if (c >= '0' && c <= '9')
 		return c - '0';
@@ -101,28 +103,69 @@ int HexValue(char c)
 }
 } // end anonymous namespace
 
-Scanner::Scanner(CharStream const& _source)
-{
-	reset(_source);
-}
 
-void Scanner::reset(CharStream const& _source)
+
+/// Scoped helper for literal recording. Automatically drops the literal
+/// if aborting the scanning before it's complete.
+enum LiteralType {
+	LITERAL_TYPE_STRING,
+	LITERAL_TYPE_NUMBER, // not really different from string type in behaviour
+	LITERAL_TYPE_COMMENT
+};
+
+class LiteralScope
+{
+public:
+	explicit LiteralScope(Scanner* _self, enum LiteralType _type): m_type(_type)
+	, m_scanner(_self)
+	, m_complete(false)
+	{
+		if (_type == LITERAL_TYPE_COMMENT)
+			m_scanner->m_nextSkippedComment.literal.clear();
+		else
+			m_scanner->m_nextToken.literal.clear();
+	}
+	~LiteralScope()
+	{
+		if (!m_complete)
+		{
+			if (m_type == LITERAL_TYPE_COMMENT)
+				m_scanner->m_nextSkippedComment.literal.clear();
+			else
+				m_scanner->m_nextToken.literal.clear();
+		}
+	}
+	void complete() { m_complete = true; }
+
+private:
+	enum LiteralType m_type;
+	Scanner* m_scanner;
+	bool m_complete;
+}; // end of LiteralScope class
+
+
+void Scanner::reset(CharStream const& _source, string const& _sourceName)
 {
 	m_source = _source;
+	m_sourceName = make_shared<string const>(_sourceName);
+	reset();
+}
+
+void Scanner::reset()
+{
+	m_source.reset();
 	m_char = m_source.get();
 	skipWhitespace();
 	scanToken();
 	next();
 }
 
-
-bool Scanner::scanHexNumber(char& o_scannedNumber, int _expectedLength)
+bool Scanner::scanHexByte(char& o_scannedByte)
 {
-	BOOST_ASSERT(_expectedLength <= 4);  // prevent overflow
 	char x = 0;
-	for (int i = 0; i < _expectedLength; i++)
+	for (int i = 0; i < 2; i++)
 	{
-		int d = HexValue(m_char);
+		int d = hexValue(m_char);
 		if (d < 0)
 		{
 			rollback(i);
@@ -131,7 +174,7 @@ bool Scanner::scanHexNumber(char& o_scannedNumber, int _expectedLength)
 		x = x * 16 + d;
 		advance();
 	}
-	o_scannedNumber = x;
+	o_scannedByte = x;
 	return true;
 }
 
@@ -141,9 +184,11 @@ BOOST_STATIC_ASSERT(Token::NUM_TOKENS <= 0x100);
 
 Token::Value Scanner::next()
 {
-	m_current_token = m_next_token;
+	m_currentToken = m_nextToken;
+	m_skippedComment = m_nextSkippedComment;
 	scanToken();
-	return m_current_token.token;
+
+	return m_currentToken.token;
 }
 
 Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _else)
@@ -155,16 +200,23 @@ Token::Value Scanner::selectToken(char _next, Token::Value _then, Token::Value _
 		return _else;
 }
 
-
 bool Scanner::skipWhitespace()
 {
-	int const start_position = getSourcePos();
-	while (IsWhiteSpace(m_char))
+	int const startPosition = getSourcePos();
+	while (isWhiteSpace(m_char))
 		advance();
 	// Return whether or not we skipped any characters.
-	return getSourcePos() != start_position;
+	return getSourcePos() != startPosition;
 }
 
+bool Scanner::skipWhitespaceExceptLF()
+{
+	int const startPosition = getSourcePos();
+	while (isWhiteSpace(m_char) && !isLineTerminator(m_char))
+		advance();
+	// Return whether or not we skipped any characters.
+	return getSourcePos() != startPosition;
+}
 
 Token::Value Scanner::skipSingleLineComment()
 {
@@ -172,13 +224,42 @@ Token::Value Scanner::skipSingleLineComment()
 	// to be part of the single-line comment; it is recognized
 	// separately by the lexical grammar and becomes part of the
 	// stream of input elements for the syntactic grammar
-	while (advance() && !IsLineTerminator(m_char)) { };
+	while (advance() && !isLineTerminator(m_char)) { };
 	return Token::WHITESPACE;
+}
+
+Token::Value Scanner::scanSingleLineDocComment()
+{
+	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
+	advance(); //consume the last '/' at ///
+	skipWhitespaceExceptLF();
+	while (!isSourcePastEndOfInput())
+	{
+		if (isLineTerminator(m_char))
+		{
+			// check if next line is also a documentation comment
+			skipWhitespace();
+			if (!m_source.isPastEndOfInput(3) &&
+				m_source.get(0) == '/' &&
+				m_source.get(1) == '/' &&
+				m_source.get(2) == '/')
+			{
+				addCommentLiteralChar('\n');
+				m_char = m_source.advanceAndGet(3);
+			}
+			else
+				break; // next line is not a documentation comment, we are done
+
+		}
+		addCommentLiteralChar(m_char);
+		advance();
+	}
+	literal.complete();
+	return Token::COMMENT_LITERAL;
 }
 
 Token::Value Scanner::skipMultiLineComment()
 {
-	BOOST_ASSERT(m_char == '*');
 	advance();
 	while (!isSourcePastEndOfInput())
 	{
@@ -198,14 +279,113 @@ Token::Value Scanner::skipMultiLineComment()
 	return Token::ILLEGAL;
 }
 
+Token::Value Scanner::scanMultiLineDocComment()
+{
+	LiteralScope literal(this, LITERAL_TYPE_COMMENT);
+	bool endFound = false;
+	bool charsAdded = false;
+
+	while (!isSourcePastEndOfInput())
+	{
+		//handle newlines in multline comments
+		if (isLineTerminator(m_char))
+		{
+			skipWhitespace();
+			if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) != '/')
+			{ // skip first '*' in subsequent lines
+				if (charsAdded)
+					addCommentLiteralChar('\n');
+				m_char = m_source.advanceAndGet(2);
+			}
+			else if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
+			{ // if after newline the comment ends, don't insert the newline
+				m_char = m_source.advanceAndGet(2);
+				endFound = true;
+				break;
+			}
+			else if (charsAdded)
+				addCommentLiteralChar('\n');
+		}
+
+		if (!m_source.isPastEndOfInput(1) && m_source.get(0) == '*' && m_source.get(1) == '/')
+		{
+			m_char = m_source.advanceAndGet(2);
+			endFound = true;
+			break;
+		}
+		addCommentLiteralChar(m_char);
+		charsAdded = true;
+		advance();
+	}
+	literal.complete();
+	if (!endFound)
+		return Token::ILLEGAL;
+	else
+		return Token::COMMENT_LITERAL;
+}
+
+Token::Value Scanner::scanSlash()
+{
+	int firstSlashPosition = getSourcePos();
+	advance();
+	if (m_char == '/')
+	{
+		if (!advance()) /* double slash comment directly before EOS */
+			return  Token::WHITESPACE;
+		else if (m_char == '/')
+		{
+			// doxygen style /// comment
+			Token::Value comment;
+			m_nextSkippedComment.location.start = firstSlashPosition;
+			comment = scanSingleLineDocComment();
+			m_nextSkippedComment.location.end = getSourcePos();
+			m_nextSkippedComment.token = comment;
+			return Token::WHITESPACE;
+		}
+		else
+			return skipSingleLineComment();
+	}
+	else if (m_char == '*')
+	{
+		// doxygen style /** natspec comment
+		if (!advance()) /* slash star comment before EOS */
+			return Token::WHITESPACE;
+		else if (m_char == '*')
+		{
+			advance(); //consume the last '*' at /**
+			skipWhitespaceExceptLF();
+
+			// special case of a closed normal multiline comment
+			if (!m_source.isPastEndOfInput() && m_source.get(0) == '/')
+				advance(); //skip the closing slash
+			else // we actually have a multiline documentation comment
+			{
+				Token::Value comment;
+				m_nextSkippedComment.location.start = firstSlashPosition;
+				comment = scanMultiLineDocComment();
+				m_nextSkippedComment.location.end = getSourcePos();
+				m_nextSkippedComment.token = comment;
+			}
+			return Token::WHITESPACE;
+		}
+		else
+			return skipMultiLineComment();
+	}
+	else if (m_char == '=')
+		return selectToken(Token::ASSIGN_DIV);
+	else
+		return Token::DIV;
+}
+
 void Scanner::scanToken()
 {
-	m_next_token.literal.clear();
+	m_nextToken.literal.clear();
+	m_nextSkippedComment.literal.clear();
 	Token::Value token;
 	do
 	{
 		// Remember the position of the next token
-		m_next_token.location.start = getSourcePos();
+		m_nextToken.location.start = getSourcePos();
 		switch (m_char)
 		{
 		case '\n': // fall-through
@@ -275,7 +455,7 @@ void Scanner::scanToken()
 				token = Token::ADD;
 			break;
 		case '-':
-			// - -- -=
+			// - -- -= Number
 			advance();
 			if (m_char == '-')
 			{
@@ -284,6 +464,8 @@ void Scanner::scanToken()
 			}
 			else if (m_char == '=')
 				token = selectToken(Token::ASSIGN_SUB);
+			else if (m_char == '.' || isDecimalDigit(m_char))
+				token = scanNumber('-');
 			else
 				token = Token::SUB;
 			break;
@@ -297,15 +479,7 @@ void Scanner::scanToken()
 			break;
 		case '/':
 			// /  // /* /=
-			advance();
-			if (m_char == '/')
-				token = skipSingleLineComment();
-			else if (m_char == '*')
-				token = skipMultiLineComment();
-			else if (m_char == '=')
-				token = selectToken(Token::ASSIGN_DIV);
-			else
-				token = Token::DIV;
+			token = scanSlash();
 			break;
 		case '&':
 			// & && &=
@@ -334,8 +508,8 @@ void Scanner::scanToken()
 		case '.':
 			// . Number
 			advance();
-			if (IsDecimalDigit(m_char))
-				token = scanNumber(true);
+			if (isDecimalDigit(m_char))
+				token = scanNumber('.');
 			else
 				token = Token::PERIOD;
 			break;
@@ -373,10 +547,10 @@ void Scanner::scanToken()
 			token = selectToken(Token::BIT_NOT);
 			break;
 		default:
-			if (IsIdentifierStart(m_char))
+			if (isIdentifierStart(m_char))
 				token = scanIdentifierOrKeyword();
-			else if (IsDecimalDigit(m_char))
-				token = scanNumber(false);
+			else if (isDecimalDigit(m_char))
+				token = scanNumber();
 			else if (skipWhitespace())
 				token = Token::WHITESPACE;
 			else if (isSourcePastEndOfInput())
@@ -389,8 +563,8 @@ void Scanner::scanToken()
 		// whitespace.
 	}
 	while (token == Token::WHITESPACE);
-	m_next_token.location.end = getSourcePos();
-	m_next_token.token = token;
+	m_nextToken.location.end = getSourcePos();
+	m_nextToken.token = token;
 }
 
 bool Scanner::scanEscape()
@@ -398,7 +572,7 @@ bool Scanner::scanEscape()
 	char c = m_char;
 	advance();
 	// Skip escaped newlines.
-	if (IsLineTerminator(c))
+	if (isLineTerminator(c))
 		return true;
 	switch (c)
 	{
@@ -421,15 +595,11 @@ bool Scanner::scanEscape()
 	case 't':
 		c = '\t';
 		break;
-	case 'u':
-		if (!scanHexNumber(c, 4))
-			return false;
-		break;
 	case 'v':
 		c = '\v';
 		break;
 	case 'x':
-		if (!scanHexNumber(c, 2))
+		if (!scanHexByte(c))
 			return false;
 		break;
 	}
@@ -442,8 +612,8 @@ Token::Value Scanner::scanString()
 {
 	char const quote = m_char;
 	advance();  // consume quote
-	LiteralScope literal(this);
-	while (m_char != quote && !isSourcePastEndOfInput() && !IsLineTerminator(m_char))
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
+	while (m_char != quote && !isSourcePastEndOfInput() && !isLineTerminator(m_char))
 	{
 		char c = m_char;
 		advance();
@@ -455,26 +625,24 @@ Token::Value Scanner::scanString()
 		else
 			addLiteralChar(c);
 	}
-	if (m_char != quote) return Token::ILLEGAL;
-	literal.Complete();
+	if (m_char != quote)
+		return Token::ILLEGAL;
+	literal.complete();
 	advance();  // consume quote
 	return Token::STRING_LITERAL;
 }
 
-
 void Scanner::scanDecimalDigits()
 {
-	while (IsDecimalDigit(m_char))
+	while (isDecimalDigit(m_char))
 		addLiteralCharAndAdvance();
 }
 
-
-Token::Value Scanner::scanNumber(bool _periodSeen)
+Token::Value Scanner::scanNumber(char _charSeen)
 {
-	BOOST_ASSERT(IsDecimalDigit(m_char));  // the first digit of the number or the fraction
-	enum { DECIMAL, HEX, OCTAL, IMPLICIT_OCTAL, BINARY } kind = DECIMAL;
-	LiteralScope literal(this);
-	if (_periodSeen)
+	enum { DECIMAL, HEX, BINARY } kind = DECIMAL;
+	LiteralScope literal(this, LITERAL_TYPE_NUMBER);
+	if (_charSeen == '.')
 	{
 		// we have already seen a decimal point of the float
 		addLiteralChar('.');
@@ -482,20 +650,21 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	}
 	else
 	{
+		if (_charSeen == '-')
+			addLiteralChar('-');
 		// if the first character is '0' we must check for octals and hex
 		if (m_char == '0')
 		{
 			addLiteralCharAndAdvance();
-			// either 0, 0exxx, 0Exxx, 0.xxx, a hex number, a binary number or
-			// an octal number.
+			// either 0, 0exxx, 0Exxx, 0.xxx or a hex number
 			if (m_char == 'x' || m_char == 'X')
 			{
 				// hex number
 				kind = HEX;
 				addLiteralCharAndAdvance();
-				if (!IsHexDigit(m_char))
+				if (!isHexDigit(m_char))
 					return Token::ILLEGAL; // we must have at least one hex digit after 'x'/'X'
-				while (IsHexDigit(m_char))
+				while (isHexDigit(m_char))
 					addLiteralCharAndAdvance();
 			}
 		}
@@ -513,13 +682,14 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	// scan exponent, if any
 	if (m_char == 'e' || m_char == 'E')
 	{
-		BOOST_ASSERT(kind != HEX);  // 'e'/'E' must be scanned as part of the hex number
-		if (kind != DECIMAL) return Token::ILLEGAL;
+		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
+		if (kind != DECIMAL)
+			return Token::ILLEGAL;
 		// scan exponent
 		addLiteralCharAndAdvance();
 		if (m_char == '+' || m_char == '-')
 			addLiteralCharAndAdvance();
-		if (!IsDecimalDigit(m_char))
+		if (!isDecimalDigit(m_char))
 			return Token::ILLEGAL; // we must have at least one decimal digit after 'e'/'E'
 		scanDecimalDigits();
 	}
@@ -527,9 +697,9 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 	// not be an identifier start or a decimal digit; see ECMA-262
 	// section 7.8.3, page 17 (note that we read only one decimal digit
 	// if the value is 0).
-	if (IsDecimalDigit(m_char) || IsIdentifierStart(m_char))
+	if (isDecimalDigit(m_char) || isIdentifierStart(m_char))
 		return Token::ILLEGAL;
-	literal.Complete();
+	literal.complete();
 	return Token::NUMBER;
 }
 
@@ -537,164 +707,79 @@ Token::Value Scanner::scanNumber(bool _periodSeen)
 // ----------------------------------------------------------------------------
 // Keyword Matcher
 
-#define KEYWORDS(KEYWORD_GROUP, KEYWORD)                                     \
-	KEYWORD_GROUP('a')                                                         \
-	KEYWORD("address", Token::ADDRESS)                                           \
-	KEYWORD_GROUP('b')                                                         \
-	KEYWORD("break", Token::BREAK)                                             \
-	KEYWORD("bool", Token::BOOL)                                               \
-	KEYWORD_GROUP('c')                                                         \
-	KEYWORD("case", Token::CASE)                                               \
-	KEYWORD("const", Token::CONST)                                             \
-	KEYWORD("continue", Token::CONTINUE)                                       \
-	KEYWORD("contract", Token::CONTRACT)                                       \
-	KEYWORD_GROUP('d')                                                         \
-	KEYWORD("default", Token::DEFAULT)                                         \
-	KEYWORD("delete", Token::DELETE)                                           \
-	KEYWORD("do", Token::DO)                                                   \
-	KEYWORD_GROUP('e')                                                         \
-	KEYWORD("else", Token::ELSE)                                               \
-	KEYWORD("extends", Token::EXTENDS)                                         \
-	KEYWORD_GROUP('f')                                                         \
-	KEYWORD("false", Token::FALSE_LITERAL)                                     \
-	KEYWORD("for", Token::FOR)                                                 \
-	KEYWORD("function", Token::FUNCTION)                                       \
-	KEYWORD_GROUP('h')                                                         \
-	KEYWORD("hash", Token::HASH)                                               \
-	KEYWORD("hash32", Token::HASH32)                                           \
-	KEYWORD("hash64", Token::HASH64)                                           \
-	KEYWORD("hash128", Token::HASH128)                                         \
-	KEYWORD("hash256", Token::HASH256)                                         \
-	KEYWORD_GROUP('i')                                                         \
-	KEYWORD("if", Token::IF)                                                   \
-	KEYWORD("in", Token::IN)                                                   \
-	KEYWORD("int", Token::INT)                                                 \
-	KEYWORD("int32", Token::INT32)                                             \
-	KEYWORD("int64", Token::INT64)                                             \
-	KEYWORD("int128", Token::INT128)                                           \
-	KEYWORD("int256", Token::INT256)                                           \
-	KEYWORD_GROUP('l')                                                         \
-	KEYWORD_GROUP('m')                                                         \
-	KEYWORD("mapping", Token::MAPPING)                                         \
-	KEYWORD_GROUP('n')                                                         \
-	KEYWORD("new", Token::NEW)                                                 \
-	KEYWORD("null", Token::NULL_LITERAL)                                       \
-	KEYWORD_GROUP('p')                                                         \
-	KEYWORD("private", Token::PRIVATE)                                         \
-	KEYWORD("public", Token::PUBLIC)                                           \
-	KEYWORD_GROUP('r')                                                         \
-	KEYWORD("real", Token::REAL)                                               \
-	KEYWORD("return", Token::RETURN)                                           \
-	KEYWORD("returns", Token::RETURNS)                                         \
-	KEYWORD_GROUP('s')                                                         \
-	KEYWORD("string", Token::STRING_TYPE)                                      \
-	KEYWORD("struct", Token::STRUCT)                                           \
-	KEYWORD("switch", Token::SWITCH)                                           \
-	KEYWORD_GROUP('t')                                                         \
-	KEYWORD("text", Token::TEXT)                                               \
-	KEYWORD("this", Token::THIS)                                               \
-	KEYWORD("true", Token::TRUE_LITERAL)                                       \
-	KEYWORD_GROUP('u')                                                         \
-	KEYWORD("uint", Token::UINT)                                               \
-	KEYWORD("uint32", Token::UINT32)                                           \
-	KEYWORD("uint64", Token::UINT64)                                           \
-	KEYWORD("uint128", Token::UINT128)                                         \
-	KEYWORD("uint256", Token::UINT256)                                         \
-	KEYWORD("ureal", Token::UREAL)                                             \
-	KEYWORD_GROUP('v')                                                         \
-	KEYWORD("var", Token::VAR)                                                 \
-	KEYWORD_GROUP('w')                                                         \
-	KEYWORD("while", Token::WHILE)                                             \
 
-
-static Token::Value KeywordOrIdentifierToken(std::string const& input)
+static Token::Value keywordOrIdentifierToken(string const& _input)
 {
-	BOOST_ASSERT(!input.empty());
-	int const kMinLength = 2;
-	int const kMaxLength = 10;
-	if (input.size() < kMinLength || input.size() > kMaxLength)
-		return Token::IDENTIFIER;
-	switch (input[0])
-	{
-	default:
-#define KEYWORD_GROUP_CASE(ch)                                \
-	break;                                                  \
-case ch:
-#define KEYWORD(keyword, token)                               \
-	{                                                         \
-		/* 'keyword' is a char array, so sizeof(keyword) is */  \
-		/* strlen(keyword) plus 1 for the NUL char. */          \
-		int const keyword_length = sizeof(keyword) - 1;         \
-		BOOST_STATIC_ASSERT(keyword_length >= kMinLength);      \
-		BOOST_STATIC_ASSERT(keyword_length <= kMaxLength);      \
-		if (input == keyword)                                   \
-			return token;                                       \
-	}
-		KEYWORDS(KEYWORD_GROUP_CASE, KEYWORD)
-	}
-	return Token::IDENTIFIER;
+	// The following macros are used inside TOKEN_LIST and cause non-keyword tokens to be ignored
+	// and keywords to be put inside the keywords variable.
+#define KEYWORD(name, string, precedence) {string, Token::name},
+#define TOKEN(name, string, precedence)
+	static const map<string, Token::Value> keywords({TOKEN_LIST(TOKEN, KEYWORD)});
+#undef KEYWORD
+#undef TOKEN
+	auto it = keywords.find(_input);
+	return it == keywords.end() ? Token::IDENTIFIER : it->second;
 }
 
 Token::Value Scanner::scanIdentifierOrKeyword()
 {
-	BOOST_ASSERT(IsIdentifierStart(m_char));
-	LiteralScope literal(this);
+	solAssert(isIdentifierStart(m_char), "");
+	LiteralScope literal(this, LITERAL_TYPE_STRING);
 	addLiteralCharAndAdvance();
 	// Scan the rest of the identifier characters.
-	while (IsIdentifierPart(m_char))
+	while (isIdentifierPart(m_char))
 		addLiteralCharAndAdvance();
-	literal.Complete();
-	return KeywordOrIdentifierToken(m_next_token.literal);
+	literal.complete();
+	return keywordOrIdentifierToken(m_nextToken.literal);
 }
 
-char CharStream::advanceAndGet()
+char CharStream::advanceAndGet(size_t _chars)
 {
 	if (isPastEndOfInput())
 		return 0;
-	++m_pos;
+	m_pos += _chars;
 	if (isPastEndOfInput())
 		return 0;
-	return get();
+	return m_source[m_pos];
 }
 
 char CharStream::rollback(size_t _amount)
 {
-	BOOST_ASSERT(m_pos >= _amount);
+	solAssert(m_pos >= _amount, "");
 	m_pos -= _amount;
 	return get();
 }
 
-std::string CharStream::getLineAtPosition(int _position) const
+string CharStream::getLineAtPosition(int _position) const
 {
 	// if _position points to \n, it returns the line before the \n
-	using size_type = std::string::size_type;
-	size_type searchStart = std::min<size_type>(m_source.size(), _position);
+	using size_type = string::size_type;
+	size_type searchStart = min<size_type>(m_source.size(), _position);
 	if (searchStart > 0)
 		searchStart--;
 	size_type lineStart = m_source.rfind('\n', searchStart);
-	if (lineStart == std::string::npos)
+	if (lineStart == string::npos)
 		lineStart = 0;
 	else
 		lineStart++;
-	return m_source.substr(lineStart,
-						   std::min(m_source.find('\n', lineStart),
-									m_source.size()) - lineStart);
+	return m_source.substr(lineStart, min(m_source.find('\n', lineStart),
+										  m_source.size()) - lineStart);
 }
 
-std::tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
+tuple<int, int> CharStream::translatePositionToLineColumn(int _position) const
 {
-	using size_type = std::string::size_type;
-	size_type searchPosition = std::min<size_type>(m_source.size(), _position);
-	int lineNumber = std::count(m_source.begin(), m_source.begin() + searchPosition, '\n');
+	using size_type = string::size_type;
+	size_type searchPosition = min<size_type>(m_source.size(), _position);
+	int lineNumber = count(m_source.begin(), m_source.begin() + searchPosition, '\n');
 	size_type lineStart;
 	if (searchPosition == 0)
 		lineStart = 0;
 	else
 	{
 		lineStart = m_source.rfind('\n', searchPosition - 1);
-		lineStart = lineStart == std::string::npos ? 0 : lineStart + 1;
+		lineStart = lineStart == string::npos ? 0 : lineStart + 1;
 	}
-	return std::tuple<int, int>(lineNumber, searchPosition - lineStart);
+	return tuple<int, int>(lineNumber, searchPosition - lineStart);
 }
 
 

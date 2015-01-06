@@ -21,17 +21,20 @@
 
 #include "State.h"
 
-#include <boost/filesystem.hpp>
-#include <time.h>
+#include <ctime>
 #include <random>
+#include <boost/filesystem.hpp>
+#include <boost/timer.hpp>
 #include <secp256k1/secp256k1.h>
 #include <libdevcore/CommonIO.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
-#include <libevm/VM.h>
+#include <libevm/VMFactory.h>
 #include "BlockChain.h"
 #include "Defaults.h"
 #include "ExtVM.h"
+#include "Executive.h"
+#include "CachedAddressState.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -40,6 +43,7 @@ using namespace dev::eth;
 
 static const u256 c_blockReward = 1500 * finney;
 
+<<<<<<< HEAD
 void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 {
 	struct inType
@@ -106,6 +110,9 @@ void State::setAddress(Address _coinbaseAddress) noexcept
 }
 
 OverlayDB State::openDB(std::string _path, bool _killExisting) noexcept
+=======
+OverlayDB State::openDB(std::string _path, bool _killExisting)
+>>>>>>> upstream/develop
 {
 	try
 	{
@@ -146,28 +153,49 @@ OverlayDB State::openDB(std::string _path, bool _killExisting) noexcept
 	}
 }
 
-State::State(Address _coinbaseAddress, OverlayDB const& _db):
+State::State(Address _coinbaseAddress, OverlayDB const& _db, BaseState _bs):
 	m_db(_db),
 	m_state(&m_db),
 	m_ourAddress(_coinbaseAddress),
 	m_blockReward(c_blockReward)
 {
+<<<<<<< HEAD
 	try
 	{
 		secp256k1_start();
 
 		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
 		m_state.init();
+=======
+	// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
+	m_state.init();
+>>>>>>> upstream/develop
 
 		paranoia("beginning of normal construction.", true);
 
+<<<<<<< HEAD
+=======
+	if (_bs == BaseState::Genesis)
+	{
+>>>>>>> upstream/develop
 		dev::eth::commit(genesisState(), m_db, m_state);
 		m_db.commit();
 
 		paranoia("after DB commit of normal construction.", true);
+<<<<<<< HEAD
 
 		m_previousBlock = BlockChain::genesis();
 		resetCurrent();
+=======
+		m_previousBlock = BlockChain::genesis();
+	}
+	else
+	{
+		m_previousBlock.setEmpty();
+	}
+
+	resetCurrent();
+>>>>>>> upstream/develop
 
 		if (assertsEqual(m_state.root(), m_previousBlock.stateRoot))
 		{
@@ -190,6 +218,7 @@ State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h) noexcept:
 	m_state(&m_db),
 	m_blockReward(c_blockReward)
 {
+<<<<<<< HEAD
 	try
 	{
 		secp256k1_start();
@@ -226,12 +255,31 @@ State::State(OverlayDB const& _db, BlockChain const& _bc, h256 _h) noexcept:
 		cerr << boost::current_exception_diagnostic_information() << endl;
 		exit(1);
 	}
+=======
+	// TODO THINK: is this necessary?
+	m_state.init();
+
+	auto b = _bc.block(_h);
+	BlockInfo bi;
+	BlockInfo bip;
+	if (_h)
+		bi.populate(b);
+	if (bi && bi.number)
+		bip.populate(_bc.block(bi.parentHash));
+	if (!_h || !bip)
+		return;
+	m_ourAddress = bi.coinbaseAddress;
+
+	sync(_bc, bi.parentHash, bip);
+	enact(&b, _bc);
+>>>>>>> upstream/develop
 }
 
 State::State(State const& _s):
 	m_db(_s.m_db),
 	m_state(&m_db, _s.m_state.root()),
 	m_transactions(_s.m_transactions),
+	m_receipts(_s.m_receipts),
 	m_transactionSet(_s.m_transactionSet),
 	m_cache(_s.m_cache),
 	m_previousBlock(_s.m_previousBlock),
@@ -272,6 +320,7 @@ State& State::operator=(State const& _s)
 		exit(1); // anything else that can be done?
 	}
 	m_transactions = _s.m_transactions;
+	m_receipts = _s.m_receipts;
 	m_transactionSet = _s.m_transactionSet;
 	m_cache = _s.m_cache;
 	m_previousBlock = _s.m_previousBlock;
@@ -299,6 +348,7 @@ Address State::nextActiveAddress(Address _a) const
 	return (*it).first;
 }
 
+<<<<<<< HEAD
 // TODO: repot
 struct CachedAddressState
 {
@@ -383,6 +433,9 @@ struct CachedAddressState
 };
 
 StateDiff State::diff(State const& _c) const noexcept
+=======
+StateDiff State::diff(State const& _c) const
+>>>>>>> upstream/develop
 {
 	StateDiff ret;
 
@@ -390,6 +443,7 @@ StateDiff State::diff(State const& _c) const noexcept
 	std::set<Address> trieAds;
 	std::set<Address> trieAdsD;
 
+<<<<<<< HEAD
 	try
 	{
 		auto trie = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
@@ -425,6 +479,32 @@ StateDiff State::diff(State const& _c) const noexcept
 		cerr << "Could not get diff of state\n";
 		cerr << boost::current_exception_diagnostic_information();
 		// should we rethrow, or is it enough to make an error message and return an empty StateDiff ?
+=======
+	auto trie = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
+	auto trieD = TrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&_c.m_db), _c.rootHash());
+
+	for (auto i: trie)
+		ads.insert(i.first), trieAds.insert(i.first);
+	for (auto i: trieD)
+		ads.insert(i.first), trieAdsD.insert(i.first);
+	for (auto i: m_cache)
+		ads.insert(i.first);
+	for (auto i: _c.m_cache)
+		ads.insert(i.first);
+
+//	cnote << *this;
+//	cnote << _c;
+
+	for (auto i: ads)
+	{
+		auto it = m_cache.find(i);
+		auto itD = _c.m_cache.find(i);
+		CachedAddressState source(trieAds.count(i) ? trie.at(i) : "", it != m_cache.end() ? &it->second : nullptr, &m_db);
+		CachedAddressState dest(trieAdsD.count(i) ? trieD.at(i) : "", itD != _c.m_cache.end() ? &itD->second : nullptr, &_c.m_db);
+		AccountDiff acd = source.diff(dest);
+		if (acd.changed())
+			ret.accounts[i] = acd;
+>>>>>>> upstream/develop
 	}
 
 	return ret;
@@ -435,7 +515,7 @@ void State::ensureCached(Address _a, bool _requireCode, bool _forceCreate) const
 	ensureCached(m_cache, _a, _requireCode, _forceCreate);
 }
 
-void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bool _requireCode, bool _forceCreate) const
+void State::ensureCached(std::map<Address, Account>& _cache, Address _a, bool _requireCode, bool _forceCreate) const
 {
 	auto it = _cache.find(_a);
 	if (it == _cache.end())
@@ -445,10 +525,11 @@ void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bo
 		if (stateBack.empty() && !_forceCreate)
 			return;
 		RLP state(stateBack);
-		AddressState s;
+		Account s;
 		if (state.isNull())
-			s = AddressState(0, 0, h256(), EmptySHA3);
+			s = Account(0, Account::NormalCreation);
 		else
+<<<<<<< HEAD
 		{
 			try
 			{
@@ -461,6 +542,9 @@ void State::ensureCached(std::map<Address, AddressState>& _cache, Address _a, bo
 				exit(1); // is there anyway of handling it better? My suggestion (see comment above) to return a bool for success or failure)
 			}
 		}
+=======
+			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>());
+>>>>>>> upstream/develop
 		bool ok;
 		tie(it, ok) = _cache.insert(make_pair(_a, s));
 	}
@@ -557,7 +641,7 @@ bool State::sync(BlockChain const& _bc, h256 _block, BlockInfo const& _bi)
 			for (auto it = chain.rbegin(); it != chain.rend(); ++it)
 			{
 				auto b = _bc.block(*it);
-				enact(&b);
+				enact(&b, _bc);
 				cleanup(true);
 			}
 		}
@@ -586,7 +670,7 @@ u256 State::enactOn(bytesConstRef _block, BlockInfo const& _bi, BlockChain const
 	sync(_bc, _bi.parentHash);
 	resetCurrent();
 	m_previousBlock = biParent;
-	return enact(_block, &_bc);
+	return enact(_block, _bc);
 }
 
 map<Address, u256> State::addresses() const noexcept
@@ -612,12 +696,18 @@ map<Address, u256> State::addresses() const noexcept
 void State::resetCurrent()
 {
 	m_transactions.clear();
+	m_receipts.clear();
 	m_transactionSet.clear();
 	m_cache.clear();
 	m_currentBlock = BlockInfo();
 	m_currentBlock.coinbaseAddress = m_ourAddress;
 	m_currentBlock.timestamp = time(0);
+<<<<<<< HEAD
 	m_currentBlock.minGasPrice = 10 * szabo;
+=======
+	m_currentBlock.transactionsRoot = h256();
+	m_currentBlock.sha3Uncles = h256();
+>>>>>>> upstream/develop
 	m_currentBlock.populateFromParent(m_previousBlock);
 
 	// Update timestamp according to clock.
@@ -659,7 +749,7 @@ bool State::cull(TransactionQueue& _tq) const
 			try
 			{
 				Transaction t(i.second);
-				if (t.nonce <= transactionsFrom(t.sender()))
+				if (t.nonce() <= transactionsFrom(t.sender()))
 				{
 					_tq.drop(i.first);
 					ret = true;
@@ -675,11 +765,13 @@ bool State::cull(TransactionQueue& _tq) const
 	return ret;
 }
 
-h256s State::sync(TransactionQueue& _tq, bool* o_transactionQueueChanged)
+h512s State::sync(BlockChain const& _bc, TransactionQueue& _tq, bool* o_transactionQueueChanged)
 {
 	// TRANSACTIONS
-	h256s ret;
+	h512s ret;
 	auto ts = _tq.transactions();
+
+	auto lh = getLastHashes(_bc);
 
 	for (int goodTxs = 1; goodTxs;)
 	{
@@ -691,10 +783,12 @@ h256s State::sync(TransactionQueue& _tq, bool* o_transactionQueueChanged)
 				try
 				{
 					uncommitToMine();
-					execute(i.second);
-					ret.push_back(m_transactions.back().changes.bloom());
+//					boost::timer t;
+					execute(lh, i.second);
+					ret.push_back(m_receipts.back().bloom());
 					_tq.noteGood(i);
 					++goodTxs;
+//					cnote << "TX took:" << t.elapsed() * 1000;
 				}
 				catch (InvalidNonce const& in)
 				{
@@ -728,12 +822,12 @@ h256s State::sync(TransactionQueue& _tq, bool* o_transactionQueueChanged)
 	return ret;
 }
 
-u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
+u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 {
 	// m_currentBlock is assumed to be prepopulated and reset.
 
 #if !ETH_RELEASE
-	BlockInfo bi(_block);
+	BlockInfo bi(_block, _checkNonce);
 	assert(m_previousBlock.hash == bi.parentHash);
 	assert(m_currentBlock.parentHash == bi.parentHash);
 	assert(rootHash() == m_previousBlock.stateRoot);
@@ -750,35 +844,60 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 //	cnote << m_state;
 
 	MemoryDB tm;
-	GenericTrieDB<MemoryDB> transactionManifest(&tm);
-	transactionManifest.init();
+	GenericTrieDB<MemoryDB> transactionsTrie(&tm);
+	transactionsTrie.init();
+
+	MemoryDB rm;
+	GenericTrieDB<MemoryDB> receiptsTrie(&rm);
+	receiptsTrie.init();
+
+	LastHashes lh = getLastHashes(_bc);
 
 	// All ok with the block generally. Play back the transactions now...
 	unsigned i = 0;
 	for (auto const& tr: RLP(_block)[1])
 	{
-//		cnote << m_state.root() << m_state;
-//		cnote << *this;
-		execute(tr[0].data());
-		if (tr[1].toHash<h256>() != m_state.root())
-		{
-			// Invalid state root
-			cnote << m_state.root() << "\n" << m_state;
-			cnote << *this;
-			cnote << "INVALID: " << tr[1].toHash<h256>();
-			BOOST_THROW_EXCEPTION(InvalidTransactionStateRoot());
-		}
-		if (tr[2].toInt<u256>() != gasUsed())
-			BOOST_THROW_EXCEPTION(InvalidTransactionGasUsed());
-		bytes k = rlp(i);
-		transactionManifest.insert(&k, tr.data());
+		RLPStream k;
+		k << i;
+
+		transactionsTrie.insert(&k.out(), tr.data());
+		execute(lh, tr.data());
+
+		RLPStream receiptrlp;
+		m_receipts.back().streamRLP(receiptrlp);
+		receiptsTrie.insert(&k.out(), &receiptrlp.out());
 		++i;
 	}
 
-	if (m_currentBlock.transactionsRoot && transactionManifest.root() != m_currentBlock.transactionsRoot)
+	if (transactionsTrie.root() != m_currentBlock.transactionsRoot)
 	{
 		cwarn << "Bad transactions state root!";
-		BOOST_THROW_EXCEPTION(InvalidTransactionStateRoot());
+		BOOST_THROW_EXCEPTION(InvalidTransactionsStateRoot());
+	}
+
+	if (receiptsTrie.root() != m_currentBlock.receiptsRoot)
+	{
+		cwarn << "Bad receipts state root.";
+		cwarn << "Block:" << toHex(_block);
+		cwarn << "Block RLP:" << RLP(_block);
+		cwarn << "Want: " << receiptsTrie.root() << ", got: " << m_currentBlock.receiptsRoot;
+		for (unsigned j = 0; j < i; ++j)
+		{
+			RLPStream k;
+			k << j;
+			auto b = asBytes(receiptsTrie.at(&k.out()));
+			cwarn << j << ": ";
+			cwarn << "RLP: " << RLP(b);
+			cwarn << "Hex: " << toHex(b);
+			cwarn << TransactionReceipt(&b);
+		}
+		BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());
+	}
+
+	if (m_currentBlock.logBloom != logBloom())
+	{
+		cwarn << "Bad log bloom!";
+		BOOST_THROW_EXCEPTION(InvalidLogBloom());
 	}
 
 	// Initialise total difficulty calculation.
@@ -787,7 +906,7 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 	// Check uncles & apply their rewards to state.
 	set<h256> nonces = { m_currentBlock.nonce };
 	Addresses rewarded;
-	set<h256> knownUncles = _bc ? _bc->allUnclesFrom(m_currentBlock.parentHash) : set<h256>();
+	set<h256> knownUncles = _bc.allUnclesFrom(m_currentBlock.parentHash);
 	for (auto const& i: RLP(_block)[2])
 	{
 		if (knownUncles.count(sha3(i.data())))
@@ -796,13 +915,11 @@ u256 State::enact(bytesConstRef _block, BlockChain const* _bc, bool _checkNonce)
 		BlockInfo uncle = BlockInfo::fromHeader(i.data());
 		if (nonces.count(uncle.nonce))
 			BOOST_THROW_EXCEPTION(DuplicateUncleNonce());
-		if (_bc)
-		{
-			BlockInfo uncleParent(_bc->block(uncle.parentHash));
-			if ((bigint)uncleParent.number < (bigint)m_currentBlock.number - 6)
-				BOOST_THROW_EXCEPTION(UncleTooOld());
-			uncle.verifyParent(uncleParent);
-		}
+
+		BlockInfo uncleParent(_bc.block(uncle.parentHash));
+		if ((bigint)uncleParent.number < (bigint)m_currentBlock.number - 7)
+			BOOST_THROW_EXCEPTION(UncleTooOld());
+		uncle.verifyParent(uncleParent);
 
 		nonces.insert(uncle.nonce);
 		tdIncrease += uncle.difficulty;
@@ -843,9 +960,7 @@ void State::cleanup(bool _fullCommit)
 		m_previousBlock = m_currentBlock;
 	}
 	else
-	{
 		m_db.rollback();
-	}
 
 	resetCurrent();
 }
@@ -858,7 +973,7 @@ void State::uncommitToMine()
 		if (!m_transactions.size())
 			m_state.setRoot(m_previousBlock.stateRoot);
 		else
-			m_state.setRoot(m_transactions[m_transactions.size() - 1].stateRoot);
+			m_state.setRoot(m_receipts[m_receipts.size() - 1].stateRoot());
 		m_db = m_lastTx;
 		paranoia("Uncommited to mine", true);
 		m_currentBlock.sha3Uncles = h256();
@@ -875,7 +990,7 @@ bool State::amIJustParanoid(BlockChain const& _bc)
 	// Compile block:
 	RLPStream block;
 	block.appendList(3);
-	m_currentBlock.fillStream(block, true);
+	m_currentBlock.streamRLP(block, WithNonce);
 	block.appendRaw(m_currentTxs);
 	block.appendRaw(m_currentUncles);
 
@@ -886,7 +1001,7 @@ bool State::amIJustParanoid(BlockChain const& _bc)
 		cnote << "PARANOIA root:" << s.rootHash();
 //		s.m_currentBlock.populate(&block.out(), false);
 //		s.m_currentBlock.verifyInternals(&block.out());
-		s.enact(&block.out(), &_bc, false);	// don't check nonce for this since we haven't mined it yet.
+		s.enact(&block.out(), _bc, false);	// don't check nonce for this since we haven't mined it yet.
 		s.cleanup(false);
 		return true;
 	}
@@ -902,11 +1017,11 @@ bool State::amIJustParanoid(BlockChain const& _bc)
 	return false;
 }
 
-h256 State::bloom() const
+LogBloom State::logBloom() const
 {
-	h256 ret = m_currentBlock.coinbaseAddress.bloom();
-	for (auto const& i: m_transactions)
-		ret |= i.changes.bloom();
+	LogBloom ret;
+	for (TransactionReceipt const& i: m_receipts)
+		ret |= i.bloom();
 	return ret;
 }
 
@@ -916,7 +1031,7 @@ void State::commitToMine(BlockChain const& _bc)
 {
 	uncommitToMine();
 
-	cnote << "Committing to mine on block" << m_previousBlock.hash.abridged();
+//	cnote << "Committing to mine on block" << m_previousBlock.hash.abridged();
 #ifdef ETH_PARANOIA
 	commit();
 	cnote << "Pre-reward stateRoot:" << m_state.root();
@@ -942,7 +1057,7 @@ void State::commitToMine(BlockChain const& _bc)
 				if (!knownUncles.count(u))	// ignore any uncles/mainline blocks that we know about.
 				{
 					BlockInfo ubi(_bc.block(u));
-					ubi.fillStream(unclesData, true);
+					ubi.streamRLP(unclesData, WithNonce);
 					++unclesCount;
 					uncleAddresses.push_back(ubi.coinbaseAddress);
 				}
@@ -950,8 +1065,12 @@ void State::commitToMine(BlockChain const& _bc)
 	}
 
 	MemoryDB tm;
-	GenericTrieDB<MemoryDB> transactionReceipts(&tm);
-	transactionReceipts.init();
+	GenericTrieDB<MemoryDB> transactionsTrie(&tm);
+	transactionsTrie.init();
+
+	MemoryDB rm;
+	GenericTrieDB<MemoryDB> receiptsTrie(&rm);
+	receiptsTrie.init();
 
 	RLPStream txs;
 	txs.appendList(m_transactions.size());
@@ -960,17 +1079,25 @@ void State::commitToMine(BlockChain const& _bc)
 	{
 		RLPStream k;
 		k << i;
-		RLPStream v;
-		m_transactions[i].fillStream(v);
-		transactionReceipts.insert(&k.out(), &v.out());
-		txs.appendRaw(v.out());
+
+		RLPStream receiptrlp;
+		m_receipts[i].streamRLP(receiptrlp);
+		receiptsTrie.insert(&k.out(), &receiptrlp.out());
+
+		RLPStream txrlp;
+		m_transactions[i].streamRLP(txrlp);
+		transactionsTrie.insert(&k.out(), &txrlp.out());
+
+		txs.appendRaw(txrlp.out());
 	}
 
 	txs.swapOut(m_currentTxs);
 
 	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
 
-	m_currentBlock.transactionsRoot = transactionReceipts.root();
+	m_currentBlock.transactionsRoot = transactionsTrie.root();
+	m_currentBlock.receiptsRoot = receiptsTrie.root();
+	m_currentBlock.logBloom = logBloom();
 	m_currentBlock.sha3Uncles = sha3(m_currentUncles);
 
 	// Apply rewards last of all.
@@ -979,7 +1106,7 @@ void State::commitToMine(BlockChain const& _bc)
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
 	commit();
 
-	cnote << "Post-reward stateRoot:" << m_state.root().abridged();
+//	cnote << "Post-reward stateRoot:" << m_state.root().abridged();
 //	cnote << m_state;
 //	cnote << *this;
 
@@ -994,10 +1121,14 @@ MineInfo State::mine(unsigned _msTimeout, bool _turbo)
 	m_currentBlock.difficulty = m_currentBlock.calculateDifficulty(m_previousBlock);
 
 	// TODO: Miner class that keeps dagger between mine calls (or just non-polling mining).
-	auto ret = m_pow.mine(/*out*/m_currentBlock.nonce, m_currentBlock.headerHashWithoutNonce(), m_currentBlock.difficulty, _msTimeout, true, _turbo);
+	auto ret = m_pow.mine(/*out*/m_currentBlock.nonce, m_currentBlock.headerHash(WithoutNonce), m_currentBlock.difficulty, _msTimeout, true, _turbo);
 
 	if (!ret.completed)
 		m_currentBytes.clear();
+	else
+	{
+		cnote << "Completed" << m_currentBlock.headerHash(WithoutNonce).abridged() << m_currentBlock.nonce.abridged() << m_currentBlock.difficulty << ProofOfWork::verify(m_currentBlock.headerHash(WithoutNonce), m_currentBlock.nonce, m_currentBlock.difficulty);
+	}
 
 	return ret;
 }
@@ -1010,7 +1141,7 @@ void State::completeMine()
 	// Compile block:
 	RLPStream ret;
 	ret.appendList(3);
-	m_currentBlock.fillStream(ret, true);
+	m_currentBlock.streamRLP(ret, WithNonce);
 	ret.appendRaw(m_currentTxs);
 	ret.appendRaw(m_currentUncles);
 	ret.swapOut(m_currentBytes);
@@ -1020,6 +1151,7 @@ void State::completeMine()
 	// Quickly reset the transactions.
 	// TODO: Leave this in a better state than this limbo, or at least record that it's in limbo.
 	m_transactions.clear();
+	m_receipts.clear();
 	m_transactionSet.clear();
 	m_lastTx = m_db;
 }
@@ -1055,8 +1187,12 @@ void State::noteSending(Address _id)
 {
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
-		m_cache[_id] = AddressState(1, 0, h256(), EmptySHA3);
+	if (asserts(it != m_cache.end()))
+	{
+		cwarn << "Sending from non-existant account. How did it pay!?!";
+		// this is impossible. but we'll continue regardless...
+		m_cache[_id] = Account(1, 0);
+	}
 	else
 		it->second.incNonce();
 }
@@ -1066,7 +1202,7 @@ void State::addBalance(Address _id, u256 _amount)
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
 	if (it == m_cache.end())
-		m_cache[_id] = AddressState(0, _amount, h256(), EmptySHA3);
+		m_cache[_id] = Account(_amount, Account::NormalCreation);
 	else
 		it->second.addBalance(_amount);
 }
@@ -1079,6 +1215,23 @@ void State::subBalance(Address _id, bigint _amount)
 		BOOST_THROW_EXCEPTION(NotEnoughCash());
 	else
 		it->second.addBalance(-_amount);
+}
+
+Address State::newContract(u256 _balance, bytes const& _code)
+{
+	auto h = sha3(_code);
+	m_db.insert(h, &_code);
+	while (true)
+	{
+		Address ret = Address::random();
+		ensureCached(ret, false, false);
+		auto it = m_cache.find(ret);
+		if (it == m_cache.end())
+		{
+			m_cache[ret] = Account(0, _balance, EmptyTrie, h);
+			return ret;
+		}
+	}
 }
 
 u256 State::transactionsFrom(Address _id) const
@@ -1117,8 +1270,8 @@ u256 State::storage(Address _id, u256 _memory) const
 		return 0;
 
 	// See if it's in the account's storage cache.
-	auto mit = it->second.storage().find(_memory);
-	if (mit != it->second.storage().end())
+	auto mit = it->second.storageOverlay().find(_memory);
+	if (mit != it->second.storageOverlay().end())
 		return mit->second;
 
 	// Not in the storage cache - go to the DB.
@@ -1146,7 +1299,7 @@ map<u256, u256> State::storage(Address _id) const
 		}
 
 		// Then merge cached storage over the top.
-		for (auto const& i: it->second.storage())
+		for (auto const& i: it->second.storageOverlay())
 			if (i.second)
 				ret[i.first] = i.second;
 			else
@@ -1163,7 +1316,7 @@ h256 State::storageRoot(Address _id) const
 		RLP r(s);
 		return r[2].toHash<h256>();
 	}
-	return h256();
+	return EmptyTrie;
 }
 
 bytes const& State::code(Address _contract) const
@@ -1195,11 +1348,11 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 				RLP r(i.second);
 				TrieDB<h256, OverlayDB> storageDB(const_cast<OverlayDB*>(&m_db), r[2].toHash<h256>());	// promise not to alter OverlayDB.
 				for (auto const& j: storageDB) { (void)j; }
-				if (!e && r[3].toHash<h256>() && m_db.lookup(r[3].toHash<h256>()).empty())
+				if (!e && r[3].toHash<h256>() != EmptySHA3 && m_db.lookup(r[3].toHash<h256>()).empty())
 					return false;
 			}
 		}
-		catch (InvalidTrie)
+		catch (InvalidTrie const&)
 		{
 			cwarn << "BAD TRIE" << (e ? "[enforced" : "[unenforced") << "refs]";
 			cnote << m_db.keys();
@@ -1209,9 +1362,21 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 	return true;
 }
 
-// TODO: maintain node overlay revisions for stateroots -> each commit gives a stateroot + OverlayDB; allow overlay copying for rewind operations.
+LastHashes State::getLastHashes(BlockChain const& _bc) const
+{
+	LastHashes ret;
+	ret.resize(256);
+	if (c_protocolVersion > 49)
+	{
+		unsigned n = (unsigned)m_previousBlock.number;
+		for (unsigned i = 0; i < 256; ++i)
+			ret[i] = _bc.numberHash(std::max<unsigned>(n, i) - i);
+	}
+	return ret;
+}
 
-u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
+// TODO: maintain node overlay revisions for stateroots -> each commit gives a stateroot + OverlayDB; allow overlay copying for rewind operations.
+u256 State::execute(LastHashes const& _lh, bytesConstRef _rlp, bytes* o_output, bool _commit)
 {
 #ifndef ETH_RELEASE
 	commit();	// get an updated hash
@@ -1224,19 +1389,20 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 	auto h = rootHash();
 #endif
 
-	Manifest ms;
-
-	Executive e(*this, &ms);
+	Executive e(*this, _lh, 0);
 	e.setup(_rlp);
 
 	u256 startGasUsed = gasUsed();
 
 #if ETH_PARANOIA
 	ctrace << "Executing" << e.t() << "on" << h;
-	ctrace << toHex(e.t().rlp(true));
+	ctrace << toHex(e.t().rlp());
 #endif
-
+#if ETH_VMTRACE
+	e.go(e.simpleTrace());
+#else
 	e.go();
+#endif
 	e.finalize();
 
 #if ETH_PARANOIA
@@ -1261,10 +1427,10 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 
 	paranoia("after execution commit.", true);
 
-	if (e.t().receiveAddress)
+	if (e.t().receiveAddress())
 	{
 		EnforceRefs r(m_db, true);
-		if (storageRoot(e.t().receiveAddress) && m_db.lookup(storageRoot(e.t().receiveAddress)).empty())
+		if (storageRoot(e.t().receiveAddress()) && m_db.lookup(storageRoot(e.t().receiveAddress())).empty())
 		{
 			cwarn << "TRIE immediately after execution; no node for receiveAddress";
 			BOOST_THROW_EXCEPTION(InvalidTrie());
@@ -1275,11 +1441,13 @@ u256 State::execute(bytesConstRef _rlp, bytes* o_output, bool _commit)
 	// TODO: CHECK TRIE after level DB flush to make sure exactly the same.
 
 	// Add to the user-originated transactions that we've executed.
-	m_transactions.push_back(TransactionReceipt(e.t(), rootHash(), startGasUsed + e.gasUsed(), ms));
+	m_transactions.push_back(e.t());
+	m_receipts.push_back(TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));
 	m_transactionSet.insert(e.t().sha3());
 	return e.gasUsed();
 }
 
+<<<<<<< HEAD
 bool State::call(Address _receiveAddress, Address _codeAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256* _gas, bytesRef _out, Address _originAddress, std::set<Address>* o_suicides, Manifest* o_ms, OnOpFunc const& _onOp, unsigned _level)
 {
 	if (!_originAddress)
@@ -1432,6 +1600,22 @@ State State::fromPending(unsigned _i) const noexcept
 			ret.m_transactionSet.erase(ret.m_transactions.back().transaction.sha3());
 			ret.m_transactions.pop_back();
 		}
+=======
+State State::fromPending(unsigned _i) const
+{
+	State ret = *this;
+	ret.m_cache.clear();
+	_i = min<unsigned>(_i, m_transactions.size());
+	if (!_i)
+		ret.m_state.setRoot(m_previousBlock.stateRoot);
+	else
+		ret.m_state.setRoot(m_receipts[_i - 1].stateRoot());
+	while (ret.m_transactions.size() > _i)
+	{
+		ret.m_transactionSet.erase(ret.m_transactions.back().sha3());
+		ret.m_transactions.pop_back();
+		ret.m_receipts.pop_back();
+>>>>>>> upstream/develop
 	}
 	catch(...)
 	{
@@ -1468,7 +1652,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 	for (auto i: d)
 	{
 		auto it = _s.m_cache.find(i);
-		AddressState* cache = it != _s.m_cache.end() ? &it->second : nullptr;
+		Account* cache = it != _s.m_cache.end() ? &it->second : nullptr;
 		string rlpString = dtr.count(i) ? trie.at(i) : "";
 		RLP r(rlpString);
 		assert(cache || r);
@@ -1483,8 +1667,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 
 			stringstream contout;
 
-			/// For POC6, 3rd value of account is code and will be empty if code is not present.
-			if ((cache && cache->codeBearing()) || (!cache && r && !r[3].isEmpty()))
+			if ((cache && cache->codeBearing()) || (!cache && r && (h256)r[3] != EmptySHA3))
 			{
 				std::map<u256, u256> mem;
 				std::set<u256> back;
@@ -1497,7 +1680,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 						mem[j.first] = RLP(j.second).toInt<u256>(), back.insert(j.first);
 				}
 				if (cache)
-					for (auto const& j: cache->storage())
+					for (auto const& j: cache->storageOverlay())
 					{
 						if ((!mem.count(j.first) && j.second) || (mem.count(j.first) && mem.at(j.first) != j.second))
 							mem[j.first] = j.second, delta.insert(j.first);
@@ -1513,7 +1696,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 				else
 					contout << r[2].toHash<h256>();
 				if (cache && cache->isFreshCode())
-					contout << " $" << cache->code();
+					contout << " $" << toHex(cache->code());
 				else
 					contout << " $" << (cache ? cache->codeHash() : r[3].toHash<h256>());
 

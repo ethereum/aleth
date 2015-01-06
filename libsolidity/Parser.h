@@ -34,7 +34,8 @@ class Scanner;
 class Parser
 {
 public:
-	ASTPointer<ContractDefinition> parse(std::shared_ptr<Scanner> const& _scanner);
+	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
+	std::shared_ptr<std::string const> const& getSourceName() const;
 
 private:
 	class ASTNodeFactory;
@@ -44,8 +45,9 @@ private:
 	/// End position of the current token
 	int getEndPosition() const;
 
-	/// Parsing functions for the AST nodes
-	/// @{
+	///@{
+	///@name Parsing functions for the AST nodes
+	ASTPointer<ImportDirective> parseImportDirective();
 	ASTPointer<ContractDefinition> parseContractDefinition();
 	ASTPointer<FunctionDefinition> parseFunctionDefinition(bool _isPublic);
 	ASTPointer<StructDefinition> parseStructDefinition();
@@ -57,24 +59,34 @@ private:
 	ASTPointer<Statement> parseStatement();
 	ASTPointer<IfStatement> parseIfStatement();
 	ASTPointer<WhileStatement> parseWhileStatement();
+	ASTPointer<ForStatement> parseForStatement();
+	ASTPointer<Statement> parseVarDefOrExprStmt();
 	ASTPointer<VariableDefinition> parseVariableDefinition();
+	ASTPointer<ExpressionStatement> parseExpressionStatement();
 	ASTPointer<Expression> parseExpression();
 	ASTPointer<Expression> parseBinaryExpression(int _minPrecedence = 4);
 	ASTPointer<Expression> parseUnaryExpression();
 	ASTPointer<Expression> parseLeftHandSideExpression();
 	ASTPointer<Expression> parsePrimaryExpression();
 	std::vector<ASTPointer<Expression>> parseFunctionCallArguments();
-	/// @}
+	///@}
 
-	/// Helper functions
-	/// @{
+	///@{
+	///@name Helper functions
+
+	/// Peeks ahead in the scanner to determine if a variable definition is going to follow
+	bool peekVariableDefinition();
+
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();
 	ASTPointer<ASTString> expectIdentifierToken();
 	ASTPointer<ASTString> getLiteralAndAdvance();
-	void throwExpectationError(std::string const& _description);
-	/// @}
+	///@}
+
+	/// Creates a @ref ParserError exception and annotates it with the current position and the
+	/// given @a _description.
+	ParserError createParserError(std::string const& _description) const;
 
 	std::shared_ptr<Scanner> m_scanner;
 };

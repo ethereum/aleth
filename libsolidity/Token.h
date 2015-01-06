@@ -42,10 +42,10 @@
 
 #pragma once
 
-#include <boost/assert.hpp>
-
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
+#include <libsolidity/Utils.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev
 {
@@ -82,8 +82,6 @@ namespace solidity
 	T(SEMICOLON, ";", 0)                                               \
 	T(PERIOD, ".", 0)                                                  \
 	T(CONDITIONAL, "?", 3)                                             \
-	T(INC, "++", 0)                                                    \
-	T(DEC, "--", 0)                                                    \
 	T(ARROW, "=>", 0)                                                  \
 	\
 	/* Assignment operators. */                                        \
@@ -109,9 +107,9 @@ namespace solidity
 	T(COMMA, ",", 1)                                                   \
 	T(OR, "||", 4)                                                     \
 	T(AND, "&&", 5)                                                    \
-	T(BIT_OR, "|", 6)                                                  \
-	T(BIT_XOR, "^", 7)                                                 \
-	T(BIT_AND, "&", 8)                                                 \
+	T(BIT_OR, "|", 8)                                                  \
+	T(BIT_XOR, "^", 9)                                                 \
+	T(BIT_AND, "&", 10)                                                \
 	T(SHL, "<<", 11)                                                   \
 	T(SAR, ">>", 11)                                                   \
 	T(SHR, ">>>", 11)                                                  \
@@ -124,25 +122,27 @@ namespace solidity
 	/* Compare operators sorted by precedence. */                      \
 	/* IsCompareOp() relies on this block of enum values */            \
 	/* being contiguous and sorted in the same order! */               \
-	T(EQ, "==", 9)                                                     \
-	T(NE, "!=", 9)                                                     \
-	T(LT, "<", 10)                                                     \
-	T(GT, ">", 10)                                                     \
-	T(LTE, "<=", 10)                                                   \
-	T(GTE, ">=", 10)                                                   \
-	K(IN, "in", 10)                                                    \
+	T(EQ, "==", 6)                                                     \
+	T(NE, "!=", 6)                                                     \
+	T(LT, "<", 7)                                                      \
+	T(GT, ">", 7)                                                      \
+	T(LTE, "<=", 7)                                                    \
+	T(GTE, ">=", 7)                                                    \
+	K(IN, "in", 7)                                                     \
 	\
 	/* Unary operators. */                                             \
 	/* IsUnaryOp() relies on this block of enum values */              \
 	/* being contiguous and sorted in the same order! */               \
 	T(NOT, "!", 0)                                                     \
 	T(BIT_NOT, "~", 0)                                                 \
+	T(INC, "++", 0)                                                    \
+	T(DEC, "--", 0)                                                    \
 	K(DELETE, "delete", 0)                                             \
 	\
 	/* Keywords */                                                     \
 	K(BREAK, "break", 0)                                               \
 	K(CASE, "case", 0)                                                 \
-	K(CONST, "const", 0)                                               \
+	K(CONST, "constant", 0)                                            \
 	K(CONTINUE, "continue", 0)                                         \
 	K(CONTRACT, "contract", 0)                                         \
 	K(DEFAULT, "default", 0)                                           \
@@ -161,7 +161,6 @@ namespace solidity
 	K(RETURNS, "returns", 0)                                           \
 	K(STRUCT, "struct", 0)                                             \
 	K(SWITCH, "switch", 0)                                             \
-	K(THIS, "this", 0)                                                 \
 	K(VAR, "var", 0)                                                   \
 	K(WHILE, "while", 0)                                               \
 	\
@@ -170,23 +169,140 @@ namespace solidity
 	 * the implementation in Types.cpp has to be synced to this here
 	 *  TODO more to be added */                                       \
 	K(INT, "int", 0)                                                   \
+	K(INT8, "int8", 0)                                                 \
+	K(INT16, "int16", 0)                                               \
+	K(INT24, "int24", 0)                                               \
 	K(INT32, "int32", 0)                                               \
+	K(INT40, "int40", 0)                                               \
+	K(INT48, "int48", 0)                                               \
+	K(INT56, "int56", 0)                                               \
 	K(INT64, "int64", 0)                                               \
+	K(INT72, "int72", 0)                                               \
+	K(INT80, "int80", 0)                                               \
+	K(INT88, "int88", 0)                                               \
+	K(INT96, "int96", 0)                                               \
+	K(INT104, "int104", 0)                                             \
+	K(INT112, "int112", 0)                                             \
+	K(INT120, "int120", 0)                                             \
 	K(INT128, "int128", 0)                                             \
+	K(INT136, "int136", 0)                                             \
+	K(INT144, "int144", 0)                                             \
+	K(INT152, "int152", 0)                                             \
+	K(INT160, "int160", 0)                                             \
+	K(INT168, "int168", 0)                                             \
+	K(INT176, "int178", 0)                                             \
+	K(INT184, "int184", 0)                                             \
+	K(INT192, "int192", 0)                                             \
+	K(INT200, "int200", 0)                                             \
+	K(INT208, "int208", 0)                                             \
+	K(INT216, "int216", 0)                                             \
+	K(INT224, "int224", 0)                                             \
+	K(INT232, "int232", 0)                                             \
+	K(INT240, "int240", 0)                                             \
+	K(INT248, "int248", 0)                                             \
 	K(INT256, "int256", 0)                                             \
 	K(UINT, "uint", 0)                                                 \
+	K(UINT8, "uint8", 0)                                               \
+	K(UINT16, "uint16", 0)                                             \
+	K(UINT24, "uint24", 0)                                             \
 	K(UINT32, "uint32", 0)                                             \
+	K(UINT40, "uint40", 0)                                             \
+	K(UINT48, "uint48", 0)                                             \
+	K(UINT56, "uint56", 0)                                             \
 	K(UINT64, "uint64", 0)                                             \
+	K(UINT72, "uint72", 0)                                             \
+	K(UINT80, "uint80", 0)                                             \
+	K(UINT88, "uint88", 0)                                             \
+	K(UINT96, "uint96", 0)                                             \
+	K(UINT104, "uint104", 0)                                           \
+	K(UINT112, "uint112", 0)                                           \
+	K(UINT120, "uint120", 0)                                           \
 	K(UINT128, "uint128", 0)                                           \
+	K(UINT136, "uint136", 0)                                           \
+	K(UINT144, "uint144", 0)                                           \
+	K(UINT152, "uint152", 0)                                           \
+	K(UINT160, "uint160", 0)                                           \
+	K(UINT168, "uint168", 0)                                           \
+	K(UINT176, "uint178", 0)                                           \
+	K(UINT184, "uint184", 0)                                           \
+	K(UINT192, "uint192", 0)                                           \
+	K(UINT200, "uint200", 0)                                           \
+	K(UINT208, "uint208", 0)                                           \
+	K(UINT216, "uint216", 0)                                           \
+	K(UINT224, "uint224", 0)                                           \
+	K(UINT232, "uint232", 0)                                           \
+	K(UINT240, "uint240", 0)                                           \
+	K(UINT248, "uint248", 0)                                           \
 	K(UINT256, "uint256", 0)                                           \
 	K(HASH, "hash", 0)                                                 \
+	K(HASH8, "hash8", 0)                                               \
+	K(HASH16, "hash16", 0)                                             \
+	K(HASH24, "hash24", 0)                                             \
 	K(HASH32, "hash32", 0)                                             \
+	K(HASH40, "hash40", 0)                                             \
+	K(HASH48, "hash48", 0)                                             \
+	K(HASH56, "hash56", 0)                                             \
 	K(HASH64, "hash64", 0)                                             \
+	K(HASH72, "hash72", 0)                                             \
+	K(HASH80, "hash80", 0)                                             \
+	K(HASH88, "hash88", 0)                                             \
+	K(HASH96, "hash96", 0)                                             \
+	K(HASH104, "hash104", 0)                                           \
+	K(HASH112, "hash112", 0)                                           \
+	K(HASH120, "hash120", 0)                                           \
 	K(HASH128, "hash128", 0)                                           \
+	K(HASH136, "hash136", 0)                                           \
+	K(HASH144, "hash144", 0)                                           \
+	K(HASH152, "hash152", 0)                                           \
+	K(HASH160, "hash160", 0)                                           \
+	K(HASH168, "hash168", 0)                                           \
+	K(HASH176, "hash178", 0)                                           \
+	K(HASH184, "hash184", 0)                                           \
+	K(HASH192, "hash192", 0)                                           \
+	K(HASH200, "hash200", 0)                                           \
+	K(HASH208, "hash208", 0)                                           \
+	K(HASH216, "hash216", 0)                                           \
+	K(HASH224, "hash224", 0)                                           \
+	K(HASH232, "hash232", 0)                                           \
+	K(HASH240, "hash240", 0)                                           \
+	K(HASH248, "hash248", 0)                                           \
 	K(HASH256, "hash256", 0)                                           \
 	K(ADDRESS, "address", 0)                                           \
 	K(BOOL, "bool", 0)                                                 \
 	K(STRING_TYPE, "string", 0)                                        \
+	K(STRING0, "string0", 0)                                           \
+	K(STRING1, "string1", 0)                                           \
+	K(STRING2, "string2", 0)                                           \
+	K(STRING3, "string3", 0)                                           \
+	K(STRING4, "string4", 0)                                           \
+	K(STRING5, "string5", 0)                                           \
+	K(STRING6, "string6", 0)                                           \
+	K(STRING7, "string7", 0)                                           \
+	K(STRING8, "string8", 0)                                           \
+	K(STRING9, "string9", 0)                                           \
+	K(STRING10, "string10", 0)                                         \
+	K(STRING11, "string11", 0)                                         \
+	K(STRING12, "string12", 0)                                         \
+	K(STRING13, "string13", 0)                                         \
+	K(STRING14, "string14", 0)                                         \
+	K(STRING15, "string15", 0)                                         \
+	K(STRING16, "string16", 0)                                         \
+	K(STRING17, "string17", 0)                                         \
+	K(STRING18, "string18", 0)                                         \
+	K(STRING19, "string19", 0)                                         \
+	K(STRING20, "string20", 0)                                         \
+	K(STRING21, "string21", 0)                                         \
+	K(STRING22, "string22", 0)                                         \
+	K(STRING23, "string23", 0)                                         \
+	K(STRING24, "string24", 0)                                         \
+	K(STRING25, "string25", 0)                                         \
+	K(STRING26, "string26", 0)                                         \
+	K(STRING27, "string27", 0)                                         \
+	K(STRING28, "string28", 0)                                         \
+	K(STRING29, "string29", 0)                                         \
+	K(STRING30, "string30", 0)                                         \
+	K(STRING31, "string31", 0)                                         \
+	K(STRING32, "string32", 0)                                         \
 	K(TEXT, "text", 0)                                                 \
 	K(REAL, "real", 0)                                                 \
 	K(UREAL, "ureal", 0)                                               \
@@ -198,6 +314,7 @@ namespace solidity
 	K(FALSE_LITERAL, "false", 0)                                       \
 	T(NUMBER, NULL, 0)                                                 \
 	T(STRING_LITERAL, NULL, 0)                                         \
+	T(COMMENT_LITERAL, NULL, 0)                                        \
 	\
 	/* Identifiers (not keywords or future reserved words). */         \
 	T(IDENTIFIER, NULL, 0)                                             \
@@ -213,6 +330,9 @@ class Token
 {
 public:
 	// All token values.
+	// attention! msvc issue:
+	// http://stackoverflow.com/questions/9567868/compile-errors-after-adding-v8-to-my-project-c2143-c2059
+	// @todo: avoid TOKEN_LIST macro
 #define T(name, string, precedence) name,
 	enum Value
 	{
@@ -225,79 +345,22 @@ public:
 	// (e.g. "LT" for the token LT).
 	static char const* getName(Value tok)
 	{
-		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned
+		solAssert(tok < NUM_TOKENS, "");
 		return m_name[tok];
 	}
 
 	// Predicates
-	static bool isKeyword(Value tok) { return m_tokenType[tok] == 'K'; }
-	static bool isIdentifier(Value tok) { return tok == IDENTIFIER; }
 	static bool isElementaryTypeName(Value tok) { return INT <= tok && tok < TYPES_END; }
 	static bool isAssignmentOp(Value tok) { return ASSIGN <= tok && tok <= ASSIGN_MOD; }
 	static bool isBinaryOp(Value op) { return COMMA <= op && op <= MOD; }
-	static bool isTruncatingBinaryOp(Value op) { return BIT_OR <= op && op <= SHR; }
+	static bool isCommutativeOp(Value op) { return op == BIT_OR || op == BIT_XOR || op == BIT_AND ||
+				op == ADD || op == MUL || op == EQ || op == NE; }
+	static bool isArithmeticOp(Value op) { return ADD <= op && op <= MOD; }
 	static bool isCompareOp(Value op) { return EQ <= op && op <= IN; }
-	static bool isOrderedRelationalCompareOp(Value op)
-	{
-		return op == LT || op == LTE || op == GT || op == GTE;
-	}
-	static bool isEqualityOp(Value op) { return op == EQ; }
-	static bool isInequalityOp(Value op) { return op == NE; }
-	static bool isArithmeticCompareOp(Value op)
-	{
-		return isOrderedRelationalCompareOp(op) ||
-			   isEqualityOp(op) || isInequalityOp(op);
-	}
-
-	static Value negateCompareOp(Value op)
-	{
-		BOOST_ASSERT(isArithmeticCompareOp(op));
-		switch (op)
-		{
-		case EQ:
-			return NE;
-		case NE:
-			return EQ;
-		case LT:
-			return GTE;
-		case GT:
-			return LTE;
-		case LTE:
-			return GT;
-		case GTE:
-			return LT;
-		default:
-			BOOST_ASSERT(false); // should not get here
-			return op;
-		}
-	}
-
-	static Value reverseCompareOp(Value op)
-	{
-		BOOST_ASSERT(isArithmeticCompareOp(op));
-		switch (op)
-		{
-		case EQ:
-			return EQ;
-		case NE:
-			return NE;
-		case LT:
-			return GT;
-		case GT:
-			return LT;
-		case LTE:
-			return GTE;
-		case GTE:
-			return LTE;
-		default:
-			BOOST_ASSERT(false); // should not get here
-			return op;
-		}
-	}
 
 	static Value AssignmentToBinaryOp(Value op)
 	{
-		BOOST_ASSERT(isAssignmentOp(op) && op != ASSIGN);
+		solAssert(isAssignmentOp(op) && op != ASSIGN, "");
 		return Token::Value(op + (BIT_OR - ASSIGN_BIT_OR));
 	}
 
@@ -311,7 +374,7 @@ public:
 	// have a (unique) string (e.g. an IDENTIFIER).
 	static char const* toString(Value tok)
 	{
-		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
+		solAssert(tok < NUM_TOKENS, "");
 		return m_string[tok];
 	}
 
@@ -319,7 +382,7 @@ public:
 	// operators; returns 0 otherwise.
 	static int precedence(Value tok)
 	{
-		BOOST_ASSERT(tok < NUM_TOKENS);  // tok is unsigned.
+		solAssert(tok < NUM_TOKENS, "");
 		return m_precedence[tok];
 	}
 

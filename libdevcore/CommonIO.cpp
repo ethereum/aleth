@@ -30,7 +30,7 @@ string dev::memDump(bytes const& _b, unsigned _w, bool _html)
 {
 	stringstream ret;
 	if (_html)
-		ret << "<pre style=\"font-family: Monospace, sans-serif; font-size: small\">";
+		ret << "<pre style=\"font-family: Monospace,Lucida Console,Courier,Courier New,sans-serif; font-size: small\">";
 	for (unsigned i = 0; i < _b.size(); i += _w)
 	{
 		ret << hex << setw(4) << setfill('0') << i << " ";
@@ -65,6 +65,8 @@ bytes dev::contents(std::string const& _file)
 	// get length of file:
 	is.seekg (0, is.end);
 	streamoff length = is.tellg();
+	if (length == 0) // return early, MSVC does not like reading 0 bytes
+		return {};
 	is.seekg (0, is.beg);
 	bytes ret(length);
 	is.read((char*)ret.data(), length);

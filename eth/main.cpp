@@ -27,11 +27,8 @@
 #include <signal.h>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
-#if ETH_JSONRPC
-#include <jsonrpc/connectors/httpserver.h>
-#endif
 #include <libdevcrypto/FileSystem.h>
-#include <libevmface/Instruction.h>
+#include <libevmcore/Instruction.h>
 #include <libevm/VM.h>
 #include <libethereum/All.h>
 #include <libwebthree/WebThree.h>
@@ -40,7 +37,8 @@
 #include <readline/history.h>
 #endif
 #if ETH_JSONRPC
-#include "EthStubServer.h"
+#include <libweb3jsonrpc/WebThreeStubServer.h>
+#include <libweb3jsonrpc/CorsHttpServer.h>
 #endif
 #include "BuildInfo.h"
 using namespace std;
@@ -91,6 +89,7 @@ void interactiveHelp()
 		<< "    importConfig <path>  Import the config (.RLP) from the path provided." <<endl
 		<< "    inspect <contract>  Dumps a contract to <APPDATA>/<contract>.evm." << endl
 		<< "    dumptrace <block> <index> <filename> <format>  Dumps a transaction trace" << endl << "to <filename>. <format> should be one of pretty, standard, standard+." << endl
+		<< "    dumpreceipt <block> <index>  Dumps a transation receipt." << endl
 		<< "    exit  Exits the application." << endl;
 }
 
@@ -336,11 +335,13 @@ int main(int argc, char** argv)
 		web3.connect(remoteHost, remotePort);
 
 #if ETH_JSONRPC
-	auto_ptr<EthStubServer> jsonrpcServer;
+	shared_ptr<WebThreeStubServer> jsonrpcServer;
+	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
 	if (jsonrpc > -1)
 	{
-		jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(jsonrpc), web3));
-		jsonrpcServer->setKeys({us});
+		jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::HttpServer(jsonrpc));
+		jsonrpcServer = shared_ptr<WebThreeStubServer>(new WebThreeStubServer(*jsonrpcConnector.get(), web3, vector<KeyPair>({us})));
+		jsonrpcServer->setIdentities({us});
 		jsonrpcServer->StartListening();
 	}
 #endif
@@ -427,8 +428,9 @@ int main(int argc, char** argv)
 			{
 				if (jsonrpc < 0)
 					jsonrpc = 8080;
-				jsonrpcServer = auto_ptr<EthStubServer>(new EthStubServer(new jsonrpc::HttpServer(jsonrpc), web3));
-				jsonrpcServer->setKeys({us});
+				jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::HttpServer(jsonrpc));
+				jsonrpcServer = shared_ptr<WebThreeStubServer>(new WebThreeStubServer(*jsonrpcConnector.get(), web3, vector<KeyPair>({us})));
+				jsonrpcServer->setIdentities({us});
 				jsonrpcServer->StartListening();
 			}
 			else if (cmd == "jsonstop")
@@ -440,9 +442,8 @@ int main(int argc, char** argv)
 #endif
 			else if (cmd == "address")
 			{
-				cout << "Current address:" << endl;
-				const char* addchr = toHex(us.address().asArray()).c_str();
-				cout << addchr << endl;
+				cout << "Current address:" << endl
+					 << toHex(us.address().asArray()) << endl;
 			}
 			else if (cmd == "secret")
 			{
@@ -491,14 +492,12 @@ int main(int argc, char** argv)
 					cnote << ssbd.str();
 					int ssize = sechex.length();
 					int size = hexAddr.length();
-					u256 minGas = (u256)Client::txGas(data.size(), 0);
+					u256 minGas = (u256)Client::txGas(data, 0);
 					if (size < 40)
 					{
 						if (size > 0)
 							cwarn << "Invalid address length:" << size;
 					}
-					else if (gasPrice < info.minGasPrice)
-						cwarn << "Minimum gas price is" << info.minGasPrice;
 					else if (gas < minGas)
 						cwarn << "Minimum gas amount is" << minGas;
 					else if (ssize < 40)
@@ -558,9 +557,9 @@ int main(int argc, char** argv)
 						auto h = bc.currentHash();
 						auto blockData = bc.block(h);
 						BlockInfo info(blockData);
-						u256 minGas = (u256)Client::txGas(0, 0);
+						u256 minGas = (u256)Client::txGas(bytes(), 0);
 						Address dest = h160(fromHex(hexAddr));
-						c->transact(us.secret(), amount, dest, bytes(), minGas, info.minGasPrice);
+						c->transact(us.secret(), amount, dest, bytes(), minGas);
 					}
 				} 
 				else
@@ -597,11 +596,9 @@ int main(int argc, char** argv)
 						cnote << "Init:";
 						cnote << ssc.str();
 					}
-					u256 minGas = (u256)Client::txGas(init.size(), 0);
+					u256 minGas = (u256)Client::txGas(init, 0);
 					if (endowment < 0)
 						cwarn << "Invalid endowment";
-					else if (gasPrice < info.minGasPrice)
-						cwarn << "Minimum gas price is" << info.minGasPrice;
 					else if (gas < minGas)
 						cwarn << "Minimum gas amount is" << minGas;
 					else
@@ -609,6 +606,17 @@ int main(int argc, char** argv)
 				} 
 				else
 					cwarn << "Require parameters: contract ENDOWMENT GASPRICE GAS CODEHEX";
+			}
+			else if (c && cmd == "dumpreceipt")
+			{
+				unsigned block;
+				unsigned index;
+				iss >> block >> index;
+				dev::eth::TransactionReceipt r = c->blockChain().receipts(c->blockChain().numberHash(block)).receipts[index];
+				auto rb = r.rlp();
+				cout << "RLP: " << RLP(rb) << endl;
+				cout << "Hex: " << toHex(rb) << endl;
+				cout << r << endl;
 			}
 			else if (c && cmd == "dumptrace")
 			{
@@ -623,7 +631,7 @@ int main(int argc, char** argv)
 				dev::eth::State state =c->state(index + 1,c->blockChain().numberHash(block));
 				if (index < state.pending().size())
 				{
-					Executive e(state);
+					Executive e(state, c->blockChain(), 0);
 					Transaction t = state.pending()[index];
 					state = state.fromPending(index);
 					bytes r = t.rlp();
@@ -633,10 +641,10 @@ int main(int argc, char** argv)
 
 						OnOpFunc oof;
 						if (format == "pretty")
-							oof = [&](uint64_t steps, Instruction instr, bigint newMemSize, bigint gasCost, void* vvm, void const* vextVM)
+							oof = [&](uint64_t steps, Instruction instr, bigint newMemSize, bigint gasCost, dev::eth::VM* vvm, dev::eth::ExtVMFace const* vextVM)
 							{
-								dev::eth::VM* vm = (VM*)vvm;
-								dev::eth::ExtVM const* ext = (ExtVM const*)vextVM;
+								dev::eth::VM* vm = vvm;
+								dev::eth::ExtVM const* ext = static_cast<ExtVM const*>(vextVM);
 								f << endl << "    STACK" << endl;
 								for (auto i: vm->stack())
 									f << (h256)i << endl;
@@ -647,17 +655,17 @@ int main(int argc, char** argv)
 								f << dec << ext->depth << " | " << ext->myAddress << " | #" << steps << " | " << hex << setw(4) << setfill('0') << vm->curPC() << " : " << dev::eth::instructionInfo(instr).name << " | " << dec << vm->gas() << " | -" << dec << gasCost << " | " << newMemSize << "x32";
 							};
 						else if (format == "standard")
-							oof = [&](uint64_t, Instruction instr, bigint, bigint, void* vvm, void const* vextVM)
+							oof = [&](uint64_t, Instruction instr, bigint, bigint, dev::eth::VM* vvm, dev::eth::ExtVMFace const* vextVM)
 							{
-								dev::eth::VM* vm = (VM*)vvm;
-								dev::eth::ExtVM const* ext = (ExtVM const*)vextVM;
+								dev::eth::VM* vm = vvm;
+								dev::eth::ExtVM const* ext = static_cast<ExtVM const*>(vextVM);
 								f << ext->myAddress << " " << hex << toHex(dev::toCompactBigEndian(vm->curPC(), 1)) << " " << hex << toHex(dev::toCompactBigEndian((int)(byte)instr, 1)) << " " << hex << toHex(dev::toCompactBigEndian((uint64_t)vm->gas(), 1)) << endl;
 							};
 						else if (format == "standard+")
-							oof = [&](uint64_t, Instruction instr, bigint, bigint, void* vvm, void const* vextVM)
+							oof = [&](uint64_t, Instruction instr, bigint, bigint, dev::eth::VM* vvm, dev::eth::ExtVMFace const* vextVM)
 							{
 								dev::eth::VM* vm = (VM*)vvm;
-								dev::eth::ExtVM const* ext = (ExtVM const*)vextVM;
+								dev::eth::ExtVM const* ext = static_cast<ExtVM const*>(vextVM);
 								if (instr == Instruction::STOP || instr == Instruction::RETURN || instr == Instruction::SUICIDE)
 									for (auto const& i: ext->state().storage(ext->myAddress))
 										f << toHex(dev::toCompactBigEndian(i.first, 1)) << " " << toHex(dev::toCompactBigEndian(i.second, 1)) << endl;

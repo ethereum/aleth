@@ -1,84 +1,35 @@
+/*
+	This file is part of cpp-ethereum.
 
-#include <string>
-#include <iostream>
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/CommonIO.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/Parser.h>
-#include <libsolidity/ASTPrinter.h>
-#include <libsolidity/NameAndTypeResolver.h>
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-namespace dev
-{
-namespace solidity
-{
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/**
+ * @author Christian <c@ethdev.com>
+ * @date 2014
+ * Solidity commandline compiler.
+ */
 
-ASTPointer<ContractDefinition> parseAST(std::string const& _source)
-{
-	ASTPointer<Scanner> scanner = std::make_shared<Scanner>(CharStream(_source));
-	Parser parser;
-	return parser.parse(scanner);
-}
-
-}
-} // end namespaces
-
-void help()
-{
-	std::cout
-			<< "Usage solc [OPTIONS] <file>" << std::endl
-			<< "Options:" << std::endl
-			<< "    -h,--help  Show this help message and exit." << std::endl
-			<< "    -V,--version  Show the version and exit." << std::endl;
-	exit(0);
-}
-
-void version()
-{
-	std::cout
-			<< "solc, the solidity complier commandline interface " << dev::Version << std::endl
-			<< "  by Christian <c@ethdev.com>, (c) 2014." << std::endl
-			<< "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << std::endl;
-	exit(0);
-}
+#include "CommandLineInterface.h"
 
 int main(int argc, char** argv)
 {
-	std::string infile;
-	for (int i = 1; i < argc; ++i)
-	{
-		std::string arg = argv[i];
-		if (arg == "-h" || arg == "--help")
-			help();
-		else if (arg == "-V" || arg == "--version")
-			version();
-		else
-			infile = argv[i];
-	}
-	std::string src;
-	if (infile.empty())
-	{
-		std::string s;
-		while (!std::cin.eof())
-		{
-			getline(std::cin, s);
-			src.append(s);
-		}
-	}
-	else
-	{
-		src = dev::asString(dev::contents(infile));
-	}
-	std::cout << "Parsing..." << std::endl;
-	// @todo catch exception
-	dev::solidity::ASTPointer<dev::solidity::ContractDefinition> ast = dev::solidity::parseAST(src);
-	std::cout << "Syntax tree for the contract:" << std::endl;
-	dev::solidity::ASTPrinter printer(ast, src);
-	printer.print(std::cout);
-	std::cout << "Resolving identifiers..." << std::endl;
-	dev::solidity::NameAndTypeResolver resolver;
-	resolver.resolveNamesAndTypes(*ast.get());
+	dev::solidity::CommandLineInterface cli;
+	if (!cli.parseArguments(argc, argv))
+		return 1;
+	if (!cli.processInput())
+		return 1;
+	cli.actOnInput();
+
 	return 0;
 }

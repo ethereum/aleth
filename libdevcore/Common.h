@@ -59,6 +59,7 @@ using bytesConstRef = vector_ref<byte const>;
 
 // Numeric types.
 using bigint = boost::multiprecision::number<boost::multiprecision::cpp_int_backend<>>;
+using u128 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<128, 128, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 using u256 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
 using s256 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<256, 256, boost::multiprecision::signed_magnitude, boost::multiprecision::unchecked, void>>;
 using u160 =  boost::multiprecision::number<boost::multiprecision::cpp_int_backend<160, 160, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>>;
@@ -72,6 +73,9 @@ using u160Set = std::set<u160>;
 using StringMap = std::map<std::string, std::string>;
 using u256Map = std::map<u256, u256>;
 using HexMap = std::map<bytes, std::string>;
+
+// Fixed-length string types.
+using string32 = std::array<char, 32>;
 
 // Null/Invalid values for convenience.
 static const u256 Invalid256 = ~(u256)0;

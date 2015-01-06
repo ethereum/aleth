@@ -52,8 +52,6 @@
 
 #pragma once
 
-#include <boost/assert.hpp>
-
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonData.h>
@@ -76,17 +74,20 @@ public:
 	CharStream(): m_pos(0) {}
 	explicit CharStream(std::string const& _source): m_source(_source), m_pos(0) {}
 	int getPos() const { return m_pos; }
-	bool isPastEndOfInput() const { return m_pos >= m_source.size(); }
-	char get() const { return m_source[m_pos]; }
-	char advanceAndGet();
+	bool isPastEndOfInput(size_t _charsForward = 0) const { return (m_pos + _charsForward) >= m_source.size(); }
+	char get(size_t _charsForward = 0) const { return m_source[m_pos + _charsForward]; }
+	char advanceAndGet(size_t _chars=1);
 	char rollback(size_t _amount);
 
+	void reset() { m_pos = 0; }
+
+	///@{
+	///@name Error printing helper functions
 	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	/// @{
 	std::string getLineAtPosition(int _position) const;
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const;
-	/// @}
+	///@}
 
 private:
 	std::string m_source;
@@ -94,57 +95,66 @@ private:
 };
 
 
+
 class Scanner
 {
+	friend class LiteralScope;
 public:
-	// Scoped helper for literal recording. Automatically drops the literal
-	// if aborting the scanning before it's complete.
-	class LiteralScope
-	{
-	public:
-		explicit LiteralScope(Scanner* self): scanner_(self), complete_(false) { scanner_->startNewLiteral(); }
-		~LiteralScope() { if (!complete_) scanner_->dropLiteral(); }
-		void Complete() { complete_ = true; }
 
-	private:
-		Scanner* scanner_;
-		bool complete_;
-	};
+	explicit Scanner(CharStream const& _source = CharStream(), std::string const& _sourceName = "") { reset(_source, _sourceName); }
 
-	explicit Scanner(CharStream const& _source);
+	/// Resets the scanner as if newly constructed with _source and _sourceName as input.
+	void reset(CharStream const& _source, std::string const& _sourceName);
+	/// Resets scanner to the start of input.
+	void reset();
 
-	/// Resets the scanner as if newly constructed with _input as input.
-	void reset(CharStream const& _source);
-
-	/// Returns the next token and advances input.
+	/// Returns the next token and advances input
 	Token::Value next();
 
-	/// Information about the current token
-	/// @{
+	///@{
+	///@name Information about the current token
 
 	/// Returns the current token
-	Token::Value getCurrentToken() { return m_current_token.token; }
-	Location getCurrentLocation() const { return m_current_token.location; }
-	const std::string& getCurrentLiteral() const { return m_current_token.literal; }
-	/// @}
+	Token::Value getCurrentToken()
+	{
+		return m_currentToken.token;
+	}
 
-	/// Information about the next token
-	/// @{
+	Location getCurrentLocation() const { return m_currentToken.location; }
+	std::string const& getCurrentLiteral() const { return m_currentToken.literal; }
+	///@}
+
+	///@{
+	///@name Information about the current comment token
+
+	Location getCurrentCommentLocation() const { return m_skippedComment.location; }
+	std::string const& getCurrentCommentLiteral() const { return m_skippedComment.literal; }
+	/// Called by the parser during FunctionDefinition parsing to clear the current comment
+	void clearCurrentCommentLiteral() { m_skippedComment.literal.clear(); }
+
+	///@}
+
+	///@{
+	///@name Information about the next token
+
 	/// Returns the next token without advancing input.
-	Token::Value peekNextToken() const { return m_next_token.token; }
-	Location peekLocation() const { return m_next_token.location; }
-	const std::string& peekLiteral() const { return m_next_token.literal; }
-	/// @}
+	Token::Value peekNextToken() const { return m_nextToken.token; }
+	Location peekLocation() const { return m_nextToken.location; }
+	std::string const& peekLiteral() const { return m_nextToken.literal; }
+	///@}
 
-	/// Functions that help pretty-printing parse errors.
+	std::shared_ptr<std::string const> const& getSourceName() const { return m_sourceName; }
+
+	///@{
+	///@name Error printing helper functions
+	/// Functions that help pretty-printing parse errors
 	/// Do only use in error cases, they are quite expensive.
-	/// @{
 	std::string getLineAtPosition(int _position) const { return m_source.getLineAtPosition(_position); }
 	std::tuple<int, int> translatePositionToLineColumn(int _position) const { return m_source.translatePositionToLineColumn(_position); }
-	/// @}
+	///@}
 
 private:
-	// Used for the current and look-ahead token.
+	/// Used for the current and look-ahead token and comments
 	struct TokenDesc
 	{
 		Token::Value token;
@@ -152,13 +162,12 @@ private:
 		std::string literal;
 	};
 
-	/// Literal buffer support
-	/// @{
-	inline void startNewLiteral() { m_next_token.literal.clear(); }
-	inline void addLiteralChar(char c) { m_next_token.literal.push_back(c); }
-	inline void dropLiteral() { m_next_token.literal.clear(); }
+	///@{
+	///@name Literal buffer support
+	inline void addLiteralChar(char c) { m_nextToken.literal.push_back(c); }
+	inline void addCommentLiteralChar(char c) { m_nextSkippedComment.literal.push_back(c); }
 	inline void addLiteralCharAndAdvance() { addLiteralChar(m_char); advance(); }
-	/// @}
+	///@}
 
 	bool advance() { m_char = m_source.advanceAndGet(); return !m_source.isPastEndOfInput(); }
 	void rollback(int _amount) { m_char = m_source.rollback(_amount); }
@@ -167,20 +176,27 @@ private:
 	/// If the next character is _next, advance and return _then, otherwise return _else.
 	inline Token::Value selectToken(char _next, Token::Value _then, Token::Value _else);
 
-	bool scanHexNumber(char& o_scannedNumber, int _expectedLength);
+	bool scanHexByte(char& o_scannedByte);
 
-	// Scans a single JavaScript token.
+	/// Scans a single Solidity token.
 	void scanToken();
 
+	/// Skips all whitespace and @returns true if something was skipped.
 	bool skipWhitespace();
+	/// Skips all whitespace except Line feeds and returns true if something was skipped
+	bool skipWhitespaceExceptLF();
 	Token::Value skipSingleLineComment();
 	Token::Value skipMultiLineComment();
 
 	void scanDecimalDigits();
-	Token::Value scanNumber(bool _periodSeen);
+	Token::Value scanNumber(char _charSeen = 0);
 	Token::Value scanIdentifierOrKeyword();
 
 	Token::Value scanString();
+	Token::Value scanSingleLineDocComment();
+	Token::Value scanMultiLineDocComment();
+	/// Scans a slash '/' and depending on the characters returns the appropriate token
+	Token::Value scanSlash();
 
 	/// Scans an escape-sequence which is part of a string and adds the
 	/// decoded character to the current literal. Returns true if a pattern
@@ -191,10 +207,14 @@ private:
 	int getSourcePos() { return m_source.getPos(); }
 	bool isSourcePastEndOfInput() { return m_source.isPastEndOfInput(); }
 
-	TokenDesc m_current_token;  // desc for current token (as returned by Next())
-	TokenDesc m_next_token;     // desc for next token (one token look-ahead)
+	TokenDesc m_skippedComment;  // desc for current skipped comment
+	TokenDesc m_nextSkippedComment; // desc for next skiped comment
+
+	TokenDesc m_currentToken;  // desc for current token (as returned by Next())
+	TokenDesc m_nextToken;     // desc for next token (one token look-ahead)
 
 	CharStream m_source;
+	std::shared_ptr<std::string const> m_sourceName;
 
 	/// one character look-ahead, equals 0 at end of input
 	char m_char;

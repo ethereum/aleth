@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file WhisperHost.h
+/** @file Interface.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
@@ -43,6 +43,8 @@ namespace shh
 	Topic mask;
 };*/
 
+class Watch;
+
 struct InstalledFilter
 {
 	InstalledFilter(TopicFilter const& _f): filter(_f) {}
@@ -67,19 +69,20 @@ public:
 
 	virtual void inject(Envelope const& _m, WhisperPeer* _from = nullptr) = 0;
 
-	unsigned installWatch(TopicMask const& _mask) { return installWatch(TopicFilter(_mask)); }
+	unsigned installWatch(TopicMask const& _mask);
 	virtual unsigned installWatch(TopicFilter const& _filter) = 0;
 	virtual unsigned installWatchOnId(h256 _filterId) = 0;
 	virtual void uninstallWatch(unsigned _watchId) = 0;
 	virtual h256s peekWatch(unsigned _watchId) const = 0;
 	virtual h256s checkWatch(unsigned _watchId) = 0;
+	virtual h256s watchMessages(unsigned _watchId) = 0;
 
 	virtual Envelope envelope(h256 _m) const = 0;
 
 	void post(bytes const& _payload, Topic _topic, unsigned _ttl = 50, unsigned _workToProve = 50) { inject(Message(_payload).seal(_topic, _ttl, _workToProve)); }
-	void post(Public _to, bytes const& _payload, Topic _topic, unsigned _ttl = 50, unsigned _workToProve = 50) { inject(Message(_payload).seal(_to, _topic, _ttl, _workToProve)); }
+	void post(Public _to, bytes const& _payload, Topic _topic, unsigned _ttl = 50, unsigned _workToProve = 50) { inject(Message(_payload).sealTo(_to, _topic, _ttl, _workToProve)); }
 	void post(Secret _from, bytes const& _payload, Topic _topic, unsigned _ttl = 50, unsigned _workToProve = 50) { inject(Message(_payload).seal(_from, _topic, _ttl, _workToProve)); }
-	void post(Secret _from, Public _to, bytes const& _payload, Topic _topic, unsigned _ttl = 50, unsigned _workToProve = 50) { inject(Message(_payload).seal(_from, _to, _topic, _ttl, _workToProve)); }
+	void post(Secret _from, Public _to, bytes const& _payload, Topic _topic, unsigned _ttl = 50, unsigned _workToProve = 50) { inject(Message(_payload).sealTo(_from, _to, _topic, _ttl, _workToProve)); }
 };
 
 struct WatshhChannel: public dev::LogChannel { static const char* name() { return "shh"; } static const int verbosity = 1; };
@@ -87,9 +90,11 @@ struct WatshhChannel: public dev::LogChannel { static const char* name() { retur
 
 }
 }
-/*
-namespace std { void swap(shh::Watch& _a, shh::Watch& _b); }
 
+namespace std { void swap(dev::shh::Watch& _a, dev::shh::Watch& _b); }
+
+namespace dev
+{
 namespace shh
 {
 
@@ -99,28 +104,29 @@ class Watch: public boost::noncopyable
 
 public:
 	Watch() {}
-	Watch(Whisper& _c, h256 _f): m_c(&_c), m_id(_c.installWatch(_f)) {}
-	Watch(Whisper& _c, TopicFilter const& _tf): m_c(&_c), m_id(_c.installWatch(_tf)) {}
+	Watch(Interface& _c, TopicMask const& _f): m_c(&_c), m_id(_c.installWatch(_f)) {}
+	Watch(Interface& _c, TopicFilter const& _tf): m_c(&_c), m_id(_c.installWatch(_tf)) {}
 	~Watch() { if (m_c) m_c->uninstallWatch(m_id); }
 
-	bool check() { return m_c ? m_c->checkWatch(m_id) : false; }
-	bool peek() { return m_c ? m_c->peekWatch(m_id) : false; }
+	h256s check() { return m_c ? m_c->checkWatch(m_id) : h256s(); }
+	h256s peek() { return m_c ? m_c->peekWatch(m_id) : h256s(); }
 
 private:
-	Whisper* m_c;
+	Interface* m_c;
 	unsigned m_id;
 };
 
 }
+}
 
-namespace shh
+namespace std
 {
 
-inline void swap(shh::Watch& _a, shh::Watch& _b)
+inline void swap(dev::shh::Watch& _a, dev::shh::Watch& _b)
 {
 	swap(_a.m_c, _b.m_c);
 	swap(_a.m_id, _b.m_id);
 }
 
 }
-*/
+
