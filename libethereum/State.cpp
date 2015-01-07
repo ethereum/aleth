@@ -437,7 +437,7 @@ h512s State::sync(BlockChain const& _bc, TransactionQueue& _tq, bool* o_transact
 					++goodTxs;
 //					cnote << "TX took:" << t.elapsed() * 1000;
 				}
-				catch (InvalidNonce const& in)
+				catch (InvalidNonce& in)
 				{
 					if (in.required > in.candidate)
 					{
