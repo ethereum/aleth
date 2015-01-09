@@ -246,7 +246,7 @@ std::shared_ptr<dev::shh::Interface> WebThreeStubServer::face() const
 
 std::string WebThreeStubServer::web3_sha3(std::string const& _param1)
 {
-	return toJS(sha3(jsToBytes(_param1)));
+	return toJS(sha3(asBytes(_param1)));
 }
 
 Json::Value WebThreeStubServer::eth_accounts()
