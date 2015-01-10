@@ -50,8 +50,9 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	{
 		e.go(_onOp);
 		e.accrueSubState(sub);
+		io_gas = e.endGas();
 	}
-	io_gas = e.endGas();
+
 	return e.newAddress();
 }
 
