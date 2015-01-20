@@ -22,6 +22,7 @@
 #include "BlockChain.h"
 
 #include <boost/filesystem.hpp>
+#include <test/JsonSpiritHeaders.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcrypto/FileSystem.h>
@@ -29,11 +30,13 @@
 #include <libethcore/ProofOfWork.h>
 #include <libethcore/BlockInfo.h>
 #include <liblll/Compiler.h>
+#include "GenesisInfo.h"
 #include "State.h"
 #include "Defaults.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+namespace js = json_spirit;
 
 #define ETH_CATCH 1
 
@@ -58,18 +61,16 @@ std::map<Address, Account> const& dev::eth::genesisState()
 	static std::map<Address, Account> s_ret;
 	if (s_ret.empty())
 	{
-		// Initialise.
-		for (auto i: vector<string>({
-            "51ba59315b3a95761d0863b05ccc7a7f54703d99",
-			"e6716f9544a56c530d868e4bfbacb172315bdead",
-			"b9c015918bdaba24b4ff057a92a3873d6eb201be",
-			"1a26338f0d905e295fccb71fa9ea849ffa12aaf4",
-			"2ef47100e0787b915105fd5e3f4ff6752079d5cb",
-			"cd2a3d9f938e13cd947ec05abc7fe734df8dd826",
-			"6c386a4b26f73c802f34673f7248bb118f97424a",
-			"e4157b34ea9615cfbde6b4fda419828124b70c78"
-		}))
-			s_ret[Address(fromHex(i))] = Account(u256(1) << 200, Account::NormalCreation);
+		js::mValue val;
+		json_spirit::read_string(c_genesisInfo, val);
+		for (auto account: val.get_obj())
+			if (account.second.get_obj()["code"].get_str().size())
+			{
+				s_ret[Address(fromHex(account.first))] = Account(fromBigEndian<u256>(fromHex(account.second.get_obj()["balance"].get_str())), Account::ContractConception);
+				s_ret[Address(fromHex(account.first))].setCode(fromHex(account.second.get_obj()["code"].get_str()));
+			}
+			else
+				s_ret[Address(fromHex(account.first))] = Account(fromBigEndian<u256>(fromHex(account.second.get_obj()["balance"].get_str())), Account::NormalCreation);
 	}
 	return s_ret;
 }
