@@ -36,6 +36,16 @@ Transaction::Transaction(bytesConstRef _rlpData, bool _checkSender)
 	RLP rlp(_rlpData);
 	try
 	{
+		// check if parameters are within the defined set
+		vector<uint8_t> rlpFieldsWithinP256 = {0, 1, 2, 4, 7, 8};
+		for (auto const i: rlpFieldsWithinP256)
+		{
+			if (rlp[i].toInt<bigint>() != rlp[i].toInt<u256>())
+				BOOST_THROW_EXCEPTION(BadCast() << errinfo_comment("rlp encoded transaction has parameters larger then u256_max - 1"));
+		}
+		if (rlp[6].toInt<bigint>() != rlp[6].toInt<byte>())
+			BOOST_THROW_EXCEPTION(BadCast() << errinfo_comment("rlp encoded transaction has v parameter larger then uint8_max - 1"));
+
 		m_nonce = rlp[field = 0].toInt<u256>();
 		m_gasPrice = rlp[field = 1].toInt<u256>();
 		m_gas = rlp[field = 2].toInt<u256>();
@@ -47,6 +57,9 @@ Transaction::Transaction(bytesConstRef _rlpData, bool _checkSender)
 		h256 r = rlp[field = 7].toInt<u256>();
 		h256 s = rlp[field = 8].toInt<u256>();
 		m_vrs = SignatureStruct{ r, s, v };
+		if (!m_vrs.isValid())
+			BOOST_THROW_EXCEPTION(InvalidSignature());
+
 		if (_checkSender)
 			m_sender = sender();
 	}
