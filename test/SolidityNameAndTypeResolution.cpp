@@ -536,6 +536,47 @@ BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint){
+			}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(bool){
+			}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f(uint, uint k) returns(uint ret_k){
+				return k;
+			}
+		})";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
+{
+	char const* text = R"(
+		contract test {
+			function f() returns(uint ret_k, uint){
+				return 5;
+			}
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
 
 BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 {

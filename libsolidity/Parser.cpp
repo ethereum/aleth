@@ -253,15 +253,24 @@ ASTPointer<VariableDeclaration> Parser::parseVariableDeclaration(VarDeclParserOp
 	ASTNodeFactory nodeFactory(*this);
 	ASTPointer<TypeName> type = parseTypeName(_options.allowVar);
 	bool isIndexed = false;
+	ASTPointer<ASTString> identifier;
 	if (_options.allowIndexed && m_scanner->getCurrentToken() == Token::INDEXED)
 	{
 		isIndexed = true;
 		m_scanner->next();
 	}
+	if (_options.allowEmptyName && m_scanner->getCurrentToken() != Token::IDENTIFIER)
+	{
+		identifier = make_shared<ASTString>("");
+		nodeFactory.setEndPositionFromNode(type);
+	}
+	else
+	{
+		nodeFactory.markEndPosition();
+		identifier = expectIdentifierToken();
+	}
 	nodeFactory.markEndPosition();
-	return nodeFactory.createNode<VariableDeclaration>(type, expectIdentifierToken(),
-													   _options.isPublic, _options.isStateVariable,
-													   isIndexed);
+	return nodeFactory.createNode<VariableDeclaration>(type, identifier, _options.isPublic, _options.isStateVariable, isIndexed);
 }
 
 ASTPointer<ModifierDefinition> Parser::parseModifierDefinition()
@@ -383,6 +392,7 @@ ASTPointer<ParameterList> Parser::parseParameterList(bool _allowEmpty, bool _all
 	vector<ASTPointer<VariableDeclaration>> parameters;
 	VarDeclParserOptions options;
 	options.allowIndexed = _allowIndexed;
+	options.allowEmptyName = true;
 	expectToken(Token::LPAREN);
 	if (!_allowEmpty || m_scanner->getCurrentToken() != Token::RPAREN)
 	{

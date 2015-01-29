@@ -51,6 +51,7 @@ private:
 		bool isPublic = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
+		bool allowEmptyName = false;
 	};
 
 	///@{
