@@ -31,7 +31,9 @@ namespace solidity
 bool DeclarationContainer::registerDeclaration(Declaration const& _declaration, bool _update)
 {
 	if (_declaration.getName().empty())
-		return true;
+		if (_declaration.getType() != nullptr)
+			if (_declaration.getType()->getCategory() != Type::Category::FUNCTION)
+				return true;
 
 	if (!_update && m_declarations.find(_declaration.getName()) != m_declarations.end())
 		return false;
