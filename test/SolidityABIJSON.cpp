@@ -289,59 +289,6 @@ BOOST_AUTO_TEST_CASE(exclude_fallback_function)
 	checkInterface(sourceCode, interface);
 }
 
-BOOST_AUTO_TEST_CASE(events)
-{
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a) returns(uint d) { return a * 7; }\n"
-	"  event e1(uint b, address indexed c); \n"
-	"  event e2(); \n"
-	"}\n";
-	char const* interface = R"([
-	{
-		"name": "f",
-		"constant": false,
-		"type": "function",
-		"inputs": [
-		{
-			"name": "a",
-			"type": "uint256"
-		}
-		],
-		"outputs": [
-		{
-			"name": "d",
-			"type": "uint256"
-		}
-		]
-	},
-	{
-		"name": "e1",
-		"type": "event",
-		"inputs": [
-		{
-			"indexed": false,
-			"name": "b",
-			"type": "uint256"
-		},
-		{
-			"indexed": true,
-			"name": "c",
-			"type": "address"
-		}
-		]
-	},
-	{
-		"name": "e2",
-		"type": "event",
-		"inputs": []
-	}
-
-	])";
-
-	checkInterface(sourceCode, interface);
-}
-
-
 BOOST_AUTO_TEST_CASE(inherited)
 {
 	char const* sourceCode =
@@ -406,6 +353,131 @@ BOOST_AUTO_TEST_CASE(inherited)
 		}]
 	}])";
 
+	checkInterface(sourceCode, interface);
+}
+
+
+BOOST_AUTO_TEST_CASE(events)
+{
+	char const* sourceCode = "contract test {\n"
+	"  function f(uint a) returns(uint d) { return a * 7; }\n"
+	"  event e1(uint b, address indexed c); \n"
+	"  event e2(); \n"
+	"}\n";
+	char const* interface = R"([
+	{
+		"name": "f",
+		"constant": false,
+		"type": "function",
+		"inputs": [
+		{
+			"name": "a",
+			"type": "uint256"
+		}
+		],
+		"outputs": [
+		{
+			"name": "d",
+			"type": "uint256"
+		}
+		]
+	},
+	{
+		"name": "e1",
+		"type": "event",
+		"inputs": [
+		{
+			"indexed": false,
+			"name": "b",
+			"type": "uint256"
+		},
+		{
+			"indexed": true,
+			"name": "c",
+			"type": "address"
+		}
+		]
+	},
+	{
+		"name": "e2",
+		"type": "event",
+		"inputs": []
+	}
+
+	])";
+
+	checkInterface(sourceCode, interface);
+}
+
+
+BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint, uint k) returns(uint ret_k, uint ret_g){
+				uint g = 8;
+				ret_k = k;
+				ret_g = g;
+			}
+		})";
+
+	char const* interface =  R"([
+		{
+			"name": "f",
+			"constant": false,
+			"inputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			},
+			{
+				"name": "k",
+				"type": "uint256"
+			}
+			],
+			"outputs": [
+			{
+				"name": "ret_k",
+				"type": "uint256"
+			}
+			{
+				"name": "ret_g",
+				"type": "uint256"
+			}
+			]
+		},
+		])";
+
+	checkInterface(sourceCode, interface);
+}
+
+BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint){
+				return k;
+			}
+		})";
+
+	char const* interface = R"([
+		{
+			"name": "f",
+			"constant": false,
+			"inputs": [
+			{
+				"name": "k",
+				"type": "uint256"
+			},
+
+			"outputs": [
+			{
+				"name": "",
+				"type": "uint256"
+			}
+			]
+		},
+		])";
 
 	checkInterface(sourceCode, interface);
 }
