@@ -425,6 +425,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 		{
 			"name": "f",
 			"constant": false,
+			"type": "function",
 			"inputs": [
 			{
 				"name": "",
@@ -439,13 +440,13 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 			{
 				"name": "ret_k",
 				"type": "uint256"
-			}
+			},
 			{
 				"name": "ret_g",
 				"type": "uint256"
 			}
 			]
-		},
+		}
 		])";
 
 	checkInterface(sourceCode, interface);
@@ -464,19 +465,20 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 		{
 			"name": "f",
 			"constant": false,
+			"type": "function",
 			"inputs": [
 			{
 				"name": "k",
 				"type": "uint256"
-			},
-
+			}
+			],
 			"outputs": [
 			{
 				"name": "",
 				"type": "uint256"
 			}
 			]
-		},
+		}
 		])";
 
 	checkInterface(sourceCode, interface);
