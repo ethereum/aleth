@@ -180,7 +180,7 @@ ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
 
 Declaration::Visibility Parser::parseVisibilitySpecifier(Token::Value _token)
 {
-	Declaration::Visibility visibility;
+	Declaration::Visibility visibility = Declaration::Visibility::DEFAULT;
 	if (_token == Token::PUBLIC)
 		visibility = Declaration::Visibility::PUBLIC;
 	else if (_token == Token::PROTECTED)
