@@ -30,7 +30,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-u256 dev::eth::c_genesisDifficulty = (u256)1 << 17;
+u256 dev::eth::c_genesisDifficulty = (u256)1 << 22;
 
 BlockInfo::BlockInfo(): timestamp(Invalid256)
 {
