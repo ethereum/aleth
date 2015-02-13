@@ -28,7 +28,8 @@
 
 #include <string>
 #include <memory>
-#include <json/json.h>
+//#include <json/json.h>
+#include <jsoncpp/json/json.h>
 
 namespace dev
 {

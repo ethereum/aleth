@@ -128,7 +128,8 @@ QStringList QMachineState::debugStorage()
 	for (auto const& i: m_state.storage)
 	{
 		std::stringstream s;
-		s << "@" << prettyU256(i.first) << "\t" << prettyU256(i.second);
+		s << "@" << prettyU256(i.first, false) << "\t" << prettyU256(i.second, false);
+		prettyU256(i.second, false);
 		storage.append(QString::fromStdString(s.str()));
 	}
 	return storage;
