@@ -21,7 +21,8 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <json/json.h>
+//#include <json/json.h>
+#include <jsoncpp/json/json.h>
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Exceptions.h>
 #include <libdevcore/Exceptions.h>

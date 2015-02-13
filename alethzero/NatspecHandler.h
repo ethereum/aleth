@@ -26,7 +26,8 @@
 #pragma warning(disable: 4100 4267)
 #include <leveldb/db.h>
 #pragma warning(pop)
-#include <json/json.h>
+//#include <json/json.h>
+#include <jsoncpp/json/json.h>
 #include <libdevcore/FixedHash.h>
 
 namespace ldb = leveldb;
@@ -49,7 +50,7 @@ class NatspecHandler
 	/// @returns The user notice or an empty string if no natspec for the contract exists
 	///          or if the existing natspec does not document the @c _methodName
 	std::string getUserNotice(dev::h256 const& _contractHash, dev::bytes const& _transactionDacta);
-	
+
   private:
 	ldb::ReadOptions m_readOptions;
 	ldb::WriteOptions m_writeOptions;
