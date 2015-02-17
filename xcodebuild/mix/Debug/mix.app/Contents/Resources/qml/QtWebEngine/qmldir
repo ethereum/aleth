@@ -1,3 +1,0 @@
-module QtWebEngine
-plugin qtwebengineplugin
-typeinfo plugins.qmltypes

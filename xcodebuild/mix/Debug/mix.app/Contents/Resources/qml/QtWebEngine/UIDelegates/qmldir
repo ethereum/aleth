@@ -1,8 +1,0 @@
-module QtWebEngine.UIDelegates
-AlertDialog 1.0 AlertDialog.qml
-ConfirmDialog 1.0 ConfirmDialog.qml
-FilePicker 1.0 FilePicker.qml
-PromptDialog 1.0 PromptDialog.qml
-Menu 1.0 Menu.qml
-MenuItem 1.0 MenuItem.qml
-MenuSeparator 1.0 MenuSeparator.qml

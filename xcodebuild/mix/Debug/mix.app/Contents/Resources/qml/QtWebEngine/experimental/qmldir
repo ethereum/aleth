@@ -1,3 +1,0 @@
-module QtWebEngine.experimental
-plugin qtwebengineexperimentalplugin
-typeinfo plugins.qmltypes

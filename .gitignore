@@ -68,3 +68,9 @@ project.pbxproj
 doc/html
 *.autosave
 node_modules/
+
+xcodebuild/ethereum.build/Debug/ZERO_CHECK.build/dgph
+
+xcodebuild/mix/res.qrc.depends
+
+xcodebuild/secp256k1/ethereum.build/Debug/secp256k1.build/dgph
