@@ -1,0 +1,5 @@
+module QtQuick.Controls
+plugin qtquickcontrolsplugin
+classname QtQuickControlsPlugin
+typeinfo plugins.qmltypes
+designersupported

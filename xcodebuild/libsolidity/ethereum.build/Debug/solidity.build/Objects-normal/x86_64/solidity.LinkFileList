@@ -1,0 +1,17 @@
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/AST.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/ASTJsonConverter.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/ASTPrinter.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/Compiler.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/CompilerContext.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/CompilerStack.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/CompilerUtils.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/DeclarationContainer.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/ExpressionCompiler.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/GlobalContext.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/InterfaceHandler.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/NameAndTypeResolver.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/Parser.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/Scanner.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/SourceReferenceFormatter.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/Token.o
+/Users/alex/dev/cpp-ethereum/xcodebuild/libsolidity/ethereum.build/Debug/solidity.build/Objects-normal/x86_64/Types.o
