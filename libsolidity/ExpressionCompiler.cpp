@@ -475,7 +475,9 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		else if (member == "gasprice")
 			m_context << eth::Instruction::GASPRICE;
 		else if (member == "data")
-			m_context << u256(0) << eth::Instruction::CALLDATASIZE;
+		{
+			// nothing to store on the stack
+		}
 		else
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown magic member."));
 		break;
@@ -508,7 +510,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 					m_context << m_context.getFunctionEntryLabel(*function).pushTag();
 					return;
 				}
-			solAssert(false, "Function not found in member access.");
 		}
 		else if (auto enumType = dynamic_cast<EnumType const*>(type.getActualType().get()))
 			m_context << enumType->getMemberValue(_memberAccess.getMemberName());
@@ -517,19 +518,7 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 	case Type::Category::ByteArray:
 	{
 		solAssert(member == "length", "Illegal bytearray member.");
-		auto const& type = dynamic_cast<ByteArrayType const&>(*_memberAccess.getExpression().getType());
-		switch (type.getLocation())
-		{
-		case ByteArrayType::Location::CallData:
-			m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
-			break;
-		case ByteArrayType::Location::Storage:
-			m_context << eth::Instruction::SLOAD;
-			break;
-		default:
-			solAssert(false, "Unsupported byte array location.");
-			break;
-		}
+		m_context << eth::Instruction::SLOAD;
 		break;
 	}
 	default:
@@ -896,8 +885,11 @@ void ExpressionCompiler::appendExternalFunctionCall(FunctionType const& _functio
 		m_context << eth::Instruction::POP;
 	m_context << eth::Instruction::POP; // pop contract address
 
-	if (firstType)
-		CompilerUtils(m_context).loadFromMemory(0, *firstType, false, true);
+	if (retSize > 0)
+	{
+		bool const c_leftAligned = firstType->getCategory() == Type::Category::String;
+		CompilerUtils(m_context).loadFromMemory(0, retSize, c_leftAligned, false, true);
+	}
 }
 
 void ExpressionCompiler::appendArgumentsCopyToMemory(vector<ASTPointer<Expression const>> const& _arguments,

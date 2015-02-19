@@ -42,7 +42,7 @@ QContractDefinition::QContractDefinition(dev::solidity::ContractDefinition const
 		m_functions.append(new QFunctionDefinition(it.second));}
 
 
-QFunctionDefinition const* QContractDefinition::getFunction(dev::FixedHash<4> _hash) const
+QFunctionDefinition* QContractDefinition::getFunction(dev::FixedHash<4> _hash)
 {
 	for (auto const& f: m_functions)
 		if (f->hash() == _hash)

@@ -274,15 +274,6 @@ TypePointer FunctionDefinition::getType(ContractDefinition const*) const
 
 void FunctionDefinition::checkTypeRequirements()
 {
-	// change all byte arrays parameters to point to calldata
-	if (getVisibility() == Visibility::External)
-		for (ASTPointer<VariableDeclaration> const& var: getParameters())
-		{
-			auto const& type = var->getType();
-			solAssert(!!type, "");
-			if (auto const* byteArrayType = dynamic_cast<ByteArrayType const*>(type.get()))
-				var->setType(byteArrayType->copyForLocation(ByteArrayType::Location::CallData));
-		}
 	for (ASTPointer<VariableDeclaration> const& var: getParameters() + getReturnParameters())
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
@@ -297,23 +288,12 @@ string FunctionDefinition::getCanonicalSignature() const
 	return FunctionType(*this).getCanonicalSignature(getName());
 }
 
-bool VariableDeclaration::isLValue() const
+Declaration::LValueType VariableDeclaration::getLValueType() const
 {
-	if (auto const* function = dynamic_cast<FunctionDefinition const*>(getScope()))
-		if (function->getVisibility() == Declaration::Visibility::External && isFunctionParameter())
-			return false;
-	return true;
-}
-
-bool VariableDeclaration::isFunctionParameter() const
-{
-	auto const* function = dynamic_cast<FunctionDefinition const*>(getScope());
-	if (!function)
-		return false;
-	for (auto const& variable: function->getParameters())
-		if (variable.get() == this)
-			return true;
-	return false;
+	if (dynamic_cast<FunctionDefinition const*>(getScope()) || dynamic_cast<ModifierDefinition const*>(getScope()))
+		return Declaration::LValueType::Local;
+	else
+		return Declaration::LValueType::Storage;
 }
 
 TypePointer ModifierDefinition::getType(ContractDefinition const*) const
@@ -606,7 +586,8 @@ void MemberAccess::checkTypeRequirements()
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Member \"" + *m_memberName + "\" not found or not "
 											  "visible in " + type.toString()));
-	m_isLValue = (type.getCategory() == Type::Category::Struct);
+	//@todo later, this will not always be STORAGE
+	m_lvalue = type.getCategory() == Type::Category::Struct ? Declaration::LValueType::Storage : Declaration::LValueType::None;
 }
 
 void IndexAccess::checkTypeRequirements()
@@ -618,14 +599,14 @@ void IndexAccess::checkTypeRequirements()
 	MappingType const& type = dynamic_cast<MappingType const&>(*m_base->getType());
 	m_index->expectType(*type.getKeyType());
 	m_type = type.getValueType();
-	m_isLValue = true;
+	m_lvalue = Declaration::LValueType::Storage;
 }
 
 void Identifier::checkTypeRequirements()
 {
 	solAssert(m_referencedDeclaration, "Identifier not resolved.");
 
-	m_isLValue = m_referencedDeclaration->isLValue();
+	m_lvalue = m_referencedDeclaration->getLValueType();
 	m_type = m_referencedDeclaration->getType(m_currentContract);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Declaration referenced before type could be determined."));

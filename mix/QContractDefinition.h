@@ -47,7 +47,7 @@ public:
 	QFunctionDefinition* constructor() const { return m_constructor; }
 	QList<QFunctionDefinition*> const& functionsList() const { return m_functions; }
 	/// Find function by hash, returns nullptr if not found
-	QFunctionDefinition const* getFunction(dev::FixedHash<4> _hash) const;
+	QFunctionDefinition* getFunction(dev::FixedHash<4> _hash);
 private:
 	QList<QFunctionDefinition*> m_functions;
 	QFunctionDefinition* m_constructor;

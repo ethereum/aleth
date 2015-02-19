@@ -24,23 +24,12 @@ Item {
 	}
 
 	function reload() {
-		if (initialized) {
-			updateContract();
-			webView.runJavaScript("reloadPage()");
-		}
+		updateContract();
+		webView.runJavaScript("reloadPage()");
 	}
 
 	function updateContract() {
-		var contracts = {};
-		for (var c in codeModel.contracts) {
-			var contract = codeModel.contracts[c];
-			contracts[c] = {
-				name: contract.contract.name,
-				address: clientModel.contractAddresses[contract.contract.name],
-				interface: JSON.parse(contract.contractInterface),
-			};
-		}
-		webView.runJavaScript("updateContracts(" + JSON.stringify(contracts) + ")");
+		webView.runJavaScript("updateContract(\"" + codeModel.code.contract.name + "\", \"" + clientModel.contractAddress + "\", " + codeModel.code.contractInterface + ")");
 	}
 
 	function reloadOnSave() {
@@ -73,6 +62,7 @@ Item {
 
 	Connections {
 		target: clientModel
+		onContractAddressChanged: reload();
 		onRunComplete: reload();
 	}
 
