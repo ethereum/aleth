@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+	This file is part of cpp-ethereum.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file FileIo.cpp
  * @author Arkadiy Paronyan arkadiy@ethdev.com
@@ -20,11 +20,15 @@
  * Ethereum IDE client.
  */
 
+#include <QDebug>
+#include <QDirIterator>
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
 #include <QTextStream>
 #include <QUrl>
+#include <libdevcore/RLP.h>
+#include <libdevcrypto/SHA3.h>
 #include "FileIo.h"
 
 using namespace dev::mix;
@@ -101,3 +105,55 @@ bool FileIo::fileExists(QString const& _url)
 	QFile file(url.path());
 	return file.exists();
 }
+
+QString FileIo::compress(QString const& _manifest, QString const& _deploymentFolder)
+{
+	QUrl folder(_deploymentFolder);
+	QString path(folder.path());
+	QDir deployDir = QDir(path);
+
+	dev::RLPStream str;
+
+	QByteArray manifestBytes = "swarm.json";
+	str.append(bytes(manifestBytes.begin(), manifestBytes.end()));
+
+	QByteArray manifestcontentBytes = "application/json";
+	str.append(bytes(manifestcontentBytes.begin(), manifestcontentBytes.end()));
+
+	QByteArray b = _manifest.toUtf8();
+	str.append(bytes(b.begin(), b.end()));
+
+	for (auto item: deployDir.entryInfoList(QDir::Files))
+	{
+		QFile qFile(item.filePath());
+		if (qFile.open(QIODevice::ReadOnly | QIODevice::Text))
+		{
+			QFileInfo i = QFileInfo(qFile.fileName());
+			QByteArray fileBytes =  i.fileName().toUtf8();
+			str.append(bytes(fileBytes.begin(), fileBytes.end()));
+
+			QByteArray contentBytes = QString().toUtf8();
+			str.append(bytes(contentBytes.begin(), contentBytes.end()));
+
+			QByteArray _a = qFile.readAll();
+			str.append(bytes(_a.begin(), _a.end()));
+		}
+		qFile.close();
+	}
+
+	bytes dapp = str.out();
+	dev::h256 h = dev::sha3(dapp);
+	QString ret = QString::fromStdString(toHex(h.ref()));
+	QUrl url(_deploymentFolder + "package.dapp");
+	QFile compressed(url.path());
+	if (compressed.open(QIODevice::WriteOnly | QIODevice::Text))
+	{
+		compressed.write((char*)dapp.data(), dapp.size());
+		compressed.flush();
+	}
+	else
+		error(tr("Error creating package.dapp"));
+	compressed.close();
+	return ret;
+}
+
