@@ -150,6 +150,7 @@ namespace solidity
 	K(Do, "do", 0)                                                     \
 	K(Else, "else", 0)                                                 \
 	K(Event, "event", 0)                                               \
+	K(External, "external", 0)                                         \
 	K(Is, "is", 0)                                                     \
 	K(Indexed, "indexed", 0)                                           \
 	K(For, "for", 0)                                                   \

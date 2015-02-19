@@ -540,12 +540,19 @@ bool ByteArrayType::operator==(Type const& _other) const
 unsigned ByteArrayType::getSizeOnStack() const
 {
 	if (m_location == Location::CallData)
-		return 0;
+		// offset, length (stack top)
+		return 2;
 	else
+		// offset
 		return 1;
 }
 
-const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType >(256)}});
+shared_ptr<ByteArrayType> ByteArrayType::copyForLocation(ByteArrayType::Location _location) const
+{
+	return make_shared<ByteArrayType>(_location);
+}
+
+const MemberList ByteArrayType::s_byteArrayMemberList = MemberList({{"length", make_shared<IntegerType>(256)}});
 
 bool ContractType::operator==(Type const& _other) const
 {
@@ -958,7 +965,7 @@ MemberList const& TypeType::getMembers() const
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).getContractDefinition();
 			vector<ContractDefinition const*> currentBases = m_currentContract->getLinearizedBaseContracts();
 			if (find(currentBases.begin(), currentBases.end(), &contract) != currentBases.end())
-				// We are accessing the type of a base contract, so add all public and private
+				// We are accessing the type of a base contract, so add all public and protected
 				// functions. Note that this does not add inherited functions on purpose.
 				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
 					if (!f->isConstructor() && !f->getName().empty() && f->isVisibleInDerivedContracts())
