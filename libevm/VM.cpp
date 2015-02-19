@@ -295,9 +295,11 @@ bytesConstRef VM::go(ExtVMFace& _ext, OnOpFunc const& _onOp, uint64_t _steps)
 			BOOST_THROW_EXCEPTION(BadInstruction());
 		}
 
-		newTempSize = (newTempSize + 31) / 32 * 32;
-		if (newTempSize > m_temp.size())
-			runGas += c_memoryGas * (newTempSize - m_temp.size()) / 32;
+		newTempSize = (newTempSize + 31) / 32; // words (not bytes)
+		bigint tempSizeWords = (m_temp.size() + 31) / 32;
+
+		if (newTempSize > tempSizeWords)
+			runGas += c_memoryGas * (newTempSize + (newTempSize * newTempSize) / 1024 - tempSizeWords - (tempSizeWords * tempSizeWords) / 1024);
 		runGas += c_copyGas * (copySize + 31) / 32;
 
 		onOperation();
@@ -313,8 +315,8 @@ bytesConstRef VM::go(ExtVMFace& _ext, OnOpFunc const& _onOp, uint64_t _steps)
 
 		m_gas = (u256)((bigint)m_gas - runGas);
 
-		if (newTempSize > m_temp.size())
-			m_temp.resize((size_t)newTempSize);
+		if (newTempSize * 32 > m_temp.size())
+			m_temp.resize((size_t)newTempSize * 32);
 
 		// EXECUTE...
 		switch (inst)
