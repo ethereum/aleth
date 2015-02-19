@@ -132,8 +132,9 @@ private:
 class Declaration: public ASTNode
 {
 public:
-	enum class LValueType { None, Local, Storage };
-	enum class Visibility { Default, Public, Protected, Private };
+
+	/// Visibility ordered from restricted to unrestricted.
+	enum class Visibility { Default, Private, Inheritable, Public, External };
 
 	Declaration(Location const& _location, ASTPointer<ASTString> const& _name,
 				Visibility _visibility = Visibility::Default):
@@ -142,7 +143,10 @@ public:
 	/// @returns the declared name.
 	ASTString const& getName() const { return *m_name; }
 	Visibility getVisibility() const { return m_visibility == Visibility::Default ? getDefaultVisibility() : m_visibility; }
-	bool isPublic() const { return getVisibility() == Visibility::Public; }
+
+	bool isPublic() const { return getVisibility() >= Visibility::Public; }
+	bool isVisibleInContract() const { return getVisibility() != Visibility::External; }
+	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Inheritable; }
 
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
@@ -451,7 +455,7 @@ public:
 	bool isIndexed() const { return m_isIndexed; }
 
 protected:
-	Visibility getDefaultVisibility() const override { return Visibility::Protected; }
+	Visibility getDefaultVisibility() const override { return Visibility::Inheritable; }
 
 private:
 	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")

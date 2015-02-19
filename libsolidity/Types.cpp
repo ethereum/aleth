@@ -566,18 +566,19 @@ MemberList const& ContractType::getMembers() const
 	if (!m_members)
 	{
 		// All address members and all interface functions
-		map<string, TypePointer> members(IntegerType::AddressMemberList.begin(),
-										 IntegerType::AddressMemberList.end());
+		vector<pair<string, TypePointer>> members(IntegerType::AddressMemberList.begin(),
+												  IntegerType::AddressMemberList.end());
 		if (m_super)
 		{
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
 				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
-					if (!function->isConstructor() && !function->getName().empty())
-						members.insert(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
+					if (!function->isConstructor() && !function->getName().empty()&&
+							function->isVisibleInDerivedContracts())
+						members.push_back(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
 		}
 		else
 			for (auto const& it: m_contract.getInterfaceFunctions())
-				members[it.second->getDeclaration().getName()] = it.second;
+				members.push_back(make_pair(it.second->getDeclaration().getName(), it.second));
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -645,9 +646,9 @@ MemberList const& StructType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
-		map<string, TypePointer> members;
+		vector<pair<string, TypePointer>> members;
 		for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
-			members[variable->getName()] = variable->getType();
+			members.push_back(make_pair(variable->getName(), variable->getType()));
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -849,15 +850,15 @@ MemberList const& FunctionType::getMembers() const
 	case Location::Bare:
 		if (!m_members)
 		{
-			map<string, TypePointer> members{
-				{"gas", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
-												  TypePointers{copyAndSetGasOrValue(true, false)},
-												  Location::SetGas, false, m_gasSet, m_valueSet)},
+			vector<pair<string, TypePointer>> members{
 				{"value", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
 													TypePointers{copyAndSetGasOrValue(false, true)},
 													Location::SetValue, false, m_gasSet, m_valueSet)}};
-			if (m_location == Location::Creation)
-				members.erase("gas");
+			if (m_location != Location::Creation)
+				members.push_back(make_pair("gas", make_shared<FunctionType>(
+												parseElementaryTypeVector({"uint"}),
+												TypePointers{copyAndSetGasOrValue(true, false)},
+												Location::SetGas, false, m_gasSet, m_valueSet)));
 			m_members.reset(new MemberList(members));
 		}
 		return *m_members;
@@ -951,7 +952,7 @@ MemberList const& TypeType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
-		map<string, TypePointer> members;
+		vector<pair<string, TypePointer>> members;
 		if (m_actualType->getCategory() == Category::Contract && m_currentContract != nullptr)
 		{
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).getContractDefinition();
@@ -960,15 +961,15 @@ MemberList const& TypeType::getMembers() const
 				// We are accessing the type of a base contract, so add all public and private
 				// functions. Note that this does not add inherited functions on purpose.
 				for (ASTPointer<FunctionDefinition> const& f: contract.getDefinedFunctions())
-					if (!f->isConstructor() && !f->getName().empty())
-						members[f->getName()] = make_shared<FunctionType>(*f);
+					if (!f->isConstructor() && !f->getName().empty() && f->isVisibleInDerivedContracts())
+						members.push_back(make_pair(f->getName(), make_shared<FunctionType>(*f)));
 		}
 		else if (m_actualType->getCategory() == Category::Enum)
 		{
 			EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).getEnumDefinition();
 			auto enumType = make_shared<EnumType>(enumDef);
 			for (ASTPointer<EnumValue> const& enumValue: enumDef.getMembers())
-				members.insert(make_pair(enumValue->getName(), enumType));
+				members.push_back(make_pair(enumValue->getName(), enumType));
 		}
 		m_members.reset(new MemberList(members));
 	}
