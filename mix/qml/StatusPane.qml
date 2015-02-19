@@ -8,9 +8,9 @@ Rectangle {
 	id: statusHeader
 	objectName: "statusPane"
 
-	function updateStatus(message)
+	function updateStatus()
 	{
-		if (!message)
+		if (statusPane.result.successful)
 		{
 			status.state = "";
 			status.text = qsTr("Compile without errors.");
@@ -20,12 +20,12 @@ Rectangle {
 		else
 		{
 			status.state = "error";
-			var errorInfo = ErrorLocationFormater.extractErrorInfo(message, true);
+			var errorInfo = ErrorLocationFormater.extractErrorInfo(statusPane.result.compilerMessage, true);
 			status.text = errorInfo.errorLocation + " " + errorInfo.errorDetail;
 			logslink.visible = true;
 			debugImg.state = "";
 		}
-		debugRunActionIcon.enabled = codeModel.hasContract;
+		debugRunActionIcon.enabled = statusPane.result.successful;
 	}
 
 	function infoMessage(text)
@@ -34,6 +34,7 @@ Rectangle {
 		status.text = text
 		logslink.visible = false;
 	}
+
 
 	Connections {
 		target:clientModel
@@ -47,11 +48,6 @@ Rectangle {
 		onDeploymentStarted: infoMessage(qsTr("Running deployment..."));
 		onDeploymentError: infoMessage(error);
 		onDeploymentComplete: infoMessage(qsTr("Deployment complete"));
-	}
-	Connections {
-		target: codeModel
-		onCompilationComplete: updateStatus();
-		onCompilationError: updateStatus(_error);
 	}
 
 	color: "transparent"

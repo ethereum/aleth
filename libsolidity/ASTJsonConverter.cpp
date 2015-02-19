@@ -118,7 +118,11 @@ bool ASTJsonConverter::visit(FunctionDefinition const& _node)
 
 bool ASTJsonConverter::visit(VariableDeclaration const& _node)
 {
-	addJsonNode("VariableDeclaration", { make_pair("name", _node.getName()) }, true);
+	bool isLocalVariable = (_node.getLValueType() == VariableDeclaration::LValueType::Local);
+	addJsonNode("VariableDeclaration",
+				{   make_pair("name", _node.getName()),
+					make_pair("local", boost::lexical_cast<std::string>(isLocalVariable))},
+				true);
 	return true;
 }
 
@@ -212,12 +216,11 @@ bool ASTJsonConverter::visit(ExpressionStatement const&)
 
 bool ASTJsonConverter::visit(Expression const& _node)
 {
-	addJsonNode(
-		"Expression",
-		{ make_pair("type", getType(_node)),
-			make_pair("lvalue", boost::lexical_cast<std::string>(_node.isLValue())) },
-		true
-	);
+	addJsonNode("Expression",
+				{ make_pair("type", getType(_node)),
+					make_pair("lvalue", boost::lexical_cast<std::string>(_node.isLValue())),
+					make_pair("local_lvalue", boost::lexical_cast<std::string>(_node.isLocalLValue())) },
+				true);
 	return true;
 }
 

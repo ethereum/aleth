@@ -43,7 +43,7 @@ Item {
 		editor.onEditorTextChanged.connect(function() {
 			documentEdit(document.documentId);
 			if (document.isContract)
-				codeModel.registerCodeChange(document.documentId, editor.getText());
+				codeModel.registerCodeChange(editor.getText());
 		});
 		editor.setText(data, document.syntaxMode);
 	}

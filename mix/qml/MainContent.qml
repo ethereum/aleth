@@ -34,7 +34,7 @@ Rectangle {
 		onCompilationComplete: {
 			if (firstCompile) {
 				firstCompile = false;
-			if (runOnProjectLoad)
+			if (codeModel.code.successful && runOnProjectLoad)
 				startQuickDebugging();
 			}
 		}
