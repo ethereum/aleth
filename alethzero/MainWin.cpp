@@ -19,7 +19,6 @@
  * @date 2014
  */
 
-#define QWEBENGINEINSPECTOR 1
 #include <fstream>
 #include <QtNetwork/QNetworkReply>
 #include <QtWidgets/QFileDialog>
@@ -61,6 +60,8 @@
 #include "OurWebThreeStubServer.h"
 #include "Transact.h"
 #include "Debugger.h"
+#include "DappLoader.h"
+#include "DappHost.h"
 #include "ui_Main.h"
 using namespace std;
 using namespace dev;
@@ -109,7 +110,8 @@ Address c_newConfig = Address("c6d9d2cd449a754c494264e1809c50e34d64562b");
 Main::Main(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::Main),
-	m_transact(this, this)
+	m_transact(this, this),
+	m_dappLoader(nullptr)
 {
 	QtWebEngine::initialize();
 	setWindowFlags(Qt::Window);
@@ -189,6 +191,10 @@ Main::Main(QWidget *parent) :
 			s.setValue("splashMessage", false);
 		}
 	}
+
+	m_dappHost.reset(new DappHost(8081));
+	m_dappLoader = new DappLoader(this, web3());
+	connect(m_dappLoader, &DappLoader::dappReady, this, &Main::dappLoaded);
 }
 
 Main::~Main()
@@ -843,15 +849,28 @@ void Main::on_jitvm_triggered()
 void Main::on_urlEdit_returnPressed()
 {
 	QString s = ui->urlEdit->text();
-	QRegExp r("([a-z]+://)?([^/]*)(.*)");
-	if (r.exactMatch(s))
-		if (r.cap(2).isEmpty())
-			s = (r.cap(1).isEmpty() ? "file://" : r.cap(1)) + r.cap(3);
+	QUrl url(s);
+	if (url.scheme().isEmpty() || url.scheme() == "eth")
+	{
+		try
+		{
+			//try do resolve dapp url
+			m_dappLoader->loadDapp(s);
+		}
+		catch (...)
+		{
+			qWarning() << boost::current_exception_diagnostic_information().c_str();
+		}
+	}
+
+	if (url.scheme().isEmpty())
+		if (url.path().indexOf('/') < url.path().indexOf('.'))
+			url.setScheme("file");
 		else
-			s = (r.cap(1).isEmpty() ? "http://" : r.cap(1)) + lookup(r.cap(2)) + r.cap(3);
-	else{}
-	qDebug() << s;
-	ui->webView->setUrl(s);
+			url.setScheme("http");
+	else {}
+	qDebug() << url.toString();
+	ui->webView->setUrl(url);
 }
 
 void Main::on_nameReg_textChanged()
@@ -1842,4 +1861,10 @@ void Main::refreshWhispers()
 		QString item = QString("[%1 - %2s] *%3 %5 %4").arg(t).arg(e.ttl()).arg(e.workProved()).arg(toString(e.topic()).c_str()).arg(msg);
 		ui->whispers->addItem(item);
 	}
+}
+
+void Main::dappLoaded(Dapp& _dapp)
+{
+	QUrl url = m_dappHost->hostDapp(std::move(_dapp));
+	ui->webView->setUrl(url);
 }

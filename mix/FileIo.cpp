@@ -106,6 +106,21 @@ bool FileIo::fileExists(QString const& _url)
 	return file.exists();
 }
 
+QString FileIo::sha3(QString const& _url)
+{
+	QUrl url(_url);
+	QString path(url.path());
+	QFile file(path);
+	dev::h256 h;
+	if (file.open(QIODevice::ReadOnly | QIODevice::Text))
+	{
+		QByteArray data = file.readAll();
+		h = dev::sha3(dev::bytesConstRef(reinterpret_cast<unsigned char*>(data.data()), data.size()));
+	}
+	QString ret = QString::fromStdString(toHex(h.ref()));
+	return ret;
+}
+
 QString FileIo::compress(QString const& _manifest, QString const& _deploymentFolder)
 {
 	QUrl folder(_deploymentFolder);
@@ -114,27 +129,21 @@ QString FileIo::compress(QString const& _manifest, QString const& _deploymentFol
 
 	dev::RLPStream str;
 
-	QByteArray manifestBytes = "swarm.json";
-	str.append(bytes(manifestBytes.begin(), manifestBytes.end()));
+	QStringList paths;
 
-	QByteArray manifestcontentBytes = "application/json";
-	str.append(bytes(manifestcontentBytes.begin(), manifestcontentBytes.end()));
+	for (auto item: deployDir.entryInfoList(QDir::Files))
+		paths.append(item.filePath());
+
+	str.appendList(paths.size() + 1);
 
 	QByteArray b = _manifest.toUtf8();
 	str.append(bytes(b.begin(), b.end()));
 
-	for (auto item: deployDir.entryInfoList(QDir::Files))
+	for (auto p: paths)
 	{
-		QFile qFile(item.filePath());
+		QFile qFile(p);
 		if (qFile.open(QIODevice::ReadOnly | QIODevice::Text))
 		{
-			QFileInfo i = QFileInfo(qFile.fileName());
-			QByteArray fileBytes =  i.fileName().toUtf8();
-			str.append(bytes(fileBytes.begin(), fileBytes.end()));
-
-			QByteArray contentBytes = QString().toUtf8();
-			str.append(bytes(contentBytes.begin(), contentBytes.end()));
-
 			QByteArray _a = qFile.readAll();
 			str.append(bytes(_a.begin(), _a.end()));
 		}
@@ -144,6 +153,7 @@ QString FileIo::compress(QString const& _manifest, QString const& _deploymentFol
 	bytes dapp = str.out();
 	dev::h256 h = dev::sha3(dapp);
 	QString ret = QString::fromStdString(toHex(h.ref()));
+	qDebug() << ret;
 	QUrl url(_deploymentFolder + "package.dapp");
 	QFile compressed(url.path());
 	if (compressed.open(QIODevice::WriteOnly | QIODevice::Text))

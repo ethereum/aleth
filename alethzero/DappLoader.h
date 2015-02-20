@@ -1,0 +1,95 @@
+/*
+	This file is part of cpp-ethereum.
+
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @file DappLoader.h
+ * @author Arkadiy Paronyan <arkadiy@ethdev.org>
+ * @date 2015
+ */
+
+#pragma once
+
+#include <map>
+#include <string>
+#include <vector>
+#include <QObject>
+#include <QString>
+#include <QUrl>
+#include <QNetworkAccessManager>
+#include <libdevcore/FixedHash.h>
+
+namespace dev
+{
+	class WebThreeDirect;
+	class RLP;
+}
+
+struct ManifestEntry
+{
+	std::string path;
+	dev::h256 hash;
+	std::string contentType;
+	unsigned httpStatus;
+};
+
+struct Manifest
+{
+	std::vector<ManifestEntry> entries;
+	//Manifest& operator=(Manifest&& _other) { entries = std::move(_other.entries); return *this; }
+};
+
+struct Dapp
+{
+	Manifest manifest;
+	std::map<dev::h256, dev::bytes> content;
+
+	//Dapp& operator=(Dapp&& _other) { manifest = std::move(_other.manifest); content = std::move(_other.content); return *this; }
+};
+
+
+struct DappLocation
+{
+	QString canonDomain;
+	QString path;
+	QString contentUri;
+	dev::h256 contentHash;
+};
+
+class DappLoader: public QObject
+{
+	Q_OBJECT
+public:
+	DappLoader(QObject* _parent, dev::WebThreeDirect* _web3);
+	virtual ~DappLoader() {}
+	void loadDapp(QString const& _uri);
+
+signals:
+	void dappReady(Dapp& _dapp);
+
+private slots:
+	void downloadComplete(QNetworkReply* _reply);
+
+private:
+	dev::WebThreeDirect* web3() const { return m_web3; }
+	DappLocation resolveAppUri(QString const& _uri);
+	void downloadApp(QString const& _contentUrl);
+	void loadDapp(dev::RLP const& _rlp);
+	Manifest loadManifest(std::string const& _manifest);
+
+	dev::WebThreeDirect* m_web3;
+	QNetworkAccessManager m_net;
+	std::map<QUrl, dev::h256> m_uriHashes;
+};
+

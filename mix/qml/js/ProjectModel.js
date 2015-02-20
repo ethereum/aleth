@@ -23,8 +23,8 @@ Qt.include("QEtherHelper.js")
 
 var htmlTemplate = "<html>\n<head>\n<script>\n</script>\n</head>\n<body>\n<script>\n</script>\n</body>\n</html>";
 var contractTemplate = "contract Contract {\n}\n";
-var registrarContract = "6fcdee8688e44aebdcddf28a8d87318d38f695ff" /*"0000000000000000000000000000000000000a28"*/
-var hintContract = "c4040ef9635e7503bbbc74b73a9385ac78733d09"
+var registrarContract = "0x2aad61c83c47cd116b591e998b89493e9c0efa48"
+var hintContract = "0x32e52fa2927efdb928a5ac20b0ec20daf70f752d"
 
 function saveAll() {
 	saveProject();
@@ -365,7 +365,8 @@ function finalizeDeployment(deploymentId, addresses) {
 
 		var jsonFile = {
 			path: '/' + doc.fileName,
-			file: '/' + doc.fileName
+			file: '/' + doc.fileName,
+			hash: fileIo.sha3(doc.path)
 		}
 		manifest.entries.push(jsonFile);
 	}
@@ -406,7 +407,7 @@ function checkRegistration(dappUrl, addr, hash, callBack)
 	{
 		//checking path (addr).
 		var str = createString(dappUrl[0]);
-		data  = "6be16bed" + str.encodeValueAsString();
+		data  = "0x6be16bed" + str.encodeValueAsString();
 		console.log("checking if path exists (register) => " + data);
 		requests.push({
 			jsonrpc: "2.0",
@@ -418,11 +419,25 @@ function checkRegistration(dappUrl, addr, hash, callBack)
 	else
 	{
 		//finalize (setContentHash).
-		finalize = true;
 		var paramTitle = createString(projectModel.projectTitle);
-		var paramHash = createHash(hash);
-		data  = "5d574e32" + paramTitle.encodeValueAsString() + paramHash.encodeValueAsString();
+
+		//reserve
+		data = "0x1c83171b" + paramTitle.encodeValueAsString();
 		console.log("finalize (setRegister) => " + data);
+		console.log(data);
+		requests.push({
+			jsonrpc: "2.0",
+			method: "eth_transact",
+			params: [ { "to": addr, "data": data } ],
+			id: jsonRpcRequestId++
+		});
+
+
+
+
+		data  = "0x5d574e32" + paramTitle.encodeValueAsString() + hash;
+		console.log("finalize (setRegister) => " + data);
+		console.log(data);
 		requests.push({
 			jsonrpc: "2.0",
 			method: "eth_transact",
@@ -431,13 +446,15 @@ function checkRegistration(dappUrl, addr, hash, callBack)
 		});
 
 		var paramWebUrl = createString(deploymentDialog.applicationUrlHttp);
-		var dataHint  = "4983e19c" + paramHash.encodeValueAsString() + paramWebUrl.encodeValueAsString();
+		var dataHint  = "0x4983e19c" + hash + paramWebUrl.encodeValueAsString();
 		requests.push({
 						  jsonrpc: "2.0",
 						  method: "eth_transact",
 						  params: [ { "to": hintContract, "data": dataHint } ],
 						  id: jsonRpcRequestId++
 					  });
+
+		console.log(hintContract);
 	}
 
 	var jsonRpcUrl = "http://localhost:8080";

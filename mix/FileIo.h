@@ -55,6 +55,8 @@ public:
 	Q_INVOKABLE bool fileExists(QString const& _url);
 	/// Compress a folder, @returns sha3 of the compressed file.
 	Q_INVOKABLE QString compress(QString const& _manifest, QString const& _deploymentFolder);
+	/// Calculate SHA3 hash of a file
+	Q_INVOKABLE QString sha3(QString const& _url);
 
 private:
 	QString getHomePath() const;
