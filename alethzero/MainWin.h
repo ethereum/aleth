@@ -110,7 +110,7 @@ private slots:
 	void on_go_triggered();
 	void on_net_triggered();
 	void on_connect_triggered();
-	void on_idealPeers_valueChanged();
+	void on_idealPeers_valueChanged(int);
 
 	// Mining
 	void on_mine_triggered();
@@ -143,7 +143,7 @@ private slots:
 	void on_blocks_currentItemChanged();
 
 	// Logging
-	void on_log_doubleClicked();
+//	void on_log_doubleClicked();
 	void on_verbosity_valueChanged();
 
 	// Misc
@@ -163,8 +163,8 @@ private slots:
 
 	// Debugger
 	void on_debugCurrent_triggered();
-	void on_debugDumpState_triggered(int _add = 1);
-	void on_debugDumpStatePre_triggered();
+	void on_debugDumpState_triggered() { debugDumpState(1); }
+	void on_debugDumpStatePre_triggered() { debugDumpState(0); }
 
 	// Whisper
 	void on_newIdentity_triggered();
@@ -181,6 +181,8 @@ signals:
 	void poll();
 
 private:
+	void debugDumpState(int _add);
+
 	dev::p2p::NetworkPreferences netPrefs() const;
 
 	QString lookup(QString const& _n) const;
