@@ -311,7 +311,7 @@ function startDeployProject(erasePrevious)
 		requests.push({
 			jsonrpc: "2.0",
 			method: "eth_transact",
-			params: [ { "code": code } ],
+			params: [ { "gas": 10000, "code": code } ], //TODO: provide gas
 			id: jsonRpcRequestId++
 		});
 		requestNames.push(c);

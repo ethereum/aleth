@@ -172,7 +172,7 @@ void Transact::rejigData()
 			m_data = fromHex(src);
 		else if (sourceIsSolidity(src))
 		{
-			dev::solidity::CompilerStack compiler;
+			dev::solidity::CompilerStack compiler(true);
 			try
 			{
 //				compiler.addSources(dev::solidity::StandardSources);
@@ -284,7 +284,7 @@ void Transact::on_send_clicked()
 				if (sourceIsSolidity(src))
 					try
 					{
-						dev::solidity::CompilerStack compiler;
+						dev::solidity::CompilerStack compiler(true);
 						m_data = compiler.compile(src, ui->optimize->isChecked());
 						for (string const& s: compiler.getContractNames())
 						{

@@ -38,8 +38,8 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::crypto;
 
-Address c_registrar = Address("e799cf8930582d5b596cc6487409a75a2d2c3225");
-Address c_urlHint = Address("b9486e939cddb16394c7a61ae10e7128128a750c");
+Address c_registrar = Address("0000000000000000000000000000000000000a28");
+Address c_urlHint = Address("0000000000000000000000000000000000000a29");
 
 DappLoader::DappLoader(QObject* _parent, WebThreeDirect* _web3):
 	QObject(_parent), m_web3(_web3)
