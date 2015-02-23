@@ -20,8 +20,6 @@
  * Ethereum IDE client.
  */
 
-#include <QJsonObject>
-#include <QDebug>
 #include <QDirIterator>
 #include <QDir>
 #include <QFile>
@@ -112,24 +110,8 @@ bool FileIo::fileExists(QString const& _url)
 	return file.exists();
 }
 
-QString FileIo::sha3(QString const& _url)
+QStringList FileIo::makePackage(QString const& _deploymentFolder)
 {
-	QUrl url(_url);
-	QString path(url.path());
-	QFile file(path);
-	dev::h256 h;
-	if (file.open(QIODevice::ReadOnly | QIODevice::Text))
-	{
-		QByteArray data = file.readAll();
-		h = dev::sha3(dev::bytesConstRef(reinterpret_cast<unsigned char*>(data.data()), data.size()));
-	}
-	QString ret = QString::fromStdString(toHex(h.ref()));
-	return ret;
-}
-
-QStringList FileIo::compress(QString const& _deploymentFolder)
-{
-
 	Json::Value manifest;
 	Json::Value entries(Json::arrayValue);
 
@@ -137,62 +119,44 @@ QStringList FileIo::compress(QString const& _deploymentFolder)
 	QString path(folder.path());
 	QDir deployDir = QDir(path);
 
-	dev::RLPStream str;
+	dev::RLPStream rlpStr;
 	int k = 1;
+	std::vector<bytes> files;
 	for (auto item: deployDir.entryInfoList(QDir::Files))
 	{
 		QFile qFile(item.filePath());
 		if (qFile.open(QIODevice::ReadOnly))
 		{
-			QFileInfo i = QFileInfo(qFile.fileName());
-			QByteArray _a = qFile.readAll();
-			bytes b = bytes(_a.begin(), _a.end());
-
-			Json::Value f;
-			f["path"] = (i.fileName() == "index.html") ? "/" : "/" + i.fileName().toStdString(); //TODO: Manage relative sub folder
-			f["file"] = "/" + i.fileName().toStdString();
-			f["contentType"] = "text/html"; //TODO: manage multiple content type
-			f["hash"] = toHex(dev::sha3(b).ref());
-			entries.append(f);
 			k++;
+			QFileInfo fileInfo = QFileInfo(qFile.fileName());
+			Json::Value jsonValue;
+			std::string path = fileInfo.fileName() == "index.html" ? "/" : fileInfo.fileName().toStdString();
+			jsonValue["path"] = path; //TODO: Manage relative sub folder
+			jsonValue["file"] = "/" + fileInfo.fileName().toStdString();
+			jsonValue["contentType"] = "text/html"; //TODO: manage multiple content type
+			QByteArray a = qFile.readAll();
+			bytes data = bytes(a.begin(), a.end());
+			files.push_back(data);
+			jsonValue["hash"] = toHex(dev::sha3(data).ref());
+			entries.append(jsonValue);
 		}
-
+		qFile.close();
 	}
-	str.appendList(k);
-
-	manifest["entries"] = entries;
+	rlpStr.appendList(k);
 
 	std::stringstream jsonStr;
 	jsonStr << manifest;
 	QByteArray b =  QString::fromStdString(jsonStr.str()).toUtf8();
-	str.append(bytes(b.begin(), b.end()));
+	rlpStr.append(bytesConstRef((const unsigned char*)b.data(), b.size()));
 
+	for (unsigned int k = 0; k < files.size(); k++)
+		rlpStr.append(files.at(k));
 
-	for (auto item: deployDir.entryInfoList(QDir::Files))
-	{
-		QFile qFile(item.filePath());
-		if (qFile.open(QIODevice::ReadOnly))
-		{
-			QFileInfo i = QFileInfo(qFile.fileName());
-			QByteArray _a = qFile.readAll();
-			bytes b = bytes(_a.begin(), _a.end());
-			str.append(b);
-
-			Json::Value f;
-			f["path"] = (i.fileName() == "index.html") ? "/" : "/" + i.fileName().toStdString(); //TODO: Manage relative sub folder
-			f["file"] = "/" + i.fileName().toStdString();
-			f["contentType"] = "text/html"; //TODO: manage multiple content type
-			f["hash"] = toHex(dev::sha3(b).ref());
-			entries.append(f);
-		}
-		qFile.close();
-	}
-
-	bytes dapp = str.out();
-	dev::h256 h = dev::sha3(dapp);
-
+	manifest["entries"] = entries;
+	bytes dapp = rlpStr.out();
+	dev::h256 dappHash = dev::sha3(dapp);
 	//encrypt
-	KeyPair key(h);
+	KeyPair key(dappHash);
 	Secp256k1 enc;
 	enc.encrypt(key.pub(), dapp);
 
@@ -208,8 +172,7 @@ QStringList FileIo::compress(QString const& _deploymentFolder)
 		error(tr("Error creating package.dapp"));
 	compressed.close();
 	QStringList ret;
-	ret.append(QString::fromStdString(toHex(h.ref())));
+	ret.append(QString::fromStdString(toHex(dappHash.ref())));
 	ret.append(qFileBytes.toBase64());
 	return ret;
 }
-

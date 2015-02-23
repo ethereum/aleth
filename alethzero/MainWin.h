@@ -75,6 +75,7 @@ public:
 	dev::eth::Client* ethereum() const { return m_webThree->ethereum(); }
 	std::shared_ptr<dev::shh::WhisperHost> whisper() const { return m_webThree->whisper(); }
 
+	bool confirm() const;
 	NatSpecFace* natSpec() { return &m_natSpecDB; }
 
 	QString pretty(dev::Address _a) const override;

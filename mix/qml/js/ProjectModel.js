@@ -299,7 +299,7 @@ function startDeployProject(erasePrevious)
 		return;
 	}
 
-	var jsonRpcUrl = "http://localhost:8080";
+	var jsonRpcUrl = "http://127.0.0.1:8080";
 	console.log("Deploying " + deploymentId + " to " + jsonRpcUrl);
 	deploymentStarted();
 
@@ -390,7 +390,7 @@ function finalizeDeployment(deploymentId, addresses) {
 	deploymentAddresses = addresses;
 	saveProject();
 
-	var packageRet = fileIo.compress(deploymentDir);
+	var packageRet = fileIo.makePackage(deploymentDir);
 	deploymentDialog.packageHash = packageRet[0];
 	deploymentDialog.packageBase64 = packageRet[1];
 
@@ -398,7 +398,7 @@ function finalizeDeployment(deploymentId, addresses) {
 	applicationUrlEth = formatAppUrl(applicationUrlEth);
 
 	deploymentStepChanged(qsTr("Registering application on the Ethereum network ..."));
-	checkRegistration(applicationUrlEth, deploymentDialog.root, function () {
+	checkRegistration(applicationUrlEth, deploymentDialog.eth, function () {
 		deploymentComplete();
 		deployRessourcesDialog.text = qsTr("Register Web Application to finalize deployment.");
 		deployRessourcesDialog.open();
@@ -531,7 +531,7 @@ function checkRegistration(dappUrl, addr, callBack)
 
 function registerToUrlHint()
 {
-	deploymentStepChanged(qsTr("Registering application Ressources (" + deploymentDialog.applicationUrlHttp) + ") ...");
+	deploymentStepChanged(qsTr("Registering application Resources (" + deploymentDialog.applicationUrlHttp) + ") ...");
 	var requests = [];
 	var paramUrlHttp = createString(deploymentDialog.applicationUrlHttp);
 	requests.push({
