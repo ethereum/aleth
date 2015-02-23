@@ -87,7 +87,7 @@ void DappHost::sendResponse(std::string const& _url, MHD_Connection* _connection
 {
 	QUrl requestUrl(QString::fromStdString(_url));
 	QString path = requestUrl.path().toLower();
-	if (path.endsWith('/'))
+	if (!path.endsWith('/'))
 			path += '/';
 
 	bytesConstRef response;

@@ -27,6 +27,7 @@
 #include <QNetworkReply>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
+#include <libdevcrypto/CryptoPP.h>
 #include <libdevcrypto/SHA3.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Client.h>
@@ -35,9 +36,10 @@
 
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::crypto;
 
-Address c_registrar = Address("2aad61c83c47cd116b591e998b89493e9c0efa48");
-Address c_urlHint = Address("32e52fa2927efdb928a5ac20b0ec20daf70f752d");
+Address c_registrar = Address("e799cf8930582d5b596cc6487409a75a2d2c3225");
+Address c_urlHint = Address("b9486e939cddb16394c7a61ae10e7128128a750c");
 
 DappLoader::DappLoader(QObject* _parent, WebThreeDirect* _web3):
 	QObject(_parent), m_web3(_web3)
@@ -88,13 +90,6 @@ DappLocation DappLoader::resolveAppUri(QString const& _uri)
 	return DappLocation { domain, path, QString::fromUtf8(contentUrl.data(), contentUrl.size()), contentHash };
 }
 
-void DappLoader::downloadApp(QString const& _contentUrl)
-{
-	QUrl url(_contentUrl);
-	QNetworkRequest request(url);
-	m_net.get(request);
-}
-
 void DappLoader::downloadComplete(QNetworkReply* _reply)
 {
 	try
@@ -103,14 +98,23 @@ void DappLoader::downloadComplete(QNetworkReply* _reply)
 		QByteArray data = _reply->readAll();
 		_reply->deleteLater();
 
-		bytesConstRef dataRef(reinterpret_cast<unsigned char const*>(data.constData()), data.size());
-		h256 got = sha3(dataRef);
 		h256 expected = m_uriHashes[_reply->request().url()];
+		bytes package(reinterpret_cast<unsigned char const*>(data.constData()), reinterpret_cast<unsigned char const*>(data.constData() + data.size()));
+		Secp256k1 dec;
+		dec.decrypt(expected, package);
+		h256 got = sha3(package);
 		if (got != expected)
-		//if (sha3(dataRef) != m_uriHashes[_reply->request().url()])
-			throw dev::Exception() << errinfo_comment("Dapp content hash does not match");
+		{
+			//try base64
+			data = QByteArray::fromBase64(data);
+			package = bytes(reinterpret_cast<unsigned char const*>(data.constData()), reinterpret_cast<unsigned char const*>(data.constData() + data.size()));
+			dec.decrypt(expected, package);
+			got = sha3(package);
+			if (got != expected)
+				throw dev::Exception() << errinfo_comment("Dapp content hash does not match");
+		}
 
-		RLP rlp(reinterpret_cast<unsigned char const*>(data.data()), data.size());
+		RLP rlp(package);
 		loadDapp(rlp);
 	}
 	catch (std::exception const& e)

@@ -176,6 +176,9 @@ Main::Main(QWidget *parent) :
 		ui->tabWidget->setTabText(0, ui->webView->title());
 	});
 
+	m_dappHost.reset(new DappHost(8081));
+	m_dappLoader = new DappLoader(this, web3());
+	connect(m_dappLoader, &DappLoader::dappReady, this, &Main::dappLoaded);
 //	ui->webView->page()->settings()->setAttribute(QWebEngineSettings::DeveloperExtrasEnabled, true);
 //	QWebEngineInspector* inspector = new QWebEngineInspector();
 //	inspector->setPage(page);
@@ -192,9 +195,6 @@ Main::Main(QWidget *parent) :
 		}
 	}
 
-	m_dappHost.reset(new DappHost(8081));
-	m_dappLoader = new DappLoader(this, web3());
-	connect(m_dappLoader, &DappLoader::dappReady, this, &Main::dappLoaded);
 }
 
 Main::~Main()

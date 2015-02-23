@@ -84,7 +84,6 @@ private slots:
 private:
 	dev::WebThreeDirect* web3() const { return m_web3; }
 	DappLocation resolveAppUri(QString const& _uri);
-	void downloadApp(QString const& _contentUrl);
 	void loadDapp(dev::RLP const& _rlp);
 	Manifest loadManifest(std::string const& _manifest);
 
