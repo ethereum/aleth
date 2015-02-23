@@ -72,7 +72,7 @@ DappLocation DappLoader::resolveAppUri(QString const& _uri)
 		std::copy(utf8.data(), utf8.data() + utf8.size(), name.data());
 		address = abiOut<Address>(web3()->ethereum()->call(address, abiIn("addr(string32)", name)));
 		domainParts.append(parts[partIndex]);
-		if (address == 0)
+		if (!address)
 		{
 			//we have the address of the last part, try to get content hash
 			contentHash = abiOut<h256>(web3()->ethereum()->call(lastAddress, abiIn("content(string32)", name)));

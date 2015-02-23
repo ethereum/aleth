@@ -19,11 +19,11 @@ Window {
 	visible: false
 	property alias applicationUrlEth: applicationUrlEth.text
 	property alias applicationUrlHttp: applicationUrlHttp.text
-	property string urlHintContract: "c83d3e22645fb015d02043a744921cc2f828c64d"
+	property string urlHintContract: "0000000000000000000000000000000000000a29"
 	property string packageHash
 	property alias packageBase64: base64Value.text
-	property string eth: "afb7cdbd076674fd2c67f8a66518e3145b184ae4";
-	property string wallet: "c83d3e22645fb015d02043a744921cc2f828c64d";
+	property string eth: "0000000000000000000000000000000000000a28";
+	property string wallet: "0000000000000000000000000000000000000a29";
 
 	color: Style.generic.layout.backgroundColor
 
