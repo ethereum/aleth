@@ -62,12 +62,17 @@
 #include "Debugger.h"
 #include "DappLoader.h"
 #include "DappHost.h"
+#include "WebPage.h"
 #include "ui_Main.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 namespace js = json_spirit;
+
+namespace
+{
+}
 
 QString Main::fromRaw(h256 _n, unsigned* _inc)
 {
@@ -111,12 +116,12 @@ Main::Main(QWidget *parent) :
 	QMainWindow(parent),
 	ui(new Ui::Main),
 	m_transact(this, this),
-	m_dappLoader(nullptr)
+	m_dappLoader(nullptr),
+	m_webPage(nullptr)
 {
 	QtWebEngine::initialize();
 	setWindowFlags(Qt::Window);
 	ui->setupUi(this);
-	QtWebEngine::initialize();
 	g_logPost = [=](string const& s, char const* c)
 	{
 		simpleDebugOut(s, c);
@@ -161,10 +166,12 @@ Main::Main(QWidget *parent) :
 	m_server->setIdentities(keysAsVector(owned()));
 	m_server->StartListening();
 
+	WebPage* webPage= new WebPage(this);
+	m_webPage = webPage;
+	connect(webPage, &WebPage::consoleMessage, [this](QString const& _msg) { Main::addConsoleMessage(_msg, QString()); });
+	ui->webView->setPage(m_webPage);
 	connect(ui->webView, &QWebEngineView::loadFinished, [this]()
 	{
-//		f->disconnect();
-//		f->addToJavaScriptWindowObject("env", this, QWebFrame::QtOwnership);
 		auto f = ui->webView->page();
 		f->runJavaScript(contentsOfQResource(":/js/bignumber.min.js"));
 		f->runJavaScript(contentsOfQResource(":/js/webthree.js"));
@@ -194,7 +201,6 @@ Main::Main(QWidget *parent) :
 			s.setValue("splashMessage", false);
 		}
 	}
-
 }
 
 Main::~Main()
@@ -446,18 +452,23 @@ void Main::eval(QString const& _js)
 				s = "<span style=\"color: #840\">" + jsonEv.toString().toHtmlEscaped() + "</span>";
 			else
 				s = "<span style=\"color: #888\">unknown type</span>";
-			m_consoleHistory.push_back(qMakePair(_js, s));
-			s = "<html><body style=\"margin: 0;\">" Div(Mono "position: absolute; bottom: 0; border: 0px; margin: 0px; width: 100%");
-			for (auto const& i: m_consoleHistory)
-				s +=	"<div style=\"border-bottom: 1 solid #eee; width: 100%\"><span style=\"float: left; width: 1em; color: #888; font-weight: bold\">&gt;</span><span style=\"color: #35d\">" + i.first.toHtmlEscaped() + "</span></div>"
-						"<div style=\"border-bottom: 1 solid #eee; width: 100%\"><span style=\"float: left; width: 1em\">&nbsp;</span><span>" + i.second + "</span></div>";
-			s += "</div></body></html>";
-			ui->jsConsole->setHtml(s);
+			addConsoleMessage(_js, s);
 		};
 		ui->webView->page()->runJavaScript("JSON.stringify(___RET)", f2);
 	};
 	auto c = (_js.startsWith("{") || _js.startsWith("if ") || _js.startsWith("if(")) ? _js : ("___RET=(" + _js + ")");
 	ui->webView->page()->runJavaScript(c, f);
+}
+
+void Main::addConsoleMessage(QString const& _js, QString const& _s)
+{
+	m_consoleHistory.push_back(qMakePair(_js, _s));
+	QString r = "<html><body style=\"margin: 0;\">" Div(Mono "position: absolute; bottom: 0; border: 0px; margin: 0px; width: 100%");
+	for (auto const& i: m_consoleHistory)
+		r +=	"<div style=\"border-bottom: 1 solid #eee; width: 100%\"><span style=\"float: left; width: 1em; color: #888; font-weight: bold\">&gt;</span><span style=\"color: #35d\">" + i.first.toHtmlEscaped() + "</span></div>"
+				"<div style=\"border-bottom: 1 solid #eee; width: 100%\"><span style=\"float: left; width: 1em\">&nbsp;</span><span>" + i.second + "</span></div>";
+	r += "</div></body></html>";
+	ui->jsConsole->setHtml(r);
 }
 
 static Public stringToPublic(QString const& _a)
@@ -877,7 +888,7 @@ void Main::on_urlEdit_returnPressed()
 			url.setScheme("http");
 	else {}
 	qDebug() << url.toString();
-	ui->webView->setUrl(url);
+	ui->webView->page()->setUrl(url);
 }
 
 void Main::on_nameReg_textChanged()
@@ -1869,5 +1880,5 @@ void Main::refreshWhispers()
 void Main::dappLoaded(Dapp& _dapp)
 {
 	QUrl url = m_dappHost->hostDapp(std::move(_dapp));
-	ui->webView->setUrl(url);
+	ui->webView->page()->setUrl(url);
 }

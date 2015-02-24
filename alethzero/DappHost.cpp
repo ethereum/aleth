@@ -27,13 +27,6 @@
 
 using namespace dev;
 
-struct MhdConnectionInfo {
-	MHD_Connection* connection;
-	std::stringstream request;
-	DappHost* host;
-	int mhdCode;
-};
-
 DappHost::DappHost(int _port, int _threads):
 	m_port(_port), m_threads(_threads), m_running(false), m_daemon(nullptr)
 {
@@ -87,8 +80,8 @@ void DappHost::sendResponse(std::string const& _url, MHD_Connection* _connection
 {
 	QUrl requestUrl(QString::fromStdString(_url));
 	QString path = requestUrl.path().toLower();
-	if (!path.endsWith('/'))
-			path += '/';
+	if (path.isEmpty())
+			path = "/";
 
 	bytesConstRef response;
 	unsigned code = MHD_HTTP_NOT_FOUND;
@@ -112,7 +105,6 @@ void DappHost::sendResponse(std::string const& _url, MHD_Connection* _connection
 		path.truncate(path.length() - 1);
 		path = path.mid(0, path.lastIndexOf('/'));
 	}
-
 
 	MHD_Response *result = MHD_create_response_from_data(response.size(), const_cast<byte*>(response.data()), 0, 1);
 	if (!contentType.empty())

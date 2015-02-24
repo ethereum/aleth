@@ -30,7 +30,7 @@
 #include <QtCore/QAbstractListModel>
 #include <QtCore/QMutex>
 #include <QtWidgets/QMainWindow>
-#include <libdevcore/RLP.h>
+#include <QtWebEngineWidgets/QWebEnginePage>
 #include <libethcore/CommonEth.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
@@ -53,7 +53,7 @@ namespace jsonrpc {
 class HttpServer;
 }
 
-class QQuickView;
+class QWebEnginePage;
 class OurWebThreeStubServer;
 class DappLoader;
 class DappHost;
@@ -101,6 +101,7 @@ public slots:
 
 private slots:
 	void eval(QString const& _js);
+	void addConsoleMessage(QString const& _js, QString const& _s);
 
 	// Application
 	void on_about_triggered();
@@ -252,4 +253,5 @@ private:
 	Transact m_transact;
 	std::unique_ptr<DappHost> m_dappHost;
 	DappLoader* m_dappLoader;
+	QWebEnginePage* m_webPage;
 };

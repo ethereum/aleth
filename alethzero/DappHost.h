@@ -29,11 +29,15 @@
 struct MHD_Daemon;
 struct MHD_Connection;
 
+/// DApp web server. Servers web content, resolves paths by hashes
 class DappHost
 {
 public:
-	DappHost(int _port, int _threads = 50);
+	/// @param _port Network pork to listen for incoming connections
+	/// @param _threads Max number of threads to process requests
+	DappHost(int _port, int _threads = 10);
 	virtual ~DappHost();
+	/// Load and host a dapp. Previsous dapp in discarded. Synchronous
 	QUrl hostDapp(Dapp&& _dapp);
 
 private:

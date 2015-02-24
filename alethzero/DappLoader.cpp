@@ -41,6 +41,8 @@ using namespace dev::crypto;
 Address c_registrar = Address("0000000000000000000000000000000000000a28");
 Address c_urlHint = Address("0000000000000000000000000000000000000a29");
 
+QString contentsOfQResource(std::string const& res);
+
 DappLoader::DappLoader(QObject* _parent, WebThreeDirect* _web3):
 	QObject(_parent), m_web3(_web3)
 {
@@ -87,7 +89,10 @@ DappLocation DappLoader::resolveAppUri(QString const& _uri)
 	QString domain = domainParts.join('/');
 	parts.erase(parts.begin(), parts.begin() + partIndex);
 	QString path = parts.join('/');
-	return DappLocation { domain, path, QString::fromUtf8(contentUrl.data(), contentUrl.size()), contentHash };
+	QString contentUrlString = QString::fromUtf8(std::string(contentUrl.data(), contentUrl.size()).c_str());
+	if (!contentUrlString.startsWith("http://") || !contentUrlString.startsWith("https://"))
+		contentUrlString = "http://" + contentUrlString;
+	return DappLocation { domain, path, contentUrlString, contentHash };
 }
 
 void DappLoader::downloadComplete(QNetworkReply* _reply)
@@ -117,43 +122,47 @@ void DappLoader::downloadComplete(QNetworkReply* _reply)
 		RLP rlp(package);
 		loadDapp(rlp);
 	}
-	catch (std::exception const& e)
+	catch (...)
 	{
-		//TODO: warning
-		//emit downloadError();
+		qWarning() << tr("Error downloading DApp: ") << boost::current_exception_diagnostic_information().c_str();
+		emit dappError();
 	}
 
 }
-
-#include <QFile>
 
 void DappLoader::loadDapp(RLP const& _rlp)
 {
 	Dapp dapp;
 	unsigned len = _rlp.itemCountStrict();
-
 	dapp.manifest = loadManifest(_rlp[0].toString());
 	for (unsigned c = 1; c < len; ++c)
 	{
 		bytesConstRef content = _rlp[c].toBytesConstRef();
 		h256 hash = sha3(content);
-
-		QByteArray cnt(reinterpret_cast<const char*>(content.data()), (int)content.size());
-		QFile file(QString("/home/arkady/dump/%1").arg(c));
-		file.open(QIODevice::WriteOnly | QIODevice::Truncate);
-		file.write(cnt.data(), cnt.size());
-		file.close();
-
-
-		if (std::count_if(dapp.manifest.entries.cbegin(), dapp.manifest.entries.cend(), [=](ManifestEntry const& _e) { return _e.hash == hash; }) == 1)
-			dapp.content[hash] = content.toBytes();
-
-			//throw dev::Exception() << errinfo_comment("Dapp content hash does not match");
-		//dapp.manifest.entries[c-1].hash = hash; //TODO: remove
-
-		//dapp.content[hash] = content.toBytes();
+		auto entry = std::find_if(dapp.manifest.entries.cbegin(), dapp.manifest.entries.cend(), [=](ManifestEntry const& _e) { return _e.hash == hash; });
+		if (entry != dapp.manifest.entries.cend())
+		{
+			if (entry->path == "/deployment.js")
+			{
+				//inject web3 code
+				QString code;
+				code += contentsOfQResource(":/js/bignumber.min.js");
+				code += "\n";
+				code += contentsOfQResource(":/js/webthree.js");
+				code += "\n";
+				code += contentsOfQResource(":/js/setup.js");
+				code += "\n";
+				QByteArray res = code.toLatin1();
+				bytes b(res.data(), res.data() + res.size());
+				b.insert(b.end(), content.begin(), content.end());
+				dapp.content[hash] = b;
+			}
+			else
+				dapp.content[hash] = content.toBytes();
+		}
+		else
+			throw dev::Exception() << errinfo_comment("Dapp content hash does not match");
 	}
-
 	emit dappReady(dapp);
 }
 
@@ -170,6 +179,8 @@ Manifest DappLoader::loadManifest(std::string const& _manifest)
 	{
 		Json::Value const& entryValue = *it;
 		std::string path = entryValue["path"].asString();
+		if (path.size() == 0 || path[0] != '/')
+			path = "/" + path;
 		std::string contentType = entryValue["contentType"].asString();
 		std::string strHash = entryValue["hash"].asString();
 		if (strHash.length() == 64)

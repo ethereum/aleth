@@ -47,15 +47,12 @@ struct ManifestEntry
 struct Manifest
 {
 	std::vector<ManifestEntry> entries;
-	//Manifest& operator=(Manifest&& _other) { entries = std::move(_other.entries); return *this; }
 };
 
 struct Dapp
 {
 	Manifest manifest;
 	std::map<dev::h256, dev::bytes> content;
-
-	//Dapp& operator=(Dapp&& _other) { manifest = std::move(_other.manifest); content = std::move(_other.content); return *this; }
 };
 
 
@@ -67,16 +64,19 @@ struct DappLocation
 	dev::h256 contentHash;
 };
 
+///Downloads, unpacks and prepares DApps for hosting
 class DappLoader: public QObject
 {
 	Q_OBJECT
 public:
 	DappLoader(QObject* _parent, dev::WebThreeDirect* _web3);
-	virtual ~DappLoader() {}
+	///Load a new DApp. Resolves a name with a name reg contract. Asynchronous. dappReady is emitted once everything is read, dappError othervise
+	///@param _uri Eth name path
 	void loadDapp(QString const& _uri);
 
 signals:
 	void dappReady(Dapp& _dapp);
+	void dappError();
 
 private slots:
 	void downloadComplete(QNetworkReply* _reply);
