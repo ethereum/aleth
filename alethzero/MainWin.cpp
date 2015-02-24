@@ -70,10 +70,6 @@ using namespace dev::p2p;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-namespace
-{
-}
-
 QString Main::fromRaw(h256 _n, unsigned* _inc)
 {
 	if (_n)
