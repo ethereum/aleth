@@ -67,6 +67,33 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
+void fixHexDataField(json_spirit::mObject& _o, string const& _sField)
+{
+	BOOST_REQUIRE(_o.count(_sField) > 0);
+	string str = _o[_sField].get_str();
+	bool isPrefix = (str.substr(0, 2) == "0x");
+	if (!isPrefix)
+		_o[_sField] = "0x"+str;
+}
+
+void fixHexStrings(json_spirit::mValue& _v)
+{
+	for (auto& i: _v.get_obj())
+	{
+		cerr << i.first << endl;
+		json_spirit::mObject& o = i.second.get_obj();
+
+		//Fixing Transactions
+		if (o.count("transaction") > 0)
+		{
+			json_spirit::mObject& tObj = o["transaction"].get_obj();
+			fixHexDataField(tObj, "to");
+			fixHexDataField(tObj, "data");
+		}
+	}
+}
+
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
@@ -255,7 +282,11 @@ byte toByte(json_spirit::mValue const& _v)
 
 bytes importByteArray(std::string const& _str)
 {
-	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, ThrowType::Throw);
+	//bool isPrefix = (_str.substr(0, 2) == "0x");
+	//if (!isPrefix)
+	//	cwarn << "WARNING: Reading HEX string without 0x prefix! (deprecated)";
+	//return fromHex(isPrefix ? _str.substr(2) : _str, ThrowType::Throw);
+	return fromHex( _str, ThrowType::Throw);
 }
 
 bytes importData(json_spirit::mObject& _o)
@@ -276,7 +307,7 @@ bytes importCode(json_spirit::mObject& _o)
 		if (_o["code"].get_str().find_first_of("0x") != 0)
 			code = compileLLL(_o["code"].get_str(), false);
 		else
-			code = fromHex(_o["code"].get_str().substr(2));
+			code = fromHex(_o["code"].get_str());
 	else if (_o["code"].type() == json_spirit::array_type)
 	{
 		code.clear();
@@ -335,8 +366,6 @@ void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
 			++j;
 		}
-	else if (_o["out"].get_str().find("0x") == 0)
-		BOOST_CHECK(_output == fromHex(_o["out"].get_str().substr(2)));
 	else
 		BOOST_CHECK(_output == fromHex(_o["out"].get_str()));
 }
@@ -480,6 +509,31 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 				json_spirit::read_string(s, v);
 				doTests(v, true);
 				writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR("Failed filling test with Exception: " << _e.what());
+			}
+			break;
+		}
+
+		if (arg == "--fixhexstring")
+		{
+			try
+			{
+				cnote << "Fixing test fillers...";
+				json_spirit::mValue v;
+				boost::filesystem::path p(__FILE__);
+				boost::filesystem::path dir = p.parent_path();
+				string s = asString(dev::contents(dir.string() + "/" + _name + "Filler.json"));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
+				json_spirit::read_string(s, v);
+				fixHexStrings(v);
+				writeFile(dir.string() + "/" + _name + "Filler.json", asBytes(json_spirit::write_string(v, true)));
 			}
 			catch (Exception const& _e)
 			{
