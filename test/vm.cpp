@@ -370,8 +370,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			{
 				auto testDuration = endTime - startTime;
 				cnote << "Execution time: "
-					  << std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
-					  << " ms";
+					<< std::chrono::duration_cast<std::chrono::milliseconds>(testDuration).count()
+					<< " ms";
 				break;
 			}
 		}
