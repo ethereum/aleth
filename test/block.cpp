@@ -83,72 +83,70 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 
 void overwriteBlockHeader(mObject& _o, BlockInfo _current_BlockHeader)
 {
-    if (_o.count("blockHeader"))
-    {
-        if (_o["blockHeader"].get_obj().size() != 14)
-        {
+	if (_o.count("blockHeader"))
+	{
+		if (_o["blockHeader"].get_obj().size() != 14)
+		{
+			BlockInfo tmp = _current_BlockHeader;
 
-            BlockInfo tmp = _current_BlockHeader;
+			if (_o["blockHeader"].get_obj().count("parentHash"))
+				tmp.parentHash = h256(_o["blockHeader"].get_obj()["parentHash"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("parentHash"))
-                tmp.parentHash = h256(_o["blockHeader"].get_obj()["parentHash"].get_str());
+			if (_o["blockHeader"].get_obj().count("uncleHash"))
+				tmp.sha3Uncles = h256(_o["blockHeader"].get_obj()["uncleHash"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("uncleHash"))
-                tmp.sha3Uncles = h256(_o["blockHeader"].get_obj()["uncleHash"].get_str());
+			if (_o["blockHeader"].get_obj().count("coinbase"))
+				tmp.coinbaseAddress = Address(_o["blockHeader"].get_obj()["coinbase"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("coinbase"))
-                tmp.coinbaseAddress = Address(_o["blockHeader"].get_obj()["coinbase"].get_str());
+			if (_o["blockHeader"].get_obj().count("stateRoot"))
+				tmp.stateRoot = h256(_o["blockHeader"].get_obj()["stateRoot"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("stateRoot"))
-                tmp.stateRoot = h256(_o["blockHeader"].get_obj()["stateRoot"].get_str());
+			if (_o["blockHeader"].get_obj().count("transactionsTrie"))
+				tmp.transactionsRoot = h256(_o["blockHeader"].get_obj()["transactionsTrie"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("transactionsTrie"))
-                tmp.transactionsRoot = h256(_o["blockHeader"].get_obj()["transactionsTrie"].get_str());
+			if (_o["blockHeader"].get_obj().count("receiptTrie"))
+				tmp.receiptsRoot = h256(_o["blockHeader"].get_obj()["receiptTrie"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("receiptTrie"))
-                tmp.receiptsRoot = h256(_o["blockHeader"].get_obj()["receiptTrie"].get_str());
+			if (_o["blockHeader"].get_obj().count("bloom"))
+				tmp.logBloom = LogBloom(_o["blockHeader"].get_obj()["bloom"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("bloom"))
-                tmp.logBloom = LogBloom(_o["blockHeader"].get_obj()["bloom"].get_str());
+			if (_o["blockHeader"].get_obj().count("difficulty"))
+				tmp.difficulty = toInt(_o["blockHeader"].get_obj()["difficulty"]);
 
-            if (_o["blockHeader"].get_obj().count("difficulty"))
-                tmp.difficulty = toInt(_o["blockHeader"].get_obj()["difficulty"]);
+			if (_o["blockHeader"].get_obj().count("number"))
+				tmp.number = toInt(_o["blockHeader"].get_obj()["number"]);
 
-            if (_o["blockHeader"].get_obj().count("number"))
-                tmp.number = toInt(_o["blockHeader"].get_obj()["number"]);
+			if (_o["blockHeader"].get_obj().count("gasLimit"))
+				tmp.gasLimit = toInt(_o["blockHeader"].get_obj()["gasLimit"]);
 
-            if (_o["blockHeader"].get_obj().count("gasLimit"))
-                tmp.gasLimit = toInt(_o["blockHeader"].get_obj()["gasLimit"]);
+			if (_o["blockHeader"].get_obj().count("gasUsed"))
+				tmp.gasUsed = toInt(_o["blockHeader"].get_obj()["gasUsed"]);
 
-            if (_o["blockHeader"].get_obj().count("gasUsed"))
-                tmp.gasUsed = toInt(_o["blockHeader"].get_obj()["gasUsed"]);
+			if (_o["blockHeader"].get_obj().count("timestamp"))
+				tmp.timestamp = toInt(_o["blockHeader"].get_obj()["timestamp"]);
 
-            if (_o["blockHeader"].get_obj().count("timestamp"))
-                tmp.timestamp = toInt(_o["blockHeader"].get_obj()["timestamp"]);
+			if (_o["blockHeader"].get_obj().count("extraData"))
+				tmp.extraData = importByteArray(_o["blockHeader"].get_obj()["extraData"].get_str());
 
-            if (_o["blockHeader"].get_obj().count("extraData"))
-                tmp.extraData = importByteArray(_o["blockHeader"].get_obj()["extraData"].get_str());
-
-            // find new valid nonce
-
-            if (tmp != _current_BlockHeader)
-            {
-                _current_BlockHeader = tmp;
-                cout << "new header!\n";
-                ProofOfWork pow;
-                MineInfo ret;
-                while (!ProofOfWork::verify(_current_BlockHeader.headerHash(WithoutNonce), _current_BlockHeader.nonce, _current_BlockHeader.difficulty))
-                    tie(ret, _current_BlockHeader.nonce) = pow.mine(_current_BlockHeader.headerHash(WithoutNonce), _current_BlockHeader.difficulty, 10000, true, true);
-            }
-        }
-        else
-        {
-            // take the blockheader as is
-            const bytes c_blockRLP = createBlockRLPFromFields(_o["blockHeader"].get_obj());
-            const RLP c_bRLP(c_blockRLP);
-            _current_BlockHeader.populateFromHeader(c_bRLP, false);
-        }
-    }
+			// find new valid nonce
+			if (tmp != _current_BlockHeader)
+			{
+				_current_BlockHeader = tmp;
+				cout << "new header!\n";
+				ProofOfWork pow;
+				MineInfo ret;
+				while (!ProofOfWork::verify(_current_BlockHeader.headerHash(WithoutNonce), _current_BlockHeader.nonce, _current_BlockHeader.difficulty))
+					tie(ret, _current_BlockHeader.nonce) = pow.mine(_current_BlockHeader.headerHash(WithoutNonce), _current_BlockHeader.difficulty, 10000, true, true);
+			}
+		}
+		else
+		{
+			// take the blockheader as is
+			const bytes c_blockRLP = createBlockRLPFromFields(_o["blockHeader"].get_obj());
+			const RLP c_bRLP(c_blockRLP);
+			_current_BlockHeader.populateFromHeader(c_bRLP, false);
+		}
+	}
 }
 
 void doBlockTests(json_spirit::mValue& _v, bool _fillin)
