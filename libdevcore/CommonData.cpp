@@ -80,7 +80,11 @@ int dev::fromHex(char _i)
 
 bytes dev::fromHex(std::string const& _s, ThrowType _throw)
 {
-	unsigned s = (_s[0] == '0' && _s[1] == 'x') ? 2 : 0;
+	bool isPrefix = (_s[0] == '0' && _s[1] == 'x');
+	if (!isPrefix)
+		cwarn << "WARNING: Reading HEX string without 0x prefix! (deprecated)";
+
+	unsigned s = isPrefix ? 2 : 0;
 	std::vector<uint8_t> ret;
 	ret.reserve((_s.size() - s + 1) / 2);
 
