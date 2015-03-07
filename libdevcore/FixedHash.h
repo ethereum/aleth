@@ -31,7 +31,7 @@
 namespace dev
 {
 
-extern std::mt19937_64 s_fixedHashEngine;
+extern std::random_device s_fixedHashEngine;
 
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
 /// Transparently converts to/from the corresponding arithmetic type; this will
@@ -85,8 +85,8 @@ public:
 	// The obvious comparison operators.
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
-	bool operator<(FixedHash const& _c) const { return m_data < _c.m_data; }
-	bool operator>=(FixedHash const& _c) const { return m_data >= _c.m_data; }
+	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
+	bool operator>=(FixedHash const& _c) const { return !operator<(_c); }
 
 	// The obvious binary operators.
 	FixedHash& operator^=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] ^= _c.m_data[i]; return *this; }
@@ -247,6 +247,7 @@ using h512 = FixedHash<64>;
 using h256 = FixedHash<32>;
 using h160 = FixedHash<20>;
 using h128 = FixedHash<16>;
+using h64 = FixedHash<8>;
 using h512s = std::vector<h512>;
 using h256s = std::vector<h256>;
 using h160s = std::vector<h160>;

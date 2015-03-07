@@ -144,7 +144,7 @@ public:
 	Visibility getVisibility() const { return m_visibility == Visibility::Default ? getDefaultVisibility() : m_visibility; }
 	bool isPublic() const { return getVisibility() >= Visibility::Public; }
 	bool isVisibleInContract() const { return getVisibility() != Visibility::External; }
-	bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Internal; }
+	virtual bool isVisibleInDerivedContracts() const { return isVisibleInContract() && getVisibility() >= Visibility::Internal; }
 
 	/// @returns the scope this declaration resides in. Can be nullptr if it is the global scope.
 	/// Available only after name and type resolution step.
@@ -247,6 +247,9 @@ public:
 	/// as intended for use by the ABI.
 	std::map<FixedHash<4>, FunctionTypePointer> getInterfaceFunctions() const;
 
+	/// @returns a list of the inheritable members of this contract
+	std::vector<Declaration const*> const& getInheritableMembers() const;
+
 	/// List of all (direct and indirect) base contracts in order from derived to base, including
 	/// the contract itself. Available after name resolution
 	std::vector<ContractDefinition const*> const& getLinearizedBaseContracts() const { return m_linearizedBaseContracts; }
@@ -273,6 +276,7 @@ private:
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
 	mutable std::unique_ptr<std::vector<ASTPointer<EventDefinition>>> m_interfaceEvents;
+	mutable std::unique_ptr<std::vector<Declaration const*>> m_inheritableMembers;
 };
 
 class InheritanceSpecifier: public ASTNode
@@ -405,6 +409,11 @@ public:
 	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block const& getBody() const { return *m_body; }
 
+	virtual bool isVisibleInDerivedContracts() const override
+	{
+		return !isConstructor() && !getName().empty() && isVisibleInContract() &&
+			getVisibility() >= Visibility::Internal;
+	}
 	virtual TypePointer getType(ContractDefinition const*) const override;
 
 	/// Checks that all parameters have allowed types and calls checkTypeRequirements on the body.
@@ -451,7 +460,6 @@ public:
 
 	virtual bool isLValue() const override;
 
-	/// Calls checkTypeRequirments for all state variables.
 	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
 	bool isExternalFunctionParameter() const;
@@ -501,7 +509,7 @@ private:
 };
 
 /**
- * Invocation/usage of a modifier in a function header.
+ * Invocation/usage of a modifier in a function header or a base constructor call.
  */
 class ModifierInvocation: public ASTNode
 {
@@ -516,7 +524,8 @@ public:
 	ASTPointer<Identifier> const& getName() const { return m_modifierName; }
 	std::vector<ASTPointer<Expression>> const& getArguments() const { return m_arguments; }
 
-	void checkTypeRequirements();
+	/// @param _bases is the list of base contracts for base constructor calls. For modifiers an empty vector should be passed.
+	void checkTypeRequirements(std::vector<ASTPointer<InheritanceSpecifier>> const& _bases);
 
 private:
 	ASTPointer<Identifier> m_modifierName;
@@ -1187,7 +1196,13 @@ public:
 		Wei = Token::SubWei,
 		Szabo = Token::SubSzabo,
 		Finney = Token::SubFinney,
-		Ether = Token::SubEther
+		Ether = Token::SubEther,
+		Second = Token::SubSecond,
+		Minute = Token::SubMinute,
+		Hour = Token::SubHour,
+		Day = Token::SubDay,
+		Week = Token::SubWeek,
+		Year = Token::SubYear
 	};
 	Literal(SourceLocation const& _location, Token::Value _token,
 			ASTPointer<ASTString> const& _value,

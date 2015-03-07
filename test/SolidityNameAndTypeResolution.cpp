@@ -28,7 +28,7 @@
 #include <libsolidity/Parser.h>
 #include <libsolidity/NameAndTypeResolver.h>
 #include <libsolidity/Exceptions.h>
-#include <boost/test/unit_test.hpp>
+#include "TestHelper.h"
 
 using namespace std;
 
@@ -55,30 +55,6 @@ ASTPointer<SourceUnit> parseTextAndResolveNames(std::string const& _source)
 		if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			resolver.checkTypeRequirements(*contract);
 
-	return sourceUnit;
-}
-
-ASTPointer<SourceUnit> parseTextAndResolveNamesWithChecks(std::string const& _source)
-{
-	Parser parser;
-	ASTPointer<SourceUnit> sourceUnit;
-	try
-	{
-		sourceUnit = parser.parse(std::make_shared<Scanner>(CharStream(_source)));
-		NameAndTypeResolver resolver({});
-		resolver.registerDeclarations(*sourceUnit);
-		for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-				resolver.resolveNamesAndTypes(*contract);
-		for (ASTPointer<ASTNode> const& node: sourceUnit->getNodes())
-			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
-				resolver.checkTypeRequirements(*contract);
-	}
-	catch(boost::exception const& _e)
-	{
-		auto msg = std::string("Parsing text and resolving names failed with: \n") + boost::diagnostic_information(_e);
-		BOOST_FAIL(msg);
-	}
 	return sourceUnit;
 }
 
@@ -109,7 +85,7 @@ BOOST_AUTO_TEST_CASE(smoke_test)
 					   "  uint256 stateVariable1;\n"
 					   "  function fun(uint256 arg1) { var x; uint256 y; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(double_stateVariable_declaration)
@@ -144,7 +120,7 @@ BOOST_AUTO_TEST_CASE(name_shadowing)
 					   "  uint256 variable;\n"
 					   "  function f() { uint32 variable ; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(name_references)
@@ -153,7 +129,7 @@ BOOST_AUTO_TEST_CASE(name_references)
 					   "  uint256 variable;\n"
 					   "  function f(uint256 arg) returns (uint out) { f(variable); test; out; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(undeclared_name)
@@ -171,7 +147,7 @@ BOOST_AUTO_TEST_CASE(reference_to_later_declaration)
 					   "  function g() { f(); }"
 					   "  function f() {  }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(struct_definition_directly_recursive)
@@ -209,7 +185,7 @@ BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
 					   "    mapping(uint => MyStructName1) x;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
@@ -217,7 +193,7 @@ BOOST_AUTO_TEST_CASE(type_inference_smoke_test)
 	char const* text = "contract test {\n"
 					   "  function f(uint256 arg1, uint32 arg2) returns (bool ret) { var x = arg1 + arg2 == 8; ret = x; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(type_checking_return)
@@ -225,7 +201,7 @@ BOOST_AUTO_TEST_CASE(type_checking_return)
 	char const* text = "contract test {\n"
 					   "  function f() returns (bool r) { return 1 >= 2; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(type_checking_return_wrong_number)
@@ -250,7 +226,7 @@ BOOST_AUTO_TEST_CASE(type_checking_function_call)
 					   "  function f() returns (bool r) { return g(12, true) == 3; }\n"
 					   "  function g(uint256 a, bool b) returns (uint256 r) { }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(type_conversion_for_comparison)
@@ -258,7 +234,7 @@ BOOST_AUTO_TEST_CASE(type_conversion_for_comparison)
 	char const* text = "contract test {\n"
 					   "  function f() { uint32(2) == int64(2); }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(type_conversion_for_comparison_invalid)
@@ -274,7 +250,7 @@ BOOST_AUTO_TEST_CASE(type_inference_explicit_conversion)
 	char const* text = "contract test {\n"
 					   "  function f() returns (int256 r) { var x = int256(uint32(2)); return x; }"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(large_string_literal)
@@ -292,7 +268,7 @@ BOOST_AUTO_TEST_CASE(balance)
 					   "    uint256 x = address(0).balance;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(balance_invalid)
@@ -332,7 +308,7 @@ BOOST_AUTO_TEST_CASE(assignment_to_struct)
 					   "    data = a;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(returns_in_constructor)
@@ -356,7 +332,7 @@ BOOST_AUTO_TEST_CASE(forward_function_reference)
 					   "    if (First(2).fun() == true) return 1;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
@@ -366,7 +342,7 @@ BOOST_AUTO_TEST_CASE(comparison_bitop_precedence)
 					   "    return 1 & 2 == 8 & 9 && 1 ^ 2 < 4 | 6;\n"
 					   "  }\n"
 					   "}\n";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(function_canonical_signature)
@@ -423,7 +399,7 @@ BOOST_AUTO_TEST_CASE(inheritance_basic)
 			function f() { baseMember = 7; }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
@@ -436,7 +412,7 @@ BOOST_AUTO_TEST_CASE(inheritance_diamond_basic)
 			function g() { f(); rootFunction(); }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(cyclic_inheritance)
@@ -492,7 +468,7 @@ BOOST_AUTO_TEST_CASE(complex_inheritance)
 		contract B { function f() {} function g() returns (uint8 r) {} }
 		contract C is A, B { }
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(constructor_visibility)
@@ -502,7 +478,7 @@ BOOST_AUTO_TEST_CASE(constructor_visibility)
 		contract A { function A() { } }
 		contract B is A { function f() { A x = A(0); } }
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(overriding_constructor)
@@ -512,7 +488,7 @@ BOOST_AUTO_TEST_CASE(overriding_constructor)
 		contract A { function A() { } }
 		contract B is A { function A() returns (uint8 r) {} }
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(missing_base_constructor_arguments)
@@ -541,7 +517,7 @@ BOOST_AUTO_TEST_CASE(implicit_derived_to_base_conversion)
 			function f() { A a = B(1); }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(implicit_base_to_derived_conversion)
@@ -564,7 +540,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation)
 			modifier mod2(string7 a) { while (a == "1234567") _ }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(invalid_function_modifier_type)
@@ -587,7 +563,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_parameters)
 			modifier mod2(string7 a) { while (a == "1234567") _ }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
@@ -598,7 +574,7 @@ BOOST_AUTO_TEST_CASE(function_modifier_invocation_local_variables)
 			modifier mod(uint a) { if (a > 0) _ }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(legal_modifier_override)
@@ -607,7 +583,7 @@ BOOST_AUTO_TEST_CASE(legal_modifier_override)
 		contract A { modifier mod(uint a) {} }
 		contract B is A { modifier mod(uint a) {} }
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(illegal_modifier_override)
@@ -661,7 +637,7 @@ BOOST_AUTO_TEST_CASE(state_variable_accessors)
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
-	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
+	ETH_TEST_CHECK_NO_THROW(source = parseTextAndResolveNames(text), "Parsing and Resolving names failed");
 	BOOST_REQUIRE((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_REQUIRE(function && function->hasDeclaration());
@@ -711,13 +687,65 @@ BOOST_AUTO_TEST_CASE(private_state_variable)
 
 	ASTPointer<SourceUnit> source;
 	ContractDefinition const* contract;
-	BOOST_CHECK_NO_THROW(source = parseTextAndResolveNamesWithChecks(text));
+	ETH_TEST_CHECK_NO_THROW(source = parseTextAndResolveNames(text), "Parsing and Resolving names failed");
 	BOOST_CHECK((contract = retrieveContract(source, 0)) != nullptr);
 	FunctionTypePointer function;
 	function = retrieveFunctionBySignature(contract, "foo()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of a private variable should not exist");
 	function = retrieveFunctionBySignature(contract, "bar()");
 	BOOST_CHECK_MESSAGE(function == nullptr, "Accessor function of an internal variable should not exist");
+}
+
+BOOST_AUTO_TEST_CASE(base_class_state_variable_accessor)
+{
+	// test for issue #1126 https://github.com/ethereum/cpp-ethereum/issues/1126
+	char const* text = "contract Parent {\n"
+					   "    uint256 public m_aMember;\n"
+					   "}\n"
+					   "contract Child is Parent{\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
+					   "}\n";
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
+}
+
+BOOST_AUTO_TEST_CASE(base_class_state_variable_internal_member)
+{
+	char const* text = "contract Parent {\n"
+					   "    uint256 internal m_aMember;\n"
+					   "}\n"
+					   "contract Child is Parent{\n"
+					   "    function foo() returns (uint256) { return Parent.m_aMember; }\n"
+					   "}\n";
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class1)
+{
+	char const* text = "contract Parent1 {\n"
+					   "    uint256 internal m_aMember1;\n"
+					   "}\n"
+					   "contract Parent2 is Parent1{\n"
+					   "    uint256 internal m_aMember2;\n"
+					   "}\n"
+					   "contract Child is Parent2{\n"
+					   "    function foo() returns (uint256) { return Parent2.m_aMember1; }\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(state_variable_member_of_wrong_class2)
+{
+	char const* text = "contract Parent1 {\n"
+					   "    uint256 internal m_aMember1;\n"
+					   "}\n"
+					   "contract Parent2 is Parent1{\n"
+					   "    uint256 internal m_aMember2;\n"
+					   "}\n"
+					   "contract Child is Parent2{\n"
+					   "    function foo() returns (uint256) { return Child.m_aMember2; }\n"
+					   "    uint256 public m_aMember3;\n"
+					   "}\n";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function)
@@ -728,7 +756,7 @@ BOOST_AUTO_TEST_CASE(fallback_function)
 			function() { x = 2; }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(fallback_function_with_arguments)
@@ -765,7 +793,7 @@ BOOST_AUTO_TEST_CASE(fallback_function_inheritance)
 			function() { x = 2; }
 		}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(event)
@@ -775,7 +803,7 @@ BOOST_AUTO_TEST_CASE(event)
 			event e(uint indexed a, string3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(event_too_many_indexed)
@@ -795,7 +823,7 @@ BOOST_AUTO_TEST_CASE(event_call)
 			event e(uint a, string3 indexed s, bool indexed b);
 			function f() { e(2, "abc", true); }
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(event_inheritance)
@@ -807,7 +835,7 @@ BOOST_AUTO_TEST_CASE(event_inheritance)
 		contract c is base {
 			function f() { e(2, "abc", true); }
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
@@ -817,7 +845,7 @@ BOOST_AUTO_TEST_CASE(multiple_events_argument_clash)
 			event e1(uint a, uint e1, uint e2);
 			event e2(uint a, uint e1, uint e2);
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
@@ -829,7 +857,7 @@ BOOST_AUTO_TEST_CASE(access_to_default_function_visibility)
 		contract d {
 			function g() { c(0).f(); }
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(access_to_internal_function)
@@ -865,7 +893,7 @@ BOOST_AUTO_TEST_CASE(access_to_internal_state_variable)
 		contract d {
 			function g() { c(0).a(); }
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(error_count_in_named_args)
@@ -911,7 +939,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter)
 			function f(uint){
 		}
 	})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
@@ -921,7 +949,7 @@ BOOST_AUTO_TEST_CASE(empty_name_return_parameter)
 			function f() returns(bool){
 		}
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
@@ -932,7 +960,7 @@ BOOST_AUTO_TEST_CASE(empty_name_input_parameter_with_named_one)
 				return k;
 		}
 	})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(empty_name_return_parameter_with_named_one)
@@ -962,7 +990,8 @@ BOOST_AUTO_TEST_CASE(overflow_caused_by_ether_units)
 			}
 			uint256 a;
 		})";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCodeFine));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCodeFine),
+		"Parsing and Resolving names failed");
 	char const* sourceCode = R"(
 		contract c {
 			function c ()
@@ -1004,7 +1033,7 @@ BOOST_AUTO_TEST_CASE(enum_member_access)
 				ActionChoices choices;
 			}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(enum_invalid_member_access)
@@ -1036,7 +1065,7 @@ BOOST_AUTO_TEST_CASE(enum_explicit_conversion_is_okay)
 				uint64 b;
 			}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
@@ -1053,7 +1082,7 @@ BOOST_AUTO_TEST_CASE(int_to_enum_explicit_conversion_is_okay)
 				ActionChoices b;
 			}
 	)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(text));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
 }
 
 BOOST_AUTO_TEST_CASE(enum_implicit_conversion_is_not_okay)
@@ -1173,7 +1202,7 @@ BOOST_AUTO_TEST_CASE(test_for_bug_override_function_with_bytearray_type)
 			function f(bytes _a) external returns (uint256 r) {r = 42;}
 		}
 		)";
-	BOOST_CHECK_NO_THROW(parseTextAndResolveNamesWithChecks(sourceCode));
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode), "Parsing and Name Resolving failed");
 }
 
 BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
@@ -1181,6 +1210,79 @@ BOOST_AUTO_TEST_CASE(array_with_nonconstant_length)
 	char const* text = R"(
 		contract c {
 			function f(uint a) { uint8[a] x; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types1)
+{
+	char const* text = R"(
+		contract c {
+			bytes a;
+			uint[] b;
+			function f() { b = a; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types2)
+{
+	char const* text = R"(
+		contract c {
+			uint32[] a;
+			uint8[] b;
+			function f() { b = a; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types_conversion_possible)
+{
+	char const* text = R"(
+		contract c {
+			uint32[] a;
+			uint8[] b;
+			function f() { a = b; }
+		})";
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types_static_dynamic)
+{
+	char const* text = R"(
+		contract c {
+			uint32[] a;
+			uint8[80] b;
+			function f() { a = b; }
+		})";
+	ETH_TEST_CHECK_NO_THROW(parseTextAndResolveNames(text), "Parsing and Name Resolving Failed");
+}
+
+BOOST_AUTO_TEST_CASE(array_copy_with_different_types_dynamic_static)
+{
+	char const* text = R"(
+		contract c {
+			uint[] a;
+			uint[80] b;
+			function f() { b = a; }
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_int)
+{
+	char const* text = R"(
+		contract c {
+			uint8 a = 1000;
+		})";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
+{
+	char const* text = R"(
+		contract c {
+			uint a = "abc";
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }

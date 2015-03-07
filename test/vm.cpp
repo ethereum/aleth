@@ -21,7 +21,9 @@
  */
 
 #include <chrono>
+
 #include <boost/filesystem.hpp>
+
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
 #include "vm.h"
@@ -286,7 +288,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			/*add the storage*/
 			Object storage;
 			for (auto const& i: std::get<2>(ext.addresses.find(ext.myAddress)->second))
-				storage.push_back(Pair( (string)i.first , (string)i.second));			
+				storage.push_back(Pair( (string)i.first , (string)i.second));
 
 			/*add all the other details*/
 			o_step.push_back(Pair("storage", storage));
@@ -365,7 +367,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		auto argc = boost::unit_test::framework::master_test_suite().argc;
 		auto argv = boost::unit_test::framework::master_test_suite().argv;
 		for (auto i = 0; i < argc; ++i)
-		{	       
+		{
 			if (std::string(argv[i]) == "--show-times")
 			{
 				auto testDuration = endTime - startTime;
@@ -518,7 +520,7 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
 		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--performance")
+		if (arg == "--performance" || arg == "--all")
 		{
 			auto start = chrono::steady_clock::now();
 
@@ -531,33 +533,33 @@ BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
-{
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits")
-		{
-			auto start = chrono::steady_clock::now();
+//BOOST_AUTO_TEST_CASE(vmInputLimitsTest1)
+//{
+//	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+//	{
+//		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+//		if (arg == "--inputlimits" || arg == "--all")
+//		{
+//			auto start = chrono::steady_clock::now();
 
-			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
+//			dev::test::executeTests("vmInputLimitsTest1", "/VMTests", dev::test::doVMTests);
 
-			auto end = chrono::steady_clock::now();
-			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
-			cnote << "test duration: " << duration.count() << " milliseconds.\n";
-		}
-	}
-}
+//			auto end = chrono::steady_clock::now();
+//			auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+//			cnote << "test duration: " << duration.count() << " milliseconds.\n";
+//		}
+//	}
+//}
 
-BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
-{
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--inputlimits")
-			dev::test::executeTests("vmInputLimitsTest2", "/VMTests", dev::test::doVMTests);
-	}
-}
+//BOOST_AUTO_TEST_CASE(vmInputLimitsTest2)
+//{
+//	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
+//	{
+//		string arg = boost::unit_test::framework::master_test_suite().argv[i];
+//		if (arg == "--inputlimits" || arg == "--all")
+//			dev::test::executeTests("vmInputLimitsTest2", "/VMTests", dev::test::doVMTests);
+//	}
+//}
 
 BOOST_AUTO_TEST_CASE(vmRandom)
 {
@@ -592,9 +594,9 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 	}
 }
 
-BOOST_AUTO_TEST_CASE(userDefinedFileVM)
+BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-	dev::test::userDefinedTest("--vmtest", dev::test::doVMTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

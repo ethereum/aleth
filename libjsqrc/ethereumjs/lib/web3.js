@@ -80,12 +80,14 @@ var setupProperties = function (obj, properties) {
     });
 };
 
+/*jshint maxparams:4 */
 var startPolling = function (method, id, callback, uninstall) {
     web3.manager.startPolling({
         method: method, 
         params: [id]
     }, id,  callback, uninstall); 
 };
+/*jshint maxparams:3 */
 
 var stopPolling = function (id) {
     web3.manager.stopPolling(id);
@@ -139,16 +141,26 @@ var web3 = {
             };
         },
 
+        canary: function (abi) {
+            return function(addr) {
+                // Default to address of Config. TODO: rremove prior to genesis.
+                addr = addr || '0xc6d9d2cd449a754c494264e1809c50e34d64562b';
+                return addr;
+            };
+        },
+
         /// @param filter may be a string, object or event
         /// @param indexed is optional, this is an object with optional event indexed params
         /// @param options is optional, this is an object with optional event options ('max'...)
         /// TODO: fix it, 4 params? no way
+        /*jshint maxparams:4 */
         watch: function (fil, indexed, options, formatter) {
             if (fil._isEvent) {
                 return fil(indexed, options);
             }
             return filter(fil, ethWatch, formatter);
         }
+        /*jshint maxparams:3 */
     },
 
     /// db object prototype

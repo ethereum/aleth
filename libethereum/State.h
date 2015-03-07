@@ -30,7 +30,7 @@
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockInfo.h>
 #include <libethcore/ProofOfWork.h>
-#include <libevm/FeeStructure.h>
+#include <libethcore/Params.h>
 #include <libevm/ExtVMFace.h>
 #include "TransactionQueue.h"
 #include "Account.h"
@@ -54,6 +54,8 @@ struct StateDetail: public LogChannel { static const char* name() { return "/S/"
 struct StateSafeExceptions: public LogChannel { static const char* name() { return "(S)"; } static const int verbosity = 21; };
 
 enum class BaseState { Empty, CanonGenesis };
+
+class GasPricer;
 
 /**
  * @brief Model of the current state of the ledger.
@@ -112,7 +114,7 @@ public:
 
 	/// Pass in a solution to the proof-of-work.
 	/// @returns true iff the given nonce is a proof-of-work for this State's block.
-	bool completeMine(h256 const& _nonce);
+	bool completeMine(ProofOfWork::Proof const& _result);
 
 	/// Attempt to find valid nonce for block that this state represents.
 	/// This function is thread-safe. You can safely have other interactions with this object while it is happening.
@@ -147,7 +149,7 @@ public:
 	/// @returns a list of receipts one for each transaction placed from the queue into the state.
 	/// @a o_transactionQueueChanged boolean pointer, the value of which will be set to true if the transaction queue
 	/// changed and the pointer is non-null
-	TransactionReceipts sync(BlockChain const& _bc, TransactionQueue& _tq, bool* o_transactionQueueChanged = nullptr);
+	TransactionReceipts sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, bool* o_transactionQueueChanged = nullptr);
 	/// Like sync but only operate on _tq, killing the invalid/old ones.
 	bool cull(TransactionQueue& _tq) const;
 
@@ -367,6 +369,32 @@ void commit(std::map<Address, Account> const& _cache, DB& _db, SecureTrieDB<Addr
 			}
 		}
 }
+
+enum class TransactionPriority
+{
+	Low = 0,
+	Medium = 1,
+	High = 2
+};
+
+class GasPricer
+{
+public:
+	explicit GasPricer(u256 _weiPerCent): m_weiPerCent(_weiPerCent) {}
+
+	u256 ask(State const&) const { return m_weiPerCent * m_centsPerBlock / m_gasPerBlock; }
+	u256 bid(TransactionPriority _p = TransactionPriority::Medium) const { return m_quartiles[(int)_p]; }
+
+	void updateRefPrice(u256 _weiPerCent) { m_weiPerCent = _weiPerCent; }
+	void updateRefRequirement(u256 _centsPerBlock) { m_centsPerBlock = _centsPerBlock; }
+	void updateQuartiles(BlockChain const& _bc);
+
+private:
+	u256 m_weiPerCent;
+	u256 m_centsPerBlock = 15;
+	u256 m_gasPerBlock = 1000000;
+	std::array<u256, 100> m_quartiles;
+};
 
 }
 }

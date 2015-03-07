@@ -28,6 +28,7 @@
 #include <libevmcore/Assembly.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Types.h>
+#include <libdevcore/Common.h>
 
 namespace dev {
 namespace solidity {
@@ -43,11 +44,13 @@ public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
 	void addStateVariable(VariableDeclaration const& _declaration);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
+	void removeVariable(VariableDeclaration const& _declaration);
 	void addAndInitializeVariable(VariableDeclaration const& _declaration);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
 
+	void setStackOffset(int _offset) { m_asm.setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 	unsigned getStackHeight() const { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
 
@@ -62,6 +65,8 @@ public:
 	/// @returns the entry label of function with the given name from the most derived class just
 	/// above _base in the current inheritance hierarchy.
 	eth::AssemblyItem getSuperFunctionEntryLabel(std::string const& _name, ContractDefinition const& _base);
+	FunctionDefinition const* getNextConstructor(ContractDefinition const& _contract) const;
+
 	/// @returns the set of functions for which we still need to generate code
 	std::set<Declaration const*> getFunctionsWithoutCode();
 	/// Resets function specific members, inserts the function entry label and marks the function
@@ -114,7 +119,9 @@ public:
 	CompilerContext& operator<<(bytes const& _data);
 
 	eth::Assembly const& getAssembly() const { return m_asm; }
-	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
+	/// @arg _sourceCodes is the map of input files to source code strings
+	void streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap()) const { m_asm.streamRLP(_stream, "", _sourceCodes); }
+
 	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
 
 	/**
@@ -126,9 +133,11 @@ public:
 		LocationSetter(CompilerContext& _compilerContext, ASTNode const* _node):
 			ScopeGuard(std::bind(&CompilerContext::popVisitedNodes, _compilerContext)) { _compilerContext.pushVisitedNodes(_node); }
 	};
-	eth::Assembly m_asm;
-private:
 
+private:
+	std::vector<ContractDefinition const*>::const_iterator getSuperContract(const ContractDefinition &_contract) const;
+
+	eth::Assembly m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.

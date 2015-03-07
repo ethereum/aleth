@@ -27,11 +27,12 @@
 #include <atomic>
 #include <libdevcore/Common.h>
 #include <libdevcore/Worker.h>
-#include <libethcore/CommonEth.h>
+#include <libethcore/Common.h>
 #include "State.h"
 
 namespace dev
 {
+
 namespace eth
 {
 
@@ -129,6 +130,9 @@ public:
 
 	/// Get and clear the mining history.
 	std::list<MineInfo> miningHistory() { Guard l(x_mineInfo); auto ret = m_mineHistory; m_mineHistory.clear(); return ret; }
+
+	/// @returns the state on which we mined.
+	State const& state() const { return m_mineState; }
 
 private:
 	/// Do some work on the mining.

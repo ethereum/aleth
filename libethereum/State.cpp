@@ -27,6 +27,7 @@
 #include <boost/timer.hpp>
 #include <secp256k1/secp256k1.h>
 #include <libdevcore/CommonIO.h>
+#include <libdevcore/StructuredLogger.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
@@ -255,7 +256,7 @@ bool State::sync(BlockChain const& _bc, h256 _block, BlockInfo const& _bi)
 			{
 				auto b = _bc.block(_block);
 				bi.populate(b);
-	//			bi.verifyInternals(_bc.block(_block));	// Unneeded - we already verify on import into the blockchain.
+//				bi.verifyInternals(_bc.block(_block));	// Unneeded - we already verify on import into the blockchain.
 				break;
 			}
 			catch (Exception const& _e)
@@ -399,7 +400,7 @@ bool State::cull(TransactionQueue& _tq) const
 	return ret;
 }
 
-TransactionReceipts State::sync(BlockChain const& _bc, TransactionQueue& _tq, bool* o_transactionQueueChanged)
+TransactionReceipts State::sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, bool* o_transactionQueueChanged)
 {
 	// TRANSACTIONS
 	TransactionReceipts ret;
@@ -413,20 +414,27 @@ TransactionReceipts State::sync(BlockChain const& _bc, TransactionQueue& _tq, bo
 		for (auto const& i: ts)
 			if (!m_transactionSet.count(i.first))
 			{
-				// don't have it yet! Execute it now.
 				try
 				{
-					uncommitToMine();
-//					boost::timer t;
-					execute(lh, i.second);
-					ret.push_back(m_receipts.back());
-					_tq.noteGood(i);
-					++goodTxs;
-//					cnote << "TX took:" << t.elapsed() * 1000;
+					Transaction t(i.second, CheckSignature::Sender);
+					if (t.gasPrice() >= _gp.ask(*this))
+					{
+						// don't have it yet! Execute it now.
+						uncommitToMine();
+	//					boost::timer t;
+						execute(lh, i.second);
+						ret.push_back(m_receipts.back());
+						_tq.noteGood(i);
+						++goodTxs;
+	//					cnote << "TX took:" << t.elapsed() * 1000;
+					}
 				}
 				catch (InvalidNonce const& in)
 				{
-					if (in.required > in.candidate)
+					bigint const* req = boost::get_error_info<errinfo_required>(in);
+					bigint const* got = boost::get_error_info<errinfo_got>(in);
+
+					if (*req > *got)
 					{
 						// too old
 						_tq.drop(i.first);
@@ -456,12 +464,51 @@ TransactionReceipts State::sync(BlockChain const& _bc, TransactionQueue& _tq, bo
 	return ret;
 }
 
+void GasPricer::updateQuartiles(BlockChain const& _bc)
+{
+	unsigned c = 0;
+	h256 p = _bc.currentHash();
+
+	map<u256, unsigned> dist;
+	unsigned total;
+	while (c < 1000 && p)
+	{
+		BlockInfo bi = _bc.info(p);
+		if (bi.transactionsRoot != EmptyTrie)
+		{
+			auto bb = _bc.block(p);
+			RLP r(bb);
+			BlockReceipts brs(_bc.receipts(bi.hash));
+			for (unsigned i = 0; i < r[1].size(); ++i)
+			{
+				auto gu = brs.receipts[i].gasUsed();
+				dist[Transaction(r[1][i].data(), CheckSignature::None).gasPrice()] += (unsigned)brs.receipts[i].gasUsed();
+				total += (unsigned)gu;
+			}
+		}
+		p = bi.parentHash;
+		++c;
+	}
+	if (total > 0)
+	{
+		unsigned t = 0;
+		unsigned q = 1;
+		for (auto const& i: dist)
+		{
+			for (; t <= total * q / 4 && t + i.second > total * q / 4; ++q)
+				m_quartiles[q - 1] = i.first;
+			if (q > 3)
+				break;
+		}
+	}
+}
+
 u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 {
 	// m_currentBlock is assumed to be prepopulated and reset.
 
 #if !ETH_RELEASE
-	BlockInfo bi(_block, _checkNonce);
+	BlockInfo bi(_block, _checkNonce ? CheckEverything : IgnoreNonce);
 	assert(m_previousBlock.hash == bi.parentHash);
 	assert(m_currentBlock.parentHash == bi.parentHash);
 	assert(rootHash() == m_previousBlock.stateRoot);
@@ -471,7 +518,7 @@ u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 		BOOST_THROW_EXCEPTION(InvalidParentHash());
 
 	// Populate m_currentBlock with the correct values.
-	m_currentBlock.populate(_block, _checkNonce);
+	m_currentBlock.populate(_block, _checkNonce ? CheckEverything : IgnoreNonce);
 	m_currentBlock.verifyInternals(_block);
 
 //	cnote << "playback begins:" << m_state.root();
@@ -486,10 +533,11 @@ u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 	receiptsTrie.init();
 
 	LastHashes lh = getLastHashes(_bc, (unsigned)m_previousBlock.number);
+	RLP rlp(_block);
 
 	// All ok with the block generally. Play back the transactions now...
 	unsigned i = 0;
-	for (auto const& tr: RLP(_block)[1])
+	for (auto const& tr: rlp[1])
 	{
 		RLPStream k;
 		k << i;
@@ -503,17 +551,11 @@ u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 		++i;
 	}
 
-	if (transactionsTrie.root() != m_currentBlock.transactionsRoot)
-	{
-		cwarn << "Bad transactions state root!";
-		BOOST_THROW_EXCEPTION(InvalidTransactionsStateRoot());
-	}
-
 	if (receiptsTrie.root() != m_currentBlock.receiptsRoot)
 	{
 		cwarn << "Bad receipts state root.";
 		cwarn << "Block:" << toHex(_block);
-		cwarn << "Block RLP:" << RLP(_block);
+		cwarn << "Block RLP:" << rlp;
 		cwarn << "Calculated: " << receiptsTrie.root();
 		for (unsigned j = 0; j < i; ++j)
 		{
@@ -548,13 +590,17 @@ u256 State::enact(bytesConstRef _block, BlockChain const& _bc, bool _checkNonce)
 	u256 tdIncrease = m_currentBlock.difficulty;
 
 	// Check uncles & apply their rewards to state.
-	set<h256> nonces = { m_currentBlock.nonce };
+	if (rlp[2].itemCount() > 2)
+		BOOST_THROW_EXCEPTION(TooManyUncles());
+
+	set<Nonce> nonces = { m_currentBlock.nonce };
 	Addresses rewarded;
 	set<h256> knownUncles = _bc.allUnclesFrom(m_currentBlock.parentHash);
-	for (auto const& i: RLP(_block)[2])
+
+	for (auto const& i: rlp[2])
 	{
 		if (knownUncles.count(sha3(i.data())))
-			BOOST_THROW_EXCEPTION(UncleInChain(knownUncles, sha3(i.data()) ));
+			BOOST_THROW_EXCEPTION(UncleInChain() << errinfo_comment("Uncle in block already mentioned") << errinfo_data(toString(knownUncles)) << errinfo_hash256(sha3(i.data())) );
 
 		BlockInfo uncle = BlockInfo::fromHeader(i.data());
 		if (nonces.count(uncle.nonce))
@@ -699,7 +745,7 @@ void State::commitToMine(BlockChain const& _bc)
 //		cout << "Checking " << m_previousBlock.hash << ", parent=" << m_previousBlock.parentHash << endl;
 		set<h256> knownUncles = _bc.allUnclesFrom(m_currentBlock.parentHash);
 		auto p = m_previousBlock.parentHash;
-		for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash(); ++gen, p = _bc.details(p).parent)
+		for (unsigned gen = 0; gen < 6 && p != _bc.genesisHash() && unclesCount < 2; ++gen, p = _bc.details(p).parent)
 		{
 			auto us = _bc.details(p).children;
 			assert(us.size() >= 1);	// must be at least 1 child of our grandparent - it's our own parent!
@@ -710,6 +756,8 @@ void State::commitToMine(BlockChain const& _bc)
 					ubi.streamRLP(unclesData, WithNonce);
 					++unclesCount;
 					uncleAddresses.push_back(ubi.coinbaseAddress);
+					if (unclesCount == 2)
+						break;
 				}
 		}
 	}
@@ -772,23 +820,28 @@ MineInfo State::mine(unsigned _msTimeout, bool _turbo)
 
 	MineInfo ret;
 	// TODO: Miner class that keeps dagger between mine calls (or just non-polling mining).
-	tie(ret, m_currentBlock.nonce) = m_pow.mine(m_currentBlock.headerHash(WithoutNonce), m_currentBlock.difficulty, _msTimeout, true, _turbo);
+	ProofOfWork::Proof r;
+	tie(ret, r) = m_pow.mine(m_currentBlock, _msTimeout, true, _turbo);
 
 	if (!ret.completed)
 		m_currentBytes.clear();
 	else
-		cnote << "Completed" << m_currentBlock.headerHash(WithoutNonce).abridged() << m_currentBlock.nonce.abridged() << m_currentBlock.difficulty << ProofOfWork::verify(m_currentBlock.headerHash(WithoutNonce), m_currentBlock.nonce, m_currentBlock.difficulty);
+	{
+		ProofOfWork::assignResult(r, m_currentBlock);
+		cnote << "Completed" << m_currentBlock.headerHash(WithoutNonce).abridged() << m_currentBlock.nonce.abridged() << m_currentBlock.difficulty << ProofOfWork::verify(m_currentBlock);
+	}
 
 	return ret;
 }
 
-bool State::completeMine(h256 const& _nonce)
+bool State::completeMine(ProofOfWork::Proof const& _nonce)
 {
-	if (!m_pow.verify(m_currentBlock.headerHash(WithoutNonce), _nonce, m_currentBlock.difficulty))
+	ProofOfWork::assignResult(_nonce, m_currentBlock);
+
+	if (!m_pow.verify(m_currentBlock))
 		return false;
 
-	m_currentBlock.nonce = _nonce;
-	cnote << "Completed" << m_currentBlock.headerHash(WithoutNonce).abridged() << m_currentBlock.nonce.abridged() << m_currentBlock.difficulty << ProofOfWork::verify(m_currentBlock.headerHash(WithoutNonce), m_currentBlock.nonce, m_currentBlock.difficulty);
+	cnote << "Completed" << m_currentBlock.headerHash(WithoutNonce).abridged() << m_currentBlock.nonce.abridged() << m_currentBlock.difficulty << ProofOfWork::verify(m_currentBlock);
 
 	completeMine();
 
@@ -809,6 +862,12 @@ void State::completeMine()
 	ret.swapOut(m_currentBytes);
 	m_currentBlock.hash = sha3(RLP(m_currentBytes)[0].data());
 	cnote << "Mined " << m_currentBlock.hash.abridged() << "(parent: " << m_currentBlock.parentHash.abridged() << ")";
+	StructuredLogger::minedNewBlock(
+		m_currentBlock.hash.abridged(),
+		m_currentBlock.nonce.abridged(),
+		"", //TODO: chain head hash here ??
+		m_currentBlock.parentHash.abridged()
+	);
 
 	// Quickly reset the transactions.
 	// TODO: Leave this in a better state than this limbo, or at least record that it's in limbo.

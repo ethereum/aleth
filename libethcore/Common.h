@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file CommonEth.h
+/** @file Common.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  *
@@ -65,6 +65,8 @@ static const u256 ether = exp10<18>();
 static const u256 finney = exp10<15>();
 static const u256 szabo = exp10<12>();
 static const u256 wei = exp10<0>();
+
+using Nonce = h64;
 
 }
 }

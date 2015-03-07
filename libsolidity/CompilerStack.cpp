@@ -155,6 +155,16 @@ bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 	return getBytecode();
 }
 
+eth::AssemblyItems const& CompilerStack::getAssemblyItems(string const& _contractName) const
+{
+	return getContract(_contractName).compiler->getAssemblyItems();
+}
+
+eth::AssemblyItems const& CompilerStack::getRuntimeAssemblyItems(string const& _contractName) const
+{
+	return getContract(_contractName).compiler->getRuntimeAssemblyItems();
+}
+
 bytes const& CompilerStack::getBytecode(string const& _contractName) const
 {
 	return getContract(_contractName).bytecode;
@@ -170,9 +180,9 @@ dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
 	return dev::sha3(getRuntimeBytecode(_contractName));
 }
 
-void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName) const
+void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
 {
-	getContract(_contractName).compiler->streamAssembly(_outStream);
+	getContract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes);
 }
 
 string const& CompilerStack::getInterface(string const& _contractName) const

@@ -22,6 +22,7 @@
 
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
+
 #include "JsonSpiritHeaders.h"
 #include <libdevcore/CommonIO.h>
 #include <libethereum/CanonBlockChain.h>
@@ -64,6 +65,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		catch (Exception const& _e)
 		{
 			cnote << "state execution did throw an exception: " << diagnostic_information(_e);
+			theState.commit();
 		}
 		catch (std::exception const& _e)
 		{
@@ -251,7 +253,7 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 
 BOOST_AUTO_TEST_CASE(userDefinedFileState)
 {
-	dev::test::userDefinedTest("--statetest", dev::test::doStateTests);
+	dev::test::userDefinedTest("--singletest", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

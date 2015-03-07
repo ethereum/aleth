@@ -21,6 +21,9 @@
  * @date 2014
  */
 
+// Make sure boost/asio.hpp is included before windows.h.
+#include <boost/asio.hpp>
+
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/SourceReferenceFormatter.h>
@@ -89,12 +92,13 @@ static Json::Value toJson(dev::eth::TransactionSkeleton const& _t)
 static Json::Value toJson(dev::eth::LocalisedLogEntry const& _e)
 {
 	Json::Value res;
-	
+
 	res["data"] = jsFromBinary(_e.data);
 	res["address"] = toJS(_e.address);
 	for (auto const& t: _e.topics)
 		res["topic"].append(toJS(t));
 	res["number"] = _e.number;
+	res["hash"] = toJS(_e.sha3);
 	return res;
 }
 
@@ -457,9 +461,9 @@ Json::Value WebThreeStubServerBase::eth_getWork()
 	return ret;
 }
 
-bool WebThreeStubServerBase::eth_submitWork(std::string const& _nonce)
+bool WebThreeStubServerBase::eth_submitWork(std::string const& _nonce, std::string const& _mixHash)
 {
-	return client()->submitNonce(jsToFixed<32>(_nonce));
+	return client()->submitWork(ProofOfWork::Proof{jsToFixed<Nonce::size>(_nonce), jsToFixed<32>(_mixHash)});
 }
 
 int WebThreeStubServerBase::eth_register(std::string const& _address)
@@ -578,7 +582,7 @@ bool WebThreeStubServerBase::shh_post(Json::Value const& _json)
 		// TODO: insert validification hook here.
 		from = m_ids[m.from()];
 	}
-	
+
 	face()->inject(toSealed(_json, m, from));
 	return true;
 }
@@ -646,7 +650,7 @@ Json::Value WebThreeStubServerBase::shh_changed(int _id)
 				continue;
 			ret.append(toJson(h, e, m));
 		}
-	
+
 	return ret;
 }
 
@@ -706,7 +710,7 @@ std::string WebThreeStubServerBase::eth_transact(Json::Value const& _json)
 	if (t.creation)
 		ret = toJS(right160(sha3(rlpList(t.from, client()->countAt(t.from)))));;
 	if (!t.gasPrice)
-		t.gasPrice = 10 * dev::eth::szabo;
+		t.gasPrice = 10 * dev::eth::szabo;		// TODO: should be determined by user somehow.
 	if (!t.gas)
 		t.gas = min<u256>(client()->gasLimitRemaining(), client()->balanceAt(t.from) / t.gasPrice);
 

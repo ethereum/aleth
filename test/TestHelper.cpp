@@ -23,7 +23,9 @@
 
 #include <thread>
 #include <chrono>
+
 #include <boost/filesystem/path.hpp>
+
 #include <libethereum/Client.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
@@ -67,7 +69,7 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller): m_TestObject(_o)
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
 	importState(_o["pre"].get_obj(), m_statePre);
@@ -139,30 +141,38 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 }
 
 void ImportTest::importTransaction(json_spirit::mObject& _o)
-{
-	BOOST_REQUIRE(_o.count("nonce")> 0);
-	BOOST_REQUIRE(_o.count("gasPrice") > 0);
-	BOOST_REQUIRE(_o.count("gasLimit") > 0);
-	BOOST_REQUIRE(_o.count("to") > 0);
-	BOOST_REQUIRE(_o.count("value") > 0);
-	BOOST_REQUIRE(_o.count("secretKey") > 0);
-	BOOST_REQUIRE(_o.count("data") > 0);
+{	
+	if (_o.count("secretKey") > 0)
+	{
+		BOOST_REQUIRE(_o.count("nonce") > 0);
+		BOOST_REQUIRE(_o.count("gasPrice") > 0);
+		BOOST_REQUIRE(_o.count("gasLimit") > 0);
+		BOOST_REQUIRE(_o.count("to") > 0);
+		BOOST_REQUIRE(_o.count("value") > 0);
+		BOOST_REQUIRE(_o.count("data") > 0);
 
-	if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
-	if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
-	if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
-	if (bigint(_o["value"].get_str()) >= c_max256plus1)
-		BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
+		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
+		if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
+		if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
+		if (bigint(_o["value"].get_str()) >= c_max256plus1)
+			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-	m_transaction = _o["to"].get_str().empty() ?
-		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
-		Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
+		m_transaction = _o["to"].get_str().empty() ?
+			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
+			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
+	}
+	else
+	{
+		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
+		RLP transactionRLP(transactionRLPStream.out());
+		m_transaction = Transaction(transactionRLP.data(), CheckSignature::Sender);
+	}
 }
 
-void ImportTest::exportTest(bytes _output, State& _statePost)
+void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
@@ -173,13 +183,8 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 	// export post state
 	json_spirit::mObject postState;
 
-	std::map<Address, Account> genesis = genesisState();
-
 	for (auto const& a: _statePost.addresses())
 	{
-		if (genesis.count(a.first))
-			continue;
-
 		json_spirit::mObject o;
 		o["balance"] = toString(_statePost.balance(a.first));
 		o["nonce"] = toString(_statePost.transactionsFrom(a.first));
@@ -202,9 +207,6 @@ void ImportTest::exportTest(bytes _output, State& _statePost)
 
 	for (auto const& a: m_statePre.addresses())
 	{
-		if (genesis.count(a.first))
-			continue;
-
 		json_spirit::mObject o;
 		o["balance"] = toString(m_statePre.balance(a.first));
 		o["nonce"] = toString(m_statePre.transactionsFrom(a.first));
