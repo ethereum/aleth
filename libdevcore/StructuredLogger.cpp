@@ -37,12 +37,15 @@ string StructuredLogger::timePointToString(chrono::system_clock::time_point cons
 {
 	// not using C++11 std::put_time due to gcc bug
 	// http://stackoverflow.com/questions/14136833/stdput-time-implementation-status-in-gcc
-
 	char buffer[64];
-	time_t time = chrono::system_clock::to_time_t(_ts);
+	unsigned long milliSecondsSinceEpoch = std::chrono::duration_cast<chrono::milliseconds>(_ts.time_since_epoch()).count();
+	const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
+	const chrono::time_point<chrono::system_clock> tpAfterDuration(durationSinceEpoch);
+	time_t time = chrono::system_clock::to_time_t(tpAfterDuration);
 	tm* ptm = localtime(&time);
+	long long int millisRemainder = milliSecondsSinceEpoch % 1000;
 	if (strftime(buffer, sizeof(buffer), get().m_timeFormat.c_str(), ptm))
-		return string(buffer);
+		return string(buffer) + string(".") + to_string(millisRemainder) + string("Z");
 	return "";
 }
 
