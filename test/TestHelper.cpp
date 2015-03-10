@@ -69,6 +69,54 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
+void fixHexDataField(json_spirit::mObject& _o, string const& _sField)
+{
+	BOOST_REQUIRE(_o.count(_sField) > 0);
+	string str = _o[_sField].get_str();
+	bool isPrefix = (str.substr(0, 2) == "0x");
+	if (!isPrefix)
+		_o[_sField] = "0x"+str;
+}
+
+void ImportTest::fixHexFields(json_spirit::mValue& _v)
+{
+	//fix all HEX string data fields in object _v to start with "0x..." prefix
+	for (auto& i: _v.get_obj())
+	{
+		cerr << i.first << endl;
+		json_spirit::mObject& o = i.second.get_obj();
+
+		//Fixing Transactions
+		if (o.count("transaction") > 0)
+		{
+			json_spirit::mObject& tObj = o["transaction"].get_obj();
+			//fixHexDataField(tObj, "to");  Christoph address expected value checker is crushing on this
+			fixHexDataField(tObj, "data");
+		}
+
+		//Fixing Environment
+		if (o.count("env") > 0)
+		{
+			json_spirit::mObject& tObj = o["env"].get_obj();
+			fixHexDataField(tObj, "currentCoinbase");
+			fixHexDataField(tObj, "previousHash");
+		}
+
+		//Assuming that Post state will be generated correctly by export test
+		//Fixing Pre State Data Fields
+		if (o.count("pre") > 0)
+		{
+			json_spirit::mObject& tObj = o["pre"].get_obj();
+			for (auto& i: tObj)
+			{
+				json_spirit::mObject& account = i.second.get_obj();
+				if (account.count("code") > 0)
+					fixHexDataField(account, "code");
+			}
+		}
+	}
+}
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
@@ -475,6 +523,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
 				json_spirit::read_string(s, v);
 				doTests(v, true);
+				ImportTest::fixHexFields(v);
 				writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 			}
 			catch (Exception const& _e)

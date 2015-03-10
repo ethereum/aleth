@@ -107,6 +107,7 @@ public:
 	void importState(json_spirit::mObject& _o, eth::State& _state);
 	void importTransaction(json_spirit::mObject& _o);
 	void exportTest(bytes const& _output, eth::State const& _statePost);
+	static void fixHexFields(json_spirit::mValue& _v);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
