@@ -42,7 +42,7 @@ string StructuredLogger::timePointToString(chrono::system_clock::time_point cons
 	const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
 	const chrono::time_point<chrono::system_clock> tpAfterDuration(durationSinceEpoch);
 	time_t time = chrono::system_clock::to_time_t(tpAfterDuration);
-	tm* ptm = localtime(&time);
+	tm* ptm = gmtime(&time);
 	long long int millisRemainder = milliSecondsSinceEpoch % 1000;
 	if (strftime(buffer, sizeof(buffer), get().m_timeFormat.c_str(), ptm))
 		return string(buffer) + string(".") + to_string(millisRemainder) + string("Z");
