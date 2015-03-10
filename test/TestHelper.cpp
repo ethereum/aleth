@@ -71,49 +71,12 @@ bigint const c_max256plus1 = bigint(1) << 256;
 
 void fixHexDataField(json_spirit::mObject& _o, string const& _sField)
 {
-	BOOST_REQUIRE(_o.count(_sField) > 0);
-	string str = _o[_sField].get_str();
-	bool isPrefix = (str.substr(0, 2) == "0x");
-	if (!isPrefix)
-		_o[_sField] = "0x"+str;
-}
-
-void ImportTest::fixHexFields(json_spirit::mValue& _v)
-{
-	//fix all HEX string data fields in object _v to start with "0x..." prefix
-	for (auto& i: _v.get_obj())
+	if (_o.count(_sField) > 0)
 	{
-		cerr << i.first << endl;
-		json_spirit::mObject& o = i.second.get_obj();
-
-		//Fixing Transactions
-		if (o.count("transaction") > 0)
-		{
-			json_spirit::mObject& tObj = o["transaction"].get_obj();
-			//fixHexDataField(tObj, "to");  Christoph address expected value checker is crushing on this
-			fixHexDataField(tObj, "data");
-		}
-
-		//Fixing Environment
-		if (o.count("env") > 0)
-		{
-			json_spirit::mObject& tObj = o["env"].get_obj();
-			fixHexDataField(tObj, "currentCoinbase");
-			fixHexDataField(tObj, "previousHash");
-		}
-
-		//Assuming that Post state will be generated correctly by export test
-		//Fixing Pre State Data Fields
-		if (o.count("pre") > 0)
-		{
-			json_spirit::mObject& tObj = o["pre"].get_obj();
-			for (auto& i: tObj)
-			{
-				json_spirit::mObject& account = i.second.get_obj();
-				if (account.count("code") > 0)
-					fixHexDataField(account, "code");
-			}
-		}
+		string str = _o[_sField].get_str();
+		bool isPrefix = (str.substr(0, 2) == "0x");
+		if (!isPrefix)
+			_o[_sField] = "0x"+str;
 	}
 }
 
@@ -208,7 +171,8 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		if (bigint(_o["value"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-		m_transaction = _o["to"].get_str().empty() ?
+		string sAddress = _o["to"].get_str();
+		m_transaction = (sAddress.empty() || sAddress == "0x")  ?
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
 	}
@@ -222,6 +186,24 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
+	//fix env fields
+	if (m_TestObject.count("env") > 0)
+	{
+		json_spirit::mObject& tObj = m_TestObject["env"].get_obj();
+		fixHexDataField(tObj, "currentCoinbase");
+		fixHexDataField(tObj, "previousHash");
+	}
+
+	//fix transaction fields
+	if (m_TestObject.count("transaction") > 0)
+	{
+		json_spirit::mObject& tObj = m_TestObject["transaction"].get_obj();
+		fixHexDataField(tObj, "data");
+		fixHexDataField(tObj, "to");
+		fixHexDataField(tObj, "r");
+		fixHexDataField(tObj, "s");
+	}
+
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
 
@@ -523,7 +505,6 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + dir.string() + "/" + _name + "Filler.json is empty.");
 				json_spirit::read_string(s, v);
 				doTests(v, true);
-				ImportTest::fixHexFields(v);
 				writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
 			}
 			catch (Exception const& _e)
@@ -574,7 +555,7 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 
 	if (_tObj.count("to"))
 	{
-		if (_tObj["to"].get_str().empty())
+		if (_tObj["to"].get_str().empty() || _tObj["to"].get_str() == "0x")
 			rlpStream << "";
 		else
 			rlpStream << importByteArray(_tObj["to"].get_str());

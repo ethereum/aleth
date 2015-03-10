@@ -107,7 +107,6 @@ public:
 	void importState(json_spirit::mObject& _o, eth::State& _state);
 	void importTransaction(json_spirit::mObject& _o);
 	void exportTest(bytes const& _output, eth::State const& _statePost);
-	static void fixHexFields(json_spirit::mValue& _v);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -124,6 +123,7 @@ byte toByte(json_spirit::mValue const& _v);
 bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject& _o);
 bytes importByteArray(std::string const& _str);
+void fixHexDataField(json_spirit::mObject& _o, std::string const& _sField);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
 void checkOutput(bytes const& _output, json_spirit::mObject& _o);

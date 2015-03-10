@@ -76,7 +76,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		else
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
-			mObject tObj = o["transaction"].get_obj();
+			mObject& tObj = o["transaction"].get_obj();
 
 			//Construct Rlp of the given transaction
 			RLPStream rlpStream = createRLPStreamFromTransactionFields(tObj);
@@ -95,6 +95,11 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				cnote << "Transaction Exception: " << diagnostic_information(_e);
 				o.erase(o.find("transaction"));
 			}
+
+			fixHexDataField(tObj, "data");
+			fixHexDataField(tObj, "to");
+			fixHexDataField(tObj, "r");
+			fixHexDataField(tObj, "s");
 		}
 	}//for
 }//doTransactionTests
