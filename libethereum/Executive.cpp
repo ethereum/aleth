@@ -199,9 +199,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 
 			if (m_isCreation)
 			{
-				u512 storageCost = (u512)m_out.size() * c_createDataGas;
+				u256 storageCost = m_out.size() * c_createDataGas;
 				if (storageCost <= m_endGas)
-					m_endGas -= (u256)storageCost;
+					m_endGas -= storageCost;
 				else
 				{
 					clog(StateDetail) << "Not enough gas to pay for the contract code storage: Require >" << storageCost << " Got" << m_endGas;
