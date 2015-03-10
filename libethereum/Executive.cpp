@@ -199,10 +199,14 @@ bool Executive::go(OnOpFunc const& _onOp)
 
 			if (m_isCreation)
 			{
-				if (m_out.size() * c_createDataGas <= m_endGas)
-					m_endGas -= m_out.size() * c_createDataGas;
+				u256 storageCost = m_out.size() * c_createDataGas;
+				if (storageCost <= m_endGas)
+					m_endGas -= storageCost;
 				else
-					m_out.reset();
+				{
+					clog(StateDetail) << "Not enough gas to pay for the contract code storage: Require >" << storageCost << " Got" << m_endGas;
+					BOOST_THROW_EXCEPTION(OutOfGas() << RequirementError((bigint)storageCost, (bigint)m_endGas));
+				}
 				m_s.m_cache[m_newAddress].setCode(m_out.toBytes());
 			}
 		}
