@@ -25,6 +25,7 @@
 #include <ctime>
 #include <boost/asio/ip/tcp.hpp>
 #include <json/json.h>
+#include <libdevcore/CommonTime.h>
 #include "Guards.h"
 
 namespace ba = boost::asio;
@@ -38,13 +39,14 @@ string StructuredLogger::timePointToString(chrono::system_clock::time_point cons
 	// not using C++11 std::put_time due to gcc bug
 	// http://stackoverflow.com/questions/14136833/stdput-time-implementation-status-in-gcc
 	char buffer[64];
+	tm timeValue;
 	unsigned long milliSecondsSinceEpoch = std::chrono::duration_cast<chrono::milliseconds>(_ts.time_since_epoch()).count();
 	const auto durationSinceEpoch = std::chrono::milliseconds(milliSecondsSinceEpoch);
 	const chrono::time_point<chrono::system_clock> tpAfterDuration(durationSinceEpoch);
 	time_t time = chrono::system_clock::to_time_t(tpAfterDuration);
-	tm* ptm = gmtime(&time);
+	timeToUTC(&time, &timeValue);
 	long long int millisRemainder = milliSecondsSinceEpoch % 1000;
-	if (strftime(buffer, sizeof(buffer), get().m_timeFormat.c_str(), ptm))
+	if (strftime(buffer, sizeof(buffer), get().m_timeFormat.c_str(), &timeValue))
 		return string(buffer) + string(".") + to_string(millisRemainder) + string("Z");
 	return "";
 }
