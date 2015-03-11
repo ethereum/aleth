@@ -29,6 +29,9 @@ namespace dev
 {
 
 /// Cross platform wrapper for thread safe gmtime()
+/// @param _timeInput        A chrono time_point to convert to UTC
+/// @param _result           Pass in a struct tm inside which to return the resulting UTC timestamp
+/// @return                  A pointer to the passed in @a _result if succesfull or NULL otherwise
 tm *timeToUTC(std::chrono::system_clock::time_point const& _timeInput, struct tm *_result);
 
 }
