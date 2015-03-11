@@ -20,18 +20,21 @@
  *
  * Helper functions having to do with time
  */
-
 #include "CommonTime.h"
+#include <ctime>
+
+using namespace std;
 
 namespace dev
 {
 
-tm *timeToUTC(const time_t *_timeInput, struct tm *_result)
+tm *timeToUTC(chrono::system_clock::time_point const& _timeInput, struct tm *_result)
 {
+	time_t time = chrono::system_clock::to_time_t(_timeInput);
 #ifdef _WIN32
-	return gmtime_s(_result, _timeInput);
+	return gmtime_s(_result, &time);
 #else
-	return gmtime_r(_timeInput, _result);
+	return gmtime_r(&time, _result);
 #endif
 }
 

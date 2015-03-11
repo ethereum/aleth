@@ -20,15 +20,15 @@
  *
  * Helper functions having to do with time
  */
-
 #pragma once
+#include <chrono>
 
-#include <time.h>
+struct tm;
 
 namespace dev
 {
 
 /// Cross platform wrapper for thread safe gmtime()
-tm *timeToUTC(const time_t *_timeInput, struct tm *_result);
+tm *timeToUTC(std::chrono::system_clock::time_point const& _timeInput, struct tm *_result);
 
 }
