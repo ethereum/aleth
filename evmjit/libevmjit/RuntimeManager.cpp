@@ -4,6 +4,8 @@
 #include <llvm/IR/IntrinsicInst.h>
 #include "preprocessor/llvm_includes_end.h"
 
+#include "Stack.h"
+
 namespace dev
 {
 namespace eth
@@ -93,7 +95,7 @@ RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, llvm::Value* _jmpBuf
 
 	// save jmpBuf to be used in helper functions
 	auto ptr = m_builder.CreateStructGEP(getRuntimePtr(), 2);
-	m_builder.CreateStore(m_jmpBuf, ptr, "jmpBufExt");
+	m_builder.CreateStore(m_jmpBuf, ptr);
 
 	// Unpack data
 	auto rtPtr = getRuntimePtr();
@@ -163,6 +165,14 @@ void RuntimeManager::registerReturnData(llvm::Value* _offset, llvm::Value* _size
 void RuntimeManager::registerSuicide(llvm::Value* _balanceAddress)
 {
 	set(RuntimeData::SuicideDestAddress, _balanceAddress);
+}
+
+void RuntimeManager::exit(ReturnCode _returnCode)
+{
+	if (m_stack)
+		m_stack->free();
+
+	m_builder.CreateRet(Constant::get(_returnCode));
 }
 
 void RuntimeManager::abort(llvm::Value* _jmpBuf)
