@@ -22,7 +22,7 @@
 // @debris disabled as tests fail with:
 // unknown location(0): fatal error in "jsonrpc_setMining": std::exception: Exception -32003 : Client connector error: : libcurl error: 28
 // /home/gav/Eth/cpp-ethereum/test/jsonrpc.cpp(169): last checkpoint
-#if ETH_JSONRPC && 0
+//#if ETH_JSONRPC
 
 #include <boost/test/unit_test.hpp>
 #include <boost/lexical_cast.hpp>
@@ -33,43 +33,189 @@
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
+#include <libethereum/Interface.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
 #include "webthreestubclient.h"
 
-BOOST_AUTO_TEST_SUITE(jsonrpc)
+//BOOST_AUTO_TEST_SUITE(jsonrpc)
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 namespace js = json_spirit;
 
-WebThreeDirect* web3;
-unique_ptr<WebThreeStubServer> jsonrpcServer;
-unique_ptr<WebThreeStubClient> jsonrpcClient;
+namespace dev { namespace test {
+RLPStream createFullBlockFromHeader(const BlockInfo& _bi, const bytes& _txs = RLPEmptyList, const bytes& _uncles = RLPEmptyList);
+}};
 
-struct Setup
+// helping functions
+
+bytes createBlockRLPFromFieldsX(js::mObject& _tObj)
 {
-	Setup()
-	{
-		static bool setup = false;
-		if (setup)
-			return;
-		setup = true;
+	RLPStream rlpStream;
+	rlpStream.appendList(_tObj.count("hash") > 0 ? (_tObj.size() - 1) : _tObj.size());
+	
+	if (_tObj.count("parentHash"))
+		rlpStream << importByteArray(_tObj["parentHash"].get_str());
+	
+	if (_tObj.count("uncleHash"))
+		rlpStream << importByteArray(_tObj["uncleHash"].get_str());
+	
+	if (_tObj.count("coinbase"))
+		rlpStream << importByteArray(_tObj["coinbase"].get_str());
+	
+	if (_tObj.count("stateRoot"))
+		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
+	
+	if (_tObj.count("transactionsTrie"))
+		rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
+	
+	if (_tObj.count("receiptTrie"))
+		rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
+	
+	if (_tObj.count("bloom"))
+		rlpStream << importByteArray(_tObj["bloom"].get_str());
+	
+	if (_tObj.count("difficulty"))
+		rlpStream << bigint(_tObj["difficulty"].get_str());
+	
+	if (_tObj.count("number"))
+		rlpStream << bigint(_tObj["number"].get_str());
+	
+	if (_tObj.count("gasLimit"))
+		rlpStream << bigint(_tObj["gasLimit"].get_str());
+	
+	if (_tObj.count("gasUsed"))
+		rlpStream << bigint(_tObj["gasUsed"].get_str());
+	
+	if (_tObj.count("timestamp"))
+		rlpStream << bigint(_tObj["timestamp"].get_str());
+	
+	if (_tObj.count("extraData"))
+		rlpStream << fromHex(_tObj["extraData"].get_str());
+	
+	if (_tObj.count("seedHash"))
+		rlpStream << importByteArray(_tObj["seedHash"].get_str());
+	
+	if (_tObj.count("mixHash"))
+		rlpStream << importByteArray(_tObj["mixHash"].get_str());
+	
+	if (_tObj.count("nonce"))
+		rlpStream << importByteArray(_tObj["nonce"].get_str());
+	
+	return rlpStream.out();
+}
 
-		dev::p2p::NetworkPreferences nprefs(30303, std::string(), false);
-		web3 = new WebThreeDirect("Ethereum(++) tests", "", true, {"eth", "shh"}, nprefs);
-		
-		web3->setIdealPeerCount(5);
-		web3->ethereum()->setForceMining(true);
-		auto server = new jsonrpc::HttpServer(8080);
-		jsonrpcServer = unique_ptr<WebThreeStubServer>(new WebThreeStubServer(*server, *web3, {}));
-		jsonrpcServer->setIdentities({});
-		jsonrpcServer->StartListening();
-		auto client = new jsonrpc::HttpClient("http://localhost:8080");
-		jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
+
+BlockInfo constructBlockX(js::mObject& _o)
+{
+	
+	BlockInfo ret;
+	try
+	{
+		// construct genesis block
+		const bytes c_blockRLP = createBlockRLPFromFieldsX(_o);
+		const RLP c_bRLP(c_blockRLP);
+		ret.populateFromHeader(c_bRLP, IgnoreNonce);
 	}
+	catch (Exception const& _e)
+	{
+		cnote << "block population did throw an exception: " << diagnostic_information(_e);
+		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+	}
+	catch(...)
+	{
+		BOOST_ERROR("block population did throw an unknown exception\n");
+	}
+	return ret;
+}
+
+class FixedStateServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
+{
+public:
+	FixedStateServer(jsonrpc::AbstractServerConnector& _conn, std::vector<dev::KeyPair> const& _accounts, dev::eth::Interface* _client): WebThreeStubServerBase(_conn, _accounts), m_client(_client) {};
+	
+private:
+	dev::eth::Interface* client() override { return m_client; }
+	std::shared_ptr<dev::shh::Interface> face() override {	BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::shh::Interface")); }
+	dev::WebThreeNetworkFace* network() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::WebThreeNetworkFace")); }
+	dev::WebThreeStubDatabaseFace* db() override { return this; }
+	std::string get(std::string const& _name, std::string const& _key) override
+	{
+		std::string k(_name + "/" + _key);
+		return m_db[k];
+	}
+	void put(std::string const& _name, std::string const& _key, std::string const& _value) override
+	{
+		std::string k(_name + "/" + _key);
+		m_db[k] = _value;
+	}
+
+private:
+	dev::eth::Interface* m_client;
+	std::map<std::string, std::string> m_db;
+};
+
+class FixedStateInterface: public dev::eth::Interface
+{
+public:
+	FixedStateInterface(BlockChain const& _bc, State _state) :  m_bc(_bc), m_state(_state) {}
+	virtual ~FixedStateInterface() {}
+	
+	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override {}
+	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override {}
+	void inject(bytesConstRef _rlp) override {}
+	void flushTransactions() override {}
+	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber = 0) override {}
+	u256 balanceAt(Address _a, int _block) const override {}
+	u256 countAt(Address _a, int _block) const override {}
+	u256 stateAt(Address _a, u256 _l, int _block) const override {}
+	bytes codeAt(Address _a, int _block) const override {}
+	std::map<u256, u256> storageAt(Address _a, int _block) const override {}
+	eth::LocalisedLogEntries logs(unsigned _watchId) const override {}
+	eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override {}
+	unsigned installWatch(eth::LogFilter const& _filter) override {}
+	unsigned installWatch(h256 _filterId) override {}
+	void uninstallWatch(unsigned _watchId) override {}
+	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override {}
+	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override {}
+	h256 hashFromNumber(unsigned _number) const override {}
+	eth::BlockInfo blockInfo(h256 _hash) const override {}
+	eth::BlockDetails blockDetails(h256 _hash) const override {}
+	eth::Transaction transaction(h256 _transactionHash) const override {}
+	eth::Transaction transaction(h256 _blockHash, unsigned _i) const override {}
+	eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const override {}
+	unsigned transactionCount(h256 _blockHash) const override {}
+	unsigned uncleCount(h256 _blockHash) const override {}
+	unsigned number() const override { return m_bc.number();}
+	eth::Transactions pending() const override {}
+	eth::StateDiff diff(unsigned _txi, h256 _block) const override {}
+	eth::StateDiff diff(unsigned _txi, int _block) const override {}
+	Addresses addresses(int _block) const override {}
+	u256 gasLimitRemaining() const override {}
+	void setAddress(Address _us) override {}
+	Address address() const override {}
+	void setMiningThreads(unsigned _threads) override {}
+	unsigned miningThreads() const override {}
+	void startMining() override {}
+	void stopMining() override {}
+	bool isMining() override {}
+	eth::MineProgress miningProgress() const override {}
+	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
+	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
+	eth::Transactions transactions(h256 _blockHash) const override {}
+	eth::TransactionHashes transactionHashes(h256 _blockHash) const override {}
+	
+private:
+	BlockChain const& m_bc;
+	State m_state;
 };
 
 string fromAscii(string _s)
@@ -78,257 +224,88 @@ string fromAscii(string _s)
 	return "0x" + toHex(b);
 }
 
-BOOST_FIXTURE_TEST_SUITE(environment, Setup)
-
-BOOST_AUTO_TEST_CASE(jsonrpc_defaultBlock)
+void doJsonrpcTests(json_spirit::mValue& v, bool _fillin)
 {
-	cnote << "Testing jsonrpc defaultBlock...";
-	int defaultBlock = jsonrpcClient->eth_defaultBlock();
-	BOOST_CHECK_EQUAL(defaultBlock, web3->ethereum()->getDefault());
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_gasPrice)
-{
-	cnote << "Testing jsonrpc gasPrice...";
-	string gasPrice = jsonrpcClient->eth_gasPrice();
-	BOOST_CHECK_EQUAL(gasPrice, toJS(10 * dev::eth::szabo));
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_isListening)
-{
-	cnote << "Testing jsonrpc isListening...";
-
-	web3->startNetwork();
-	bool listeningOn = jsonrpcClient->eth_listening();
-	BOOST_CHECK_EQUAL(listeningOn, web3->isNetworkStarted());
-	
-	web3->stopNetwork();
-	bool listeningOff = jsonrpcClient->eth_listening();
-	BOOST_CHECK_EQUAL(listeningOff, web3->isNetworkStarted());
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
-{
-	cnote << "Testing jsonrpc isMining...";
-
-	web3->ethereum()->startMining();
-	bool miningOn = jsonrpcClient->eth_mining();
-	BOOST_CHECK_EQUAL(miningOn, web3->ethereum()->isMining());
-
-	web3->ethereum()->stopMining();
-	bool miningOff = jsonrpcClient->eth_mining();
-	BOOST_CHECK_EQUAL(miningOff, web3->ethereum()->isMining());
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_accounts)
-{
-	cnote << "Testing jsonrpc accounts...";
-	std::vector <dev::KeyPair> keys = {KeyPair::create(), KeyPair::create()};
-	jsonrpcServer->setAccounts(keys);
-	Json::Value k = jsonrpcClient->eth_accounts();
-	jsonrpcServer->setAccounts({});
-	BOOST_CHECK_EQUAL(k.isArray(), true);
-	BOOST_CHECK_EQUAL(k.size(),  keys.size());
-	for (auto &i:k)
+	for (auto& i: v.get_obj())
 	{
-		auto it = std::find_if(keys.begin(), keys.end(), [i](dev::KeyPair const& keyPair)
+		cerr << i.first << endl;
+		js::mObject& o = i.second.get_obj();
+		
+		BOOST_REQUIRE(o.count("genesisBlockHeader"));
+		BlockInfo biGenesisBlock = constructBlockX(o["genesisBlockHeader"].get_obj());
+		BOOST_REQUIRE(o.count("pre"));
+		ImportTest importer(o["pre"].get_obj());
+		State state(Address(), OverlayDB(), BaseState::Empty);
+		importer.importState(o["pre"].get_obj(), state);
+		state.commit();
+		
+		// create new "genesis" block
+		RLPStream rlpGenesisBlock = createFullBlockFromHeader(biGenesisBlock);
+		biGenesisBlock.verifyInternals(&rlpGenesisBlock.out());
+		
+		// construct blockchain
+		BlockChain bc(rlpGenesisBlock.out(), string(), true);
+		
+		for (auto const& bl: o["blocks"].get_array())
 		{
-			return jsToAddress(i.asString()) == keyPair.address();
-		});
-		BOOST_CHECK_EQUAL(it != keys.end(), true);
-	}
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_number)
-{
-	cnote << "Testing jsonrpc number2...";
-	int number = jsonrpcClient->eth_number();
-	BOOST_CHECK_EQUAL(number, web3->ethereum()->number() + 1);
-	dev::eth::mine(*(web3->ethereum()), 1);
-	int numberAfter = jsonrpcClient->eth_number();
-	BOOST_CHECK_EQUAL(number + 1, numberAfter);
-	BOOST_CHECK_EQUAL(numberAfter, web3->ethereum()->number() + 1);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_peerCount)
-{
-	cnote << "Testing jsonrpc peerCount...";
-	int peerCount = jsonrpcClient->eth_peerCount();
-	BOOST_CHECK_EQUAL(web3->peerCount(), peerCount);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_setListening)
-{
-	cnote << "Testing jsonrpc setListening...";
-
-	jsonrpcClient->eth_setListening(true);
-	BOOST_CHECK_EQUAL(web3->isNetworkStarted(), true);
-	
-	jsonrpcClient->eth_setListening(false);
-	BOOST_CHECK_EQUAL(web3->isNetworkStarted(), false);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_setMining)
-{
-	cnote << "Testing jsonrpc setMining...";
-
-	jsonrpcClient->eth_setMining(true);
-	BOOST_CHECK_EQUAL(web3->ethereum()->isMining(), true);
-
-	jsonrpcClient->eth_setMining(false);
-	BOOST_CHECK_EQUAL(web3->ethereum()->isMining(), false);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_stateAt)
-{
-	cnote << "Testing jsonrpc stateAt...";
-	dev::KeyPair key = KeyPair::create();
-	auto address = key.address();
-	string stateAt = jsonrpcClient->eth_stateAt(toJS(address), "0");
-	BOOST_CHECK_EQUAL(toJS(web3->ethereum()->stateAt(address, jsToU256("0"), 0)), stateAt);
-}
-
-BOOST_AUTO_TEST_CASE(jsonrpc_transact)
-{
-	cnote << "Testing jsonrpc transact...";
-	string coinbase = jsonrpcClient->eth_coinbase();
-	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->address());
-	
-	dev::KeyPair key = KeyPair::create();
-	auto address = key.address();
-	auto receiver = KeyPair::create();
-	web3->ethereum()->setAddress(address);
-
-	coinbase = jsonrpcClient->eth_coinbase();
-	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->address());
-	BOOST_CHECK_EQUAL(jsToAddress(coinbase), address);
-	
-	jsonrpcServer->setAccounts({key});
-	auto balance = web3->ethereum()->balanceAt(address, 0);
-	string balanceString = jsonrpcClient->eth_balanceAt(toJS(address));
-	double countAt = jsonrpcClient->eth_countAt(toJS(address));
-	
-	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3->ethereum()->countAt(address));
-	BOOST_CHECK_EQUAL(countAt, 0);
-	BOOST_CHECK_EQUAL(toJS(balance), balanceString);
-	BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "0");
-	
-	dev::eth::mine(*(web3->ethereum()), 1);
-	balance = web3->ethereum()->balanceAt(address, 0);
-	balanceString = jsonrpcClient->eth_balanceAt(toJS(address));
-	
-	BOOST_CHECK_EQUAL(toJS(balance), balanceString);
-	BOOST_CHECK_EQUAL(jsToDecimal(balanceString), "1500000000000000000");
-	
-	auto txAmount = balance / 2u;
-	auto gasPrice = 10 * dev::eth::szabo;
-	auto gas = dev::eth::c_txGas;
-	
-	Json::Value t;
-	t["from"] = toJS(address);
-	t["value"] = jsToDecimal(toJS(txAmount));
-	t["to"] = toJS(receiver.address());
-	t["data"] = toJS(bytes());
-	t["gas"] = toJS(gas);
-	t["gasPrice"] = toJS(gasPrice);
-	
-	jsonrpcClient->eth_transact(t);
-	jsonrpcServer->setAccounts({});
-	dev::eth::mine(*(web3->ethereum()), 1);
-	
-	countAt = jsonrpcClient->eth_countAt(toJS(address));
-	auto balance2 = web3->ethereum()->balanceAt(receiver.address());
-	string balanceString2 = jsonrpcClient->eth_balanceAt(toJS(receiver.address()));
-	
-	BOOST_CHECK_EQUAL(countAt, (double)(uint64_t)web3->ethereum()->countAt(address));
-	BOOST_CHECK_EQUAL(countAt, 1);
-	BOOST_CHECK_EQUAL(toJS(balance2), balanceString2);
-	BOOST_CHECK_EQUAL(jsToDecimal(balanceString2), "750000000000000000");
-	BOOST_CHECK_EQUAL(txAmount, balance2);
-}
-
-
-BOOST_AUTO_TEST_CASE(simple_contract)
-{
-	cnote << "Testing jsonrpc contract...";
-	KeyPair kp = KeyPair::create();
-	web3->ethereum()->setAddress(kp.address());
-	jsonrpcServer->setAccounts({kp});
-
-	dev::eth::mine(*(web3->ethereum()), 1);
-	
-	char const* sourceCode = "contract test {\n"
-	"  function f(uint a) returns(uint d) { return a * 7; }\n"
-	"}\n";
-
-	string compiled = jsonrpcClient->eth_solidity(sourceCode);
-
-	Json::Value create;
-	create["code"] = compiled;
-	string contractAddress = jsonrpcClient->eth_transact(create);
-	dev::eth::mine(*(web3->ethereum()), 1);
-	
-	Json::Value call;
-	call["to"] = contractAddress;
-	call["data"] = "0x00000000000000000000000000000000000000000000000000000000000000001";
-	string result = jsonrpcClient->eth_call(call);
-	BOOST_CHECK_EQUAL(result, "0x0000000000000000000000000000000000000000000000000000000000000007");
-}
-
-BOOST_AUTO_TEST_CASE(contract_storage)
-{
-	cnote << "Testing jsonrpc contract storage...";
-	KeyPair kp = KeyPair::create();
-	web3->ethereum()->setAddress(kp.address());
-	jsonrpcServer->setAccounts({kp});
-
-	dev::eth::mine(*(web3->ethereum()), 1);
-	
-	char const* sourceCode = R"(
-		contract test {
-			uint hello;
-			function writeHello(uint value)  returns(bool d){
-				hello = value;
-				return true;
+			js::mObject blObj = bl.get_obj();
+			bytes blockRLP;
+			try
+			{
+				state.sync(bc);
+				blockRLP = importByteArray(blObj["rlp"].get_str());
+				bc.import(blockRLP, state.db());
+				state.sync(bc);
+			}
+			// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+			catch (Exception const& _e)
+			{
+				cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
+				BOOST_CHECK(blObj.count("blockHeader") == 0);
+				BOOST_CHECK(blObj.count("transactions") == 0);
+				BOOST_CHECK(blObj.count("uncleHeaders") == 0);
+				continue;
+			}
+			catch (std::exception const& _e)
+			{
+				cnote << "state sync or block import did throw an exception: " << _e.what();
+				BOOST_CHECK(blObj.count("blockHeader") == 0);
+				BOOST_CHECK(blObj.count("transactions") == 0);
+				BOOST_CHECK(blObj.count("uncleHeaders") == 0);
+				continue;
+			}
+			catch(...)
+			{
+				cnote << "state sync or block import did throw an exception\n";
+				BOOST_CHECK(blObj.count("blockHeader") == 0);
+				BOOST_CHECK(blObj.count("transactions") == 0);
+				BOOST_CHECK(blObj.count("uncleHeaders") == 0);
+				continue;
 			}
 		}
-	)";
-	
-	string compiled = jsonrpcClient->eth_solidity(sourceCode);
-	
-	Json::Value create;
-	create["code"] = compiled;
-	string contractAddress = jsonrpcClient->eth_transact(create);
-	dev::eth::mine(*(web3->ethereum()), 1);
-	
-	Json::Value transact;
-	transact["to"] = contractAddress;
-	transact["data"] = "0x00000000000000000000000000000000000000000000000000000000000000003";
-	jsonrpcClient->eth_transact(transact);
-	dev::eth::mine(*(web3->ethereum()), 1);
-	
-	Json::Value storage = jsonrpcClient->eth_storageAt(contractAddress);
-	BOOST_CHECK_EQUAL(storage.getMemberNames().size(), 1);
-	// bracers are required, cause msvc couldnt handle this macro in for statement
-	for (auto name: storage.getMemberNames())
-	{
-		BOOST_CHECK_EQUAL(storage[name].asString(), "0x03");
+		
+		FixedStateInterface fsi(bc, state);
+		unique_ptr<FixedStateServer> jsonrpcServer;
+		auto server = new jsonrpc::HttpServer(8080);
+		jsonrpcServer.reset(new FixedStateServer(*server, {}, &fsi));
+		jsonrpcServer->StartListening();
+		
+		unique_ptr<WebThreeStubClient> jsonrpcClient;
+		auto client = new jsonrpc::HttpClient("http://localhost:8080");
+		jsonrpcClient.reset(new WebThreeStubClient(*client));
+		
+		string number = jsonrpcClient->eth_blockNumber();
+		
+		
 	}
 }
 
-BOOST_AUTO_TEST_CASE(sha3)
-{
-	cnote << "Testing jsonrpc sha3...";
-	string testString = "multiply(uint256)";
-	h256 expected = dev::sha3(testString);
+BOOST_AUTO_TEST_SUITE(jsonrpc)
 
-	auto hexValue = fromAscii(testString);
-	string result = jsonrpcClient->web3_sha3(hexValue);
-	BOOST_CHECK_EQUAL(toJS(expected), result);
-	BOOST_CHECK_EQUAL("0xc6888fa159d67f77c2f3d7a402e199802766bd7e8d4d1ecd2274fc920265d56a", result);
+BOOST_AUTO_TEST_CASE(stExample)
+{
+	dev::test::executeTests("bcBlockChainTest", "/BlockTests", doJsonrpcTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-BOOST_AUTO_TEST_SUITE_END()
 
-#endif
