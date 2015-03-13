@@ -42,7 +42,7 @@
 #include "CommonNet.h"
 #include "LogFilter.h"
 #include "Miner.h"
-#include "Interface.h"
+#include "InterfaceStub.h"
 
 namespace dev
 {
@@ -182,7 +182,7 @@ private:
 /**
  * @brief Main API hub for interfacing with Ethereum.
  */
-class Client: public MinerHost, public Interface, Worker
+class Client: public MinerHost, public InterfaceStub, Worker
 {
 	friend class Miner;
 
@@ -234,13 +234,11 @@ public:
 
 	// [NEW API]
 
-	using Interface::balanceAt;
 	using Interface::countAt;
 	using Interface::stateAt;
 	using Interface::codeAt;
 	using Interface::storageAt;
 
-	virtual u256 balanceAt(Address _a, int _block) const;
 	virtual u256 countAt(Address _a, int _block) const;
 	virtual u256 stateAt(Address _a, u256 _l, int _block) const;
 	virtual bytes codeAt(Address _a, int _block) const;
@@ -258,20 +256,17 @@ public:
 	// [EXTRA API]:
 
 	/// @returns the length of the chain.
-	virtual unsigned number() const { return m_bc.number(); }
+//	virtual unsigned number() const { return m_bc.number(); }
 
 	/// Get the list of pending transactions.
 	/// @TODO: Remove in favour of transactions().
 	virtual Transactions pending() const { return m_postMine.pending(); }
 
-	virtual h256 hashFromNumber(unsigned _number) const { return m_bc.numberHash(_number); }
 	virtual BlockInfo blockInfo(h256 _hash) const { return BlockInfo(m_bc.block(_hash)); }
 	virtual BlockDetails blockDetails(h256 _hash) const { return m_bc.details(_hash); }
 	virtual Transaction transaction(h256 _transactionHash) const;
 	virtual Transaction transaction(h256 _blockHash, unsigned _i) const;
 	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const;
-	virtual unsigned transactionCount(h256 _blockHash) const;
-	virtual unsigned uncleCount(h256 _blockHash) const;
 	virtual Transactions transactions(h256 _blockHash) const;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const;
 
@@ -350,6 +345,11 @@ public:
 	void clearPending();
 	/// Kills the blockchain. Just for debug use.
 	void killChain();
+	
+	virtual BlockChain const& bc() const { return m_bc; }
+	virtual State asOf(int _h) const;
+	virtual State preMine() const { return m_preMine; }
+	virtual State postMine() const { return m_postMine; }
 
 protected:
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
@@ -378,9 +378,6 @@ private:
 
 	/// Return the actual block number of the block with the given int-number (positive is the same, INT_MIN is genesis block, < 0 is negative age, thus -1 is most recently mined, 0 is pending.
 	unsigned numberOf(int _b) const;
-
-	State asOf(int _h) const;
-	State asOf(unsigned _h) const;
 
 	VersionChecker m_vc;					///< Dummy object to check & update the protocol version.
 	CanonBlockChain m_bc;					///< Maintains block database.

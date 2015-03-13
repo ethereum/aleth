@@ -769,11 +769,6 @@ std::vector<Address> Client::addresses(int _block) const
 	return ret;
 }
 
-u256 Client::balanceAt(Address _a, int _block) const
-{
-	return asOf(_block).balance(_a);
-}
-
 std::map<u256, u256> Client::storageAt(Address _a, int _block) const
 {
 	return asOf(_block).storage(_a);
@@ -817,20 +812,6 @@ BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const
 		return BlockInfo::fromHeader(b[2][_i].data());
 	else
 		return BlockInfo();
-}
-
-unsigned Client::transactionCount(h256 _blockHash) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	return b[1].itemCount();
-}
-
-unsigned Client::uncleCount(h256 _blockHash) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	return b[2].itemCount();
 }
 
 Transactions Client::transactions(h256 _blockHash) const
