@@ -34,6 +34,7 @@
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <libethereum/Interface.h>
+#include <libdevcore/CommonJS.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
@@ -174,7 +175,7 @@ public:
 	void inject(bytesConstRef _rlp) override {}
 	void flushTransactions() override {}
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber = 0) override {}
-	u256 balanceAt(Address _a, int _block) const override {}
+	u256 balanceAt(Address _a, int _block) const override { return m_state.balance(_a); }
 	u256 countAt(Address _a, int _block) const override {}
 	u256 stateAt(Address _a, u256 _l, int _block) const override {}
 	bytes codeAt(Address _a, int _block) const override {}
@@ -294,8 +295,27 @@ void doJsonrpcTests(json_spirit::mValue& v, bool _fillin)
 		auto client = new jsonrpc::HttpClient("http://localhost:8080");
 		jsonrpcClient.reset(new WebThreeStubClient(*client));
 		
-		string number = jsonrpcClient->eth_blockNumber();
+		// eth_coinbase
 		
+		// eth_mining
+		
+		// eth_gasPrice
+		
+		// eth_accounts
+		
+		// eth_blockNumber
+		string number = jsonrpcClient->eth_blockNumber();
+		string expectedNumber = toJS(o["blocks"].get_array().size());
+		BOOST_CHECK_EQUAL(number, expectedNumber);
+		
+		// eth_getBalance
+		for (auto& acc: o["pre"].get_obj())
+		{
+			string balance = jsonrpcClient->eth_getBalance(acc.first, "latest");
+			js::mObject& a = acc.second.get_obj();
+			string expectedBalance = toJS(jsToBytes(a["balance"].get_str()));
+			BOOST_CHECK_EQUAL(balance, expectedBalance);
+		}
 		
 	}
 }
