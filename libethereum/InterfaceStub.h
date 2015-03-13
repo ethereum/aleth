@@ -19,6 +19,8 @@
  * @date 2015
  */
 
+#pragma once
+
 #include "Interface.h"
 
 namespace dev {
@@ -38,31 +40,43 @@ public:
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber = 0) override {}
 
 	using Interface::balanceAt;
+	using Interface::countAt;
+	using Interface::stateAt;
+	using Interface::codeAt;
+	using Interface::storageAt;
+
 	u256 balanceAt(Address _a, int _block) const override;
-	u256 countAt(Address _a, int _block) const override {}
-	u256 stateAt(Address _a, u256 _l, int _block) const override {}
-	bytes codeAt(Address _a, int _block) const override {}
-std::map<u256, u256> storageAt(Address _a, int _block) const override {}
-eth::LocalisedLogEntries logs(unsigned _watchId) const override {}
-eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override {}
-unsigned installWatch(eth::LogFilter const& _filter) override {}
-unsigned installWatch(h256 _filterId) override {}
-void uninstallWatch(unsigned _watchId) override {}
-eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override {}
-eth::LocalisedLogEntries checkWatch(unsigned _watchId) override {}
-h256 hashFromNumber(unsigned _number) const override;
-eth::BlockInfo blockInfo(h256 _hash) const override {}
-eth::BlockDetails blockDetails(h256 _hash) const override {}
-eth::Transaction transaction(h256 _transactionHash) const override {}
-eth::Transaction transaction(h256 _blockHash, unsigned _i) const override {}
-eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const override {}
-unsigned transactionCount(h256 _blockHash) const override;
-unsigned uncleCount(h256 _blockHash) const override;
-unsigned number() const override;
-eth::Transactions pending() const override {}
-eth::StateDiff diff(unsigned _txi, h256 _block) const override {}
-eth::StateDiff diff(unsigned _txi, int _block) const override {}
-Addresses addresses(int _block) const override {}
+	u256 countAt(Address _a, int _block) const override;
+	u256 stateAt(Address _a, u256 _l, int _block) const override;
+	bytes codeAt(Address _a, int _block) const override;
+	std::map<u256, u256> storageAt(Address _a, int _block) const override;
+
+	eth::LocalisedLogEntries logs(unsigned _watchId) const override {}
+	eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override {}
+	unsigned installWatch(eth::LogFilter const& _filter) override {}
+	unsigned installWatch(h256 _filterId) override {}
+	void uninstallWatch(unsigned _watchId) override {}
+	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override {}
+	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override {}
+
+	h256 hashFromNumber(unsigned _number) const override;
+	eth::BlockInfo blockInfo(h256 _hash) const override;
+	eth::BlockDetails blockDetails(h256 _hash) const override;
+	eth::Transaction transaction(h256 _transactionHash) const override;
+	eth::Transaction transaction(h256 _blockHash, unsigned _i) const override;
+	eth::Transactions transactions(h256 _blockHash) const override;
+	eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const override;
+	unsigned transactionCount(h256 _blockHash) const override;
+	unsigned uncleCount(h256 _blockHash) const override;
+	unsigned number() const override;
+	eth::Transactions pending() const override;
+
+	eth::StateDiff diff(unsigned _txi, h256 _block) const override {}
+	eth::StateDiff diff(unsigned _txi, int _block) const override {}
+
+	using Interface::addresses;
+	Addresses addresses(int _block) const override;
+
 u256 gasLimitRemaining() const override {}
 void setAddress(Address _us) override {}
 Address address() const override {}
@@ -74,7 +88,6 @@ bool isMining() override {}
 eth::MineProgress miningProgress() const override {}
 std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
 bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
-eth::Transactions transactions(h256 _blockHash) const override {}
 eth::TransactionHashes transactionHashes(h256 _blockHash) const override {}
 
 virtual BlockChain const& bc() const = 0;

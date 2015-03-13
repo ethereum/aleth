@@ -33,7 +33,7 @@
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
-#include <libethereum/Interface.h>
+#include <libethereum/InterfaceStub.h>
 #include <libdevcore/CommonJS.h>
 #include <set>
 #include "JsonSpiritHeaders.h"
@@ -164,65 +164,16 @@ private:
 	std::map<std::string, std::string> m_db;
 };
 
-class FixedStateInterface: public dev::eth::Interface
+class FixedStateInterface: public dev::eth::InterfaceStub
 {
 public:
 	FixedStateInterface(BlockChain const& _bc, State _state) :  m_bc(_bc), m_state(_state) {}
 	virtual ~FixedStateInterface() {}
-	
-	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override {}
-	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override {}
-	void inject(bytesConstRef _rlp) override {}
-	void flushTransactions() override {}
-	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber = 0) override {}
-	u256 balanceAt(Address _a, int _block) const override { return m_state.balance(_a); }
-	u256 countAt(Address _a, int _block) const override {}
-	u256 stateAt(Address _a, u256 _l, int _block) const override {}
-	bytes codeAt(Address _a, int _block) const override {}
-	std::map<u256, u256> storageAt(Address _a, int _block) const override {}
-	eth::LocalisedLogEntries logs(unsigned _watchId) const override {}
-	eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override {}
-	unsigned installWatch(eth::LogFilter const& _filter) override {}
-	unsigned installWatch(h256 _filterId) override {}
-	void uninstallWatch(unsigned _watchId) override {}
-	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override {}
-	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override {}
-	h256 hashFromNumber(unsigned _number) const override { return m_bc.numberHash(_number); }
-	eth::BlockInfo blockInfo(h256 _hash) const override {}
-	eth::BlockDetails blockDetails(h256 _hash) const override {}
-	eth::Transaction transaction(h256 _transactionHash) const override {}
-	eth::Transaction transaction(h256 _blockHash, unsigned _i) const override {}
-	eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const override {}
-	unsigned transactionCount(h256 _blockHash) const override
-	{
-		auto bl = m_bc.block(_blockHash);
-		RLP b(bl);
-		return b[1].itemCount();
-	}
-	unsigned uncleCount(h256 _blockHash) const override
-	{
-		auto bl = m_bc.block(_blockHash);
-		RLP b(bl);
-		return b[2].itemCount();
-	}
-	unsigned number() const override { return m_bc.number();}
-	eth::Transactions pending() const override {}
-	eth::StateDiff diff(unsigned _txi, h256 _block) const override {}
-	eth::StateDiff diff(unsigned _txi, int _block) const override {}
-	Addresses addresses(int _block) const override {}
-	u256 gasLimitRemaining() const override {}
-	void setAddress(Address _us) override {}
-	Address address() const override {}
-	void setMiningThreads(unsigned _threads) override {}
-	unsigned miningThreads() const override {}
-	void startMining() override {}
-	void stopMining() override {}
-	bool isMining() override {}
-	eth::MineProgress miningProgress() const override {}
-	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
-	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
-	eth::Transactions transactions(h256 _blockHash) const override {}
-	eth::TransactionHashes transactionHashes(h256 _blockHash) const override {}
+
+	virtual BlockChain const& bc() const { return m_bc; }
+	virtual State asOf(int _h) const { return m_state; }
+	virtual State preMine() const { return m_state; }
+	virtual State postMine() const { return m_state; }
 	
 private:
 	BlockChain const& m_bc;

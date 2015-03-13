@@ -232,17 +232,6 @@ public:
 
 	// Informational stuff
 
-	// [NEW API]
-
-	using Interface::countAt;
-	using Interface::stateAt;
-	using Interface::codeAt;
-	using Interface::storageAt;
-
-	virtual u256 countAt(Address _a, int _block) const;
-	virtual u256 stateAt(Address _a, u256 _l, int _block) const;
-	virtual bytes codeAt(Address _a, int _block) const;
-	virtual std::map<u256, u256> storageAt(Address _a, int _block) const;
 
 	virtual unsigned installWatch(LogFilter const& _filter);
 	virtual unsigned installWatch(h256 _filterId);
@@ -253,31 +242,12 @@ public:
 	virtual LocalisedLogEntries logs(unsigned _watchId) const;
 	virtual LocalisedLogEntries logs(LogFilter const& _filter) const;
 
-	// [EXTRA API]:
-
-	/// @returns the length of the chain.
-//	virtual unsigned number() const { return m_bc.number(); }
-
-	/// Get the list of pending transactions.
-	/// @TODO: Remove in favour of transactions().
-	virtual Transactions pending() const { return m_postMine.pending(); }
-
-	virtual BlockInfo blockInfo(h256 _hash) const { return BlockInfo(m_bc.block(_hash)); }
-	virtual BlockDetails blockDetails(h256 _hash) const { return m_bc.details(_hash); }
-	virtual Transaction transaction(h256 _transactionHash) const;
-	virtual Transaction transaction(h256 _blockHash, unsigned _i) const;
-	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const;
-	virtual Transactions transactions(h256 _blockHash) const;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const;
 
 	/// Differences between transactions.
 	using Interface::diff;
 	virtual StateDiff diff(unsigned _txi, h256 _block) const;
 	virtual StateDiff diff(unsigned _txi, int _block) const;
-
-	/// Get a list of all active addresses.
-	using Interface::addresses;
-	virtual std::vector<Address> addresses(int _block) const;
 
 	/// Get the remaining gas limit in this block.
 	virtual u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }

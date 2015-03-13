@@ -761,69 +761,6 @@ StateDiff Client::diff(unsigned _txi, h256 _block) const
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
-std::vector<Address> Client::addresses(int _block) const
-{
-	vector<Address> ret;
-	for (auto const& i: asOf(_block).addresses())
-		ret.push_back(i.first);
-	return ret;
-}
-
-std::map<u256, u256> Client::storageAt(Address _a, int _block) const
-{
-	return asOf(_block).storage(_a);
-}
-
-u256 Client::countAt(Address _a, int _block) const
-{
-	return asOf(_block).transactionsFrom(_a);
-}
-
-u256 Client::stateAt(Address _a, u256 _l, int _block) const
-{
-	return asOf(_block).storage(_a, _l);
-}
-
-bytes Client::codeAt(Address _a, int _block) const
-{
-	return asOf(_block).code(_a);
-}
-
-Transaction Client::transaction(h256 _transactionHash) const
-{
-	return Transaction(m_bc.transaction(_transactionHash), CheckSignature::Range);
-}
-
-Transaction Client::transaction(h256 _blockHash, unsigned _i) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	if (_i < b[1].itemCount())
-		return Transaction(b[1][_i].data(), CheckSignature::Range);
-	else
-		return Transaction();
-}
-
-BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	if (_i < b[2].itemCount())
-		return BlockInfo::fromHeader(b[2][_i].data());
-	else
-		return BlockInfo();
-}
-
-Transactions Client::transactions(h256 _blockHash) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	Transactions res;
-	for (unsigned i = 0; i < b[1].itemCount(); i++)
-		res.emplace_back(b[1][i].data(), CheckSignature::Range);
-	return res;
-}
-
 TransactionHashes Client::transactionHashes(h256 _blockHash) const
 {
 	return m_bc.transactionHashes(_blockHash);
