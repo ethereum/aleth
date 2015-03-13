@@ -242,8 +242,6 @@ public:
 	virtual LocalisedLogEntries logs(unsigned _watchId) const;
 	virtual LocalisedLogEntries logs(LogFilter const& _filter) const;
 
-	virtual TransactionHashes transactionHashes(h256 _blockHash) const;
-
 	/// Differences between transactions.
 	using Interface::diff;
 	virtual StateDiff diff(unsigned _txi, h256 _block) const;
@@ -278,10 +276,7 @@ public:
 	/// Enable/disable fast mining.
 	void setTurboMining(bool _enable = true) { m_turboMining = _enable; }
 
-	/// Set the coinbase address.
-	virtual void setAddress(Address _us) { m_preMine.setAddress(_us); }
-	/// Get the coinbase address.
-	virtual Address address() const { return m_preMine.address(); }
+
 	/// Stops mining and sets the number of mining threads (0 for automatic).
 	virtual void setMiningThreads(unsigned _threads = 0);
 	/// Get the effective number of mining threads.

@@ -169,7 +169,32 @@ class FixedStateInterface: public dev::eth::InterfaceStub
 public:
 	FixedStateInterface(BlockChain const& _bc, State _state) :  m_bc(_bc), m_state(_state) {}
 	virtual ~FixedStateInterface() {}
-
+	
+	// not tested
+	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override {}
+	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override {}
+	void inject(bytesConstRef _rlp) override {}
+	void flushTransactions() override {}
+	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber) override {}
+	eth::LocalisedLogEntries logs(unsigned _watchId) const override {}
+	eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override{}
+	unsigned installWatch(eth::LogFilter const& _filter) override {}
+	unsigned installWatch(h256 _filterId) override {}
+	void uninstallWatch(unsigned _watchId) override {}
+	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override {}
+	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override {}
+	void setMiningThreads(unsigned _threads) override {}
+	unsigned miningThreads() const override {}
+	void startMining() override {}
+	void stopMining() override {}
+	bool isMining() override {}
+	eth::MineProgress miningProgress() const override {}
+	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
+	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
+	eth::StateDiff diff(unsigned _txi, h256 _block) const override {}
+	eth::StateDiff diff(unsigned _txi, int _block) const override {}
+	
+	// stub
 	virtual BlockChain const& bc() const { return m_bc; }
 	virtual State asOf(int _h) const { return m_state; }
 	virtual State preMine() const { return m_state; }

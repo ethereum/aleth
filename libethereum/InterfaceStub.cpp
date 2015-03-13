@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file InterfaceStub.h
+/** @file InterfaceStub.cpp
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
@@ -91,6 +91,11 @@ Transactions InterfaceStub::transactions(h256 _blockHash) const
 	return res;
 }
 
+TransactionHashes InterfaceStub::transactionHashes(h256 _blockHash) const
+{
+	return bc().transactionHashes(_blockHash);
+}
+
 BlockInfo InterfaceStub::uncle(h256 _blockHash, unsigned _i) const
 {
 	auto bl = bc().block(_blockHash);
@@ -133,8 +138,21 @@ Addresses InterfaceStub::addresses(int _block) const
 	return ret;
 }
 
+u256 InterfaceStub::gasLimitRemaining() const
+{
+	return postMine().gasLimitRemaining();
+}
 
 
+void InterfaceStub::setAddress(Address _us)
+{
+	preMine().setAddress(_us);
+}
+
+Address InterfaceStub::address() const
+{
+	return preMine().address();
+}
 
 
 

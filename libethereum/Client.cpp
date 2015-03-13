@@ -761,11 +761,6 @@ StateDiff Client::diff(unsigned _txi, h256 _block) const
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
-TransactionHashes Client::transactionHashes(h256 _blockHash) const
-{
-	return m_bc.transactionHashes(_blockHash);
-}
-
 LocalisedLogEntries Client::logs(unsigned _watchId) const
 {
 	LogFilter f;
