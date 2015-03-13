@@ -1151,7 +1151,15 @@ public:
 	Declaration const* getReferencedDeclaration() const { return m_referencedDeclaration; }
 	ContractDefinition const* getCurrentContract() const { return m_currentContract; }
 
+	void setOverloadedDeclarations(std::set<Declaration const*> const& _declarations) { m_overloadedDeclarations = _declarations; }
+	std::set<Declaration const*> getOverloadedDeclarations() const { return m_overloadedDeclarations; }
+
+	void checkTypeRequirementsWithFunctionCall(FunctionCall const& _functionCall);
+	void checkTypeRequirementsFromVariableDeclaration();
+
+	Declaration const* overloadResolution(FunctionCall const& _functionCall);
 private:
+
 	ASTPointer<ASTString> m_name;
 
 	/// Declaration the name refers to.
@@ -1159,6 +1167,8 @@ private:
 	/// Stores a reference to the current contract. This is needed because types of base contracts
 	/// change depending on the context.
 	ContractDefinition const* m_currentContract = nullptr;
+	/// A set of overloaded declarations, right now only FunctionDefinition has overloaded declarations.
+	std::set<Declaration const*> m_overloadedDeclarations;
 };
 
 /**

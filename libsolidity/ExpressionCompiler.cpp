@@ -857,6 +857,13 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 	{
 		// no-op
 	}
+	else if (declaration == nullptr && _identifier.getOverloadedDeclarations().size() > 1)
+	{
+		// var x = f;
+		declaration = *_identifier.getOverloadedDeclarations().begin();
+		FunctionDefinition const* functionDef = dynamic_cast<FunctionDefinition const*>(declaration);
+		m_context << m_context.getVirtualFunctionEntryLabel(*functionDef).pushTag();
+	}
 	else
 	{
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Identifier type not expected in expression context."));

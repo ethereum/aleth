@@ -76,6 +76,16 @@ void ContractDefinition::checkTypeRequirements()
 
 	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
 		function->checkTypeRequirements();
+	// check for duplicate declaration
+	set<string> functions;
+	for (ASTPointer<FunctionDefinition> const& function: getDefinedFunctions())
+	{
+		string signature = function->getCanonicalSignature();
+		if (functions.count(signature))
+			BOOST_THROW_EXCEPTION(DeclarationError() << errinfo_sourceLocation(function->getLocation())
+														<< errinfo_comment("Duplicate functions are not allowed."));
+		functions.insert(signature);
+	}
 
 	for (ASTPointer<VariableDeclaration> const& variable: m_stateVariables)
 		variable->checkTypeRequirements();
@@ -129,6 +139,7 @@ void ContractDefinition::checkIllegalOverrides() const
 	// TODO unify this at a later point. for this we need to put the constness and the access specifier
 	// into the types
 	map<string, FunctionDefinition const*> functions;
+	set<string> functionNames;
 	map<string, ModifierDefinition const*> modifiers;
 
 	// We search from derived to base, so the stored item causes the error.
@@ -141,7 +152,8 @@ void ContractDefinition::checkIllegalOverrides() const
 			string const& name = function->getName();
 			if (modifiers.count(name))
 				BOOST_THROW_EXCEPTION(modifiers[name]->createTypeError("Override changes function to modifier."));
-			FunctionDefinition const*& override = functions[name];
+			FunctionDefinition const*& override = functions[function->getCanonicalSignature()];
+			functionNames.insert(name);
 			if (!override)
 				override = function.get();
 			else if (override->getVisibility() != function->getVisibility() ||
@@ -152,13 +164,13 @@ void ContractDefinition::checkIllegalOverrides() const
 		for (ASTPointer<ModifierDefinition> const& modifier: contract->getFunctionModifiers())
 		{
 			string const& name = modifier->getName();
-			if (functions.count(name))
-				BOOST_THROW_EXCEPTION(functions[name]->createTypeError("Override changes modifier to function."));
 			ModifierDefinition const*& override = modifiers[name];
 			if (!override)
 				override = modifier.get();
 			else if (ModifierType(*override) != ModifierType(*modifier))
 				BOOST_THROW_EXCEPTION(override->createTypeError("Override changes modifier signature."));
+			if (functionNames.count(name))
+				BOOST_THROW_EXCEPTION(override->createTypeError("Override changes modifier to function."));
 		}
 	}
 }
@@ -185,16 +197,21 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	if (!m_interfaceFunctionList)
 	{
 		set<string> functionsSeen;
+		set<string> signaturesSeen;
 		m_interfaceFunctionList.reset(new vector<pair<FixedHash<4>, FunctionTypePointer>>());
 		for (ContractDefinition const* contract: getLinearizedBaseContracts())
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
-				if (f->isPublic() && !f->isConstructor() && !f->getName().empty() && functionsSeen.count(f->getName()) == 0)
+			{
+				string functionSignature = f->getCanonicalSignature();
+				if (f->isPublic() && !f->isConstructor() && !f->getName().empty() && signaturesSeen.count(functionSignature) == 0)
 				{
 					functionsSeen.insert(f->getName());
-					FixedHash<4> hash(dev::sha3(f->getCanonicalSignature()));
+					signaturesSeen.insert(functionSignature);
+					FixedHash<4> hash(dev::sha3(functionSignature));
 					m_interfaceFunctionList->push_back(make_pair(hash, make_shared<FunctionType>(*f, false)));
 				}
+			}
 
 			for (ASTPointer<VariableDeclaration> const& v: contract->getStateVariables())
 				if (v->isPublic() && functionsSeen.count(v->getName()) == 0)
@@ -339,7 +356,12 @@ void VariableDeclaration::checkTypeRequirements()
 	else
 	{
 		// no type declared and no previous assignment, infer the type
-		m_value->checkTypeRequirements();
+		Identifier* identifier = dynamic_cast<Identifier*>(m_value.get());
+		if (identifier)
+			identifier->checkTypeRequirementsFromVariableDeclaration();
+		else
+			m_value->checkTypeRequirements();
+
 		TypePointer type = m_value->getType();
 		if (type->getCategory() == Type::Category::IntegerConstant)
 		{
@@ -544,9 +566,15 @@ void BinaryOperation::checkTypeRequirements()
 
 void FunctionCall::checkTypeRequirements()
 {
-	m_expression->checkTypeRequirements();
+	// we need to check arguments' type first as their info will be used by m_express(Identifier).
 	for (ASTPointer<Expression> const& argument: m_arguments)
 		argument->checkTypeRequirements();
+
+	auto identifier = dynamic_cast<Identifier*>(m_expression.get());
+	if (identifier)
+		identifier->checkTypeRequirementsWithFunctionCall(*this);
+	else
+		m_expression->checkTypeRequirements();
 
 	Type const* expressionType = m_expression->getType().get();
 	if (isTypeConversion())
@@ -612,6 +640,27 @@ void FunctionCall::checkTypeRequirements()
 
 		// @todo actually the return type should be an anonymous struct,
 		// but we change it to the type of the first return value until we have structs
+		if (functionType->getReturnParameterTypes().empty())
+			m_type = make_shared<VoidType>();
+		else
+			m_type = functionType->getReturnParameterTypes().front();
+	}
+	else if (OverloadedFunctionType const* overloadedTypes = dynamic_cast<OverloadedFunctionType const*>(expressionType))
+	{
+		// this only applies to "x(3)" where x is assigned by "var x = f;" where f is an overloaded functions.
+		auto identifier = dynamic_cast<Identifier*>(m_expression.get());
+		solAssert(identifier, "only applies to 'var x = f;'");
+
+		Declaration const* function = overloadedTypes->getIdentifier()->overloadResolution(*this);
+		if (!function)
+			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve declarations"));
+
+		identifier->setReferencedDeclaration(*function);
+		identifier->checkTypeRequirements();
+
+		TypePointer type = identifier->getType();
+		FunctionType const* functionType = dynamic_cast<FunctionType const*>(type.get());
+
 		if (functionType->getReturnParameterTypes().empty())
 			m_type = make_shared<VoidType>();
 		else
@@ -709,6 +758,28 @@ void IndexAccess::checkTypeRequirements()
 	}
 }
 
+void Identifier::checkTypeRequirementsWithFunctionCall(FunctionCall const& _functionCall)
+{
+	solAssert(m_referencedDeclaration || !m_overloadedDeclarations.empty(), "Identifier not resolved.");
+
+	if (!m_referencedDeclaration)
+		setReferencedDeclaration(*overloadResolution(_functionCall));
+
+	checkTypeRequirements();
+}
+
+void Identifier::checkTypeRequirementsFromVariableDeclaration()
+{
+	solAssert(m_referencedDeclaration || !m_overloadedDeclarations.empty(), "Identifier not resolved.");
+
+	if (!m_referencedDeclaration)
+		m_type = make_shared<OverloadedFunctionType>(this);
+	else
+		checkTypeRequirements();
+
+	m_isLValue = true;
+}
+
 void Identifier::checkTypeRequirements()
 {
 	solAssert(m_referencedDeclaration, "Identifier not resolved.");
@@ -717,6 +788,51 @@ void Identifier::checkTypeRequirements()
 	m_type = m_referencedDeclaration->getType(m_currentContract);
 	if (!m_type)
 		BOOST_THROW_EXCEPTION(createTypeError("Declaration referenced before type could be determined."));
+}
+
+Declaration const* Identifier::overloadResolution(FunctionCall const& _functionCall)
+{
+	solAssert(m_overloadedDeclarations.size() > 1, "FunctionIdentifier not resolved.");
+	solAssert(!m_referencedDeclaration, "Referenced declaration should be null before overload resolution.");
+
+	std::vector<ASTPointer<Expression const>> arguments = _functionCall.getArguments();
+	std::vector<ASTPointer<ASTString>> const& argumentNames = _functionCall.getNames();
+
+	if (argumentNames.empty())
+	{
+		// positional arguments
+		std::vector<Declaration const*> possibles;
+		for (Declaration const* declaration: m_overloadedDeclarations)
+		{
+			TypePointer const& function = declaration->getType();
+			auto const& functionType = dynamic_cast<FunctionType const&>(*function);
+			TypePointers const& parameterTypes = functionType.getParameterTypes();
+
+			if (functionType.takesArbitraryParameters() ||
+				(arguments.size() == parameterTypes.size() &&
+				 std::equal(arguments.cbegin(), arguments.cend(), parameterTypes.cbegin(),
+							[](ASTPointer<Expression const> const& argument, TypePointer const& parameterType)
+							{
+								return argument->getType()->isImplicitlyConvertibleTo(*parameterType);
+							})))
+				possibles.push_back(declaration);			
+		}
+		if (possibles.empty())
+			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve identifier"));
+		else if (std::none_of(possibles.cbegin() + 1, possibles.cend(),
+			[&possibles](Declaration const* declaration)
+			{
+				return declaration->getScope() == possibles.front()->getScope();
+			}))
+				return possibles.front();
+		else
+			BOOST_THROW_EXCEPTION(createTypeError("Can't resolve identifier"));
+	}
+	else
+		// named arguments
+		// TODO: don't support right now
+		BOOST_THROW_EXCEPTION(createTypeError("Named arguments with overloaded functions are not supported yet."));
+	return nullptr;
 }
 
 void ElementaryTypeNameExpression::checkTypeRequirements()

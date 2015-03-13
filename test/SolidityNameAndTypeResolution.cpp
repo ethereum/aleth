@@ -424,23 +424,23 @@ BOOST_AUTO_TEST_CASE(cyclic_inheritance)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_direct)
+BOOST_AUTO_TEST_CASE(legal_override_direct)
 {
 	char const* text = R"(
 		contract B { function f() {} }
 		contract C is B { function f(uint i) {} }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
-BOOST_AUTO_TEST_CASE(illegal_override_indirect)
+BOOST_AUTO_TEST_CASE(legal_override_indirect)
 {
 	char const* text = R"(
 		contract A { function f(uint a) {} }
 		contract B { function f() {} }
 		contract C is A, B { }
 	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(illegal_override_visibility)
@@ -1285,6 +1285,31 @@ BOOST_AUTO_TEST_CASE(storage_variable_initialization_with_incorrect_type_string)
 			uint a = "abc";
 		})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f() returns(uint) { return 1; }
+			function f(uint a) returns(uint) { return a; }
+			function g() returns(uint) { return f(3, 5); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(ambiguous_overloaded_function)
+{
+	// literal 1 can be both converted to uint8 and uint8, so it's ambiguous.
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint8 a) returns(uint) { return a; }
+			function f(uint a) returns(uint) { return 2*a; }
+			function g() returns(uint) { return f(1); }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -3181,6 +3181,98 @@ BOOST_AUTO_TEST_CASE(pass_dynamic_arguments_to_the_base_base_with_gap)
 	BOOST_CHECK(callContractFunction("m_i()") == encodeArgs(4));
 }
 
+BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_first)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint d) { return k; }
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function g() returns(uint d) { return f(3); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(3));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_resolve_to_second)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint k) returns(uint d) { return k; }
+			function g() returns(uint d) { return f(3, 7); }
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_call_with_if_else)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function f(uint k) returns(uint d) { return k; }
+			function g(bool flag) returns(uint d) {
+				if (flag)
+					return f(3);
+				else
+					return f(3, 7);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(overloaded_function_with_var)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function f(uint k) returns(uint d) { return k; }
+			function f(uint a, uint b) returns(uint d) { return a + b; }
+			function g(bool flag) returns(uint d) {
+				var x = f;
+				if (flag)
+					return x(3);
+				else
+					return x(3, 7);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("g(bool)", true) == encodeArgs(3));
+	BOOST_CHECK(callContractFunction("g(bool)", false) == encodeArgs(10));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_direct)
+{
+	char const* sourceCode = R"(
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is B {
+			function f(uint i) returns(uint) { return 2 * i; }
+			function g() returns(uint) { return f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(2));
+}
+
+BOOST_AUTO_TEST_CASE(derived_overload_base_function_indirect)
+{
+	char const* sourceCode = R"(
+		contract A { function f(uint a) returns(uint) { return 2 * a; } }
+		contract B { function f() returns(uint) { return 10; } }
+		contract C is A, B {
+			function g() returns(uint) { return f(); }
+			function h() returns(uint) { return f(1); }
+		}
+	)";
+	compileAndRun(sourceCode, 0, "C");
+	BOOST_CHECK(callContractFunction("g()") == encodeArgs(10));
+	BOOST_CHECK(callContractFunction("h()") == encodeArgs(2));
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
