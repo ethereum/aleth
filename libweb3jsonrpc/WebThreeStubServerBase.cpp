@@ -295,162 +295,99 @@ string WebThreeStubServerBase::eth_blockNumber()
 
 string WebThreeStubServerBase::eth_getBalance(string const& _address, string const& _blockNumber)
 {
-	Address address;
-	int number;
-	
 	try
 	{
-		address = jsToAddress(_address);
-		number = toBlockNumber(_blockNumber);
+		return toJS(client()->balanceAt(jsToAddress(_address), toBlockNumber(_blockNumber)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->balanceAt(address, number));
-}
-
-
-Json::Value WebThreeStubServerBase::eth_getStorage(string const& _address, string const& _blockNumber)
-{
-	Address address;
-	int number;
-	
-	try
-	{
-		address = jsToAddress(_address);
-		number = toBlockNumber(_blockNumber);
-	}
-	catch (...)
-	{
-		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
-	}
-	
-	//TODO: fix this naming !
-	return toJson(client()->storageAt(address, number));
 }
 
 string WebThreeStubServerBase::eth_getStorageAt(string const& _address, string const& _position, string const& _blockNumber)
 {
-	Address address;
-	u256 position;
-	int number;
-	
 	try
 	{
-		address = jsToAddress(_address);
-		position = jsToU256(_position);
-		number = toBlockNumber(_blockNumber);
+		return toJS(client()->stateAt(jsToAddress(_address), jsToU256(_position), toBlockNumber(_blockNumber)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	//TODO: fix this naming !
-	return toJS(client()->stateAt(address, position, number));
 }
 
 string WebThreeStubServerBase::eth_getTransactionCount(string const& _address, string const& _blockNumber)
 {
-	Address address;
-	int number;
-	
 	try
 	{
-		address = jsToAddress(_address);
-		number = toBlockNumber(_blockNumber);
+		return toJS(client()->countAt(jsToAddress(_address), toBlockNumber(_blockNumber)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->countAt(address, number));
 }
 
 string WebThreeStubServerBase::eth_getBlockTransactionCountByHash(string const& _blockHash)
 {
-	h256 hash;
-	
 	try
 	{
-		hash = jsToFixed<32>(_blockHash);
+		return toJS(client()->transactionCount(jsToFixed<32>(_blockHash)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->transactionCount(hash));
 }
 
 
 string WebThreeStubServerBase::eth_getBlockTransactionCountByNumber(string const& _blockNumber)
 {
-	int number;
-	
 	try
 	{
-		number = toBlockNumber(_blockNumber);
+		return toJS(client()->transactionCount(client()->hashFromNumber(toBlockNumber(_blockNumber))));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->transactionCount(client()->hashFromNumber(number)));
 }
 
 string WebThreeStubServerBase::eth_getUncleCountByBlockHash(string const& _blockHash)
 {
-	h256 hash;
-	
 	try
 	{
-		hash = jsToFixed<32>(_blockHash);
+		return toJS(client()->uncleCount(jsToFixed<32>(_blockHash)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->uncleCount(hash));
 }
 
 string WebThreeStubServerBase::eth_getUncleCountByBlockNumber(string const& _blockNumber)
 {
-	int number;
-	
 	try
 	{
-		number = toBlockNumber(_blockNumber);
+		return toJS(client()->uncleCount(client()->hashFromNumber(toBlockNumber(_blockNumber))));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->uncleCount(client()->hashFromNumber(number)));
 }
 
-string WebThreeStubServerBase::eth_getData(string const& _address, string const& _blockNumber)
+string WebThreeStubServerBase::eth_getCode(string const& _address, string const& _blockNumber)
 {
-	Address address;
-	int number;
-	
 	try
 	{
-		address = jsToAddress(_address);
-		number = toBlockNumber(_blockNumber);
+		return toJS(client()->codeAt(jsToAddress(_address), toBlockNumber(_blockNumber)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->codeAt(address, number));
 }
 
 static TransactionSkeleton toTransaction(Json::Value const& _json)
@@ -552,132 +489,94 @@ bool WebThreeStubServerBase::eth_flush()
 
 Json::Value WebThreeStubServerBase::eth_getBlockByHash(string const& _blockHash, bool _includeTransactions)
 {
-	h256 hash;
-	
 	try
 	{
-		hash = jsToFixed<32>(_blockHash);
+		auto h = jsToFixed<32>(_blockHash);
+		if (_includeTransactions)
+			return toJson(client()->blockInfo(h), client()->transactions(h));
+		else
+			return toJson(client()->blockInfo(h), client()->transactionHashes(h));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	if (_includeTransactions) {
-		return toJson(client()->blockInfo(hash), client()->transactions(hash));
-	}
-	
-	return toJson(client()->blockInfo(hash), client()->transactionHashes(hash));
 }
 
 Json::Value WebThreeStubServerBase::eth_getBlockByNumber(string const& _blockNumber, bool _includeTransactions)
 {
-	int number;
-	
 	try
 	{
-		number = toBlockNumber(_blockNumber);
+		auto h = client()->hashFromNumber(jsToInt(_blockNumber));
+		if (_includeTransactions)
+			return toJson(client()->blockInfo(h), client()->transactions(h));
+		else
+			return toJson(client()->blockInfo(h), client()->transactionHashes(h));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	h256 hash = client()->hashFromNumber(number);
-	
-	if (_includeTransactions) {
-		return toJson(client()->blockInfo(hash), client()->transactions(hash));
-	}
-	
-	return toJson(client()->blockInfo(hash), client()->transactionHashes(hash));
 }
 
 Json::Value WebThreeStubServerBase::eth_getTransactionByHash(string const& _transactionHash)
 {
-	h256 hash;
-	
 	try
 	{
-		hash = jsToFixed<32>(_transactionHash);
+		return toJson(client()->transaction(jsToFixed<32>(_transactionHash)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJson(client()->transaction(hash));
 }
 
 Json::Value WebThreeStubServerBase::eth_getTransactionByBlockHashAndIndex(string const& _blockHash, string const& _transactionIndex)
 {
-	h256 hash;
-	unsigned index;
-	
 	try
 	{
-		hash = jsToFixed<32>(_blockHash);
-		index = jsToInt(_transactionIndex);
+		return toJson(client()->transaction(jsToFixed<32>(_blockHash), jsToInt(_transactionIndex)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJson(client()->transaction(hash, index));
 }
 
 Json::Value WebThreeStubServerBase::eth_getTransactionByBlockNumberAndIndex(string const& _blockNumber, string const& _transactionIndex)
 {
-	int number;
-	unsigned index;
-	
 	try
 	{
-		number = jsToInt(_blockNumber);
-		index = jsToInt(_transactionIndex);
+		return toJson(client()->transaction(client()->hashFromNumber(jsToInt(_blockNumber)), jsToInt(_transactionIndex)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJson(client()->transaction(client()->hashFromNumber(number), index));
 }
 
 Json::Value WebThreeStubServerBase::eth_getUncleByBlockHashAndIndex(string const& _blockHash, string const& _uncleIndex)
 {
-	h256 hash;
-	unsigned index;
-	
 	try
 	{
-		hash = jsToFixed<32>(_blockHash);
-		index = jsToInt(_uncleIndex);
+		return toJson(client()->uncle(jsToFixed<32>(_blockHash), jsToInt(_uncleIndex)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJson(client()->uncle(hash, index));
 }
 
 Json::Value WebThreeStubServerBase::eth_getUncleByBlockNumberAndIndex(string const& _blockNumber, string const& _uncleIndex)
 {
-	int number;
-	unsigned index;
-	
 	try
 	{
-		number = toBlockNumber(_blockNumber);
-		index = jsToInt(_uncleIndex);
+		return toJson(client()->uncle(client()->hashFromNumber(toBlockNumber(_blockNumber)), jsToInt(_uncleIndex)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJson(client()->uncle(client()->hashFromNumber(number), index));
 }
 
 Json::Value WebThreeStubServerBase::eth_getCompilers()
@@ -713,7 +612,7 @@ string WebThreeStubServerBase::eth_compileSerpent(string const& _code)
 	}
 	catch (string err)
 	{
-		cwarn << "Solidity compilation error: " << err;
+		cwarn << "Serpent compilation error: " << err;
 	}
 	catch (...)
 	{
@@ -747,18 +646,14 @@ string WebThreeStubServerBase::eth_compileSolidity(string const& _code)
 
 string WebThreeStubServerBase::eth_newFilter(Json::Value const& _json)
 {
-	LogFilter filter;
-	
 	try
 	{
-		filter = toLogFilter(_json);
+		return toJS(client()->installWatch(toLogFilter(_json)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(client()->installWatch(filter));
 }
 
 string WebThreeStubServerBase::eth_newBlockFilter(string const& _filter)
@@ -777,73 +672,56 @@ string WebThreeStubServerBase::eth_newBlockFilter(string const& _filter)
 
 bool WebThreeStubServerBase::eth_uninstallFilter(string const& _filterId)
 {
-	unsigned id;
-	
 	try
 	{
-		id = jsToInt(_filterId);
+		return client()->uninstallWatch(jsToInt(_filterId));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 	
-	// TODO: throw an error if there is no watch with given id?
-	client()->uninstallWatch(id);
-	return true;
+
 }
 
 Json::Value WebThreeStubServerBase::eth_getFilterChanges(string const& _filterId)
 {
-	unsigned id;
-	
 	try
 	{
-		id = jsToInt(_filterId);
+		int id = jsToInt(_filterId);
+		auto entries = client()->checkWatch(id);
+		if (entries.size())
+			cnote << "FIRING WATCH" << id << entries.size();
+		return toJson(entries);
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	// TODO: throw an error if there is no watch with given id?
-	auto entries = client()->checkWatch(id);
-	if (entries.size())
-		cnote << "FIRING WATCH" << id << entries.size();
-	return toJson(entries);
 }
 
 Json::Value WebThreeStubServerBase::eth_getFilterLogs(string const& _filterId)
 {
-	unsigned id;
-	
 	try
 	{
-		id = jsToInt(_filterId);
+		return toJson(client()->logs(jsToInt(_filterId)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	// TODO: throw an error if there is no watch with given id?
-	return toJson(client()->logs(id));
 }
 
 Json::Value WebThreeStubServerBase::eth_getLogs(Json::Value const& _json)
 {
-	LogFilter filter;
-	
 	try
 	{
-		filter = toLogFilter(_json);
+		return toJson(client()->logs(toLogFilter(_json)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJson(client()->logs(filter));
 }
 
 Json::Value WebThreeStubServerBase::eth_getWork()
@@ -857,75 +735,56 @@ Json::Value WebThreeStubServerBase::eth_getWork()
 
 bool WebThreeStubServerBase::eth_submitWork(string const& _nonce, string const& _mixHash)
 {
-	
-	Nonce nonce;
-	h256 mixHash;
-	
 	try
 	{
-		nonce = jsToFixed<Nonce::size>(_nonce);
-		mixHash = jsToFixed<32>(_mixHash);
+		return client()->submitWork(ProofOfWork::Proof{jsToFixed<Nonce::size>(_nonce), jsToFixed<32>(_mixHash)});
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return client()->submitWork(ProofOfWork::Proof{nonce, mixHash});
 }
 
 string WebThreeStubServerBase::eth_register(string const& _address)
 {
-	Address address;
-	
 	try
 	{
-		address = jsToAddress(_address);
+		return toJS(m_accounts->addProxyAccount(jsToAddress(_address)));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return toJS(m_accounts->addProxyAccount(address));
 }
 
 bool WebThreeStubServerBase::eth_unregister(string const& _accountId)
 {
-	unsigned id;
-	
 	try
 	{
-		id = jsToInt(_accountId);
+		return m_accounts->removeProxyAccount(jsToInt(_accountId));
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-
-	// TODO: throw an error on no account with given id
-	return m_accounts->removeProxyAccount(id);
 }
 
 Json::Value WebThreeStubServerBase::eth_fetchQueuedTransactions(string const& _accountId)
 {
-	unsigned id;
-	
 	try
 	{
-		id = jsToInt(_accountId);
+		auto id = jsToInt(_accountId);
+		Json::Value ret(Json::arrayValue);
+		// TODO: throw an error on no account with given id
+		for (TransactionSkeleton const& t: m_accounts->getQueuedTransactions(id))
+			ret.append(toJson(t));
+		m_accounts->clearQueue(id);
+		return ret;
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-
-	// TODO: throw an error on no account with given id
-	Json::Value ret(Json::arrayValue);
-	for (TransactionSkeleton const& t: m_accounts->getQueuedTransactions(id))
-		ret.append(toJson(t));
-	m_accounts->clearQueue(id);
-	return ret;
 }
 
 bool WebThreeStubServerBase::db_put(string const& _name, string const& _key, string const& _value)
@@ -941,26 +800,24 @@ string WebThreeStubServerBase::db_get(string const& _name, string const& _key)
 
 bool WebThreeStubServerBase::shh_post(Json::Value const& _json)
 {
-	shh::Message m;
 	try
 	{
-		m = toMessage(_json);
+		shh::Message m = toMessage(_json);
+		Secret from;
+		if (m.from() && m_ids.count(m.from()))
+		{
+			cwarn << "Silently signing message from identity" << m.from().abridged() << ": User validation hook goes here.";
+			// TODO: insert validification hook here.
+			from = m_ids[m.from()];
+		}
+
+		face()->inject(toSealed(_json, m, from));
+		return true;
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	Secret from;
-	if (m.from() && m_ids.count(m.from()))
-	{
-		cwarn << "Silently signing message from identity" << m.from().abridged() << ": User validation hook goes here.";
-		// TODO: insert validification hook here.
-		from = m_ids[m.from()];
-	}
-	
-	face()->inject(toSealed(_json, m, from));
-	return true;
 }
 
 string WebThreeStubServerBase::shh_newIdentity()
@@ -972,18 +829,14 @@ string WebThreeStubServerBase::shh_newIdentity()
 
 bool WebThreeStubServerBase::shh_hasIdentity(string const& _identity)
 {
-	Public identity;
-	
 	try
 	{
-		identity = jsToPublic(_identity);
+		return m_ids.count(jsToPublic(_identity)) > 0;
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	return m_ids.count(identity) > 0;
 }
 
 
@@ -1003,107 +856,96 @@ string WebThreeStubServerBase::shh_addToGroup(string const& _group, string const
 
 string WebThreeStubServerBase::shh_newFilter(Json::Value const& _json)
 {
-	pair<shh::FullTopic, Public> w;
 	
 	try
 	{
-		w = toWatch(_json);
+		pair<shh::FullTopic, Public> w = toWatch(_json);
+		auto ret = face()->installWatch(w.first);
+		m_shhWatches.insert(make_pair(ret, w.second));
+		return toJS(ret);
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	auto ret = face()->installWatch(w.first);
-	m_shhWatches.insert(make_pair(ret, w.second));
-	return toJS(ret);
 }
-
 
 bool WebThreeStubServerBase::shh_uninstallFilter(string const& _filterId)
 {
-	int id;
-	
 	try
 	{
-		id = jsToInt(_filterId);
+		face()->uninstallWatch(jsToInt(_filterId));
+		return true;
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	face()->uninstallWatch(id);
-	return true;
 }
 
 Json::Value WebThreeStubServerBase::shh_getFilterChanges(string const& _filterId)
 {
-	int id;
-	
 	try
 	{
-		id = jsToInt(_filterId);
+		Json::Value ret(Json::arrayValue);
+
+		int id = jsToInt(_filterId);
+		auto pub = m_shhWatches[id];
+		if (!pub || m_ids.count(pub))
+			for (h256 const& h: face()->checkWatch(id))
+			{
+				auto e = face()->envelope(h);
+				shh::Message m;
+				if (pub)
+				{
+					cwarn << "Silently decrypting message from identity" << pub.abridged() << ": User validation hook goes here.";
+					m = e.open(face()->fullTopic(id), m_ids[pub]);
+				}
+				else
+					m = e.open(face()->fullTopic(id));
+				if (!m)
+					continue;
+				ret.append(toJson(h, e, m));
+			}
+
+		return ret;
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	Json::Value ret(Json::arrayValue);
-	auto pub = m_shhWatches[id];
-	if (!pub || m_ids.count(pub))
-		for (h256 const& h: face()->checkWatch(id))
-		{
-			auto e = face()->envelope(h);
-			shh::Message m;
-			if (pub)
-			{
-				cwarn << "Silently decrypting message from identity" << pub.abridged() << ": User validation hook goes here.";
-				m = e.open(face()->fullTopic(id), m_ids[pub]);
-			}
-			else
-				m = e.open(face()->fullTopic(id));
-			if (!m)
-				continue;
-			ret.append(toJson(h, e, m));
-		}
-
-	return ret;
 }
 
 Json::Value WebThreeStubServerBase::shh_getMessages(string const& _filterId)
 {
-	int id;
-	
 	try
 	{
-		id = jsToInt(_filterId);
+		Json::Value ret(Json::arrayValue);
+
+		int id = jsToInt(_filterId);
+		auto pub = m_shhWatches[id];
+		if (!pub || m_ids.count(pub))
+			for (h256 const& h: face()->watchMessages(id))
+			{
+				auto e = face()->envelope(h);
+				shh::Message m;
+				if (pub)
+				{
+					cwarn << "Silently decrypting message from identity" << pub.abridged() << ": User validation hook goes here.";
+					m = e.open(face()->fullTopic(id), m_ids[pub]);
+				}
+				else
+					m = e.open(face()->fullTopic(id));
+				if (!m)
+					continue;
+				ret.append(toJson(h, e, m));
+			}
+		return ret;
 	}
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	
-	Json::Value ret(Json::arrayValue);
-	auto pub = m_shhWatches[id];
-	if (!pub || m_ids.count(pub))
-		for (h256 const& h: face()->watchMessages(id))
-		{
-			auto e = face()->envelope(h);
-			shh::Message m;
-			if (pub)
-			{
-				cwarn << "Silently decrypting message from identity" << pub.abridged() << ": User validation hook goes here.";
-				m = e.open(face()->fullTopic(id), m_ids[pub]);
-			}
-			else
-				m = e.open(face()->fullTopic(id));
-			if (!m)
-				continue;
-			ret.append(toJson(h, e, m));
-		}
-	return ret;
 }
 
 void WebThreeStubServerBase::authenticate(TransactionSkeleton const& _t, bool _toProxy)

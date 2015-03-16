@@ -249,13 +249,13 @@ void Client::clearPending()
 	noteChanged(changeds);
 }
 
-unsigned Client::installWatch(h256 _h)
+unsigned Client::installWatch(h256 _h, Reaping _r)
 {
 	unsigned ret;
 	{
 		Guard l(m_filterLock);
 		ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-		m_watches[ret] = ClientWatch(_h);
+		m_watches[ret] = ClientWatch(_h, _r);
 		cwatch << "+++" << ret << _h.abridged();
 	}
 	auto ch = logs(ret);
@@ -268,7 +268,7 @@ unsigned Client::installWatch(h256 _h)
 	return ret;
 }
 
-unsigned Client::installWatch(LogFilter const& _f)
+unsigned Client::installWatch(LogFilter const& _f, Reaping _r)
 {
 	h256 h = _f.sha3();
 	{
@@ -279,10 +279,10 @@ unsigned Client::installWatch(LogFilter const& _f)
 			m_filters.insert(make_pair(h, _f));
 		}
 	}
-	return installWatch(h);
+	return installWatch(h, _r);
 }
 
-void Client::uninstallWatch(unsigned _i)
+bool Client::uninstallWatch(unsigned _i)
 {
 	cwatch << "XXX" << _i;
 
@@ -290,7 +290,7 @@ void Client::uninstallWatch(unsigned _i)
 
 	auto it = m_watches.find(_i);
 	if (it == m_watches.end())
-		return;
+		return false;
 	auto id = it->second.id;
 	m_watches.erase(it);
 
@@ -301,6 +301,7 @@ void Client::uninstallWatch(unsigned _i)
 			cwatch << "*X*" << fit->first << ":" << fit->second.filter;
 			m_filters.erase(fit);
 		}
+	return true;
 }
 
 void Client::noteChanged(h256Set const& _filters)
@@ -327,19 +328,15 @@ LocalisedLogEntries Client::peekWatch(unsigned _watchId) const
 {
 	Guard l(m_filterLock);
 
-	try {
 #if ETH_DEBUG
-		cdebug << "peekWatch" << _watchId;
+	cdebug << "peekWatch" << _watchId;
 #endif
-		auto& w = m_watches.at(_watchId);
+	auto& w = m_watches.at(_watchId);
 #if ETH_DEBUG
-		cdebug << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+	cdebug << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
 #endif
-		w.lastPoll = chrono::system_clock::now();
-		return w.changes;
-	} catch (...) {}
-
-	return LocalisedLogEntries();
+	w.lastPoll = chrono::system_clock::now();
+	return w.changes;
 }
 
 LocalisedLogEntries Client::checkWatch(unsigned _watchId)
@@ -347,17 +344,15 @@ LocalisedLogEntries Client::checkWatch(unsigned _watchId)
 	Guard l(m_filterLock);
 	LocalisedLogEntries ret;
 
-	try {
 #if ETH_DEBUG && 0
-		cdebug << "checkWatch" << _watchId;
+	cdebug << "checkWatch" << _watchId;
 #endif
-		auto& w = m_watches.at(_watchId);
+	auto& w = m_watches.at(_watchId);
 #if ETH_DEBUG && 0
-		cdebug << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+	cdebug << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
 #endif
-		std::swap(ret, w.changes);
-		w.lastPoll = chrono::system_clock::now();
-	} catch (...) {}
+	std::swap(ret, w.changes);
+	w.lastPoll = chrono::system_clock::now();
 
 	return ret;
 }
@@ -416,8 +411,11 @@ void Client::setForceMining(bool _enable)
 void Client::setMiningThreads(unsigned _threads)
 {
 	stopMining();
-
+#if ETH_ETHASHCL
+	unsigned t = 1;
+#else
 	auto t = _threads ? _threads : thread::hardware_concurrency();
+#endif
 	WriteGuard l(x_localMiners);
 	m_localMiners.clear();
 	m_localMiners.resize(t);
@@ -694,7 +692,7 @@ void Client::doWork()
 		{
 			Guard l(m_filterLock);
 			for (auto key: keysOf(m_watches))
-				if (chrono::system_clock::now() - m_watches[key].lastPoll > chrono::seconds(20))
+				if (m_watches[key].lastPoll != chrono::system_clock::time_point::max() && chrono::system_clock::now() - m_watches[key].lastPoll > chrono::seconds(20))
 				{
 					toUninstall.push_back(key);
 					cnote << "GC: Uninstall" << key << "(" << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - m_watches[key].lastPoll).count() << "s old)";
@@ -764,10 +762,13 @@ StateDiff Client::diff(unsigned _txi, h256 _block) const
 LocalisedLogEntries Client::logs(unsigned _watchId) const
 {
 	LogFilter f;
-	try {
+	try
+	{
 		Guard l(m_filterLock);
 		f = m_filters.at(m_watches.at(_watchId).id).filter;
-	} catch (...) {
+	}
+	catch (...)
+	{
 		return LocalisedLogEntries();
 	}
 	return logs(f);

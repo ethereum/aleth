@@ -40,6 +40,8 @@ namespace dev
 namespace mix
 {
 
+// TODO: merge as much as possible with the Client.cpp into a mutually inherited base class.
+
 const Secret c_defaultUserAccountSecret = Secret("cb73d9408c4720e230387d956eb0f829d8a4dd2c1055f96257167e14e7169074");
 const u256 c_mixGenesisDifficulty = c_minimumDifficulty; //TODO: make it lower for Mix somehow
 
@@ -54,10 +56,10 @@ public:
 	static bytes createGenesisBlock(h256 _stateRoot)
 	{
 		RLPStream block(3);
-		block.appendList(16)
+		block.appendList(15)
 			<< h256() << EmptyListSHA3 << h160() << _stateRoot << EmptyTrie << EmptyTrie
-			<< LogBloom() << c_mixGenesisDifficulty << 0 << 1000000 << 0 << (unsigned)0
-			<< std::string() << h256() << h256() << h64(u64(42));
+			<< LogBloom() << c_mixGenesisDifficulty << 0 << c_genesisGasLimit << 0 << (unsigned)0
+			<< std::string() << h256() << h64(u64(42));
 		block.appendRaw(RLPEmptyList);
 		block.appendRaw(RLPEmptyList);
 		return block.out();
@@ -360,13 +362,13 @@ eth::LocalisedLogEntries MixClient::logs(eth::LogFilter const& _f) const
 	return ret;
 }
 
-unsigned MixClient::installWatch(h256 _h)
+unsigned MixClient::installWatch(h256 _h, eth::Reaping _r)
 {
 	unsigned ret;
 	{
 		Guard l(m_filterLock);
 		ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-		m_watches[ret] = ClientWatch(_h);
+		m_watches[ret] = ClientWatch(_h, _r);
 	}
 	auto ch = logs(ret);
 	if (ch.empty())
@@ -378,23 +380,23 @@ unsigned MixClient::installWatch(h256 _h)
 	return ret;
 }
 
-unsigned MixClient::installWatch(eth::LogFilter const& _f)
+unsigned MixClient::installWatch(eth::LogFilter const& _f, eth::Reaping _r)
 {
 	h256 h = _f.sha3();
 	{
 		Guard l(m_filterLock);
 		m_filters.insert(std::make_pair(h, _f));
 	}
-	return installWatch(h);
+	return installWatch(h, _r);
 }
 
-void MixClient::uninstallWatch(unsigned _i)
+bool MixClient::uninstallWatch(unsigned _i)
 {
 	Guard l(m_filterLock);
 
 	auto it = m_watches.find(_i);
 	if (it == m_watches.end())
-		return;
+		return false;
 	auto id = it->second.id;
 	m_watches.erase(it);
 
@@ -402,6 +404,8 @@ void MixClient::uninstallWatch(unsigned _i)
 	if (fit != m_filters.end())
 		if (!--fit->second.refCount)
 			m_filters.erase(fit);
+
+	return true;
 }
 
 void MixClient::noteChanged(h256Set const& _filters)
