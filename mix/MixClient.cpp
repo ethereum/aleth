@@ -292,31 +292,6 @@ bytes MixClient::call(Secret _secret, u256 _value, Address _dest, bytes const& _
 	return lastExecution().returnValue;
 }
 
-u256 MixClient::balanceAt(Address _a, int _block) const
-{
-	return asOf(_block).balance(_a);
-}
-
-u256 MixClient::countAt(Address _a, int _block) const
-{
-	return asOf(_block).transactionsFrom(_a);
-}
-
-u256 MixClient::stateAt(Address _a, u256 _l, int _block) const
-{
-	return asOf(_block).storage(_a, _l);
-}
-
-bytes MixClient::codeAt(Address _a, int _block) const
-{
-	return asOf(_block).code(_a);
-}
-
-std::map<u256, u256> MixClient::storageAt(Address _a, int _block) const
-{
-	return asOf(_block).storage(_a);
-}
-
 eth::LocalisedLogEntries MixClient::logs(unsigned _watchId) const
 {
 	Guard l(m_filterLock);
@@ -439,89 +414,9 @@ LocalisedLogEntries MixClient::checkWatch(unsigned _watchId)
 	return ret;
 }
 
-h256 MixClient::hashFromNumber(unsigned _number) const
-{
-	return bc().numberHash(_number);
-}
-
-eth::BlockInfo MixClient::blockInfo(h256 _hash) const
-{
-	return BlockInfo(bc().block(_hash));
-
-}
-
 eth::BlockInfo MixClient::blockInfo() const
 {
 	return BlockInfo(bc().block());
-}
-
-eth::BlockDetails MixClient::blockDetails(h256 _hash) const
-{
-	return bc().details(_hash);
-}
-
-Transaction MixClient::transaction(h256 _transactionHash) const
-{
-	return Transaction(bc().transaction(_transactionHash), CheckSignature::Range);
-}
-
-eth::Transaction MixClient::transaction(h256 _blockHash, unsigned _i) const
-{
-	auto bl = bc().block(_blockHash);
-	RLP b(bl);
-	if (_i < b[1].itemCount())
-		return Transaction(b[1][_i].data(), CheckSignature::Range);
-	else
-		return Transaction();
-}
-
-eth::BlockInfo MixClient::uncle(h256 _blockHash, unsigned _i) const
-{
-	auto bl = bc().block(_blockHash);
-	RLP b(bl);
-	if (_i < b[2].itemCount())
-		return BlockInfo::fromHeader(b[2][_i].data());
-	else
-		return BlockInfo();
-}
-
-unsigned MixClient::transactionCount(h256 _blockHash) const
-{
-	auto bl = bc().block(_blockHash);
-	RLP b(bl);
-	return b[1].itemCount();
-}
-
-unsigned MixClient::uncleCount(h256 _blockHash) const
-{
-	auto bl = bc().block(_blockHash);
-	RLP b(bl);
-	return b[2].itemCount();
-}
-
-Transactions MixClient::transactions(h256 _blockHash) const
-{
-	auto bl = bc().block(_blockHash);
-	RLP b(bl);
-	Transactions res;
-	for (unsigned i = 0; i < b[1].itemCount(); i++)
-		res.emplace_back(b[1][i].data(), CheckSignature::Range);
-	return res;
-}
-
-TransactionHashes MixClient::transactionHashes(h256 _blockHash) const
-{
-	return bc().transactionHashes(_blockHash);
-}
-
-unsigned MixClient::number() const
-{
-	return bc().number();
-}
-
-eth::Transactions MixClient::pending() const
-{
-	return m_state.pending();
 }
 
 eth::StateDiff MixClient::diff(unsigned _txi, h256 _block) const
@@ -534,14 +429,6 @@ eth::StateDiff MixClient::diff(unsigned _txi, int _block) const
 {
 	State st = asOf(_block);
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-Addresses MixClient::addresses(int _block) const
-{
-	Addresses ret;
-	for (auto const& i: asOf(_block).addresses())
-		ret.push_back(i.first);
-	return ret;
 }
 
 u256 MixClient::gasLimitRemaining() const
