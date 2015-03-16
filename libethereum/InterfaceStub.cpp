@@ -40,6 +40,7 @@ void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes c
 	m_tq.attemptImport(t.rlp());
 }
 
+// TODO: use structured logger here?
 Address InterfaceStub::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
 {
 //	startWorking();
@@ -66,7 +67,7 @@ void InterfaceStub::flushTransactions()
 //	doWork();
 }
 
-
+// TODO: this should throw an exception
 bytes InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
 {
 	bytes out;
@@ -85,6 +86,7 @@ bytes InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes cons
 	return out;
 }
 
+// TODO: this should throw an exception
 bytes InterfaceStub::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
 {
 	try
@@ -127,6 +129,161 @@ bytes InterfaceStub::codeAt(Address _a, int _block) const
 map<u256, u256> InterfaceStub::storageAt(Address _a, int _block) const
 {
 	return asOf(_block).storage(_a);
+}
+
+// TODO: this should throw an exception
+LocalisedLogEntries InterfaceStub::logs(unsigned _watchId) const
+{
+	LogFilter f;
+	try
+	{
+		Guard l(m_filterLock);
+		f = m_filters.at(m_watches.at(_watchId).id).filter;
+	}
+	catch (...)
+	{
+		return LocalisedLogEntries();
+	}
+	return logs(f);
+}
+
+LocalisedLogEntries InterfaceStub::logs(LogFilter const& _f) const
+{
+	LocalisedLogEntries ret;
+	unsigned begin = min<unsigned>(bc().number() + 1, (unsigned)_f.latest());
+	unsigned end = min(bc().number(), min(begin, (unsigned)_f.earliest()));
+	
+	// Handle pending transactions differently as they're not on the block chain.
+	if (begin > bc().number())
+	{
+		State temp = postMine();
+		for (unsigned i = 0; i < temp.pending().size(); ++i)
+		{
+			// Might have a transaction that contains a matching log.
+			TransactionReceipt const& tr = temp.receipt(i);
+			auto sha3 = temp.pending()[i].sha3();
+			LogEntries le = _f.matches(tr);
+			if (le.size())
+				for (unsigned j = 0; j < le.size(); ++j)
+					ret.insert(ret.begin(), LocalisedLogEntry(le[j], begin, sha3));
+		}
+		begin = bc().number();
+	}
+	
+	set<unsigned> matchingBlocks;
+	for (auto const& i: _f.bloomPossibilities())
+		for (auto u: bc().withBlockBloom(i, end, begin))
+			matchingBlocks.insert(u);
+
+	unsigned falsePos = 0;
+	for (auto n: matchingBlocks)
+	{
+		int total = 0;
+		auto h = bc().numberHash(n);
+		auto receipts = bc().receipts(h).receipts;
+		for (size_t i = 0; i < receipts.size(); i++)
+		{
+			TransactionReceipt receipt = receipts[i];
+			if (_f.matches(receipt.bloom()))
+			{
+				auto info = bc().info(h);
+				auto h = transaction(info.hash, i).sha3();
+				LogEntries le = _f.matches(receipt);
+				if (le.size())
+				{
+					total += le.size();
+					for (unsigned j = 0; j < le.size(); ++j)
+						ret.insert(ret.begin(), LocalisedLogEntry(le[j], n, h));
+				}
+			}
+			
+			if (!total)
+				falsePos++;
+		}
+	}
+
+	cdebug << matchingBlocks.size() << "searched from" << (end - begin) << "skipped; " << falsePos << "false +ves";
+	return ret;
+}
+
+unsigned InterfaceStub::installWatch(LogFilter const& _f, Reaping _r)
+{
+	h256 h = _f.sha3();
+	{
+		Guard l(m_filterLock);
+		if (!m_filters.count(h))
+		{
+			cwatch << "FFF" << _f << h.abridged();
+			m_filters.insert(make_pair(h, _f));
+		}
+	}
+	return installWatch(h, _r);
+}
+
+unsigned InterfaceStub::installWatch(h256 _h, Reaping _r)
+{
+	unsigned ret;
+	{
+		Guard l(m_filterLock);
+		ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
+		m_watches[ret] = ClientWatch(_h, _r);
+		cwatch << "+++" << ret << _h.abridged();
+	}
+	auto ch = logs(ret);
+	if (ch.empty())
+		ch.push_back(InitialChange);
+	{
+		Guard l(m_filterLock);
+		swap(m_watches[ret].changes, ch);
+	}
+	return ret;
+}
+
+bool InterfaceStub::uninstallWatch(unsigned _i)
+{
+	cwatch << "XXX" << _i;
+	
+	Guard l(m_filterLock);
+	
+	auto it = m_watches.find(_i);
+	if (it == m_watches.end())
+		return false;
+	auto id = it->second.id;
+	m_watches.erase(it);
+	
+	auto fit = m_filters.find(id);
+	if (fit != m_filters.end())
+		if (!--fit->second.refCount)
+		{
+			cwatch << "*X*" << fit->first << ":" << fit->second.filter;
+			m_filters.erase(fit);
+		}
+	return true;
+}
+
+LocalisedLogEntries InterfaceStub::peekWatch(unsigned _watchId) const
+{
+	Guard l(m_filterLock);
+	
+	cwatch << "peekWatch" << _watchId;
+	auto& w = m_watches.at(_watchId);
+	cwatch << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+	w.lastPoll = chrono::system_clock::now();
+	return w.changes;
+}
+
+LocalisedLogEntries InterfaceStub::checkWatch(unsigned _watchId)
+{
+	Guard l(m_filterLock);
+	LocalisedLogEntries ret;
+	
+	cwatch << "checkWatch" << _watchId;
+	auto& w = m_watches.at(_watchId);
+	cwatch << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
+	std::swap(ret, w.changes);
+	w.lastPoll = chrono::system_clock::now();
+	
+	return ret;
 }
 
 h256 InterfaceStub::hashFromNumber(unsigned _number) const

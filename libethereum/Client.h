@@ -40,7 +40,6 @@
 #include "TransactionQueue.h"
 #include "State.h"
 #include "CommonNet.h"
-#include "LogFilter.h"
 #include "Miner.h"
 #include "InterfaceStub.h"
 
@@ -73,40 +72,6 @@ private:
 };
 
 static const int GenesisBlock = INT_MIN;
-
-struct InstalledFilter
-{
-	InstalledFilter(LogFilter const& _f): filter(_f) {}
-
-	LogFilter filter;
-	unsigned refCount = 1;
-	LocalisedLogEntries changes;
-};
-
-static const h256 PendingChangedFilter = u256(0);
-static const h256 ChainChangedFilter = u256(1);
-
-static const LogEntry SpecialLogEntry = LogEntry(Address(), h256s(), bytes());
-static const LocalisedLogEntry InitialChange(SpecialLogEntry, 0);
-
-struct ClientWatch
-{
-	ClientWatch(): lastPoll(std::chrono::system_clock::now()) {}
-	explicit ClientWatch(h256 _id, Reaping _r): id(_id), lastPoll(_r == Reaping::Automatic ? std::chrono::system_clock::now() : std::chrono::system_clock::time_point::max()) {}
-
-	h256 id;
-	LocalisedLogEntries changes = LocalisedLogEntries{ InitialChange };
-	mutable std::chrono::system_clock::time_point lastPoll = std::chrono::system_clock::now();
-};
-
-struct WatchChannel: public LogChannel { static const char* name() { return "(o)"; } static const int verbosity = 7; };
-#define cwatch dev::LogOutputStream<dev::eth::WatchChannel, true>()
-struct WorkInChannel: public LogChannel { static const char* name() { return ">W>"; } static const int verbosity = 16; };
-struct WorkOutChannel: public LogChannel { static const char* name() { return "<W<"; } static const int verbosity = 16; };
-struct WorkChannel: public LogChannel { static const char* name() { return "-W-"; } static const int verbosity = 16; };
-#define cwork dev::LogOutputStream<dev::eth::WorkChannel, true>()
-#define cworkin dev::LogOutputStream<dev::eth::WorkInChannel, true>()
-#define cworkout dev::LogOutputStream<dev::eth::WorkOutChannel, true>()
 
 template <class T> struct ABISerialiser {};
 template <unsigned N> struct ABISerialiser<FixedHash<N>> { static bytes serialise(FixedHash<N> const& _t) { static_assert(N <= 32, "Cannot serialise hash > 32 bytes."); static_assert(N > 0, "Cannot serialise zero-length hash."); return bytes(32 - N, 0) + _t.asBytes(); } };
@@ -210,24 +175,6 @@ public:
 
 	/// Resets the gas pricer to some other object.
 	void setGasPricer(std::shared_ptr<GasPricer> _gp) { m_gp = _gp; }
-	
-	/// Makes the given call. Nothing is recorded into the state.
-//	virtual bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo, int _blockNumber = 0);
-
-	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
-//	virtual bytes call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether);
-
-	// Informational stuff
-
-
-	virtual unsigned installWatch(LogFilter const& _filter, Reaping _r = Reaping::Automatic) override;
-	virtual unsigned installWatch(h256 _filterId, Reaping _r = Reaping::Automatic) override;
-	virtual bool uninstallWatch(unsigned _watchId) override;
-	virtual LocalisedLogEntries peekWatch(unsigned _watchId) const;
-	virtual LocalisedLogEntries checkWatch(unsigned _watchId);
-
-	virtual LocalisedLogEntries logs(unsigned _watchId) const;
-	virtual LocalisedLogEntries logs(LogFilter const& _filter) const;
 
 	/// Differences between transactions.
 	using Interface::diff;
@@ -353,10 +300,6 @@ private:
 	bool m_turboMining = false;				///< Don't squander all of our time mining actually just sleeping.
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
 	bool m_verifyOwnBlocks = true;			///< Should be verify blocks that we mined?
-
-	mutable Mutex m_filterLock;
-	std::map<h256, InstalledFilter> m_filters;
-	std::map<unsigned, ClientWatch> m_watches;
 
 	mutable std::chrono::system_clock::time_point m_lastGarbageCollection;
 };

@@ -22,10 +22,47 @@
 #pragma once
 
 #include "Interface.h"
+#include "LogFilter.h"
 
 namespace dev {
 
 namespace eth {
+
+	
+struct InstalledFilter
+{
+	InstalledFilter(LogFilter const& _f): filter(_f) {}
+
+	LogFilter filter;
+	unsigned refCount = 1;
+	LocalisedLogEntries changes;
+};
+	
+static const h256 PendingChangedFilter = u256(0);
+static const h256 ChainChangedFilter = u256(1);
+	
+static const LogEntry SpecialLogEntry = LogEntry(Address(), h256s(), bytes());
+static const LocalisedLogEntry InitialChange(SpecialLogEntry, 0);
+	
+struct ClientWatch
+{
+	ClientWatch(): lastPoll(std::chrono::system_clock::now()) {}
+	explicit ClientWatch(h256 _id, Reaping _r): id(_id), lastPoll(_r == Reaping::Automatic ? std::chrono::system_clock::now() : std::chrono::system_clock::time_point::max()) {}
+
+	h256 id;
+	LocalisedLogEntries changes = LocalisedLogEntries{ InitialChange };
+	mutable std::chrono::system_clock::time_point lastPoll = std::chrono::system_clock::now();
+};
+	
+	
+struct WatchChannel: public LogChannel { static const char* name() { return "(o)"; } static const int verbosity = 7; };
+#define cwatch dev::LogOutputStream<dev::eth::WatchChannel, true>()
+struct WorkInChannel: public LogChannel { static const char* name() { return ">W>"; } static const int verbosity = 16; };
+struct WorkOutChannel: public LogChannel { static const char* name() { return "<W<"; } static const int verbosity = 16; };
+struct WorkChannel: public LogChannel { static const char* name() { return "-W-"; } static const int verbosity = 16; };
+#define cwork dev::LogOutputStream<dev::eth::WorkChannel, true>()
+#define cworkin dev::LogOutputStream<dev::eth::WorkInChannel, true>()
+#define cworkout dev::LogOutputStream<dev::eth::WorkOutChannel, true>()
 
 class InterfaceStub: public dev::eth::Interface
 {
@@ -63,6 +100,16 @@ public:
 	u256 stateAt(Address _a, u256 _l, int _block) const override;
 	bytes codeAt(Address _a, int _block) const override;
 	std::map<u256, u256> storageAt(Address _a, int _block) const override;
+	
+	virtual LocalisedLogEntries logs(unsigned _watchId) const override;
+	virtual LocalisedLogEntries logs(LogFilter const& _filter) const override;
+
+	/// Install, uninstall and query watches.
+	virtual unsigned installWatch(LogFilter const& _filter, Reaping _r = Reaping::Automatic) override;
+	virtual unsigned installWatch(h256 _filterId, Reaping _r = Reaping::Automatic) override;
+	virtual bool uninstallWatch(unsigned _watchId) override;
+	virtual LocalisedLogEntries peekWatch(unsigned _watchId) const override;
+	virtual LocalisedLogEntries checkWatch(unsigned _watchId) override;
 
 	h256 hashFromNumber(unsigned _number) const override;
 	eth::BlockInfo blockInfo(h256 _hash) const override;
@@ -94,6 +141,11 @@ virtual State postMine() const = 0;
 protected:
 	
 	TransactionQueue m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
+	
+	// filters
+	mutable Mutex m_filterLock;
+	std::map<h256, InstalledFilter> m_filters;
+	std::map<unsigned, ClientWatch> m_watches;
 
 private:
 
