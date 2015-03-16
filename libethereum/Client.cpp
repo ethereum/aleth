@@ -580,3 +580,30 @@ StateDiff Client::diff(unsigned _txi, h256 _block) const
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
+void Client::inject(bytesConstRef _rlp)
+{
+	//	startWorking();
+	
+	m_tq.attemptImport(_rlp);
+}
+
+// TODO: this should throw an exception
+bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
+{
+	try
+	{
+		State temp = postMine();
+		Executive e(temp, LastHashes(), 0);
+		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
+		{
+			e.go();
+			return e.out().toBytes();
+		}
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return bytes();
+}
+

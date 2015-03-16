@@ -181,6 +181,12 @@ public:
 	virtual StateDiff diff(unsigned _txi, h256 _block) const;
 	virtual StateDiff diff(unsigned _txi, int _block) const;
 
+	/// Injects the RLP-encoded transaction given by the _rlp into the transaction queue directly.
+	virtual void inject(bytesConstRef _rlp);	
+	
+	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
+	virtual bytes call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether);
+	
 	/// Get the remaining gas limit in this block.
 	virtual u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }
 

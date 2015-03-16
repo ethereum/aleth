@@ -171,18 +171,6 @@ public:
 	virtual ~FixedStateInterface() {}
 	
 	// not tested
-	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override {}
-	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override {}
-	void inject(bytesConstRef _rlp) override {}
-	void flushTransactions() override {}
-	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber) override {}
-	eth::LocalisedLogEntries logs(unsigned _watchId) const override {}
-	eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override{}
-	unsigned installWatch(eth::LogFilter const& _filter, Reaping _r = Reaping::Automatic) override {}
-	unsigned installWatch(h256 _filterId, Reaping _r = Reaping::Automatic) override {}
-	bool uninstallWatch(unsigned _watchId) override {}
-	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override {}
-	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override {}
 	void setMiningThreads(unsigned _threads) override {}
 	unsigned miningThreads() const override {}
 	void startMining() override {}

@@ -44,27 +44,18 @@ namespace mix
 
 const Secret c_defaultUserAccountSecret = Secret("cb73d9408c4720e230387d956eb0f829d8a4dd2c1055f96257167e14e7169074");
 const u256 c_mixGenesisDifficulty = c_minimumDifficulty; //TODO: make it lower for Mix somehow
-
-class MixBlockChain: public dev::eth::BlockChain
+	
+bytes MixBlockChain::createGenesisBlock(h256 _stateRoot)
 {
-public:
-	MixBlockChain(std::string const& _path, h256 _stateRoot):
-		BlockChain(createGenesisBlock(_stateRoot), _path, true)
-	{
-	}
-
-	static bytes createGenesisBlock(h256 _stateRoot)
-	{
-		RLPStream block(3);
-		block.appendList(15)
-			<< h256() << EmptyListSHA3 << h160() << _stateRoot << EmptyTrie << EmptyTrie
-			<< LogBloom() << c_mixGenesisDifficulty << 0 << c_genesisGasLimit << 0 << (unsigned)0
-			<< std::string() << h256() << h64(u64(42));
-		block.appendRaw(RLPEmptyList);
-		block.appendRaw(RLPEmptyList);
-		return block.out();
-	}
-};
+	RLPStream block(3);
+	block.appendList(15)
+	<< h256() << EmptyListSHA3 << h160() << _stateRoot << EmptyTrie << EmptyTrie
+	<< LogBloom() << c_mixGenesisDifficulty << 0 << c_genesisGasLimit << 0 << (unsigned)0
+	<< std::string() << h256() << h64(u64(42));
+	block.appendRaw(RLPEmptyList);
+	block.appendRaw(RLPEmptyList);
+	return block.out();
+}
 
 MixClient::MixClient(std::string const& _dbPath):
 	m_dbPath(_dbPath), m_minigThreads(0)
@@ -265,17 +256,6 @@ Address MixClient::transact(Secret _secret, u256 _endowment, bytes const& _init,
 	return address;
 }
 
-void MixClient::inject(bytesConstRef _rlp)
-{
-	WriteGuard l(x_state);
-	eth::Transaction t(_rlp, CheckSignature::None);
-	executeTransaction(t, m_state, false);
-}
-
-void MixClient::flushTransactions()
-{
-}
-
 bytes MixClient::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
 {
 	u256 n;
@@ -291,80 +271,7 @@ bytes MixClient::call(Secret _secret, u256 _value, Address _dest, bytes const& _
 	executeTransaction(t, temp, true);
 	return lastExecution().returnValue;
 }
-
-eth::LocalisedLogEntries MixClient::logs(unsigned _watchId) const
-{
-	Guard l(m_filterLock);
-	h256 h = m_watches.at(_watchId).id;
-	auto filterIter = m_filters.find(h);
-	if (filterIter != m_filters.end())
-		return logs(filterIter->second.filter);
-	return eth::LocalisedLogEntries();
-}
-
-eth::LocalisedLogEntries MixClient::logs(eth::LogFilter const& _f) const
-{
-	LocalisedLogEntries ret;
-	unsigned lastBlock = bc().number();
-	unsigned block = std::min<unsigned>(lastBlock, (unsigned)_f.latest());
-	unsigned end = std::min(lastBlock, std::min(block, (unsigned)_f.earliest()));
-	// Pending transactions
-if (block > bc().number())
-	{
-		ReadGuard l(x_state);
-		for (unsigned i = 0; i < m_state.pending().size(); ++i)
-		{
-			// Might have a transaction that contains a matching log.
-			TransactionReceipt const& tr = m_state.receipt(i);
-			LogEntries logEntries = _f.matches(tr);
-			for (unsigned entry = 0; entry < logEntries.size(); ++entry)
-				ret.insert(ret.begin(), LocalisedLogEntry(logEntries[entry], block));
-		}
-		block = bc().number();
-	}
-
-	// The rest
-	auto h = bc().numberHash(block);
-	for (; ret.size() != block && block != end; block--)
-	{
-		if (_f.matches(bc().info(h).logBloom))
-			for (TransactionReceipt receipt: bc().receipts(h).receipts)
-				if (_f.matches(receipt.bloom()))
-					for (auto const& e: _f.matches(receipt))
-						ret.insert(ret.begin(), LocalisedLogEntry(e, block));
-		h = bc().details(h).parent;
-	}
-	return ret;
-}
-
-unsigned MixClient::installWatch(h256 _h, eth::Reaping _r)
-{
-	unsigned ret;
-	{
-		Guard l(m_filterLock);
-		ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-		m_watches[ret] = ClientWatch(_h, _r);
-	}
-	auto ch = logs(ret);
-	if (ch.empty())
-		ch.push_back(eth::InitialChange);
-	{
-		Guard l(m_filterLock);
-		swap(m_watches[ret].changes, ch);
-	}
-	return ret;
-}
-
-unsigned MixClient::installWatch(eth::LogFilter const& _f, eth::Reaping _r)
-{
-	h256 h = _f.sha3();
-	{
-		Guard l(m_filterLock);
-		m_filters.insert(std::make_pair(h, _f));
-	}
-	return installWatch(h, _r);
-}
-
+	
 bool MixClient::uninstallWatch(unsigned _i)
 {
 	Guard l(m_filterLock);

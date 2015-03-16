@@ -34,7 +34,13 @@ namespace dev
 namespace mix
 {
 
-class MixBlockChain;
+class MixBlockChain: public dev::eth::BlockChain
+{
+public:
+	MixBlockChain(std::string const& _path, h256 _stateRoot): BlockChain(createGenesisBlock(_stateRoot), _path, true) {}
+		
+	static bytes createGenesisBlock(h256 _stateRoot);
+};
 
 class MixClient: public dev::eth::InterfaceStub
 {
@@ -50,13 +56,7 @@ public:
 	//dev::eth::Interface
 	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override;
 	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override;
-	void inject(bytesConstRef _rlp) override;
-	void flushTransactions() override;
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber) override;
-	eth::LocalisedLogEntries logs(unsigned _watchId) const override;
-	eth::LocalisedLogEntries logs(eth::LogFilter const& _filter) const override;
-	unsigned installWatch(eth::LogFilter const& _filter, eth::Reaping _r = eth::Reaping::Automatic) override;
-	unsigned installWatch(h256 _filterId, eth::Reaping _r = eth::Reaping::Automatic) override;
 	bool uninstallWatch(unsigned _watchId) override;
 	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override;
 	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override;
@@ -73,16 +73,20 @@ public:
 	eth::MineProgress miningProgress() const override;
 	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
 	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
+	
 	/// @returns the last mined block information
 	eth::BlockInfo blockInfo() const;
 	std::vector<KeyPair> userAccounts() { return m_userAccounts; }
 
+	virtual dev::eth::State asOf(int _block) const override;
+	virtual dev::eth::BlockChain& bc() { return *m_bc; }
+	virtual dev::eth::BlockChain const& bc() const override { return *m_bc; }
+	virtual dev::eth::State preMine() const override { return m_startState; }
+	virtual dev::eth::State postMine() const override { return m_state; }
+	
 private:
 	void executeTransaction(dev::eth::Transaction const& _t, eth::State& _state, bool _call);
 	void noteChanged(h256Set const& _filters);
-	dev::eth::State asOf(int _block) const;
-	MixBlockChain& bc() { return *m_bc; }
-	MixBlockChain const& bc() const { return *m_bc; }
 
 	std::vector<KeyPair> m_userAccounts;
 	eth::State m_state;
@@ -90,9 +94,6 @@ private:
 	OverlayDB m_stateDB;
 	std::auto_ptr<MixBlockChain> m_bc;
 	mutable boost::shared_mutex x_state;
-	mutable std::mutex m_filterLock;
-	std::map<h256, dev::eth::InstalledFilter> m_filters;
-	std::map<unsigned, dev::eth::ClientWatch> m_watches;
 	ExecutionResults m_executions;
 	std::string m_dbPath;
 	unsigned m_minigThreads;

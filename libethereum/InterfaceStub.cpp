@@ -32,12 +32,12 @@ void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes c
 {
 //	startWorking();
 	
-	u256 n;
-	n = postMine().transactionsFrom(toAddress(_secret));
+	u256 n = postMine().transactionsFrom(toAddress(_secret));
 	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+	m_tq.attemptImport(t.rlp());
+	
 	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
 	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
 }
 
 // TODO: use structured logger here?
@@ -45,22 +45,14 @@ Address InterfaceStub::transact(Secret _secret, u256 _endowment, bytes const& _i
 {
 //	startWorking();
 	
-	u256 n;
-	n = postMine().transactionsFrom(toAddress(_secret));
+	u256 n = postMine().transactionsFrom(toAddress(_secret));
 	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
-	cnote << "New transaction " << t;
 	m_tq.attemptImport(t.rlp());
+	
+	cnote << "New transaction " << t;
+	
 	return right160(sha3(rlpList(t.sender(), t.nonce())));
 }
-
-
-void InterfaceStub::inject(bytesConstRef _rlp)
-{
-//	startWorking();
-	
-	m_tq.attemptImport(_rlp);
-}
-
 
 void InterfaceStub::flushTransactions()
 {
@@ -84,26 +76,6 @@ bytes InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes cons
 		// TODO: Some sort of notification of failure.
 	}
 	return out;
-}
-
-// TODO: this should throw an exception
-bytes InterfaceStub::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
-{
-	try
-	{
-		State temp = postMine();
-		Executive e(temp, LastHashes(), 0);
-		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
-		{
-			e.go();
-			return e.out().toBytes();
-		}
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return bytes();
 }
 
 u256 InterfaceStub::balanceAt(Address _a, int _block) const
@@ -161,11 +133,11 @@ LocalisedLogEntries InterfaceStub::logs(LogFilter const& _f) const
 		{
 			// Might have a transaction that contains a matching log.
 			TransactionReceipt const& tr = temp.receipt(i);
-			auto sha3 = temp.pending()[i].sha3();
+			auto th = temp.pending()[i].sha3();
 			LogEntries le = _f.matches(tr);
 			if (le.size())
 				for (unsigned j = 0; j < le.size(); ++j)
-					ret.insert(ret.begin(), LocalisedLogEntry(le[j], begin, sha3));
+					ret.insert(ret.begin(), LocalisedLogEntry(le[j], begin, th));
 		}
 		begin = bc().number();
 	}
@@ -187,13 +159,13 @@ LocalisedLogEntries InterfaceStub::logs(LogFilter const& _f) const
 			if (_f.matches(receipt.bloom()))
 			{
 				auto info = bc().info(h);
-				auto h = transaction(info.hash, i).sha3();
+				auto th = transaction(info.hash, i).sha3();
 				LogEntries le = _f.matches(receipt);
 				if (le.size())
 				{
 					total += le.size();
 					for (unsigned j = 0; j < le.size(); ++j)
-						ret.insert(ret.begin(), LocalisedLogEntry(le[j], n, h));
+						ret.insert(ret.begin(), LocalisedLogEntry(le[j], n, th));
 				}
 			}
 			
