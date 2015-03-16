@@ -40,8 +40,6 @@
 #include "TestHelper.h"
 #include "webthreestubclient.h"
 
-//BOOST_AUTO_TEST_SUITE(jsonrpc)
-
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -51,92 +49,6 @@ namespace js = json_spirit;
 namespace dev { namespace test {
 RLPStream createFullBlockFromHeader(const BlockInfo& _bi, const bytes& _txs = RLPEmptyList, const bytes& _uncles = RLPEmptyList);
 }};
-
-// helping functions
-
-bytes createBlockRLPFromFieldsX(js::mObject& _tObj)
-{
-	RLPStream rlpStream;
-	rlpStream.appendList(_tObj.count("hash") > 0 ? (_tObj.size() - 1) : _tObj.size());
-	
-	if (_tObj.count("parentHash"))
-		rlpStream << importByteArray(_tObj["parentHash"].get_str());
-	
-	if (_tObj.count("uncleHash"))
-		rlpStream << importByteArray(_tObj["uncleHash"].get_str());
-	
-	if (_tObj.count("coinbase"))
-		rlpStream << importByteArray(_tObj["coinbase"].get_str());
-	
-	if (_tObj.count("stateRoot"))
-		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
-	
-	if (_tObj.count("transactionsTrie"))
-		rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
-	
-	if (_tObj.count("receiptTrie"))
-		rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
-	
-	if (_tObj.count("bloom"))
-		rlpStream << importByteArray(_tObj["bloom"].get_str());
-	
-	if (_tObj.count("difficulty"))
-		rlpStream << bigint(_tObj["difficulty"].get_str());
-	
-	if (_tObj.count("number"))
-		rlpStream << bigint(_tObj["number"].get_str());
-	
-	if (_tObj.count("gasLimit"))
-		rlpStream << bigint(_tObj["gasLimit"].get_str());
-	
-	if (_tObj.count("gasUsed"))
-		rlpStream << bigint(_tObj["gasUsed"].get_str());
-	
-	if (_tObj.count("timestamp"))
-		rlpStream << bigint(_tObj["timestamp"].get_str());
-	
-	if (_tObj.count("extraData"))
-		rlpStream << fromHex(_tObj["extraData"].get_str());
-	
-	if (_tObj.count("seedHash"))
-		rlpStream << importByteArray(_tObj["seedHash"].get_str());
-	
-	if (_tObj.count("mixHash"))
-		rlpStream << importByteArray(_tObj["mixHash"].get_str());
-	
-	if (_tObj.count("nonce"))
-		rlpStream << importByteArray(_tObj["nonce"].get_str());
-	
-	return rlpStream.out();
-}
-
-
-BlockInfo constructBlockX(js::mObject& _o)
-{
-	
-	BlockInfo ret;
-	try
-	{
-		// construct genesis block
-		const bytes c_blockRLP = createBlockRLPFromFieldsX(_o);
-		const RLP c_bRLP(c_blockRLP);
-		ret.populateFromHeader(c_bRLP, IgnoreNonce);
-	}
-	catch (Exception const& _e)
-	{
-		cnote << "block population did throw an exception: " << diagnostic_information(_e);
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
-	}
-	catch(...)
-	{
-		BOOST_ERROR("block population did throw an unknown exception\n");
-	}
-	return ret;
-}
 
 class FixedStateServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
 {
@@ -192,13 +104,14 @@ string fromAscii(string _s)
 
 void doJsonrpcTests(json_spirit::mValue& v, bool _fillin)
 {
+	(void)_fillin;
 	for (auto& i: v.get_obj())
 	{
 		cerr << i.first << endl;
 		js::mObject& o = i.second.get_obj();
 		
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
-		BlockInfo biGenesisBlock = constructBlockX(o["genesisBlockHeader"].get_obj());
+		BlockInfo biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj());
 		BOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
 		State state(Address(), OverlayDB(), BaseState::Empty);
@@ -310,9 +223,6 @@ void doJsonrpcTests(json_spirit::mValue& v, bool _fillin)
 			BOOST_CHECK_EQUAL(ucByNumber, expectedUc);
 			BOOST_CHECK_EQUAL(ucByHash, expectedUc);
 		}
-		
-		
-		
 	}
 }
 
@@ -322,21 +232,6 @@ BOOST_AUTO_TEST_CASE(bcBlockChainTest)
 {
 	dev::test::executeTests("bcBlockChainTest", "/BlockTests", doJsonrpcTests);
 }
-
-//BOOST_AUTO_TEST_CASE(bcValidBlockTest)
-//{
-//	dev::test::executeTests("bcValidBlockTest", "/BlockTests", doJsonrpcTests);
-//}
-//
-//BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest)
-//{
-//	dev::test::executeTests("bcInvalidHeaderTest", "/BlockTests", doJsonrpcTests);
-//}
-//
-//BOOST_AUTO_TEST_CASE(bcUncleTest)
-//{
-//	dev::test::executeTests("bcUncleTest", "/BlockTests", doJsonrpcTests);
-//}
 
 BOOST_AUTO_TEST_SUITE_END()
 
