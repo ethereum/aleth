@@ -39,6 +39,7 @@
 #include "JsonSpiritHeaders.h"
 #include "TestHelper.h"
 #include "webthreestubclient.h"
+#include "TestUtils.h"
 
 using namespace std;
 using namespace dev;
