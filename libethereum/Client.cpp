@@ -541,12 +541,13 @@ unsigned Client::numberOf(int _n) const
 
 State Client::asOf(int _h) const
 {
+	ReadGuard l(x_stateDB);
 	if (_h == 0)
 		return m_postMine;
 	else if (_h == -1)
 		return m_preMine;
 
-	return asOf(bc().numberHash(_h));
+	return State(m_stateDB, bc(), bc().numberHash(_h));
 }
 
 State Client::asOf(h256 _block) const

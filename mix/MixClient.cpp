@@ -229,12 +229,13 @@ ExecutionResults const& MixClient::executions() const
 
 State MixClient::asOf(int _block) const
 {
+	ReadGuard l(x_state);
 	if (_block == 0)
 		return m_state;
 	else if (_block == -1)
 		return m_startState;
-	else
-		return asOf(bc().numberHash(_block));
+	
+	return State(m_stateDB, bc(), bc().numberHash(_block));
 }
 
 State MixClient::asOf(h256 _block) const
