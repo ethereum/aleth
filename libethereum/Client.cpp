@@ -605,7 +605,6 @@ bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u2
 	return bytes();
 }
 
-
 void Client::flushTransactions()
 {
 	doWork();

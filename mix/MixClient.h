@@ -38,7 +38,7 @@ class MixBlockChain: public dev::eth::BlockChain
 {
 public:
 	MixBlockChain(std::string const& _path, h256 _stateRoot): BlockChain(createGenesisBlock(_stateRoot), _path, true) {}
-		
+
 	static bytes createGenesisBlock(h256 _stateRoot);
 };
 
@@ -57,7 +57,7 @@ public:
 	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override;
 	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override;
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber) override;
-	
+
 	void setAddress(Address _us) override;
 	void setMiningThreads(unsigned _threads) override;
 	unsigned miningThreads() const override;
@@ -68,14 +68,14 @@ public:
 	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
 	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
 	virtual void flushTransactions() override {}
-	
+
 	/// @returns the last mined block information
 	eth::BlockInfo blockInfo() const;
 	std::vector<KeyPair> userAccounts() { return m_userAccounts; }
 
 protected:
 	virtual dev::eth::BlockChain& bc() { return *m_bc; }
-	
+
 	/// InterfaceStub methods
 	virtual dev::eth::State asOf(int _block) const override;
 	virtual dev::eth::State asOf(h256 _block) const override;

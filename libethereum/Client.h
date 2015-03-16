@@ -178,7 +178,7 @@ public:
 
 	/// Injects the RLP-encoded transaction given by the _rlp into the transaction queue directly.
 	virtual void inject(bytesConstRef _rlp);	
-	
+
 	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
 	virtual bytes call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether);
 
@@ -212,7 +212,6 @@ public:
 	bool turboMining() const { return m_turboMining; }
 	/// Enable/disable fast mining.
 	void setTurboMining(bool _enable = true) { m_turboMining = _enable; }
-
 
 	/// Stops mining and sets the number of mining threads (0 for automatic).
 	virtual void setMiningThreads(unsigned _threads = 0);
@@ -256,7 +255,7 @@ protected:
 	virtual State preMine() const override { ReadGuard l(x_stateDB); return m_preMine; }
 	virtual State postMine() const override { ReadGuard l(x_stateDB); return m_postMine; }
 	virtual void prepareForTransaction() override;
-	
+
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
 	/// Insert any filters that are activated into @a o_changed.
 	void appendFromNewPending(TransactionReceipt const& _receipt, h256Set& io_changed, h256 _sha3);
