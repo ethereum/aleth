@@ -77,7 +77,8 @@ public:
 	eth::TransactionHashes transactionHashes(h256 _blockHash) const override;
 	unsigned number() const override;
 	eth::Transactions pending() const override;
-]
+	eth::StateDiff diff(unsigned _txi, h256 _block) const override;
+	eth::StateDiff diff(unsigned _txi, int _block) const override;
 	Addresses addresses(int _block) const override;
 	u256 gasLimitRemaining() const override;
 	void setAddress(Address _us) override;
