@@ -628,7 +628,6 @@ BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 	dev::test::executeTests("bcInvalidRLPTest", "/BlockTests", dev::test::doBlockchainTests);
 }
 
-
 BOOST_AUTO_TEST_CASE(bcBlockChainTest)
 {
 	dev::test::executeTests("bcBlockChainTest", "/BlockTests", dev::test::doBlockchainTests);
