@@ -229,13 +229,18 @@ ExecutionResults const& MixClient::executions() const
 
 State MixClient::asOf(int _block) const
 {
-	ReadGuard l(x_state);
 	if (_block == 0)
 		return m_state;
 	else if (_block == -1)
 		return m_startState;
 	else
-		return State(m_stateDB, bc(), bc().numberHash(_block));
+		return asOf(bc().numberHash(_block));
+}
+
+State MixClient::asOf(h256 _block) const
+{
+	ReadGuard l(x_state);
+	return State(m_stateDB, bc(), _block);
 }
 
 void MixClient::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
@@ -258,36 +263,14 @@ Address MixClient::transact(Secret _secret, u256 _endowment, bytes const& _init,
 
 bytes MixClient::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
 {
-	u256 n;
-	State temp;
-	{
-		ReadGuard lr(x_state);
-		temp = asOf(_blockNumber);
-		n = temp.transactionsFrom(toAddress(_secret));
-	}
+	
+	State temp = asOf(_blockNumber);
+	u256 n = temp.transactionsFrom(toAddress(_secret));
 	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
 	bytes rlp = t.rlp();
 	WriteGuard lw(x_state); //TODO: lock is required only for last execution state
 	executeTransaction(t, temp, true);
 	return lastExecution().returnValue;
-}
-	
-bool MixClient::uninstallWatch(unsigned _i)
-{
-	Guard l(m_filterLock);
-
-	auto it = m_watches.find(_i);
-	if (it == m_watches.end())
-		return false;
-	auto id = it->second.id;
-	m_watches.erase(it);
-
-	auto fit = m_filters.find(id);
-	if (fit != m_filters.end())
-		if (!--fit->second.refCount)
-			m_filters.erase(fit);
-
-	return true;
 }
 
 void MixClient::noteChanged(h256Set const& _filters)
@@ -304,56 +287,15 @@ void MixClient::noteChanged(h256Set const& _filters)
 		i.second.changes.clear();
 }
 
-LocalisedLogEntries MixClient::peekWatch(unsigned _watchId) const
-{
-	Guard l(m_filterLock);
-	if (_watchId < m_watches.size())
-		return m_watches.at(_watchId).changes;
-	return LocalisedLogEntries();
-}
-
-LocalisedLogEntries MixClient::checkWatch(unsigned _watchId)
-{
-	Guard l(m_filterLock);
-	LocalisedLogEntries ret;
-	if (_watchId < m_watches.size())
-		std::swap(ret, m_watches.at(_watchId).changes);
-	return ret;
-}
-
 eth::BlockInfo MixClient::blockInfo() const
 {
 	return BlockInfo(bc().block());
-}
-
-eth::StateDiff MixClient::diff(unsigned _txi, h256 _block) const
-{
-	State st(m_stateDB, bc(), _block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-eth::StateDiff MixClient::diff(unsigned _txi, int _block) const
-{
-	State st = asOf(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-u256 MixClient::gasLimitRemaining() const
-{
-	ReadGuard l(x_state);
-	return m_state.gasLimitRemaining();
 }
 
 void MixClient::setAddress(Address _us)
 {
 	WriteGuard l(x_state);
 	m_state.setAddress(_us);
-}
-
-Address MixClient::address() const
-{
-	ReadGuard l(x_state);
-	return m_state.address();
 }
 
 void MixClient::setMiningThreads(unsigned _threads)

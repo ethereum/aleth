@@ -57,14 +57,8 @@ public:
 	void transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override;
 	Address transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override;
 	bytes call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber) override;
-	bool uninstallWatch(unsigned _watchId) override;
-	eth::LocalisedLogEntries peekWatch(unsigned _watchId) const override;
-	eth::LocalisedLogEntries checkWatch(unsigned _watchId) override;
-	eth::StateDiff diff(unsigned _txi, h256 _block) const override;
-	eth::StateDiff diff(unsigned _txi, int _block) const override;
-	u256 gasLimitRemaining() const override;
+	
 	void setAddress(Address _us) override;
-	Address address() const override;
 	void setMiningThreads(unsigned _threads) override;
 	unsigned miningThreads() const override;
 	void startMining() override;
@@ -73,17 +67,23 @@ public:
 	eth::MineProgress miningProgress() const override;
 	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
 	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
+	virtual void flushTransactions() override {}
 	
 	/// @returns the last mined block information
 	eth::BlockInfo blockInfo() const;
 	std::vector<KeyPair> userAccounts() { return m_userAccounts; }
 
-	virtual dev::eth::State asOf(int _block) const override;
+protected:
 	virtual dev::eth::BlockChain& bc() { return *m_bc; }
-	virtual dev::eth::BlockChain const& bc() const override { return *m_bc; }
-	virtual dev::eth::State preMine() const override { return m_startState; }
-	virtual dev::eth::State postMine() const override { return m_state; }
 	
+	/// InterfaceStub methods
+	virtual dev::eth::State asOf(int _block) const override;
+	virtual dev::eth::State asOf(h256 _block) const override;
+	virtual dev::eth::BlockChain const& bc() const override { return *m_bc; }
+	virtual dev::eth::State preMine() const override { ReadGuard l(x_state);  return m_startState; }
+	virtual dev::eth::State postMine() const override { ReadGuard l(x_state); return m_state; }
+	virtual void prepareForTransaction() override {}
+
 private:
 	void executeTransaction(dev::eth::Transaction const& _t, eth::State& _state, bool _call);
 	void noteChanged(h256Set const& _filters);

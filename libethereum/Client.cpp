@@ -541,13 +541,23 @@ unsigned Client::numberOf(int _n) const
 
 State Client::asOf(int _h) const
 {
-	ReadGuard l(x_stateDB);
 	if (_h == 0)
 		return m_postMine;
 	else if (_h == -1)
 		return m_preMine;
-	else
-		return State(m_stateDB, m_bc, m_bc.numberHash(numberOf(_h)));
+
+	return asOf(bc().numberHash(_h));
+}
+
+State Client::asOf(h256 _block) const
+{
+	ReadGuard l(x_stateDB);
+	return State(m_stateDB, bc(), _block);
+}
+
+void Client::prepareForTransaction()
+{
+	startWorking();
 }
 
 State Client::state(unsigned _txi, h256 _block) const
@@ -568,21 +578,9 @@ eth::State Client::state(unsigned _txi) const
 	return m_postMine.fromPending(_txi);
 }
 
-StateDiff Client::diff(unsigned _txi, int _block) const
-{
-	State st = asOf(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-StateDiff Client::diff(unsigned _txi, h256 _block) const
-{
-	State st = state(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
 void Client::inject(bytesConstRef _rlp)
 {
-	//	startWorking();
+	startWorking();
 	
 	m_tq.attemptImport(_rlp);
 }
@@ -607,3 +605,8 @@ bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u2
 	return bytes();
 }
 
+
+void Client::flushTransactions()
+{
+	doWork();
+}

@@ -30,7 +30,7 @@ using namespace dev::eth;
 
 void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
-//	startWorking();
+	prepareForTransaction();
 	
 	u256 n = postMine().transactionsFrom(toAddress(_secret));
 	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
@@ -40,26 +40,21 @@ void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes c
 	cnote << "New transaction " << t;
 }
 
-// TODO: use structured logger here?
 Address InterfaceStub::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
 {
-//	startWorking();
+	prepareForTransaction();
 	
 	u256 n = postMine().transactionsFrom(toAddress(_secret));
 	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
 	m_tq.attemptImport(t.rlp());
-	
+
+	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
 	cnote << "New transaction " << t;
 	
 	return right160(sha3(rlpList(t.sender(), t.nonce())));
 }
 
-void InterfaceStub::flushTransactions()
-{
-//	doWork();
-}
-
-// TODO: this should throw an exception
+// TODO: remove try/catch, allow exceptions
 bytes InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
 {
 	bytes out;
@@ -103,7 +98,7 @@ map<u256, u256> InterfaceStub::storageAt(Address _a, int _block) const
 	return asOf(_block).storage(_a);
 }
 
-// TODO: this should throw an exception
+// TODO: remove try/catch, allow exceptions
 LocalisedLogEntries InterfaceStub::logs(unsigned _watchId) const
 {
 	LogFilter f;
@@ -337,6 +332,19 @@ Transactions InterfaceStub::pending() const
 	return postMine().pending();
 }
 
+
+StateDiff InterfaceStub::diff(unsigned _txi, h256 _block) const
+{
+	State st = asOf(_block);
+	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
+}
+
+StateDiff InterfaceStub::diff(unsigned _txi, int _block) const
+{
+	State st = asOf(_block);
+	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
+}
+
 Addresses InterfaceStub::addresses(int _block) const
 {
 	Addresses ret;
@@ -350,7 +358,6 @@ u256 InterfaceStub::gasLimitRemaining() const
 	return postMine().gasLimitRemaining();
 }
 
-
 void InterfaceStub::setAddress(Address _us)
 {
 	preMine().setAddress(_us);
@@ -360,7 +367,3 @@ Address InterfaceStub::address() const
 {
 	return preMine().address();
 }
-
-
-
-

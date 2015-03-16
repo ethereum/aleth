@@ -170,23 +170,14 @@ public:
 	FixedStateInterface(BlockChain const& _bc, State _state) :  m_bc(_bc), m_state(_state) {}
 	virtual ~FixedStateInterface() {}
 	
-	// not tested
-	void setMiningThreads(unsigned _threads) override {}
-	unsigned miningThreads() const override {}
-	void startMining() override {}
-	void stopMining() override {}
-	bool isMining() override {}
-	eth::MineProgress miningProgress() const override {}
-	std::pair<h256, u256> getWork() override { return std::pair<h256, u256>(); }
-	bool submitWork(eth::ProofOfWork::Proof const&) override { return false; }
-	eth::StateDiff diff(unsigned _txi, h256 _block) const override {}
-	eth::StateDiff diff(unsigned _txi, int _block) const override {}
-	
 	// stub
-	virtual BlockChain const& bc() const { return m_bc; }
-	virtual State asOf(int _h) const { return m_state; }
-	virtual State preMine() const { return m_state; }
-	virtual State postMine() const { return m_state; }
+	virtual void flushTransactions() override {}
+	virtual BlockChain const& bc() const override { return m_bc; }
+	virtual State asOf(int _h) const override { (void)_h; return m_state; }
+	virtual State asOf(h256 _h) const override { (void)_h; return m_state; }
+	virtual State preMine() const override { return m_state; }
+	virtual State postMine() const override { return m_state; }
+	virtual void prepareForTransaction() override {}
 	
 private:
 	BlockChain const& m_bc;

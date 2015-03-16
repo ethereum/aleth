@@ -176,22 +176,19 @@ public:
 	/// Resets the gas pricer to some other object.
 	void setGasPricer(std::shared_ptr<GasPricer> _gp) { m_gp = _gp; }
 
-	/// Differences between transactions.
-	using Interface::diff;
-	virtual StateDiff diff(unsigned _txi, h256 _block) const;
-	virtual StateDiff diff(unsigned _txi, int _block) const;
-
 	/// Injects the RLP-encoded transaction given by the _rlp into the transaction queue directly.
 	virtual void inject(bytesConstRef _rlp);	
 	
 	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
 	virtual bytes call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether);
-	
+
+	/// Blocks until all pending transactions have been processed.
+	virtual void flushTransactions() override;
+
 	/// Get the remaining gas limit in this block.
 	virtual u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }
 
 	// [PRIVATE API - only relevant for base clients, not available in general]
-
 	dev::eth::State state(unsigned _txi, h256 _block) const;
 	dev::eth::State state(h256 _block) const;
 	dev::eth::State state(unsigned _txi) const;
@@ -250,13 +247,16 @@ public:
 	void clearPending();
 	/// Kills the blockchain. Just for debug use.
 	void killChain();
-	
-	virtual BlockChain const& bc() const { return m_bc; }
-	virtual State asOf(int _h) const;
-	virtual State preMine() const { return m_preMine; }
-	virtual State postMine() const { return m_postMine; }
 
 protected:
+	/// InterfaceStub methods
+	virtual BlockChain const& bc() const override { return m_bc; }
+	virtual State asOf(int _h) const override;
+	virtual State asOf(h256 _block) const override;
+	virtual State preMine() const override { ReadGuard l(x_stateDB); return m_preMine; }
+	virtual State postMine() const override { ReadGuard l(x_stateDB); return m_postMine; }
+	virtual void prepareForTransaction() override;
+	
 	/// Collate the changed filters for the bloom filter of the given pending transaction.
 	/// Insert any filters that are activated into @a o_changed.
 	void appendFromNewPending(TransactionReceipt const& _receipt, h256Set& io_changed, h256 _sha3);
@@ -286,7 +286,6 @@ private:
 
 	VersionChecker m_vc;					///< Dummy object to check & update the protocol version.
 	CanonBlockChain m_bc;					///< Maintains block database.
-//	TransactionQueue m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
 	BlockQueue m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 	std::shared_ptr<GasPricer> m_gp;		///< The gas pricer.
 
