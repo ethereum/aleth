@@ -48,7 +48,7 @@ namespace js = json_spirit;
 
 namespace dev { namespace test {
 RLPStream createFullBlockFromHeader(const BlockInfo& _bi, const bytes& _txs = RLPEmptyList, const bytes& _uncles = RLPEmptyList);
-}};
+}}
 
 class FixedStateServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
 {
