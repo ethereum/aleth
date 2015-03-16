@@ -19,12 +19,90 @@
  * @date 2015
  */
 
+#include <libdevcore/StructuredLogger.h>
 #include "InterfaceStub.h"
 #include "BlockChain.h"
+#include "Executive.h"
 
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
+{
+//	startWorking();
+	
+	u256 n;
+	n = postMine().transactionsFrom(toAddress(_secret));
+	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
+	cnote << "New transaction " << t;
+	m_tq.attemptImport(t.rlp());
+}
+
+Address InterfaceStub::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
+{
+//	startWorking();
+	
+	u256 n;
+	n = postMine().transactionsFrom(toAddress(_secret));
+	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
+	cnote << "New transaction " << t;
+	m_tq.attemptImport(t.rlp());
+	return right160(sha3(rlpList(t.sender(), t.nonce())));
+}
+
+
+void InterfaceStub::inject(bytesConstRef _rlp)
+{
+//	startWorking();
+	
+	m_tq.attemptImport(_rlp);
+}
+
+
+void InterfaceStub::flushTransactions()
+{
+//	doWork();
+}
+
+
+bytes InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+{
+	bytes out;
+	try
+	{
+		State temp = asOf(_blockNumber);
+		u256 n = temp.transactionsFrom(toAddress(_secret));
+		Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
+		u256 gasUsed = temp.execute(bc(), t.rlp(), &out, false);
+		(void)gasUsed; // TODO: do something with gasused which it returns.
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return out;
+}
+
+bytes InterfaceStub::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
+{
+	try
+	{
+		State temp = postMine();
+		Executive e(temp, LastHashes(), 0);
+		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
+		{
+			e.go();
+			return e.out().toBytes();
+		}
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return bytes();
+}
 
 u256 InterfaceStub::balanceAt(Address _a, int _block) const
 {

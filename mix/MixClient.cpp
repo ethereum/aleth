@@ -309,7 +309,7 @@ eth::LocalisedLogEntries MixClient::logs(eth::LogFilter const& _f) const
 	unsigned block = std::min<unsigned>(lastBlock, (unsigned)_f.latest());
 	unsigned end = std::min(lastBlock, std::min(block, (unsigned)_f.earliest()));
 	// Pending transactions
-	if (block > bc().number())
+if (block > bc().number())
 	{
 		ReadGuard l(x_state);
 		for (unsigned i = 0; i < m_state.pending().size(); ++i)

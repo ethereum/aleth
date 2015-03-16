@@ -186,11 +186,6 @@ void Client::doneWorking()
 	m_postMine = m_preMine;
 }
 
-void Client::flushTransactions()
-{
-	doWork();
-}
-
 void Client::killChain()
 {
 	bool wasMining = isMining();
@@ -473,92 +468,6 @@ void Client::setupState(State& _s)
 	}
 	else
 		_s.commitToMine(m_bc);
-}
-
-void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
-{
-	startWorking();
-
-	u256 n;
-	{
-		ReadGuard l(x_stateDB);
-		n = m_postMine.transactionsFrom(toAddress(_secret));
-	}
-	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
-//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
-	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
-}
-
-bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
-{
-	bytes out;
-	try
-	{
-		u256 n;
-		State temp;
-	//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-		{
-			ReadGuard l(x_stateDB);
-			temp = asOf(_blockNumber);
-			n = temp.transactionsFrom(toAddress(_secret));
-		}
-		Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
-		u256 gasUsed = temp.execute(m_bc, t.rlp(), &out, false);
-		(void)gasUsed; // TODO: do something with gasused which it returns.
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return out;
-}
-
-bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
-{
-	try
-	{
-		State temp;
-//		cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-		{
-			ReadGuard l(x_stateDB);
-			temp = m_postMine;
-		}
-		Executive e(temp, LastHashes(), 0);
-		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
-		{
-			e.go();
-			return e.out().toBytes();
-		}
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return bytes();
-}
-
-Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
-{
-	startWorking();
-
-	u256 n;
-	{
-		ReadGuard l(x_stateDB);
-		n = m_postMine.transactionsFrom(toAddress(_secret));
-	}
-	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
-	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
-	return right160(sha3(rlpList(t.sender(), t.nonce())));
-}
-
-void Client::inject(bytesConstRef _rlp)
-{
-	startWorking();
-
-	m_tq.attemptImport(_rlp);
 }
 
 pair<h256, u256> Client::getWork()
