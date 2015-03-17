@@ -146,9 +146,16 @@ bytes dev::test::toBlockChain(Json::Value const& _json)
 	return fullStream.out();
 }
 
+bool LoadTestFileFixture::m_loaded = false;
+Json::Value LoadTestFileFixture::m_json;
+
 LoadTestFileFixture::LoadTestFileFixture()
 {
-	m_json = loadTestFile(getCommandLineArgument("--eth_testfile"));
+	if (!m_loaded)
+	{
+		m_json = loadTestFile(getCommandLineArgument("--eth_testfile"));
+		m_loaded = true;
+	}
 }
 
 void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, State state)> callback)

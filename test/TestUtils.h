@@ -22,7 +22,8 @@ struct LoadTestFileFixture
 {
 	LoadTestFileFixture();
 	
-	Json::Value m_json;
+	static bool m_loaded;
+	static Json::Value m_json;
 };
 
 struct BlockChainFixture: public LoadTestFileFixture
