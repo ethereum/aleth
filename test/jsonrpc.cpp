@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_SUITE(jsonrpc)
 
 BOOST_AUTO_TEST_CASE(bcBlockChainTest)
 {
-	dev::test::executeTests("bcBlockChainTest", "/BlockTests", doJsonrpcTests);
+	dev::test::executeTests("bcJS_API_Test", "/BlockTests", doJsonrpcTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

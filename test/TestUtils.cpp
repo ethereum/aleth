@@ -5,11 +5,30 @@
 
 // used methods from TestHelper:
 // getTestPath
+// importByteArray
 #include "TestHelper.h"
 
 using namespace std;
 using namespace dev;
+using namespace dev::eth;
 using namespace dev::test;
+
+namespace dev
+{
+namespace test
+{
+
+bool getCommandLineOption(std::string const& _name);
+std::string getCommandLineArgument(std::string const& _name, bool _require = false);
+std::string loadFile(std::string const& _path);
+Json::Value loadTestFile(std::string const& _filename);
+dev::eth::BlockInfo toBlockInfo(Json::Value const& _json);
+bytes toBlockChain(Json::Value const& _json);
+bytes toBytes(std::string const& _str);
+dev::eth::State toState(Json::Value const& _json);
+
+}
+}
 
 bool dev::test::getCommandLineOption(string const& _name)
 {
@@ -21,30 +40,147 @@ bool dev::test::getCommandLineOption(string const& _name)
 	return result;
 }
 
-std::string getCommandLineArgument(string const& _name, bool _require)
+std::string dev::test::getCommandLineArgument(string const& _name, bool _require)
 {
 	auto argc = boost::unit_test::framework::master_test_suite().argc;
 	auto argv = boost::unit_test::framework::master_test_suite().argv;
-	for (auto i = 0; !result && i < argc; ++i)
-		if (_name == argv[i]) {
-			if (i + 1 < argc)
-				return argv[i + 1];
-			else
-				BOOST_ERROR("Failed getting command line argument: " << _name << " from: " << argv);
-		}
+	for (auto i = 1; i < argc; ++i)
+	{
+		string str = argv[i];
+		if (_name == str.substr(0, _name.size()))
+			return str.substr(str.find("=") + 1);
+	}
 	if (_require)
 		BOOST_ERROR("Failed getting command line argument: " << _name << " from: " << argv);
 	return "";
 }
 
-std::string loadFile(std::string const& _path)
+std::string dev::test::loadFile(std::string const& _path)
 {
-	string s = asString(dev::contents(testPath + "/" + _name + ".json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+	string s = asString(dev::contents(_path));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _path + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 	return s;
 }
 
-std::string loadTestFile(std::string const& _filename)
+Json::Value dev::test::loadTestFile(std::string const& _filename)
 {
-	return loadFile(getTestPath() + "/" + _filename + ".json");
+	Json::Reader reader;
+	Json::Value result;
+	reader.parse(loadFile(getTestPath() + "/" + _filename + ".json"), result);
+	return result;
 }
+
+dev::eth::BlockInfo dev::test::toBlockInfo(Json::Value const& _json)
+{
+	RLPStream rlpStream;
+	auto size = _json.getMemberNames().size();
+	rlpStream.appendList(_json["hash"].empty() ? size : (size - 1));
+	rlpStream << toBytes(_json["parentHash"].asString());
+	rlpStream << toBytes(_json["uncleHash"].asString());
+	rlpStream << toBytes(_json["coinbase"].asString());
+	rlpStream << toBytes(_json["stateRoot"].asString());
+	rlpStream << toBytes(_json["transactionsTrie"].asString());
+	rlpStream << toBytes(_json["receiptTrie"].asString());
+	rlpStream << toBytes(_json["bloom"].asString());
+	rlpStream << bigint(_json["difficulty"].asString());
+	rlpStream << bigint(_json["number"].asString());
+	rlpStream << bigint(_json["gasLimit"].asString());
+	rlpStream << bigint(_json["gasUsed"].asString());
+	rlpStream << bigint(_json["timestamp"].asString());
+	rlpStream << fromHex(_json["extraData"].asString());
+	rlpStream << toBytes(_json["mixHash"].asString());
+	rlpStream << toBytes(_json["nonce"].asString());
+	
+	BlockInfo result;
+	RLP rlp(rlpStream.out());
+	result.populateFromHeader(rlp, IgnoreNonce);
+	return result;
+}
+
+bytes dev::test::toBytes(std::string const& _str)
+{
+	return importByteArray(_str);
+}
+
+dev::eth::State toState(Json::Value const& _json)
+{
+	for (string const& name: _json.getMemberNames())
+	{
+		Json::Value o = _json[name];
+		Address address = Address(name);
+		
+		
+	}
+}
+
+bytes dev::test::toBlockChain(Json::Value const& _json)
+{
+	BlockInfo bi = toBlockInfo(_json["genesisBlockHeader"]);
+	RLPStream rlpStream;
+	bi.streamRLP(rlpStream, WithNonce);
+	
+	RLPStream fullStream(3);
+	fullStream.appendRaw(rlpStream.out());
+	fullStream.appendRaw(RLPEmptyList);
+	fullStream.appendRaw(RLPEmptyList);
+	bi.verifyInternals(&fullStream.out());
+	
+	return fullStream.out();
+}
+
+LoadTestFileFixture::LoadTestFileFixture()
+{
+	m_json = loadTestFile(getCommandLineArgument("--eth_testfile"));
+}
+
+void BlockChainFixture::enumerateBlockchains(std::function<void(dev::eth::BlockChain&, Json::Value const&)> callback)
+{
+	for (string const& name: m_json.getMemberNames())
+	{
+		State state(Address(), OverlayDB(), BaseState::Empty);
+		state.commit();
+		// not sure if import state is required
+		BlockChain bc(toBlockChain(m_json[name]), string(), true);
+		for (auto const& block: m_json[name]["blocks"])
+		{
+			bytes rlp = toBytes(block["rlp"].asString());
+			bc.import(rlp, state.db());
+			state.sync(bc);
+		}
+		callback(bc, m_json[name]);
+	}
+}
+
+class FixedInterface: public dev::eth::InterfaceStub
+{
+public:
+	FixedInterface(BlockChain const& _bc, State _state) :  m_bc(_bc), m_state(_state) {}
+	virtual ~FixedInterface() {}
+	
+	// stub
+	virtual void flushTransactions() override {}
+	virtual BlockChain const& bc() const override { return m_bc; }
+	virtual State asOf(int _h) const override { (void)_h; return m_state; }
+	virtual State asOf(h256 _h) const override { (void)_h; return m_state; }
+	virtual State preMine() const override { return m_state; }
+	virtual State postMine() const override { return m_state; }
+	virtual void prepareForTransaction() override {}
+	
+private:
+	BlockChain const& m_bc;
+	State m_state;
+};
+
+void InterfaceStubFixture::enumerateInterfaces(std::function<void(dev::eth::InterfaceStub&, Json::Value const&)> callback)
+{
+	enumerateBlockchains([callback](dev::eth::BlockChain& _bc, Json::Value const& _json) -> void
+	{
+		State state(OverlayDB(), _bc, _bc.currentHash());
+		FixedInterface client(_bc, state);
+		callback(client, _json);
+	});
+}
+
+
+
+
