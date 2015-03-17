@@ -11,9 +11,9 @@ BOOST_FIXTURE_TEST_SUITE(InterfaceStub, InterfaceStubFixture)
 
 BOOST_AUTO_TEST_CASE(number)
 {
-	enumerateInterfaces([](dev::eth::InterfaceStub& _client, Json::Value const& _json) -> void
+	enumerateInterfaces([](Json::Value const& _json, dev::eth::InterfaceStub& _client) -> void
 	{
-		unsigned number = _client.number();
+		BOOST_CHECK_EQUAL(_client.number(), _json["blocks"].size());
 	});
 }
 

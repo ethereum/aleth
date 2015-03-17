@@ -25,7 +25,6 @@ Json::Value loadTestFile(std::string const& _filename);
 dev::eth::BlockInfo toBlockInfo(Json::Value const& _json);
 bytes toBlockChain(Json::Value const& _json);
 bytes toBytes(std::string const& _str);
-dev::eth::State toState(Json::Value const& _json);
 
 }
 }
@@ -102,15 +101,34 @@ bytes dev::test::toBytes(std::string const& _str)
 	return importByteArray(_str);
 }
 
-dev::eth::State toState(Json::Value const& _json)
+dev::eth::State TestUtils::toState(Json::Value const& _json)
 {
+	State state(Address(), OverlayDB(), BaseState::Empty);
 	for (string const& name: _json.getMemberNames())
 	{
 		Json::Value o = _json[name];
+
 		Address address = Address(name);
+		bytes code = fromHex(o["code"].asString().substr(2));
+
+		if (code.size())
+		{
+			state.m_cache[address] = Account(toInt(o["balance"].asString()), Account::ContractConception);
+			state.m_cache[address].setCode(code);
+		}
+		else
+			state.m_cache[address] = Account(toInt(o["balance"].asString()), Account::NormalCreation);
+
+		for (string const& j: o["storage"].getMemberNames())
+			state.setStorage(address, toInt(j), toInt(o["storage"][j].asString()));
+
+		for (auto i = 0; i < toInt(o["nonce"].asString()); ++i)
+			state.noteSending(address);
 		
-		
+		state.ensureCached(address, false, false);
 	}
+
+	return state;
 }
 
 bytes dev::test::toBlockChain(Json::Value const& _json)
@@ -133,21 +151,23 @@ LoadTestFileFixture::LoadTestFileFixture()
 	m_json = loadTestFile(getCommandLineArgument("--eth_testfile"));
 }
 
-void BlockChainFixture::enumerateBlockchains(std::function<void(dev::eth::BlockChain&, Json::Value const&)> callback)
+void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, State state)> callback)
 {
 	for (string const& name: m_json.getMemberNames())
 	{
-		State state(Address(), OverlayDB(), BaseState::Empty);
+		Json::Value o = m_json[name];
+
+		State state = TestUtils::toState(o["pre"]);
 		state.commit();
 		// not sure if import state is required
-		BlockChain bc(toBlockChain(m_json[name]), string(), true);
-		for (auto const& block: m_json[name]["blocks"])
+		BlockChain bc(toBlockChain(o), string(), true);
+		for (auto const& block: o["blocks"])
 		{
 			bytes rlp = toBytes(block["rlp"].asString());
 			bc.import(rlp, state.db());
 			state.sync(bc);
 		}
-		callback(bc, m_json[name]);
+		callback(o, bc, state);
 	}
 }
 
@@ -171,16 +191,11 @@ private:
 	State m_state;
 };
 
-void InterfaceStubFixture::enumerateInterfaces(std::function<void(dev::eth::InterfaceStub&, Json::Value const&)> callback)
+void InterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback)
 {
-	enumerateBlockchains([callback](dev::eth::BlockChain& _bc, Json::Value const& _json) -> void
+	enumerateBlockchains([callback](Json::Value const& _json, BlockChain& _bc, State _state) -> void
 	{
-		State state(OverlayDB(), _bc, _bc.currentHash());
-		FixedInterface client(_bc, state);
-		callback(client, _json);
+		FixedInterface client(_bc, _state);
+		callback(_json, client);
 	});
 }
-
-
-
-
