@@ -182,12 +182,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				BlockInfo uncle = _client.uncle(blockHash, i);
 				compareBlockInfos(u, uncle);
 			}
-			
-			
 		}
-		
-		
-		
 	});
 }
 
