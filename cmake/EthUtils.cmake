@@ -57,7 +57,7 @@ macro(eth_add_test NAME)
 	add_custom_target("test.${NAME}"
 		DEPENDS testeth
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-		COMMAND ${CMAKE_COMMAND} -DETH_TEST_NAME="${NAME}" -P "${ETH_SCRIPTS_DIR}/runtest.cmake"
+		COMMAND ${CMAKE_COMMAND} -DETH_TEST_NAME="${NAME}" -DCTEST_COMMAND="${CTEST_COMMAND}" -P "${ETH_SCRIPTS_DIR}/runtest.cmake"
 	)
 
 endmacro()

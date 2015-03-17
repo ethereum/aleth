@@ -1,10 +1,8 @@
 # Should be used to run ctest
 # 
 # example usage:
-# cmake -DETH_TEST_NAME=TestInterfaceStub -P scripts/runtest.cmake
+# cmake -DETH_TEST_NAME=TestInterfaceStub -DCTEST_COMMAND=/path/to/ctest -P scripts/runtest.cmake
 
-
-find_program(CTEST_COMMAND ctest)
 if (NOT CTEST_COMMAND)
 	message(FATAL_ERROR "ctest could not be found!")
 endif()
