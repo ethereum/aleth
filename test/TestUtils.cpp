@@ -24,7 +24,6 @@ std::string loadFile(std::string const& _path);
 Json::Value loadTestFile(std::string const& _filename);
 dev::eth::BlockInfo toBlockInfo(Json::Value const& _json);
 bytes toBlockChain(Json::Value const& _json);
-bytes toBytes(std::string const& _str);
 
 }
 }

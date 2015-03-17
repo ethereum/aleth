@@ -12,6 +12,8 @@ namespace dev
 namespace test
 {
 
+bytes toBytes(std::string const& _str);
+
 class TestUtils
 {
 public:
