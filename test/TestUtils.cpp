@@ -1,6 +1,9 @@
 
+#include <ctime>
+#include <random>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonIO.h>
+#include <libdevcrypto/FileSystem.h>
 #include "TestUtils.h"
 
 // used methods from TestHelper:
@@ -24,8 +27,24 @@ std::string loadFile(std::string const& _path);
 Json::Value loadTestFile(std::string const& _filename);
 dev::eth::BlockInfo toBlockInfo(Json::Value const& _json);
 bytes toBlockChain(Json::Value const& _json);
+int randomNumber();
+std::string getRandomPathForTest(std::string const& _test);
 
 }
+}
+
+int dev::test::randomNumber()
+{
+	static std::mt19937 randomGenerator(time(0));
+	randomGenerator.seed(std::random_device()());
+	return std::uniform_int_distribution<int>(1)(randomGenerator);
+}
+
+std::string dev::test::getRandomPathForTest(std::string const& _test)
+{
+	std::stringstream stream;
+	stream << getDataDir() << "/EthereumTests/" << _test << randomNumber();
+	return stream.str();
 }
 
 bool dev::test::getCommandLineOption(string const& _name)
@@ -165,14 +184,19 @@ void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value cons
 
 		State state = TestUtils::toState(o["pre"]);
 		state.commit();
-		// not sure if import state is required
-		BlockChain bc(toBlockChain(o), string(), true);
+
+		string path = getRandomPathForTest("InterfaceStub");
+		ShortLivingDirectory directory(path);
+		BlockChain bc(toBlockChain(o), path, true);
+		clog << "test blockchain path: " << path << endl;
+
 		for (auto const& block: o["blocks"])
 		{
 			bytes rlp = toBytes(block["rlp"].asString());
 			bc.import(rlp, state.db());
 			state.sync(bc);
 		}
+
 		callback(o, bc, state);
 	}
 }

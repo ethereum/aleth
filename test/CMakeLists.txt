@@ -56,6 +56,7 @@ enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
 
 include(EthUtils)
+
 eth_add_test(InterfaceStub
 	ARGS --eth_testfile=BlockTests/bcJS_API_Test 
 	ARGS --eth_testfile=BlockTests/bcValidBlockTest

@@ -3,5 +3,11 @@
 # example usage:
 # cmake -DETH_TEST_NAME=TestInterfaceStub -P scripts/runtest.cmake
 
-execute_process(COMMAND ctest --force-new-ctest-process -C Debug -j 1 -V -R ${ETH_TEST_NAME})
+
+find_program(CTEST_COMMAND ctest)
+if (NOT CTEST_COMMAND)
+	message(FATAL_ERROR "ctest could not be found!")
+endif()
+
+execute_process(COMMAND ${CTEST_COMMAND} --force-new-ctest-process -C Debug -j 4 -V -R ${ETH_TEST_NAME})
 
