@@ -9,5 +9,5 @@ if (NOT CTEST_COMMAND)
 	message(FATAL_ERROR "ctest could not be found!")
 endif()
 
-execute_process(COMMAND ${CTEST_COMMAND} --force-new-ctest-process -C Debug -j 4 -V -R ${ETH_TEST_NAME})
+execute_process(COMMAND ${CTEST_COMMAND} --force-new-ctest-process -C Debug -j 4 -V -R "${ETH_TEST_NAME}[.].*")
 
