@@ -62,7 +62,7 @@ eth_add_test(InterfaceStub
 	ARGS --eth_testfile=BlockTests/bcValidBlockTest
 )
 
-eth_add_test(jsonrpc
+eth_add_test(JsonRpc
 	ARGS --eth_testfile=BlockTests/bcJS_API_Test 
 	ARGS --eth_testfile=BlockTests/bcValidBlockTest
 )

@@ -39,8 +39,7 @@ macro(eth_add_test NAME)
 	endforeach(arg)
 	list(APPEND commands ${current_command})
 
-	message(STATUS "test: ${NAME}")
-	message(STATUS "${commands}")
+	message(STATUS "test: ${NAME} | ${commands}")
 
 	# create tests
 	set(index 0)
@@ -49,7 +48,6 @@ macro(eth_add_test NAME)
 		list(GET commands ${index} test_arguments)
 
 		set(run_test "--run_test=${NAME}")
-		message(STATUS "testeth ${run_test} ${test_arguments}")
 		add_test(NAME "${NAME}.${index}" COMMAND testeth ${run_test} ${test_arguments})
 		
 		math(EXPR index "${index} + 1")

@@ -15,6 +15,7 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
 /** @file InterfaceStub.cpp
+ * @author Gav Wood <i@gavwood.com>
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */

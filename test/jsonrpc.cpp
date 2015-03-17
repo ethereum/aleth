@@ -28,11 +28,11 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(jsonrpc, JsonRpcFixture)
+BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
 
-BOOST_AUTO_TEST_CASE(ttt)
+BOOST_AUTO_TEST_CASE(empty)
 {
-	
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()
