@@ -421,7 +421,7 @@ BOOST_AUTO_TEST_CASE(short_circuiting)
 
 	auto short_circuiting_cpp = [](u256 n) -> u256
 	{
-		n == 0 || (n = 8) > 0;
+		(void)(n == 0 || (n = 8) > 0);
 		return n;
 	};
 
@@ -532,6 +532,27 @@ BOOST_AUTO_TEST_CASE(empty_string_on_stack)
 							 "}\n";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("run(bytes0,uint8)", string(), byte(0x02)) == encodeArgs(0x2, string(""), string("abc\0")));
+}
+
+BOOST_AUTO_TEST_CASE(inc_dec_operators)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 x;
+			uint v;
+			function f() returns (uint r) {
+				uint a = 6;
+				r = a;
+				r += (a++) * 0x10;
+				r += (++a) * 0x100;
+				v = 3;
+				r += (v++) * 0x1000;
+				r += (++v) * 0x10000;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("f()") == encodeArgs(0x53866));
 }
 
 BOOST_AUTO_TEST_CASE(state_smoke_test)
@@ -970,18 +991,20 @@ BOOST_AUTO_TEST_CASE(multiple_elementary_accessors)
 
 BOOST_AUTO_TEST_CASE(complex_accessors)
 {
-	char const* sourceCode = "contract test {\n"
-							 "  mapping(uint256 => bytes4) public to_string_map;\n"
-							 "  mapping(uint256 => bool) public to_bool_map;\n"
-							 "  mapping(uint256 => uint256) public to_uint_map;\n"
-							 "  mapping(uint256 => mapping(uint256 => uint256)) public to_multiple_map;\n"
-							 "  function test() {\n"
-							 "    to_string_map[42] = \"24\";\n"
-							 "    to_bool_map[42] = false;\n"
-							 "    to_uint_map[42] = 12;\n"
-							 "    to_multiple_map[42][23] = 31;\n"
-							 "  }\n"
-							 "}\n";
+	char const* sourceCode = R"(
+		contract test {
+			mapping(uint256 => bytes4) public to_string_map;
+			mapping(uint256 => bool) public to_bool_map;
+			mapping(uint256 => uint256) public to_uint_map;
+			mapping(uint256 => mapping(uint256 => uint256)) public to_multiple_map;
+			function test() {
+				to_string_map[42] = "24";
+				to_bool_map[42] = false;
+				to_uint_map[42] = 12;
+				to_multiple_map[42][23] = 31;
+			}
+		}
+	)";
 	compileAndRun(sourceCode);
 	BOOST_CHECK(callContractFunction("to_string_map(uint256)", 42) == encodeArgs("24"));
 	BOOST_CHECK(callContractFunction("to_bool_map(uint256)", 42) == encodeArgs(false));
@@ -1029,6 +1052,35 @@ BOOST_AUTO_TEST_CASE(blockchain)
 							 "}\n";
 	compileAndRun(sourceCode, 27);
 	BOOST_CHECK(callContractFunctionWithValue("someInfo()", 28) == encodeArgs(28, 0, 1));
+}
+
+BOOST_AUTO_TEST_CASE(msg_sig)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function foo(uint256 a) returns (bytes4 value) {
+				return msg.sig;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunctionWithValue("foo(uint256)", 13) == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
+}
+
+BOOST_AUTO_TEST_CASE(msg_sig_after_internal_call_is_same)
+{
+	char const* sourceCode = R"(
+		contract test {
+			function boo() returns (bytes4 value) {
+				return msg.sig;
+			}
+			function foo(uint256 a) returns (bytes4 value) {
+				return boo();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunctionWithValue("foo(uint256)", 13) == encodeArgs(asString(FixedHash<4>(dev::sha3("foo(uint256)")).asBytes())));
 }
 
 BOOST_AUTO_TEST_CASE(now)
@@ -2150,6 +2202,43 @@ BOOST_AUTO_TEST_CASE(event_no_arguments)
 	BOOST_CHECK_EQUAL(m_logs[0].topics[0], dev::sha3(string("Deposit()")));
 }
 
+BOOST_AUTO_TEST_CASE(event_anonymous)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit() anonymous;
+			function deposit() {
+				Deposit();
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	callContractFunction("deposit()");
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(event_anonymous_with_topics)
+{
+	char const* sourceCode = R"(
+		contract ClientReceipt {
+			event Deposit(address indexed _from, bytes32 indexed _id, uint _value) anonymous;
+			function deposit(bytes32 _id, bool _manually) {
+				Deposit(msg.sender, _id, msg.value);
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	u256 value(18);
+	u256 id(0x1234);
+	callContractFunctionWithValue("deposit(bytes32,bool)", value, id);
+	BOOST_REQUIRE_EQUAL(m_logs.size(), 1);
+	BOOST_CHECK_EQUAL(m_logs[0].address, m_contractAddress);
+	BOOST_CHECK_EQUAL(h256(m_logs[0].data), h256(u256(value)));
+	BOOST_REQUIRE_EQUAL(m_logs[0].topics.size(), 2);
+	BOOST_CHECK_EQUAL(m_logs[0].topics[0], h256(m_sender));
+	BOOST_CHECK_EQUAL(m_logs[0].topics[1], h256(id));
+}
+
 BOOST_AUTO_TEST_CASE(event_lots_of_data)
 {
 	char const* sourceCode = R"(
@@ -2473,7 +2562,7 @@ BOOST_AUTO_TEST_CASE(struct_copy)
 		contract c {
 			struct Nested { uint x; uint y; }
 			struct Struct { uint a; mapping(uint => Struct) b; Nested nested; uint c; }
-			mapping(uint => Struct) public data;
+			mapping(uint => Struct) data;
 			function set(uint k) returns (bool) {
 				data[k].a = 1;
 				data[k].nested.x = 3;
@@ -3219,6 +3308,130 @@ BOOST_AUTO_TEST_CASE(constant_variables)
 	})";
 	compileAndRun(sourceCode);
 }
+
+BOOST_AUTO_TEST_CASE(packed_storage_structs_uint)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct str { uint8 a; uint16 b; uint248 c; }
+			str data;
+			function test() returns (uint) {
+				data.a = 2;
+				if (data.a != 2) return 2;
+				data.b = 0xabcd;
+				if (data.b != 0xabcd) return 3;
+				data.c = 0x1234567890;
+				if (data.c != 0x1234567890) return 4;
+				if (data.a != 2) return 5;
+				data.a = 8;
+				if (data.a != 8) return 6;
+				if (data.b != 0xabcd) return 7;
+				data.b = 0xdcab;
+				if (data.b != 0xdcab) return 8;
+				if (data.c != 0x1234567890) return 9;
+				data.c = 0x9876543210;
+				if (data.c != 0x9876543210) return 10;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(packed_storage_structs_enum)
+{
+	char const* sourceCode = R"(
+		contract C {
+			enum small { A, B, C, D }
+			enum larger { A, B, C, D, E}
+			struct str { small a; small b; larger c; larger d; }
+			str data;
+			function test() returns (uint) {
+				data.a = small.B;
+				if (data.a != small.B) return 2;
+				data.b = small.C;
+				if (data.b != small.C) return 3;
+				data.c = larger.D;
+				if (data.c != larger.D) return 4;
+				if (data.a != small.B) return 5;
+				data.a = small.C;
+				if (data.a != small.C) return 6;
+				if (data.b != small.C) return 7;
+				data.b = small.D;
+				if (data.b != small.D) return 8;
+				if (data.c != larger.D) return 9;
+				data.c = larger.B;
+				if (data.c != larger.B) return 10;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+}
+
+BOOST_AUTO_TEST_CASE(packed_storage_structs_bytes)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct s1 { byte a; byte b; bytes10 c; bytes9 d; bytes10 e; }
+			struct s2 { byte a; s1 inner; byte b; byte c; }
+			byte x;
+			s2 data;
+			byte y;
+			function test() returns (bool) {
+				x = 1;
+				data.a = 2;
+				data.inner.a = 3;
+				data.inner.b = 4;
+				data.inner.c = "1234567890";
+				data.inner.d = "123456789";
+				data.inner.e = "abcdefghij";
+				data.b = 5;
+				data.c = 6;
+				y = 7;
+				return x == 1 && data.a == 2 && data.inner.a == 3 && data.inner.b == 4 &&
+					data.inner.c == "1234567890" && data.inner.d == "123456789" &&
+					data.inner.e == "abcdefghij" && data.b == 5 && data.c == 6 && y == 7;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(true));
+}
+
+BOOST_AUTO_TEST_CASE(packed_storage_structs_delete)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct str { uint8 a; uint16 b; uint8 c; }
+			uint8 x;
+			uint16 y;
+			str data;
+			function test() returns (uint) {
+				x = 1;
+				y = 2;
+				data.a = 2;
+				data.b = 0xabcd;
+				data.c = 0xfa;
+				if (x != 1 || y != 2 || data.a != 2 || data.b != 0xabcd || data.c != 0xfa)
+					return 2;
+				delete y;
+				delete data.b;
+				if (x != 1 || y != 0 || data.a != 2 || data.b != 0 || data.c != 0xfa)
+					return 3;
+				delete x;
+				delete data;
+				return 1;
+			}
+		}
+	)";
+	compileAndRun(sourceCode);
+	BOOST_CHECK(callContractFunction("test()") == encodeArgs(1));
+	BOOST_CHECK(m_state.storage(m_contractAddress).empty());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }
