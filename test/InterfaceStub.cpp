@@ -138,7 +138,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				BOOST_CHECK_EQUAL(expectedTransactionNonce, _transaction.nonce());
 				BOOST_CHECK_EQUAL(expectedTransactionSignatureR, _transaction.signature().r);
 				BOOST_CHECK_EQUAL(expectedTransactionSignatureS, _transaction.signature().s);
-//				BOOST_CHECK_EQUAL(expectedTransactionSignatureV, _transaction.signature().v); // BROKEN?
+//				BOOST_CHECK_EQUAL(expectedTransactionSignatureV, _transaction.signature().v); // 27 === 0x0, 28 === 0x1, not sure why
 			};
 
 			Transactions ts = _client.transactions(blockHash);

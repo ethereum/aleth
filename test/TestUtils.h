@@ -42,14 +42,18 @@ struct LoadTestFileFixture
 
 struct BlockChainFixture: public LoadTestFileFixture
 {
-	BlockChainFixture() {}
 	void enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, dev::eth::State state)> callback);
 };
 
 struct InterfaceStubFixture: public BlockChainFixture
 {
-	InterfaceStubFixture() {}
 	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback);
+};
+
+struct JsonRpcFixture: public InterfaceStubFixture
+{
+	JsonRpcFixture() {}
+	
 };
 
 }
