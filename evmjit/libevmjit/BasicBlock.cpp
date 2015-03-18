@@ -137,32 +137,34 @@ void BasicBlock::synchronizeLocalStack(Stack& _evmStack)
 {
 	auto blockTerminator = m_llvmBB->getTerminator();
 	assert(blockTerminator != nullptr);
-	m_builder.SetInsertPoint(blockTerminator);
-
-	auto currIter = m_currentStack.begin();
-	auto endIter = m_currentStack.end();
-
-	// Update (emit set()) changed values
-	for (int idx = (int)m_currentStack.size() - 1 - m_tosOffset;
-		 currIter < endIter && idx >= 0;
-		 ++currIter, --idx)
+	if (blockTerminator->getOpcode() != llvm::Instruction::Ret)
 	{
-		assert(static_cast<size_t>(idx) < m_initialStack.size());
-		if (*currIter != m_initialStack[idx]) // value needs update
-			_evmStack.set(static_cast<size_t>(idx), *currIter);
-	}
+		// Not needed in case of ret instruction. Ret also invalidates the stack.
+		m_builder.SetInsertPoint(blockTerminator);
 
-	if (m_tosOffset < 0)
-	{
+		auto currIter = m_currentStack.begin();
+		auto endIter = m_currentStack.end();
+
+		// Update (emit set()) changed values
+		for (int idx = (int)m_currentStack.size() - 1 - m_tosOffset;
+			 currIter < endIter && idx >= 0;
+			 ++currIter, --idx)
+		{
+			assert(static_cast<size_t>(idx) < m_initialStack.size());
+			if (*currIter != m_initialStack[idx]) // value needs update
+				_evmStack.set(static_cast<size_t>(idx), *currIter);
+		}
+
 		// Pop values
-		_evmStack.pop(static_cast<size_t>(-m_tosOffset));
-	}
+		if (m_tosOffset < 0)
+			_evmStack.pop(static_cast<size_t>(-m_tosOffset));
 
-	// Push new values
-	for (; currIter < endIter; ++currIter)
-	{
-		assert(*currIter != nullptr);
-		_evmStack.push(*currIter);
+		// Push new values
+		for (; currIter < endIter; ++currIter)
+		{
+			assert(*currIter != nullptr);
+			_evmStack.push(*currIter);
+		}
 	}
 
 	// Emit get() for all (used) values from the initial stack
@@ -234,7 +236,7 @@ void BasicBlock::linkLocalStacks(std::vector<BasicBlock*> basicBlocks, llvm::IRB
 		for (auto predIt = llvm::pred_begin(bb); predIt != llvm::pred_end(bb); ++predIt)
 		{
 			auto predInfoEntry = cfg.find(*predIt);
-			if (predInfoEntry != cfg.end())
+			if (predInfoEntry != cfg.end()) // FIXME: It is wrong - will skip entry block
 				info.predecessors.push_back(&predInfoEntry->second);
 		}
 	}
@@ -255,6 +257,9 @@ void BasicBlock::linkLocalStacks(std::vector<BasicBlock*> basicBlocks, llvm::IRB
 		for (auto& pair : cfg)
 		{
 			auto& info = pair.second;
+
+			if (&info.bblock == basicBlocks.front())
+				info.inputItems = 0; // we cannot use phi nodes for first block as it is a successor of entry block
 
 			if (info.predecessors.empty())
 				info.inputItems = 0; // no consequences for other blocks, so leave valuesChanged false

@@ -56,54 +56,6 @@ llvm::Function* Arith256::getMulFunc()
 		auto c64 = Constant::get(64);
 		auto c128 = Constant::get(128);
 		auto c192 = Constant::get(192);
-//		auto mask64 = Constant::get(-1);
-
-//		auto x1 = m_builder.CreateLShr(x, c64);
-//		auto y2 = m_builder.CreateLShr(y, c64);
-//		auto x3 = m_builder.CreateLShr(x, c128);
-//		auto y5 = m_builder.CreateLShr(y, c128);
-//		auto x4 = m_builder.CreateTrunc(x3, i128);
-//		auto y6 = m_builder.CreateTrunc(y5, i128);
-//		auto x9 = m_builder.CreateTrunc(x, i128);
-//		auto y7 = m_builder.CreateTrunc(y, i128);
-//
-//		auto y8 = m_builder.CreateAnd(y7, mask64);
-//		auto x10 = m_builder.CreateAnd(x9, mask64);
-//		auto m11 = m_builder.CreateMul(y8, x10);
-//		auto y12 = m_builder.CreateTrunc(y2, i128);
-//		auto y13 = m_builder.CreateAnd(y12, mask64);
-//		auto m14 = m_builder.CreateMul(y13, x10);
-//		auto m15 = m_builder.CreateMul(y6, x10);
-//		auto x16 = m_builder.CreateTrunc(x1, i128);
-//		auto x17 = m_builder.CreateAnd(x16, mask64);
-//		auto m18 = m_builder.CreateMul(x17, y8);
-//		auto m19 = m_builder.CreateMul(y13, x17);
-//		auto m20 = m_builder.CreateMul(x17, y6);
-//		auto m21 = m_builder.CreateMul(y8, x4);
-//		auto m22 = m_builder.CreateMul(y13, x4);
-//
-//		auto n23 = m_builder.CreateZExt(m11, i256);
-//		auto n24 = m_builder.CreateZExt(m14, i256);
-//		auto n25 = m_builder.CreateZExt(m15, i256);
-//		auto n26 = m_builder.CreateZExt(m18, i256);
-//		auto n27 = m_builder.CreateZExt(m19, i256);
-//		auto n28 = m_builder.CreateZExt(m20, i256);
-//		auto n29 = m_builder.CreateZExt(m21, i256);
-//		auto n30 = m_builder.CreateZExt(m22, i256);
-//
-//		auto p0 = m_builder.CreateNUWAdd(n25, n29);
-//		auto p1 = m_builder.CreateNUWAdd(p0, n27);
-//		auto p2 = m_builder.CreateShl(p1, c128);
-//		auto p3 = m_builder.CreateNUWAdd(n30, n28);
-//		auto p4 = m_builder.CreateShl(p3, c192);
-//		auto p5 = m_builder.CreateNUWAdd(n24, n26);
-//		auto p6 = m_builder.CreateShl(p5, c64);
-//
-//		auto p31 = m_builder.CreateOr(p2, n23);
-//		auto p32 = m_builder.CreateAdd(p31, p4);
-//		auto p33 = m_builder.CreateAdd(p32, p6);
-//
-//		m_builder.CreateRet(p33);
 
 		auto x_lo = m_builder.CreateTrunc(x, i64, "x.lo");
 		auto y_lo = m_builder.CreateTrunc(y, i64, "y.lo");
@@ -504,40 +456,42 @@ llvm::Value* Arith256::exp(llvm::Value* _arg1, llvm::Value* _arg2)
 
 llvm::Value* Arith256::addmod(llvm::Value* _arg1, llvm::Value* _arg2, llvm::Value* _arg3)
 {
-	if (auto c1 = llvm::dyn_cast<llvm::ConstantInt>(_arg1))
-	{
-		if (auto c2 = llvm::dyn_cast<llvm::ConstantInt>(_arg2))
-		{
-			if (auto c3 = llvm::dyn_cast<llvm::ConstantInt>(_arg3))
-			{
-				if (!c3->getValue())
-					return Constant::get(0);
-				auto s = c1->getValue().zext(256+64) + c2->getValue().zext(256+64);
-				auto r = s.urem(c3->getValue().zext(256+64)).trunc(256);
-				return Constant::get(r);
-			}
-		}
-	}
+	// FIXME: Disabled because of llvm::APInt::urem bug
+//	if (auto c1 = llvm::dyn_cast<llvm::ConstantInt>(_arg1))
+//	{
+//		if (auto c2 = llvm::dyn_cast<llvm::ConstantInt>(_arg2))
+//		{
+//			if (auto c3 = llvm::dyn_cast<llvm::ConstantInt>(_arg3))
+//			{
+//				if (!c3->getValue())
+//					return Constant::get(0);
+//				auto s = c1->getValue().zext(256+64) + c2->getValue().zext(256+64);
+//				auto r = s.urem(c3->getValue().zext(256+64)).trunc(256);
+//				return Constant::get(r);
+//			}
+//		}
+//	}
 
 	return createCall(getAddModFunc(), {_arg1, _arg2, _arg3});
 }
 
 llvm::Value* Arith256::mulmod(llvm::Value* _arg1, llvm::Value* _arg2, llvm::Value* _arg3)
 {
-	if (auto c1 = llvm::dyn_cast<llvm::ConstantInt>(_arg1))
-	{
-		if (auto c2 = llvm::dyn_cast<llvm::ConstantInt>(_arg2))
-		{
-			if (auto c3 = llvm::dyn_cast<llvm::ConstantInt>(_arg3))
-			{
-				if (!c3->getValue())
-					return Constant::get(0);
-				auto p = c1->getValue().zext(512) * c2->getValue().zext(512);
-				auto r = p.urem(c3->getValue().zext(512)).trunc(256);
-				return Constant::get(r);
-			}
-		}
-	}
+	// FIXME: Disabled because of llvm::APInt::urem bug
+//	if (auto c1 = llvm::dyn_cast<llvm::ConstantInt>(_arg1))
+//	{
+//		if (auto c2 = llvm::dyn_cast<llvm::ConstantInt>(_arg2))
+//		{
+//			if (auto c3 = llvm::dyn_cast<llvm::ConstantInt>(_arg3))
+//			{
+//				if (!c3->getValue())
+//					return Constant::get(0);
+//				auto p = c1->getValue().zext(512) * c2->getValue().zext(512);
+//				auto r = p.urem(c3->getValue().zext(512)).trunc(256);
+//				return Constant::get(r);
+//			}
+//		}
+//	}
 
 	return createCall(getMulModFunc(), {_arg1, _arg2, _arg3});
 }
