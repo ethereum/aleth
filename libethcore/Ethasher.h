@@ -29,6 +29,21 @@
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/SHA3.h>
 #include <libethash/ethash.h>		// TODO: REMOVE once everything merged into this class and an opaque API can be provided.
+static const unsigned c_ethashRevision = REVISION;
+static const unsigned c_ethashEpochLength = EPOCH_LENGTH;
+#undef REVISION
+#undef DATASET_BYTES_INIT
+#undef DATASET_BYTES_GROWTH
+#undef CACHE_BYTES_INIT
+#undef CACHE_BYTES_GROWTH
+#undef DAGSIZE_BYTES_INIT
+#undef DAG_GROWTH
+#undef EPOCH_LENGTH
+#undef MIX_BYTES
+#undef HASH_BYTES
+#undef DATASET_PARENTS
+#undef CACHE_ROUNDS
+#undef ACCESSES
 #include "Common.h"
 #include "BlockInfo.h"
 
