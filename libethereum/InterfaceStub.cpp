@@ -29,7 +29,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
+void InterfaceStub::submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
 	prepareForTransaction();
 	
@@ -41,7 +41,7 @@ void InterfaceStub::transact(Secret _secret, u256 _value, Address _dest, bytes c
 	cnote << "New transaction " << t;
 }
 
-Address InterfaceStub::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
+Address InterfaceStub::submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
 {
 	prepareForTransaction();
 	
@@ -56,22 +56,40 @@ Address InterfaceStub::transact(Secret _secret, u256 _endowment, bytes const& _i
 }
 
 // TODO: remove try/catch, allow exceptions
-bytes InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+ExecutionResult InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
 {
-	bytes out;
+	ExecutionResult ret;
 	try
 	{
 		State temp = asOf(_blockNumber);
 		u256 n = temp.transactionsFrom(toAddress(_secret));
 		Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
-		u256 gasUsed = temp.execute(bc(), t.rlp(), &out, false);
-		(void)gasUsed; // TODO: do something with gasused which it returns.
+		ret = temp.execute(bc(), t.rlp(), Permanence::Reverted);
 	}
 	catch (...)
 	{
 		// TODO: Some sort of notification of failure.
 	}
-	return out;
+	return ret;
+}
+
+ExecutionResult InterfaceStub::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+{
+	ExecutionResult ret;
+	try
+	{
+		State temp = asOf(_blockNumber);
+		u256 n = temp.transactionsFrom(toAddress(_secret));
+		//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+		
+		Transaction t(_value, _gasPrice, _gas, _data, n, _secret);
+		ret = temp.execute(bc(), t.rlp(), Permanence::Reverted);
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return ret;
 }
 
 u256 InterfaceStub::balanceAt(Address _a, int _block) const

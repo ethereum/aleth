@@ -382,6 +382,29 @@ void Client::setupState(State& _s)
 		_s.commitToMine(m_bc);
 }
 
+ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
+{
+	ExecutionResult ret;
+	try
+	{
+		State temp;
+//		cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+		{
+			ReadGuard l(x_stateDB);
+			temp = m_postMine;
+		}
+		Executive e(temp, LastHashes(), 0);
+		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
+			e.go();
+		ret = e.executionResult();
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+	}
+	return ret;
+}
+
 pair<h256, u256> Client::getWork()
 {
 	Guard l(x_remoteMiner);
@@ -584,26 +607,6 @@ void Client::inject(bytesConstRef _rlp)
 	startWorking();
 	
 	m_tq.attemptImport(_rlp);
-}
-
-// TODO: this should throw an exception
-bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
-{
-	try
-	{
-		State temp = postMine();
-		Executive e(temp, LastHashes(), 0);
-		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
-		{
-			e.go();
-			return e.out().toBytes();
-		}
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return bytes();
 }
 
 void Client::flushTransactions()
