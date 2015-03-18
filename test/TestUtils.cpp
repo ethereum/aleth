@@ -21,6 +21,7 @@
 
 #include <ctime>
 #include <random>
+#include <thread>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcrypto/FileSystem.h>
@@ -196,6 +197,18 @@ LoadTestFileFixture::LoadTestFileFixture()
 	}
 }
 
+void ParallelFixture::enumerateThreads(std::function<void()> callback)
+{
+	vector<thread> workers;
+	for (size_t i = 0; i < 5; i++)
+		workers.emplace_back(callback);
+	
+	for_each(workers.begin(), workers.end(), [](thread &t)
+	{
+		t.join();
+	});
+}
+
 void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, State state)> callback)
 {
 	for (string const& name: m_json.getMemberNames())
@@ -243,9 +256,21 @@ private:
 
 void InterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback)
 {
-	enumerateBlockchains([callback](Json::Value const& _json, BlockChain& _bc, State _state) -> void
+	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain& _bc, State _state) -> void
 	{
 		FixedInterface client(_bc, _state);
 		callback(_json, client);
+	});
+}
+
+void ParallelInterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback)
+{
+	InterfaceStubFixture::enumerateInterfaces([this, &callback](Json::Value const& _json, dev::eth::InterfaceStub& _client) -> void
+	{
+		// json is being copied here
+		enumerateThreads([callback, _json, &_client]() -> void
+		{
+			callback(_json, _client);
+		});
 	});
 }

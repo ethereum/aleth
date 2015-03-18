@@ -60,12 +60,29 @@ struct LoadTestFileFixture
 	static Json::Value m_json;
 };
 
+struct ParallelFixture
+{
+	void enumerateThreads(std::function<void()> callback);
+};
+
 struct BlockChainFixture: public LoadTestFileFixture
 {
 	void enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, dev::eth::State state)> callback);
 };
 
 struct InterfaceStubFixture: public BlockChainFixture
+{
+	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback);
+};
+
+// important BOOST TEST do have problems with thread safety!!!
+// BOOST_CHECK is not thread safe
+// BOOST_MESSAGE is not thread safe
+// http://boost.2283326.n4.nabble.com/Is-boost-test-thread-safe-td3471644.html
+// http://lists.boost.org/boost-users/2010/03/57691.php
+// worth reading
+// https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
+struct ParallelInterfaceStubFixture: public InterfaceStubFixture, public ParallelFixture
 {
 	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback);
 };

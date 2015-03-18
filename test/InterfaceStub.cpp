@@ -28,9 +28,9 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(InterfaceStub, InterfaceStubFixture)
+BOOST_FIXTURE_TEST_SUITE(InterfaceStub, ParallelInterfaceStubFixture)
 
-BOOST_AUTO_TEST_CASE(postState)
+BOOST_AUTO_TEST_CASE(blocks)
 {
 	enumerateInterfaces([](Json::Value const& _json, dev::eth::InterfaceStub& _client) -> void
 	{
@@ -38,17 +38,17 @@ BOOST_AUTO_TEST_CASE(postState)
 		{
 			Json::Value o = _json["postState"][name];
 			Address address(name);
-			
+
 			// balanceAt
 			u256 expectedBalance = u256(o["balance"].asString());
 			u256 balance = _client.balanceAt(address);
 			BOOST_CHECK_EQUAL(expectedBalance, balance);
-			
+
 			// countAt
 			u256 expectedCount = u256(o["nonce"].asString());
 			u256 count = _client.countAt(address);
 			BOOST_CHECK_EQUAL(expectedCount, count);
-			
+
 			// stateAt
 			for (string const& pos: o["storage"].getMemberNames())
 			{
@@ -56,20 +56,14 @@ BOOST_AUTO_TEST_CASE(postState)
 				u256 state = _client.stateAt(address, u256(pos));
 				BOOST_CHECK_EQUAL(expectedState, state);
 			}
-			
+
 			// codeAt
 			bytes expectedCode = toBytes(o["code"].asString());
 			bytes code = _client.codeAt(address);
 			BOOST_CHECK_EQUAL_COLLECTIONS(expectedCode.begin(), expectedCode.end(),
 										  code.begin(), code.end());
 		}
-	});
-}
 
-BOOST_AUTO_TEST_CASE(blocks)
-{
-	enumerateInterfaces([](Json::Value const& _json, dev::eth::InterfaceStub& _client) -> void
-	{
 		// number
 		unsigned expectedNumber = _json["blocks"].size();
 		unsigned number = _client.number();
