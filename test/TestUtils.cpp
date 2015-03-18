@@ -104,7 +104,9 @@ Json::Value dev::test::loadTestFile(std::string const& _filename)
 {
 	Json::Reader reader;
 	Json::Value result;
-	reader.parse(loadFile(getTestPath() + "/" + _filename + ".json"), result);
+	string path = getTestPath() + "/" + _filename + ".json";
+	reader.parse(loadFile(path), result);
+	clog << "FIXTURE: loaded test from file: " << path << endl;
 	return result;
 }
 
@@ -199,8 +201,10 @@ LoadTestFileFixture::LoadTestFileFixture()
 
 void ParallelFixture::enumerateThreads(std::function<void()> callback)
 {
+	size_t threadsCount = std::stoul(getCommandLineArgument("--eth_threads"), nullptr, 10);
+	
 	vector<thread> workers;
-	for (size_t i = 0; i < 5; i++)
+	for (size_t i = 0; i < threadsCount; i++)
 		workers.emplace_back(callback);
 	
 	for_each(workers.begin(), workers.end(), [](thread &t)
@@ -221,7 +225,7 @@ void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value cons
 		string path = getRandomPathForTest("InterfaceStub");
 		ShortLivingDirectory directory(path);
 		BlockChain bc(toBlockChain(o), path, true);
-		clog << "test blockchain path: " << path << endl;
+		clog << "FIXTURE: initalized blockchain at path: " << path << endl;
 
 		for (auto const& block: o["blocks"])
 		{

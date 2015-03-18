@@ -123,7 +123,6 @@ BOOST_AUTO_TEST_CASE(blocks)
 				BOOST_CHECK_EQUAL(expectedBlockInfoTransactionsRoot, _blockInfo.transactionsRoot);
 				BOOST_CHECK_EQUAL(expectedBlockInfoUncldeHash, _blockInfo.sha3Uncles);
 			};
-			
 
 			BlockInfo blockInfo = _client.blockInfo(blockHash);
 			compareBlockInfos(blockHeader, blockInfo);
