@@ -178,6 +178,7 @@ endif()
 
 if (JSONRPC)
 	add_subdirectory(libweb3jsonrpc)
+	add_subdirectory(ethrpctest)
 endif()
 
 add_subdirectory(secp256k1)
@@ -197,7 +198,6 @@ add_subdirectory(libethereum)
 add_subdirectory(libwebthree)
 add_subdirectory(libtestutils)
 add_subdirectory(test)
-add_subdirectory(ethrpctest)
 
 if (NOT JUSTTESTS)
 

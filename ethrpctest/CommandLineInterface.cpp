@@ -23,11 +23,18 @@
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
+#include <jsonrpccpp/server/connectors/httpserver.h>
 #include <libtestutils/Common.h>
+#include <libtestutils/BlockChainLoader.h>
+#include <libtestutils/FixedInterface.h>
+#include <libtestutils/FixedWebThreeServer.h>
 #include "CommandLineInterface.h"
 #include "BuildInfo.h"
 
 using namespace std;
+using namespace dev;
+using namespace dev::eth;
+using namespace dev::test;
 namespace po = boost::program_options;
 
 bool CommandLineInterface::parseArguments(int argc, char** argv)
@@ -83,6 +90,14 @@ bool CommandLineInterface::processInput()
 		cout << "Non existant test case \"" << infile << "\"" << endl;
 		return false;
 	}
+	
+	if (!j[test].isObject())
+	{
+		cout << "Incorrect JSON file \"" << infile << "\"" << endl;
+		return false;
+	}
+	
+	m_json = j[test];
 
 	return true;
 }
@@ -96,8 +111,17 @@ void sighandler(int)
 
 void CommandLineInterface::actOnInput()
 {
+	BlockChainLoader bcl(m_json);
+	FixedInterface client(bcl.bc(), bcl.state());
+	unique_ptr<FixedWebThreeServer> jsonrpcServer;
+	auto server = new jsonrpc::HttpServer(8080);
+	jsonrpcServer.reset(new FixedWebThreeServer(*server, {}, &client));
+	jsonrpcServer->StartListening();
 
 	signal(SIGABRT, &sighandler);
 	signal(SIGTERM, &sighandler);
 	signal(SIGINT, &sighandler);
+
+	while (!g_exit)
+	{}
 }
