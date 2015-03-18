@@ -95,6 +95,7 @@ void MixClient::resetState(std::map<Secret, u256> _accounts)
 	m_state = eth::State(genesisState.begin()->first , m_stateDB, BaseState::Empty);
 	m_state.sync(bc());
 	m_startState = m_state;
+	WriteGuard lx(x_executions);
 	m_executions.clear();
 }
 
@@ -177,12 +178,14 @@ void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _c
 		d.contractAddress = right160(sha3(rlpList(_t.sender(), _t.nonce())));
 	if (!_call)
 		d.transactionIndex = m_state.pending().size();
-	m_executions.emplace_back(std::move(d));
+	d.executonIndex = m_executions.size();
 
 	// execute on a state
 	if (!_call)
 	{
 		_state.execute(lastHashes, rlp, nullptr, true);
+		if (_t.isCreation() && _state.code(d.contractAddress).empty())
+			BOOST_THROW_EXCEPTION(OutOfGas() << errinfo_comment("Not enough gas for contract deployment"));
 		// collect watches
 		h256Set changed;
 		Guard l(m_filterLock);
@@ -202,6 +205,8 @@ void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _c
 		changed.insert(dev::eth::PendingChangedFilter);
 		noteChanged(changed);
 	}
+	WriteGuard l(x_executions);
+	m_executions.emplace_back(std::move(d));
 }
 
 void MixClient::mine()
@@ -217,14 +222,16 @@ void MixClient::mine()
 	noteChanged(changed);
 }
 
-ExecutionResult const& MixClient::lastExecution() const
+ExecutionResult MixClient::lastExecution() const
 {
-	return m_executions.back();
+	ReadGuard l(x_executions);
+	return m_executions.empty() ? ExecutionResult() : m_executions.back();
 }
 
-ExecutionResults const& MixClient::executions() const
+ExecutionResult MixClient::execution(unsigned _index) const
 {
-	return m_executions;
+	ReadGuard l(x_executions);
+	return m_executions.at(_index);
 }
 
 State MixClient::asOf(int _block) const
@@ -290,6 +297,7 @@ void MixClient::noteChanged(h256Set const& _filters)
 
 eth::BlockInfo MixClient::blockInfo() const
 {
+	ReadGuard l(x_state);
 	return BlockInfo(bc().block());
 }
 
