@@ -25,8 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <libtestutils/BlockChainLoader.h>
-#include <libtestutils/ShortLivingDirectory.h>
-#include <libtestutils/Common.h>
+#include <libtestutils/FixedInterface.h>
 #include "TestUtils.h"
 
 // used methods from TestHelper:
@@ -108,26 +107,6 @@ void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value cons
 		callback(m_json[name], bcl.bc(), bcl.state());
 	}
 }
-
-class FixedInterface: public dev::eth::InterfaceStub
-{
-public:
-	FixedInterface(BlockChain const& _bc, State _state) :  m_bc(_bc), m_state(_state) {}
-	virtual ~FixedInterface() {}
-	
-	// stub
-	virtual void flushTransactions() override {}
-	virtual BlockChain const& bc() const override { return m_bc; }
-	virtual State asOf(int _h) const override { (void)_h; return m_state; }
-	virtual State asOf(h256 _h) const override { (void)_h; return m_state; }
-	virtual State preMine() const override { return m_state; }
-	virtual State postMine() const override { return m_state; }
-	virtual void prepareForTransaction() override {}
-	
-private:
-	BlockChain const& m_bc;
-	State m_state;
-};
 
 void InterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback)
 {

@@ -197,6 +197,7 @@ add_subdirectory(libethereum)
 add_subdirectory(libwebthree)
 add_subdirectory(libtestutils)
 add_subdirectory(test)
+add_subdirectory(ethrpctest)
 
 if (NOT JUSTTESTS)
 
