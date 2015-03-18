@@ -143,6 +143,8 @@ void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::m
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
+bytes createBlockRLPFromFields(json_spirit::mObject& _tObj);
+eth::BlockInfo constructBlock(json_spirit::mObject& _o);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)

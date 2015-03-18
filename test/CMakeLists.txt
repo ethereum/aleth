@@ -52,3 +52,22 @@ target_link_libraries(checkRandomStateTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES
 target_link_libraries(checkRandomStateTest ethereum)
 target_link_libraries(checkRandomStateTest ethcore)
 
+enable_testing()
+set(CTEST_OUTPUT_ON_FAILURE TRUE)
+
+include(EthUtils)
+
+eth_add_test(InterfaceStub
+	ARGS --eth_testfile=BlockTests/bcJS_API_Test --eth_threads=1
+	ARGS --eth_testfile=BlockTests/bcJS_API_Test --eth_threads=3
+	ARGS --eth_testfile=BlockTests/bcJS_API_Test --eth_threads=10
+	ARGS --eth_testfile=BlockTests/bcValidBlockTest --eth_threads=1
+	ARGS --eth_testfile=BlockTests/bcValidBlockTest --eth_threads=3
+	ARGS --eth_testfile=BlockTests/bcValidBlockTest --eth_threads=10
+)
+
+eth_add_test(JsonRpc
+	ARGS --eth_testfile=BlockTests/bcJS_API_Test 
+	ARGS --eth_testfile=BlockTests/bcValidBlockTest
+)
+

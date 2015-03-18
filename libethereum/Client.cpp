@@ -186,11 +186,6 @@ void Client::doneWorking()
 	m_postMine = m_preMine;
 }
 
-void Client::flushTransactions()
-{
-	doWork();
-}
-
 void Client::killChain()
 {
 	bool wasMining = isMining();
@@ -249,61 +244,6 @@ void Client::clearPending()
 	noteChanged(changeds);
 }
 
-unsigned Client::installWatch(h256 _h, Reaping _r)
-{
-	unsigned ret;
-	{
-		Guard l(m_filterLock);
-		ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-		m_watches[ret] = ClientWatch(_h, _r);
-		cwatch << "+++" << ret << _h.abridged();
-	}
-	auto ch = logs(ret);
-	if (ch.empty())
-		ch.push_back(InitialChange);
-	{
-		Guard l(m_filterLock);
-		swap(m_watches[ret].changes, ch);
-	}
-	return ret;
-}
-
-unsigned Client::installWatch(LogFilter const& _f, Reaping _r)
-{
-	h256 h = _f.sha3();
-	{
-		Guard l(m_filterLock);
-		if (!m_filters.count(h))
-		{
-			cwatch << "FFF" << _f << h.abridged();
-			m_filters.insert(make_pair(h, _f));
-		}
-	}
-	return installWatch(h, _r);
-}
-
-bool Client::uninstallWatch(unsigned _i)
-{
-	cwatch << "XXX" << _i;
-
-	Guard l(m_filterLock);
-
-	auto it = m_watches.find(_i);
-	if (it == m_watches.end())
-		return false;
-	auto id = it->second.id;
-	m_watches.erase(it);
-
-	auto fit = m_filters.find(id);
-	if (fit != m_filters.end())
-		if (!--fit->second.refCount)
-		{
-			cwatch << "*X*" << fit->first << ":" << fit->second.filter;
-			m_filters.erase(fit);
-		}
-	return true;
-}
-
 void Client::noteChanged(h256Set const& _filters)
 {
 	Guard l(m_filterLock);
@@ -322,39 +262,6 @@ void Client::noteChanged(h256Set const& _filters)
 	// clear the filters now.
 	for (auto& i: m_filters)
 		i.second.changes.clear();
-}
-
-LocalisedLogEntries Client::peekWatch(unsigned _watchId) const
-{
-	Guard l(m_filterLock);
-
-#if ETH_DEBUG
-	cdebug << "peekWatch" << _watchId;
-#endif
-	auto& w = m_watches.at(_watchId);
-#if ETH_DEBUG
-	cdebug << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-#endif
-	w.lastPoll = chrono::system_clock::now();
-	return w.changes;
-}
-
-LocalisedLogEntries Client::checkWatch(unsigned _watchId)
-{
-	Guard l(m_filterLock);
-	LocalisedLogEntries ret;
-
-#if ETH_DEBUG && 0
-	cdebug << "checkWatch" << _watchId;
-#endif
-	auto& w = m_watches.at(_watchId);
-#if ETH_DEBUG && 0
-	cdebug << "lastPoll updated to " << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now().time_since_epoch()).count();
-#endif
-	std::swap(ret, w.changes);
-	w.lastPoll = chrono::system_clock::now();
-
-	return ret;
 }
 
 void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Set& io_changed, h256 _sha3)
@@ -473,92 +380,6 @@ void Client::setupState(State& _s)
 	}
 	else
 		_s.commitToMine(m_bc);
-}
-
-void Client::transact(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
-{
-	startWorking();
-
-	u256 n;
-	{
-		ReadGuard l(x_stateDB);
-		n = m_postMine.transactionsFrom(toAddress(_secret));
-	}
-	Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
-//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
-	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
-}
-
-bytes Client::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
-{
-	bytes out;
-	try
-	{
-		u256 n;
-		State temp;
-	//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-		{
-			ReadGuard l(x_stateDB);
-			temp = asOf(_blockNumber);
-			n = temp.transactionsFrom(toAddress(_secret));
-		}
-		Transaction t(_value, _gasPrice, _gas, _dest, _data, n, _secret);
-		u256 gasUsed = temp.execute(m_bc, t.rlp(), &out, false);
-		(void)gasUsed; // TODO: do something with gasused which it returns.
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return out;
-}
-
-bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
-{
-	try
-	{
-		State temp;
-//		cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-		{
-			ReadGuard l(x_stateDB);
-			temp = m_postMine;
-		}
-		Executive e(temp, LastHashes(), 0);
-		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
-		{
-			e.go();
-			return e.out().toBytes();
-		}
-	}
-	catch (...)
-	{
-		// TODO: Some sort of notification of failure.
-	}
-	return bytes();
-}
-
-Address Client::transact(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
-{
-	startWorking();
-
-	u256 n;
-	{
-		ReadGuard l(x_stateDB);
-		n = m_postMine.transactionsFrom(toAddress(_secret));
-	}
-	Transaction t(_endowment, _gasPrice, _gas, _init, n, _secret);
-	cnote << "New transaction " << t;
-	m_tq.attemptImport(t.rlp());
-	return right160(sha3(rlpList(t.sender(), t.nonce())));
-}
-
-void Client::inject(bytesConstRef _rlp)
-{
-	startWorking();
-
-	m_tq.attemptImport(_rlp);
 }
 
 pair<h256, u256> Client::getWork()
@@ -725,8 +546,19 @@ State Client::asOf(int _h) const
 		return m_postMine;
 	else if (_h == -1)
 		return m_preMine;
-	else
-		return State(m_stateDB, m_bc, m_bc.numberHash(numberOf(_h)));
+
+	return State(m_stateDB, bc(), bc().numberHash(_h));
+}
+
+State Client::asOf(h256 _block) const
+{
+	ReadGuard l(x_stateDB);
+	return State(m_stateDB, bc(), _block);
+}
+
+void Client::prepareForTransaction()
+{
+	startWorking();
 }
 
 State Client::state(unsigned _txi, h256 _block) const
@@ -747,183 +579,34 @@ eth::State Client::state(unsigned _txi) const
 	return m_postMine.fromPending(_txi);
 }
 
-StateDiff Client::diff(unsigned _txi, int _block) const
+void Client::inject(bytesConstRef _rlp)
 {
-	State st = asOf(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
+	startWorking();
+	
+	m_tq.attemptImport(_rlp);
 }
 
-StateDiff Client::diff(unsigned _txi, h256 _block) const
+// TODO: this should throw an exception
+bytes Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice)
 {
-	State st = state(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
-}
-
-std::vector<Address> Client::addresses(int _block) const
-{
-	vector<Address> ret;
-	for (auto const& i: asOf(_block).addresses())
-		ret.push_back(i.first);
-	return ret;
-}
-
-u256 Client::balanceAt(Address _a, int _block) const
-{
-	return asOf(_block).balance(_a);
-}
-
-std::map<u256, u256> Client::storageAt(Address _a, int _block) const
-{
-	return asOf(_block).storage(_a);
-}
-
-u256 Client::countAt(Address _a, int _block) const
-{
-	return asOf(_block).transactionsFrom(_a);
-}
-
-u256 Client::stateAt(Address _a, u256 _l, int _block) const
-{
-	return asOf(_block).storage(_a, _l);
-}
-
-bytes Client::codeAt(Address _a, int _block) const
-{
-	return asOf(_block).code(_a);
-}
-
-Transaction Client::transaction(h256 _transactionHash) const
-{
-	return Transaction(m_bc.transaction(_transactionHash), CheckSignature::Range);
-}
-
-Transaction Client::transaction(h256 _blockHash, unsigned _i) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	if (_i < b[1].itemCount())
-		return Transaction(b[1][_i].data(), CheckSignature::Range);
-	else
-		return Transaction();
-}
-
-BlockInfo Client::uncle(h256 _blockHash, unsigned _i) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	if (_i < b[2].itemCount())
-		return BlockInfo::fromHeader(b[2][_i].data());
-	else
-		return BlockInfo();
-}
-
-unsigned Client::transactionCount(h256 _blockHash) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	return b[1].itemCount();
-}
-
-unsigned Client::uncleCount(h256 _blockHash) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	return b[2].itemCount();
-}
-
-Transactions Client::transactions(h256 _blockHash) const
-{
-	auto bl = m_bc.block(_blockHash);
-	RLP b(bl);
-	Transactions res;
-	for (unsigned i = 0; i < b[1].itemCount(); i++)
-		res.emplace_back(b[1][i].data(), CheckSignature::Range);
-	return res;
-}
-
-TransactionHashes Client::transactionHashes(h256 _blockHash) const
-{
-	return m_bc.transactionHashes(_blockHash);
-}
-
-LocalisedLogEntries Client::logs(unsigned _watchId) const
-{
-	LogFilter f;
 	try
 	{
-		Guard l(m_filterLock);
-		f = m_filters.at(m_watches.at(_watchId).id).filter;
+		State temp = postMine();
+		Executive e(temp, LastHashes(), 0);
+		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
+		{
+			e.go();
+			return e.out().toBytes();
+		}
 	}
 	catch (...)
 	{
-		return LocalisedLogEntries();
+		// TODO: Some sort of notification of failure.
 	}
-	return logs(f);
+	return bytes();
 }
 
-LocalisedLogEntries Client::logs(LogFilter const& _f) const
+void Client::flushTransactions()
 {
-	LocalisedLogEntries ret;
-	unsigned begin = min<unsigned>(m_bc.number() + 1, (unsigned)_f.latest());
-	unsigned end = min(m_bc.number(), min(begin, (unsigned)_f.earliest()));
-
-	// Handle pending transactions differently as they're not on the block chain.
-	if (begin > m_bc.number())
-	{
-		ReadGuard l(x_stateDB);
-		for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
-		{
-			// Might have a transaction that contains a matching log.
-			TransactionReceipt const& tr = m_postMine.receipt(i);
-			auto sha3 = m_postMine.pending()[i].sha3();
-			LogEntries le = _f.matches(tr);
-			if (le.size())
-				for (unsigned j = 0; j < le.size(); ++j)
-					ret.insert(ret.begin(), LocalisedLogEntry(le[j], begin, sha3));
-		}
-		begin = m_bc.number();
-	}
-
-	set<unsigned> matchingBlocks;
-	for (auto const& i: _f.bloomPossibilities())
-		for (auto u: m_bc.withBlockBloom(i, end, begin))
-			matchingBlocks.insert(u);
-
-#if ETH_DEBUG
-	unsigned falsePos = 0;
-#endif
-	for (auto n: matchingBlocks)
-	{
-#if ETH_DEBUG
-		int total = 0;
-#endif
-		auto h = m_bc.numberHash(n);
-		auto receipts = m_bc.receipts(h).receipts;
-		for (size_t i = 0; i < receipts.size(); i++)
-		{
-			TransactionReceipt receipt = receipts[i];
-			if (_f.matches(receipt.bloom()))
-			{
-				auto info = m_bc.info(h);
-				auto h = transaction(info.hash, i).sha3();
-				LogEntries le = _f.matches(receipt);
-				if (le.size())
-				{
-#if ETH_DEBUG
-					total += le.size();
-#endif
-					for (unsigned j = 0; j < le.size(); ++j)
-						ret.insert(ret.begin(), LocalisedLogEntry(le[j], n, h));
-				}
-			}
-#if ETH_DEBUG
-			if (!total)
-				falsePos++;
-#endif
-		}
-	}
-#if ETH_DEBUG
-	cdebug << matchingBlocks.size() << "searched from" << (end - begin) << "skipped; " << falsePos << "false +ves";
-#endif
-	return ret;
+	doWork();
 }

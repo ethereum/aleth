@@ -41,7 +41,7 @@
 namespace dev
 {
 
-namespace test { class ImportTest; }
+namespace test { class ImportTest; class TestUtils; }
 
 namespace eth
 {
@@ -93,6 +93,7 @@ class State
 {
 	friend class ExtVM;
 	friend class dev::test::ImportTest;
+	friend class dev::test::TestUtils;
 	friend class Executive;
 
 public:
