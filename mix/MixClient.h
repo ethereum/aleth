@@ -70,6 +70,7 @@ public:
 	virtual void flushTransactions() override {}
 
 	/// @returns the last mined block information
+	using Interface::blockInfo; // to remove warning about hiding virtual function
 	eth::BlockInfo blockInfo() const;
 	std::vector<KeyPair> userAccounts() { return m_userAccounts; }
 

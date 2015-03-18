@@ -180,6 +180,7 @@ public:
 	virtual void inject(bytesConstRef _rlp);	
 
 	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
+	using Interface::call; // to remove warning about hiding virtual function
 	virtual bytes call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether);
 
 	/// Blocks until all pending transactions have been processed.
