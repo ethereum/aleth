@@ -238,9 +238,9 @@ static Json::Value toJson(h256 const& _h, shh::Envelope const& _e, shh::Message 
 static int toBlockNumber(string const& _string)
 {
 	if (_string.compare("latest") == 0)
-		return -1;
-	if (_string.compare("pending") == 0)
 		return 0;
+	if (_string.compare("pending") == 0)
+		return -1;
 	return jsToInt(_string);
 }
 
@@ -390,7 +390,7 @@ string WebThreeStubServerBase::eth_getCode(string const& _address, string const&
 {
 	try
 	{
-		return toJS(client()->codeAt(jsToAddress(_address), toBlockNumber(_blockNumber)));
+		return toJS(client()->codeAt(jsToAddress(_address), toBlockNumber(_blockNumber)), 1);
 	}
 	catch (...)
 	{

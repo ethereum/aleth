@@ -39,15 +39,16 @@ public:
 	// stub
 	virtual void flushTransactions() override {}
 	virtual eth::BlockChain const& bc() const override { return m_bc; }
-	virtual eth::State asOf(int _h) const override { (void)_h; return m_state; }
-	virtual eth::State asOf(h256 _h) const override { (void)_h; return m_state; }
-	virtual eth::State preMine() const override { return m_state; }
-	virtual eth::State postMine() const override { return m_state; }
+	virtual eth::State asOf(int _h) const override;
+	virtual eth::State asOf(h256 _h) const override;
+	virtual eth::State preMine() const override { ReadGuard l(x_stateDB); return m_state; }
+	virtual eth::State postMine() const override { ReadGuard l(x_stateDB); return m_state; }
 	virtual void prepareForTransaction() override {}
 
 private:
 	eth::BlockChain const& m_bc;
 	eth::State m_state;
+	mutable SharedMutex x_stateDB;			///< Lock on the state DB, effectively a lock on m_postMine.
 };
 
 }

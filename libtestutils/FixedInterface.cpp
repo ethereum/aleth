@@ -20,3 +20,25 @@
  */
 
 #include "FixedInterface.h"
+
+using namespace dev;
+using namespace dev::eth;
+using namespace dev::test;
+
+eth::State FixedInterface::asOf(int _h) const
+{
+	ReadGuard l(x_stateDB);
+	if (_h == 0)
+		return m_state;
+	else if (_h == -1)
+		return m_state;
+	
+	return State(m_state.db(), bc(), bc().numberHash(_h));
+}
+
+eth::State FixedInterface::asOf(h256 _h) const
+{
+
+	ReadGuard l(x_stateDB);
+	return State(m_state.db(), bc(), _h);
+}
