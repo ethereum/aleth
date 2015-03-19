@@ -38,6 +38,7 @@ namespace eth
 {
 
 using TransactionHashes = h256s;
+using UncleHashes = h256s;
 
 enum class Reaping
 {
@@ -115,6 +116,7 @@ public:
 	virtual Transaction transaction(h256 _transactionHash) const = 0;
 	virtual Transaction transaction(h256 _blockHash, unsigned _i) const = 0;
 	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const = 0;
+	virtual UncleHashes uncleHashes(h256 _blockHash) const = 0;
 	virtual unsigned transactionCount(h256 _blockHash) const = 0;
 	virtual unsigned uncleCount(h256 _blockHash) const = 0;
 	virtual Transactions transactions(h256 _blockHash) const = 0;

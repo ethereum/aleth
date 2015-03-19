@@ -111,6 +111,7 @@ public:
 	virtual eth::Transactions transactions(h256 _blockHash) const override;
 	virtual eth::TransactionHashes transactionHashes(h256 _blockHash) const override;
 	virtual eth::BlockInfo uncle(h256 _blockHash, unsigned _i) const override;
+	virtual eth::UncleHashes uncleHashes(h256 _blockHash) const override;
 	virtual unsigned transactionCount(h256 _blockHash) const override;
 	virtual unsigned uncleCount(h256 _blockHash) const override;
 	virtual unsigned number() const override;

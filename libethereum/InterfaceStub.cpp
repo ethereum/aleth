@@ -327,6 +327,11 @@ BlockInfo InterfaceStub::uncle(h256 _blockHash, unsigned _i) const
 		return BlockInfo();
 }
 
+UncleHashes InterfaceStub::uncleHashes(h256 _blockHash) const
+{
+	return bc().uncleHashes(_blockHash);
+}
+
 unsigned InterfaceStub::transactionCount(h256 _blockHash) const
 {
 	auto bl = bc().block(_blockHash);
