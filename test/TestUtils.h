@@ -32,8 +32,11 @@ namespace dev
 namespace test
 {
 
-bytes toBytes(std::string const& _str);
-
+// should be used for multithread tests
+static SharedMutex x_boostTest;
+#define ETH_CHECK_EQUAL(x, y) { dev::WriteGuard(x_boostTest); BOOST_CHECK_EQUAL(x, y); }
+#define ETH_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye) { dev::WriteGuard(x_boostTest); BOOST_CHECK_EQUAL_COLLECTIONS(xb, xe, yb, ye); }
+#define ETH_REQUIRE(x) { dev::WriteGuard(x_boostTest); BOOST_REQUIRE(x); }
 
 struct LoadTestFileFixture
 {
