@@ -73,7 +73,11 @@ bytesConstRef Ethasher::full(BlockInfo const& _header)
 		try {
 			boost::filesystem::create_directories(getDataDir() + "/ethashcache");
 		} catch (...) {}
-		std::string memoFile = getDataDir() + "/ethashcache/" + toHex(_header.seedHash().ref().cropped(0, 4)) + ".full";
+
+		std::string memoFile = getDataDir() + "/ethashcache/full";
+		auto info = rlpList(c_ethashRevision, _header.seedHash());
+		if (boost::filesystem::exists(memoFile) && contents(memoFile + ".info") != info)
+			boost::filesystem::remove(memoFile);
 		m_fulls[_header.seedHash()] = contentsNew(memoFile);
 		if (!m_fulls[_header.seedHash()])
 		{
@@ -82,6 +86,7 @@ bytesConstRef Ethasher::full(BlockInfo const& _header)
 			auto c = cache(_header);
 			ethash_prep_full(m_fulls[_header.seedHash()].data(), &p, c.data());
 			writeFile(memoFile, m_fulls[_header.seedHash()]);
+			writeFile(memoFile + ".info", info);
 		}
 	}
 	return m_fulls[_header.seedHash()];
@@ -123,6 +128,6 @@ Ethasher::Result Ethasher::eval(BlockInfo const& _header, Nonce const& _nonce)
 	auto p = Ethasher::params(_header);
 	ethash_return_value r;
 	ethash_compute_light(&r, Ethasher::get()->cache(_header).data(), &p, _header.headerHash(WithoutNonce).data(), (uint64_t)(u64)_nonce);
-	cdebug << "Ethasher::eval sha3(cache):" << sha3(Ethasher::get()->cache(_header)) << "hh:" << _header.headerHash(WithoutNonce) << "nonce:" << _nonce << " => " << h256(r.result, h256::ConstructFromPointer);
+//	cdebug << "Ethasher::eval sha3(cache):" << sha3(Ethasher::get()->cache(_header)) << "hh:" << _header.headerHash(WithoutNonce) << "nonce:" << _nonce << " => " << h256(r.result, h256::ConstructFromPointer);
 	return Result{h256(r.result, h256::ConstructFromPointer), h256(r.mix_hash, h256::ConstructFromPointer)};
 }
