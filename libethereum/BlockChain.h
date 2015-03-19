@@ -135,7 +135,6 @@ public:
 	UncleHashes uncleHashes(h256 _hash) const { auto b = block(_hash); RLP rlp(b); h256s ret; for (auto t: rlp[2]) ret.push_back(sha3(t.data())); return ret; }
 	UncleHashes uncleHashes() const { return uncleHashes(currentHash()); }
 	
-	/// Get a list of transaction hashes for a given block. Thread-safe.
 	h256 numberHash(u256 _index) const { if (!_index) return genesisHash(); return queryExtras<BlockHash, ExtraBlockHash>(h256(_index), m_blockHashes, x_blockHashes, NullBlockHash).value; }
 
 	/** Get the block blooms for a number of blocks. Thread-safe.

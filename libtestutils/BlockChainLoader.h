@@ -37,7 +37,7 @@ namespace test
 class BlockChainLoader
 {
 public:
-	BlockChainLoader(Json::Value _json);
+	BlockChainLoader(Json::Value const& _json);
 	eth::BlockChain& bc() { return *m_bc; }
 	eth::State state() { return m_state; }
 	

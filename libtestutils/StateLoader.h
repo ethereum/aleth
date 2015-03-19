@@ -14,30 +14,29 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file FixedInterface.cpp
+/** @file StateLoader.h
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
 
-#include "FixedInterface.h"
+#pragma once
 
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
+#include <json/json.h>
+#include <libethereum/State.h>
 
-eth::State FixedInterface::asOf(int _h) const
+namespace dev
 {
-	ReadGuard l(x_stateDB);
-	if (_h == 0)
-		return m_state;
-	else if (_h == -1)
-		return m_state;
-	
-	return State(m_state.db(), bc(), bc().numberHash(_h));
+namespace test
+{
+
+class StateLoader
+{
+public:
+	StateLoader(Json::Value const& _json);
+	eth::State state() { return m_state; }
+
+private:
+	eth::State m_state;
+};
 }
-
-eth::State FixedInterface::asOf(h256 _h) const
-{
-	ReadGuard l(x_stateDB);
-	return State(m_state.db(), bc(), _h);
 }

@@ -35,7 +35,7 @@ public:
 	ShortLivingDirectory(std::string const& _path);
 	~ShortLivingDirectory();
 
-	std::string getPath(){ return m_path; }
+	std::string path(){ return m_path; }
 
 private:
 	std::string m_path;

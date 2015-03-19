@@ -20,6 +20,7 @@
  */
 
 #include "BlockChainLoader.h"
+#include "StateLoader.h"
 #include "Common.h"
 
 using namespace std;
@@ -32,44 +33,9 @@ namespace dev
 namespace test
 {
 dev::eth::BlockInfo toBlockInfo(Json::Value const& _json);
-bytes toBlockChain(Json::Value const& _json);
+bytes toGenesisBlock(Json::Value const& _json);
 
-class TestUtils
-{
-public:
-	static dev::eth::State toState(Json::Value const& _json);
-};
 }
-}
-
-dev::eth::State TestUtils::toState(Json::Value const& _json)
-{
-	State state(Address(), OverlayDB(), BaseState::Empty);
-	for (string const& name: _json.getMemberNames())
-	{
-		Json::Value o = _json[name];
-		
-		Address address = Address(name);
-		bytes code = fromHex(o["code"].asString().substr(2));
-		
-		if (code.size())
-		{
-			state.m_cache[address] = Account(u256(o["balance"].asString()), Account::ContractConception);
-			state.m_cache[address].setCode(code);
-		}
-		else
-			state.m_cache[address] = Account(u256(o["balance"].asString()), Account::NormalCreation);
-		
-		for (string const& j: o["storage"].getMemberNames())
-			state.setStorage(address, u256(j), u256(o["storage"][j].asString()));
-		
-		for (auto i = 0; i < u256(o["nonce"].asString()); ++i)
-			state.noteSending(address);
-		
-		state.ensureCached(address, false, false);
-	}
-	
-	return state;
 }
 
 dev::eth::BlockInfo dev::test::toBlockInfo(Json::Value const& _json)
@@ -99,9 +65,9 @@ dev::eth::BlockInfo dev::test::toBlockInfo(Json::Value const& _json)
 	return result;
 }
 
-bytes dev::test::toBlockChain(Json::Value const& _json)
+bytes dev::test::toGenesisBlock(Json::Value const& _json)
 {
-	BlockInfo bi = toBlockInfo(_json["genesisBlockHeader"]);
+	BlockInfo bi = toBlockInfo(_json);
 	RLPStream rlpStream;
 	bi.streamRLP(rlpStream, WithNonce);
 	
@@ -114,24 +80,22 @@ bytes dev::test::toBlockChain(Json::Value const& _json)
 	return fullStream.out();
 }
 
-BlockChainLoader::BlockChainLoader(Json::Value _json)
+BlockChainLoader::BlockChainLoader(Json::Value const& _json)
 {
-	m_state= TestUtils::toState(_json["pre"]);
-	m_state.commit();
+	// load pre state
+	StateLoader sl(_json["pre"]);
+	m_state = sl.state();
 
-	m_bc.reset(new BlockChain(toBlockChain(_json), m_dir.getPath(), true));
+	// load genesisBlock
+	m_bc.reset(new BlockChain(toGenesisBlock(_json["genesisBlockHeader"]), m_dir.path(), true));
 
+	// load blocks
 	for (auto const& block: _json["blocks"])
 	{
 		bytes rlp = toBytes(block["rlp"].asString());
 		m_bc->import(rlp, m_state.db());
-		m_state.sync(*m_bc);
 	}
+
+	// sync state
+	m_state.sync(*m_bc);
 }
-
-
-
-
-
-
-
