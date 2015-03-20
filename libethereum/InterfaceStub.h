@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <chrono>
 #include "Interface.h"
 #include "LogFilter.h"
 

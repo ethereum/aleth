@@ -22,6 +22,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <csignal>
 #include <boost/filesystem.hpp>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <libtestutils/Common.h>
