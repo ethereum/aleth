@@ -23,6 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <csignal>
+#include <thread>
 #include <boost/filesystem.hpp>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <libtestutils/Common.h>
@@ -115,7 +116,7 @@ void CommandLineInterface::actOnInput()
 	BlockChainLoader bcl(m_json);
 	FixedInterface client(bcl.bc(), bcl.state());
 	unique_ptr<FixedWebThreeServer> jsonrpcServer;
-	auto server = new jsonrpc::HttpServer(8080);
+	auto server = new jsonrpc::HttpServer(8080, "", "", 2);
 	jsonrpcServer.reset(new FixedWebThreeServer(*server, {}, &client));
 	jsonrpcServer->StartListening();
 
@@ -124,5 +125,7 @@ void CommandLineInterface::actOnInput()
 	signal(SIGINT, &sighandler);
 
 	while (!g_exit)
-	{}
+	{
+		this_thread::sleep_for(chrono::milliseconds(1000));
+	}
 }
