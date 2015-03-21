@@ -7,36 +7,33 @@ if (${CMAKE_MAJOR_VERSION} GREATER 2)
 endif()
 set(CMAKE_AUTOMOC OFF)
 
-set(CMAKE_ASM_COMPILER "yasm")
-
 set(EXECUTABLE secp256k1)
 file(GLOB HEADERS "*.h") 
 
 if (APPLE OR UNIX)
 
 	if (ETH_STATIC)
-		add_library(${EXECUTABLE} STATIC ${EXECUTABLE}.c field_5x52_asm.asm)
+		add_library(${EXECUTABLE} STATIC ${EXECUTABLE}.c field_5x52_impl.h)
 	else()
-		add_library(${EXECUTABLE} SHARED ${EXECUTABLE}.c field_5x52_asm.asm)
+		add_library(${EXECUTABLE} SHARED ${EXECUTABLE}.c field_5x52_impl.h)
 	endif()
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -DUSE_FIELD_GMP -DUSE_NUM_GMP -DUSE_FIELD_INV_NUM")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c89 -DHAVE___INT128 -DUSE_SCALAR_4X64 -DUSE_SCALAR_INV_NUM -DUSE_ASM_X86_64 -DUSE_FIELD_5X52 -DUSE_FIELD_INV_NUM -DUSE_NUM_GMP -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings")
 	target_link_libraries(${EXECUTABLE} ${GMP_LIBRARIES})
+
 elseif (CMAKE_COMPILER_IS_MINGW)
 
 	include_directories(${Boost_INCLUDE_DIRS})
-
 	if (ETH_STATIC)
-		add_library(${EXECUTABLE} STATIC ${EXECUTABLE}.c field_5x52_asm.asm)
+		add_library(${EXECUTABLE} STATIC ${EXECUTABLE}.c field_5x52_impl.h)
 	else()
-		add_library(${EXECUTABLE} SHARED ${EXECUTABLE}.c field_5x52_asm.asm)
+		add_library(${EXECUTABLE} SHARED ${EXECUTABLE}.c field_5x52_impl.h)
 	endif()
-
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c99 -W -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -DUSE_FIELD_GMP -DUSE_NUM_GMP -DUSE_FIELD_INV_NUM")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c89 -DHAVE___INT128 -DUSE_SCALAR_4X64 -DUSE_SCALAR_INV_NUM -DUSE_ASM_X86_64 -DUSE_FIELD_5X52 -DUSE_FIELD_INV_NUM -DUSE_NUM_GMP -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings")
 	target_link_libraries(${EXECUTABLE} ${GMP_LIBRARIES})
+  
 else()
 
 	include_directories(${Boost_INCLUDE_DIRS})
-
 	if (ETH_STATIC)
 		add_library(${EXECUTABLE} STATIC ${EXECUTABLE}.c)
 	else()
@@ -44,7 +41,7 @@ else()
 	endif()
 	# /TP - compile project as cpp project
 	set_target_properties(${EXECUTABLE} PROPERTIES COMPILE_FLAGS "/TP /wd4244")
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_NUM_BOOST -DUSE_FIELD_10X26 -DUSE_FIELD_INV_BUILTIN")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DUSE_SCALAR_4X64 -DUSE_SCALAR_INV_NUM -DUSE_ASM_X86_64 -DUSE_NUM_BOOST -DUSE_FIELD_10X26 -DUSE_FIELD_INV_BUILTIN")
 	
 endif()
 
