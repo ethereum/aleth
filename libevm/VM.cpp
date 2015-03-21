@@ -185,6 +185,21 @@ bytesConstRef VM::go(ExtVMFace& _ext, OnOpFunc const& _onOp, uint64_t _steps)
 			runGas = c_expGas + c_expByteGas * (32 - (h256(expon).firstBitSet() / 8));
 			break;
 		}
+		case Instruction::ADDRESS:
+		case Instruction::ORIGIN:
+		case Instruction::CALLER:
+		case Instruction::CALLVALUE:
+		case Instruction::CALLDATASIZE:
+		case Instruction::CODESIZE:
+		case Instruction::GASPRICE:
+		case Instruction::COINBASE:
+		case Instruction::TIMESTAMP:
+		case Instruction::NUMBER:
+		case Instruction::DIFFICULTY:
+		case Instruction::GASLIMIT:
+		case Instruction::PC:
+		case Instruction::MSIZE:
+		case Instruction::GAS:
 		case Instruction::PUSH1:
 		case Instruction::PUSH2:
 		case Instruction::PUSH3:
@@ -217,7 +232,7 @@ bytesConstRef VM::go(ExtVMFace& _ext, OnOpFunc const& _onOp, uint64_t _steps)
 		case Instruction::PUSH30:
 		case Instruction::PUSH31:
 		case Instruction::PUSH32:
-			if (m_stack.size() > c_stackLimit)
+			if (m_stack.size() >= c_stackLimit)
 				BOOST_THROW_EXCEPTION(OutOfStack());
 		default:;
 		}
