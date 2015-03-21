@@ -27,7 +27,7 @@ macro(eth_add_test NAME)
 	# parse arguments here
 	set(commands)
 	set(current_command "")
-	foreach(arg ${ARGN})	
+	foreach (arg ${ARGN})
 		if (arg STREQUAL "ARGS")
 			if (current_command)
 				list(APPEND commands ${current_command})
@@ -44,7 +44,7 @@ macro(eth_add_test NAME)
 	# create tests
 	set(index 0)
 	list(LENGTH commands count)
-	while(index LESS count)
+	while (index LESS count)
 		list(GET commands ${index} test_arguments)
 
 		set(run_test "--run_test=${NAME}")

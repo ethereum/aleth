@@ -125,7 +125,5 @@ void CommandLineInterface::actOnInput()
 	signal(SIGINT, &sighandler);
 
 	while (!g_exit)
-	{
 		this_thread::sleep_for(chrono::milliseconds(1000));
-	}
 }
