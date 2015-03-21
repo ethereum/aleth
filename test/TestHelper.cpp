@@ -316,7 +316,7 @@ byte dev::test::toByte(json_spirit::mValue const& _v)
 
 bytes dev::test::importByteArray(std::string const& _str)
 {
-	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, ThrowType::Throw);
+	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
 bytes dev::test::importData(json_spirit::mObject& _o)
