@@ -33,7 +33,6 @@ namespace test
 struct TestChannel: public LogChannel  { static const char* name() { return "TEST"; } };
 #define ctest dev::LogOutputStream<dev::test::TestChannel, true>()
 
-bytes toBytes(std::string const& _str);
 std::string getTestPath();
 int randomNumber();
 Json::Value loadJsonFromFile(std::string const& _path);

@@ -21,7 +21,6 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
-#include <libtestutils/Common.h>
 #include "TestUtils.h"
 
 using namespace std;
@@ -59,7 +58,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 			}
 
 			// codeAt
-			bytes expectedCode = toBytes(o["code"].asString());
+			bytes expectedCode = fromHex(o["code"].asString());
 			bytes code = _client.codeAt(address);
 			ETH_CHECK_EQUAL_COLLECTIONS(expectedCode.begin(), expectedCode.end(),
 										  code.begin(), code.end());
@@ -76,7 +75,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 			Json::Value blockHeader = block["blockHeader"];
 			Json::Value uncles = block["uncleHeaders"];
 			Json::Value transactions = block["transactions"];
-			h256 blockHash = h256(toBytes(blockHeader["hash"].asString()));
+			h256 blockHash = h256(fromHex(blockHeader["hash"].asString()));
 			
 			// just update the difficulty
 			for (Json::Value const& uncle: uncles)
@@ -85,28 +84,28 @@ BOOST_AUTO_TEST_CASE(blocks)
 			}
 			
 			// hashFromNumber
-			h256 expectedHashFromNumber = h256(toBytes(blockHeader["hash"].asString()));
+			h256 expectedHashFromNumber = h256(fromHex(blockHeader["hash"].asString()));
 			h256 hashFromNumber = _client.hashFromNumber(jsToInt(blockHeader["number"].asString()));
 			ETH_CHECK_EQUAL(expectedHashFromNumber, hashFromNumber);
 			
 			// blockInfo
 			auto compareBlockInfos = [](Json::Value const& _b, BlockInfo _blockInfo) -> void
 			{
-				LogBloom expectedBlockInfoBloom = LogBloom(toBytes(_b["bloom"].asString()));
-				Address expectedBlockInfoCoinbase = Address(toBytes(_b["coinbase"].asString()));
+				LogBloom expectedBlockInfoBloom = LogBloom(fromHex(_b["bloom"].asString()));
+				Address expectedBlockInfoCoinbase = Address(fromHex(_b["coinbase"].asString()));
 				u256 expectedBlockInfoDifficulty = u256(_b["difficulty"].asString());
-				bytes expectedBlockInfoExtraData = toBytes(_b["extraData"].asString());
+				bytes expectedBlockInfoExtraData = fromHex(_b["extraData"].asString());
 				u256 expectedBlockInfoGasLimit = u256(_b["gasLimit"].asString());
 				u256 expectedBlockInfoGasUsed = u256(_b["gasUsed"].asString());
-				h256 expectedBlockInfoHash = h256(toBytes(_b["hash"].asString()));
-				h256 expectedBlockInfoMixHash = h256(toBytes(_b["mixHash"].asString()));
-				Nonce expectedBlockInfoNonce = Nonce(toBytes(_b["nonce"].asString()));
+				h256 expectedBlockInfoHash = h256(fromHex(_b["hash"].asString()));
+				h256 expectedBlockInfoMixHash = h256(fromHex(_b["mixHash"].asString()));
+				Nonce expectedBlockInfoNonce = Nonce(fromHex(_b["nonce"].asString()));
 				u256 expectedBlockInfoNumber = u256(_b["number"].asString());
-				h256 expectedBlockInfoParentHash = h256(toBytes(_b["parentHash"].asString()));
-				h256 expectedBlockInfoReceiptsRoot = h256(toBytes(_b["receiptTrie"].asString()));
+				h256 expectedBlockInfoParentHash = h256(fromHex(_b["parentHash"].asString()));
+				h256 expectedBlockInfoReceiptsRoot = h256(fromHex(_b["receiptTrie"].asString()));
 				u256 expectedBlockInfoTimestamp = u256(_b["timestamp"].asString());
-				h256 expectedBlockInfoTransactionsRoot = h256(toBytes(_b["transactionsTrie"].asString()));
-				h256 expectedBlockInfoUncldeHash = h256(toBytes(_b["uncleHash"].asString()));
+				h256 expectedBlockInfoTransactionsRoot = h256(fromHex(_b["transactionsTrie"].asString()));
+				h256 expectedBlockInfoUncldeHash = h256(fromHex(_b["uncleHash"].asString()));
 				ETH_CHECK_EQUAL(expectedBlockInfoBloom, _blockInfo.logBloom);
 				ETH_CHECK_EQUAL(expectedBlockInfoCoinbase, _blockInfo.coinbaseAddress);
 				ETH_CHECK_EQUAL(expectedBlockInfoDifficulty, _blockInfo.difficulty);
@@ -137,12 +136,12 @@ BOOST_AUTO_TEST_CASE(blocks)
 			
 			auto compareTransactions = [](Json::Value const& _t, Transaction _transaction) -> void
 			{
-				bytes expectedTransactionData = toBytes(_t["data"].asString());
+				bytes expectedTransactionData = fromHex(_t["data"].asString());
 				u256 expectedTransactionGasLimit = u256(_t["gasLimit"].asString());
 				u256 expectedTransactionGasPrice = u256(_t["gasPrice"].asString());
 				u256 expectedTransactionNonce = u256(_t["nonce"].asString());
-				u256 expectedTransactionSignatureR = h256(toBytes(_t["r"].asString()));
-				u256 expectedTransactionSignatureS = h256(toBytes(_t["s"].asString()));
+				u256 expectedTransactionSignatureR = h256(fromHex(_t["r"].asString()));
+				u256 expectedTransactionSignatureS = h256(fromHex(_t["s"].asString()));
 //				unsigned expectedTransactionSignatureV = jsToInt(t["v"].asString());
 				
 				ETH_CHECK_EQUAL_COLLECTIONS(expectedTransactionData.begin(), expectedTransactionData.end(),

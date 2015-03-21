@@ -29,11 +29,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::test;
 
-bytes dev::test::toBytes(std::string const& _str)
-{
-	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, ThrowType::Throw);
-}
-
 std::string dev::test::getTestPath()
 {
 	string testPath;

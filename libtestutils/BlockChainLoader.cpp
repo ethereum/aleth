@@ -43,21 +43,21 @@ dev::eth::BlockInfo dev::test::toBlockInfo(Json::Value const& _json)
 	RLPStream rlpStream;
 	auto size = _json.getMemberNames().size();
 	rlpStream.appendList(_json["hash"].empty() ? size : (size - 1));
-	rlpStream << toBytes(_json["parentHash"].asString());
-	rlpStream << toBytes(_json["uncleHash"].asString());
-	rlpStream << toBytes(_json["coinbase"].asString());
-	rlpStream << toBytes(_json["stateRoot"].asString());
-	rlpStream << toBytes(_json["transactionsTrie"].asString());
-	rlpStream << toBytes(_json["receiptTrie"].asString());
-	rlpStream << toBytes(_json["bloom"].asString());
+	rlpStream << fromHex(_json["parentHash"].asString());
+	rlpStream << fromHex(_json["uncleHash"].asString());
+	rlpStream << fromHex(_json["coinbase"].asString());
+	rlpStream << fromHex(_json["stateRoot"].asString());
+	rlpStream << fromHex(_json["transactionsTrie"].asString());
+	rlpStream << fromHex(_json["receiptTrie"].asString());
+	rlpStream << fromHex(_json["bloom"].asString());
 	rlpStream << bigint(_json["difficulty"].asString());
 	rlpStream << bigint(_json["number"].asString());
 	rlpStream << bigint(_json["gasLimit"].asString());
 	rlpStream << bigint(_json["gasUsed"].asString());
 	rlpStream << bigint(_json["timestamp"].asString());
 	rlpStream << fromHex(_json["extraData"].asString());
-	rlpStream << toBytes(_json["mixHash"].asString());
-	rlpStream << toBytes(_json["nonce"].asString());
+	rlpStream << fromHex(_json["mixHash"].asString());
+	rlpStream << fromHex(_json["nonce"].asString());
 	
 	BlockInfo result;
 	RLP rlp(rlpStream.out());
@@ -92,7 +92,7 @@ BlockChainLoader::BlockChainLoader(Json::Value const& _json)
 	// load blocks
 	for (auto const& block: _json["blocks"])
 	{
-		bytes rlp = toBytes(block["rlp"].asString());
+		bytes rlp = fromHex(block["rlp"].asString());
 		m_bc->import(rlp, m_state.db());
 	}
 
