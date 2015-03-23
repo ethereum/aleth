@@ -69,6 +69,17 @@ namespace test
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
+void fixHexDataField(json_spirit::mObject& _o, string const& _sField)
+{
+	if (_o.count(_sField) > 0)
+	{
+		string str = _o[_sField].get_str();
+		bool isPrefix = (str.substr(0, 2) == "0x");
+		if (!isPrefix)
+			_o[_sField] = "0x"+str;
+	}
+}
+
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller) : m_statePre(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(_o["env"].get_obj()["currentCoinbase"].get_str()), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o)
 {
 	importEnv(_o["env"].get_obj());
@@ -160,7 +171,8 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		if (bigint(_o["value"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-		m_transaction = _o["to"].get_str().empty() ?
+		string sAddress = _o["to"].get_str();
+		m_transaction = (sAddress.empty() || sAddress == "0x")  ?
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
 	}
@@ -174,6 +186,24 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 
 void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 {
+	//fix env fields
+	if (m_TestObject.count("env") > 0)
+	{
+		json_spirit::mObject& tObj = m_TestObject["env"].get_obj();
+		fixHexDataField(tObj, "currentCoinbase");
+		fixHexDataField(tObj, "previousHash");
+	}
+
+	//fix transaction fields
+	if (m_TestObject.count("transaction") > 0)
+	{
+		json_spirit::mObject& tObj = m_TestObject["transaction"].get_obj();
+		fixHexDataField(tObj, "data");
+		fixHexDataField(tObj, "to");
+		fixHexDataField(tObj, "r");
+		fixHexDataField(tObj, "s");
+	}
+
 	// export output
 	m_TestObject["out"] = "0x" + toHex(_output);
 
@@ -507,7 +537,7 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 
 	if (_tObj.count("to"))
 	{
-		if (_tObj["to"].get_str().empty())
+		if (_tObj["to"].get_str().empty() || _tObj["to"].get_str() == "0x")
 			rlpStream << "";
 		else
 			rlpStream << importByteArray(_tObj["to"].get_str());

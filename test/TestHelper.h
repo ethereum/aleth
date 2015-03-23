@@ -130,6 +130,7 @@ byte toByte(json_spirit::mValue const& _v);
 bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject& _o);
 bytes importByteArray(std::string const& _str);
+void fixHexDataField(json_spirit::mObject& _o, std::string const& _sField);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
 void checkOutput(bytes const& _output, json_spirit::mObject& _o);

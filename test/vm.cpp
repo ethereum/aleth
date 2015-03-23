@@ -97,10 +97,10 @@ void FakeExtVM::push(mArray& a, u256 _v)
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	ret["previousHash"] = toString(previousBlock.hash);
+	ret["previousHash"] = "0x"+toString(previousBlock.hash);
 	push(ret, "currentDifficulty", currentBlock.difficulty);
 	push(ret, "currentTimestamp", currentBlock.timestamp);
-	ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
+	ret["currentCoinbase"] = "0x"+toString(currentBlock.coinbaseAddress);
 	push(ret, "currentNumber", currentBlock.number);
 	push(ret, "currentGasLimit", currentBlock.gasLimit);
 	return ret;
@@ -171,9 +171,9 @@ void FakeExtVM::importState(mObject& _object)
 mObject FakeExtVM::exportExec()
 {
 	mObject ret;
-	ret["address"] = toString(myAddress);
-	ret["caller"] = toString(caller);
-	ret["origin"] = toString(origin);
+	ret["address"] = "0x"+toString(myAddress);
+	ret["caller"] = "0x"+toString(caller);
+	ret["origin"] = "0x"+toString(origin);
 	push(ret, "value", value);
 	push(ret, "gasPrice", gasPrice);
 	push(ret, "gas", gas);
