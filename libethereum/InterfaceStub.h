@@ -78,9 +78,9 @@ public:
 	virtual Address submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo) override;
 
 	/// Makes the given call. Nothing is recorded into the state.
-	virtual ExecutionResult call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo, int _blockNumber = 0) override;
+	virtual ExecutionResult call(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo, BlockNumber _blockNumber = PendingBlock) override;
 
-	virtual ExecutionResult create(Secret _secret, u256 _value, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo, int _blockNumber = 0) override;
+	virtual ExecutionResult create(Secret _secret, u256 _value, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo, BlockNumber _blockNumber = PendingBlock) override;
 	
 	using Interface::balanceAt;
 	using Interface::countAt;
@@ -88,11 +88,11 @@ public:
 	using Interface::codeAt;
 	using Interface::storageAt;
 
-	virtual u256 balanceAt(Address _a, int _block) const override;
-	virtual u256 countAt(Address _a, int _block) const override;
-	virtual u256 stateAt(Address _a, u256 _l, int _block) const override;
-	virtual bytes codeAt(Address _a, int _block) const override;
-	virtual std::map<u256, u256> storageAt(Address _a, int _block) const override;
+	virtual u256 balanceAt(Address _a, BlockNumber _block) const override;
+	virtual u256 countAt(Address _a, BlockNumber _block) const override;
+	virtual u256 stateAt(Address _a, u256 _l, BlockNumber _block) const override;
+	virtual bytes codeAt(Address _a, BlockNumber _block) const override;
+	virtual std::map<u256, u256> storageAt(Address _a, BlockNumber _block) const override;
 
 	virtual LocalisedLogEntries logs(unsigned _watchId) const override;
 	virtual LocalisedLogEntries logs(LogFilter const& _filter) const override;
@@ -120,10 +120,10 @@ public:
 
 	using Interface::diff;
 	virtual StateDiff diff(unsigned _txi, h256 _block) const override;
-	virtual StateDiff diff(unsigned _txi, int _block) const override;
+	virtual StateDiff diff(unsigned _txi, BlockNumber _block) const override;
 
 	using Interface::addresses;
-	virtual Addresses addresses(int _block) const override;
+	virtual Addresses addresses(BlockNumber _block) const override;
 	virtual u256 gasLimitRemaining() const override;
 
 	// Set the coinbase address
@@ -146,7 +146,7 @@ public:
 protected:
 
 	virtual BlockChain const& bc() const = 0;
-	virtual State asOf(int _h) const = 0;
+	virtual State asOf(BlockNumber _h) const = 0;
 	virtual State asOf(h256 _h) const = 0;
 	virtual State preMine() const = 0;
 	virtual State postMine() const = 0;

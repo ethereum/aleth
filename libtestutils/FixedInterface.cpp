@@ -25,12 +25,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-eth::State FixedInterface::asOf(int _h) const
+eth::State FixedInterface::asOf(BlockNumber _h) const
 {
 	ReadGuard l(x_stateDB);
-	if (_h == 0)
-		return m_state;
-	else if (_h == -1)
+	if (_h == PendingBlock || _h == LatestBlock)
 		return m_state;
 	
 	return State(m_state.db(), bc(), bc().numberHash(_h));

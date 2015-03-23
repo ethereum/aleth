@@ -65,7 +65,7 @@ bool isFalse(std::string const& _m)
 void help()
 {
 	cout
-		<< "Usage neth [OPTIONS] <remote-host>" << endl
+		<< "Usage neth [OPTIONS]" << endl
 		<< "Options:" << endl
 		<< "    -a,--address <addr>  Set the coinbase (mining payout) address to addr (default: auto)." << endl
 		<< "    -c,--client-name <name>  Add a name to your client's version string (default: blank)." << endl
@@ -122,7 +122,7 @@ string credits()
 	std::ostringstream ccout;
 	ccout
 		<< "NEthereum (++) " << dev::Version << endl
-		<< "  Code by Gav Wood & , (c) 2013, 2014." << endl
+		<< "  Code by Gav Wood & caktux, (c) 2013, 2014, 2015." << endl
 		<< "  Based on a design by Vitalik Buterin." << endl << endl;
 
 	ccout << "Type 'netstart 30303' to start networking" << endl;
@@ -134,7 +134,7 @@ string credits()
 void version()
 {
 	cout << "neth version " << dev::Version << endl;
-	cout << "Network protocol version: " << dev::eth::c_protocolVersion << endl;
+	cout << "eth network protocol version: " << dev::eth::c_protocolVersion << endl;
 	cout << "Client database version: " << dev::eth::c_databaseVersion << endl;
 	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
@@ -428,7 +428,10 @@ int main(int argc, char** argv)
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else
-			remoteHost = argv[i];
+		{
+			cerr << "Invalid argument: " << arg << endl;
+			exit(-1);
+		}
 	}
 
 	if (!clientName.empty())
@@ -954,7 +957,7 @@ int main(int argc, char** argv)
 				auto s = t.receiveAddress() ?
 					boost::format("  %1% %2%> %3%: %4% [%5%]") %
 						toString(t.safeSender()) %
-						(c->codeAt(t.receiveAddress(), 0).size() ? '*' : '-') %
+						(c->codeAt(t.receiveAddress(), PendingBlock).size() ? '*' : '-') %
 						toString(t.receiveAddress()) %
 						toString(formatBalance(t.value())) %
 						toString((unsigned)t.nonce()) :
@@ -979,7 +982,7 @@ int main(int argc, char** argv)
 			auto s = t.receiveAddress() ?
 				boost::format("%1% %2%> %3%: %4% [%5%]") %
 					toString(t.safeSender()) %
-					(c->codeAt(t.receiveAddress(), 0).size() ? '*' : '-') %
+					(c->codeAt(t.receiveAddress(), PendingBlock).size() ? '*' : '-') %
 					toString(t.receiveAddress()) %
 					toString(formatBalance(t.value())) %
 					toString((unsigned)t.nonce()) :
@@ -999,25 +1002,25 @@ int main(int argc, char** argv)
 		int cc = 1;
 		auto acs = c->addresses();
 		for (auto const& i: acs)
-			if (c->codeAt(i, 0).size())
+			if (c->codeAt(i, PendingBlock).size())
 			{
 				auto s = boost::format("%1%%2% : %3% [%4%]") %
 					toString(i) %
 					pretty(i, c->postState()) %
 					toString(formatBalance(c->balanceAt(i))) %
-					toString((unsigned)c->countAt(i, 0));
+					toString((unsigned)c->countAt(i, PendingBlock));
 				mvwaddnstr(contractswin, cc++, x, s.str().c_str(), qwidth);
 				if (cc > qheight - 2)
 					break;
 			}
 		for (auto const& i: acs)
-			if (c->codeAt(i, 0).empty())
+			if (c->codeAt(i, PendingBlock).empty())
 			{
 				auto s = boost::format("%1%%2% : %3% [%4%]") %
 					toString(i) %
 					pretty(i, c->postState()) %
 					toString(formatBalance(c->balanceAt(i))) %
-					toString((unsigned)c->countAt(i, 0));
+					toString((unsigned)c->countAt(i, PendingBlock));
 				mvwaddnstr(addswin, y++, x, s.str().c_str(), width / 2 - 4);
 				if (y > height * 3 / 5 - 4)
 					break;

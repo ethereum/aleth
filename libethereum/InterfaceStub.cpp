@@ -56,7 +56,7 @@ Address InterfaceStub::submitTransaction(Secret _secret, u256 _endowment, bytes 
 }
 
 // TODO: remove try/catch, allow exceptions
-ExecutionResult InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+ExecutionResult InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
 {
 	ExecutionResult ret;
 	try
@@ -73,7 +73,7 @@ ExecutionResult InterfaceStub::call(Secret _secret, u256 _value, Address _dest, 
 	return ret;
 }
 
-ExecutionResult InterfaceStub::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+ExecutionResult InterfaceStub::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
 {
 	ExecutionResult ret;
 	try
@@ -92,27 +92,27 @@ ExecutionResult InterfaceStub::create(Secret _secret, u256 _value, bytes const& 
 	return ret;
 }
 
-u256 InterfaceStub::balanceAt(Address _a, int _block) const
+u256 InterfaceStub::balanceAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).balance(_a);
 }
 
-u256 InterfaceStub::countAt(Address _a, int _block) const
+u256 InterfaceStub::countAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).transactionsFrom(_a);
 }
 
-u256 InterfaceStub::stateAt(Address _a, u256 _l, int _block) const
+u256 InterfaceStub::stateAt(Address _a, u256 _l, BlockNumber _block) const
 {
 	return asOf(_block).storage(_a, _l);
 }
 
-bytes InterfaceStub::codeAt(Address _a, int _block) const
+bytes InterfaceStub::codeAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).code(_a);
 }
 
-map<u256, u256> InterfaceStub::storageAt(Address _a, int _block) const
+map<u256, u256> InterfaceStub::storageAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).storage(_a);
 }
@@ -363,13 +363,13 @@ StateDiff InterfaceStub::diff(unsigned _txi, h256 _block) const
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
-StateDiff InterfaceStub::diff(unsigned _txi, int _block) const
+StateDiff InterfaceStub::diff(unsigned _txi, BlockNumber _block) const
 {
 	State st = asOf(_block);
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
-Addresses InterfaceStub::addresses(int _block) const
+Addresses InterfaceStub::addresses(BlockNumber _block) const
 {
 	Addresses ret;
 	for (auto const& i: asOf(_block).addresses())

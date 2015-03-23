@@ -251,7 +251,7 @@ public:
 protected:
 	/// InterfaceStub methods
 	virtual BlockChain const& bc() const override { return m_bc; }
-	virtual State asOf(int _h) const override;
+	virtual State asOf(BlockNumber _h) const override;
 	virtual State asOf(h256 _block) const override;
 	virtual State preMine() const override { ReadGuard l(x_stateDB); return m_preMine; }
 	virtual State postMine() const override { ReadGuard l(x_stateDB); return m_postMine; }

@@ -234,12 +234,12 @@ ExecutionResult MixClient::execution(unsigned _index) const
 	return m_executions.at(_index);
 }
 
-State MixClient::asOf(int _block) const
+State MixClient::asOf(BlockNumber _block) const
 {
 	ReadGuard l(x_state);
-	if (_block == 0)
+	if (_block == PendingBlock)
 		return m_state;
-	else if (_block == -1)
+	else if (_block == LatestBlock)
 		return m_startState;
 	
 	return State(m_stateDB, bc(), bc().numberHash(_block));
@@ -269,7 +269,7 @@ Address MixClient::submitTransaction(Secret _secret, u256 _endowment, bytes cons
 	return address;
 }
 
-dev::eth::ExecutionResult MixClient::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+dev::eth::ExecutionResult MixClient::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
 {
 	
 	State temp = asOf(_blockNumber);
@@ -281,7 +281,7 @@ dev::eth::ExecutionResult MixClient::call(Secret _secret, u256 _value, Address _
 	return lastExecution().result;
 }
 
-dev::eth::ExecutionResult MixClient::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber)
+dev::eth::ExecutionResult MixClient::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
 {
 	u256 n;
 	State temp;

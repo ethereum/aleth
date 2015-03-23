@@ -55,8 +55,8 @@ public:
 
 	void submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice) override;
 	Address submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice) override;
-	dev::eth::ExecutionResult call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, int _blockNumber) override;
-	dev::eth::ExecutionResult create(Secret _secret, u256 _value, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo, int _blockNumber = 0) override;
+	dev::eth::ExecutionResult call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, eth::BlockNumber _blockNumber = eth::PendingBlock) override;
+	dev::eth::ExecutionResult create(Secret _secret, u256 _value, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo, eth::BlockNumber _blockNumber = eth::PendingBlock) override;
 
 	void setAddress(Address _us) override;
 	void setMiningThreads(unsigned _threads) override;
@@ -78,7 +78,7 @@ protected:
 	virtual dev::eth::BlockChain& bc() { return *m_bc; }
 
 	/// InterfaceStub methods
-	virtual dev::eth::State asOf(int _block) const override;
+	virtual dev::eth::State asOf(eth::BlockNumber _block) const override;
 	virtual dev::eth::State asOf(h256 _block) const override;
 	virtual dev::eth::BlockChain const& bc() const override { return *m_bc; }
 	virtual dev::eth::State preMine() const override { ReadGuard l(x_state);  return m_startState; }

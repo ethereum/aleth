@@ -562,12 +562,12 @@ unsigned Client::numberOf(int _n) const
 		return m_bc.details().number + max(-(int)m_bc.details().number, 1 + _n);
 }
 
-State Client::asOf(int _h) const
+State Client::asOf(BlockNumber _h) const
 {
 	ReadGuard l(x_stateDB);
-	if (_h == 0)
+	if (_h == PendingBlock)
 		return m_postMine;
-	else if (_h == -1)
+	else if (_h == LatestBlock)
 		return m_preMine;
 
 	return State(m_stateDB, bc(), bc().numberHash(_h));
