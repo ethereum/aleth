@@ -22,14 +22,14 @@
 #include <string>
 #include <iostream>
 #include <fstream>
-#include <signal.h>
+#include <csignal>
 #include <thread>
+#include <boost/filesystem.hpp>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <libtestutils/Common.h>
 #include <libtestutils/BlockChainLoader.h>
 #include <libtestutils/FixedInterface.h>
 #include <libtestutils/FixedWebThreeServer.h>
-#include <boost/filesystem.hpp>
 #include "CommandLineInterface.h"
 #include "BuildInfo.h"
 
