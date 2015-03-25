@@ -436,59 +436,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 // helping functions
 
-bytes createBlockRLPFromFields(mObject& _tObj)
-{
-	RLPStream rlpStream;
-	rlpStream.appendList(_tObj.count("hash") > 0 ? (_tObj.size() - 1) : _tObj.size());
-
-	if (_tObj.count("parentHash"))
-		rlpStream << importByteArray(_tObj["parentHash"].get_str());
-
-	if (_tObj.count("uncleHash"))
-		rlpStream << importByteArray(_tObj["uncleHash"].get_str());
-
-	if (_tObj.count("coinbase"))
-		rlpStream << importByteArray(_tObj["coinbase"].get_str());
-
-	if (_tObj.count("stateRoot"))
-		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
-
-	if (_tObj.count("transactionsTrie"))
-		rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
-
-	if (_tObj.count("receiptTrie"))
-		rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
-
-	if (_tObj.count("bloom"))
-		rlpStream << importByteArray(_tObj["bloom"].get_str());
-
-	if (_tObj.count("difficulty"))
-		rlpStream << bigint(_tObj["difficulty"].get_str());
-
-	if (_tObj.count("number"))
-		rlpStream << bigint(_tObj["number"].get_str());
-
-	if (_tObj.count("gasLimit"))
-		rlpStream << bigint(_tObj["gasLimit"].get_str());
-
-	if (_tObj.count("gasUsed"))
-		rlpStream << bigint(_tObj["gasUsed"].get_str());
-
-	if (_tObj.count("timestamp"))
-		rlpStream << bigint(_tObj["timestamp"].get_str());
-
-	if (_tObj.count("extraData"))
-		rlpStream << fromHex(_tObj["extraData"].get_str());
-
-	if (_tObj.count("mixHash"))
-		rlpStream << importByteArray(_tObj["mixHash"].get_str());
-
-	if (_tObj.count("nonce"))
-		rlpStream << importByteArray(_tObj["nonce"].get_str());
-
-	return rlpStream.out();
-}
-
 void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 {
 	if (_blObj["blockHeader"].get_obj().size() != 14)
@@ -560,33 +507,6 @@ void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj)
 		const RLP c_bRLP(c_blockRLP);
 		_current_BlockHeader.populateFromHeader(c_bRLP, IgnoreNonce);
 	}
-}
-
-BlockInfo constructBlock(mObject& _o)
-{
-
-	BlockInfo ret;
-	try
-	{
-		// construct genesis block
-		const bytes c_blockRLP = createBlockRLPFromFields(_o);
-		const RLP c_bRLP(c_blockRLP);
-		ret.populateFromHeader(c_bRLP, IgnoreNonce);
-	}
-	catch (Exception const& _e)
-	{
-		cnote << "block population did throw an exception: " << diagnostic_information(_e);
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
-	}
-	catch(...)
-	{
-		BOOST_ERROR("block population did throw an unknown exception\n");
-	}
-	return ret;
 }
 
 void updatePoW(BlockInfo& _bi)

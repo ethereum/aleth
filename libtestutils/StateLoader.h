@@ -13,27 +13,30 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file jsonrpc.cpp
+ */
+/** @file StateLoader.h
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
-#include "TestUtils.h"
+#pragma once
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
+#include <json/json.h>
+#include <libethereum/State.h>
 
-BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
-
-BOOST_AUTO_TEST_CASE(empty)
+namespace dev
+{
+namespace test
 {
 
+class StateLoader
+{
+public:
+	StateLoader(Json::Value const& _json);
+	eth::State state() { return m_state; }
+
+private:
+	eth::State m_state;
+};
 }
-
-BOOST_AUTO_TEST_SUITE_END()
-
+}

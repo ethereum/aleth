@@ -13,27 +13,29 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file jsonrpc.cpp
+ */
+/** @file FixedClient.cpp
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
-#include "TestUtils.h"
+#include "FixedClient.h"
 
-using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
-
-BOOST_AUTO_TEST_CASE(empty)
+eth::State FixedClient::asOf(BlockNumber _h) const
 {
-
+	ReadGuard l(x_stateDB);
+	if (_h == PendingBlock || _h == LatestBlock)
+		return m_state;
+	
+	return State(m_state.db(), bc(), bc().numberHash(_h));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
+eth::State FixedClient::asOf(h256 _h) const
+{
+	ReadGuard l(x_stateDB);
+	return State(m_state.db(), bc(), _h);
+}

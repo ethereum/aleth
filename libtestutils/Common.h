@@ -13,27 +13,32 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file jsonrpc.cpp
+ */
+/** @file Common.h
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
-#include "TestUtils.h"
+#pragma once
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
+#include <string>
+#include <json/json.h>
+#include <libdevcore/Log.h>
 
-BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
-
-BOOST_AUTO_TEST_CASE(empty)
+namespace dev
 {
+namespace test
+{
+
+struct TestChannel: public LogChannel  { static const char* name() { return "TEST"; } };
+#define ctest dev::LogOutputStream<dev::test::TestChannel, true>()
+
+std::string getTestPath();
+int randomNumber();
+Json::Value loadJsonFromFile(std::string const& _path);
+std::string toTestFilePath(std::string const& _filename);
+std::string getRandomPath();
 
 }
 
-BOOST_AUTO_TEST_SUITE_END()
-
+}

@@ -26,6 +26,7 @@
 #include <chrono>
 #include <thread>
 #include <cstdint>
+#include <algorithm>
 #include <libdevcrypto/SHA3.h>
 #include "Common.h"
 #include "BlockInfo.h"

@@ -13,27 +13,39 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file jsonrpc.cpp
+ */
+/** @file BlockChainLoader.h
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
-#include "TestUtils.h"
+#pragma once
+#include <string>
+#include <json/json.h>
+#include <libethereum/BlockChain.h>
+#include <libethereum/State.h>
+#include "ShortLivingDirectory.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
-
-BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
-
-BOOST_AUTO_TEST_CASE(empty)
+namespace dev
+{
+namespace test
 {
 
+/**
+ * @brief - loads the blockchain from json, creates temporary directory to store it, removes this temporary directory on dealloc
+ */
+class BlockChainLoader
+{
+public:
+	BlockChainLoader(Json::Value const& _json);
+	eth::BlockChain& bc() { return *m_bc; }
+	eth::State state() { return m_state; }
+	
+private:
+	ShortLivingDirectory m_dir;
+	std::auto_ptr<eth::BlockChain> m_bc;
+	eth::State m_state;
+};
+
 }
-
-BOOST_AUTO_TEST_SUITE_END()
-
+}

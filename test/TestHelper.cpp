@@ -31,11 +31,11 @@
 #include <libevm/VMFactory.h>
 
 using namespace std;
+using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 
 namespace dev
-{
-namespace eth
 {
 
 void mine(Client& c, int numBlocks)
@@ -61,10 +61,6 @@ void connectClients(Client& c1, Client& c2)
 	c2.connect("127.0.0.1", c1Port);
 #endif
 }
-}
-
-namespace test
-{
 
 struct ValueTooLarge: virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
@@ -189,7 +185,7 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 	m_TestObject["pre"] = fillJsonWithState(m_statePre);
 }
 
-json_spirit::mObject fillJsonWithState(State _state)
+json_spirit::mObject dev::test::fillJsonWithState(State _state)
 {
 	// export pre state
 	json_spirit::mObject oState;
@@ -212,7 +208,87 @@ json_spirit::mObject fillJsonWithState(State _state)
 	return oState;
 }
 
-u256 toInt(json_spirit::mValue const& _v)
+bytes dev::test::createBlockRLPFromFields(json_spirit::mObject& _tObj)
+{
+	RLPStream rlpStream;
+	rlpStream.appendList(_tObj.count("hash") > 0 ? (_tObj.size() - 1) : _tObj.size());
+
+	if (_tObj.count("parentHash"))
+		rlpStream << importByteArray(_tObj["parentHash"].get_str());
+
+	if (_tObj.count("uncleHash"))
+		rlpStream << importByteArray(_tObj["uncleHash"].get_str());
+
+	if (_tObj.count("coinbase"))
+		rlpStream << importByteArray(_tObj["coinbase"].get_str());
+
+	if (_tObj.count("stateRoot"))
+		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
+
+	if (_tObj.count("transactionsTrie"))
+		rlpStream << importByteArray(_tObj["transactionsTrie"].get_str());
+
+	if (_tObj.count("receiptTrie"))
+		rlpStream << importByteArray(_tObj["receiptTrie"].get_str());
+
+	if (_tObj.count("bloom"))
+		rlpStream << importByteArray(_tObj["bloom"].get_str());
+		
+	if (_tObj.count("difficulty"))
+		rlpStream << bigint(_tObj["difficulty"].get_str());
+
+	if (_tObj.count("number"))
+		rlpStream << bigint(_tObj["number"].get_str());
+	
+	if (_tObj.count("gasLimit"))
+		rlpStream << bigint(_tObj["gasLimit"].get_str());
+
+	if (_tObj.count("gasUsed"))
+		rlpStream << bigint(_tObj["gasUsed"].get_str());
+
+	if (_tObj.count("timestamp"))
+		rlpStream << bigint(_tObj["timestamp"].get_str());
+
+	if (_tObj.count("extraData"))
+		rlpStream << fromHex(_tObj["extraData"].get_str());
+
+	if (_tObj.count("mixHash"))
+		rlpStream << importByteArray(_tObj["mixHash"].get_str());
+
+	if (_tObj.count("nonce"))
+		rlpStream << importByteArray(_tObj["nonce"].get_str());
+
+	return rlpStream.out();
+}
+
+BlockInfo dev::test::constructBlock(json_spirit::mObject& _o)
+{
+
+	BlockInfo ret;
+	try
+	{
+		// construct genesis block
+		const bytes c_blockRLP = createBlockRLPFromFields(_o);
+		const RLP c_bRLP(c_blockRLP);
+		ret.populateFromHeader(c_bRLP, IgnoreNonce);
+	}
+	catch (Exception const& _e)
+	{
+		cnote << "block population did throw an exception: " << diagnostic_information(_e);
+		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+	}
+	catch(...)
+	{
+		BOOST_ERROR("block population did throw an unknown exception\n");
+	}
+	return ret;
+}
+
+u256 dev::test::toInt(json_spirit::mValue const& _v)
 {
 	switch (_v.type())
 	{
@@ -225,7 +301,7 @@ u256 toInt(json_spirit::mValue const& _v)
 	return 0;
 }
 
-byte toByte(json_spirit::mValue const& _v)
+byte dev::test::toByte(json_spirit::mValue const& _v)
 {
 	switch (_v.type())
 	{
@@ -238,12 +314,12 @@ byte toByte(json_spirit::mValue const& _v)
 	return 0;
 }
 
-bytes importByteArray(std::string const& _str)
+bytes dev::test::importByteArray(std::string const& _str)
 {
 	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
-bytes importData(json_spirit::mObject& _o)
+bytes dev::test::importData(json_spirit::mObject& _o)
 {
 	bytes data;
 	if (_o["data"].type() == json_spirit::str_type)
@@ -254,7 +330,7 @@ bytes importData(json_spirit::mObject& _o)
 	return data;
 }
 
-bytes importCode(json_spirit::mObject& _o)
+bytes dev::test::importCode(json_spirit::mObject& _o)
 {
 	bytes code;
 	if (_o["code"].type() == json_spirit::str_type)
@@ -271,7 +347,7 @@ bytes importCode(json_spirit::mObject& _o)
 	return code;
 }
 
-LogEntries importLog(json_spirit::mArray& _a)
+LogEntries dev::test::importLog(json_spirit::mArray& _a)
 {
 	LogEntries logEntries;
 	for (auto const& l: _a)
@@ -292,7 +368,7 @@ LogEntries importLog(json_spirit::mArray& _a)
 	return logEntries;
 }
 
-json_spirit::mArray exportLog(eth::LogEntries _logs)
+json_spirit::mArray dev::test::exportLog(eth::LogEntries _logs)
 {
 	json_spirit::mArray ret;
 	if (_logs.size() == 0) return ret;
@@ -311,7 +387,7 @@ json_spirit::mArray exportLog(eth::LogEntries _logs)
 	return ret;
 }
 
-void checkOutput(bytes const& _output, json_spirit::mObject& _o)
+void dev::test::checkOutput(bytes const& _output, json_spirit::mObject& _o)
 {
 	int j = 0;
 	if (_o["out"].type() == json_spirit::array_type)
@@ -326,7 +402,7 @@ void checkOutput(bytes const& _output, json_spirit::mObject& _o)
 		BOOST_CHECK(_output == fromHex(_o["out"].get_str()));
 }
 
-void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)
+void dev::test::checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)
 {
 	for (auto&& expectedStorePair : _expectedStore)
 	{
@@ -349,7 +425,7 @@ void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, 
 	}
 }
 
-void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
+void dev::test::checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 {
 	BOOST_REQUIRE_EQUAL(_resultLogs.size(), _expectedLogs.size());
 
@@ -361,7 +437,7 @@ void checkLog(LogEntries _resultLogs, LogEntries _expectedLogs)
 	}
 }
 
-void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)
+void dev::test::checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates)
 {
 	BOOST_REQUIRE_EQUAL(_resultCallCreates.size(), _expectedCallCreates.size());
 
@@ -374,23 +450,7 @@ void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _e
 	}
 }
 
-std::string getTestPath()
-{
-	string testPath;
-	const char* ptestPath = getenv("ETHEREUM_TEST_PATH");
-
-	if (ptestPath == NULL)
-	{
-		cnote << " could not find environment variable ETHEREUM_TEST_PATH \n";
-		testPath = "../../../tests";
-	}
-	else
-		testPath = ptestPath;
-
-	return testPath;
-}
-
-void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
+void dev::test::userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
 	{
@@ -442,7 +502,7 @@ void userDefinedTest(string testTypeFlag, std::function<void(json_spirit::mValue
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
+void dev::test::executeTests(const string& _name, const string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests)
 {
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
@@ -490,7 +550,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, std::fun
 	}
 }
 
-RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
+RLPStream dev::test::createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
 {
 	//Construct Rlp of the given transaction
 	RLPStream rlpStream;
@@ -583,14 +643,13 @@ Options const& Options::get()
 }
 
 
-LastHashes lastHashes(u256 _currentBlockNumber)
+LastHashes dev::test::lastHashes(u256 _currentBlockNumber)
 {
 	LastHashes ret;
 	for (u256 i = 1; i <= 256 && i <= _currentBlockNumber; ++i)
 		ret.push_back(sha3(toString(_currentBlockNumber - i)));
 	return ret;
 }
-
 
 namespace
 {
@@ -614,4 +673,4 @@ void Listener::notifyTestFinished()
 		g_listener->testFinished();
 }
 
-} } // namespaces
+} // namespaces

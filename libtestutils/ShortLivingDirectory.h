@@ -13,27 +13,33 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file jsonrpc.cpp
+ */
+/** @file ShortLivingDirectory.h
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
-#include "TestUtils.h"
+#pragma once
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
+#include <string>
 
-BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
-
-BOOST_AUTO_TEST_CASE(empty)
+namespace dev
+{
+namespace test
 {
 
+class ShortLivingDirectory
+{
+public:
+	ShortLivingDirectory();
+	ShortLivingDirectory(std::string const& _path);
+	~ShortLivingDirectory();
+
+	std::string path(){ return m_path; }
+
+private:
+	std::string m_path;
+};
+
 }
-
-BOOST_AUTO_TEST_SUITE_END()
-
+}

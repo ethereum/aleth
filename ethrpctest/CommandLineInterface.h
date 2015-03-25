@@ -14,26 +14,33 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file jsonrpc.cpp
+/** CommandLineInterface.h
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
+#pragma once
 
-#include <boost/test/unit_test.hpp>
-#include <libdevcore/CommonJS.h>
-#include "TestUtils.h"
+#include <json/json.h>
+#include <boost/program_options.hpp>
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
-
-BOOST_FIXTURE_TEST_SUITE(JsonRpc, JsonRpcFixture)
-
-BOOST_AUTO_TEST_CASE(empty)
+class CommandLineInterface
 {
+public:
+	CommandLineInterface() {}
 
-}
+	/// Parse command line arguments and return false if we should not continue
+	bool parseArguments(int argc, char** argv);
+	/// Parse input file and check if test exists
+	bool processInput();
+	/// Start FixedJsonRpcServer
+	void actOnInput();
 
-BOOST_AUTO_TEST_SUITE_END()
+private:
+
+	/// Compiler arguments variable map
+	boost::program_options::variables_map m_args;
+
+	/// loaded json test case
+	Json::Value m_json;
+};
 
