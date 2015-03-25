@@ -251,6 +251,9 @@ public:
 protected:
 	/// InterfaceStub methods
 	virtual BlockChain const& bc() const override { return m_bc; }
+	
+	/// Returns the state object for the full block (i.e. the terminal state) for index _h.
+	/// Works properly with LatestBlock and PendingBlock.
 	virtual State asOf(BlockNumber _h) const override;
 	virtual State asOf(h256 _block) const override;
 	virtual State preMine() const override { ReadGuard l(x_stateDB); return m_preMine; }
@@ -280,9 +283,6 @@ private:
 	virtual void setupState(State& _s);
 	virtual bool turbo() const { return m_turboMining; }
 	virtual bool force() const { return m_forceMining; }
-
-	/// Return the actual block number of the block with the given int-number (positive is the same, INT_MIN is genesis block, < 0 is negative age, thus -1 is most recently mined, 0 is pending.
-	unsigned numberOf(int _b) const;
 
 	VersionChecker m_vc;					///< Dummy object to check & update the protocol version.
 	CanonBlockChain m_bc;					///< Maintains block database.

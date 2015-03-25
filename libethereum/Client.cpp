@@ -392,6 +392,7 @@ ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 
 		{
 			ReadGuard l(x_stateDB);
 			temp = m_postMine;
+			temp.addBalance(Address(), _value + _gasPrice * _gas);
 		}
 		Executive e(temp, LastHashes(), 0);
 		if (!e.call(_dest, _dest, Address(), _value, _gasPrice, &_data, _gas, Address()))
@@ -550,16 +551,6 @@ void Client::doWork()
 
 		m_lastGarbageCollection = chrono::system_clock::now();
 	}
-}
-
-unsigned Client::numberOf(int _n) const
-{
-	if (_n > 0)
-		return _n;
-	else if (_n == GenesisBlock)
-		return 0;
-	else
-		return m_bc.details().number + max(-(int)m_bc.details().number, 1 + _n);
 }
 
 State Client::asOf(BlockNumber _h) const
