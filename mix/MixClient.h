@@ -78,8 +78,6 @@ protected:
 	virtual dev::eth::BlockChain& bc() { return *m_bc; }
 
 	/// InterfaceStub methods
-	virtual dev::eth::State asOf(eth::BlockNumber _block) const override;
-	virtual dev::eth::State asOf(h256 _block) const override;
 	virtual dev::eth::BlockChain const& bc() const override { return *m_bc; }
 	virtual dev::eth::State preMine() const override { ReadGuard l(x_state);  return m_startState; }
 	virtual dev::eth::State postMine() const override { ReadGuard l(x_state); return m_state; }

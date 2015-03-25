@@ -553,23 +553,6 @@ void Client::doWork()
 	}
 }
 
-State Client::asOf(BlockNumber _h) const
-{
-	ReadGuard l(x_stateDB);
-	if (_h == PendingBlock)
-		return m_postMine;
-	else if (_h == LatestBlock)
-		return m_preMine;
-
-	return State(m_stateDB, bc(), bc().numberHash(_h));
-}
-
-State Client::asOf(h256 _block) const
-{
-	ReadGuard l(x_stateDB);
-	return State(m_stateDB, bc(), _block);
-}
-
 void Client::prepareForTransaction()
 {
 	startWorking();

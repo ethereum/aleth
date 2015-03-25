@@ -234,23 +234,6 @@ ExecutionResult MixClient::execution(unsigned _index) const
 	return m_executions.at(_index);
 }
 
-State MixClient::asOf(BlockNumber _block) const
-{
-	ReadGuard l(x_state);
-	if (_block == PendingBlock)
-		return m_state;
-	else if (_block == LatestBlock)
-		return m_startState;
-	
-	return State(m_stateDB, bc(), bc().numberHash(_block));
-}
-
-State MixClient::asOf(h256 _block) const
-{
-	ReadGuard l(x_state);
-	return State(m_stateDB, bc(), _block);
-}
-
 void MixClient::submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
 	WriteGuard l(x_state);

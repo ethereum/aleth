@@ -391,3 +391,19 @@ Address ClientBase::address() const
 {
 	return preMine().address();
 }
+
+State ClientBase::asOf(BlockNumber _h) const
+{
+	if (_h == PendingBlock)
+		return postMine();
+	else if (_h == LatestBlock)
+		return preMine();
+	
+	return State(preMine().db(), bc(), bc().numberHash(_h));
+}
+
+State ClientBase::asOf(h256 _block) const
+{
+	return State(preMine().db(), bc(), _block);
+}
+

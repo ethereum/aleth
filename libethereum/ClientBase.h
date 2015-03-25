@@ -146,11 +146,14 @@ public:
 protected:
 
 	virtual BlockChain const& bc() const = 0;
-	virtual State asOf(BlockNumber _h) const = 0;
-	virtual State asOf(h256 _h) const = 0;
 	virtual State preMine() const = 0;
 	virtual State postMine() const = 0;
 	virtual void prepareForTransaction() = 0;
+
+	/// Returns the state object for the full block (i.e. the terminal state) for index _h.
+	/// Works properly with LatestBlock and PendingBlock.
+	virtual State asOf(BlockNumber _h) const;
+	virtual State asOf(h256 _h) const;
 
 	TransactionQueue m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
 
