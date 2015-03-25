@@ -62,7 +62,7 @@ set(CTEST_OUTPUT_ON_FAILURE TRUE)
 
 include(EthUtils)
 
-eth_add_test(InterfaceStub
+eth_add_test(ClientBase
 	ARGS --eth_testfile=BlockTests/bcJS_API_Test --eth_threads=1
 	ARGS --eth_testfile=BlockTests/bcJS_API_Test --eth_threads=3
 	ARGS --eth_testfile=BlockTests/bcJS_API_Test --eth_threads=10

@@ -25,7 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <libtestutils/BlockChainLoader.h>
-#include <libtestutils/FixedInterface.h>
+#include <libtestutils/FixedClient.h>
 #include "TestUtils.h"
 
 // used methods from TestHelper:
@@ -108,18 +108,18 @@ void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value cons
 	}
 }
 
-void ClientBaseFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
+void ClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
 {
 	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain& _bc, State _state) -> void
 	{
-		FixedInterface client(_bc, _state);
+		FixedClient client(_bc, _state);
 		callback(_json, client);
 	});
 }
 
-void ParallelClientBaseFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
+void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
 {
-	ClientBaseFixture::enumerateInterfaces([this, &callback](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
+	ClientBaseFixture::enumerateClients([this, &callback](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{
 		// json is being copied here
 		enumerateThreads([callback, _json, &_client]() -> void

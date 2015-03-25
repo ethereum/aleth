@@ -32,7 +32,7 @@ BOOST_FIXTURE_TEST_SUITE(ClientBase, ParallelClientBaseFixture)
 
 BOOST_AUTO_TEST_CASE(blocks)
 {
-	enumerateInterfaces([](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
+	enumerateClients([](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{
 		for (string const& name: _json["postState"].getMemberNames())
 		{

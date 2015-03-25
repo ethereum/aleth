@@ -28,7 +28,7 @@
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <libtestutils/Common.h>
 #include <libtestutils/BlockChainLoader.h>
-#include <libtestutils/FixedInterface.h>
+#include <libtestutils/FixedClient.h>
 #include <libtestutils/FixedWebThreeServer.h>
 #include "CommandLineInterface.h"
 #include "BuildInfo.h"
@@ -114,7 +114,7 @@ void sighandler(int)
 void CommandLineInterface::actOnInput()
 {
 	BlockChainLoader bcl(m_json);
-	FixedInterface client(bcl.bc(), bcl.state());
+	FixedClient client(bcl.bc(), bcl.state());
 	unique_ptr<FixedWebThreeServer> jsonrpcServer;
 	auto server = new jsonrpc::HttpServer(8080, "", "", 2);
 	jsonrpcServer.reset(new FixedWebThreeServer(*server, {}, &client));

@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file FixedInterface.h
+/** @file FixedClient.h
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
@@ -30,11 +30,11 @@ namespace dev
 namespace test
 {
 
-class FixedInterface: public dev::eth::ClientBase
+class FixedClient: public dev::eth::ClientBase
 {
 public:
-	FixedInterface(eth::BlockChain const& _bc, eth::State _state) :  m_bc(_bc), m_state(_state) {}
-	virtual ~FixedInterface() {}
+	FixedClient(eth::BlockChain const& _bc, eth::State _state) :  m_bc(_bc), m_state(_state) {}
+	virtual ~FixedClient() {}
 	
 	// stub
 	virtual void flushTransactions() override {}

@@ -14,18 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file FixedInterface.cpp
+/** @file FixedClient.cpp
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
 
-#include "FixedInterface.h"
+#include "FixedClient.h"
 
 using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-eth::State FixedInterface::asOf(BlockNumber _h) const
+eth::State FixedClient::asOf(BlockNumber _h) const
 {
 	ReadGuard l(x_stateDB);
 	if (_h == PendingBlock || _h == LatestBlock)
@@ -34,7 +34,7 @@ eth::State FixedInterface::asOf(BlockNumber _h) const
 	return State(m_state.db(), bc(), bc().numberHash(_h));
 }
 
-eth::State FixedInterface::asOf(h256 _h) const
+eth::State FixedClient::asOf(h256 _h) const
 {
 	ReadGuard l(x_stateDB);
 	return State(m_state.db(), bc(), _h);

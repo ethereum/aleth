@@ -58,7 +58,7 @@ struct BlockChainFixture: public LoadTestFileFixture
 
 struct ClientBaseFixture: public BlockChainFixture
 {
-	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
+	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
 };
 
 // important BOOST TEST do have problems with thread safety!!!
@@ -70,7 +70,7 @@ struct ClientBaseFixture: public BlockChainFixture
 // https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
 struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixture
 {
-	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
+	void enumerateClients(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
 };
 
 struct JsonRpcFixture: public ClientBaseFixture
