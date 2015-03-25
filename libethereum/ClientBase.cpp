@@ -14,14 +14,14 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file InterfaceStub.cpp
+/** @file ClientBase.cpp
  * @author Gav Wood <i@gavwood.com>
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
 
 #include <libdevcore/StructuredLogger.h>
-#include "InterfaceStub.h"
+#include "ClientBase.h"
 #include "BlockChain.h"
 #include "Executive.h"
 
@@ -29,7 +29,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-void InterfaceStub::submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
+void ClientBase::submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice)
 {
 	prepareForTransaction();
 	
@@ -41,7 +41,7 @@ void InterfaceStub::submitTransaction(Secret _secret, u256 _value, Address _dest
 	cnote << "New transaction " << t;
 }
 
-Address InterfaceStub::submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
+Address ClientBase::submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice)
 {
 	prepareForTransaction();
 	
@@ -56,7 +56,7 @@ Address InterfaceStub::submitTransaction(Secret _secret, u256 _endowment, bytes 
 }
 
 // TODO: remove try/catch, allow exceptions
-ExecutionResult InterfaceStub::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
+ExecutionResult ClientBase::call(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
 {
 	ExecutionResult ret;
 	try
@@ -73,7 +73,7 @@ ExecutionResult InterfaceStub::call(Secret _secret, u256 _value, Address _dest, 
 	return ret;
 }
 
-ExecutionResult InterfaceStub::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
+ExecutionResult ClientBase::create(Secret _secret, u256 _value, bytes const& _data, u256 _gas, u256 _gasPrice, BlockNumber _blockNumber)
 {
 	ExecutionResult ret;
 	try
@@ -92,33 +92,33 @@ ExecutionResult InterfaceStub::create(Secret _secret, u256 _value, bytes const& 
 	return ret;
 }
 
-u256 InterfaceStub::balanceAt(Address _a, BlockNumber _block) const
+u256 ClientBase::balanceAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).balance(_a);
 }
 
-u256 InterfaceStub::countAt(Address _a, BlockNumber _block) const
+u256 ClientBase::countAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).transactionsFrom(_a);
 }
 
-u256 InterfaceStub::stateAt(Address _a, u256 _l, BlockNumber _block) const
+u256 ClientBase::stateAt(Address _a, u256 _l, BlockNumber _block) const
 {
 	return asOf(_block).storage(_a, _l);
 }
 
-bytes InterfaceStub::codeAt(Address _a, BlockNumber _block) const
+bytes ClientBase::codeAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).code(_a);
 }
 
-map<u256, u256> InterfaceStub::storageAt(Address _a, BlockNumber _block) const
+map<u256, u256> ClientBase::storageAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).storage(_a);
 }
 
 // TODO: remove try/catch, allow exceptions
-LocalisedLogEntries InterfaceStub::logs(unsigned _watchId) const
+LocalisedLogEntries ClientBase::logs(unsigned _watchId) const
 {
 	LogFilter f;
 	try
@@ -133,7 +133,7 @@ LocalisedLogEntries InterfaceStub::logs(unsigned _watchId) const
 	return logs(f);
 }
 
-LocalisedLogEntries InterfaceStub::logs(LogFilter const& _f) const
+LocalisedLogEntries ClientBase::logs(LogFilter const& _f) const
 {
 	LocalisedLogEntries ret;
 	unsigned begin = min<unsigned>(bc().number() + 1, (unsigned)_f.latest());
@@ -192,7 +192,7 @@ LocalisedLogEntries InterfaceStub::logs(LogFilter const& _f) const
 	return ret;
 }
 
-unsigned InterfaceStub::installWatch(LogFilter const& _f, Reaping _r)
+unsigned ClientBase::installWatch(LogFilter const& _f, Reaping _r)
 {
 	h256 h = _f.sha3();
 	{
@@ -206,7 +206,7 @@ unsigned InterfaceStub::installWatch(LogFilter const& _f, Reaping _r)
 	return installWatch(h, _r);
 }
 
-unsigned InterfaceStub::installWatch(h256 _h, Reaping _r)
+unsigned ClientBase::installWatch(h256 _h, Reaping _r)
 {
 	unsigned ret;
 	{
@@ -225,7 +225,7 @@ unsigned InterfaceStub::installWatch(h256 _h, Reaping _r)
 	return ret;
 }
 
-bool InterfaceStub::uninstallWatch(unsigned _i)
+bool ClientBase::uninstallWatch(unsigned _i)
 {
 	cwatch << "XXX" << _i;
 	
@@ -247,7 +247,7 @@ bool InterfaceStub::uninstallWatch(unsigned _i)
 	return true;
 }
 
-LocalisedLogEntries InterfaceStub::peekWatch(unsigned _watchId) const
+LocalisedLogEntries ClientBase::peekWatch(unsigned _watchId) const
 {
 	Guard l(m_filterLock);
 	
@@ -258,7 +258,7 @@ LocalisedLogEntries InterfaceStub::peekWatch(unsigned _watchId) const
 	return w.changes;
 }
 
-LocalisedLogEntries InterfaceStub::checkWatch(unsigned _watchId)
+LocalisedLogEntries ClientBase::checkWatch(unsigned _watchId)
 {
 	Guard l(m_filterLock);
 	LocalisedLogEntries ret;
@@ -272,27 +272,27 @@ LocalisedLogEntries InterfaceStub::checkWatch(unsigned _watchId)
 	return ret;
 }
 
-h256 InterfaceStub::hashFromNumber(unsigned _number) const
+h256 ClientBase::hashFromNumber(unsigned _number) const
 {
 	return bc().numberHash(_number);
 }
 
-BlockInfo InterfaceStub::blockInfo(h256 _hash) const
+BlockInfo ClientBase::blockInfo(h256 _hash) const
 {
 	return BlockInfo(bc().block(_hash));
 }
 
-BlockDetails InterfaceStub::blockDetails(h256 _hash) const
+BlockDetails ClientBase::blockDetails(h256 _hash) const
 {
 	return bc().details(_hash);
 }
 
-Transaction InterfaceStub::transaction(h256 _transactionHash) const
+Transaction ClientBase::transaction(h256 _transactionHash) const
 {
 	return Transaction(bc().transaction(_transactionHash), CheckSignature::Range);
 }
 
-Transaction InterfaceStub::transaction(h256 _blockHash, unsigned _i) const
+Transaction ClientBase::transaction(h256 _blockHash, unsigned _i) const
 {
 	auto bl = bc().block(_blockHash);
 	RLP b(bl);
@@ -302,7 +302,7 @@ Transaction InterfaceStub::transaction(h256 _blockHash, unsigned _i) const
 		return Transaction();
 }
 
-Transactions InterfaceStub::transactions(h256 _blockHash) const
+Transactions ClientBase::transactions(h256 _blockHash) const
 {
 	auto bl = bc().block(_blockHash);
 	RLP b(bl);
@@ -312,12 +312,12 @@ Transactions InterfaceStub::transactions(h256 _blockHash) const
 	return res;
 }
 
-TransactionHashes InterfaceStub::transactionHashes(h256 _blockHash) const
+TransactionHashes ClientBase::transactionHashes(h256 _blockHash) const
 {
 	return bc().transactionHashes(_blockHash);
 }
 
-BlockInfo InterfaceStub::uncle(h256 _blockHash, unsigned _i) const
+BlockInfo ClientBase::uncle(h256 _blockHash, unsigned _i) const
 {
 	auto bl = bc().block(_blockHash);
 	RLP b(bl);
@@ -327,49 +327,49 @@ BlockInfo InterfaceStub::uncle(h256 _blockHash, unsigned _i) const
 		return BlockInfo();
 }
 
-UncleHashes InterfaceStub::uncleHashes(h256 _blockHash) const
+UncleHashes ClientBase::uncleHashes(h256 _blockHash) const
 {
 	return bc().uncleHashes(_blockHash);
 }
 
-unsigned InterfaceStub::transactionCount(h256 _blockHash) const
+unsigned ClientBase::transactionCount(h256 _blockHash) const
 {
 	auto bl = bc().block(_blockHash);
 	RLP b(bl);
 	return b[1].itemCount();
 }
 
-unsigned InterfaceStub::uncleCount(h256 _blockHash) const
+unsigned ClientBase::uncleCount(h256 _blockHash) const
 {
 	auto bl = bc().block(_blockHash);
 	RLP b(bl);
 	return b[2].itemCount();
 }
 
-unsigned InterfaceStub::number() const
+unsigned ClientBase::number() const
 {
 	return bc().number();
 }
 
-Transactions InterfaceStub::pending() const
+Transactions ClientBase::pending() const
 {
 	return postMine().pending();
 }
 
 
-StateDiff InterfaceStub::diff(unsigned _txi, h256 _block) const
+StateDiff ClientBase::diff(unsigned _txi, h256 _block) const
 {
 	State st = asOf(_block);
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
-StateDiff InterfaceStub::diff(unsigned _txi, BlockNumber _block) const
+StateDiff ClientBase::diff(unsigned _txi, BlockNumber _block) const
 {
 	State st = asOf(_block);
 	return st.fromPending(_txi).diff(st.fromPending(_txi + 1));
 }
 
-Addresses InterfaceStub::addresses(BlockNumber _block) const
+Addresses ClientBase::addresses(BlockNumber _block) const
 {
 	Addresses ret;
 	for (auto const& i: asOf(_block).addresses())
@@ -377,17 +377,17 @@ Addresses InterfaceStub::addresses(BlockNumber _block) const
 	return ret;
 }
 
-u256 InterfaceStub::gasLimitRemaining() const
+u256 ClientBase::gasLimitRemaining() const
 {
 	return postMine().gasLimitRemaining();
 }
 
-void InterfaceStub::setAddress(Address _us)
+void ClientBase::setAddress(Address _us)
 {
 	preMine().setAddress(_us);
 }
 
-Address InterfaceStub::address() const
+Address ClientBase::address() const
 {
 	return preMine().address();
 }

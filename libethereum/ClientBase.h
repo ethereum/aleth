@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file InterfaceStub.h
+/** @file ClientBase.h
  * @author Gav Wood <i@gavwood.com>
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
@@ -64,11 +64,11 @@ struct WorkChannel: public LogChannel { static const char* name() { return "-W-"
 #define cworkin dev::LogOutputStream<dev::eth::WorkInChannel, true>()
 #define cworkout dev::LogOutputStream<dev::eth::WorkOutChannel, true>()
 
-class InterfaceStub: public dev::eth::Interface
+class ClientBase: public dev::eth::Interface
 {
 public:
-	InterfaceStub() {}
-	virtual ~InterfaceStub() {}
+	ClientBase() {}
+	virtual ~ClientBase() {}
 
 	/// Submits the given message-call transaction.
 	virtual void submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo) override;
@@ -134,14 +134,14 @@ public:
 
 	/// TODO: consider moving it to a separate interface
 
-	virtual void setMiningThreads(unsigned _threads) override { (void)_threads; BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::setMiningThreads")); }
-	virtual unsigned miningThreads() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::miningThreads")); }
-	virtual void startMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::startMining")); }
-	virtual void stopMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::stopMining")); }
-	virtual bool isMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::isMining")); }
-	virtual eth::MineProgress miningProgress() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::miningProgress")); }
-	virtual std::pair<h256, u256> getWork() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::getWork")); }
-	virtual bool submitWork(eth::ProofOfWork::Proof const&) override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::InterfaceStub::submitWork")); }
+	virtual void setMiningThreads(unsigned _threads) override { (void)_threads; BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::setMiningThreads")); }
+	virtual unsigned miningThreads() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::miningThreads")); }
+	virtual void startMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::startMining")); }
+	virtual void stopMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::stopMining")); }
+	virtual bool isMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::isMining")); }
+	virtual eth::MineProgress miningProgress() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::miningProgress")); }
+	virtual std::pair<h256, u256> getWork() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::getWork")); }
+	virtual bool submitWork(eth::ProofOfWork::Proof const&) override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("dev::eth::ClientBase::submitWork")); }
 
 protected:
 

@@ -25,7 +25,7 @@
 #include <string>
 #include <json/json.h>
 #include <libethereum/BlockChain.h>
-#include <libethereum/InterfaceStub.h>
+#include <libethereum/ClientBase.h>
 
 namespace dev
 {
@@ -56,9 +56,9 @@ struct BlockChainFixture: public LoadTestFileFixture
 	void enumerateBlockchains(std::function<void(Json::Value const&, dev::eth::BlockChain&, dev::eth::State state)> callback);
 };
 
-struct InterfaceStubFixture: public BlockChainFixture
+struct ClientBaseFixture: public BlockChainFixture
 {
-	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback);
+	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
 };
 
 // important BOOST TEST do have problems with thread safety!!!
@@ -68,12 +68,12 @@ struct InterfaceStubFixture: public BlockChainFixture
 // http://lists.boost.org/boost-users/2010/03/57691.php
 // worth reading
 // https://codecrafter.wordpress.com/2012/11/01/c-unit-test-framework-adapter-part-3/
-struct ParallelInterfaceStubFixture: public InterfaceStubFixture, public ParallelFixture
+struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixture
 {
-	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback);
+	void enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback);
 };
 
-struct JsonRpcFixture: public InterfaceStubFixture
+struct JsonRpcFixture: public ClientBaseFixture
 {
 	
 };

@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file InterfaceStub.cpp
+/** @file ClientBase.cpp
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
@@ -28,11 +28,11 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_FIXTURE_TEST_SUITE(InterfaceStub, ParallelInterfaceStubFixture)
+BOOST_FIXTURE_TEST_SUITE(ClientBase, ParallelClientBaseFixture)
 
 BOOST_AUTO_TEST_CASE(blocks)
 {
-	enumerateInterfaces([](Json::Value const& _json, dev::eth::InterfaceStub& _client) -> void
+	enumerateInterfaces([](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{
 		for (string const& name: _json["postState"].getMemberNames())
 		{

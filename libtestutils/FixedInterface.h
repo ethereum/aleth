@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <libethereum/InterfaceStub.h>
+#include <libethereum/ClientBase.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/State.h>
 
@@ -30,7 +30,7 @@ namespace dev
 namespace test
 {
 
-class FixedInterface: public dev::eth::InterfaceStub
+class FixedInterface: public dev::eth::ClientBase
 {
 public:
 	FixedInterface(eth::BlockChain const& _bc, eth::State _state) :  m_bc(_bc), m_state(_state) {}

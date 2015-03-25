@@ -108,7 +108,7 @@ void BlockChainFixture::enumerateBlockchains(std::function<void(Json::Value cons
 	}
 }
 
-void InterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback)
+void ClientBaseFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
 {
 	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain& _bc, State _state) -> void
 	{
@@ -117,9 +117,9 @@ void InterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value co
 	});
 }
 
-void ParallelInterfaceStubFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::InterfaceStub&)> callback)
+void ParallelClientBaseFixture::enumerateInterfaces(std::function<void(Json::Value const&, dev::eth::ClientBase&)> callback)
 {
-	InterfaceStubFixture::enumerateInterfaces([this, &callback](Json::Value const& _json, dev::eth::InterfaceStub& _client) -> void
+	ClientBaseFixture::enumerateInterfaces([this, &callback](Json::Value const& _json, dev::eth::ClientBase& _client) -> void
 	{
 		// json is being copied here
 		enumerateThreads([callback, _json, &_client]() -> void

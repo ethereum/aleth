@@ -41,7 +41,7 @@
 #include "State.h"
 #include "CommonNet.h"
 #include "Miner.h"
-#include "InterfaceStub.h"
+#include "ClientBase.h"
 
 namespace dev
 {
@@ -147,7 +147,7 @@ private:
 /**
  * @brief Main API hub for interfacing with Ethereum.
  */
-class Client: public MinerHost, public InterfaceStub, Worker
+class Client: public MinerHost, public ClientBase, Worker
 {
 	friend class Miner;
 

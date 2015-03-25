@@ -25,7 +25,7 @@
 
 #include <vector>
 #include <string>
-#include <libethereum/InterfaceStub.h>
+#include <libethereum/ClientBase.h>
 #include <libethereum/Client.h>
 #include "MachineStates.h"
 
@@ -42,7 +42,7 @@ public:
 	static bytes createGenesisBlock(h256 _stateRoot);
 };
 
-class MixClient: public dev::eth::InterfaceStub
+class MixClient: public dev::eth::ClientBase
 {
 public:
 	MixClient(std::string const& _dbPath);
