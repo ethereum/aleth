@@ -40,7 +40,7 @@ VersionChecker::VersionChecker(string const& _dbPath):
 {
 	auto protocolContents = contents(m_path + "/protocol");
 	auto databaseContents = contents(m_path + "/database");
-	m_ok = RLP(protocolContents).toInt<unsigned>(RLP::LaisezFaire) == c_protocolVersion && RLP(databaseContents).toInt<unsigned>(RLP::LaisezFaire) == c_databaseVersion;
+	m_ok = RLP(protocolContents).toInt<unsigned>(RLP::LaisezFaire) == eth::c_protocolVersion && RLP(databaseContents).toInt<unsigned>(RLP::LaisezFaire) == c_databaseVersion;
 }
 
 void VersionChecker::setOk()
@@ -55,7 +55,7 @@ void VersionChecker::setOk()
 		{
 			cwarn << "Unhandled exception! Failed to create directory: " << m_path << "\n" << boost::current_exception_diagnostic_information();
 		}
-		writeFile(m_path + "/protocol", rlp(c_protocolVersion));
+		writeFile(m_path + "/protocol", rlp(eth::c_protocolVersion));
 		writeFile(m_path + "/database", rlp(c_databaseVersion));
 	}
 }
@@ -264,11 +264,11 @@ void Client::noteChanged(h256Set const& _filters)
 		i.second.changes.clear();
 }
 
-void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Set& io_changed, h256 _sha3)
+void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Set& io_changed, h256 _transactionHash)
 {
 	Guard l(m_filterLock);
 	for (pair<h256 const, InstalledFilter>& i: m_filters)
-		if ((unsigned)i.second.filter.latest() > m_bc.number())
+		if (i.second.filter.envelops(RelativeBlock::Pending, m_bc.number() + 1))
 		{
 			// acceptable number.
 			auto m = i.second.filter.matches(_receipt);
@@ -276,7 +276,7 @@ void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Set& i
 			{
 				// filter catches them
 				for (LogEntry const& l: m)
-					i.second.changes.push_back(LocalisedLogEntry(l, m_bc.number() + 1, _sha3));
+					i.second.changes.push_back(LocalisedLogEntry(l, m_bc.number() + 1, _transactionHash));
 				io_changed.insert(i.first);
 			}
 		}
@@ -290,7 +290,7 @@ void Client::appendFromNewBlock(h256 const& _block, h256Set& io_changed)
 
 	Guard l(m_filterLock);
 	for (pair<h256 const, InstalledFilter>& i: m_filters)
-		if ((unsigned)i.second.filter.latest() >= d.number && (unsigned)i.second.filter.earliest() <= d.number && i.second.filter.matches(d.logBloom))
+		if (i.second.filter.envelops(RelativeBlock::Latest, d.number) && i.second.filter.matches(d.logBloom))
 			// acceptable number & looks like block may contain a matching log entry.
 			for (size_t j = 0; j < br.receipts.size(); j++)
 			{
@@ -298,10 +298,10 @@ void Client::appendFromNewBlock(h256 const& _block, h256Set& io_changed)
 				auto m = i.second.filter.matches(tr);
 				if (m.size())
 				{
-					auto sha3 = transaction(d.hash, j).sha3();
+					auto transactionHash = transaction(d.hash, j).sha3();
 					// filter catches them
 					for (LogEntry const& l: m)
-						i.second.changes.push_back(LocalisedLogEntry(l, (unsigned)d.number, sha3));
+						i.second.changes.push_back(LocalisedLogEntry(l, (unsigned)d.number, transactionHash));
 					io_changed.insert(i.first);
 				}
 			}
