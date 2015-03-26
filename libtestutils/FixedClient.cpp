@@ -13,25 +13,20 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Exceptions.h
- * @author Christian <c@ethdev.com>
- * @date 2014
+ */
+/** @file FixedClient.cpp
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
-#pragma once
+#include "FixedClient.h"
 
-#include <libdevcore/Exceptions.h>
+using namespace dev;
+using namespace dev::eth;
+using namespace dev::test;
 
-namespace dev
+eth::State FixedClient::asOf(h256 const& _h) const
 {
-namespace eth
-{
-
-struct AssemblyException: virtual Exception {};
-struct InvalidDeposit: virtual AssemblyException {};
-struct InvalidOpcode: virtual AssemblyException {};
-struct OptimizerException: virtual AssemblyException {};
-
-}
+	ReadGuard l(x_stateDB);
+	return State(m_state.db(), bc(), _h);
 }

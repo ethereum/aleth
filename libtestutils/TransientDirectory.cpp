@@ -13,25 +13,30 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Exceptions.h
- * @author Christian <c@ethdev.com>
- * @date 2014
+ */
+/** @file TransientDirectory.cpp
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
-#pragma once
-
+#include <boost/filesystem.hpp>
 #include <libdevcore/Exceptions.h>
+#include "TransientDirectory.h"
 
-namespace dev
+using namespace std;
+using namespace dev;
+using namespace dev::test;
+
+TransientDirectory::TransientDirectory(std::string const& _path) : m_path(_path)
 {
-namespace eth
-{
+	// we never ever want to delete a directory (including all its contents) that we did not create ourselves.
+	if (boost::filesystem::exists(m_path))
+		BOOST_THROW_EXCEPTION(FileError());
 
-struct AssemblyException: virtual Exception {};
-struct InvalidDeposit: virtual AssemblyException {};
-struct InvalidOpcode: virtual AssemblyException {};
-struct OptimizerException: virtual AssemblyException {};
-
+	boost::filesystem::create_directories(m_path);
 }
+
+TransientDirectory::~TransientDirectory()
+{
+	boost::filesystem::remove_all(m_path);
 }

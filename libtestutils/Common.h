@@ -13,25 +13,32 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Exceptions.h
- * @author Christian <c@ethdev.com>
- * @date 2014
+ */
+/** @file Common.h
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <string>
+#include <json/json.h>
+#include <libdevcore/Log.h>
 
 namespace dev
 {
-namespace eth
+namespace test
 {
 
-struct AssemblyException: virtual Exception {};
-struct InvalidDeposit: virtual AssemblyException {};
-struct InvalidOpcode: virtual AssemblyException {};
-struct OptimizerException: virtual AssemblyException {};
+struct TestChannel: public LogChannel  { static const char* name() { return "TEST"; } };
+#define ctest dev::LogOutputStream<dev::test::TestChannel, true>()
+
+std::string getTestPath();
+int randomNumber();
+Json::Value loadJsonFromFile(std::string const& _path);
+std::string toTestFilePath(std::string const& _filename);
+std::string getRandomPath();
 
 }
+
 }

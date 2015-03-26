@@ -13,25 +13,38 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Exceptions.h
- * @author Christian <c@ethdev.com>
- * @date 2014
+ */
+/** @file TransientDirectory.h
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <string>
+#include "Common.h"
 
 namespace dev
 {
-namespace eth
+namespace test
 {
 
-struct AssemblyException: virtual Exception {};
-struct InvalidDeposit: virtual AssemblyException {};
-struct InvalidOpcode: virtual AssemblyException {};
-struct OptimizerException: virtual AssemblyException {};
+/**
+ * @brief temporary directory implementation
+ * It creates temporary directory in the given path. On dealloc it removes the directory
+ * @throws if the given path already exists, throws an exception
+ */
+class TransientDirectory
+{
+public:
+	TransientDirectory(std::string const& _path = getRandomPath());
+	~TransientDirectory();
+
+	std::string const& path() const { return m_path; }
+
+private:
+	std::string m_path;
+};
 
 }
 }
