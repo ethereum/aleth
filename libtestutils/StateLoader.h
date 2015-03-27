@@ -13,25 +13,33 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Exceptions.h
- * @author Christian <c@ethdev.com>
- * @date 2014
+ */
+/** @file StateLoader.h
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
 #pragma once
 
-#include <libdevcore/Exceptions.h>
+#include <json/json.h>
+#include <libethereum/State.h>
 
 namespace dev
 {
-namespace eth
+namespace test
 {
 
-struct AssemblyException: virtual Exception {};
-struct InvalidDeposit: virtual AssemblyException {};
-struct InvalidOpcode: virtual AssemblyException {};
-struct OptimizerException: virtual AssemblyException {};
+/**
+ * @brief Friend of State, loads State from given JSON object
+ */
+class StateLoader
+{
+public:
+	StateLoader(Json::Value const& _json);
+	eth::State const& state() const { return m_state; }
 
+private:
+	eth::State m_state;
+};
 }
 }

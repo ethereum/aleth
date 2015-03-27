@@ -13,25 +13,10 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Exceptions.h
- * @author Christian <c@ethdev.com>
- * @date 2014
+ */
+/** @file FixedWebThreeStubServer.cpp
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
-#pragma once
-
-#include <libdevcore/Exceptions.h>
-
-namespace dev
-{
-namespace eth
-{
-
-struct AssemblyException: virtual Exception {};
-struct InvalidDeposit: virtual AssemblyException {};
-struct InvalidOpcode: virtual AssemblyException {};
-struct OptimizerException: virtual AssemblyException {};
-
-}
-}
+#include "FixedWebThreeServer.h"
