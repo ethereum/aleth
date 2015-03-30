@@ -25,8 +25,10 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DETH_DEBUG")
 	set(ETH_SHARED 1)
 
+	# For macos we need to set CLANG_X86_VECTOR_INSTRUCTIONS to ssse3
+	# This should result in binaries which will execute on Apple hardware which are < Mavericks
 	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -fcolor-diagnostics -Qunused-arguments -DBOOST_ASIO_HAS_CLANG_LIBCXX")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -fcolor-diagnostics -Qunused-arguments -DBOOST_ASIO_HAS_CLANG_LIBCXX -msse3")
 	endif()
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
