@@ -14,7 +14,8 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file TransientDirectory.h
+/** CommandLineInterface.h
+ * @author Gav Wood <i@gavwood.com>
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
@@ -22,42 +23,39 @@
 #pragma once
 
 #include <string>
-#include "Common.h"
+#include <vector>
+#include "Abi.h"
 
 namespace dev
 {
-namespace test
+namespace abi
 {
-
-/**
- * @brief temporary directory implementation
- * It creates temporary directory in the given path. On dealloc it removes the directory
- * @throws if the given path already exists, throws an exception
- */
-class TransientDirectory
+class CommandLineInterface
 {
 public:
-	TransientDirectory();
-	TransientDirectory(std::string const& _path);
-	~TransientDirectory();
+	CommandLineInterface() {}
 
-	std::string const& path() const { return m_path; }
-
+	/// Parse command line arguments and return false if we should not continue
+	bool parseArguments(int argc, char** argv);
+	/// Parse input file and check if test exists
+	bool processInput();
+	///
+	bool actOnInput();
+	
 private:
-	std::string m_path;
+	Encoding encoding = Encoding::Auto;
+	Mode mode = Mode::Encode;
+	std::string abiFile;
+	std::string method;
+	Tristate formatPrefix = Tristate::Mu;
+	Tristate typePrefix = Tristate::Mu;
+	EncodingPrefs prefs;
+	bool verbose = false;
+	int outputIndex = -1;
+	std::vector<std::pair<bytes, Format>> params;
+	std::vector<ABIType> args;
+	std::string incoming;
+	std::string abiData;
 };
-
-class TransientFile
-{
-public:
-	TransientFile(std::string const& _contents);
-
-	std::string const& path() const { return m_path; }
-
-private:
-	TransientDirectory m_dir;
-	std::string m_path;
+}
 };
-
-}
-}

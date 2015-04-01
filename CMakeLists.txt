@@ -202,6 +202,7 @@ if (NOT JUSTTESTS)
 
 	add_subdirectory(rlp)
 	add_subdirectory(abi)
+	add_subdirectory(libabi)
 	add_subdirectory(eth)
 
 	if("x${CMAKE_BUILD_TYPE}" STREQUAL "xDebug")

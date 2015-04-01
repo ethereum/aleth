@@ -20,8 +20,11 @@
  */
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <libdevcore/Exceptions.h>
+#include <libdevcore/CommonIO.h>
 #include "TransientDirectory.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::test;
@@ -43,4 +46,12 @@ TransientDirectory::TransientDirectory(std::string const& _path):
 TransientDirectory::~TransientDirectory()
 {
 	boost::filesystem::remove_all(m_path);
+}
+
+TransientFile::TransientFile(string const& _contents)
+{
+	std::stringstream ss;
+	ss << m_dir.path() << "/tmp";
+	m_path = ss.str();
+	boost::filesystem::ofstream(m_path, std::ios_base::app) << _contents;
 }

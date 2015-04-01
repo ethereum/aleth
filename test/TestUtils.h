@@ -23,6 +23,7 @@
 
 #include <functional>
 #include <string>
+#include <ostream>
 #include <json/json.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/ClientBase.h>
@@ -76,6 +77,18 @@ struct ParallelClientBaseFixture: public ClientBaseFixture, public ParallelFixtu
 struct JsonRpcFixture: public ClientBaseFixture
 {
 	
+};
+
+struct CoutFixture
+{
+	CoutFixture();
+	~CoutFixture();
+
+	std::string getOutput() const;
+
+private:
+	std::streambuf* m_coutbuf;
+	std::stringstream m_stream;
 };
 
 }
