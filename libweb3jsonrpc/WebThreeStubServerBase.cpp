@@ -127,16 +127,13 @@ static Json::Value toJson(dev::eth::TransactionSkeleton const& _t)
 static Json::Value toJson(dev::eth::LocalisedLogEntry const& _e)
 {
 	Json::Value res;
-	if (_e.transactionHash)
-	{
-		res["data"] = toJS(_e.data);
-		res["address"] = toJS(_e.address);
-		res["topics"] = Json::Value(Json::arrayValue);
-		for (auto const& t: _e.topics)
-			res["topics"].append(toJS(t));
-		res["number"] = _e.number;
-		res["hash"] = toJS(_e.transactionHash);
-	}
+	res["data"] = toJS(_e.data);
+	res["address"] = toJS(_e.address);
+	res["topics"] = Json::Value(Json::arrayValue);
+	for (auto const& t: _e.topics)
+		res["topics"].append(toJS(t));
+	res["number"] = _e.number;
+	res["hash"] = toJS(_e.transactionHash);
 	return res;
 }
 
@@ -144,7 +141,8 @@ static Json::Value toJson(dev::eth::LocalisedLogEntries const& _es)
 {
 	Json::Value res(Json::arrayValue);
 	for (dev::eth::LocalisedLogEntry const& e: _es)
-		res.append(toJson(e));
+		if (e.transactionHash)
+			res.append(toJson(e));
 	return res;
 }
 
