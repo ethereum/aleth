@@ -24,7 +24,7 @@ set(EXECUTABLE mix)
 
 if ("${Qt5WebEngine_VERSION_STRING}" VERSION_GREATER "5.3.0")
 	set (ETH_HAVE_WEBENGINE TRUE)
-	qt5_add_resources(UI_RESOURCES web.qrc)
+	qt5_add_resources(UI_RESOURCES web.qrc ../libjsqrc/js.qrc)
 else()
 	qt5_add_resources(UI_RESOURCES noweb.qrc)
 endif()
