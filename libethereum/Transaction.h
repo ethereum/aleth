@@ -67,6 +67,13 @@ enum class CodeDeposit
 	Success
 };
 
+enum TransactionType
+{
+	NullTransaction,			///< Null transaction.
+	ContractCreation,			///< Transaction to create contracts - receiveAddress() is ignored.
+	MessageCall					///< Transaction to invoke a message call - receiveAddress() is used.
+};
+
 struct VMException;
 
 TransactionException toTransactionException(VMException const& _e);
@@ -179,17 +186,9 @@ public:
 	SignatureStruct const& signature() const { return m_vrs; }
 
 private:
-	/// Type of transaction.
-	enum Type
-	{
-		NullTransaction,			///< Null transaction.
-		ContractCreation,			///< Transaction to create contracts - receiveAddress() is ignored.
-		MessageCall					///< Transaction to invoke a message call - receiveAddress() is used.
-	};
-
 	void sign(Secret _priv);		///< Sign the transaction.
 
-	Type m_type = NullTransaction;	///< Is this a contract-creation transaction or a message-call transaction?
+	TransactionType m_type = NullTransaction;	///< Is this a contract-creation transaction or a message-call transaction?
 	u256 m_nonce;					///< The transaction-count of the sender.
 	u256 m_value;					///< The amount of ETH to be transferred by this transaction. Called 'endowment' for contract-creation transactions.
 	Address m_receiveAddress;		///< The receiving address of the transaction.

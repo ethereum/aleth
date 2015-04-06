@@ -654,7 +654,7 @@ int main(int argc, char** argv)
 					cnote << ssbd.str();
 					int ssize = sechex.length();
 					int size = hexAddr.length();
-					u256 minGas = (u256)Client::txGas(data, 0);
+					u256 minGas = (u256)Client::txGas(data, 0, hexAddr.empty() ? TransactionType::ContractCreation : TransactionType::MessageCall);
 					if (size < 40)
 					{
 						if (size > 0)
@@ -733,7 +733,7 @@ int main(int argc, char** argv)
 						auto h = bc.currentHash();
 						auto blockData = bc.block(h);
 						BlockInfo info(blockData);
-						u256 minGas = (u256)Client::txGas(bytes(), 0);
+						u256 minGas = (u256)Client::txGas(bytes(), 0, hexAddr.empty() ? TransactionType::ContractCreation : TransactionType::MessageCall);
 						try
 						{
 							Address dest = h160(fromHex(hexAddr, WhenError::Throw));
@@ -798,7 +798,7 @@ int main(int argc, char** argv)
 						cnote << "Init:";
 						cnote << ssc.str();
 					}
-					u256 minGas = (u256)Client::txGas(init, 0);
+					u256 minGas = (u256)Client::txGas(init, 0, TransactionType::ContractCreation);
 					if (!init.size())
 						cwarn << "Contract creation aborted, no init code.";
 					else if (endowment < 0)

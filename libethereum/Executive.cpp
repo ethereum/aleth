@@ -69,7 +69,7 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Check gas cost is enough.
-	m_gasRequired = Interface::txGas(m_t.data());
+	m_gasRequired = Interface::txGas(m_t.data(), 0, m_t.isCreation() ? TransactionType::ContractCreation : TransactionType::MessageCall);
 	if (m_t.gas() < m_gasRequired)
 	{
 		clog(StateDetail) << "Not enough gas to pay for the transaction: Require >" << m_gasRequired << " Got" << m_t.gas();
