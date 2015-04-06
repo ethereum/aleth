@@ -40,7 +40,7 @@ namespace test
 class ExecutionFramework
 {
 public:
-	ExecutionFramework() { g_logVerbosity = 0; }
+	ExecutionFramework() { g_logVerbosity = 14; }
 
 	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
 	{
@@ -133,10 +133,10 @@ private:
 protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
-		m_state.addBalance(m_sender, _value); // just in case
+		m_state.addBalance(m_sender, _value + m_gasPrice * m_gas); // just in case
 		eth::Executive executive(m_state, eth::LastHashes(), 0);
-		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec())
-										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, 0, KeyPair::create().sec());
+		eth::Transaction t = _isCreation ? eth::Transaction(_value, m_gasPrice, m_gas, _data, m_state.transactionsFrom(m_sender), m_senderKeyPair.secret())
+										 : eth::Transaction(_value, m_gasPrice, m_gas, m_contractAddress, _data, m_state.transactionsFrom(m_sender), m_senderKeyPair.secret());
 		bytes transactionRLP = t.rlp();
 		try
 		{
@@ -166,7 +166,8 @@ protected:
 
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
-	Address m_sender;
+	KeyPair m_senderKeyPair = KeyPair::create();
+	Address m_sender = m_senderKeyPair.address();
 	Address m_contractAddress;
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
