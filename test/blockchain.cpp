@@ -126,6 +126,12 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						vBiUncles.push_back(vBiBlocks[(size_t)toInt(uncleHeaderObj["sameAsBlock"])]);
 						continue;
 					}
+					string overwrite = "false";
+					if (uncleHeaderObj.count("overwriteAndRedoPoW"))
+					{
+						overwrite = uncleHeaderObj["overwriteAndRedoPoW"].get_str();
+						uncleHeaderObj.erase("overwriteAndRedoPoW");
+					}
 
 					BlockInfo uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
@@ -141,6 +147,20 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					else
 						continue;
 
+					if (overwrite != "false")
+					{
+						uncleBlockFromFields.difficulty = overwrite == "difficulty" ? toInt(uncleHeaderObj["difficulty"]) : uncleBlockFromFields.difficulty;
+						uncleBlockFromFields.gasLimit = overwrite == "gasLimit" ? toInt(uncleHeaderObj["gasLimit"]) : uncleBlockFromFields.gasLimit;
+						uncleBlockFromFields.gasUsed = overwrite == "gasUsed" ? toInt(uncleHeaderObj["gasUsed"]) : uncleBlockFromFields.gasUsed;
+						uncleBlockFromFields.parentHash = overwrite == "parentHash" ? h256(uncleHeaderObj["parentHash"].get_str()) : uncleBlockFromFields.parentHash;
+						uncleBlockFromFields.stateRoot = overwrite == "stateRoot" ? h256(uncleHeaderObj["stateRoot"].get_str()) : uncleBlockFromFields.stateRoot;
+						if (overwrite == "timestamp")
+						{
+							uncleBlockFromFields.timestamp = toInt(uncleHeaderObj["timestamp"]);
+							uncleBlockFromFields.difficulty = uncleBlockFromFields.calculateDifficulty(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
+						}
+					}
+
 					updatePoW(uncleBlockFromFields);
 					writeBlockHeaderToJson(uncleHeaderObj, uncleBlockFromFields);
 
@@ -148,8 +168,16 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					vBiUncles.push_back(uncleBlockFromFields);
 
 					cnote << "import uncle in blockQueue";
+
 					RLPStream uncle = createFullBlockFromHeader(uncleBlockFromFields);
-					uncleBlockQueue.import(&uncle.out(), bc);
+					try
+					{
+						uncleBlockQueue.import(&uncle.out(), bc);
+					}
+					catch(...)
+					{
+						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
+					}
 
 					uncleHeaderObj_pre = uncleHeaderObj;
 				}
@@ -355,7 +383,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 					try
 					{
-						Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckSignature::Sender);
+						Transaction t(createRLPStreamFromTransactionFields(tx).out(), CheckTransaction::Everything);
 						txsFromField.push_back(t);
 					}
 					catch (Exception const& _e)
@@ -372,7 +400,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				RLP root(blockRLP);
 				for (auto const& tr: root[1])
 				{
-					Transaction tx(tr.data(), CheckSignature::Sender);
+					Transaction tx(tr.data(), CheckTransaction::Everything);
 					txsFromRlp.push_back(tx);
 				}
 
@@ -402,7 +430,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
 					{
 						mObject uBlH = uBlHeaderObj.get_obj();
-						cout << "uBlH.size(): " << uBlH.size() << endl;
 						BOOST_REQUIRE(uBlH.size() == 16);
 						bytes uncleRLP = createBlockRLPFromFields(uBlH);
 						const RLP c_uRLP(uncleRLP);
@@ -662,6 +689,11 @@ BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest)
 BOOST_AUTO_TEST_CASE(bcUncleTest)
 {
 	dev::test::executeTests("bcUncleTest", "/BlockTests", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcUncleHeaderValiditiy)
+{
+	dev::test::executeTests("bcUncleHeaderValiditiy", "/BlockTests", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)

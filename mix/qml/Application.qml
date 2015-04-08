@@ -178,7 +178,7 @@ ApplicationWindow {
 		id: editStatesAction
 		text: qsTr("Edit States")
 		shortcut: "Ctrl+Alt+E"
-		onTriggered: stateList.show();
+		onTriggered: stateList.open();
 	}
 
 	Connections {
@@ -397,5 +397,15 @@ ApplicationWindow {
 		shortcut: "Ctrl+Shift+D"
 		enabled: !projectModel.isEmpty && codeModel.hasContract
 		onTriggered: projectModel.deployProject();
+	}
+
+	Action {
+		id: goToCompilationError
+		text: qsTr("Go to compilation error")
+		shortcut: "F4"
+		onTriggered:
+		{
+			mainContent.codeEditor.goToCompilationError();
+		}
 	}
 }

@@ -20,6 +20,7 @@
  */
 
 #include "MixApplication.h"
+#include <boost/exception/diagnostic_information.hpp>
 #include <QQmlApplicationEngine>
 #include <QUrl>
 #include <QIcon>
@@ -51,13 +52,8 @@ ApplicationService::ApplicationService()
 MixApplication::MixApplication(int& _argc, char* _argv[]):
 	QApplication(_argc, _argv), m_engine(new QQmlApplicationEngine())
 {
+	setWindowIcon(QIcon(":/res/mix_256x256x32.png"));
 	m_engine->load(QUrl("qrc:/qml/Application.qml"));
-	if (!m_engine->rootObjects().empty())
-	{
-		QWindow *window = qobject_cast<QWindow*>(m_engine->rootObjects().at(0));
-		if (window)
-			window->setIcon(QIcon(":/res/mix_256x256x32.png"));
-	}
 }
 
 void MixApplication::initialize()
@@ -100,4 +96,17 @@ void MixApplication::initialize()
 
 MixApplication::~MixApplication()
 {
+}
+
+bool MixApplication::notify(QObject * receiver, QEvent * event)
+{
+	try
+	{
+		return QApplication::notify(receiver, event);
+	}
+	catch (...)
+	{
+		std::cerr << boost::current_exception_diagnostic_information();
+	}
+	return false;
 }
