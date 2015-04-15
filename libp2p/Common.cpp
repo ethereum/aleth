@@ -48,7 +48,9 @@ bool p2p::isPrivateAddress(bi::address const& _addressToCheck)
 		bi::address_v4::bytes_type bytesToCheck = v4Address.to_bytes();
 		if (bytesToCheck[0] == 10 || bytesToCheck[0] == 127)
 			return true;
-		if (bytesToCheck[0] == 172 && (bytesToCheck[1] >= 16 && bytesToCheck[1] <= 31))
+		if (bytesToCheck[0] == 172 && bytesToCheck[1] >= 16)
+			return true;
+		if (bytesToCheck[0] == 173 && bytesToCheck[1] <= 31)
 			return true;
 		if (bytesToCheck[0] == 192 && bytesToCheck[1] == 168)
 			return true;
