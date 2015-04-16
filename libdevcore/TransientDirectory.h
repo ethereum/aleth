@@ -13,21 +13,35 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file Common.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
+ */
+/** @file TransientDirectory.h
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
  */
 
-#include "Common.h"
+#pragma once
 
-using namespace std;
-using namespace dev;
+#include <string>
 
 namespace dev
 {
 
-char const* Version = "0.9.9";
+/**
+ * @brief temporary directory implementation
+ * It creates temporary directory in the given path. On dealloc it removes the directory
+ * @throws if the given path already exists, throws an exception
+ */
+class TransientDirectory
+{
+public:
+	TransientDirectory();
+	TransientDirectory(std::string const& _path);
+	~TransientDirectory();
+
+	std::string const& path() const { return m_path; }
+
+private:
+	std::string m_path;
+};
 
 }
-
