@@ -124,7 +124,7 @@ Address const& Transaction::sender() const
 bigint Transaction::gasRequired() const
 {
 	if (!m_gasRequired)
-		m_gasRequired = Transaction::gasRequired(m_data);
+		m_gasRequired = Transaction::gasRequired(m_data, 0, m_type);
 	return m_gasRequired;
 }
 

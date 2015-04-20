@@ -67,6 +67,13 @@ enum class CodeDeposit
 	Success
 };
 
+enum TransactionType
+{
+	NullTransaction,				///< Null transaction.
+	ContractCreation,				///< Transaction to create contracts - receiveAddress() is ignored.
+	MessageCall						///< Transaction to invoke a message call - receiveAddress() is used.
+};
+
 struct VMException;
 
 TransactionException toTransactionException(VMException const& _e);
@@ -185,20 +192,12 @@ public:
 	bigint gasRequired() const;
 
 	/// Get the fee associated for a transaction with the given data.
-	template <class T> static bigint gasRequired(T const& _data, u256 _gas = 0) { bigint ret = c_txGas + _gas; for (auto i: _data) ret += i ? c_txDataNonZeroGas : c_txDataZeroGas; return ret; }
+	template <class T> static bigint gasRequired(T const& _data, u256 _gas = 0, TransactionType _type = NullTransaction) { bigint ret = c_txGas + _gas; if (_type == ContractCreation) ret += c_createGas; for (auto i: _data) ret += i ? c_txDataNonZeroGas : c_txDataZeroGas; return ret; }
 
 private:
-	/// Type of transaction.
-	enum Type
-	{
-		NullTransaction,				///< Null transaction.
-		ContractCreation,				///< Transaction to create contracts - receiveAddress() is ignored.
-		MessageCall						///< Transaction to invoke a message call - receiveAddress() is used.
-	};
-
 	void sign(Secret _priv);			///< Sign the transaction.
 
-	Type m_type = NullTransaction;		///< Is this a contract-creation transaction or a message-call transaction?
+	TransactionType m_type = NullTransaction;		///< Is this a contract-creation transaction or a message-call transaction?
 	u256 m_nonce;						///< The transaction-count of the sender.
 	u256 m_value;						///< The amount of ETH to be transferred by this transaction. Called 'endowment' for contract-creation transactions.
 	Address m_receiveAddress;			///< The receiving address of the transaction.
