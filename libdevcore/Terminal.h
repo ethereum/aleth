@@ -85,6 +85,7 @@ namespace con
 #define EthBlackBold ""
 #define EthViolet ""
 #define EthTeal ""
+#define EthOrange ""
 
 #else
 
