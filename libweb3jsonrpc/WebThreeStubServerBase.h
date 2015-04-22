@@ -77,6 +77,8 @@ public:
 	virtual std::string net_peerCount();
 	virtual bool net_listening();
 
+	virtual std::string eth_protocolVersion();
+	virtual std::string eth_hashrate();
 	virtual std::string eth_coinbase();
 	virtual bool eth_mining();
 	virtual std::string eth_gasPrice();
@@ -111,7 +113,7 @@ public:
 	virtual Json::Value eth_getFilterLogs(std::string const& _filterId);
 	virtual Json::Value eth_getLogs(Json::Value const& _json);
 	virtual Json::Value eth_getWork();
-	virtual bool eth_submitWork(std::string const& _nonce, std::string const& _mixHash);
+	virtual bool eth_submitWork(std::string const& _nonce, std::string const&, std::string const& _mixHash);
 	virtual std::string eth_register(std::string const& _address);
 	virtual bool eth_unregister(std::string const& _accountId);
 	virtual Json::Value eth_fetchQueuedTransactions(std::string const& _accountId);

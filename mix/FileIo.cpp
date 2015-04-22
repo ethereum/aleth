@@ -102,6 +102,7 @@ void FileIo::writeFile(QString const& _url, QString const& _data)
 	}
 	else
 		error(tr("Error writing file %1").arg(_url));
+	file.close();
 	m_watcher->addPath(path);
 }
 
@@ -184,7 +185,7 @@ QStringList FileIo::makePackage(QString const& _deploymentFolder)
 
 	QUrl url(_deploymentFolder + "package.dapp");
 	QFile compressed(url.path());
-	QByteArray qFileBytes((char*)dapp.data(), dapp.size());
+	QByteArray qFileBytes((char*)dapp.data(), static_cast<int>(dapp.size()));
 	if (compressed.open(QIODevice::WriteOnly))
 	{
 		compressed.write(qFileBytes);
@@ -196,6 +197,7 @@ QStringList FileIo::makePackage(QString const& _deploymentFolder)
 	QStringList ret;
 	ret.append(QString::fromStdString(toHex(dappHash.ref())));
 	ret.append(qFileBytes.toBase64());
+	ret.append(url.toString());
 	return ret;
 }
 

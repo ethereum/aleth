@@ -28,39 +28,50 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-bool TransactionQueue::import(bytesConstRef _transactionRLP)
+const char* TransactionQueueChannel::name() { return EthCyan "┉┅▶"; }
+
+ImportResult TransactionQueue::import(bytesConstRef _transactionRLP, ImportCallback const& _cb, IfDropped _ik)
 {
 	// Check if we already know this transaction.
 	h256 h = sha3(_transactionRLP);
 
 	UpgradableGuard l(m_lock);
+	// TODO: keep old transactions around and check in State for nonce validity
+
 	if (m_known.count(h))
-		return false;
+		return ImportResult::AlreadyKnown;
+
+	if (m_dropped.count(h) && _ik == IfDropped::Ignore)
+		return ImportResult::AlreadyInChain;
 
 	try
 	{
 		// Check validity of _transactionRLP as a transaction. To do this we just deserialise and attempt to determine the sender.
 		// If it doesn't work, the signature is bad.
 		// The transaction's nonce may yet be invalid (or, it could be "valid" but we may be missing a marginally older transaction).
-		Transaction t(_transactionRLP, CheckSignature::Sender);
+		Transaction t(_transactionRLP, CheckTransaction::Everything);
 
 		UpgradeGuard ul(l);
 		// If valid, append to blocks.
 		m_current[h] = t;
 		m_known.insert(h);
+		if (_cb)
+			m_callbacks[h] = _cb;
+		ctxq << "Queued vaguely legit-looking transaction" << h.abridged();
+		m_onReady();
 	}
 	catch (Exception const& _e)
 	{
-		cwarn << "Ignoring invalid transaction: " <<  diagnostic_information(_e);
-		return false;
+		ctxq << "Ignoring invalid transaction: " <<  diagnostic_information(_e);
+		return ImportResult::Malformed;
 	}
 	catch (std::exception const& _e)
 	{
-		cwarn << "Ignoring invalid transaction: " << _e.what();
-		return false;
+		ctxq << "Ignoring invalid transaction: " << _e.what();
+		return ImportResult::Malformed;
 	}
 
-	return true;
+	return ImportResult::Success;
 }
 
 void TransactionQueue::setFuture(std::pair<h256, Transaction> const& _t)
@@ -82,7 +93,7 @@ void TransactionQueue::noteGood(std::pair<h256, Transaction> const& _t)
 	m_unknown.erase(r.first, r.second);
 }
 
-void TransactionQueue::drop(h256 _txHash)
+void TransactionQueue::drop(h256 const& _txHash)
 {
 	UpgradableGuard l(m_lock);
 
@@ -90,6 +101,7 @@ void TransactionQueue::drop(h256 _txHash)
 		return;
 
 	UpgradeGuard ul(l);
+	m_dropped.insert(_txHash);
 	m_known.erase(_txHash);
 
 	if (m_current.count(_txHash))

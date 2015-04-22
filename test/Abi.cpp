@@ -21,7 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libabi/CommandLineInterface.h>
-#include <libtestutils/TransientDirectory.h>
+#include <libdevcore/TransientDirectory.h>
 #include "TestUtils.h"
 
 using namespace std;

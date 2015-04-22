@@ -51,7 +51,9 @@ target_link_libraries(${EXECUTABLE} ethcore)
 target_link_libraries(${EXECUTABLE} devcrypto)
 target_link_libraries(${EXECUTABLE} secp256k1)
 target_link_libraries(${EXECUTABLE} lll)
-target_link_libraries(${EXECUTABLE} solidity)
+if (SOLIDITY)
+	target_link_libraries(${EXECUTABLE} solidity)
+endif ()
 target_link_libraries(${EXECUTABLE} evmcore)
 target_link_libraries(${EXECUTABLE} devcore)
 target_link_libraries(${EXECUTABLE} web3jsonrpc)
@@ -59,10 +61,10 @@ target_link_libraries(${EXECUTABLE} jsqrc)
 target_link_libraries(${EXECUTABLE} natspec)
 target_link_libraries(${EXECUTABLE} ${MHD_LIBRARIES})
 
-if (NOT ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"))
+if (SERPENT)
 	target_link_libraries(${EXECUTABLE} serpent)
 endif()
 
 # eth_install_executable is defined in cmake/EthExecutableHelper.cmake
-eth_install_executable(${EXECUTABLE} DLLS ${MHD_DLL_RELEASE})
+eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS)
 

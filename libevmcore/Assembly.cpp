@@ -23,7 +23,8 @@
 #include <fstream>
 #include <libdevcore/Log.h>
 #include <libevmcore/CommonSubexpressionEliminator.h>
-
+#include <libevmcore/ControlFlowGraph.h>
+#include <json/json.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -34,9 +35,9 @@ void Assembly::append(Assembly const& _a)
 	for (AssemblyItem i: _a.m_items)
 	{
 		if (i.type() == Tag || i.type() == PushTag)
-			i.m_data += m_usedTags;
+			i.setData(i.data() + m_usedTags);
 		else if (i.type() == PushSub || i.type() == PushSubSize)
-			i.m_data += m_subs.size();
+			i.setData(i.data() + m_usedTags);
 		append(i);
 	}
 	m_deposit = newDeposit;
@@ -62,6 +63,13 @@ void Assembly::append(Assembly const& _a, int _deposit)
 		while (_deposit++ < _a.m_deposit)
 			append(Instruction::POP);
 	}
+}
+
+string Assembly::out() const
+{
+	stringstream ret;
+	stream(ret);
+	return ret.str();
 }
 
 unsigned Assembly::bytesRequired() const
@@ -100,40 +108,40 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	return move(cut);
 }
 
-ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
+ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
 {
 	_out << _prefix << ".code:" << endl;
 	for (AssemblyItem const& i: m_items)
 	{
 		_out << _prefix;
-		switch (i.m_type)
+		switch (i.type())
 		{
 		case Operation:
 			_out << "  " << instructionInfo(i.instruction()).name  << "\t" << i.getJumpTypeAsString();
 			break;
 		case Push:
-			_out << "  PUSH " << i.m_data;
+			_out << "  PUSH " << i.data();
 			break;
 		case PushString:
-			_out << "  PUSH \"" << m_strings.at((h256)i.m_data) << "\"";
+			_out << "  PUSH \"" << m_strings.at((h256)i.data()) << "\"";
 			break;
 		case PushTag:
-			_out << "  PUSH [tag" << i.m_data << "]";
+			_out << "  PUSH [tag" << i.data() << "]";
 			break;
 		case PushSub:
-			_out << "  PUSH [$" << h256(i.m_data).abridged() << "]";
+			_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
 			break;
 		case PushSubSize:
-			_out << "  PUSH #[$" << h256(i.m_data).abridged() << "]";
+			_out << "  PUSH #[$" << h256(i.data()).abridged() << "]";
 			break;
 		case PushProgramSize:
 			_out << "  PUSHSIZE";
 			break;
 		case Tag:
-			_out << "tag" << i.m_data << ": " << endl << _prefix << "  JUMPDEST";
+			_out << "tag" << i.data() << ": " << endl << _prefix << "  JUMPDEST";
 			break;
 		case PushData:
-			_out << "  PUSH [" << hex << (unsigned)i.m_data << "]";
+			_out << "  PUSH [" << hex << (unsigned)i.data() << "]";
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InvalidOpcode());
@@ -154,6 +162,115 @@ ostream& Assembly::stream(ostream& _out, string const& _prefix, StringMap const&
 		}
 	}
 	return _out;
+}
+
+Json::Value Assembly::createJsonValue(string _name, int _begin, int _end, string _value, string _jumpType) const
+{
+	Json::Value value;
+	value["name"] = _name;
+	value["begin"] = _begin;
+	value["end"] = _end;
+	if (!_value.empty())
+		value["value"] = _value;
+	if (!_jumpType.empty())
+		value["jumpType"] = _jumpType;
+	return value;
+}
+
+string toStringInHex(u256 _value)
+{
+	std::stringstream hexStr;
+	hexStr << hex << _value;
+	return hexStr.str();
+}
+
+Json::Value Assembly::streamAsmJson(ostream& _out, StringMap const& _sourceCodes) const
+{
+	Json::Value root;
+
+	Json::Value collection(Json::arrayValue);
+	for (AssemblyItem const& i: m_items)
+	{
+		switch (i.type())
+		{
+		case Operation:
+			collection.append(
+				createJsonValue(instructionInfo(i.instruction()).name, i.getLocation().start, i.getLocation().end, i.getJumpTypeAsString()));
+			break;
+		case Push:
+			collection.append(
+				createJsonValue("PUSH", i.getLocation().start, i.getLocation().end, toStringInHex(i.data()), i.getJumpTypeAsString()));
+			break;
+		case PushString:
+			collection.append(
+				createJsonValue("PUSH tag", i.getLocation().start, i.getLocation().end, m_strings.at((h256)i.data())));
+			break;
+		case PushTag:
+			collection.append(
+				createJsonValue("PUSH [tag]", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
+			break;
+		case PushSub:
+			collection.append(
+				createJsonValue("PUSH [$]", i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
+			break;
+		case PushSubSize:
+			collection.append(
+				createJsonValue("PUSH #[$]", i.getLocation().start, i.getLocation().end, dev::toString(h256(i.data()))));
+			break;
+		case PushProgramSize:
+			collection.append(
+				createJsonValue("PUSHSIZE", i.getLocation().start, i.getLocation().end));
+			break;
+		case Tag:
+		{
+			collection.append(
+				createJsonValue("tag", i.getLocation().start, i.getLocation().end, string(i.data())));
+			collection.append(
+				createJsonValue("JUMDEST", i.getLocation().start, i.getLocation().end));
+		}
+			break;
+		case PushData:
+		{
+			Json::Value pushData;
+			pushData["name"] = "PUSH hex";
+			collection.append(createJsonValue("PUSH hex", i.getLocation().start, i.getLocation().end, toStringInHex(i.data())));
+		}
+			break;
+		default:
+			BOOST_THROW_EXCEPTION(InvalidOpcode());
+		}
+	}
+
+	root[".code"] = collection;
+
+	if (!m_data.empty() || !m_subs.empty())
+	{
+		Json::Value data;
+		for (auto const& i: m_data)
+			if (u256(i.first) >= m_subs.size())
+				data[toStringInHex((u256)i.first)] = toHex(i.second);
+
+		for (size_t i = 0; i < m_subs.size(); ++i)
+		{
+			std::stringstream hexStr;
+			hexStr << hex << i;
+			data[hexStr.str()] = m_subs[i].stream(_out, "", _sourceCodes, true);
+		}
+		root[".data"] = data;
+		_out << root;
+	}
+	return root;
+}
+
+Json::Value Assembly::stream(ostream& _out, string const& _prefix, StringMap const& _sourceCodes, bool _inJsonFormat) const
+{
+	if (_inJsonFormat)
+		return streamAsmJson(_out, _sourceCodes);
+	else
+	{
+		streamAsm(_out, _prefix, _sourceCodes);
+		return Json::Value();
+	}
 }
 
 AssemblyItem const& Assembly::append(AssemblyItem const& _i)
@@ -189,13 +306,25 @@ Assembly& Assembly::optimise(bool _enable)
 		return *this;
 	std::vector<pair<AssemblyItems, function<AssemblyItems(AssemblyItemsConstRef)>>> rules;
 	// jump to next instruction
-	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].m_data == m[2].m_data) return {m[2]}; else return m.toVector(); }});
+	rules.push_back({ { PushTag, Instruction::JUMP, Tag }, [](AssemblyItemsConstRef m) -> AssemblyItems { if (m[0].data() == m[2].data()) return {m[2]}; else return m.toVector(); }});
 
 	unsigned total = 0;
 	for (unsigned count = 1; count > 0; total += count)
 	{
-		copt << *this;
+		copt << toString(*this);
 		count = 0;
+
+		copt << "Performing control flow analysis...";
+		{
+			ControlFlowGraph cfg(m_items);
+			AssemblyItems optItems = cfg.optimisedItems();
+			if (optItems.size() < m_items.size())
+			{
+				copt << "Old size: " << m_items.size() << ", new size: " << optItems.size();
+				m_items = move(optItems);
+				count++;
+			}
+		}
 
 		copt << "Performing common subexpression elimination...";
 		for (auto iter = m_items.begin(); iter != m_items.end();)
@@ -224,80 +353,6 @@ Assembly& Assembly::optimise(bool _enable)
 					*orig = move(*moveIter);
 				iter = m_items.erase(orig, iter);
 			}
-		}
-
-		for (unsigned i = 0; i < m_items.size(); ++i)
-		{
-			for (auto const& r: rules)
-			{
-				auto vr = AssemblyItemsConstRef(&m_items).cropped(i, r.first.size());
-				if (matches(vr, &r.first))
-				{
-					auto rw = r.second(vr);
-					if (rw.size() < vr.size())
-					{
-						copt << "Rule " << vr << " matches " << AssemblyItemsConstRef(&r.first) << " becomes...";
-						copt << AssemblyItemsConstRef(&rw) << "\n";
-						if (rw.size() > vr.size())
-						{
-							// create hole in the vector
-							unsigned sizeIncrease = rw.size() - vr.size();
-							m_items.resize(m_items.size() + sizeIncrease, AssemblyItem(UndefinedItem));
-							move_backward(m_items.begin() + i, m_items.end() - sizeIncrease, m_items.end());
-						}
-						else
-							m_items.erase(m_items.begin() + i + rw.size(), m_items.begin() + i + vr.size());
-
-						copy(rw.begin(), rw.end(), m_items.begin() + i);
-
-						count++;
-						copt << "Now:" << m_items;
-					}
-				}
-			}
-			if (m_items[i].type() == Operation && m_items[i].instruction() == Instruction::JUMP)
-			{
-				bool o = false;
-				while (m_items.size() > i + 1 && m_items[i + 1].type() != Tag)
-				{
-					m_items.erase(m_items.begin() + i + 1);
-					o = true;
-				}
-				if (o)
-				{
-					copt << "Jump with no tag. Now:\n" << m_items;
-					++count;
-				}
-			}
-		}
-
-		map<u256, unsigned> tags;
-		for (unsigned i = 0; i < m_items.size(); ++i)
-			if (m_items[i].type() == Tag)
-				tags.insert(make_pair(m_items[i].data(), i));
-
-		for (auto const& i: m_items)
-			if (i.type() == PushTag)
-				tags.erase(i.data());
-
-		if (!tags.empty())
-		{
-			auto t = *tags.begin();
-			unsigned i = t.second;
-			if (i && m_items[i - 1].type() == Operation && m_items[i - 1].instruction() == Instruction::JUMP)
-				while (i < m_items.size() && (m_items[i].type() != Tag || tags.count(m_items[i].data())))
-				{
-					if (m_items[i].type() == Tag && tags.count(m_items[i].data()))
-						tags.erase(m_items[i].data());
-					m_items.erase(m_items.begin() + i);
-				}
-			else
-			{
-				m_items.erase(m_items.begin() + i);
-				tags.erase(t.first);
-			}
-			copt << "Unused tag. Now:\n" << m_items;
-			++count;
 		}
 	}
 
@@ -331,16 +386,16 @@ bytes Assembly::assemble() const
 	// m_data must not change from here on
 
 	for (AssemblyItem const& i: m_items)
-		switch (i.m_type)
+		switch (i.type())
 		{
 		case Operation:
-			ret.push_back((byte)i.m_data);
+			ret.push_back((byte)i.data());
 			break;
 		case PushString:
 		{
 			ret.push_back((byte)Instruction::PUSH32);
 			unsigned ii = 0;
-			for (auto j: m_strings.at((h256)i.m_data))
+			for (auto j: m_strings.at((h256)i.data()))
 				if (++ii > 32)
 					break;
 				else
@@ -351,30 +406,30 @@ bytes Assembly::assemble() const
 		}
 		case Push:
 		{
-			byte b = max<unsigned>(1, dev::bytesRequired(i.m_data));
+			byte b = max<unsigned>(1, dev::bytesRequired(i.data()));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);
 			bytesRef byr(&ret.back() + 1 - b, b);
-			toBigEndian(i.m_data, byr);
+			toBigEndian(i.data(), byr);
 			break;
 		}
 		case PushTag:
 		{
 			ret.push_back(tagPush);
-			tagRef[ret.size()] = (unsigned)i.m_data;
+			tagRef[ret.size()] = (unsigned)i.data();
 			ret.resize(ret.size() + bytesPerTag);
 			break;
 		}
 		case PushData: case PushSub:
 		{
 			ret.push_back(dataRefPush);
-			dataRef.insert(make_pair((h256)i.m_data, ret.size()));
+			dataRef.insert(make_pair((h256)i.data(), ret.size()));
 			ret.resize(ret.size() + bytesPerDataRef);
 			break;
 		}
 		case PushSubSize:
 		{
-			auto s = m_data[i.m_data].size();
+			auto s = m_data[i.data()].size();
 			byte b = max<unsigned>(1, dev::bytesRequired(s));
 			ret.push_back((byte)Instruction::PUSH1 - 1 + b);
 			ret.resize(ret.size() + b);
@@ -390,7 +445,7 @@ bytes Assembly::assemble() const
 			break;
 		}
 		case Tag:
-			tagPos[(unsigned)i.m_data] = ret.size();
+			tagPos[(unsigned)i.data()] = ret.size();
 			ret.push_back((byte)Instruction::JUMPDEST);
 			break;
 		default:

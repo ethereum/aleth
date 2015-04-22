@@ -132,10 +132,11 @@ void EthereumHost::noteDoneBlocks(EthereumPeer* _who, bool _clemency)
 		else
 		{
 			// Done our chain-get.
-			clog(NetNote) << "Chain download failed. Peer with blocks didn't have them all. This peer is bad and should be punished.";
-
-			m_banned.insert(_who->session()->id());			// We know who you are!
-			_who->disable("Peer sent hashes but was unable to provide the blocks.");
+			clog(NetWarn) << "Chain download failed. Peer with blocks didn't have them all. This peer is bad and should be punished.";
+			clog(NetWarn) << m_man.remaining();
+			clog(NetWarn) << "WOULD BAN.";
+//			m_banned.insert(_who->session()->id());			// We know who you are!
+//			_who->disable("Peer sent hashes but was unable to provide the blocks.");
 		}
 		m_man.reset();
 	}
@@ -159,9 +160,22 @@ void EthereumHost::doWork()
 	// If we've finished our initial sync (including getting all the blocks into the chain so as to reduce invalid transactions), start trading transactions & blocks
 	if (!isSyncing() && m_chain.isKnown(m_latestBlockSent))
 	{
-		maintainTransactions();
-		maintainBlocks(h);
+		if (m_newTransactions)
+		{
+			m_newTransactions = false;
+			maintainTransactions();
+		}
+		if (m_newBlocks)
+		{
+			m_newBlocks = false;
+			maintainBlocks(h);
+		}
 	}
+
+	for (auto p: peerSessions())
+		if (shared_ptr<EthereumPeer> const& ep = p.first->cap<EthereumPeer>())
+			ep->tick();
+
 //	return netChange;
 	// TODO: Figure out what to do with netChange.
 	(void)netChange;
@@ -170,18 +184,28 @@ void EthereumHost::doWork()
 void EthereumHost::maintainTransactions()
 {
 	// Send any new transactions.
+	map<std::shared_ptr<EthereumPeer>, h256s> peerTransactions;
+	auto ts = m_tq.transactions();
+	for (auto const& i: ts)
+	{
+		bool unsent = !m_transactionsSent.count(i.first);
+		for (auto const& p: randomSelection(100, [&](EthereumPeer* p) { return p->m_requireTransactions || (unsent && !p->m_knownTransactions.count(i.first)); }))
+			peerTransactions[p].push_back(i.first);
+	}
+	for (auto const& t: ts)
+		m_transactionsSent.insert(t.first);
 	for (auto p: peerSessions())
-		if (auto ep = p.first->cap<EthereumPeer>().get())
+		if (auto ep = p.first->cap<EthereumPeer>())
 		{
 			bytes b;
 			unsigned n = 0;
-			for (auto const& i: m_tq.transactions())
-				if (ep->m_requireTransactions || (!m_transactionsSent.count(i.first) && !ep->m_knownTransactions.count(i.first)))
-				{
-					b += i.second.rlp();
-					++n;
-					m_transactionsSent.insert(i.first);
-				}
+			for (auto const& h: peerTransactions[ep])
+			{
+				ep->m_knownTransactions.insert(h);
+				b += ts[h].rlp();
+				++n;
+			}
+
 			ep->clearKnownTransactions();
 
 			if (n || ep->m_requireTransactions)
@@ -194,24 +218,52 @@ void EthereumHost::maintainTransactions()
 		}
 }
 
+std::vector<std::shared_ptr<EthereumPeer>> EthereumHost::randomSelection(unsigned _percent, std::function<bool(EthereumPeer*)> const& _allow)
+{
+	std::vector<std::shared_ptr<EthereumPeer>> candidates;
+	candidates.reserve(peerSessions().size());
+	for (auto const& j: peerSessions())
+	{
+		auto pp = j.first->cap<EthereumPeer>();
+		if (_allow(pp.get()))
+			candidates.push_back(pp);
+	}
+
+	std::vector<std::shared_ptr<EthereumPeer>> ret;
+	for (unsigned i = (peerSessions().size() * _percent + 99) / 100; i-- && candidates.size();)
+	{
+		unsigned n = rand() % candidates.size();
+		ret.push_back(std::move(candidates[n]));
+		candidates.erase(candidates.begin() + n);
+	}
+	return ret;
+}
+
 void EthereumHost::maintainBlocks(h256 _currentHash)
 {
 	// Send any new blocks.
-	if (m_chain.details(m_latestBlockSent).totalDifficulty < m_chain.details(_currentHash).totalDifficulty)
+	auto detailsFrom = m_chain.details(m_latestBlockSent);
+	auto detailsTo = m_chain.details(_currentHash);
+	if (detailsFrom.totalDifficulty < detailsTo.totalDifficulty)
 	{
-		clog(NetMessageSummary) << "Sending a new block (current is" << _currentHash << ", was" << m_latestBlockSent << ")";
-
-		for (auto j: peerSessions())
+		if (diff(detailsFrom.number, detailsTo.number) < 20)
 		{
-			auto p = j.first->cap<EthereumPeer>().get();
+			// don't be sending more than 20 "new" blocks. if there are any more we were probably waaaay behind.
+			clog(NetMessageSummary) << "Sending a new block (current is" << _currentHash << ", was" << m_latestBlockSent << ")";
 
-			RLPStream ts;
-			p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(), 1).append(m_chain.details().totalDifficulty);
+			h256s blocks = get<0>(m_chain.treeRoute(m_latestBlockSent, _currentHash, false, false, true));
 
-			Guard l(p->x_knownBlocks);
-			if (!p->m_knownBlocks.count(_currentHash))
-				p->sealAndSend(ts);
-			p->m_knownBlocks.clear();
+			for (auto const& p: randomSelection(100, [&](EthereumPeer* p){return !p->m_knownBlocks.count(_currentHash); }))
+				for (auto const& b: blocks)
+					if (!p->m_knownBlocks.count(b))
+					{
+						RLPStream ts;
+						p->prep(ts, NewBlockPacket, 2).appendRaw(m_chain.block(b), 1).append(m_chain.details(b).totalDifficulty);
+
+						Guard l(p->x_knownBlocks);
+						p->sealAndSend(ts);
+						p->m_knownBlocks.clear();
+					}
 		}
 		m_latestBlockSent = _currentHash;
 	}

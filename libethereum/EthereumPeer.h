@@ -105,6 +105,9 @@ private:
 	/// Check whether the session should bother grabbing the peer's blocks.
 	bool shouldGrabBlocks() const;
 
+	/// Runs period checks to check up on the peer.
+	void tick();
+
 	/// Peer's protocol version.
 	unsigned m_protocolVersion;
 	/// Peer's network id.
@@ -112,6 +115,8 @@ private:
 
 	/// What, if anything, we last asked the other peer for.
 	Asking m_asking = Asking::Nothing;
+	/// When we asked for it. Allows a time out.
+	std::chrono::system_clock::time_point m_lastAsk;
 
 	/// Whether this peer is in the process of syncing or not. Only one peer can be syncing at once.
 	bool m_isSyncing = false;
@@ -124,6 +129,7 @@ private:
 	/// This is built as we ask for hashes. Once no more hashes are given, we present this to the
 	/// host who initialises the DownloadMan and m_sub becomes active for us to begin asking for blocks.
 	h256s m_syncingNeededBlocks;				///< The blocks that we should download from this peer.
+	h256 m_syncingLastReceivedHash;				///< Hash more recently received from peer.
 	h256 m_syncingLatestHash;					///< Peer's latest block's hash, as of the current sync.
 	u256 m_syncingTotalDifficulty;				///< Peer's latest block's total difficulty, as of the current sync.
 

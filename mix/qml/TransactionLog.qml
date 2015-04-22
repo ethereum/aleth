@@ -4,32 +4,19 @@ import QtQuick.Controls.Styles 1.1
 import QtQuick.Dialogs 1.1
 import QtQuick.Layouts 1.1
 import org.ethereum.qml.RecordLogEntry 1.0
+import org.ethereum.qml.InverseMouseArea 1.0
 
 Item {
-
 	property ListModel fullModel: ListModel{}
 	property ListModel transactionModel: ListModel{}
 	property ListModel callModel: ListModel{}
-
-	Action {
-		id: addStateAction
-		text: "Add State"
-		shortcut: "Ctrl+Alt+T"
-		enabled: codeModel.hasContract && !clientModel.running;
-		onTriggered: projectModel.stateListModel.addState();
-	}
-	Action {
-		id: editStateAction
-		text: "Edit State"
-		shortcut: "Ctrl+Alt+T"
-		enabled: codeModel.hasContract && !clientModel.running && statesCombo.currentIndex >= 0 && projectModel.stateListModel.count > 0;
-		onTriggered: projectModel.stateListModel.editState(statesCombo.currentIndex);
-	}
+	property int selectedStateIndex: statesCombo.selectedIndex
 
 	ColumnLayout {
 		anchors.fill: parent
 		RowLayout {
-
+			anchors.right: parent.right
+			anchors.left: parent.left
 			Connections
 			{
 				id: compilationStatus
@@ -61,35 +48,31 @@ Item {
 				}
 			}
 
-			ComboBox {
+			StatesComboBox
+			{
 				id: statesCombo
-				model: projectModel.stateListModel
-				width: 150
-				editable: false
-				textRole: "title"
-				onActivated:  {
-					model.runState(index);
-				}
+				items: projectModel.stateListModel
+				onSelectCreate: projectModel.stateListModel.addState()
+				onEditItem: projectModel.stateListModel.editState(item)
+				colorItem: "#808080"
+				colorSelect: "#4a90e2"
+				color: "white"
 				Connections {
 					target: projectModel.stateListModel
 					onStateRun: {
-						if (statesCombo.currentIndex !== index)
-							statesCombo.currentIndex = index;
+						if (statesCombo.selectedIndex !== index)
+							statesCombo.setSelectedIndex(index)
+					}
+					onStateListModelReady: {
+						statesCombo.setSelectedIndex(projectModel.stateListModel.defaultStateIndex)
+					}
+					onStateDeleted: {
+						if (index === statesCombo.selectedIndex)
+							statesCombo.setSelectedIndex(0);
 					}
 				}
 			}
-			Button
-			{
-				anchors.rightMargin: 9
-				anchors.verticalCenter: parent.verticalCenter
-				action: editStateAction
-			}
-			Button
-			{
-				anchors.rightMargin: 9
-				anchors.verticalCenter: parent.verticalCenter
-				action: addStateAction
-			}
+
 			Button
 			{
 				anchors.rightMargin: 9
@@ -153,6 +136,11 @@ Item {
 				title: qsTr("Returned")
 				width: 120
 			}
+			TableViewColumn {
+				role: "gasUsed"
+				title: qsTr("Gas Used")
+				width: 120
+			}
 			onActivated:  {
 				var item = logTable.model.get(row);
 				if (item.type === RecordLogEntry.Transaction)
@@ -167,12 +155,7 @@ Item {
 				}
 			}
 		}
-		Rectangle {
-			height: 6
-			color: "transparent"
-		}
 	}
-
 	Connections {
 		target: clientModel
 		onStateCleared: {

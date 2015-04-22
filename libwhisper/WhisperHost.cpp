@@ -29,12 +29,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
 
-#if defined(clogS)
-#undef clogS
-#endif
-#define clogS(X) dev::LogOutputStream<X, true>(false) << "| " << std::setw(2) << session()->socketId() << "] "
-
-WhisperHost::WhisperHost()
+WhisperHost::WhisperHost(): Worker("shh")
 {
 }
 
@@ -162,7 +157,7 @@ void WhisperHost::uninstallWatch(unsigned _i)
 
 void WhisperHost::doWork()
 {
-	for (auto& i: peerSessions())
+	for (auto i: peerSessions())
 		i.first->cap<WhisperPeer>().get()->sendMessages();
 	cleanup();
 }

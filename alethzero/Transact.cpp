@@ -37,7 +37,7 @@
 #include <libnatspec/NatspecExpressionEvaluator.h>
 #include <libethereum/Client.h>
 #include <libethereum/Utility.h>
-#ifndef _MSC_VER
+#if ETH_SERPENT
 #include <libserpent/funcs.h>
 #include <libserpent/util.h>
 #endif
@@ -168,6 +168,7 @@ static std::string toString(TransactionException _te)
 	}
 }
 
+#if ETH_SOLIDITY
 static string getFunctionHashes(dev::solidity::CompilerStack const& _compiler, string const& _contractName)
 {
 	string ret = "";
@@ -182,6 +183,7 @@ static string getFunctionHashes(dev::solidity::CompilerStack const& _compiler, s
 	}
 	return ret;
 }
+#endif
 
 static tuple<vector<string>, bytes, string> userInputToCode(string const& _user, bool _opt)
 {
@@ -197,6 +199,7 @@ static tuple<vector<string>, bytes, string> userInputToCode(string const& _user,
 		boost::replace_all_copy(u, " ", "");
 		data = fromHex(u);
 	}
+#if ETH_SOLIDITY
 	else if (sourceIsSolidity(_user))
 	{
 		dev::solidity::CompilerStack compiler(true);
@@ -220,7 +223,8 @@ static tuple<vector<string>, bytes, string> userInputToCode(string const& _user,
 			errors.push_back("Solidity: Uncaught exception");
 		}
 	}
-#ifndef _MSC_VER
+#endif
+#if ETH_SERPENT
 	else if (sourceIsSerpent(_user))
 	{
 		try
@@ -306,7 +310,7 @@ void Transact::rejigData()
 	htmlInfo += "<h4>Hex</h4>" + QString(Div(Mono)) + QString::fromStdString(toHex(m_data)) + "</div>";
 
 	// Determine the minimum amount of gas we need to play...
-	qint64 baseGas = (qint64)Interface::txGas(m_data, 0);
+	qint64 baseGas = (qint64)Transaction::gasRequired(m_data, 0);
 	qint64 gasNeeded = 0;
 
 	if (b < value() + baseGas * gasPrice())
@@ -394,6 +398,7 @@ void Transact::on_send_clicked()
 		// If execution is a contract creation, add Natspec to
 		// a local Natspec LEVELDB
 		ethereum()->submitTransaction(s, value(), m_data, ui->gas->value(), gasPrice());
+#if ETH_SOLIDITY
 		string src = ui->data->toPlainText().toStdString();
 		if (sourceIsSolidity(src))
 			try
@@ -407,6 +412,7 @@ void Transact::on_send_clicked()
 				}
 			}
 			catch (...) {}
+#endif
 	}
 	else
 		ethereum()->submitTransaction(s, value(), m_context->fromString(ui->destination->currentText()), m_data, ui->gas->value(), gasPrice());

@@ -31,7 +31,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-#define ETH_VMTRACE 1
+const char* VMTraceChannel::name() { return "EVM"; }
 
 Executive::Executive(State& _s, BlockChain const& _bc, unsigned _level):
 	m_s(_s),
@@ -69,12 +69,11 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Check gas cost is enough.
-	m_gasRequired = Interface::txGas(m_t.data());
-	if (m_t.gas() < m_gasRequired)
+	if (!m_t.checkPayment())
 	{
-		clog(StateDetail) << "Not enough gas to pay for the transaction: Require >" << m_gasRequired << " Got" << m_t.gas();
+		clog(StateDetail) << "Not enough gas to pay for the transaction: Require >" << m_t.gasRequired() << " Got" << m_t.gas();
 		m_excepted = TransactionException::OutOfGas;
-		BOOST_THROW_EXCEPTION(OutOfGas() << RequirementError((bigint)m_gasRequired, (bigint)m_t.gas()));
+		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_t.gasRequired(), (bigint)m_t.gas()));
 	}
 
 	// Avoid invalid transactions.
@@ -119,9 +118,9 @@ bool Executive::execute()
 	m_s.subBalance(m_t.sender(), m_gasCost);
 
 	if (m_t.isCreation())
-		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_gasRequired, &m_t.data(), m_t.sender());
+		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_t.gasRequired(), &m_t.data(), m_t.sender());
 	else
-		return call(m_t.receiveAddress(), m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_gasRequired, m_t.sender());
+		return call(m_t.receiveAddress(), m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_t.gasRequired(), m_t.sender());
 }
 
 bool Executive::call(Address _receiveAddress, Address _codeAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas, Address _originAddress)
@@ -202,8 +201,8 @@ OnOpFunc Executive::simpleTrace()
 		o << "    STORAGE" << endl;
 		for (auto const& i: ext.state().storage(ext.myAddress))
 			o << showbase << hex << i.first << ": " << i.second << endl;
-		dev::LogOutputStream<VMTraceChannel, false>(true) << o.str();
-		dev::LogOutputStream<VMTraceChannel, false>(false) << " | " << dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << hex << setw(4) << setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << dec << vm.gas() << " | -" << dec << gasCost << " | " << newMemSize << "x32" << " ]";
+		dev::LogOutputStream<VMTraceChannel, false>() << o.str();
+		dev::LogOutputStream<VMTraceChannel, false>() << " < " << dec << ext.depth << " : " << ext.myAddress << " : #" << steps << " : " << hex << setw(4) << setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " : " << dec << vm.gas() << " : -" << dec << gasCost << " : " << newMemSize << "x32" << " >";
 	};
 }
 

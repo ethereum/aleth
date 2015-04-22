@@ -84,7 +84,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
 
 	for (auto ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next)
 	{
-		if (!ifa->ifa_addr || string(ifa->ifa_name) == "lo0")
+		if (!ifa->ifa_addr || string(ifa->ifa_name) == "lo0" || !(ifa->ifa_flags & IFF_UP))
 			continue;
 
 		if (ifa->ifa_addr->sa_family == AF_INET)
@@ -228,7 +228,7 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
 		bi::tcp::resolver r(s_resolverIoService);
 		auto it = r.resolve({split[0], toString(port)}, ec);
 		if (ec)
-			clog(NetWarn) << "Error resolving host address " << _addr << ":" << ec.message();
+			clog(NetWarn) << "Error resolving host address..." << url << _addr << ":" << error << ec.message();
 		else
 			ep = *it;
 	}

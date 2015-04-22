@@ -9,7 +9,7 @@ var editor = CodeMirror(document.body, {
 						});
 var ternServer;
 
-editor.setOption("theme", "solarized dark");
+editor.setOption("theme", "inkpot");
 editor.setOption("indentUnit", 4);
 editor.setOption("indentWithTabs", true);
 editor.setOption("fullScreen", true);
@@ -124,8 +124,6 @@ var executionMark;
 highlightExecution = function(start, end) {
 	if (executionMark)
 		executionMark.clear();
-	if (start === 0 && end + 1 === editor.getValue().length)
-		return; // Do not hightlight the whole document.
 	if (debugWarning)
 		debugWarning.clear();
 	executionMark = editor.markText(editor.posFromIndex(start), editor.posFromIndex(end), { className: "CodeMirror-exechighlight" });
@@ -191,4 +189,16 @@ compilationComplete = function()
 	compilationCompleteBool = true;
 }
 
+goToCompilationError = function()
+{
+	editor.setCursor(annotation.line, annotation.column)
+}
+
+setFontSize = function(size)
+{
+	editor.getWrapperElement().style["font-size"] = size + "px";
+	editor.refresh();
+}
+
 editor.setOption("extraKeys", extraKeys);
+
