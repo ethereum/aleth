@@ -116,3 +116,27 @@ void ParallelClientBaseFixture::enumerateClients(std::function<void(Json::Value 
 		});
 	});
 }
+
+CoutFixture::CoutFixture()
+{
+	m_coutbuf = std::cout.rdbuf();
+	std::cout.rdbuf(m_stream.rdbuf());
+}
+
+CoutFixture::~CoutFixture()
+{
+	// reset to standard output
+	std::cout.rdbuf(m_coutbuf);
+	
+	// print standard output, cause it contains boost logs
+	std::cout << m_stream.str();
+}
+
+std::string CoutFixture::getOutput() const
+{
+	string ret = m_stream.str();
+	if (ret.size() < 1)
+		return ret;
+
+	return ret.find("\n",ret.size() - 1) == std::string::npos ? ret : ret.substr(0, ret.size() - 1);
+}

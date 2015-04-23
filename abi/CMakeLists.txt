@@ -10,7 +10,7 @@ set(EXECUTABLE abi)
 
 add_executable(${EXECUTABLE} ${SRC_LIST})
 
-target_link_libraries(${EXECUTABLE} ethereum)
+target_link_libraries(${EXECUTABLE} abil)
 
 install( TARGETS ${EXECUTABLE} DESTINATION bin) 
 
