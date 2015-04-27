@@ -62,6 +62,18 @@ std::pair<string, string> ICAP::fromIBAN(std::string _iban)
 	return make_pair(c, d);
 }
 
+ICAP ICAP::safeDecoded(std::string const& _encoded)
+{
+	try
+	{
+		return decoded(_encoded);
+	}
+	catch (InvalidICAP const&)
+	{
+		return ICAP();
+	}
+}
+
 ICAP ICAP::decoded(std::string const& _encoded)
 {
 	ICAP ret;

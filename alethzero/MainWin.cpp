@@ -570,7 +570,7 @@ Address Main::fromString(QString const& _n) const
 			return Address();
 		}
 	}
-	else if (Address a = ICAP::decoded(_n.toStdString()).direct())
+	else if (Address a = ICAP::safeDecoded(_n.toStdString()).direct())
 		return a;
 	else
 		return Address();
