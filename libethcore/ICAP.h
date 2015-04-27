@@ -49,13 +49,13 @@ public:
 	/// Construct null ICAP object.
 	ICAP() = default;
 	/// Construct a direct ICAP object for given target address. Must have a zero first byte.
-	ICAP(Address const& _target): m_direct(_target) {}
+	ICAP(Address const& _target): m_type(Direct), m_direct(_target) {}
 	/// Construct an indirect ICAP object for given target name.
-	ICAP(std::string const& _target): m_client(_target), m_asset("ETH") {}
+	ICAP(std::string const& _target): m_type(Indirect), m_client(_target), m_asset("ETH") {}
 	/// Construct an indirect ICAP object for given client and institution names.
-	ICAP(std::string const& _client, std::string const& _inst): m_client(_client), m_institution(_inst), m_asset("XET") {}
+	ICAP(std::string const& _client, std::string const& _inst): m_type(Indirect), m_client(_client), m_institution(_inst), m_asset("XET") {}
 	/// Construct an indirect ICAP object for given client, institution and asset names. You generally don't want to use this.
-	ICAP(std::string const& _c, std::string const& _i, std::string const& _a): m_client(_c), m_institution(_i), m_asset(_a) {}
+	ICAP(std::string const& _c, std::string const& _i, std::string const& _a): m_type(Indirect), m_client(_c), m_institution(_i), m_asset(_a) {}
 
 	/// Type of ICAP address.
 	enum Type
@@ -70,8 +70,10 @@ public:
 	/// @returns Client and data from given IBAN address.
 	static std::pair<std::string, std::string> fromIBAN(std::string _iban);
 
-	/// @returns the ICAP object for the ICAP address given.
+	/// @returns the ICAP object for the ICAP address given. Throws InvalidICAP exception in case of invalid input.
 	static ICAP decoded(std::string const& _encoded);
+	/// @returns the ICAP object for the ICAP address given. Returns invalid ICAP object in case of invalid input.
+	static ICAP safeDecoded(std::string const& _encoded);
 
 	/// @returns the encoded ICAP address.
 	std::string encoded() const;
