@@ -364,7 +364,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		RLPStream s;
 		prep(s, BlockHashesPacket, c);
-		h256 p = host()->m_chain.details(later).parent;
+		h256 p = later;
 		for (unsigned i = 0; i < c && p; ++i, p = host()->m_chain.details(p).parent)
 			s << p;
 		sealAndSend(s);
