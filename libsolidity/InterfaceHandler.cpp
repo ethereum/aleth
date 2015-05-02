@@ -69,6 +69,7 @@ std::unique_ptr<std::string> InterfaceHandler::getABIInterface(ContractDefinitio
 	if (_contractDef.getConstructor())
 	{
 		Json::Value method;
+		method["name"] = _contractDef.getName();
 		method["type"] = "constructor";
 		auto externalFunction = FunctionType(*_contractDef.getConstructor()).externalFunctionType();
 		solAssert(!!externalFunction, "");
