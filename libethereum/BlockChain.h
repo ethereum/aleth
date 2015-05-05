@@ -44,9 +44,9 @@ namespace ldb = leveldb;
 
 namespace std
 {
-template <> struct hash<std::pair<dev::h256, unsigned>>
+template<> struct hash<pair<dev::h256, unsigned>>
 {
-	size_t operator()(const pair<dev::h256, unsigned> &x ) const { return std::hash<dev::h256>()(x.first) ^ std::hash<unsigned>()(x.second); }
+	size_t operator()(pair<dev::h256, unsigned> const& _x ) const { return hash<dev::h256>()(_x.first) ^ hash<unsigned>()(_x.second); }
 };
 }
 
