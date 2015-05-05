@@ -42,10 +42,13 @@
 #include "BlockQueue.h"
 namespace ldb = leveldb;
 
-template <> struct std::hash<std::pair<dev::h256, unsigned>>
+namespace std
+{
+template <> struct hash<std::pair<dev::h256, unsigned>>
 {
 	size_t operator()(const pair<dev::h256, unsigned> &x ) const { return std::hash<dev::h256>()(x.first) ^ std::hash<unsigned>()(x.second); }
 };
+}
 
 namespace dev
 {
