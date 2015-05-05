@@ -7,36 +7,26 @@ if (${CMAKE_MAJOR_VERSION} GREATER 2)
 endif()
 set(CMAKE_AUTOMOC OFF)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
+
 aux_source_directory(. SRC_LIST)
 
+include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})
 
-if (ETHASHCL)
-	include_directories(${OpenCL_INCLUDE_DIRS})
-endif ()
-
-if (CPUID_FOUND)
-	include_directories(${Cpuid_INCLUDE_DIRS})
-endif ()
-
-set(EXECUTABLE ethcore)
+set(EXECUTABLE evmasm)
 
 file(GLOB HEADERS "*.h")
 
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+if (ETH_STATIC)
+	add_library(${EXECUTABLE} STATIC ${SRC_LIST} ${HEADERS})
+else()
+	add_library(${EXECUTABLE} SHARED ${SRC_LIST} ${HEADERS})
+endif()
 
-target_link_libraries(${EXECUTABLE} ethash)
-target_link_libraries(${EXECUTABLE} devcrypto)
 target_link_libraries(${EXECUTABLE} evmcore)
-
-if (ETHASHCL)
-	target_link_libraries(${EXECUTABLE} ethash-cl)
-endif ()
-
-if (CPUID_FOUND)
-	target_link_libraries(${EXECUTABLE} ${CPUID_LIBRARIES})
-endif ()
+target_link_libraries(${EXECUTABLE} devcrypto)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
