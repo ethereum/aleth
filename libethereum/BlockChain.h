@@ -46,7 +46,7 @@ namespace std
 {
 template<> struct hash<pair<dev::h256, unsigned>>
 {
-	size_t operator()(pair<dev::h256, unsigned> const& _x ) const { return hash<dev::h256>()(_x.first) ^ hash<unsigned>()(_x.second); }
+	size_t operator()(pair<dev::h256, unsigned> const& _x) const { return hash<dev::h256>()(_x.first) ^ hash<unsigned>()(_x.second); }
 };
 }
 
