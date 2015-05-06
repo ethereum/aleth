@@ -31,7 +31,7 @@ public:
 public:
 	ethash_cl_miner();
 
-	bool init(ethash_params const& params, std::function<void(void*)> _fillDAG, unsigned workgroup_size = 64, unsigned _platformId = 0, unsigned _deviceId = 0);
+	bool init(ethash_params const& params, const void * dag_ptr, unsigned workgroup_size = 64, unsigned _platformId = 0, unsigned _deviceId = 0);
 	static std::string platform_info(unsigned _platformId = 0, unsigned _deviceId = 0);
 	static unsigned get_num_devices(unsigned _platformId = 0);
 
@@ -39,7 +39,7 @@ public:
 	void finish();
 	void hash(uint8_t* ret, uint8_t const* header, uint64_t nonce, unsigned count);
 	void search(uint8_t const* header, uint64_t target, search_hook& hook);
-
+	void checkdag();
 private:
 	enum { c_max_search_results = 63, c_num_buffers = 2, c_hash_batch_size = 1024, c_search_batch_size = 1024*256 };
 
@@ -48,6 +48,7 @@ private:
 	cl::CommandQueue m_queue;
 	cl::Kernel m_hash_kernel;
 	cl::Kernel m_search_kernel;
+	cl::Kernel m_check_kernel;
 	cl::Buffer m_dag;
 	cl::Buffer m_header;
 	cl::Buffer m_hash_buf[c_num_buffers];

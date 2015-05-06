@@ -117,7 +117,7 @@ void ethash_cl_miner::finish()
 	}
 }
 
-bool ethash_cl_miner::init(ethash_params const& params, std::function<void(void*)> _fillDAG, unsigned workgroup_size, unsigned _platformId, unsigned _deviceId)
+bool ethash_cl_miner::init(ethash_params const& params, const void * dag_ptr, unsigned workgroup_size, unsigned _platformId, unsigned _deviceId)
 {
 	// store params
 	m_params = params;
@@ -192,9 +192,10 @@ bool ethash_cl_miner::init(ethash_params const& params, std::function<void(void*
 	}
 	m_hash_kernel = cl::Kernel(program, "ethash_hash");
 	m_search_kernel = cl::Kernel(program, "ethash_search");
+	m_check_kernel = cl::Kernel(program, "ethash_checkdag");
 
 	// create buffer for dag
-	m_dag = cl::Buffer(m_context, CL_MEM_READ_ONLY, params.full_size);
+	m_dag = cl::Buffer(m_context, CL_MEM_READ_ONLY | CL_MEM_USE_HOST_PTR, params.full_size, (void *)dag_ptr);
 	
 	// create buffer for header
 	m_header = cl::Buffer(m_context, CL_MEM_READ_ONLY, 32);
@@ -202,10 +203,10 @@ bool ethash_cl_miner::init(ethash_params const& params, std::function<void(void*
 	// compute dag on CPU
 	{
 		// if this throws then it's because we probably need to subdivide the dag uploads for compatibility
-		void* dag_ptr = m_queue.enqueueMapBuffer(m_dag, true, m_opencl_1_1 ? CL_MAP_WRITE : CL_MAP_WRITE_INVALIDATE_REGION, 0, params.full_size);
+		//void* dag_ptr2 = m_queue.enqueueMapBuffer(m_dag, true, m_opencl_1_1 ? CL_MAP_WRITE : CL_MAP_WRITE_INVALIDATE_REGION, 0, params.full_size);
 		// memcpying 1GB: horrible... really. horrible. but necessary since we can't mmap *and* gpumap.
-		_fillDAG(dag_ptr);
-		m_queue.enqueueUnmapMemObject(m_dag, dag_ptr);
+		//_fillDAG(dag_ptr);
+		//m_queue.enqueueUnmapMemObject(m_dag, dag_ptr2);
 	}
 
 	// create mining buffers
@@ -386,3 +387,8 @@ void ethash_cl_miner::search(uint8_t const* header, uint64_t target, search_hook
 #endif
 }
 
+void ethash_cl_miner::checkdag()
+{
+	m_check_kernel.setArg(0, m_dag);
+	m_queue.enqueueNDRangeKernel(m_check_kernel, cl::NullRange, 1, 1);
+}

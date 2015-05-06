@@ -223,7 +223,8 @@ typedef union
 
 typedef union
 {
-	uint uints[128 / sizeof(uint)];
+	uchar uchars[128 / sizeof(uchar)];
+	uint  uints[128 / sizeof(uint)];
 	uint4 uint4s[128 / sizeof(uint4)];
 } hash128_t;
 
@@ -456,5 +457,14 @@ __kernel void ethash_search(
 	{
 		uint slot = min(MAX_OUTPUTS, atomic_inc(&g_output[0]) + 1);
 		g_output[slot] = gid;
+	}
+}
+
+__kernel void ethash_checkdag(__global hash128_t const* g_dag)
+{
+	for (int i = 0; i < 16; i++) {
+		for (int j = 0; j < 16; j++) {
+			printf("%x ", g_dag[i].uchars[j]);
+		}
 	}
 }

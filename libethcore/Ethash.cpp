@@ -310,13 +310,18 @@ void Ethash::GPUMiner::workLoop()
 			m_miner = new ethash_cl_miner;
 
 			auto p = EthashAux::params(m_minerSeed);
-			auto cb = [&](void* d) { EthashAux::full(m_minerSeed, bytesRef((byte*)d, p.full_size)); };
+			//auto cb = [&](void* d) { EthashAux::full(m_minerSeed, bytesRef((byte*)d, p.full_size)); };
+
+			const void * dag_ptr;
+			EthashAux::full_ptr(m_minerSeed, &dag_ptr);
+
 			unsigned device = instances() > 1 ? index() : s_deviceId;
-			m_miner->init(p, cb, 32, s_platformId, device);
+			m_miner->init(p, dag_ptr, 32, s_platformId, device);
 		}
 
 		uint64_t upper64OfBoundary = (uint64_t)(u64)((u256)w.boundary >> 192);
 		m_miner->search(w.headerHash.data(), upper64OfBoundary, *m_hook);
+		//m_miner->checkdag();
 	}
 	catch (...)
 	{
