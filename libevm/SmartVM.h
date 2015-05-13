@@ -13,15 +13,31 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
- */
-/** @file FixedWebThreeStubServer.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @author Gav Wood <i@gavwood.com>
- * @date 2015
- */
+*/
+#pragma once
 
-#include "FixedWebThreeServer.h"
-#include <libethereum/Interface.h>
-using namespace std;
-using namespace dev;
-using namespace eth;
+#include "VMFace.h"
+
+namespace dev
+{
+namespace eth
+{
+
+/// Smart VM proxy.
+///
+/// This class is a strategy pattern implementation for VM. For every EVM code
+/// execution request it tries to select the best VM implementation (Interpreter or JIT)
+/// by analyzing available information like: code size, hit count, JIT status, etc.
+class SmartVM: public VMFace
+{
+public:
+	SmartVM(u256 _gas): VMFace(_gas) {}
+
+	virtual bytesConstRef go(ExtVMFace& _ext, OnOpFunc const& _onOp = {}, uint64_t _steps = (uint64_t)-1) override final;
+
+private:
+	std::unique_ptr<VMFace> m_selectedVM;
+};
+
+}
+}
