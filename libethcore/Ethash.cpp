@@ -276,6 +276,7 @@ Ethash::GPUMiner::GPUMiner(ConstructionInfo const& _ci):
 Ethash::GPUMiner::~GPUMiner()
 {
 	pause();
+	m_miner->finish();
 	delete m_miner;
 	delete m_hook;
 }
