@@ -163,19 +163,21 @@ EthashAux::FullType EthashAux::full(uint64_t _blockNumber, function<int(unsigned
 	FullType ret;
 
 	DEV_GUARDED(get()->x_fulls)
+	{
 		if ((ret = get()->m_fulls[seedHash].lock()))
 		{
 			get()->m_lastUsedFull = ret;
 			return ret;
 		}
 
-	s_dagCallback = _f;
-	cnote << "Loading from libethash...";
-	ret = make_shared<FullAllocation>(l->light, dagCallbackShim);
-	cnote << "Done loading.";
+		s_dagCallback = _f;
+		cnote << "Loading from libethash...";
+		ret = make_shared<FullAllocation>(l->light, dagCallbackShim);
+		cnote << "Done loading.";
 
-	DEV_GUARDED(get()->x_fulls)
+
 		get()->m_fulls[seedHash] = get()->m_lastUsedFull = ret;
+	}
 	return ret;
 }
 
