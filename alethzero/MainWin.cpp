@@ -1984,6 +1984,7 @@ void Main::on_newAccount_triggered()
 		m_keyManager.import(p.secret(), s.toStdString());
 	keysChanged();
 }
+
 void Main::on_killAccount_triggered()
 {
 	if (ui->ourAccounts->currentRow() >= 0)
@@ -1993,7 +1994,6 @@ void Main::on_killAccount_triggered()
 
 		auto k = m_keyManager.accountDetails()[h];
 	
-		//ethereum()->balanceAt(h) != 0 &&
 		QString s = QInputDialog::getText(this, QString::fromStdString("Kill Account " + k.first + "?!"),
 			QString::fromStdString("Account " + k.first + " (" + render(h) + ") has " + formatBalance(ethereum()->balanceAt(h)) + " in it.\r\nIt, and any contract that this account can access, will be lost forever if you continue. Do NOT continue unless you know what you are doing.\n"
 			"Are you sure you want to continue? \r\n If so, type 'YES' to confirm."),
