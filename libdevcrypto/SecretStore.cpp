@@ -14,49 +14,50 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file hexPrefix.cpp
+/** @file SecretStore.cpp
  * @author Gav Wood <i@gavwood.com>
- * @date 2014
- * Main test functions.
+ * @date 2015
+ * Secret store test functions.
  */
 
 #include <fstream>
-
+#include <random>
 #include <boost/test/unit_test.hpp>
-
 #include "../JsonSpiritHeaders.h"
-#include <libdevcore/Log.h>
+#include <libdevcrypto/SecretStore.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/TrieCommon.h>
+#include <libdevcore/TrieDB.h>
+#include <libdevcore/TrieHash.h>
+#include "MemTrie.h"
 #include "../TestHelper.h"
-
 using namespace std;
 using namespace dev;
+
 namespace js = json_spirit;
 
-BOOST_AUTO_TEST_SUITE(BasicTests)
+BOOST_AUTO_TEST_SUITE(KeyStore)
 
-BOOST_AUTO_TEST_CASE(hexPrefix_test)
+BOOST_AUTO_TEST_CASE(basic_tests)
 {
-
 	string testPath = test::getTestPath();
-	testPath += "/BasicTests";
 
-	cnote << "Testing Hex-Prefix-Encode...";
+	testPath += "/KeyStoreTests";
+
+	cnote << "Testing Key Store...";
 	js::mValue v;
-	string s = asString(contents(testPath + "/hexencodetest.json"));
-	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content from 'hexencodetest.json' is empty. Have you cloned the 'tests' repo branch develop?");
+	string s = asString(contents(testPath + "/basic_tests.json"));
+	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'KeyStoreTests/basic_tests.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 	for (auto& i: v.get_obj())
 	{
-		js::mObject& o = i.second.get_obj();
 		cnote << i.first;
-		bytes v;
-		for (auto& i: o["seq"].get_array())
-			v.push_back((byte)i.get_int());
-		auto e = hexPrefixEncode(v, o["term"].get_bool());
-		BOOST_REQUIRE( ! o["out"].is_null() );
-		BOOST_CHECK( o["out"].get_str() == toHex(e) );
+		js::mObject& o = i.second.get_obj();
+		SecretStore store(".");
+		h128 u = store.readKeyContent(js::write_string(o["json"], false));
+		cdebug << "read uuid" << u;
+		bytes s = store.secret(u, [&](){ return o["password"].get_str(); });
+		cdebug << "got secret" << toHex(s);
+		BOOST_REQUIRE_EQUAL(toHex(s), o["priv"].get_str());
 	}
 }
 
