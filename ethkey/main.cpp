@@ -24,24 +24,21 @@
 #include <chrono>
 #include <fstream>
 #include <iostream>
-#include <signal.h>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/trim_all.hpp>
 #include <libdevcore/FileSystem.h>
-#include "MinerAux.h"
+#include <libdevcore/Log.h>
+#include <libethcore/KeyManager.h>
+#include "BuildInfo.h"
+#include "KeyAux.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-using namespace boost::algorithm;
-
-#undef RETURN
 
 void help()
 {
 	cout
-		<< "Usage ethminer [OPTIONS]" << endl
+		<< "Usage ethkey [OPTIONS]" << endl
 		<< "Options:" << endl << endl;
-	MinerCLI::streamHelp(cout);
+	KeyCLI::streamHelp(cout);
 	cout
 		<< "General Options:" << endl
 		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (default: 8)." << endl
@@ -53,20 +50,20 @@ void help()
 
 void version()
 {
-	cout << "ethminer version " << dev::Version << endl;
+	cout << "ethkey version " << dev::Version << endl;
 	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
 
 int main(int argc, char** argv)
 {
-	MinerCLI m(MinerCLI::OperationMode::Farm);
+	KeyCLI m(KeyCLI::OperationMode::ListBare);
+	g_logVerbosity = 0;
 
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
-		if (m.interpretOption(i, argc, argv))
-		{}
+		if (m.interpretOption(i, argc, argv)) {}
 		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
 			g_logVerbosity = atoi(argv[++i]);
 		else if (arg == "-h" || arg == "--help")
