@@ -368,11 +368,14 @@ public:
 	virtual Category getCategory() const override { return Category::Array; }
 
 	/// Constructor for a byte array ("bytes")
-	explicit ArrayType(Location _location):
+	explicit ArrayType(Location _location, bool _isString = false):
 		m_location(_location),
 		m_isByteArray(true),
-		m_baseType(std::make_shared<FixedBytesType>(1))
-	{}
+		m_baseType(std::make_shared<FixedBytesType>(1)),
+		m_isString(_isString)
+	{
+		solAssert((m_isString && m_isByteArray) || !m_isString , "");
+	}
 	/// Constructor for a dynamically sized array type ("type[]")
 	ArrayType(Location _location, const TypePointer &_baseType):
 		m_location(_location),
@@ -400,7 +403,13 @@ public:
 	Location getLocation() const { return m_location; }
 	bool isByteArray() const { return m_isByteArray; }
 	TypePointer const& getBaseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
-	u256 const& getLength() const { return m_length; }
+	u256 const& getLength() const
+	{
+		if (! m_isString)
+			return m_length;
+		else
+			BOOST_THROW_EXCEPTION(TypeError() << errinfo_comment("length() is not specified for string type"));
+	}
 
 	/// @returns a copy of this type with location changed to @a _location
 	/// @todo this might move as far up as Type later
@@ -413,6 +422,7 @@ private:
 	bool m_hasDynamicLength = true;
 	u256 m_length;
 	static const MemberList s_arrayTypeMemberList;
+	bool m_isString = false;
 };
 
 /**
