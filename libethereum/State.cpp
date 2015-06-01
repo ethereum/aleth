@@ -1196,7 +1196,10 @@ ExecutionResult State::execute(LastHashes const& _lh, Transaction const& _t, Per
 	(void)_onOp;
 	if (!e.execute())
 #if ETH_VMTRACE
+	{
+		(void) _onOp;
 		e.go(e.simpleTrace());
+	}
 #else
 		e.go(_onOp);
 #endif
