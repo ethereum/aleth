@@ -28,16 +28,26 @@ using namespace dev::eth;
 
 bool ExtVM::call(CallParameters& _p)
 {
-	Executive e(m_s, lastHashes, depth + 1);
-	if (!e.call(_p, gasPrice, origin))
+	m_callStack.emplace(m_s, lastHashes, depth + 1);
+	try
 	{
-		e.go(_p.onOp);
-		e.accrueSubState(sub);
-	}
-	_p.gas = e.endGas();
-	e.out().copyTo(_p.out);
+		Executive& e = m_callStack.top();
+		if (!e.call(_p, gasPrice, origin))
+		{
+			e.go(_p.onOp);
+			e.accrueSubState(sub);
+		}
+		_p.gas = e.endGas();
+		e.out().copyTo(_p.out);
 
-	return !e.excepted();
+		m_callStack.pop();
+		return !e.excepted();
+	}
+	catch(...)
+	{
+		m_callStack.pop();
+		throw;
+	}
 }
 
 h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
@@ -45,13 +55,23 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	// Increment associated nonce for sender.
 	m_s.noteSending(myAddress);
 
-	Executive e(m_s, lastHashes, depth + 1);
-	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
+	m_callStack.emplace(m_s, lastHashes, depth + 1);
+	try
 	{
-		e.go(_onOp);
-		e.accrueSubState(sub);
+		Executive& e = m_callStack.top();
+		if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
+		{
+			e.go(_onOp);
+			e.accrueSubState(sub);
+		}
+		io_gas = e.endGas();
+		m_callStack.pop();
+		return e.newAddress();
 	}
-	io_gas = e.endGas();
-	return e.newAddress();
+	catch(...)
+	{
+		m_callStack.pop();
+		throw;
+	}
 }
 
