@@ -774,11 +774,9 @@ int main(int argc, char** argv)
 		string l;
 		while (!g_exit)
 		{
-			silence = false;
 			cout << logbuf << "Press Enter" << flush;
 			std::getline(cin, l);
 			logbuf.clear();
-			silence = true;
 
 #if ETH_READLINE
 			if (l.size())
