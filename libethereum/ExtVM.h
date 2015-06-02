@@ -23,15 +23,16 @@
 
 #include <map>
 #include <functional>
+#include <stack>
 #include <libethcore/Common.h>
 #include <libevm/ExtVMFace.h>
 #include "State.h"
+#include "Executive.h"
 
 namespace dev
 {
 namespace eth
 {
-
 /**
  * @brief Externality interface for the Virtual Machine providing access to world state.
  */
@@ -93,6 +94,7 @@ public:
 private:
 	State& m_s;											///< A reference to the base state.
 	std::unordered_map<Address, Account> m_origCache;	///< The cache of the address states (i.e. the externalities) as-was prior to the execution.
+	std::stack<dev::eth::Executive> m_callStack;
 };
 
 }
