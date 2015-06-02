@@ -26,18 +26,64 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+template<size_t _Size>
+class ContextStack
+{
+public:
+	ContextStack(): m_mem(new char[_Size]) {}
+
+	void* ptr() const { return m_mem.get() + _Size; } // stack grows down
+	size_t size() const { return _Size; }
+
+	ContextStack(ContextStack const&) = delete;
+	ContextStack& operator=(ContextStack) = delete;
+
+private:
+	std::unique_ptr<char[]> m_mem;
+};
+
+namespace
+{
+void callProcedure(intptr_t _param)
+{
+	auto& params = *reinterpret_cast<CallParameters*>(_param);
+	auto& e = *params.executive;
+	auto& extVM = *params.extVM;
+	try
+	{
+		if (!e.call(params, extVM.gasPrice, extVM.origin))
+		{
+			e.go(params.onOp);
+			e.accrueSubState(extVM.sub);
+		}
+		params.gas = e.endGas();
+		e.out().copyTo(params.out);
+	}
+	catch(...)
+	{
+		// TODO: Exception can be passed to other context but not by throw.
+		//       However Executive should handle its exceptions internally.
+		cwarn << "Unexpected exception in CALL.";
+	}
+
+	boost::context::jump_fcontext(params.callCtx, params.retCtx, !e.excepted());
+}
+}
+
 bool ExtVM::call(CallParameters& _p)
 {
-	Executive e(m_s, lastHashes, depth + 1);
-	if (!e.call(_p, gasPrice, origin))
-	{
-		e.go(_p.onOp);
-		e.accrueSubState(sub);
-	}
-	_p.gas = e.endGas();
-	e.out().copyTo(_p.out);
+	auto e = std::unique_ptr<Executive>(new Executive{m_s, lastHashes, depth + 1});
+	_p.executive = e.get();
+	_p.extVM = this;
 
-	return !e.excepted();
+	boost::context::fcontext_t retCtx;
+	_p.retCtx = &retCtx;
+	ContextStack<64 * 1024> stack;
+	_p.callCtx = boost::context::make_fcontext(stack.ptr(), stack.size(), callProcedure);
+
+	auto ret = boost::context::jump_fcontext(_p.retCtx, _p.callCtx, reinterpret_cast<intptr_t>(&_p));
+
+	return static_cast<bool>(ret);
 }
 
 h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)

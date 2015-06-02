@@ -22,7 +22,8 @@
 #pragma once
 
 #include <set>
-#include <functional>
+#include <functional> 
+#include <boost/context/fcontext.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/RLP.h>
@@ -103,6 +104,7 @@ struct SubState
 
 class ExtVMFace;
 class VM;
+class Executive;
 
 using LastHashes = std::vector<h256>;
 
@@ -118,6 +120,10 @@ struct CallParameters
 	bytesConstRef data;
 	bytesRef out;
 	OnOpFunc onOp;
+	Executive* executive = nullptr;
+	ExtVMFace* extVM = nullptr;
+	boost::context::fcontext_t* callCtx;
+	boost::context::fcontext_t* retCtx;
 };
 
 /**

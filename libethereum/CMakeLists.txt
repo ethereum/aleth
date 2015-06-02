@@ -29,6 +29,7 @@ target_link_libraries(${EXECUTABLE} devcrypto)
 target_link_libraries(${EXECUTABLE} ethcore)
 target_link_libraries(${EXECUTABLE} ${LEVELDB_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${Boost_REGEX_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_CONTEXT_LIBRARIES})
 target_link_libraries(${EXECUTABLE} secp256k1)
 
 if (CMAKE_COMPILER_IS_MINGW)
