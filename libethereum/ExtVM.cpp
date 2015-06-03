@@ -56,7 +56,7 @@ void callProcedure(intptr_t _param)
 			e.go(params.onOp);
 			e.accrueSubState(extVM.sub);
 		}
-		params.gas = e.endGas();
+		params.gas = e.gas();
 		e.out().copyTo(params.out);
 	}
 	catch(...)
@@ -133,7 +133,7 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 
 	boost::context::jump_fcontext(params.retCtx, params.callCtx, reinterpret_cast<intptr_t>(&params));
 
-	io_gas = e.endGas();
+	io_gas = e.gas();
 	return e.newAddress();
 }
 

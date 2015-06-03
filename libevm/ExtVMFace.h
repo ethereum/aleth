@@ -108,7 +108,7 @@ class Executive;
 
 using LastHashes = std::vector<h256>;
 
-using OnOpFunc = std::function<void(uint64_t /*steps*/, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, VM*, ExtVMFace const*)>;
+using OnOpFunc = std::function<void(uint64_t /*steps*/, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, bigint /*gas*/, VM*, ExtVMFace const*)>;
 
 struct CallParameters
 {
@@ -120,8 +120,8 @@ struct CallParameters
 	bytesConstRef data;
 	bytesRef out;
 	OnOpFunc onOp;
-	Executive* executive = nullptr;
-	ExtVMFace* extVM = nullptr;
+	Executive* executive;
+	ExtVMFace* extVM;
 	boost::context::fcontext_t* callCtx;
 	boost::context::fcontext_t* retCtx;
 };
