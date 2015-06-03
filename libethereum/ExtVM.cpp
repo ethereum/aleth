@@ -68,17 +68,42 @@ void callProcedure(intptr_t _param)
 
 	boost::context::jump_fcontext(params.callCtx, params.retCtx, !e.excepted());
 }
+
+void createProcedure(intptr_t _param)
+{
+	auto& params = *reinterpret_cast<CallParameters*>(_param);
+	auto& e = *params.executive;
+	auto& extVM = *params.extVM;
+	try
+	{
+		if (!e.create(extVM.myAddress, params.value, extVM.gasPrice, params.gas, params.data, extVM.origin))
+		{
+			e.go(params.onOp);
+			e.accrueSubState(extVM.sub);
+		}
+	}
+	catch(...)
+	{
+		// TODO: Exception can be passed to other context but not by throw.
+		//       However Executive should handle its exceptions internally.
+		cwarn << "Unexpected exception in CREATE.";
+	}
+
+	boost::context::jump_fcontext(params.callCtx, params.retCtx, !e.excepted());
 }
+}
+
+static const size_t c_contextStackSize = 16 * 1024;
 
 bool ExtVM::call(CallParameters& _p)
 {
-	auto e = std::unique_ptr<Executive>(new Executive{m_s, lastHashes, depth + 1});
-	_p.executive = e.get();
+	Executive e(m_s, lastHashes, depth + 1);
+	_p.executive = &e;
 	_p.extVM = this;
 
 	boost::context::fcontext_t retCtx;
 	_p.retCtx = &retCtx;
-	ContextStack<64 * 1024> stack;
+	ContextStack<c_contextStackSize> stack;
 	_p.callCtx = boost::context::make_fcontext(stack.ptr(), stack.size(), callProcedure);
 
 	auto ret = boost::context::jump_fcontext(_p.retCtx, _p.callCtx, reinterpret_cast<intptr_t>(&_p));
@@ -92,11 +117,22 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	m_s.noteSending(myAddress);
 
 	Executive e(m_s, lastHashes, depth + 1);
-	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
-	{
-		e.go(_onOp);
-		e.accrueSubState(sub);
-	}
+
+	CallParameters params;
+	params.value = _endowment;
+	params.gas = io_gas;
+	params.data = _code;
+	params.onOp = _onOp;
+	params.executive = &e;
+	params.extVM = this;
+
+	boost::context::fcontext_t retCtx;
+	params.retCtx = &retCtx;
+	ContextStack<c_contextStackSize> stack;
+	params.callCtx = boost::context::make_fcontext(stack.ptr(), stack.size(), createProcedure);
+
+	boost::context::jump_fcontext(params.retCtx, params.callCtx, reinterpret_cast<intptr_t>(&params));
+
 	io_gas = e.endGas();
 	return e.newAddress();
 }
