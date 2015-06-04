@@ -14,230 +14,167 @@
     You should have received a copy of the GNU Lesser General Public License
     along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file contract.js
- * @authors:
- *   Marek Kotewicz <marek@ethdev.com>
+/** 
+ * @file contract.js
+ * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2014
  */
 
 var web3 = require('../web3'); 
-var abi = require('../solidity/abi');
 var utils = require('../utils/utils');
-var eventImpl = require('./event');
-var signature = require('./signature');
-
-var exportNatspecGlobals = function (vars) {
-    // it's used byt natspec.js
-    // TODO: figure out better way to solve this
-    web3._currentContractAbi = vars.abi;
-    web3._currentContractAddress = vars.address;
-    web3._currentContractMethodName = vars.method;
-    web3._currentContractMethodParams = vars.params;
-};
-
-var addFunctionRelatedPropertiesToContract = function (contract) {
-    
-    contract.call = function (options) {
-        contract._isTransaction = false;
-        contract._options = options;
-        return contract;
-    };
-
-
-    contract.sendTransaction = function (options) {
-        contract._isTransaction = true;
-        contract._options = options;
-        return contract;
-    };
-    // DEPRECATED
-    contract.transact = function (options) {
-
-        console.warn('myContract.transact() is deprecated please use myContract.sendTransaction() instead.');
-
-        return contract.sendTransaction(options);
-    };
-
-    contract._options = {};
-    ['gas', 'gasPrice', 'value', 'from'].forEach(function(p) {
-        contract[p] = function (v) {
-            contract._options[p] = v;
-            return contract;
-        };
-    });
-
-};
-
-var addFunctionsToContract = function (contract, desc, address) {
-    var inputParser = abi.inputParser(desc);
-    var outputParser = abi.outputParser(desc);
-
-    // create contract functions
-    utils.filterFunctions(desc).forEach(function (method) {
-
-        var displayName = utils.extractDisplayName(method.name);
-        var typeName = utils.extractTypeName(method.name);
-
-        var impl = function () {
-            /*jshint maxcomplexity:7 */
-            var params = Array.prototype.slice.call(arguments);
-            var sign = signature.functionSignatureFromAscii(method.name);
-            var parsed = inputParser[displayName][typeName].apply(null, params);
-
-            var options = contract._options || {};
-            options.to = address;
-            options.data = sign + parsed;
-            
-            var isTransaction = contract._isTransaction === true || (contract._isTransaction !== false && !method.constant);
-            var collapse = options.collapse !== false;
-            
-            // reset
-            contract._options = {};
-            contract._isTransaction = null;
-
-            if (isTransaction) {
-                
-                exportNatspecGlobals({
-                    abi: desc,
-                    address: address,
-                    method: method.name,
-                    params: params
-                });
-
-                // transactions do not have any output, cause we do not know, when they will be processed
-                web3.eth.sendTransaction(options);
-                return;
-            }
-            
-            var output = web3.eth.call(options);
-            var ret = outputParser[displayName][typeName](output);
-            if (collapse)
-            {
-                if (ret.length === 1)
-                    ret = ret[0];
-                else if (ret.length === 0)
-                    ret = null;
-            }
-            return ret;
-        };
-
-        if (contract[displayName] === undefined) {
-            contract[displayName] = impl;
-        }
-
-        contract[displayName][typeName] = impl;
-    });
-};
-
-var addEventRelatedPropertiesToContract = function (contract, desc, address) {
-    contract.address = address;
-    contract._onWatchEventResult = function (data) {
-        var matchingEvent = event.getMatchingEvent(utils.filterEvents(desc));
-        var parser = eventImpl.outputParser(matchingEvent);
-        return parser(data);
-    };
-    
-    Object.defineProperty(contract, 'topics', {
-        get: function() {
-            return utils.filterEvents(desc).map(function (e) {
-                return signature.eventSignatureFromAscii(e.name);
-            });
-        }
-    });
-
-};
-
-var addEventsToContract = function (contract, desc, address) {
-    // create contract events
-    utils.filterEvents(desc).forEach(function (e) {
-
-        var impl = function () {
-            var params = Array.prototype.slice.call(arguments);
-            var sign = signature.eventSignatureFromAscii(e.name);
-            var event = eventImpl.inputParser(address, sign, e);
-            var o = event.apply(null, params);
-            var outputFormatter = function (data) {
-                var parser = eventImpl.outputParser(e);
-                return parser(data);
-            };
-			return web3.eth.filter(o, undefined, undefined, outputFormatter);
-        };
-        
-        // this property should be used by eth.filter to check if object is an event
-        impl._isEvent = true;
-
-        var displayName = utils.extractDisplayName(e.name);
-        var typeName = utils.extractTypeName(e.name);
-
-        if (contract[displayName] === undefined) {
-            contract[displayName] = impl;
-        }
-
-        contract[displayName][typeName] = impl;
-
-    });
-};
-
+var coder = require('../solidity/coder');
+var SolidityEvent = require('./event');
+var SolidityFunction = require('./function');
 
 /**
- * This method should be called when we want to call / transact some solidity method from javascript
- * it returns an object which has same methods available as solidity contract description
- * usage example: 
+ * Should be called to encode constructor params
  *
- * var abi = [{
- *      name: 'myMethod',
- *      inputs: [{ name: 'a', type: 'string' }],
- *      outputs: [{name: 'd', type: 'string' }]
- * }];  // contract abi
- *
- * var MyContract = web3.eth.contract(abi); // creation of contract prototype
- *
- * var contractInstance = new MyContract('0x0123123121');
- *
- * contractInstance.myMethod('this is test string param for call'); // myMethod call (implicit, default)
- * contractInstance.call().myMethod('this is test string param for call'); // myMethod call (explicit)
- * contractInstance.sendTransaction().myMethod('this is test string param for transact'); // myMethod sendTransaction
- *
- * @param abi - abi json description of the contract, which is being created
- * @returns contract object
+ * @method encodeConstructorParams
+ * @param {Array} abi
+ * @param {Array} constructor params
  */
-var contract = function (abi) {
-
-    // return prototype
-    if(abi instanceof Array && arguments.length === 1) {
-        return Contract.bind(null, abi);
-
-    // deprecated: auto initiate contract
-    } else {
-
-        console.warn('Initiating a contract like this is deprecated please use var MyContract = eth.contract(abi); new MyContract(address); instead.');
-
-        return new Contract(arguments[1], arguments[0]);
-    }
-
+var encodeConstructorParams = function (abi, params) {
+    return abi.filter(function (json) {
+        return json.type === 'constructor' && json.inputs.length === params.length;
+    }).map(function (json) {
+        return json.inputs.map(function (input) {
+            return input.type;
+        });
+    }).map(function (types) {
+        return coder.encodeParams(types, params);
+    })[0] || '';
 };
 
-function Contract(abi, address) {
-
-    // workaround for invalid assumption that method.name is the full anonymous prototype of the method.
-    // it's not. it's just the name. the rest of the code assumes it's actually the anonymous
-    // prototype, so we make it so as a workaround.
-    // TODO: we may not want to modify input params, maybe use copy instead?
-    abi.forEach(function (method) {
-        if (method.name.indexOf('(') === -1) {
-            var displayName = method.name;
-            var typeName = method.inputs.map(function(i){return i.type; }).join();
-            method.name = displayName + '(' + typeName + ')';
-        }
+/**
+ * Should be called to add functions to contract object
+ *
+ * @method addFunctionsToContract
+ * @param {Contract} contract
+ * @param {Array} abi
+ */
+var addFunctionsToContract = function (contract, abi) {
+    abi.filter(function (json) {
+        return json.type === 'function';
+    }).map(function (json) {
+        return new SolidityFunction(json, contract.address);
+    }).forEach(function (f) {
+        f.attachToContract(contract);
     });
+};
 
-    var result = {};
-    addFunctionRelatedPropertiesToContract(result);
-    addFunctionsToContract(result, abi, address);
-    addEventRelatedPropertiesToContract(result, abi, address);
-    addEventsToContract(result, abi, address);
+/**
+ * Should be called to add events to contract object
+ *
+ * @method addEventsToContract
+ * @param {Contract} contract
+ * @param {Array} abi
+ */
+var addEventsToContract = function (contract, abi) {
+    abi.filter(function (json) {
+        return json.type === 'event';
+    }).map(function (json) {
+        return new SolidityEvent(json, contract.address);
+    }).forEach(function (e) {
+        e.attachToContract(contract);
+    });
+};
 
-    return result;
-}
+/**
+ * Should be called to create new ContractFactory
+ *
+ * @method contract
+ * @param {Array} abi
+ * @returns {ContractFactory} new contract factory
+ */
+var contract = function (abi) {
+    return new ContractFactory(abi);
+};
+
+/**
+ * Should be called to create new ContractFactory instance
+ *
+ * @method ContractFactory
+ * @param {Array} abi
+ */
+var ContractFactory = function (abi) {
+    this.abi = abi;
+};
+
+/**
+ * Should be called to create new contract on a blockchain
+ * 
+ * @method new
+ * @param {Any} contract constructor param1 (optional)
+ * @param {Any} contract constructor param2 (optional)
+ * @param {Object} contract transaction object (required)
+ * @param {Function} callback
+ * @returns {Contract} returns contract if no callback was passed,
+ * otherwise calls callback function (err, contract)
+ */
+ContractFactory.prototype.new = function () {
+    // parse arguments
+    var options = {}; // required!
+    var callback;
+
+    var args = Array.prototype.slice.call(arguments);
+    if (utils.isFunction(args[args.length - 1])) {
+        callback = args.pop();
+    }
+
+    var last = args[args.length - 1];
+    if (utils.isObject(last) && !utils.isArray(last)) {
+        options = args.pop();
+    }
+
+    // throw an error if there are no options
+
+    var bytes = encodeConstructorParams(this.abi, args);
+    options.data += bytes;
+
+    if (!callback) {
+        var address = web3.eth.sendTransaction(options);
+        return this.at(address);
+    }
+  
+    var self = this;
+    web3.eth.sendTransaction(options, function (err, address) {
+        if (err) {
+            callback(err);
+        }
+        self.at(address, callback); 
+    }); 
+};
+
+/**
+ * Should be called to get access to existing contract on a blockchain
+ *
+ * @method at
+ * @param {Address} contract address (required)
+ * @param {Function} callback {optional)
+ * @returns {Contract} returns contract if no callback was passed,
+ * otherwise calls callback function (err, contract)
+ */
+ContractFactory.prototype.at = function (address, callback) {
+    // TODO: address is required
+    
+    if (callback) {
+        callback(null, new Contract(this.abi, address));
+    } 
+    return new Contract(this.abi, address);
+};
+
+/**
+ * Should be called to create new contract instance
+ *
+ * @method Contract
+ * @param {Array} abi
+ * @param {Address} contract address
+ */
+var Contract = function (abi, address) {
+    this.address = address;
+    addFunctionsToContract(this, abi);
+    addEventsToContract(this, abi);
+};
 
 module.exports = contract;
 

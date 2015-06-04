@@ -25,6 +25,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonData.h>
+#include <libdevcore/SHA3.h>
 #include <libsolidity/Utils.h>
 #include <libsolidity/AST.h>
 
@@ -92,13 +93,13 @@ std::pair<u256, unsigned> const* MemberList::getMemberStorageOffset(string const
 	{
 		TypePointers memberTypes;
 		memberTypes.reserve(m_memberTypes.size());
-		for (auto const& nameAndType: m_memberTypes)
-			memberTypes.push_back(nameAndType.second);
+		for (auto const& member: m_memberTypes)
+			memberTypes.push_back(member.type);
 		m_storageOffsets.reset(new StorageOffsets());
 		m_storageOffsets->computeOffsets(memberTypes);
 	}
 	for (size_t index = 0; index < m_memberTypes.size(); ++index)
-		if (m_memberTypes[index].first == _name)
+		if (m_memberTypes[index].name == _name)
 			return m_storageOffsets->getOffset(index);
 	return nullptr;
 }
@@ -144,6 +145,8 @@ TypePointer Type::fromElementaryTypeName(Token::Value _typeToken)
 		return make_shared<BoolType>();
 	else if (_typeToken == Token::Bytes)
 		return make_shared<ArrayType>(ArrayType::Location::Storage);
+	else if (_typeToken == Token::String)
+		return make_shared<ArrayType>(ArrayType::Location::Storage, true);
 	else
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unable to convert elementary typename " +
 																		 std::string(Token::toString(_typeToken)) + " to type."));
@@ -189,7 +192,7 @@ TypePointer Type::fromArrayTypeName(TypeName& _baseTypeName, Expression* _length
 	if (_length)
 	{
 		if (!_length->getType())
-			_length->checkTypeRequirements();
+			_length->checkTypeRequirements(nullptr);
 		auto const* length = dynamic_cast<IntegerConstantType const*>(_length->getType().get());
 		if (!length)
 			BOOST_THROW_EXCEPTION(_length->createTypeError("Invalid array length."));
@@ -315,6 +318,7 @@ TypePointer IntegerType::binaryOperatorResult(Token::Value _operator, TypePointe
 const MemberList IntegerType::AddressMemberList({
 	{"balance", make_shared<IntegerType >(256)},
 	{"call", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::Bare, true)},
+	{"callcode", make_shared<FunctionType>(strings(), strings(), FunctionType::Location::BareCallCode, true)},
 	{"send", make_shared<FunctionType>(strings{"uint"}, strings{}, FunctionType::Location::Send)}
 });
 
@@ -661,7 +665,7 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 	// let us not allow assignment to memory arrays for now
 	if (convertTo.getLocation() != Location::Storage)
 		return false;
-	if (convertTo.isByteArray() != isByteArray())
+	if (convertTo.isByteArray() != isByteArray() || convertTo.isString() != isString())
 		return false;
 	if (!getBaseType()->isImplicitlyConvertibleTo(*convertTo.getBaseType()))
 		return false;
@@ -682,8 +686,12 @@ bool ArrayType::operator==(Type const& _other) const
 	if (_other.getCategory() != getCategory())
 		return false;
 	ArrayType const& other = dynamic_cast<ArrayType const&>(_other);
-	if (other.m_location != m_location || other.isByteArray() != isByteArray() ||
-			other.isDynamicallySized() != isDynamicallySized())
+	if (
+		other.m_location != m_location ||
+		other.isByteArray() != isByteArray() ||
+		other.isString() != isString() ||
+		other.isDynamicallySized() != isDynamicallySized()
+	)
 		return false;
 	return isDynamicallySized() || getLength()  == other.getLength();
 }
@@ -734,7 +742,9 @@ unsigned ArrayType::getSizeOnStack() const
 
 string ArrayType::toString() const
 {
-	if (isByteArray())
+	if (isString())
+		return "string";
+	else if (isByteArray())
 		return "bytes";
 	string ret = getBaseType()->toString() + "[";
 	if (!isDynamicallySized())
@@ -742,10 +752,25 @@ string ArrayType::toString() const
 	return ret + "]";
 }
 
+TypePointer ArrayType::externalType() const
+{
+	if (m_arrayKind != ArrayKind::Ordinary)
+		return shared_from_this();
+	if (!m_baseType->externalType())
+		return TypePointer();
+	if (m_baseType->getCategory() == Category::Array && m_baseType->isDynamicallySized())
+		return TypePointer();
+
+	if (isDynamicallySized())
+		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType());
+	else
+		return std::make_shared<ArrayType>(Location::CallData, m_baseType->externalType(), m_length);
+}
+
 shared_ptr<ArrayType> ArrayType::copyForLocation(ArrayType::Location _location) const
 {
 	auto copy = make_shared<ArrayType>(_location);
-	copy->m_isByteArray = m_isByteArray;
+	copy->m_arrayKind = m_arrayKind;
 	if (m_baseType->getCategory() == Type::Category::Array)
 		copy->m_baseType = dynamic_cast<ArrayType const&>(*m_baseType).copyForLocation(_location);
 	else
@@ -776,18 +801,46 @@ MemberList const& ContractType::getMembers() const
 	if (!m_members)
 	{
 		// All address members and all interface functions
-		vector<pair<string, TypePointer>> members(IntegerType::AddressMemberList.begin(),
-												  IntegerType::AddressMemberList.end());
+		MemberList::MemberMap members(
+			IntegerType::AddressMemberList.begin(),
+			IntegerType::AddressMemberList.end()
+		);
 		if (m_super)
 		{
+			// add the most derived of all functions which are visible in derived contracts
 			for (ContractDefinition const* base: m_contract.getLinearizedBaseContracts())
 				for (ASTPointer<FunctionDefinition> const& function: base->getDefinedFunctions())
-					if (function->isVisibleInDerivedContracts())
-						members.push_back(make_pair(function->getName(), make_shared<FunctionType>(*function, true)));
+				{
+					if (!function->isVisibleInDerivedContracts())
+						continue;
+					auto functionType = make_shared<FunctionType>(*function, true);
+					bool functionWithEqualArgumentsFound = false;
+					for (auto const& member: members)
+					{
+						if (member.name != function->getName())
+							continue;
+						auto memberType = dynamic_cast<FunctionType const*>(member.type.get());
+						solAssert(!!memberType, "Override changes type.");
+						if (!memberType->hasEqualArgumentTypes(*functionType))
+							continue;
+						functionWithEqualArgumentsFound = true;
+						break;
+					}
+					if (!functionWithEqualArgumentsFound)
+						members.push_back(MemberList::Member(
+							function->getName(),
+							functionType,
+							function.get()
+						));
+				}
 		}
 		else
 			for (auto const& it: m_contract.getInterfaceFunctions())
-				members.push_back(make_pair(it.second->getDeclaration().getName(), it.second));
+				members.push_back(MemberList::Member(
+					it.second->getDeclaration().getName(),
+					it.second,
+					&it.second->getDeclaration()
+				));
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -804,16 +857,6 @@ shared_ptr<FunctionType const> const& ContractType::getConstructorType() const
 			m_constructorType = make_shared<FunctionType>(TypePointers(), TypePointers());
 	}
 	return m_constructorType;
-}
-
-u256 ContractType::getFunctionIdentifier(string const& _functionName) const
-{
-	auto interfaceFunctions = m_contract.getInterfaceFunctions();
-	for (auto const& it: m_contract.getInterfaceFunctions())
-		if (it.second->getDeclaration().getName() == _functionName)
-			return FixedHash<4>::Arith(it.first);
-
-	return Invalid256;
 }
 
 vector<tuple<VariableDeclaration const*, u256, unsigned>> ContractType::getStateVariables() const
@@ -856,8 +899,8 @@ u256 StructType::getStorageSize() const
 
 bool StructType::canLiveOutsideStorage() const
 {
-	for (pair<string, TypePointer> const& member: getMembers())
-		if (!member.second->canLiveOutsideStorage())
+	for (auto const& member: getMembers())
+		if (!member.type->canLiveOutsideStorage())
 			return false;
 	return true;
 }
@@ -874,7 +917,7 @@ MemberList const& StructType::getMembers() const
 	{
 		MemberList::MemberMap members;
 		for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
-			members.push_back(make_pair(variable->getName(), variable->getType()));
+			members.push_back(MemberList::Member(variable->getName(), variable->getType(), variable.get()));
 		m_members.reset(new MemberList(members));
 	}
 	return *m_members;
@@ -964,26 +1007,37 @@ FunctionType::FunctionType(FunctionDefinition const& _function, bool _isInternal
 FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 	m_location(Location::External), m_isConstant(true), m_declaration(&_varDecl)
 {
-	TypePointers params;
+	TypePointers paramTypes;
 	vector<string> paramNames;
 	auto returnType = _varDecl.getType();
 
-	while (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
+	while (true)
 	{
-		params.push_back(mappingType->getKeyType());
-		paramNames.push_back("");
-		returnType = mappingType->getValueType();
+		if (auto mappingType = dynamic_cast<MappingType const*>(returnType.get()))
+		{
+			paramTypes.push_back(mappingType->getKeyType());
+			paramNames.push_back("");
+			returnType = mappingType->getValueType();
+		}
+		else if (auto arrayType = dynamic_cast<ArrayType const*>(returnType.get()))
+		{
+			returnType = arrayType->getBaseType();
+			paramNames.push_back("");
+			paramTypes.push_back(make_shared<IntegerType>(256));
+		}
+		else
+			break;
 	}
 
 	TypePointers retParams;
 	vector<string> retParamNames;
 	if (auto structType = dynamic_cast<StructType const*>(returnType.get()))
 	{
-		for (pair<string, TypePointer> const& member: structType->getMembers())
-			if (member.second->canLiveOutsideStorage())
+		for (auto const& member: structType->getMembers())
+			if (member.type->getCategory() != Category::Mapping && member.type->getCategory() != Category::Array)
 			{
-				retParamNames.push_back(member.first);
-				retParams.push_back(member.second);
+				retParamNames.push_back(member.name);
+				retParams.push_back(member.type);
 			}
 	}
 	else
@@ -992,7 +1046,7 @@ FunctionType::FunctionType(VariableDeclaration const& _varDecl):
 		retParamNames.push_back("");
 	}
 
-	swap(params, m_parameterTypes);
+	swap(paramTypes, m_parameterTypes);
 	swap(paramNames, m_parameterNames);
 	swap(retParams, m_returnParameterTypes);
 	swap(retParamNames, m_returnParameterNames);
@@ -1070,15 +1124,37 @@ unsigned FunctionType::getSizeOnStack() const
 	}
 
 	unsigned size = 0;
-	if (location == Location::External)
+	if (location == Location::External || location == Location::CallCode)
 		size = 2;
-	else if (location == Location::Internal || location == Location::Bare)
+	else if (location == Location::Bare || location == Location::BareCallCode)
+		size = 1;
+	else if (location == Location::Internal)
 		size = 1;
 	if (m_gasSet)
 		size++;
 	if (m_valueSet)
 		size++;
 	return size;
+}
+
+FunctionTypePointer FunctionType::externalFunctionType() const
+{
+	TypePointers paramTypes;
+	TypePointers retParamTypes;
+
+	for (auto type: m_parameterTypes)
+	{
+		if (!type->externalType())
+			return FunctionTypePointer();
+		paramTypes.push_back(type->externalType());
+	}
+	for (auto type: m_returnParameterTypes)
+	{
+		if (!type->externalType())
+			return FunctionTypePointer();
+		retParamTypes.push_back(type->externalType());
+	}
+	return make_shared<FunctionType>(paramTypes, retParamTypes, m_parameterNames, m_returnParameterNames, m_location, m_arbitraryParameters);
 }
 
 MemberList const& FunctionType::getMembers() const
@@ -1091,17 +1167,40 @@ MemberList const& FunctionType::getMembers() const
 	case Location::SHA256:
 	case Location::RIPEMD160:
 	case Location::Bare:
+	case Location::BareCallCode:
 		if (!m_members)
 		{
-			vector<pair<string, TypePointer>> members{
-				{"value", make_shared<FunctionType>(parseElementaryTypeVector({"uint"}),
-													TypePointers{copyAndSetGasOrValue(false, true)},
-													Location::SetValue, false, m_gasSet, m_valueSet)}};
+			MemberList::MemberMap members{
+				{
+					"value",
+					make_shared<FunctionType>(
+						parseElementaryTypeVector({"uint"}),
+						TypePointers{copyAndSetGasOrValue(false, true)},
+						strings(),
+						strings(),
+						Location::SetValue,
+						false,
+						m_gasSet,
+						m_valueSet
+					)
+				}
+			};
 			if (m_location != Location::Creation)
-				members.push_back(make_pair("gas", make_shared<FunctionType>(
-												parseElementaryTypeVector({"uint"}),
-												TypePointers{copyAndSetGasOrValue(true, false)},
-												Location::SetGas, false, m_gasSet, m_valueSet)));
+				members.push_back(
+					MemberList::Member(
+						"gas",
+						make_shared<FunctionType>(
+							parseElementaryTypeVector({"uint"}),
+							TypePointers{copyAndSetGasOrValue(true, false)},
+							strings(),
+							strings(),
+							Location::SetGas,
+							false,
+							m_gasSet,
+							m_valueSet
+						)
+					)
+				);
 			m_members.reset(new MemberList(members));
 		}
 		return *m_members;
@@ -1110,7 +1209,53 @@ MemberList const& FunctionType::getMembers() const
 	}
 }
 
-string FunctionType::getCanonicalSignature(std::string const& _name) const
+bool FunctionType::canTakeArguments(TypePointers const& _argumentTypes) const
+{
+	TypePointers const& parameterTypes = getParameterTypes();
+	if (takesArbitraryParameters())
+		return true;
+	else if (_argumentTypes.size() != parameterTypes.size())
+		return false;
+	else
+		return std::equal(
+			_argumentTypes.cbegin(),
+			_argumentTypes.cend(),
+			parameterTypes.cbegin(),
+			[](TypePointer const& argumentType, TypePointer const& parameterType)
+			{
+				return argumentType->isImplicitlyConvertibleTo(*parameterType);
+			}
+		);
+}
+
+bool FunctionType::hasEqualArgumentTypes(FunctionType const& _other) const
+{
+	if (m_parameterTypes.size() != _other.m_parameterTypes.size())
+		return false;
+	return equal(
+		m_parameterTypes.cbegin(),
+		m_parameterTypes.cend(),
+		_other.m_parameterTypes.cbegin(),
+		[](TypePointer const& _a, TypePointer const& _b) -> bool { return *_a == *_b; }
+	);
+}
+
+bool FunctionType::isBareCall() const
+{
+	switch (m_location)
+	{
+	case Location::Bare:
+	case Location::BareCallCode:
+	case Location::ECRecover:
+	case Location::SHA256:
+	case Location::RIPEMD160:
+		return true;
+	default:
+		return false;
+	}
+}
+
+string FunctionType::externalSignature(std::string const& _name) const
 {
 	std::string funcName = _name;
 	if (_name == "")
@@ -1120,10 +1265,21 @@ string FunctionType::getCanonicalSignature(std::string const& _name) const
 	}
 	string ret = funcName + "(";
 
-	for (auto it = m_parameterTypes.cbegin(); it != m_parameterTypes.cend(); ++it)
-		ret += (*it)->toString() + (it + 1 == m_parameterTypes.cend() ? "" : ",");
+	FunctionTypePointer external = externalFunctionType();
+	solAssert(!!external, "External function type requested.");
+	TypePointers externalParameterTypes = external->getParameterTypes();
+	for (auto it = externalParameterTypes.cbegin(); it != externalParameterTypes.cend(); ++it)
+	{
+		solAssert(!!(*it), "Parameter should have external type");
+		ret += (*it)->toString() + (it + 1 == externalParameterTypes.cend() ? "" : ",");
+	}
 
 	return ret + ")";
+}
+
+u256 FunctionType::externalIdentifier() const
+{
+	return FixedHash<4>::Arith(FixedHash<4>(dev::sha3(externalSignature())));
 }
 
 TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
@@ -1137,9 +1293,16 @@ TypePointers FunctionType::parseElementaryTypeVector(strings const& _types)
 
 TypePointer FunctionType::copyAndSetGasOrValue(bool _setGas, bool _setValue) const
 {
-	return make_shared<FunctionType>(m_parameterTypes, m_returnParameterTypes, m_location,
-									 m_arbitraryParameters,
-									 m_gasSet || _setGas, m_valueSet || _setValue);
+	return make_shared<FunctionType>(
+		m_parameterTypes,
+		m_returnParameterTypes,
+		m_parameterNames,
+		m_returnParameterNames,
+		m_location,
+		m_arbitraryParameters,
+		m_gasSet || _setGas,
+		m_valueSet || _setValue
+	);
 }
 
 vector<string> const FunctionType::getParameterTypeNames() const
@@ -1209,7 +1372,7 @@ MemberList const& TypeType::getMembers() const
 	// We need to lazy-initialize it because of recursive references.
 	if (!m_members)
 	{
-		vector<pair<string, TypePointer>> members;
+		MemberList::MemberMap members;
 		if (m_actualType->getCategory() == Category::Contract && m_currentContract != nullptr)
 		{
 			ContractDefinition const& contract = dynamic_cast<ContractType const&>(*m_actualType).getContractDefinition();
@@ -1218,14 +1381,14 @@ MemberList const& TypeType::getMembers() const
 				// We are accessing the type of a base contract, so add all public and protected
 				// members. Note that this does not add inherited functions on purpose.
 				for (Declaration const* decl: contract.getInheritableMembers())
-					members.push_back(make_pair(decl->getName(), decl->getType()));
+					members.push_back(MemberList::Member(decl->getName(), decl->getType(), decl));
 		}
 		else if (m_actualType->getCategory() == Category::Enum)
 		{
 			EnumDefinition const& enumDef = dynamic_cast<EnumType const&>(*m_actualType).getEnumDefinition();
 			auto enumType = make_shared<EnumType>(enumDef);
 			for (ASTPointer<EnumValue> const& enumValue: enumDef.getMembers())
-				members.push_back(make_pair(enumValue->getName(), enumType));
+				members.push_back(MemberList::Member(enumValue->getName(), enumType));
 		}
 		m_members.reset(new MemberList(members));
 	}

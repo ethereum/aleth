@@ -17,10 +17,10 @@
         <file>qml/fonts/SourceSerifPro-Semibold.ttf</file>
         <file>qml/img/available_updates.png</file>
         <file>qml/img/b64.png</file>
-        <file>qml/img/broom.png</file>
         <file>qml/img/bugiconactive.png</file>
         <file>qml/img/bugiconinactive.png</file>
         <file>qml/img/closedtriangleindicator.png</file>
+        <file>qml/img/closedtriangleindicator@2x.png</file>
         <file>qml/img/closedtriangleindicator_filesproject.png</file>
         <file>qml/img/console.png</file>
         <file>qml/img/copy.png</file>
@@ -44,14 +44,29 @@
         <file>qml/img/note.png</file>
         <file>qml/img/openedfolder.png</file>
         <file>qml/img/opentriangleindicator.png</file>
+        <file>qml/img/opentriangleindicator@2x.png</file>
         <file>qml/img/opentriangleindicator_filesproject.png</file>
         <file>qml/img/plus.png</file>
         <file>qml/img/projecticon.png</file>
         <file>qml/img/run.png</file>
         <file>qml/img/search_filled.png</file>
+        <file>qml/img/play_button2x.png</file>
+        <file>qml/img/play_button.png</file>
+        <file>qml/img/pause_button2x.png</file>
+        <file>qml/img/pause_button.png</file>
         <file>res/mix_256x256x32.png</file>
         <file>stdc/config.sol</file>
         <file>stdc/namereg.sol</file>
         <file>stdc/std.sol</file>
+        <file>qml/img/edit_combox.png</file>
+        <file>qml/img/clearicon.png</file>
+        <file>qml/img/cleariconactive.png</file>
+        <file>qml/img/copyicon.png</file>
+        <file>qml/img/copyiconactive.png</file>
+        <file>qml/img/searchicon.png</file>
+        <file>qml/img/stop_button2x.png</file>
+        <file>qml/img/warningicon.png</file>
+        <file>qml/img/warningicon@2x.png</file>
+        <file>qml/QAddressView.qml</file>
     </qresource>
 </RCC>

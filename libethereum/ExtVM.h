@@ -58,7 +58,7 @@ public:
 	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp = {}) override final;
 
 	/// Create a new message call. Leave _myAddressOverride as the default to use the present address as caller.
-	virtual bool call(Address _receiveAddress, u256 _txValue, bytesConstRef _txData, u256& io_gas, bytesRef _out, OnOpFunc const& _onOp = {}, Address _myAddressOverride = {}, Address _codeAddressOverride = {}) override final;
+	virtual bool call(CallParameters& _params) override final;
 
 	/// Read address's balance.
 	virtual u256 balance(Address _a) override final { return m_s.balance(_a); }
@@ -82,13 +82,17 @@ public:
 
 	/// Revert any changes made (by any of the other calls).
 	/// @TODO check call site for the parent manifest being discarded.
-	virtual void revert() override final { m_s.m_cache = m_origCache; sub.clear(); }
+	virtual void revert() override final
+	{
+		m_s.m_cache = m_origCache;
+		sub.clear();
+	}
 
 	State& state() const { return m_s; }
 
 private:
-	State& m_s;										///< A reference to the base state.
-	std::map<Address, Account> m_origCache;			///< The cache of the address states (i.e. the externalities) as-was prior to the execution.
+	State& m_s;											///< A reference to the base state.
+	std::unordered_map<Address, Account> m_origCache;	///< The cache of the address states (i.e. the externalities) as-was prior to the execution.
 };
 
 }

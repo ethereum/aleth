@@ -69,17 +69,43 @@ private:
 class MemberList
 {
 public:
-	using MemberMap = std::vector<std::pair<std::string, TypePointer>>;
+	struct Member
+	{
+		Member(std::string const& _name, TypePointer const& _type, Declaration const* _declaration = nullptr):
+			name(_name),
+			type(_type),
+			declaration(_declaration)
+		{
+		}
+
+		std::string name;
+		TypePointer type;
+		Declaration const* declaration = nullptr;
+	};
+
+	using MemberMap = std::vector<Member>;
 
 	MemberList() {}
 	explicit MemberList(MemberMap const& _members): m_memberTypes(_members) {}
 	MemberList& operator=(MemberList&& _other);
 	TypePointer getMemberType(std::string const& _name) const
 	{
+		TypePointer type;
 		for (auto const& it: m_memberTypes)
-			if (it.first == _name)
-				return it.second;
-		return TypePointer();
+			if (it.name == _name)
+			{
+				solAssert(!type, "Requested member type by non-unique name.");
+				type = it.type;
+			}
+		return type;
+	}
+	MemberMap membersByName(std::string const& _name) const
+	{
+		MemberMap members;
+		for (auto const& it: m_memberTypes)
+			if (it.name == _name)
+				members.push_back(it);
+		return members;
 	}
 	/// @returns the offset of the given member in storage slots and bytes inside a slot or
 	/// a nullptr if the member is not part of storage.
@@ -187,6 +213,10 @@ public:
 																		 "for type without literals."));
 	}
 
+	/// @returns a type suitable for outside of Solidity, i.e. for contract types it returns address.
+	/// If there is no such type, returns an empty shared pointer.
+	virtual TypePointer externalType() const { return TypePointer(); }
+
 protected:
 	/// Convenience object used when returning an empty member list.
 	static const MemberList EmptyMemberList;
@@ -217,9 +247,11 @@ public:
 	virtual unsigned getStorageBytes() const override { return m_bits / 8; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual MemberList const& getMembers() const { return isAddress() ? AddressMemberList : EmptyMemberList; }
+	virtual MemberList const& getMembers() const override { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
 	virtual std::string toString() const override;
+
+	virtual TypePointer externalType() const override { return shared_from_this(); }
 
 	int getNumBits() const { return m_bits; }
 	bool isAddress() const { return m_modifier == Modifier::Address; }
@@ -292,6 +324,7 @@ public:
 
 	virtual std::string toString() const override { return "bytes" + dev::toString(m_bytes); }
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer externalType() const override { return shared_from_this(); }
 
 	int getNumBytes() const { return m_bytes; }
 
@@ -311,12 +344,13 @@ public:
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual TypePointer binaryOperatorResult(Token::Value _operator, TypePointer const& _other) const override;
 
-	virtual unsigned getCalldataEncodedSize(bool _padded) const { return _padded ? 32 : 1; }
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override{ return _padded ? 32 : 1; }
 	virtual unsigned getStorageBytes() const override { return 1; }
 	virtual bool isValueType() const override { return true; }
 
 	virtual std::string toString() const override { return "bool"; }
 	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual TypePointer externalType() const override { return shared_from_this(); }
 };
 
 /**
@@ -333,11 +367,11 @@ public:
 
 	virtual Category getCategory() const override { return Category::Array; }
 
-	/// Constructor for a byte array ("bytes")
-	explicit ArrayType(Location _location):
+	/// Constructor for a byte array ("bytes") and string.
+	explicit ArrayType(Location _location, bool _isString = false):
 		m_location(_location),
-		m_isByteArray(true),
-		m_baseType(std::make_shared<FixedBytesType>(8))
+		m_arrayKind(_isString ? ArrayKind::String : ArrayKind::Bytes),
+		m_baseType(std::make_shared<FixedBytesType>(1))
 	{}
 	/// Constructor for a dynamically sized array type ("type[]")
 	ArrayType(Location _location, const TypePointer &_baseType):
@@ -360,10 +394,17 @@ public:
 	virtual u256 getStorageSize() const override;
 	virtual unsigned getSizeOnStack() const override;
 	virtual std::string toString() const override;
-	virtual MemberList const& getMembers() const override { return s_arrayTypeMemberList; }
+	virtual MemberList const& getMembers() const override
+	{
+		return isString() ? EmptyMemberList : s_arrayTypeMemberList;
+	}
+	virtual TypePointer externalType() const override;
 
 	Location getLocation() const { return m_location; }
-	bool isByteArray() const { return m_isByteArray; }
+	/// @returns true if this is a byte array or a string
+	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
+	/// @returns true if this is a string
+	bool isString() const { return m_arrayKind == ArrayKind::String; }
 	TypePointer const& getBaseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
 	u256 const& getLength() const { return m_length; }
 
@@ -372,8 +413,12 @@ public:
 	std::shared_ptr<ArrayType> copyForLocation(Location _location) const;
 
 private:
+	/// String is interpreted as a subtype of Bytes.
+	enum class ArrayKind { Ordinary, Bytes, String };
+
 	Location m_location;
-	bool m_isByteArray = false; ///< Byte arrays ("bytes") have different semantics from ordinary arrays.
+	///< Byte arrays ("bytes") and strings have different semantics from ordinary arrays.
+	ArrayKind m_arrayKind = ArrayKind::Ordinary;
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
@@ -395,11 +440,20 @@ public:
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded ) const override
+	{
+		return externalType()->getCalldataEncodedSize(_padded);
+	}
 	virtual unsigned getStorageBytes() const override { return 20; }
+	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual bool isValueType() const override { return true; }
 	virtual std::string toString() const override;
 
 	virtual MemberList const& getMembers() const override;
+	virtual TypePointer externalType() const override
+	{
+		return std::make_shared<IntegerType>(160, IntegerType::Modifier::Address);
+	}
 
 	bool isSuper() const { return m_super; }
 	ContractDefinition const& getContractDefinition() const { return m_contract; }
@@ -462,12 +516,21 @@ public:
 	explicit EnumType(EnumDefinition const& _enum): m_enum(_enum) {}
 	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override
+	{
+		return externalType()->getCalldataEncodedSize(_padded);
+	}
 	virtual unsigned getSizeOnStack() const override { return 1; }
 	virtual unsigned getStorageBytes() const override;
+	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual std::string toString() const override;
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer externalType() const override
+	{
+		return std::make_shared<IntegerType>(8 * int(getStorageBytes()));
+	}
 
 	EnumDefinition const& getEnumDefinition() const { return m_enum; }
 	/// @returns the value that the string has in the Enum
@@ -487,40 +550,78 @@ private:
 class FunctionType: public Type
 {
 public:
-	/// The meaning of the value(s) on the stack referencing the function:
-	/// INTERNAL: jump tag, EXTERNAL: contract address + function identifier,
-	/// BARE: contract address (non-abi contract call)
-	/// OTHERS: special virtual function, nothing on the stack
+	/// How this function is invoked on the EVM.
 	/// @todo This documentation is outdated, and Location should rather be named "Type"
-	enum class Location { Internal, External, Creation, Send,
-						  SHA3, Suicide,
-						  ECRecover, SHA256, RIPEMD160,
-						  Log0, Log1, Log2, Log3, Log4, Event,
-						  SetGas, SetValue, BlockHash,
-						  Bare };
+	enum class Location
+	{
+		Internal, ///< stack-call using plain JUMP
+		External, ///< external call using CALL
+		CallCode, ///< extercnal call using CALLCODE, i.e. not exchanging the storage
+		Bare, ///< CALL without function hash
+		BareCallCode, ///< CALLCODE without function hash
+		Creation, ///< external call using CREATE
+		Send, ///< CALL, but without data and gas
+		SHA3, ///< SHA3
+		Suicide, ///< SUICIDE
+		ECRecover, ///< CALL to special contract for ecrecover
+		SHA256, ///< CALL to special contract for sha256
+		RIPEMD160, ///< CALL to special contract for ripemd160
+		Log0,
+		Log1,
+		Log2,
+		Log3,
+		Log4,
+		Event, ///< syntactic sugar for LOG*
+		SetGas, ///< modify the default gas value for the function call
+		SetValue, ///< modify the default value transfer for the function call
+		BlockHash ///< BLOCKHASH
+	};
 
 	virtual Category getCategory() const override { return Category::Function; }
+
+	/// @returns TypePointer of a new FunctionType object. All input/return parameters are an
+	/// appropriate external types of input/return parameters of current function.
+	/// Returns an empty shared pointer if one of the input/return parameters does not have an
+	/// external type.
+	FunctionTypePointer externalFunctionType() const;
+	virtual TypePointer externalType() const override { return externalFunctionType(); }
+
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
 	explicit FunctionType(VariableDeclaration const& _varDecl);
 	explicit FunctionType(EventDefinition const& _event);
-	FunctionType(strings const& _parameterTypes, strings const& _returnParameterTypes,
-				 Location _location = Location::Internal, bool _arbitraryParameters = false):
-		FunctionType(parseElementaryTypeVector(_parameterTypes), parseElementaryTypeVector(_returnParameterTypes),
-					 _location, _arbitraryParameters) {}
 	FunctionType(
-		TypePointers const&	_parameterTypes,
-		TypePointers const&	_returnParameterTypes,
-		Location			_location = Location::Internal,
-		bool				_arbitraryParameters = false,
-		bool				_gasSet = false,
-		bool				_valueSet = false
+		strings const& _parameterTypes,
+		strings const& _returnParameterTypes,
+		Location _location = Location::Internal,
+		bool _arbitraryParameters = false
+	): FunctionType(
+		parseElementaryTypeVector(_parameterTypes),
+		parseElementaryTypeVector(_returnParameterTypes),
+		strings(),
+		strings(),
+		_location,
+		_arbitraryParameters
+	)
+	{
+	}
+	FunctionType(
+		TypePointers const& _parameterTypes,
+		TypePointers const& _returnParameterTypes,
+		strings _parameterNames = strings(),
+		strings _returnParameterNames = strings(),
+		Location _location = Location::Internal,
+		bool _arbitraryParameters = false,
+		bool _gasSet = false,
+		bool _valueSet = false
 	):
-		m_parameterTypes		(_parameterTypes),
-		m_returnParameterTypes	(_returnParameterTypes),
-		m_location				(_location),
-		m_arbitraryParameters	(_arbitraryParameters),
-		m_gasSet				(_gasSet),
-		m_valueSet				(_valueSet)
+		m_parameterTypes (_parameterTypes),
+		m_returnParameterTypes (_returnParameterTypes),
+		m_parameterNames (_parameterNames),
+		m_returnParameterNames (_returnParameterNames),
+		m_location (_location),
+		m_arbitraryParameters (_arbitraryParameters),
+		m_gasSet (_gasSet),
+		m_valueSet (_valueSet)
 	{}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
@@ -538,11 +639,21 @@ public:
 	virtual unsigned getSizeOnStack() const override;
 	virtual MemberList const& getMembers() const override;
 
+	/// @returns true if this function can take the given argument types (possibly
+	/// after implicit conversion).
+	bool canTakeArguments(TypePointers const& _arguments) const;
+	/// @returns true if the types of parameters are equal (does't check return parameter types)
+	bool hasEqualArgumentTypes(FunctionType const& _other) const;
+
+	/// @returns true if the ABI is used for this call (only meaningful for external calls)
+	bool isBareCall() const;
 	Location const& getLocation() const { return m_location; }
-	/// @returns the canonical signature of this function type given the function name
+	/// @returns the external signature of this function type given the function name
 	/// If @a _name is not provided (empty string) then the @c m_declaration member of the
 	/// function type is used
-	std::string getCanonicalSignature(std::string const& _name = "") const;
+	std::string externalSignature(std::string const& _name = "") const;
+	/// @returns the external identifier of this function (the hash of the signature).
+	u256 externalIdentifier() const;
 	Declaration const& getDeclaration() const
 	{
 		solAssert(m_declaration, "Requested declaration from a FunctionType that has none");

@@ -24,10 +24,12 @@
 #include <functional>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 #include "JsonSpiritHeaders.h"
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>
+#include <libtestutils/Common.h>
 
 namespace dev
 {
@@ -35,9 +37,12 @@ namespace eth
 {
 
 class Client;
+class State;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
+void mine(State& _s, BlockChain const& _bc);
+void mine(BlockInfo& _bi);
 
 }
 
@@ -96,17 +101,31 @@ namespace test
 	}																	\
 	while (0)
 
+struct ImportStateOptions
+{
+	ImportStateOptions(bool _bSetAll = false):m_bHasBalance(_bSetAll), m_bHasNonce(_bSetAll), m_bHasCode(_bSetAll), m_bHasStorage(_bSetAll)	{}
+	bool isAllSet() {return m_bHasBalance && m_bHasNonce && m_bHasCode && m_bHasStorage;}
+	bool m_bHasBalance;
+	bool m_bHasNonce;
+	bool m_bHasCode;
+	bool m_bHasStorage;
+};
+typedef std::map<Address, ImportStateOptions> stateOptionsMap;
 
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o) : m_statePre(Address(), OverlayDB(), eth::BaseState::Empty),  m_statePost(Address(), OverlayDB(), eth::BaseState::Empty), m_TestObject(_o) {}
+	ImportTest(json_spirit::mObject& _o): m_TestObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 	// imports
 	void importEnv(json_spirit::mObject& _o);
-	void importState(json_spirit::mObject& _o, eth::State& _state);
+	static void importState(json_spirit::mObject& _o, eth::State& _state);
+	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
 	void importTransaction(json_spirit::mObject& _o);
+	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
+
 	void exportTest(bytes const& _output, eth::State const& _statePost);
+	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const _expectedStateOptions = stateOptionsMap(), WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -137,12 +156,12 @@ void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _res
 void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
 
-void executeTests(const std::string& _name, const std::string& _testPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests);
-std::string getTestPath();
-void userDefinedTest(std::string testTypeFlag, std::function<void(json_spirit::mValue&, bool)> doTests);
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests);
+void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
+json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
@@ -160,19 +179,24 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 class Options
 {
 public:
-	bool jit = false;		///< Use JIT
 	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
-	bool statsFull = false; ///< Output full stats - execution times for every test
+	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	bool checkState = false;///< Throw error when checking test states
+	bool fulloutput = false;///< Replace large output to just it's length
 
 	/// Test selection
 	/// @{
+	bool singleTest = false;
+	std::string singleTestFile;
+	std::string singleTestName;
 	bool performance = false;
 	bool quadratic = false;
 	bool memory = false;
 	bool inputLimits = false;
 	bool bigData = false;
+	bool wallet = false;
 	/// @}
 
 	/// Get reference to options
@@ -191,10 +215,12 @@ class Listener
 public:
 	virtual ~Listener() = default;
 
+	virtual void suiteStarted(std::string const&) {}
 	virtual void testStarted(std::string const& _name) = 0;
 	virtual void testFinished() = 0;
 
 	static void registerListener(Listener& _listener);
+	static void notifySuiteStarted(std::string const& _name);
 	static void notifyTestStarted(std::string const& _name);
 	static void notifyTestFinished();
 
@@ -208,8 +234,6 @@ public:
 		ExecTimeGuard& operator=(ExecTimeGuard) = delete;
 	};
 };
-
-
 
 }
 }

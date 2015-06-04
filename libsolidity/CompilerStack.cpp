@@ -31,7 +31,7 @@
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/InterfaceHandler.h>
 
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 
 using namespace std;
 
@@ -55,10 +55,27 @@ const map<string, string> StandardSources = map<string, string>{
 };
 
 CompilerStack::CompilerStack(bool _addStandardSources):
-	m_addStandardSources(_addStandardSources), m_parseSuccessful(false)
+	m_parseSuccessful(false)
 {
-	if (m_addStandardSources)
+	if (_addStandardSources)
 		addSources(StandardSources, true); // add them as libraries
+}
+
+void CompilerStack::reset(bool _keepSources, bool _addStandardSources)
+{
+	m_parseSuccessful = false;
+	if (_keepSources)
+		for (auto sourcePair: m_sources)
+			sourcePair.second.reset();
+	else
+	{
+		m_sources.clear();
+		if (_addStandardSources)
+			addSources(StandardSources, true);
+	}
+	m_globalContext.reset();
+	m_sourceOrder.clear();
+	m_contracts.clear();
 }
 
 bool CompilerStack::addSource(string const& _name, string const& _content, bool _isLibrary)
@@ -138,6 +155,8 @@ void CompilerStack::compile(bool _optimize)
 		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
 			{
+				if (!contract->isFullyImplemented())
+					continue;
 				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize);
 				compiler->compileContract(*contract, contractBytecode);
 				Contract& compiledContract = m_contracts[contract->getName()];
@@ -155,14 +174,16 @@ bytes const& CompilerStack::compile(string const& _sourceCode, bool _optimize)
 	return getBytecode();
 }
 
-eth::AssemblyItems const& CompilerStack::getAssemblyItems(string const& _contractName) const
+eth::AssemblyItems const* CompilerStack::getAssemblyItems(string const& _contractName) const
 {
-	return getContract(_contractName).compiler->getAssemblyItems();
+	Contract const& contract = getContract(_contractName);
+	return contract.compiler ? &getContract(_contractName).compiler->getAssemblyItems() : nullptr;
 }
 
-eth::AssemblyItems const& CompilerStack::getRuntimeAssemblyItems(string const& _contractName) const
+eth::AssemblyItems const* CompilerStack::getRuntimeAssemblyItems(string const& _contractName) const
 {
-	return getContract(_contractName).compiler->getRuntimeAssemblyItems();
+	Contract const& contract = getContract(_contractName);
+	return contract.compiler ? &getContract(_contractName).compiler->getRuntimeAssemblyItems() : nullptr;
 }
 
 bytes const& CompilerStack::getBytecode(string const& _contractName) const
@@ -180,9 +201,16 @@ dev::h256 CompilerStack::getContractCodeHash(string const& _contractName) const
 	return dev::sha3(getRuntimeBytecode(_contractName));
 }
 
-void CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes) const
+Json::Value CompilerStack::streamAssembly(ostream& _outStream, string const& _contractName, StringMap _sourceCodes, bool _inJsonFormat) const
 {
-	getContract(_contractName).compiler->streamAssembly(_outStream, _sourceCodes);
+	Contract const& contract = getContract(_contractName);
+	if (contract.compiler)
+		return contract.compiler->streamAssembly(_outStream, _sourceCodes, _inJsonFormat);
+	else
+	{
+		_outStream << "Contract not fully implemented" << endl;
+		return Json::Value();
+	}
 }
 
 string const& CompilerStack::getInterface(string const& _contractName) const
@@ -240,27 +268,40 @@ ContractDefinition const& CompilerStack::getContractDefinition(string const& _co
 	return *getContract(_contractName).contract;
 }
 
+size_t CompilerStack::getFunctionEntryPoint(
+	std::string const& _contractName,
+	FunctionDefinition const& _function
+) const
+{
+	shared_ptr<Compiler> const& compiler = getContract(_contractName).compiler;
+	if (!compiler)
+		return 0;
+	eth::AssemblyItem tag = compiler->getFunctionEntryLabel(_function);
+	if (tag.type() == eth::UndefinedItem)
+		return 0;
+	eth::AssemblyItems const& items = compiler->getRuntimeAssemblyItems();
+	for (size_t i = 0; i < items.size(); ++i)
+		if (items.at(i).type() == eth::Tag && items.at(i).data() == tag.data())
+			return i;
+	return 0;
+}
+
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)
 {
 	CompilerStack stack;
 	return stack.compile(_sourceCode, _optimize);
 }
 
-void CompilerStack::reset(bool _keepSources)
+tuple<int, int, int, int> CompilerStack::positionFromSourceLocation(SourceLocation const& _sourceLocation) const
 {
-	m_parseSuccessful = false;
-	if (_keepSources)
-		for (auto sourcePair: m_sources)
-			sourcePair.second.reset();
-	else
-	{
-		m_sources.clear();
-		if (m_addStandardSources)
-			addSources(StandardSources);
-	}
-	m_globalContext.reset();
-	m_sourceOrder.clear();
-	m_contracts.clear();
+	int startLine;
+	int startColumn;
+	int endLine;
+	int endColumn;
+	tie(startLine, startColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.start);
+	tie(endLine, endColumn) = getScanner(*_sourceLocation.sourceName).translatePositionToLineColumn(_sourceLocation.end);
+
+	return make_tuple(++startLine, ++startColumn, ++endLine, ++endColumn);
 }
 
 void CompilerStack::resolveImports()

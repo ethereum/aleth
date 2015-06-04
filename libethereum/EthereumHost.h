@@ -22,9 +22,9 @@
 #pragma once
 
 #include <mutex>
-#include <map>
+#include <unordered_map>
 #include <vector>
-#include <set>
+#include <unordered_set>
 #include <memory>
 #include <utility>
 #include <thread>
@@ -56,8 +56,6 @@ class BlockQueue;
  */
 class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
-	friend class EthereumPeer;
-
 public:
 	/// Start server, but don't listen.
 	EthereumHost(BlockChain const& _ch, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
@@ -72,27 +70,42 @@ public:
 	void reset();
 
 	DownloadMan const& downloadMan() const { return m_man; }
-	bool isSyncing() const { return !!m_syncer; }
-
+	bool isSyncing() const { Guard l(x_sync); return isSyncing_UNSAFE(); }
 	bool isBanned(p2p::NodeId _id) const { return !!m_banned.count(_id); }
 
-private:
-	/// Session is tell us that we may need (re-)syncing with the peer.
-	void noteNeedsSyncing(EthereumPeer* _who);
+	void noteNewTransactions() { m_newTransactions = true; }
+	void noteNewBlocks() { m_newBlocks = true; }
 
-	/// Called when the peer can no longer provide us with any needed blocks.
-	void noteDoneBlocks(EthereumPeer* _who, bool _clemency);
+	void onPeerStatus(EthereumPeer* _peer); ///< Called by peer to report status
+	void onPeerBlocks(EthereumPeer* _peer, RLP const& _r); ///< Called by peer once it has new blocks during syn
+	void onPeerNewBlock(EthereumPeer* _peer, RLP const& _r); ///< Called by peer once it has new blocks
+	void onPeerNewHashes(EthereumPeer* _peer, h256s const& _hashes); ///< Called by peer once it has new hashes
+	void onPeerHashes(EthereumPeer* _peer, h256s const& _hashes); ///< Called by peer once it has another sequential block of hashes during sync
+	void onPeerTransactions(EthereumPeer* _peer, RLP const& _r); ///< Called by peer when it has new transactions
+
+	DownloadMan& downloadMan() { return m_man; }
+	HashDownloadMan& hashDownloadMan() { return m_hashMan; }
+	BlockChain const& chain() { return m_chain; }
+
+	static unsigned const c_oldProtocolVersion;
+
+private:
+	std::tuple<std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<p2p::Session>>> randomSelection(unsigned _percent = 25, std::function<bool(EthereumPeer*)> const& _allow = [](EthereumPeer const*){ return true; });
+
+	void foreachPeerPtr(std::function<void(std::shared_ptr<EthereumPeer>)> const& _f) const;
+	void foreachPeer(std::function<void(EthereumPeer*)> const& _f) const;
+	bool isSyncing_UNSAFE() const;
 
 	/// Sync with the BlockChain. It might contain one of our mined blocks, we might have new candidates from the network.
 	void doWork();
 
 	void maintainTransactions();
-	void maintainBlocks(h256 _currentBlock);
+	void maintainBlocks(h256 const& _currentBlock);
 
 	/// Get a bunch of needed blocks.
 	/// Removes them from our list of needed blocks.
 	/// @returns empty if there's no more blocks left to fetch, otherwise the blocks to fetch.
-	h256Set neededBlocks(h256Set const& _exclude);
+	h256Hash neededBlocks(h256Hash const& _exclude);
 
 	///	Check to see if the network peer-state initialisation has happened.
 	bool isInitialised() const { return (bool)m_latestBlockSent; }
@@ -103,7 +116,13 @@ private:
 	virtual void onStarting() { startWorking(); }
 	virtual void onStopping() { stopWorking(); }
 
-	void changeSyncer(EthereumPeer* _ignore);
+	void continueSync(); /// Find something to do for all peers
+	void continueSync(EthereumPeer* _peer); /// Find some work to do for a peer
+	void onPeerDoneHashes(EthereumPeer* _peer, bool _new); /// Called when done downloading hashes from peer
+	void onPeerHashes(EthereumPeer* _peer, h256s const& _hashes, bool _complete);
+	bool peerShouldGrabBlocks(EthereumPeer* _peer) const;
+	bool peerShouldGrabChain(EthereumPeer* _peer) const;
+	void estimatePeerHashes(EthereumPeer* _peer);
 
 	BlockChain const& m_chain;
 	TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
@@ -111,14 +130,23 @@ private:
 
 	u256 m_networkId;
 
-	EthereumPeer* m_syncer = nullptr;	// TODO: switch to weak_ptr
-
 	DownloadMan m_man;
+	HashDownloadMan m_hashMan;
 
 	h256 m_latestBlockSent;
-	h256Set m_transactionsSent;
+	h256Hash m_transactionsSent;
 
-	std::set<p2p::NodeId> m_banned;
+	std::unordered_set<p2p::NodeId> m_banned;
+
+	bool m_newTransactions = false;
+	bool m_newBlocks = false;
+
+	mutable Mutex x_sync;
+	bool m_needSyncHashes = true;				///< Indicates if need to downlad hashes
+	bool m_needSyncBlocks = true;				///< Indicates if we still need to download some blocks
+	h256 m_syncingLatestHash;					///< Latest block's hash, as of the current sync.
+	u256 m_syncingTotalDifficulty;				///< Latest block's total difficulty, as of the current sync.
+	h256s m_hashes;								///< List of hashes with unknown block numbers. Used for v60 chain downloading and catching up to a particular unknown
 };
 
 }

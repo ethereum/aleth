@@ -22,7 +22,7 @@
 
 #include <vector>
 #include <libdevcore/Log.h>
-#include <libevmcore/SourceLocation.h>
+#include <libevmasm/SourceLocation.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Exceptions.h>
@@ -164,8 +164,17 @@ ASTPointer<ContractDefinition> Parser::parseContractDefinition()
 	}
 	nodeFactory.markEndPosition();
 	expectToken(Token::RBrace);
-	return nodeFactory.createNode<ContractDefinition>(name, docString, baseContracts, structs, enums,
-													  stateVariables, functions, modifiers, events);
+	return nodeFactory.createNode<ContractDefinition>(
+		name,
+		docString,
+		baseContracts,
+		structs,
+		enums,
+		stateVariables,
+		functions,
+		modifiers,
+		events
+	);
 }
 
 ASTPointer<InheritanceSpecifier> Parser::parseInheritanceSpecifier()
@@ -247,8 +256,15 @@ ASTPointer<FunctionDefinition> Parser::parseFunctionDefinition(ASTString const* 
 	}
 	else
 		returnParameters = createEmptyParameterList();
-	ASTPointer<Block> block = parseBlock();
-	nodeFactory.setEndPositionFromNode(block);
+	ASTPointer<Block> block = ASTPointer<Block>();
+	nodeFactory.markEndPosition();
+	if (m_scanner->getCurrentToken() != Token::Semicolon)
+	{
+		block = parseBlock();
+		nodeFactory.setEndPositionFromNode(block);
+	}
+	else
+		m_scanner->next(); // just consume the ';'
 	bool const c_isConstructor = (_contractName && *name == *_contractName);
 	return nodeFactory.createNode<FunctionDefinition>(name, visibility, c_isConstructor, docstring,
 													  parameters, isDeclaredConst, modifiers,
@@ -456,17 +472,18 @@ ASTPointer<TypeName> Parser::parseTypeName(bool _allowVar)
 	else
 		BOOST_THROW_EXCEPTION(createParserError("Expected type name"));
 
-	// Parse "[...]" postfixes for arrays.
-	while (m_scanner->getCurrentToken() == Token::LBrack)
-	{
-		m_scanner->next();
-		ASTPointer<Expression> length;
-		if (m_scanner->getCurrentToken() != Token::RBrack)
-			length = parseExpression();
-		nodeFactory.markEndPosition();
-		expectToken(Token::RBrack);
-		type = nodeFactory.createNode<ArrayTypeName>(type, length);
-	}
+	if (type)
+		// Parse "[...]" postfixes for arrays.
+		while (m_scanner->getCurrentToken() == Token::LBrack)
+		{
+			m_scanner->next();
+			ASTPointer<Expression> length;
+			if (m_scanner->getCurrentToken() != Token::RBrack)
+				length = parseExpression();
+			nodeFactory.markEndPosition();
+			expectToken(Token::RBrack);
+			type = nodeFactory.createNode<ArrayTypeName>(type, length);
+		}
 	return type;
 }
 

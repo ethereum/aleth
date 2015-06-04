@@ -22,9 +22,9 @@
 #pragma once
 
 #include <libdevcore/RLP.h>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
-
+#include <libevmcore/Params.h>
 namespace dev
 {
 namespace eth
@@ -37,11 +37,11 @@ enum IncludeSignature
 	WithSignature = 1,		///< Do include a signature.
 };
 
-enum class CheckSignature
+enum class CheckTransaction
 {
 	None,
-	Range,
-	Sender
+	Cheap,
+	Everything
 };
 
 enum class TransactionException
@@ -75,12 +75,24 @@ TransactionException toTransactionException(VMException const& _e);
 struct ExecutionResult
 {
 	ExecutionResult() = default;
-	ExecutionResult(u256 _gasUsed, TransactionException _excepted, Address _newAddress, bytesConstRef _output, CodeDeposit _codeDeposit): gasUsed(_gasUsed), excepted(_excepted), newAddress(_newAddress), output(_output.toBytes()), codeDeposit(_codeDeposit) {}
-	u256 gasUsed;
+	ExecutionResult(u256 const& _gasUsed, TransactionException _excepted, Address const& _newAddress, bytesConstRef _output, CodeDeposit _codeDeposit, u256 const& _gasRefund, unsigned _depositSize, u256 const& _gasForDeposit):
+		gasUsed(_gasUsed),
+		excepted(_excepted),
+		newAddress(_newAddress),
+		output(_output.toBytes()),
+		codeDeposit(_codeDeposit),
+		gasRefunded(_gasRefund),
+		depositSize(_depositSize),
+		gasForDeposit(_gasForDeposit)
+	{}
+	u256 gasUsed = 0;
 	TransactionException excepted = TransactionException::Unknown;
 	Address newAddress;
 	bytes output;
 	CodeDeposit codeDeposit = CodeDeposit::None;
+	u256 gasRefunded = 0;
+	unsigned depositSize = 0;
+	u256 gasForDeposit;
 };
 
 std::ostream& operator<<(std::ostream& _out, ExecutionResult const& _er);
@@ -93,22 +105,22 @@ public:
 	Transaction() {}
 
 	/// Constructs a signed message-call transaction.
-	Transaction(u256 _value, u256 _gasPrice, u256 _gas, Address const& _dest, bytes const& _data, u256 _nonce, Secret const& _secret): m_type(MessageCall), m_nonce(_nonce), m_value(_value), m_receiveAddress(_dest), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) { sign(_secret); }
+	Transaction(u256 const& _value, u256 const& _gasPrice, u256 const& _gas, Address const& _dest, bytes const& _data, u256 const& _nonce, Secret const& _secret): m_type(MessageCall), m_nonce(_nonce), m_value(_value), m_receiveAddress(_dest), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) { sign(_secret); }
 
 	/// Constructs a signed contract-creation transaction.
-	Transaction(u256 _value, u256 _gasPrice, u256 _gas, bytes const& _data, u256 _nonce, Secret const& _secret): m_type(ContractCreation), m_nonce(_nonce), m_value(_value), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) { sign(_secret); }
+	Transaction(u256 const& _value, u256 const& _gasPrice, u256 const& _gas, bytes const& _data, u256 const& _nonce, Secret const& _secret): m_type(ContractCreation), m_nonce(_nonce), m_value(_value), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) { sign(_secret); }
 
 	/// Constructs an unsigned message-call transaction.
-	Transaction(u256 _value, u256 _gasPrice, u256 _gas, Address const& _dest, bytes const& _data): m_type(MessageCall), m_value(_value), m_receiveAddress(_dest), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) {}
+	Transaction(u256 const& _value, u256 const& _gasPrice, u256 const& _gas, Address const& _dest, bytes const& _data, u256 const& _nonce = 0): m_type(MessageCall), m_nonce(_nonce), m_value(_value), m_receiveAddress(_dest), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) {}
 
 	/// Constructs an unsigned contract-creation transaction.
-	Transaction(u256 _value, u256 _gasPrice, u256 _gas, bytes const& _data): m_type(ContractCreation), m_value(_value), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) {}
+	Transaction(u256 const& _value, u256 const& _gasPrice, u256 const& _gas, bytes const& _data, u256 const& _nonce = 0): m_type(ContractCreation), m_nonce(_nonce), m_value(_value), m_gasPrice(_gasPrice), m_gas(_gas), m_data(_data) {}
 
 	/// Constructs a transaction from the given RLP.
-	explicit Transaction(bytesConstRef _rlp, CheckSignature _checkSig);
+	explicit Transaction(bytesConstRef _rlp, CheckTransaction _checkSig);
 
 	/// Constructs a transaction from the given RLP.
-	explicit Transaction(bytes const& _rlp, CheckSignature _checkSig): Transaction(&_rlp, _checkSig) {}
+	explicit Transaction(bytes const& _rlp, CheckTransaction _checkSig): Transaction(&_rlp, _checkSig) {}
 
 
 	/// Checks equality of transactions.
@@ -117,9 +129,11 @@ public:
 	bool operator!=(Transaction const& _c) const { return !operator==(_c); }
 
 	/// @returns sender of the transaction from the signature (and hash).
-	Address sender() const;
+	Address const& sender() const;
 	/// Like sender() but will never throw. @returns a null Address if the signature is invalid.
-	Address safeSender() const noexcept;
+	Address const& safeSender() const noexcept;
+	/// Force the sender to a particular value. This will result in an invalid transaction RLP.
+	void forceSender(Address const& _a) { m_sender = _a; }
 
 	/// @returns true if transaction is non-null.
 	explicit operator bool() const { return m_type != NullTransaction; }
@@ -137,7 +151,7 @@ public:
 	bytes rlp(IncludeSignature _sig = WithSignature) const { RLPStream s; streamRLP(s, _sig); return s.out(); }
 
 	/// @returns the SHA3 hash of the RLP serialisation of this transaction.
-	h256 sha3(IncludeSignature _sig = WithSignature) const { RLPStream s; streamRLP(s, _sig); return dev::sha3(s.out()); }
+	h256 sha3(IncludeSignature _sig = WithSignature) const { if (_sig == WithSignature && m_hashWith) return m_hashWith; RLPStream s; streamRLP(s, _sig); auto ret = dev::sha3(s.out()); if (_sig == WithSignature) m_hashWith = ret; return ret; }
 
 	/// @returns the amount of ETH to be transferred by this (message-call) transaction, in Wei. Synonym for endowment().
 	u256 value() const { return m_value; }
@@ -153,6 +167,12 @@ public:
 	/// @returns the receiving address of the message-call transaction (undefined for contract-creation transactions).
 	Address receiveAddress() const { return m_receiveAddress; }
 
+	/// Synonym for receiveAddress().
+	Address to() const { return m_receiveAddress; }
+
+	/// Synonym for safeSender().
+	Address from() const { return safeSender(); }
+
 	/// @returns the data associated with this (message-call) transaction. Synonym for initCode().
 	bytes const& data() const { return m_data; }
 	/// @returns the initialisation code associated with this (contract-creation) transaction. Synonym for data().
@@ -164,27 +184,38 @@ public:
 	/// @returns the signature of the transaction. Encodes the sender.
 	SignatureStruct const& signature() const { return m_vrs; }
 
+	/// @returns true if the transaction contains enough gas for the basic payment.
+	bool checkPayment() const { return m_gas >= gasRequired(); }
+
+	/// @returns the gas required to run this transaction.
+	bigint gasRequired() const;
+
+	/// Get the fee associated for a transaction with the given data.
+	template <class T> static bigint gasRequired(T const& _data, u256 _gas = 0) { bigint ret = c_txGas + _gas; for (auto i: _data) ret += i ? c_txDataNonZeroGas : c_txDataZeroGas; return ret; }
+
 private:
 	/// Type of transaction.
 	enum Type
 	{
-		NullTransaction,			///< Null transaction.
-		ContractCreation,			///< Transaction to create contracts - receiveAddress() is ignored.
-		MessageCall					///< Transaction to invoke a message call - receiveAddress() is used.
+		NullTransaction,				///< Null transaction.
+		ContractCreation,				///< Transaction to create contracts - receiveAddress() is ignored.
+		MessageCall						///< Transaction to invoke a message call - receiveAddress() is used.
 	};
 
-	void sign(Secret _priv);		///< Sign the transaction.
+	void sign(Secret _priv);			///< Sign the transaction.
 
-	Type m_type = NullTransaction;	///< Is this a contract-creation transaction or a message-call transaction?
-	u256 m_nonce;					///< The transaction-count of the sender.
-	u256 m_value;					///< The amount of ETH to be transferred by this transaction. Called 'endowment' for contract-creation transactions.
-	Address m_receiveAddress;		///< The receiving address of the transaction.
-	u256 m_gasPrice;				///< The base fee and thus the implied exchange rate of ETH to GAS.
-	u256 m_gas;						///< The total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
-	bytes m_data;					///< The data associated with the transaction, or the initialiser if it's a creation transaction.
-	SignatureStruct m_vrs;			///< The signature of the transaction. Encodes the sender.
+	Type m_type = NullTransaction;		///< Is this a contract-creation transaction or a message-call transaction?
+	u256 m_nonce;						///< The transaction-count of the sender.
+	u256 m_value;						///< The amount of ETH to be transferred by this transaction. Called 'endowment' for contract-creation transactions.
+	Address m_receiveAddress;			///< The receiving address of the transaction.
+	u256 m_gasPrice;					///< The base fee and thus the implied exchange rate of ETH to GAS.
+	u256 m_gas;							///< The total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
+	bytes m_data;						///< The data associated with the transaction, or the initialiser if it's a creation transaction.
+	SignatureStruct m_vrs;				///< The signature of the transaction. Encodes the sender.
 
-	mutable Address m_sender;		///< Cached sender, determined from signature.
+	mutable h256 m_hashWith;			///< Cached hash of transaction with signature.
+	mutable Address m_sender;			///< Cached sender, determined from signature.
+	mutable bigint m_gasRequired = 0;	///< Memoised amount required for the transaction to run.
 };
 
 /// Nice name for vector of Transaction.
@@ -193,21 +224,19 @@ using Transactions = std::vector<Transaction>;
 /// Simple human-readable stream-shift operator.
 inline std::ostream& operator<<(std::ostream& _out, Transaction const& _t)
 {
-	_out << "{";
+	_out << _t.sha3().abridged() << "{";
 	if (_t.receiveAddress())
 		_out << _t.receiveAddress().abridged();
 	else
 		_out << "[CREATE]";
 
-	_out << "/" << _t.nonce() << "$" << _t.value() << "+" << _t.gas() << "@" << _t.gasPrice();
-	try
-	{
-		_out << "<-" << _t.sender().abridged();
-	}
-	catch (...) {}
-	_out << " #" << _t.data().size() << "}";
+	_out << "/" << _t.data().size() << "$" << _t.value() << "+" << _t.gas() << "@" << _t.gasPrice();
+	_out << "<-" << _t.safeSender().abridged() << " #" << _t.nonce() << "}";
 	return _out;
 }
+
+void badTransaction(bytesConstRef _tx, std::string const& _err);
+inline void badTransaction(bytes const& _tx, std::string const& _err) { badTransaction(&_tx, _err); }
 
 }
 }

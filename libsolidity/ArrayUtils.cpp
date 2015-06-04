@@ -364,7 +364,13 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 		return;
 	}
 	// stack: end_pos pos
-	eth::AssemblyItem loopStart = m_context.newTag();
+
+	// jump to and return from the loop to allow for duplicate code removal
+	eth::AssemblyItem returnTag = m_context.pushNewTag();
+	m_context << eth::Instruction::SWAP2 << eth::Instruction::SWAP1;
+
+	// stack: <return tag> end_pos pos
+	eth::AssemblyItem loopStart = m_context.appendJumpToNew();
 	m_context << loopStart;
 	// check for loop condition
 	m_context << eth::Instruction::DUP1 << eth::Instruction::DUP3
@@ -380,7 +386,11 @@ void ArrayUtils::clearStorageLoop(Type const& _type) const
 	m_context.appendJumpTo(loopStart);
 	// cleanup
 	m_context << zeroLoopEnd;
-	m_context << eth::Instruction::POP;
+	m_context << eth::Instruction::POP << eth::Instruction::SWAP1;
+	// "return"
+	m_context << eth::Instruction::JUMP;
+
+	m_context << returnTag;
 	solAssert(m_context.getStackHeight() == stackHeightStart - 1, "");
 }
 
@@ -388,10 +398,7 @@ void ArrayUtils::convertLengthToSize(ArrayType const& _arrayType, bool _pad) con
 {
 	if (_arrayType.getLocation() == ArrayType::Location::Storage)
 	{
-		if (_arrayType.isByteArray())
-			m_context << u256(31) << eth::Instruction::ADD
-				<< u256(32) << eth::Instruction::SWAP1 << eth::Instruction::DIV;
-		else if (_arrayType.getBaseType()->getStorageSize() <= 1)
+		if (_arrayType.getBaseType()->getStorageSize() <= 1)
 		{
 			unsigned baseBytes = _arrayType.getBaseType()->getStorageBytes();
 			if (baseBytes == 0)
@@ -437,6 +444,88 @@ void ArrayUtils::retrieveLength(ArrayType const& _arrayType) const
 			m_context << eth::Instruction::SLOAD;
 			break;
 		}
+	}
+}
+
+void ArrayUtils::accessIndex(ArrayType const& _arrayType) const
+{
+	ArrayType::Location location = _arrayType.getLocation();
+	eth::Instruction load =
+		location == ArrayType::Location::Storage ? eth::Instruction::SLOAD :
+		location == ArrayType::Location::Memory ? eth::Instruction::MLOAD :
+		eth::Instruction::CALLDATALOAD;
+
+	// retrieve length
+	if (!_arrayType.isDynamicallySized())
+		m_context << _arrayType.getLength();
+	else if (location == ArrayType::Location::CallData)
+		// length is stored on the stack
+		m_context << eth::Instruction::SWAP1;
+	else
+		m_context << eth::Instruction::DUP2 << load;
+	// stack: <base_ref> <index> <length>
+	// check out-of-bounds access
+	m_context << eth::Instruction::DUP2 << eth::Instruction::LT << eth::Instruction::ISZERO;
+	// out-of-bounds access throws exception
+	m_context.appendConditionalJumpTo(m_context.errorTag());
+
+	// stack: <base_ref> <index>
+	m_context << eth::Instruction::SWAP1;
+	if (_arrayType.isDynamicallySized())
+	{
+		if (location == ArrayType::Location::Storage)
+			CompilerUtils(m_context).computeHashStatic();
+		else if (location == ArrayType::Location::Memory)
+			m_context << u256(32) << eth::Instruction::ADD;
+	}
+	// stack: <index> <data_ref>
+	switch (location)
+	{
+	case ArrayType::Location::CallData:
+		if (!_arrayType.isByteArray())
+			m_context
+				<< eth::Instruction::SWAP1
+				<< _arrayType.getBaseType()->getCalldataEncodedSize()
+				<< eth::Instruction::MUL;
+		m_context << eth::Instruction::ADD;
+		if (_arrayType.getBaseType()->isValueType())
+			CompilerUtils(m_context).loadFromMemoryDynamic(
+				*_arrayType.getBaseType(),
+				true,
+				!_arrayType.isByteArray(),
+				false
+			);
+		break;
+	case ArrayType::Location::Storage:
+		m_context << eth::Instruction::SWAP1;
+		if (_arrayType.getBaseType()->getStorageBytes() <= 16)
+		{
+			// stack: <data_ref> <index>
+			// goal:
+			// <ref> <byte_number> = <base_ref + index / itemsPerSlot> <(index % itemsPerSlot) * byteSize>
+			unsigned byteSize = _arrayType.getBaseType()->getStorageBytes();
+			solAssert(byteSize != 0, "");
+			unsigned itemsPerSlot = 32 / byteSize;
+			m_context << u256(itemsPerSlot) << eth::Instruction::SWAP2;
+			// stack: itemsPerSlot index data_ref
+			m_context
+				<< eth::Instruction::DUP3 << eth::Instruction::DUP3
+				<< eth::Instruction::DIV << eth::Instruction::ADD
+			// stack: itemsPerSlot index (data_ref + index / itemsPerSlot)
+				<< eth::Instruction::SWAP2 << eth::Instruction::SWAP1
+				<< eth::Instruction::MOD;
+			if (byteSize != 1)
+				m_context << u256(byteSize) << eth::Instruction::MUL;
+		}
+		else
+		{
+			if (_arrayType.getBaseType()->getStorageSize() != 1)
+				m_context << _arrayType.getBaseType()->getStorageSize() << eth::Instruction::MUL;
+			m_context << eth::Instruction::ADD << u256(0);
+		}
+		break;
+	case ArrayType::Location::Memory:
+		solAssert(false, "Memory lvalues not yet implemented.");
 	}
 }
 

@@ -25,10 +25,11 @@
 #include <boost/filesystem.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
-#include <libdevcrypto/FileSystem.h>
+#include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/ProofOfWork.h>
 #include <libethcore/BlockInfo.h>
+#include <libethcore/Params.h>
 #include <liblll/Compiler.h>
 #include "GenesisInfo.h"
 #include "State.h"
@@ -40,9 +41,9 @@ namespace js = json_spirit;
 
 #define ETH_CATCH 1
 
-std::map<Address, Account> const& dev::eth::genesisState()
+std::unordered_map<Address, Account> const& dev::eth::genesisState()
 {
-	static std::map<Address, Account> s_ret;
+	static std::unordered_map<Address, Account> s_ret;
 
 	if (s_ret.empty())
 	{
@@ -92,6 +93,6 @@ bytes CanonBlockChain::createGenesisBlock()
 	return block.out();
 }
 
-CanonBlockChain::CanonBlockChain(std::string _path, bool _killExisting): BlockChain(CanonBlockChain::createGenesisBlock(), _path, _killExisting)
+CanonBlockChain::CanonBlockChain(std::string const& _path, WithExisting _we, ProgressCallback const& _pc): BlockChain(CanonBlockChain::createGenesisBlock(), _path, _we, _pc)
 {
 }

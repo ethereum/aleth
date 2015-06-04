@@ -28,8 +28,10 @@
 #include <memory>
 #include <vector>
 #include <boost/noncopyable.hpp>
+#include <json/json.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
+#include <libevmasm/SourceLocation.h>
 
 namespace dev
 {
@@ -46,6 +48,7 @@ namespace solidity
 // forward declarations
 class Scanner;
 class ContractDefinition;
+class FunctionDefinition;
 class SourceUnit;
 class Compiler;
 class GlobalContext;
@@ -69,6 +72,9 @@ class CompilerStack: boost::noncopyable
 public:
 	/// Creates a new compiler stack. Adds standard sources if @a _addStandardSources.
 	explicit CompilerStack(bool _addStandardSources = true);
+
+	/// Resets the compiler to a state where the sources are not parsed or even removed.
+	void reset(bool _keepSources = false, bool _addStandardSources = true);
 
 	/// Adds a source object (e.g. file) to the parser. After this, parse has to be called again.
 	/// @returns true if a source object by the name already existed and was replaced.
@@ -94,16 +100,17 @@ public:
 	/// @returns the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	bytes const& getRuntimeBytecode(std::string const& _contractName = "") const;
 	/// @returns normal contract assembly items
-	eth::AssemblyItems const& getAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* getAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns runtime contract assembly items
-	eth::AssemblyItems const& getRuntimeAssemblyItems(std::string const& _contractName = "") const;
+	eth::AssemblyItems const* getRuntimeAssemblyItems(std::string const& _contractName = "") const;
 	/// @returns hash of the runtime bytecode for the contract, i.e. the code that is returned by the constructor.
 	dev::h256 getContractCodeHash(std::string const& _contractName = "") const;
 
 	/// Streams a verbose version of the assembly to @a _outStream.
 	/// @arg _sourceCodes is the map of input files to source code strings
+	/// @arg _inJsonFromat shows whether the out should be in Json format
 	/// Prerequisite: Successful compilation.
-	void streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap()) const;
+	Json::Value streamAssembly(std::ostream& _outStream, std::string const& _contractName = "", StringMap _sourceCodes = StringMap(), bool _inJsonFormat = false) const;
 
 	/// Returns a string representing the contract interface in JSON.
 	/// Prerequisite: Successful call to parse or compile.
@@ -125,9 +132,21 @@ public:
 	/// does not exist.
 	ContractDefinition const& getContractDefinition(std::string const& _contractName) const;
 
+	/// @returns the offset of the entry point of the given function into the list of assembly items
+	/// or zero if it is not found or does not exist.
+	size_t getFunctionEntryPoint(
+		std::string const& _contractName,
+		FunctionDefinition const& _function
+	) const;
+
 	/// Compile the given @a _sourceCode to bytecode. If a scanner is provided, it is used for
 	/// scanning the source code - this is useful for printing exception information.
 	static bytes staticCompile(std::string const& _sourceCode, bool _optimize = false);
+
+	/// Helper function for logs printing. Do only use in error cases, it's quite expensive.
+	/// line and columns are numbered starting from 1 with following order:
+	/// start line, start column, end line, end column
+	std::tuple<int, int, int, int> positionFromSourceLocation(SourceLocation const& _sourceLocation) const;
 
 private:
 	/**
@@ -139,7 +158,7 @@ private:
 		std::shared_ptr<SourceUnit> ast;
 		std::string interface;
 		bool isLibrary = false;
-		void reset() { scanner.reset(); ast.reset(); interface.clear(); isLibrary = false;}
+		void reset() { scanner.reset(); ast.reset(); interface.clear(); }
 	};
 
 	struct Contract
@@ -157,13 +176,11 @@ private:
 		Contract();
 	};
 
-	void reset(bool _keepSources = false);
 	void resolveImports();
 
 	Contract const& getContract(std::string const& _contractName = "") const;
 	Source const& getSource(std::string const& _sourceName = "") const;
 
-	bool m_addStandardSources; ///< If true, standard sources are added.
 	bool m_parseSuccessful;
 	std::map<std::string const, Source> m_sources;
 	std::shared_ptr<GlobalContext> m_globalContext;

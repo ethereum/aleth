@@ -29,12 +29,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
 
-#if defined(clogS)
-#undef clogS
-#endif
-#define clogS(X) dev::LogOutputStream<X, true>(false) << "| " << std::setw(2) << session()->socketId() << "] "
-
-WhisperHost::WhisperHost()
+WhisperHost::WhisperHost(): Worker("shh")
 {
 }
 
@@ -108,11 +103,11 @@ unsigned WhisperHost::installWatchOnId(h256 _h)
 	return ret;
 }
 
-unsigned WhisperHost::installWatch(shh::FullTopic const& _ft)
+unsigned WhisperHost::installWatch(shh::Topics const& _t)
 {
 	Guard l(m_filterLock);
 
-	InstalledFilter f(_ft);
+	InstalledFilter f(_t);
 	h256 h = f.filter.sha3();
 
 	if (!m_filters.count(h))
@@ -162,7 +157,7 @@ void WhisperHost::uninstallWatch(unsigned _i)
 
 void WhisperHost::doWork()
 {
-	for (auto& i: peerSessions())
+	for (auto i: peerSessions())
 		i.first->cap<WhisperPeer>().get()->sendMessages();
 	cleanup();
 }

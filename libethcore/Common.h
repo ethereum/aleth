@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <string>
+#include <functional>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 #include <libdevcrypto/Common.h>
@@ -35,11 +37,11 @@ namespace eth
 /// Current protocol version.
 extern const unsigned c_protocolVersion;
 
-/// Current database version.
-extern const unsigned c_databaseVersion;
+/// Current minor protocol version.
+extern const unsigned c_minorProtocolVersion;
 
 /// Current database version.
-extern const unsigned c_ethashVersion;
+extern const unsigned c_databaseVersion;
 
 /// User-friendly string representation of the amount _b in wei.
 std::string formatBalance(bigint const& _b);
@@ -81,6 +83,75 @@ enum class RelativeBlock: BlockNumber
 	Latest = LatestBlock,
 	Pending = PendingBlock
 };
+
+enum class ImportResult
+{
+	Success = 0,
+	UnknownParent,
+	FutureTime,
+	AlreadyInChain,
+	AlreadyKnown,
+	Malformed,
+	BadChain
+};
+
+struct ImportRequirements
+{
+	using value = unsigned;
+	enum
+	{
+		ValidNonce = 1, ///< Validate nonce
+		DontHave = 2, ///< Avoid old blocks
+		CheckUncles = 4, ///< Check uncle nonces
+		Default = ValidNonce | DontHave | CheckUncles
+	};
+};
+
+/// Super-duper signal mechanism. TODO: replace with somthing a bit heavier weight.
+class Signal
+{
+public:
+	class HandlerAux
+	{
+		friend class Signal;
+
+	public:
+		~HandlerAux() { if (m_s) m_s->m_fire.erase(m_i); m_s = nullptr; }
+
+	private:
+		HandlerAux(unsigned _i, Signal* _s): m_i(_i), m_s(_s) {}
+
+		unsigned m_i = 0;
+		Signal* m_s = nullptr;
+	};
+
+	using Callback = std::function<void()>;
+
+	std::shared_ptr<HandlerAux> add(Callback const& _h) { auto n = m_fire.empty() ? 0 : (m_fire.rbegin()->first + 1); m_fire[n] = _h; return std::shared_ptr<HandlerAux>(new HandlerAux(n, this)); }
+
+	void operator()() { for (auto const& f: m_fire) f.second(); }
+
+private:
+	std::map<unsigned, Callback> m_fire;
+};
+
+using Handler = std::shared_ptr<Signal::HandlerAux>;
+
+struct TransactionSkeleton
+{
+	bool creation = false;
+	Address from;
+	Address to;
+	u256 value;
+	bytes data;
+	u256 gas = UndefinedU256;
+	u256 gasPrice = UndefinedU256;
+};
+
+void badBlockHeader(bytesConstRef _header, std::string const& _err);
+inline void badBlockHeader(bytes const& _header, std::string const& _err) { badBlockHeader(&_header, _err); }
+void badBlock(bytesConstRef _header, std::string const& _err);
+inline void badBlock(bytes const& _header, std::string const& _err) { badBlock(&_header, _err); }
 
 }
 }

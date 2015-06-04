@@ -5,7 +5,7 @@ function solCurrency()
 
 function solKeywords()
 {
-	return { "break": true, "case": true, "constant": true, "continue": true, "contract": true, "default": true, "do": true, "else": true, "event": true, "external": true, "is": true, "indexed": true, "for": true, "function": true, "if": true, "import": true, "mapping": true, "modifier": true, "new": true, "public": true, "private": true, "internal": true, "return": true, "returns": true, "struct": true, "switch": true, "var": true, "while": true, "enum": true };
+	return { "break": true, "case": true, "constant": true, "continue": true, "contract": true, "default": true, "delete": true, "do": true, "else": true, "event": true, "external": true, "is": true, "indexed": true, "for": true, "function": true, "if": true, "import": true, "mapping": true, "modifier": true, "new": true, "public": true, "private": true, "internal": true, "return": true, "returns": true, "struct": true, "switch": true, "var": true, "while": true, "enum": true };
 }
 
 function solStdContract()
@@ -26,4 +26,16 @@ function solTypes()
 function solMisc()
 {
 	return { "true": true, "false": true, "null": true };
+}
+
+function keywordsName()
+{
+	var keywords = {};
+	keywords[solCurrency.name.toLowerCase()] = "Currency";
+	keywords[solKeywords.name.toLowerCase()] = "Keyword";
+	keywords[solStdContract.name.toLowerCase()] = "Contract";
+	keywords[solTime.name.toLowerCase()] = "Time";
+	keywords[solTypes.name.toLowerCase()] = "Type";
+	keywords[solMisc.name.toLowerCase()] = "Misc";
+	return keywords;
 }

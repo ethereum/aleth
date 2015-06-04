@@ -21,10 +21,12 @@
 
 #include "Precompiled.h"
 
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/Log.h>
+#include <libdevcore/SHA3.h>
+#include <libdevcore/Hash.h>
 #include <libdevcrypto/Common.h>
 #include <libethcore/Common.h>
-#include <libethcore/Params.h>
+#include <libevmcore/Params.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -61,19 +63,12 @@ static bytes ecrecoverCode(bytesConstRef _in)
 
 static bytes sha256Code(bytesConstRef _in)
 {
-	bytes ret(32);
-	sha256(_in, &ret);
-	return ret;
+	return sha256(_in).asBytes();
 }
 
 static bytes ripemd160Code(bytesConstRef _in)
 {
-	bytes ret(32);
-	ripemd160(_in, &ret);
-	// leaves the 20-byte hash left-aligned. we want it right-aligned:
-	memmove(ret.data() + 12, ret.data(), 20);
-	memset(ret.data(), 0, 12);
-	return ret;
+	return h256(ripemd160(_in), h256::AlignRight).asBytes();
 }
 
 static bytes identityCode(bytesConstRef _in)
@@ -81,7 +76,7 @@ static bytes identityCode(bytesConstRef _in)
 	return _in.toBytes();
 }
 
-static const std::map<unsigned, PrecompiledAddress> c_precompiled =
+static const std::unordered_map<unsigned, PrecompiledAddress> c_precompiled =
 {
 	{ 1, { [](bytesConstRef) -> bigint { return c_ecrecoverGas; }, ecrecoverCode }},
 	{ 2, { [](bytesConstRef i) -> bigint { return c_sha256Gas + (i.size() + 31) / 32 * c_sha256WordGas; }, sha256Code }},
@@ -89,7 +84,7 @@ static const std::map<unsigned, PrecompiledAddress> c_precompiled =
 	{ 4, { [](bytesConstRef i) -> bigint { return c_identityGas + (i.size() + 31) / 32 * c_identityWordGas; }, identityCode }}
 };
 
-std::map<unsigned, PrecompiledAddress> const& dev::eth::precompiled()
+std::unordered_map<unsigned, PrecompiledAddress> const& dev::eth::precompiled()
 {
 	return c_precompiled;
 }

@@ -25,10 +25,11 @@
 #include <QStringList>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QMimeDatabase>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcrypto/CryptoPP.h>
-#include <libdevcrypto/SHA3.h>
+#include <libdevcore/SHA3.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
@@ -38,13 +39,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::crypto;
 
-Address c_registrar = Address("0000000000000000000000000000000000000a28");
-Address c_urlHint = Address("0000000000000000000000000000000000000a29");
-
 QString contentsOfQResource(std::string const& res);
 
-DappLoader::DappLoader(QObject* _parent, WebThreeDirect* _web3):
-	QObject(_parent), m_web3(_web3)
+DappLoader::DappLoader(QObject* _parent, WebThreeDirect* _web3, Address _nameReg):
+	QObject(_parent), m_web3(_web3), m_nameReg(_nameReg)
 {
 	connect(&m_net, &QNetworkAccessManager::finished, this, &DappLoader::downloadComplete);
 }
@@ -60,31 +58,39 @@ DappLocation DappLoader::resolveAppUri(QString const& _uri)
 	std::reverse(parts.begin(), parts.end());
 	parts.append(url.path().split('/', QString::SkipEmptyParts));
 
-	Address address = c_registrar;
+	Address address = m_nameReg;
 	Address lastAddress;
 	int partIndex = 0;
 
 	h256 contentHash;
-
 	while (address && partIndex < parts.length())
 	{
 		lastAddress = address;
 		string32 name = ZeroString32;
 		QByteArray utf8 = parts[partIndex].toUtf8();
 		std::copy(utf8.data(), utf8.data() + utf8.size(), name.data());
-		address = abiOut<Address>(web3()->ethereum()->call(address, abiIn("addr(string32)", name)).output);
+		if (address != m_nameReg)
+			address = abiOut<Address>(web3()->ethereum()->call(address, abiIn("subRegistrar(bytes32)", name)).output);
+		else
+			address = abiOut<Address>(web3()->ethereum()->call(address, abiIn("register(bytes32)", name)).output);
+
 		domainParts.append(parts[partIndex]);
 		if (!address)
 		{
 			//we have the address of the last part, try to get content hash
-			contentHash = abiOut<h256>(web3()->ethereum()->call(lastAddress, abiIn("content(string32)", name)).output);
+			contentHash = abiOut<h256>(web3()->ethereum()->call(lastAddress, abiIn("content(bytes32)", name)).output);
 			if (!contentHash)
 				throw dev::Exception() << errinfo_comment("Can't resolve address");
 		}
 		++partIndex;
 	}
 
-	string32 contentUrl = abiOut<string32>(web3()->ethereum()->call(c_urlHint, abiIn("url(hash256)", contentHash)).output);
+	string32 urlHintName = ZeroString32;
+	QByteArray utf8 = QString("urlhint").toUtf8();
+	std::copy(utf8.data(), utf8.data() + utf8.size(), urlHintName.data());
+
+	Address urlHint = abiOut<Address>(web3()->ethereum()->call(m_nameReg, abiIn("addr(bytes32)", urlHintName)).output);
+	string32 contentUrl = abiOut<string32>(web3()->ethereum()->call(urlHint, abiIn("url(bytes32)", contentHash)).output);
 	QString domain = domainParts.join('/');
 	parts.erase(parts.begin(), parts.begin() + partIndex);
 	QString path = parts.join('/');
@@ -96,13 +102,31 @@ DappLocation DappLoader::resolveAppUri(QString const& _uri)
 
 void DappLoader::downloadComplete(QNetworkReply* _reply)
 {
+	QUrl requestUrl = _reply->request().url();
+	if (m_pageUrls.count(requestUrl) != 0)
+	{
+		//inject web3 js
+		QByteArray content = "<script>\n";
+		content.append(web3Content());
+		content.append("</script>\n");
+		content.append(_reply->readAll());
+		QString contentType = _reply->header(QNetworkRequest::ContentTypeHeader).toString();
+		if (contentType.isEmpty())
+		{
+			QMimeDatabase db;
+			contentType = db.mimeTypeForUrl(requestUrl).name();
+		}
+		pageReady(content, contentType, requestUrl);
+		return;
+	}
+
 	try
 	{
 		//try to interpret as rlp
 		QByteArray data = _reply->readAll();
 		_reply->deleteLater();
 
-		h256 expected = m_uriHashes[_reply->request().url()];
+		h256 expected = m_uriHashes[requestUrl];
 		bytes package(reinterpret_cast<unsigned char const*>(data.constData()), reinterpret_cast<unsigned char const*>(data.constData() + data.size()));
 		Secp256k1 dec;
 		dec.decrypt(expected, package);
@@ -144,15 +168,7 @@ void DappLoader::loadDapp(RLP const& _rlp)
 			if (entry->path == "/deployment.js")
 			{
 				//inject web3 code
-				QString code;
-				code += contentsOfQResource(":/js/bignumber.min.js");
-				code += "\n";
-				code += contentsOfQResource(":/js/webthree.js");
-				code += "\n";
-				code += contentsOfQResource(":/js/setup.js");
-				code += "\n";
-				QByteArray res = code.toLatin1();
-				bytes b(res.data(), res.data() + res.size());
+				bytes b(web3Content().data(), web3Content().data() + web3Content().size());
 				b.insert(b.end(), content.begin(), content.end());
 				dapp.content[hash] = b;
 			}
@@ -163,6 +179,22 @@ void DappLoader::loadDapp(RLP const& _rlp)
 			throw dev::Exception() << errinfo_comment("Dapp content hash does not match");
 	}
 	emit dappReady(dapp);
+}
+
+QByteArray const& DappLoader::web3Content()
+{
+	if (m_web3Js.isEmpty())
+	{
+		QString code;
+		code += contentsOfQResource(":/js/bignumber.min.js");
+		code += "\n";
+		code += contentsOfQResource(":/js/webthree.js");
+		code += "\n";
+		code += contentsOfQResource(":/js/setup.js");
+		code += "\n";
+		m_web3Js = code.toLatin1();
+	}
+	return m_web3Js;
 }
 
 Manifest DappLoader::loadManifest(std::string const& _manifest)
@@ -193,10 +225,35 @@ Manifest DappLoader::loadManifest(std::string const& _manifest)
 
 void DappLoader::loadDapp(QString const& _uri)
 {
-	DappLocation location = resolveAppUri(_uri);
-	QUrl uri(location.contentUri);
+	QUrl uri(_uri);
+	QUrl contentUri;
+	h256 hash;
+	if (uri.path().endsWith(".dapp") && uri.query().startsWith("hash="))
+	{
+		contentUri = uri;
+		QString query = uri.query();
+		query.remove("hash=");
+		if (!query.startsWith("0x"))
+			query.insert(0, "0x");
+		hash = jsToFixed<32>(query.toStdString());
+	}
+	else
+	{
+		DappLocation location = resolveAppUri(_uri);
+		contentUri = location.contentUri;
+		hash = location.contentHash;
+		uri = contentUri;
+	}
+	QNetworkRequest request(contentUri);
+	m_uriHashes[uri] = hash;
+	m_net.get(request);
+}
+
+void DappLoader::loadPage(QString const& _uri)
+{
+	QUrl uri(_uri);
 	QNetworkRequest request(uri);
-	m_uriHashes[uri] = location.contentHash;
+	m_pageUrls.insert(uri);
 	m_net.get(request);
 }
 

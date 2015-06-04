@@ -25,6 +25,7 @@
 #include <libdevcrypto/Common.h>
 #include <libethcore/Exceptions.h>
 #include <libevm/VMFace.h>
+#include "Interface.h"
 #include "Transaction.h"
 using namespace std;
 using namespace dev;
@@ -36,6 +37,27 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, ExecutionResult const& _e
 {
 	_out << "{" << _er.gasUsed << ", " << _er.newAddress << ", " << toHex(_er.output) << "}";
 	return _out;
+}
+
+std::string badTransaction(bytesConstRef _tx, string const& _err)
+{
+	stringstream ret;
+	ret << "========================================================================" << endl;
+	ret << "==  Software Failure    " << (_err + string(max<int>(0, 44 - _err.size()), ' ')) << "  ==" << endl;
+	ret << "==                      Guru Meditation " << sha3(_tx).abridged() << "                     ==" << endl;
+	ret << "========================================================================" << endl;
+	ret << "  Transaction: " << toHex(_tx) << endl;
+	ret << "  Transaction RLP: ";
+	try {
+		ret << RLP(_tx);
+	}
+	catch (Exception& _e)
+	{
+		ret << "Invalid: " << _e.what();
+	}
+	ret << endl;
+
+	return ret.str();
 }
 
 TransactionException dev::eth::toTransactionException(VMException const& _e)
@@ -53,7 +75,7 @@ TransactionException dev::eth::toTransactionException(VMException const& _e)
 	return TransactionException::Unknown;
 }
 
-Transaction::Transaction(bytesConstRef _rlpData, CheckSignature _checkSig)
+Transaction::Transaction(bytesConstRef _rlpData, CheckTransaction _checkSig)
 {
 	int field = 0;
 	RLP rlp(_rlpData);
@@ -68,6 +90,10 @@ Transaction::Transaction(bytesConstRef _rlpData, CheckSignature _checkSig)
 		m_type = rlp[field = 3].isEmpty() ? ContractCreation : MessageCall;
 		m_receiveAddress = rlp[field = 3].isEmpty() ? Address() : rlp[field = 3].toHash<Address>(RLP::VeryStrict);
 		m_value = rlp[field = 4].toInt<u256>();
+
+		if (!rlp[field = 5].isData())
+			BOOST_THROW_EXCEPTION(BadRLP() << errinfo_comment("transaction data RLP must be an array"));
+
 		m_data = rlp[field = 5].toBytes();
 		byte v = rlp[field = 6].toInt<byte>() - 27;
 		h256 r = rlp[field = 7].toInt<u256>();
@@ -77,19 +103,21 @@ Transaction::Transaction(bytesConstRef _rlpData, CheckSignature _checkSig)
 			BOOST_THROW_EXCEPTION(BadRLP() << errinfo_comment("to many fields in the transaction RLP"));
 
 		m_vrs = SignatureStruct{ r, s, v };
-		if (_checkSig >= CheckSignature::Range && !m_vrs.isValid())
+		if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
 			BOOST_THROW_EXCEPTION(InvalidSignature());
-		if (_checkSig == CheckSignature::Sender)
+		if (_checkSig == CheckTransaction::Everything)
 			m_sender = sender();
 	}
 	catch (Exception& _e)
 	{
-		_e << errinfo_name("invalid transaction format") << BadFieldError(field,toHex(rlp[field].data().toBytes()));
+		_e << errinfo_name("invalid transaction format") << BadFieldError(field, toHex(rlp[field].data().toBytes()));
 		throw;
 	}
+	if (_checkSig >= CheckTransaction::Cheap && !checkPayment())
+		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(gasRequired(), (bigint)gas()));
 }
 
-Address Transaction::safeSender() const noexcept
+Address const& Transaction::safeSender() const noexcept
 {
 	try
 	{
@@ -98,11 +126,11 @@ Address Transaction::safeSender() const noexcept
 	catch (...)
 	{
 		cwarn << "safeSender() did throw an exception: " <<  boost::current_exception_diagnostic_information();
-		return Address();
+		return ZeroAddress;
 	}
 }
 
-Address Transaction::sender() const
+Address const& Transaction::sender() const
 {
 	if (!m_sender)
 	{
@@ -112,6 +140,13 @@ Address Transaction::sender() const
 		m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
 	}
 	return m_sender;
+}
+
+bigint Transaction::gasRequired() const
+{
+	if (!m_gasRequired)
+		m_gasRequired = Transaction::gasRequired(m_data);
+	return m_gasRequired;
 }
 
 void Transaction::sign(Secret _priv)

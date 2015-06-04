@@ -2,6 +2,7 @@ import QtQuick 2.2
 import QtQuick.Controls 1.1
 import QtQuick.Layouts 1.1
 import QtQuick.Controls.Styles 1.3
+import org.ethereum.qml.InverseMouseArea 1.0
 import "js/ErrorLocationFormater.js" as ErrorLocationFormater
 import "."
 
@@ -9,7 +10,7 @@ Rectangle {
 	id: statusHeader
 	objectName: "statusPane"
 	property variant webPreview
-
+	property alias currentStatus: logPane.currentStatus
 	function updateStatus(message)
 	{
 		if (!message)
@@ -17,6 +18,7 @@ Rectangle {
 			status.state = "";
 			status.text = qsTr("Compile successfully.");
 			debugImg.state = "active";
+			currentStatus = { "type": "Comp", "date": Qt.formatDateTime(new Date(), "hh:mm:ss"), "content": status.text, "level": "info" }
 		}
 		else
 		{
@@ -24,9 +26,8 @@ Rectangle {
 			var errorInfo = ErrorLocationFormater.extractErrorInfo(message, true);
 			status.text = errorInfo.errorLocation + " " + errorInfo.errorDetail;
 			debugImg.state = "";
-			errorMessage(status.text, "Compilation");
+			currentStatus = { "type": "Comp", "date": Qt.formatDateTime(new Date(), "hh:mm:ss"), "content": status.text, "level": "error" }
 		}
-		debugRunActionIcon.enabled = codeModel.hasContract;
 	}
 
 	function infoMessage(text, type)
@@ -34,6 +35,7 @@ Rectangle {
 		status.state = "";
 		status.text = text
 		logPane.push("info", type, text);
+		currentStatus = { "type": type, "date": Qt.formatDateTime(new Date(), "hh:mm:ss"), "content": text, "level": "info" }
 	}
 
 	function warningMessage(text, type)
@@ -41,13 +43,25 @@ Rectangle {
 		status.state = "warning";
 		status.text = text
 		logPane.push("warning", type, text);
+		currentStatus = { "type": type, "date": Qt.formatDateTime(new Date(), "hh:mm:ss"), "content": text, "level": "warning" }
 	}
 
 	function errorMessage(text, type)
 	{
 		status.state = "error";
-		status.text = text
+		status.text = text;
 		logPane.push("error", type, text);
+		currentStatus = { "type": type, "date": Qt.formatDateTime(new Date(), "hh:mm:ss"), "content": text, "level": "error" }
+	}
+
+	function clear()
+	{
+		status.state = "";
+		status.text = "";
+	}
+
+	StatusPaneStyle {
+		id: statusPaneStyle
 	}
 
 	Connections {
@@ -69,7 +83,11 @@ Rectangle {
 
 	Connections {
 		target:clientModel
-		onRunStarted: infoMessage(qsTr("Running transactions..."), "Run");
+		onRunStarted:
+		{
+			logPane.clear()
+			infoMessage(qsTr("Running transactions..."), "Run");
+		}
 		onRunFailed: errorMessage(format(_message), "Run");
 		onRunComplete: infoMessage(qsTr("Run complete"), "Run");
 		onNewBlock: infoMessage(qsTr("New block created"), "State");
@@ -77,9 +95,9 @@ Rectangle {
 		function format(_message)
 		{
 			var formatted = _message.match(/(?:<dev::eth::)(.+)(?:>)/);
-			if (formatted === null)
+			if (!formatted)
 				formatted = _message.match(/(?:<dev::)(.+)(?:>)/);
-			if (formatted.length > 1)
+			if (formatted && formatted.length > 1)
 				formatted = formatted[1];
 			else
 				return _message;
@@ -91,6 +109,7 @@ Rectangle {
 			return formatted;
 		}
 	}
+
 	Connections {
 		target:projectModel
 		onDeploymentStarted: infoMessage(qsTr("Running deployment..."), "Deployment");
@@ -100,8 +119,17 @@ Rectangle {
 	}
 	Connections {
 		target: codeModel
-		onCompilationComplete: updateStatus();
-		onCompilationError: updateStatus(_error);
+		onCompilationComplete:
+		{
+			goToLine.visible = false;
+			updateStatus();
+		}
+
+		onCompilationError:
+		{
+			goToLine.visible = true
+			updateStatus(_error);
+		}
 	}
 
 	color: "transparent"
@@ -112,33 +140,13 @@ Rectangle {
 		anchors.horizontalCenter: parent.horizontalCenter
 		anchors.verticalCenter: parent.verticalCenter
 		radius: 3
-		width: 500
+		width: 600
 		height: 30
 		color: "#fcfbfc"
-		states: [
-			State {
-				name: "logsOpened"
-				PropertyChanges {
-					target: statusContainer
-					border.color: "#5391d8"
-					border.width: 1
-				}
-			},
-			State {
-				name: "logsClosed"
-				PropertyChanges {
-					target: statusContainer
-					border.color: "#5391d8"
-					border.width: 0
-				}
-			}
-		]
-
 		Text {
 			anchors.verticalCenter: parent.verticalCenter
 			anchors.horizontalCenter: parent.horizontalCenter
-			font.pointSize: StatusPaneStyle.general.statusFontSize
-			height: 15
+			font.pointSize: appStyle.absoluteSize(-1)
 			font.family: "sans serif"
 			objectName: "status"
 			wrapMode: Text.WrapAnywhere
@@ -191,6 +199,7 @@ Rectangle {
 			id: toolTip
 			action: toolTipInfo
 			text: ""
+			z: 3;
 			style:
 				ButtonStyle {
 				background:Rectangle {
@@ -200,7 +209,59 @@ Rectangle {
 			MouseArea {
 				anchors.fill: parent
 				onClicked: {
-					logsContainer.toggle();
+					var globalCoord = goToLineBtn.mapToItem(statusContainer, 0, 0);
+					if (mouseX > globalCoord.x
+							&& mouseX < globalCoord.x + goToLineBtn.width
+							&& mouseY > globalCoord.y
+							&& mouseY < globalCoord.y + goToLineBtn.height)
+						goToCompilationError.trigger(goToLineBtn);
+					else
+						logsContainer.toggle();
+				}
+			}
+		}
+
+		Rectangle
+		{
+			visible: false
+			color: "transparent"
+			width: 40
+			height: parent.height
+			anchors.top: parent.top
+			anchors.left: status.right
+			anchors.leftMargin: 15
+			id: goToLine
+			RowLayout
+			{
+				anchors.fill: parent
+				Rectangle
+				{
+					color: "transparent"
+					anchors.fill: parent
+					Button
+					{
+						z: 4
+						anchors.centerIn: parent
+						id: goToLineBtn
+						text: ""
+						width: 30
+						height: 30
+						action: goToCompilationError
+						style: ButtonStyle {
+							background: Rectangle {
+								color: "transparent"
+
+								Image {
+									source: "qrc:/qml/img/warningicon.png"
+									height: 30
+									width: 30
+									sourceSize.width: 30
+									sourceSize.height: 30
+									anchors.centerIn: parent
+								}
+							}
+						}
+					}
 				}
 			}
 		}
@@ -212,58 +273,124 @@ Rectangle {
 
 		Rectangle
 		{
+			id: logsShadow
+			width: logsContainer.width + 5
+			height: 0
+			opacity: 0.3
+			clip: true
+			anchors.top: logsContainer.top
+			anchors.margins: 4
+			Rectangle {
+				color: "gray"
+				anchors.top: parent.top
+				radius: 10
+				id: roundRect
+				height: 400
+				width: parent.width
+			}
+		}
+
+
+
+		Rectangle
+		{
+			InverseMouseArea
+			{
+				id: outsideClick
+				anchors.fill: parent
+				active: false
+				onClickedOutside: {
+					logsContainer.toggle();
+				}
+			}
+
 			function toggle()
 			{
 				if (logsContainer.state === "opened")
 				{
-					statusContainer.state = "logsClosed";
+					statusContainer.visible = true
 					logsContainer.state = "closed"
 				}
 				else
 				{
-					statusContainer.state = "logsOpened";
+					statusContainer.visible = false
 					logsContainer.state = "opened";
 					logsContainer.focus = true;
 					forceActiveFocus();
+					calCoord()
+					move()
 				}
 			}
 
 			id: logsContainer
-			width: 1000
-			height: 0
-			anchors.topMargin: 10
+			width: 750
 			anchors.top: statusContainer.bottom
-			anchors.horizontalCenter: parent.horizontalCenter
+			anchors.topMargin: 4
 			visible: false
-			radius: 5
-			Component.onCompleted:
+			radius: 10
+
+			function calCoord()
 			{
+				if (!logsContainer.parent.parent)
+					return
 				var top = logsContainer;
 				while (top.parent)
 					top = top.parent
-				var coordinates = logsContainer.mapToItem(top, 0, 0)
+				var coordinates = logsContainer.mapToItem(top, 0, 0);
 				logsContainer.parent = top;
-				logsContainer.x = coordinates.x
-				logsContainer.y = coordinates.y
+				logsShadow.parent = top;
+				top.onWidthChanged.connect(move)
+				top.onHeightChanged.connect(move)
 			}
+
+			function move()
+			{
+				var statusGlobalCoord = status.mapToItem(null, 0, 0);
+				logsContainer.x = statusGlobalCoord.x - logPane.contentXPos
+				logsShadow.x = statusGlobalCoord.x - logPane.contentXPos
+				logsShadow.z = 1
+				logsContainer.z = 2
+				if (Qt.platform.os === "osx")
+				{
+					logsContainer.y = statusGlobalCoord.y;
+					logsShadow.y = statusGlobalCoord.y;
+				}
+			}
+
+			LogsPaneStyle {
+				id: logStyle
+			}
+
 			LogsPane
 			{
-				id: logPane
+				id: logPane;
+				statusPane: statusHeader
+				onContentXPosChanged:
+				{
+					parent.move();
+				}
 			}
+
 			states: [
 				State {
 					name: "opened";
 					PropertyChanges { target: logsContainer; height: 500; visible: true }
+					PropertyChanges { target: logsShadow; height: 500; visible: true }
+					PropertyChanges { target: outsideClick; active: true }
+
 				},
 				State {
 					name: "closed";
 					PropertyChanges { target: logsContainer; height: 0; visible: false }
+					PropertyChanges { target: statusContainer; width: 600; height: 30 }
+					PropertyChanges { target: outsideClick; active: false }
+					PropertyChanges { target: logsShadow; height: 0; visible: false }
 				}
 			]
 			transitions: Transition {
 					 NumberAnimation { properties: "height"; easing.type: Easing.InOutQuad; duration: 200 }
-					 NumberAnimation { properties: "visible"; easing.type: Easing.InOutQuad; duration: 200 }
-				 }
+					 NumberAnimation { target: logsContainer;  properties: "visible"; easing.type: Easing.InOutQuad; duration: 200 }
+			}
 		}
 	}
 
@@ -287,24 +414,9 @@ Rectangle {
 					anchors.rightMargin: 9
 					anchors.verticalCenter: parent.verticalCenter
 					id: debugImg
-					iconSource: "qrc:/qml/img/bugiconinactive.png"
-					action: debugRunActionIcon
-					states: [
-						State{
-							name: "active"
-							PropertyChanges { target: debugImg; iconSource: "qrc:/qml/img/bugiconactive.png"}
-						}
-					]
-				}
-				Action {
-					id: debugRunActionIcon
-					onTriggered: {
-						if (mainContent.rightViewIsVisible())
-							mainContent.hideRightView()
-						else
-							mainContent.startQuickDebugging();
-					}
-					enabled: false
+					text: ""
+					iconSource: "qrc:/qml/img/bugiconactive.png"
+					action: showHideRightPanelAction
 				}
 			}
 		}

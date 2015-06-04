@@ -20,9 +20,16 @@
  */
 
 #include "CommonIO.h"
-
+#include <iostream>
+#include <cstdlib>
 #include <fstream>
 #include "Exceptions.h"
+#include <stdio.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <termios.h>
+#endif
 using namespace std;
 using namespace dev;
 
@@ -58,7 +65,7 @@ string dev::memDump(bytes const& _bytes, unsigned _width, bool _html)
 }
 
 // Don't forget to delete[] later.
-bytesRef dev::contentsNew(std::string const& _file)
+bytesRef dev::contentsNew(std::string const& _file, bytesRef _dest)
 {
 	std::ifstream is(_file, std::ifstream::binary);
 	if (!is)
@@ -68,8 +75,10 @@ bytesRef dev::contentsNew(std::string const& _file)
 	streamoff length = is.tellg();
 	if (length == 0) // return early, MSVC does not like reading 0 bytes
 		return bytesRef();
+	if (!_dest.empty() && _dest.size() != (unsigned)length)
+		return bytesRef();
 	is.seekg (0, is.beg);
-	bytesRef ret(new byte[length], length);
+	bytesRef ret = _dest.empty() ? bytesRef(new byte[length], length) : _dest;
 	is.read((char*)ret.data(), length);
 	is.close();
 	return ret;
@@ -112,6 +121,54 @@ string dev::contentsString(std::string const& _file)
 
 void dev::writeFile(std::string const& _file, bytesConstRef _data)
 {
-	ofstream(_file, ios::trunc).write((char const*)_data.data(), _data.size());
+	ofstream(_file, ios::trunc|ios::binary).write((char const*)_data.data(), _data.size());
 }
 
+std::string dev::getPassword(std::string const& _prompt)
+{
+#if WIN32
+	cout << _prompt << flush;
+	// Get current Console input flags
+	HANDLE hStdin;
+	DWORD fdwSaveOldMode;
+	if ((hStdin = GetStdHandle(STD_INPUT_HANDLE)) == INVALID_HANDLE_VALUE)
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("GetStdHandle"));
+	if (!GetConsoleMode(hStdin, &fdwSaveOldMode))
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("GetConsoleMode"));
+	// Set console flags to no echo
+	if (!SetConsoleMode(hStdin, fdwSaveOldMode & (~ENABLE_ECHO_INPUT)))
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
+	// Read the string
+	std::string ret;
+	std::getline(cin, ret);
+	// Restore old input mode
+	if (!SetConsoleMode(hStdin, fdwSaveOldMode))
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("SetConsoleMode"));
+	return ret;
+#else
+	struct termios oflags;
+	struct termios nflags;
+	char password[256];
+
+	// disable echo in the terminal
+	tcgetattr(fileno(stdin), &oflags);
+	nflags = oflags;
+	nflags.c_lflag &= ~ECHO;
+	nflags.c_lflag |= ECHONL;
+
+	if (tcsetattr(fileno(stdin), TCSANOW, &nflags) != 0)
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
+
+	printf("%s", _prompt.c_str());
+	if (!fgets(password, sizeof(password), stdin))
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("fgets"));
+	password[strlen(password) - 1] = 0;
+
+	// restore terminal
+	if (tcsetattr(fileno(stdin), TCSANOW, &oflags) != 0)
+		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("tcsetattr"));
+
+
+	return password;
+#endif
+}

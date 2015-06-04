@@ -30,7 +30,7 @@ using namespace CryptoPP;
 
 void RLPXHandshake::writeAuth()
 {
-	clog(NetConnect) << "p2p.connect.egress sending auth to " << m_socket->remoteEndpoint();
+	clog(NetP2PConnect) << "p2p.connect.egress sending auth to " << m_socket->remoteEndpoint();
 	m_auth.resize(Signature::size + h256::size + Public::size + h256::size + 1);
 	bytesRef sig(&m_auth[0], Signature::size);
 	bytesRef hepubk(&m_auth[Signature::size], h256::size);
@@ -56,7 +56,7 @@ void RLPXHandshake::writeAuth()
 
 void RLPXHandshake::writeAck()
 {
-	clog(NetConnect) << "p2p.connect.ingress sending ack to " << m_socket->remoteEndpoint();
+	clog(NetP2PConnect) << "p2p.connect.ingress sending ack to " << m_socket->remoteEndpoint();
 	m_ack.resize(Public::size + h256::size + 1);
 	bytesRef epubk(&m_ack[0], Public::size);
 	bytesRef nonce(&m_ack[Public::size], h256::size);
@@ -74,7 +74,7 @@ void RLPXHandshake::writeAck()
 
 void RLPXHandshake::readAuth()
 {
-	clog(NetConnect) << "p2p.connect.ingress recving auth from " << m_socket->remoteEndpoint();
+	clog(NetP2PConnect) << "p2p.connect.ingress recving auth from " << m_socket->remoteEndpoint();
 	m_authCipher.resize(307);
 	auto self(shared_from_this());
 	ba::async_read(m_socket->ref(), ba::buffer(m_authCipher, 307), [this, self](boost::system::error_code ec, std::size_t)
@@ -93,12 +93,15 @@ void RLPXHandshake::readAuth()
 			Secret sharedSecret;
 			crypto::ecdh::agree(m_host->m_alias.sec(), m_remote, sharedSecret);
 			m_remoteEphemeral = recover(*(Signature*)sig.data(), sharedSecret ^ m_remoteNonce);
-			assert(sha3(m_remoteEphemeral) == *(h256*)hepubk.data());
+
+			if (sha3(m_remoteEphemeral) != *(h256*)hepubk.data())
+				clog(NetP2PConnect) << "p2p.connect.ingress auth failed (invalid: hash mismatch) for" << m_socket->remoteEndpoint();
+			
 			transition();
 		}
 		else
 		{
-			clog(NetConnect) << "p2p.connect.ingress recving auth decrypt failed for" << m_socket->remoteEndpoint();
+			clog(NetP2PConnect) << "p2p.connect.ingress recving auth decrypt failed for" << m_socket->remoteEndpoint();
 			m_nextState = Error;
 			transition();
 		}
@@ -107,7 +110,7 @@ void RLPXHandshake::readAuth()
 
 void RLPXHandshake::readAck()
 {
-	clog(NetConnect) << "p2p.connect.egress recving ack from " << m_socket->remoteEndpoint();
+	clog(NetP2PConnect) << "p2p.connect.egress recving ack from " << m_socket->remoteEndpoint();
 	m_ackCipher.resize(210);
 	auto self(shared_from_this());
 	ba::async_read(m_socket->ref(), ba::buffer(m_ackCipher, 210), [this, self](boost::system::error_code ec, std::size_t)
@@ -122,7 +125,7 @@ void RLPXHandshake::readAck()
 		}
 		else
 		{
-			clog(NetConnect) << "p2p.connect.egress recving ack decrypt failed for " << m_socket->remoteEndpoint();
+			clog(NetP2PConnect) << "p2p.connect.egress recving ack decrypt failed for " << m_socket->remoteEndpoint();
 			m_nextState = Error;
 			transition();
 		}
@@ -131,7 +134,14 @@ void RLPXHandshake::readAck()
 
 void RLPXHandshake::error()
 {
-	clog(NetConnect) << "Disconnecting " << m_socket->remoteEndpoint() << " (Handshake Failed)";
+	m_idleTimer.cancel();
+	
+	auto connected = m_socket->isConnected();
+	if (connected && !m_socket->remoteEndpoint().address().is_unspecified())
+		clog(NetP2PConnect) << "Disconnecting " << m_socket->remoteEndpoint() << " (Handshake Failed)";
+	else
+		clog(NetP2PConnect) << "Handshake Failed (Connection reset by peer)";
+
 	m_socket->close();
 	if (m_io != nullptr)
 		delete m_io;
@@ -139,8 +149,11 @@ void RLPXHandshake::error()
 
 void RLPXHandshake::transition(boost::system::error_code _ech)
 {
-	if (_ech || m_nextState == Error)
+	if (_ech || m_nextState == Error || m_cancel)
+	{
+		clog(NetP2PConnect) << "Handshake Failed (I/O Error:" << _ech.message() << ")";
 		return error();
+	}
 	
 	auto self(shared_from_this());
 	if (m_nextState == New)
@@ -162,7 +175,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 	else if (m_nextState == WriteHello)
 	{
 		m_nextState = ReadHello;
-		clog(NetConnect) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "sending capabilities handshake";
+		clog(NetP2PConnect) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "sending capabilities handshake";
 
 		/// This pointer will be freed if there is an error otherwise
 		/// it will be passed to Host which will take ownership.
@@ -172,7 +185,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 		// 5 arguments, HelloPacket
 		RLPStream s;
 		s.append((unsigned)0).appendList(5)
-		<< m_host->protocolVersion()
+		<< dev::p2p::c_protocolVersion
 		<< m_host->m_clientVersion
 		<< m_host->caps()
 		<< m_host->listenPort()
@@ -207,7 +220,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 					return;
 				}
 				
-				clog(NetNote) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "recvd hello header";
+				clog(NetP2PNote) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "recvd hello header";
 				
 				/// check frame size
 				bytes& header = m_handshakeInBuffer;
@@ -215,7 +228,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 				if (frameSize > 1024)
 				{
 					// all future frames: 16777216
-					clog(NetWarn) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame is too large" << frameSize;
+					clog(NetP2PWarn) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame is too large" << frameSize;
 					m_nextState = Error;
 					transition();
 					return;
@@ -236,7 +249,7 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 						bytesRef frame(&m_handshakeInBuffer);
 						if (!m_io->authAndDecryptFrame(frame))
 						{
-							clog(NetWarn) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: decrypt failed";
+							clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: decrypt failed";
 							m_nextState = Error;
 							transition();
 							return;
@@ -245,18 +258,29 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 						PacketType packetType = (PacketType)(frame[0] == 0x80 ? 0x0 : frame[0]);
 						if (packetType != 0)
 						{
-							clog(NetWarn) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: invalid packet type";
+							clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: invalid packet type";
 							m_nextState = Error;
 							transition();
 							return;
 						}
 
-						clog(NetNote) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: success. starting session.";
-						RLP rlp(frame.cropped(1));
+						clog(NetTriviaSummary) << (m_originated ? "p2p.connect.egress" : "p2p.connect.ingress") << "hello frame: success. starting session.";
+						RLP rlp(frame.cropped(1), RLP::ThrowOnFail | RLP::FailIfTooSmall);
 						m_host->startPeerSession(m_remote, rlp, m_io, m_socket->remoteEndpoint());
 					}
 				});
 			}
 		});
 	}
+	
+	m_idleTimer.expires_from_now(c_timeout);
+	m_idleTimer.async_wait([this, self](boost::system::error_code const& _ec)
+	{
+		if (!_ec)
+		{
+			if (!m_socket->remoteEndpoint().address().is_unspecified())
+				clog(NetP2PConnect) << "Disconnecting " << m_socket->remoteEndpoint() << " (Handshake Timeout)";
+			cancel();
+		}
+	});
 }

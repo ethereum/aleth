@@ -34,7 +34,6 @@
 #include <libdevcore/Guards.h>
 #include "BlockDetails.h"
 #include "Account.h"
-#include "BlockQueue.h"
 #include "BlockChain.h"
 namespace ldb = leveldb;
 
@@ -45,7 +44,7 @@ namespace eth
 {
 
 // TODO: Move all this Genesis stuff into Genesis.h/.cpp
-std::map<Address, Account> const& genesisState();
+std::unordered_map<Address, Account> const& genesisState();
 
 /**
  * @brief Implements the blockchain database. All data this gives is disk-backed.
@@ -55,8 +54,8 @@ std::map<Address, Account> const& genesisState();
 class CanonBlockChain: public BlockChain
 {
 public:
-		CanonBlockChain(bool _killExisting = false): CanonBlockChain(std::string(), _killExisting) {}
-		CanonBlockChain(std::string _path, bool _killExisting = false);
+		CanonBlockChain(WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback()): CanonBlockChain(std::string(), _we, _pc) {}
+		CanonBlockChain(std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
 		~CanonBlockChain() {}
 
 		/// @returns the genesis block header.

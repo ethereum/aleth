@@ -12,7 +12,12 @@ Item {
 	id: webPreview
 	property string pendingPageUrl: ""
 	property bool initialized: false
+	property alias urlInput: urlInput
+	property alias webView: webView
+	property string webContent; //for testing
 	signal javaScriptMessage(var _level, string _sourceId, var _lineNb, string _content)
+	signal webContentReady
+	signal ready
 
 	function setPreviewUrl(url) {
 		if (!initialized)
@@ -36,11 +41,14 @@ Item {
 		var contracts = {};
 		for (var c in codeModel.contracts) {
 			var contract = codeModel.contracts[c];
-			contracts[c] = {
-				name: contract.contract.name,
-				address: clientModel.contractAddresses[contract.contract.name],
-				interface: JSON.parse(contract.contractInterface),
-			};
+			var address = clientModel.contractAddresses[contract.contract.name];
+			if (address) {
+				contracts[c] = {
+					name: contract.contract.name,
+					address: address,
+					interface: JSON.parse(contract.contractInterface),
+				};
+			}
 		}
 		webView.runJavaScript("updateContracts(" + JSON.stringify(contracts) + ")");
 	}
@@ -56,8 +64,19 @@ Item {
 				action(i);
 	}
 
+	function getContent() {
+		webView.runJavaScript("getContent()", function(result) {
+			webContent = result;
+			webContentReady();
+		});
+	}
+
 	function changePage() {
 		setPreviewUrl(urlInput.text);
+	}
+
+	WebPreviewStyle {
+		id: webPreviewStyle
 	}
 
 	Connections {
@@ -135,7 +154,6 @@ Item {
 		id: httpServer
 		listen: true
 		accept: true
-		port: 8893
 		onClientConnected: {
 			var urlPath = _request.url.toString();
 			if (urlPath.indexOf("/rpc/") === 0)
@@ -155,20 +173,23 @@ Item {
 				//document request
 				if (urlPath === "/")
 					urlPath = "/index.html";
-				var documentId = urlPath.substr(urlPath.lastIndexOf("/") + 1);
+				var documentName = urlPath.substr(urlPath.lastIndexOf("/") + 1);
+				var documentId = projectModel.getDocumentIdByName(documentName);
 				var content = "";
 				if (projectModel.codeEditor.isDocumentOpen(documentId))
 					content = projectModel.codeEditor.getDocumentText(documentId);
 				else
 				{
 					var doc = projectModel.getDocument(documentId);
-					if (doc !== undefined)
+					if (doc)
 						content = fileIo.readFile(doc.path);
 				}
 
-				if (documentId === urlInput.text.replace(httpServer.url + "/", "")) {
-					//root page, inject deployment script
-					content = "<script>web3=parent.web3;contracts=parent.contracts;</script>\n" + content;
+				var accept = _request.headers["accept"];
+				if (accept && accept.indexOf("text/html") >= 0 && !_request.headers["http_x_requested_with"])
+				{
+					//navigate to page request, inject deployment script
+					content = "<script>web3=parent.web3;BigNumber=parent.BigNumber;contracts=parent.contracts;</script>\n" + content;
 					_request.setResponseContentType("text/html");
 				}
 				_request.setResponse(content);
@@ -182,7 +203,7 @@ Item {
 		Rectangle
 		{
 			anchors.leftMargin: 4
-			color: WebPreviewStyle.general.headerBackgroundColor
+			color: webPreviewStyle.general.headerBackgroundColor
 			Layout.preferredWidth: parent.width
 			Layout.preferredHeight: 32
 			Row {
@@ -229,7 +250,7 @@ Item {
 				{
 					width: 1
 					height: parent.height - 10
-					color: WebPreviewStyle.general.separatorColor
+					color: webPreviewStyle.general.separatorColor
 					anchors.verticalCenter: parent.verticalCenter
 				}
 
@@ -250,7 +271,7 @@ Item {
 				{
 					width: 1
 					height: parent.height - 10
-					color: WebPreviewStyle.general.separatorColor
+					color: webPreviewStyle.general.separatorColor
 					anchors.verticalCenter: parent.verticalCenter
 				}
 
@@ -284,7 +305,7 @@ Item {
 		{
 			Layout.preferredHeight: 1
 			Layout.preferredWidth: parent.width
-			color: WebPreviewStyle.general.separatorColor
+			color: webPreviewStyle.general.separatorColor
 		}
 
 		Splitter
@@ -298,7 +319,8 @@ Item {
 				id: webView
 				experimental.settings.localContentCanAccessRemoteUrls: true
 				onJavaScriptConsoleMessage: {
-					webPreview.javaScriptMessage(level, sourceID, lineNumber, message);
+					console.log(sourceID + ":" + lineNumber + ": " + message);
+					webPreview.javaScriptMessage(level, sourceID, lineNumber - 1, message);
 				}
 				onLoadingChanged: {
 					if (!loading) {
@@ -306,6 +328,7 @@ Item {
 						webView.runJavaScript("init(\"" + httpServer.url + "/rpc/\")");
 						if (pendingPageUrl)
 							setPreviewUrl(pendingPageUrl);
+						ready();
 					}
 				}
 			}
@@ -338,7 +361,7 @@ Item {
 						height: 22
 						width: 22
 						action: clearAction
-						iconSource: "qrc:/qml/img/broom.png"
+						iconSource: "qrc:/qml/img/cleariconactive.png"
 					}
 
 					Action {
@@ -354,11 +377,11 @@ Item {
 						id: expressionInput
 						width: parent.width - 15
 						height: 20
-						font.family: WebPreviewStyle.general.fontName
+						font.family: webPreviewStyle.general.fontName
 						font.italic: true
-						font.pointSize: Style.absoluteSize(-3)
+						font.pointSize: appStyle.absoluteSize(-3)
 						anchors.verticalCenter: parent.verticalCenter
-
+						property bool active: false
 						property var history: []
 						property int index: -1
 
@@ -375,12 +398,20 @@ Item {
 							expressionInput.text = history[index];
 						}
 
+						onTextChanged: {
+							active = text !== "";
+							if (!active)
+								index = -1;
+						}
+
 						Keys.onDownPressed: {
-							displayCache(1);
+							if (active)
+								displayCache(-1);
 						}
 
 						Keys.onUpPressed: {
-							displayCache(-1);
+							displayCache(1);
+							active = true;
 						}
 
 						Keys.onEnterPressed:
@@ -416,8 +447,9 @@ Item {
 					id: resultTextArea
 					width: expressionPanel.width
 					wrapMode: Text.Wrap
-					font.family: WebPreviewStyle.general.fontName
-					font.pointSize: Style.absoluteSize(-3)
+					textFormat: Text.RichText
+					font.family: webPreviewStyle.general.fontName
+					font.pointSize: appStyle.absoluteSize(-3)
 					backgroundVisible: true
 					style: TextAreaStyle {
 						backgroundColor: "#f0f0f0"

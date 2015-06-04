@@ -36,10 +36,10 @@
 namespace dev
 {
 class WebThreeNetworkFace;
-class AccountHolder;
 class KeyPair;
 namespace eth
 {
+class AccountHolder;
 struct TransactionSkeleton;
 class Interface;
 }
@@ -47,6 +47,9 @@ namespace shh
 {
 class Interface;
 }
+
+extern const unsigned SensibleHttpThreads;
+extern const unsigned SensibleHttpPort;
 
 class WebThreeStubDatabaseFace
 {
@@ -65,7 +68,7 @@ public:
 class WebThreeStubServerBase: public AbstractWebThreeStubServer
 {
 public:
-	WebThreeStubServerBase(jsonrpc::AbstractServerConnector& _conn, std::vector<dev::KeyPair> const& _accounts);
+	WebThreeStubServerBase(jsonrpc::AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _sshAccounts);
 
 	virtual std::string web3_sha3(std::string const& _param1);
 	virtual std::string web3_clientVersion() { return "C++ (ethereum-cpp)"; }
@@ -74,6 +77,8 @@ public:
 	virtual std::string net_peerCount();
 	virtual bool net_listening();
 
+	virtual std::string eth_protocolVersion();
+	virtual std::string eth_hashrate();
 	virtual std::string eth_coinbase();
 	virtual bool eth_mining();
 	virtual std::string eth_gasPrice();
@@ -108,11 +113,14 @@ public:
 	virtual Json::Value eth_getFilterLogs(std::string const& _filterId);
 	virtual Json::Value eth_getLogs(Json::Value const& _json);
 	virtual Json::Value eth_getWork();
-	virtual bool eth_submitWork(std::string const& _nonce, std::string const& _mixHash);
+	virtual bool eth_submitWork(std::string const& _nonce, std::string const&, std::string const& _mixHash);
 	virtual std::string eth_register(std::string const& _address);
 	virtual bool eth_unregister(std::string const& _accountId);
 	virtual Json::Value eth_fetchQueuedTransactions(std::string const& _accountId);
-	
+	virtual std::string eth_signTransaction(Json::Value const& _transaction);
+	virtual Json::Value eth_inspectTransaction(std::string const& _rlp);
+	virtual bool eth_injectTransaction(std::string const& _rlp);
+
 	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value);
 	virtual std::string db_get(std::string const& _name, std::string const& _key);
 
@@ -126,12 +134,8 @@ public:
 	virtual Json::Value shh_getFilterChanges(std::string const& _filterId);
 	virtual Json::Value shh_getMessages(std::string const& _filterId);
 	
-	void setAccounts(std::vector<dev::KeyPair> const& _accounts);
 	void setIdentities(std::vector<dev::KeyPair> const& _ids);
-	std::map<dev::Public, dev::Secret> const& ids() const { return m_ids; }
-
-protected:
-	virtual void authenticate(dev::eth::TransactionSkeleton const& _t, bool _toProxy);
+	std::map<dev::Public, dev::Secret> const& ids() const { return m_shhIds; }
 
 protected:
 	virtual dev::eth::Interface* client() = 0;
@@ -139,9 +143,10 @@ protected:
 	virtual dev::WebThreeNetworkFace* network() = 0;
 	virtual dev::WebThreeStubDatabaseFace* db() = 0;
 
-	std::map<dev::Public, dev::Secret> m_ids;
+	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;
+
+	std::map<dev::Public, dev::Secret> m_shhIds;
 	std::map<unsigned, dev::Public> m_shhWatches;
-	std::shared_ptr<dev::AccountHolder> m_accounts;
 };
 
 } //namespace dev

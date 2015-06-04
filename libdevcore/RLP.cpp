@@ -26,12 +26,31 @@ using namespace dev;
 bytes dev::RLPNull = rlp("");
 bytes dev::RLPEmptyList = rlpList();
 
+RLP::RLP(bytesConstRef _d, Strictness _s):
+	m_data(_d)
+{
+	if ((_s & FailIfTooBig) && actualSize() < _d.size())
+	{
+		if (_s & ThrowOnFail)
+			BOOST_THROW_EXCEPTION(OversizeRLP());
+		else
+			m_data.reset();
+	}
+	if ((_s & FailIfTooSmall) && actualSize() > _d.size())
+	{
+		if (_s & ThrowOnFail)
+			BOOST_THROW_EXCEPTION(UndersizeRLP());
+		else
+			m_data.reset();
+	}
+}
+
 RLP::iterator& RLP::iterator::operator++()
 {
 	if (m_remaining)
 	{
 		m_lastItem.retarget(m_lastItem.next().data(), m_remaining);
-		m_lastItem = m_lastItem.cropped(0, RLP(m_lastItem).actualSize());
+		m_lastItem = m_lastItem.cropped(0, RLP(m_lastItem, ThrowOnFail | FailIfTooSmall).actualSize());
 		m_remaining -= std::min<unsigned>(m_remaining, m_lastItem.size());
 	}
 	else
@@ -44,7 +63,7 @@ RLP::iterator::iterator(RLP const& _parent, bool _begin)
 	if (_begin && _parent.isList())
 	{
 		auto pl = _parent.payload();
-		m_lastItem = pl.cropped(0, RLP(pl).actualSize());
+		m_lastItem = pl.cropped(0, RLP(pl, ThrowOnFail | FailIfTooSmall).actualSize());
 		m_remaining = pl.size() - m_lastItem.size();
 	}
 	else
@@ -58,17 +77,17 @@ RLP RLP::operator[](unsigned _i) const
 {
 	if (_i < m_lastIndex)
 	{
-		m_lastEnd = RLP(payload()).actualSize();
+		m_lastEnd = RLP(payload(), ThrowOnFail | FailIfTooSmall).actualSize();
 		m_lastItem = payload().cropped(0, m_lastEnd);
 		m_lastIndex = 0;
 	}
 	for (; m_lastIndex < _i && m_lastItem.size(); ++m_lastIndex)
 	{
 		m_lastItem = payload().cropped(m_lastEnd);
-		m_lastItem = m_lastItem.cropped(0, RLP(m_lastItem).actualSize());
+		m_lastItem = m_lastItem.cropped(0, RLP(m_lastItem, ThrowOnFail | FailIfTooSmall).actualSize());
 		m_lastEnd += m_lastItem.size();
 	}
-	return RLP(m_lastItem);
+	return RLP(m_lastItem, ThrowOnFail | FailIfTooSmall);
 }
 
 RLPs RLP::toList() const
@@ -88,14 +107,28 @@ unsigned RLP::actualSize() const
 	if (isSingleByte())
 		return 1;
 	if (isData() || isList())
-		return payload().data() - m_data.data() + length();
+		return payloadOffset() + length();
 	return 0;
+}
+
+void RLP::requireGood() const
+{
+	if (isNull())
+		BOOST_THROW_EXCEPTION(BadRLP());
+	byte n = m_data[0];
+	if (n != c_rlpDataImmLenStart + 1)
+		return;
+	if (m_data.size() < 2)
+		BOOST_THROW_EXCEPTION(BadRLP());
+	if (m_data[1] < c_rlpDataImmLenStart)
+		BOOST_THROW_EXCEPTION(BadRLP());
 }
 
 bool RLP::isInt() const
 {
 	if (isNull())
 		return false;
+	requireGood();
 	byte n = m_data[0];
 	if (n < c_rlpDataImmLenStart)
 		return !!n;
@@ -122,6 +155,7 @@ unsigned RLP::length() const
 {
 	if (isNull())
 		return 0;
+	requireGood();
 	unsigned ret = 0;
 	byte n = m_data[0];
 	if (n < c_rlpDataImmLenStart)
@@ -132,6 +166,9 @@ unsigned RLP::length() const
 	{
 		if ((int)m_data.size() <= n - c_rlpDataIndLenZero)
 			BOOST_THROW_EXCEPTION(BadRLP());
+		if ((int)m_data.size() > 1)
+			if (m_data[1] == 0)
+				BOOST_THROW_EXCEPTION(BadRLP());
 		for (int i = 0; i < n - c_rlpDataIndLenZero; ++i)
 			ret = (ret << 8) | m_data[i + 1];
 	}
@@ -141,6 +178,9 @@ unsigned RLP::length() const
 	{
 		if ((int)m_data.size() <= n - c_rlpListIndLenZero)
 			BOOST_THROW_EXCEPTION(BadRLP());
+		if ((int)m_data.size() > 1)
+			if (m_data[1] == 0)
+				BOOST_THROW_EXCEPTION(BadRLP());
 		for (int i = 0; i < n - c_rlpListIndLenZero; ++i)
 			ret = (ret << 8) | m_data[i + 1];
 	}
@@ -154,7 +194,7 @@ unsigned RLP::items() const
 		bytesConstRef d = payload().cropped(0, length());
 		unsigned i = 0;
 		for (; d.size(); ++i)
-			d = d.cropped(RLP(d).actualSize());
+			d = d.cropped(RLP(d, ThrowOnFail | FailIfTooSmall).actualSize());
 		return i;
 	}
 	return 0;

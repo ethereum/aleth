@@ -12,15 +12,20 @@ Item {
 
 	property alias model: stateListModel
 	property var stateList: []
+	property alias stateDialog: stateDialog
 	property string defaultAccount: "cb73d9408c4720e230387d956eb0f829d8a4dd2c1055f96257167e14e7169074" //support for old project
 
 	function fromPlainStateItem(s) {
 		if (!s.accounts)
 			s.accounts = [stateListModel.newAccount("1000000", QEther.Ether, defaultAccount)]; //support for old project
+		if (!s.contracts)
+			s.contracts = [];
 		return {
 			title: s.title,
-			transactions: s.transactions.map(fromPlainTransactionItem),
-			accounts: s.accounts.map(fromPlainAccountItem)
+			transactions: s.transactions.filter(function(t) { return !t.stdContract; }).map(fromPlainTransactionItem), //support old projects by filtering std contracts
+			accounts: s.accounts.map(fromPlainAccountItem),
+			contracts: s.contracts.map(fromPlainAccountItem),
+			miner: s.miner
 		};
 	}
 
@@ -28,25 +33,43 @@ Item {
 	{
 		return {
 			name: t.name,
+			address: t.address,
 			secret: t.secret,
-			balance: QEtherHelper.createEther(t.balance.value, t.balance.unit)
+			balance: QEtherHelper.createEther(t.balance.value, t.balance.unit),
+			storage: t.storage,
+			code: t.code,
 		};
 	}
 
 	function fromPlainTransactionItem(t) {
 		if (!t.sender)
 			t.sender = defaultAccount; //support for old project
+
 		var r = {
+			type: t.type,
 			contractId: t.contractId,
 			functionId: t.functionId,
 			url: t.url,
 			value: QEtherHelper.createEther(t.value.value, t.value.unit),
 			gas: QEtherHelper.createBigInt(t.gas.value),
 			gasPrice: QEtherHelper.createEther(t.gasPrice.value, t.gasPrice.unit),
-			stdContract: t.stdContract ? true : false,
+			gasAuto: t.gasAuto,
 			parameters: {},
-			sender: t.sender
+			sender: t.sender,
+			isContractCreation: t.isContractCreation,
+			label: t.label,
+			isFunctionCall: t.isFunctionCall
 		};
+
+		if (r.isFunctionCall === undefined)
+			r.isFunctionCall = true;
+
+		if (!r.label)
+			r.label = r.contractId + " - " + r.functionId;
+
+		if (r.isContractCreation === undefined)
+			r.isContractCreation = r.functionId === r.contractId;
+
 		for (var key in t.parameters)
 			r.parameters[key] = t.parameters[key];
 
@@ -57,7 +80,9 @@ Item {
 		return {
 			title: s.title,
 			transactions: s.transactions.map(toPlainTransactionItem),
-			accounts: s.accounts.map(toPlainAccountItem)
+			accounts: s.accounts.map(toPlainAccountItem),
+			contracts: s.contracts.map(toPlainAccountItem),
+			miner: s.miner
 		};
 	}
 
@@ -79,20 +104,28 @@ Item {
 			balance: {
 				value: t.balance.value,
 				unit: t.balance.unit
-			}
+			},
+			address: t.address,
+			storage: t.storage,
+			code: t.code,
 		};
 	}
 
 	function toPlainTransactionItem(t) {
 		var r = {
+			type: t.type,
 			contractId: t.contractId,
 			functionId: t.functionId,
 			url: t.url,
 			value: { value: t.value.value, unit: t.value.unit },
 			gas: { value: t.gas.value() },
+			gasAuto: t.gasAuto,
 			gasPrice: { value: t.gasPrice.value, unit: t.gasPrice.unit },
-			stdContract: t.stdContract,
-			parameters: {}
+			sender: t.sender,
+			parameters: {},
+			isContractCreation: t.isContractCreation,
+			label: t.label,
+			isFunctionCall: t.isFunctionCall
 		};
 		for (var key in t.parameters)
 			r.parameters[key] = t.parameters[key];
@@ -154,16 +187,13 @@ Item {
 		}
 	}
 
-	ContractLibrary {
-		id: contractLibrary;
-	}
-
 	ListModel {
 		id: stateListModel
 		property int defaultStateIndex: 0
 		signal defaultStateChanged;
 		signal stateListModelReady;
 		signal stateRun(int index)
+		signal stateDeleted(int index)
 
 		function defaultTransactionItem() {
 			return TransactionHelper.defaultTransaction();
@@ -172,37 +202,30 @@ Item {
 		function newAccount(_balance, _unit, _secret)
 		{
 			if (!_secret)
-				_secret = clientModel.newAddress();
-			var name = qsTr("Account") + "-" + _secret.substring(0, 4);
-			return { name: name, secret: _secret, balance: QEtherHelper.createEther(_balance, _unit) };
+				_secret = clientModel.newSecret();
+			var address = clientModel.address(_secret);
+			var name = qsTr("Account") + "-" + address.substring(0, 4);
+			return { name: name, secret: _secret, balance: QEtherHelper.createEther(_balance, _unit), address: address };
 		}
 
 		function createDefaultState() {
 			var item = {
 				title: "",
 				transactions: [],
-				accounts: []
+				accounts: [],
+				contracts: []
 			};
 
-			item.accounts.push(newAccount("1000000", QEther.Ether, defaultAccount));
-
-			//add all stdc contracts
-			for (var i = 0; i < contractLibrary.model.count; i++) {
-				var contractTransaction = defaultTransactionItem();
-				var contractItem = contractLibrary.model.get(i);
-				contractTransaction.url = contractItem.url;
-				contractTransaction.contractId = contractItem.name;
-				contractTransaction.functionId = contractItem.name;
-				contractTransaction.stdContract = true;
-				contractTransaction.sender = item.accounts[0].secret; // default account is used to deploy std contract.
-				item.transactions.push(contractTransaction);
-			};
+			var account = newAccount("1000000", QEther.Ether, defaultAccount)
+			item.accounts.push(account);
+			item.miner = account;
 
 			//add constructors, //TODO: order by dependencies
 			for(var c in codeModel.contracts) {
 				var ctorTr = defaultTransactionItem();
 				ctorTr.functionId = c;
 				ctorTr.contractId = c;
+				ctorTr.label = qsTr("Deploy") + " " + ctorTr.contractId;
 				ctorTr.sender = item.accounts[0].secret;
 				item.transactions.push(ctorTr);
 			}
@@ -233,21 +256,17 @@ Item {
 		}
 
 		function addNewContracts() {
-			//add new contracts for all states
+			//add new contracts to empty states
 			var changed = false;
-			for(var c in codeModel.contracts) {
+			for (var c in codeModel.contracts) {
 				for (var s = 0; s < stateListModel.count; s++) {
 					var state = stateList[s];
-					for (var t = 0; t < state.transactions.length; t++) {
-						var transaction = state.transactions[t];
-						if (transaction.functionId === c && transaction.contractId === c)
-							break;
-					}
-					if (t === state.transactions.length) {
+					if (state.transactions.length === 0) {
 						//append this contract
 						var ctorTr = defaultTransactionItem();
 						ctorTr.functionId = c;
 						ctorTr.contractId = c;
+						ctorTr.label = qsTr("Deploy") + " " + ctorTr.contractId;
 						ctorTr.sender = state.accounts[0].secret;
 						state.transactions.push(ctorTr);
 						changed = true;
@@ -290,9 +309,8 @@ Item {
 			}
 			else if (defaultStateIndex > index)
 				defaultStateIndex--;
-
 			save();
-
+			stateDeleted(index);
 		}
 
 		function save() {

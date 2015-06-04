@@ -41,16 +41,22 @@ enum class WhenError
 	Throw = 1,
 };
 
+enum class HexPrefix
+{
+	DontAdd = 0,
+	Add = 1,
+};
 /// Convert a series of bytes to the corresponding string of hex duplets.
-/// @param _w specifies the width of each of the elements. Defaults to two - enough to represent a byte.
+/// @param _w specifies the width of the first of the elements. Defaults to two - enough to represent a byte.
 /// @example toHex("A\x69") == "4169"
 template <class _T>
-std::string toHex(_T const& _data, int _w = 2)
+std::string toHex(_T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::DontAdd)
 {
 	std::ostringstream ret;
+	unsigned ii = 0;
 	for (auto i: _data)
-		ret << std::hex << std::setfill('0') << std::setw(_w) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
-	return ret.str();
+		ret << std::hex << std::setfill('0') << std::setw(ii++ ? 2 : _w) << (int)(typename std::make_unsigned<decltype(i)>::type)i;
+	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
 }
 
 /// Converts a (printable) ASCII hex character into the correspnding integer value.
@@ -74,6 +80,13 @@ inline std::string asString(bytes const& _b)
 	return std::string((char const*)_b.data(), (char const*)(_b.data() + _b.size()));
 }
 
+/// Converts byte array ref to a string containing the same (binary) data. Unless
+/// the byte array happens to contain ASCII data, this won't be printable.
+inline std::string asString(bytesConstRef _b)
+{
+	return std::string((char const*)_b.data(), (char const*)(_b.data() + _b.size()));
+}
+
 /// Converts a string to a byte array containing the string's (byte) data.
 inline bytes asBytes(std::string const& _b)
 {
@@ -82,7 +95,7 @@ inline bytes asBytes(std::string const& _b)
 
 /// Converts a string into the big-endian base-16 stream of integers (NOT ASCII).
 /// @example asNibbles("A")[0] == 4 && asNibbles("A")[1] == 1
-bytes asNibbles(std::string const& _s);
+bytes asNibbles(bytesConstRef const& _s);
 
 
 // Big-endian to/from host endian conversion functions.
@@ -108,9 +121,9 @@ inline void toBigEndian(_T _val, _Out& o_out)
 template <class _T, class _In>
 inline _T fromBigEndian(_In const& _bytes)
 {
-	_T ret = 0;
+	_T ret = (_T)0;
 	for (auto i: _bytes)
-		ret = (ret << 8) | (byte)(typename std::make_unsigned<typename _In::value_type>::type)i;
+		ret = (_T)((ret << 8) | (byte)(typename std::make_unsigned<typename _In::value_type>::type)i);
 	return ret;
 }
 
@@ -119,9 +132,6 @@ inline std::string toBigEndianString(u256 _val) { std::string ret(32, '\0'); toB
 inline std::string toBigEndianString(u160 _val) { std::string ret(20, '\0'); toBigEndian(_val, ret); return ret; }
 inline bytes toBigEndian(u256 _val) { bytes ret(32); toBigEndian(_val, ret); return ret; }
 inline bytes toBigEndian(u160 _val) { bytes ret(20); toBigEndian(_val, ret); return ret; }
-
-/// Convenience function for conversion of a u256 to hex
-inline std::string toHex(u256 val) { return toHex(toBigEndian(val)); }
 
 /// Convenience function for toBigEndian.
 /// @returns a byte array just big enough to represent @a _val.
@@ -142,15 +152,27 @@ inline bytes toCompactBigEndian(byte _val, unsigned _min = 0)
 /// Convenience function for toBigEndian.
 /// @returns a string just big enough to represent @a _val.
 template <class _T>
-inline std::string toCompactBigEndianString(_T _val)
+inline std::string toCompactBigEndianString(_T _val, unsigned _min = 0)
 {
 	int i = 0;
 	for (_T v = _val; v; ++i, v >>= 8) {}
-	std::string ret(i, '\0');
+	std::string ret(std::max<unsigned>(_min, i), '\0');
 	toBigEndian(_val, ret);
 	return ret;
 }
 
+/// Convenience function for conversion of a u256 to hex
+inline std::string toHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd)
+{
+	std::string str = toHex(toBigEndian(val));
+	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+}
+
+inline std::string toCompactHex(u256 val, HexPrefix prefix = HexPrefix::DontAdd, unsigned _min = 0)
+{
+	std::string str = toHex(toCompactBigEndian(val, _min));
+	return (prefix == HexPrefix::Add) ? "0x" + str : str;
+}
 
 // Algorithms for string and string-like collections.
 
@@ -228,6 +250,42 @@ inline std::vector<_T>& operator+=(std::vector<typename std::enable_if<!std::is_
 	return _a;
 }
 
+/// Insert the contents of a container into a set
+template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
+{
+	for (auto const& i: _b)
+		_a.insert(i);
+	return _a;
+}
+
+/// Insert the contents of a container into an unordered_st
+template <class T, class U> std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
+{
+	for (auto const& i: _b)
+		_a.insert(i);
+	return _a;
+}
+
+/// Concatenate the contents of a container onto a vector
+template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
+{
+	for (auto const& i: _b)
+		_a.push_back(i);
+	return _a;
+}
+
+/// Insert the contents of a container into a set
+template <class T, class U> std::set<T> operator+(std::set<T> _a, U const& _b)
+{
+	return _a += _b;
+}
+
+/// Concatenate the contents of a container onto a vector
+template <class T, class U> std::vector<T> operator+(std::vector<T> _a, U const& _b)
+{
+	return _a += _b;
+}
+
 /// Concatenate two vectors of elements.
 template <class _T>
 inline std::vector<_T> operator+(std::vector<_T> const& _a, std::vector<_T> const& _b)
@@ -258,6 +316,15 @@ std::string toString(string32 const& _s);
 
 template<class T, class U>
 std::vector<T> keysOf(std::map<T, U> const& _m)
+{
+	std::vector<T> ret;
+	for (auto const& i: _m)
+		ret.push_back(i.first);
+	return ret;
+}
+
+template<class T, class U>
+std::vector<T> keysOf(std::unordered_map<T, U> const& _m)
 {
 	std::vector<T> ret;
 	for (auto const& i: _m)

@@ -5,6 +5,7 @@ import QtQuick.Controls 1.0
 import QtQuick.Dialogs 1.1
 import Qt.labs.settings 1.0
 import "js/ProjectModel.js" as ProjectModelCode
+import "js/NetworkDeployment.js" as NetworkDeploymentCode
 
 Item {
 	id: projectModel
@@ -35,6 +36,7 @@ Item {
 	readonly property string projectFileName: ".mix"
 
 	property bool appIsClosing: false
+	property bool projectIsClosing: false
 	property string projectPath: ""
 	property string projectTitle: ""
 	property string currentDocumentId: ""
@@ -42,8 +44,11 @@ Item {
 	property string deploymentDir
 	property var listModel: projectListModel
 	property var stateListModel: projectStateListModel.model
+	property alias stateDialog: projectStateListModel.stateDialog
 	property CodeEditorView codeEditor: null
 	property var unsavedFiles: []
+	property alias newProjectDialog: newProjectDialog
+	property string deployedState
 
 	//interface
 	function saveAll() { ProjectModelCode.saveAll(); }
@@ -63,16 +68,17 @@ Item {
 	function renameDocument(documentId, newName) { ProjectModelCode.renameDocument(documentId, newName); }
 	function removeDocument(documentId) { ProjectModelCode.removeDocument(documentId); }
 	function getDocument(documentId) { return ProjectModelCode.getDocument(documentId); }
+	function getDocumentIdByName(documentName) { return ProjectModelCode.getDocumentIdByName(documentName); }
 	function getDocumentIndex(documentId) { return ProjectModelCode.getDocumentIndex(documentId); }
 	function addExistingFiles(paths) { ProjectModelCode.doAddExistingFiles(paths); }
-	function deployProject() { ProjectModelCode.deployProject(false); }
-	function registerToUrlHint() { ProjectModelCode.registerToUrlHint(); }
-	function formatAppUrl() { ProjectModelCode.formatAppUrl(url); }
+	function deployProject() { NetworkDeploymentCode.deployProject(false); }
+	function registerToUrlHint() { NetworkDeploymentCode.registerToUrlHint(); }
+	function formatAppUrl() { NetworkDeploymentCode.formatAppUrl(url); }
 
 	Connections {
 		target: mainApplication
 		onLoaded: {
-			if (projectSettings.lastProjectPath && projectSettings.lastProjectPath !== "")
+			if (mainApplication.trackLastProject && projectSettings.lastProjectPath && projectSettings.lastProjectPath !== "")
 				projectModel.loadProject(projectSettings.lastProjectPath)
 		}
 	}
@@ -121,13 +127,17 @@ Item {
 		icon: StandardIcon.Question
 		property var callBack;
 		onYes: {
+			projectIsClosing = true;
 			projectModel.saveAll();
+			unsavedFiles = [];
 			ProjectModelCode.doCloseProject();
 			if (callBack)
 				callBack();
 		}
 		onRejected: {}
 		onNo: {
+			projectIsClosing = true;
+			unsavedFiles = [];
 			ProjectModelCode.doCloseProject();
 			if (callBack)
 				callBack();
@@ -147,12 +157,12 @@ Item {
 		icon: StandardIcon.Question
 		standardButtons: StandardButton.Ok | StandardButton.Abort
 		onAccepted: {
-			ProjectModelCode.startDeployProject(true);
+			NetworkDeploymentCode.startDeployProject(true);
 		}
 	}
 
 	MessageDialog {
-		id: deployRessourcesDialog
+		id: deployResourcesDialog
 		title: qsTr("Project")
 		standardButtons: StandardButton.Ok
 	}

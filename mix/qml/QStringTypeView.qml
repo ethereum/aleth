@@ -3,9 +3,10 @@ import QtQuick 2.0
 Item
 {
 	property alias value: textinput.text
+	property alias readOnly: textinput.readOnly
 	id: editRoot
 	height: 20
-	width: 150
+	width: readOnly ? textinput.implicitWidth : 150
 
 	SourceSansProBold
 	{
@@ -15,7 +16,6 @@ Item
 	Rectangle {
 		anchors.fill: parent
 		radius: 4
-		color: "#f7f7f7"
 		TextInput {
 			id: textinput
 			text: value
@@ -23,12 +23,7 @@ Item
 			anchors.fill: parent
 			wrapMode: Text.WrapAnywhere
 			font.family: boldFont.name
-			MouseArea {
-				id: mouseArea
-				anchors.fill: parent
-				hoverEnabled: true
-				onClicked: textinput.forceActiveFocus()
-			}
+			selectByMouse: true
 		}
 	}
 }

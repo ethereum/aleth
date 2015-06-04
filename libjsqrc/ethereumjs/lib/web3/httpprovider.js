@@ -22,46 +22,67 @@
  * @date 2014
  */
 
-if (process.env.NODE_ENV !== 'build') {
-        var XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest; // jshint ignore:line
-}
+"use strict";
+
+var XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest; // jshint ignore:line
+var errors = require('./errors');
 
 var HttpProvider = function (host) {
-    this.name  = 'HTTP';
-    this.handlers = [];
-    this.host = host || 'http://localhost:8080';
+    this.host = host || 'http://localhost:8545';
 };
 
-HttpProvider.prototype.send = function (payload, callback) {
+HttpProvider.prototype.send = function (payload) {
     var request = new XMLHttpRequest();
 
-    // ASYNC
-    if(typeof callback === 'function') {
-        request.onreadystatechange = function() {
-            if(request.readyState === 4) {
-                var result = '';
-                try {
-                    result = JSON.parse(request.responseText);
-                } catch(error) {
-                    result = error;
-                }
-                callback(result, request.status);
+    request.open('POST', this.host, false);
+    
+    try {
+        request.send(JSON.stringify(payload));
+    } catch(error) {
+        throw errors.InvalidConnection(this.host);
+    }
+
+
+    // check request.status
+    // TODO: throw an error here! it cannot silently fail!!!
+    //if (request.status !== 200) {
+        //return;
+    //}
+
+    var result = request.responseText;
+
+    try {
+        result = JSON.parse(result);
+    } catch(e) {
+        throw errors.InvalidResponse(result);                
+    }
+
+    return result;
+};
+
+HttpProvider.prototype.sendAsync = function (payload, callback) {
+    var request = new XMLHttpRequest();
+    request.onreadystatechange = function() {
+        if (request.readyState === 4) {
+            var result = request.responseText;
+            var error = null;
+
+            try {
+                result = JSON.parse(result);
+            } catch(e) {
+                error = errors.InvalidResponse(result);                
             }
-        };
 
-        request.open('POST', this.host, true);
+            callback(error, result);
+        }
+    };
+
+    request.open('POST', this.host, true);
+
+    try {
         request.send(JSON.stringify(payload));
-
-    // SYNC
-    } else {
-        request.open('POST', this.host, false);
-        request.send(JSON.stringify(payload));
-
-        // check request.status
-        if(request.status !== 200)
-            return;
-        return JSON.parse(request.responseText);
-        
+    } catch(error) {
+        callback(errors.InvalidConnection(this.host));
     }
 };
 

@@ -34,9 +34,7 @@
  */
 
 /// required to define ETH_BIGNUMBER_ROUNDING_MODE
-if (process.env.NODE_ENV !== 'build') {
-    var BigNumber = require('bignumber.js'); // jshint ignore:line
-}
+var BigNumber = require('bignumber.js');
 
 var ETH_UNITS = [ 
     'wei', 
@@ -66,6 +64,7 @@ module.exports = {
     ETH_UNITS: ETH_UNITS,
     ETH_BIGNUMBER_ROUNDING_MODE: { ROUNDING_MODE: BigNumber.ROUND_DOWN },
     ETH_POLLING_TIMEOUT: 1000,
-    ETH_DEFAULTBLOCK: 'latest'
+    defaultBlock: 'latest',
+    defaultAccount: undefined
 };
 

@@ -21,9 +21,11 @@
 
 #include "Common.h"
 #include <random>
-#include <libdevcrypto/SHA3.h>
-#include "Ethasher.h"
+#include <boost/algorithm/string/case_conv.hpp>
+#include <libdevcore/Base64.h>
+#include <libdevcore/SHA3.h>
 #include "Exceptions.h"
+#include "ProofOfWork.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -33,16 +35,18 @@ namespace dev
 namespace eth
 {
 
-const unsigned c_ethashVersion = c_ethashRevision;
-const unsigned c_protocolVersion = 58;
-const unsigned c_databaseBaseVersion = 8;
+const unsigned c_protocolVersion = 61;
 #if ETH_FATDB
+const unsigned c_minorProtocolVersion = 3;
+const unsigned c_databaseBaseVersion = 9;
 const unsigned c_databaseVersionModifier = 1;
 #else
+const unsigned c_minorProtocolVersion = 2;
+const unsigned c_databaseBaseVersion = 9;
 const unsigned c_databaseVersionModifier = 0;
 #endif
 
-const unsigned c_databaseVersion = c_databaseBaseVersion + (c_databaseVersionModifier << 8) + (c_ethashVersion << 9);
+const unsigned c_databaseVersion = c_databaseBaseVersion + (c_databaseVersionModifier << 8) + (ProofOfWork::revision() << 9);
 
 vector<pair<u256, string>> const& units()
 {
@@ -100,4 +104,28 @@ std::string formatBalance(bigint const& _b)
 	return ret.str();
 }
 
-}}
+static void badBlockInfo(BlockInfo const& _bi, string const& _err)
+{
+	cwarn << EthRedBold << "========================================================================";
+	cwarn << EthRedBold << "==  Software Failure    " + _err + string(max<int>(0, 44 - _err.size()), ' ') + "  ==";
+	string bin = toString(_bi.number);
+	cwarn << EthRedBold << ("==                 Guru Meditation #" + string(max<int>(0, 8 - bin.size()), '0') + bin + "." + _bi.hash().abridged() + "                ==");
+	cwarn << EthRedBold << "========================================================================";
+}
+
+void badBlock(bytesConstRef _block, string const& _err)
+{
+	badBlockInfo(BlockInfo(_block, CheckNothing), _err);
+	cwarn << "  Block:" << toHex(_block);
+	cwarn << "  Block RLP:" << RLP(_block);
+}
+
+void badBlockHeader(bytesConstRef _header, string const& _err)
+{
+	badBlockInfo(BlockInfo::fromHeader(_header, CheckNothing), _err);
+	cwarn << "  Header:" << toHex(_header);
+	cwarn << "  Header RLP:" << RLP(_header);;
+}
+
+}
+}

@@ -25,6 +25,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <QString>
 #include <vector>
+#include <libdevcore/Common.h>
 
 namespace dev
 {
@@ -44,11 +45,13 @@ struct SolidityType
 		Bool,
 		Address,
 		Bytes,
+		String,
 		Enum,
 		Struct
 	};
 	Type type;
 	unsigned size; //in bytes,
+	unsigned count;
 	bool array;
 	bool dynamicSize;
 	QString name;
@@ -60,7 +63,11 @@ struct SolidityDeclaration
 {
 	QString name;
 	SolidityType type;
+	dev::u256 slot;
+	unsigned offset;
 };
+
+using SolidityDeclarations = std::vector<SolidityDeclaration>;
 
 }
 }

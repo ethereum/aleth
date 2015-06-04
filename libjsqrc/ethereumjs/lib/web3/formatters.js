@@ -14,24 +14,45 @@
     You should have received a copy of the GNU Lesser General Public License
     along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file formatters.js
- * @authors:
- *   Marek Kotewicz <marek@ethdev.com>
- *   Fabian Vogelsteller <fabian@ethdev.com>
+/** 
+ * @file formatters.js
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @author Fabian Vogelsteller <fabian@ethdev.com>
  * @date 2015
  */
 
 var utils = require('../utils/utils');
+var config = require('../utils/config');
 
 /**
- * Should the input to a big number
+ * Should the format output to a big number
  *
- * @method convertToBigNumber
+ * @method outputBigNumberFormatter
  * @param {String|Number|BigNumber}
  * @returns {BigNumber} object
  */
-var convertToBigNumber = function (value) {
-    return utils.toBigNumber(value);
+var outputBigNumberFormatter = function (number) {
+    return utils.toBigNumber(number);
+};
+
+var isPredefinedBlockNumber = function (blockNumber) {
+    return blockNumber === 'latest' || blockNumber === 'pending' || blockNumber === 'earliest';
+};
+
+var inputDefaultBlockNumberFormatter = function (blockNumber) {
+    if (blockNumber === undefined) {
+        return config.defaultBlock;
+    }
+    return inputBlockNumberFormatter(blockNumber);
+};
+
+var inputBlockNumberFormatter = function (blockNumber) {
+    if (blockNumber === undefined) {
+        return undefined;
+    } else if (isPredefinedBlockNumber(blockNumber)) {
+        return blockNumber;
+    }
+    return utils.toHex(blockNumber);
 };
 
 /**
@@ -43,17 +64,21 @@ var convertToBigNumber = function (value) {
 */
 var inputTransactionFormatter = function (options){
 
+    options.from = options.from || config.defaultAccount;
+
     // make code -> data
     if (options.code) {
         options.data = options.code;
         delete options.code;
     }
 
-    ['gasPrice', 'gas', 'value'].forEach(function(key){
+    ['gasPrice', 'gas', 'value', 'nonce'].filter(function (key) {
+        return options[key] !== undefined;
+    }).forEach(function(key){
         options[key] = utils.fromDecimal(options[key]);
     });
 
-    return options;
+    return options; 
 };
 
 /**
@@ -64,30 +89,14 @@ var inputTransactionFormatter = function (options){
  * @returns {Object} transaction
 */
 var outputTransactionFormatter = function (tx){
+    tx.blockNumber = utils.toDecimal(tx.blockNumber);
+    tx.transactionIndex = utils.toDecimal(tx.transactionIndex);
+    tx.nonce = utils.toDecimal(tx.nonce);
     tx.gas = utils.toDecimal(tx.gas);
     tx.gasPrice = utils.toBigNumber(tx.gasPrice);
     tx.value = utils.toBigNumber(tx.value);
     return tx;
 };
-
-/**
- * Formats the input of a call and converts all values to HEX
- *
- * @method inputCallFormatter
- * @param {Object} transaction options
- * @returns object
-*/
-var inputCallFormatter = function (options){
-
-    // make code -> data
-    if (options.code) {
-        options.data = options.code;
-        delete options.code;
-    }
-
-    return options;
-};
-
 
 /**
  * Formats the output of a block to its proper values
@@ -96,7 +105,7 @@ var inputCallFormatter = function (options){
  * @param {Object} block object 
  * @returns {Object} block object
 */
-var outputBlockFormatter = function(block){
+var outputBlockFormatter = function(block) {
 
     // transform to number
     block.gasLimit = utils.toDecimal(block.gasLimit);
@@ -105,11 +114,10 @@ var outputBlockFormatter = function(block){
     block.timestamp = utils.toDecimal(block.timestamp);
     block.number = utils.toDecimal(block.number);
 
-    block.minGasPrice = utils.toBigNumber(block.minGasPrice);
     block.difficulty = utils.toBigNumber(block.difficulty);
     block.totalDifficulty = utils.toBigNumber(block.totalDifficulty);
 
-    if(block.transactions instanceof Array) {
+    if (utils.isArray(block.transactions)) {
         block.transactions.forEach(function(item){
             if(!utils.isString(item))
                 return outputTransactionFormatter(item);
@@ -126,14 +134,17 @@ var outputBlockFormatter = function(block){
  * @param {Object} log object
  * @returns {Object} log
 */
-var outputLogFormatter = function(log){
+var outputLogFormatter = function(log) {
+    if (log === null) { // 'pending' && 'latest' filters are nulls
+        return null;
+    }
+
     log.blockNumber = utils.toDecimal(log.blockNumber);
     log.transactionIndex = utils.toDecimal(log.transactionIndex);
     log.logIndex = utils.toDecimal(log.logIndex);
 
     return log;
 };
-
 
 /**
  * Formats the input of a whisper post and converts all values to HEX
@@ -142,22 +153,24 @@ var outputLogFormatter = function(log){
  * @param {Object} transaction object
  * @returns {Object}
 */
-var inputPostFormatter = function(post){
+var inputPostFormatter = function(post) {
 
     post.payload = utils.toHex(post.payload);
     post.ttl = utils.fromDecimal(post.ttl);
+    post.workToProve = utils.fromDecimal(post.workToProve);
     post.priority = utils.fromDecimal(post.priority);
 
-    if(!(post.topics instanceof Array))
-        post.topics = [post.topics];
-
+    // fallback
+    if (!utils.isArray(post.topics)) {
+        post.topics = post.topics ? [post.topics] : [];
+    }
 
     // format the following options
     post.topics = post.topics.map(function(topic){
         return utils.fromAscii(topic);
     });
 
-    return post;
+    return post; 
 };
 
 /**
@@ -176,13 +189,14 @@ var outputPostFormatter = function(post){
     post.payloadRaw = post.payload;
     post.payload = utils.toAscii(post.payload);
 
-    if(post.payload.indexOf('{') === 0 || post.payload.indexOf('[') === 0) {
-        try {
-            post.payload = JSON.parse(post.payload);
-        } catch (e) { }
+    if (utils.isJson(post.payload)) {
+        post.payload = JSON.parse(post.payload);
     }
 
     // format the following options
+    if (!post.topics) {
+        post.topics = [];
+    }
     post.topics = post.topics.map(function(topic){
         return utils.toAscii(topic);
     });
@@ -191,13 +205,14 @@ var outputPostFormatter = function(post){
 };
 
 module.exports = {
-    convertToBigNumber: convertToBigNumber,
+    inputDefaultBlockNumberFormatter: inputDefaultBlockNumberFormatter,
+    inputBlockNumberFormatter: inputBlockNumberFormatter,
     inputTransactionFormatter: inputTransactionFormatter,
+    inputPostFormatter: inputPostFormatter,
+    outputBigNumberFormatter: outputBigNumberFormatter,
     outputTransactionFormatter: outputTransactionFormatter,
-    inputCallFormatter: inputCallFormatter,
     outputBlockFormatter: outputBlockFormatter,
     outputLogFormatter: outputLogFormatter,
-    inputPostFormatter: inputPostFormatter,
     outputPostFormatter: outputPostFormatter
 };
 
