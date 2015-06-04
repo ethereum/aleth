@@ -14,51 +14,33 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file OverlayDB.h
+/** @file TrieHash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#include <leveldb/db.h>
-#pragma warning(pop)
-
-#include <memory>
 #include <libdevcore/Common.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/MemoryDB.h>
-namespace ldb = leveldb;
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
 
-class OverlayDB: public MemoryDB
+bytes rlp256(BytesMap const& _s);
+h256 hash256(BytesMap const& _s);
+
+h256 orderedTrieRoot(std::vector<bytes> const& _data);
+
+template <class T, class U> inline h256 trieRootOver(unsigned _itemCount, T const& _getKey, U const& _getValue)
 {
-public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
-	~OverlayDB();
+	BytesMap m;
+	for (unsigned i = 0; i < _itemCount; ++i)
+		m[_getKey(i)] = _getValue(i);
+	return hash256(m);
+}
 
-	ldb::DB* db() const { return m_db.get(); }
-
-	void commit();
-	void rollback();
-
-	std::string lookup(h256 const& _h) const;
-	bool exists(h256 const& _h) const;
-	void kill(h256 const& _h);
-
-	bytes lookupAux(h256 const& _h) const;
-
-private:
-	using MemoryDB::clear;
-
-	std::shared_ptr<ldb::DB> m_db;
-
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
-};
+h256 orderedTrieRoot(std::vector<bytesConstRef> const& _data);
+h256 orderedTrieRoot(std::vector<bytes> const& _data);
 
 }

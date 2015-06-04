@@ -14,51 +14,25 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file OverlayDB.h
+/** @file Hash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
+ *
+ * The FixedHash fixed-size "hash" container type.
  */
 
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#include <leveldb/db.h>
-#pragma warning(pop)
-
-#include <memory>
-#include <libdevcore/Common.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/MemoryDB.h>
-namespace ldb = leveldb;
+#include <string>
+#include <libdevcore/FixedHash.h>
+#include <libdevcore/vector_ref.h>
+#include "SHA3.h"
 
 namespace dev
 {
 
-class OverlayDB: public MemoryDB
-{
-public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
-	~OverlayDB();
+h256 sha256(bytesConstRef _input);
 
-	ldb::DB* db() const { return m_db.get(); }
-
-	void commit();
-	void rollback();
-
-	std::string lookup(h256 const& _h) const;
-	bool exists(h256 const& _h) const;
-	void kill(h256 const& _h);
-
-	bytes lookupAux(h256 const& _h) const;
-
-private:
-	using MemoryDB::clear;
-
-	std::shared_ptr<ldb::DB> m_db;
-
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
-};
+h160 ripemd160(bytesConstRef _input);
 
 }
