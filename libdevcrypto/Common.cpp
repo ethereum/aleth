@@ -46,7 +46,6 @@ struct Secp256k1Context
 	~Secp256k1Context() { secp256k1_stop(); }
 };
 static Secp256k1Context s_secp256k1Context;
-void dev::crypto::init() { (void)s_secp256k1Context; }
 
 bool dev::SignatureStruct::isValid() const
 {
