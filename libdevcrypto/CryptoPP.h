@@ -72,8 +72,6 @@ class Secp256k1
 public:
 	Secp256k1(): m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()), m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder()) {}
 	
-	Address toAddress(Public const& _p) { return right160(sha3(_p.ref())); }
-	
 	void toPublic(Secret const& _s, Public& o_public) { exponentToPublic(Integer(_s.data(), sizeof(_s)), o_public); }
 	
 	/// Encrypts text (replace input). (ECIES w/XOR-SHA1)

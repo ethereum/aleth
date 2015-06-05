@@ -171,47 +171,12 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		Integer hInt(hm.asBytes().data(), 32);
 		h256 k(hm ^ key.sec());
 		Integer kInt(k.asBytes().data(), 32);
-
-		// raw sign w/cryptopp (doesn't pass through cryptopp hash filter)
-		ECDSA<ECP, SHA3_256>::Signer signer;
-		signer.AccessKey().Initialize(s_params, secretToExponent(key.sec()));
-		Integer r, s;
-		signer.RawSign(kInt, hInt, r, s);
-
-		// verify cryptopp raw-signature w/cryptopp
-		ECDSA<ECP, SHA3_256>::Verifier verifier;
-		verifier.AccessKey().Initialize(s_params, publicToPoint(key.pub()));
-		Signature sigppraw;
-		r.Encode(sigppraw.data(), 32);
-		s.Encode(sigppraw.data() + 32, 32);
-		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppraw.data(), 64));
-//		BOOST_REQUIRE(crypto::verify(key.pub(), sigppraw, bytesConstRef(&m)));
-		BOOST_REQUIRE(dev::verify(key.pub(), sigppraw, hm));
 		
 		// sign with cryptopp, verify, recover w/sec256lib
 		Signature seclibsig(dev::sign(key.sec(), hm));
-		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), seclibsig.data(), 64));
-//		BOOST_REQUIRE(crypto::verify(key.pub(), seclibsig, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), seclibsig, hm));
 		BOOST_REQUIRE(dev::recover(seclibsig, hm) == key.pub());
 
-		// sign with cryptopp (w/hash filter?), verify with cryptopp
-		bytes sigppb(signer.MaxSignatureLength());
-		size_t ssz = signer.SignMessage(s_rng, m.data(), m.size(), sigppb.data());
-		Signature sigpp;
-		memcpy(sigpp.data(), sigppb.data(), 64);
-		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), sigppb.data(), ssz));
-//		BOOST_REQUIRE(crypto::verify(key.pub(), sigpp, bytesConstRef(&m)));
-		BOOST_REQUIRE(dev::verify(key.pub(), sigpp, hm));
-
-		// sign with cryptopp and stringsource hash filter
-		string sigstr;
-		StringSource ssrc(asString(m), true, new SignerFilter(s_rng, signer, new StringSink(sigstr)));
-		FixedHash<sizeof(Signature)> retsig((byte const*)sigstr.data(), Signature::ConstructFromPointer);
-		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), retsig.data(), 64));
-//		BOOST_REQUIRE(crypto::verify(key.pub(), retsig, bytesConstRef(&m)));
-		BOOST_REQUIRE(dev::verify(key.pub(), retsig, hm));
-		
 		/// verification w/sec256lib
 		// requires public key and sig in standard format
 		byte encpub[65] = {0x04};
@@ -220,18 +185,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		
 		// verify sec256lib sig w/sec256lib
 		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, seclibsig.data(), 64, DSA_P1363);
-		BOOST_CHECK(cssz <= 72);
-		BOOST_REQUIRE(sizeof(hm) == 32);
-		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), dersig, cssz, encpub, 65));
-		
-		// verify cryptopp-raw sig w/sec256lib
-		cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sigppraw.data(), 64, DSA_P1363);
-		BOOST_CHECK(cssz <= 72);
-		BOOST_REQUIRE(sizeof(hm) == 32);
-		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), dersig, cssz, encpub, 65));
-
-		// verify cryptopp sig w/sec256lib
-		cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sigppb.data(), 64, DSA_P1363);
 		BOOST_CHECK(cssz <= 72);
 		BOOST_REQUIRE(sizeof(hm) == 32);
 		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), dersig, cssz, encpub, 65));
