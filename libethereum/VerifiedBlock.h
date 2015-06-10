@@ -14,43 +14,40 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ExtVM.cpp
+/** @file VerfiedBlock.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "ExtVM.h"
 
-#include "Executive.h"
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
+#include <libdevcore/Common.h>
+#include <libethcore/BlockInfo.h>
 
-bool ExtVM::call(CallParameters& _p)
+#pragma once
+
+namespace dev
 {
-	Executive e(m_s, lastHashes, depth + 1);
-	if (!e.call(_p, gasPrice, origin))
-	{
-		e.go(_p.onOp);
-		e.accrueSubState(sub);
-	}
-	_p.gas = e.gas();
-
-	return !e.excepted();
-}
-
-h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
+namespace eth
 {
-	// Increment associated nonce for sender.
-	m_s.noteSending(myAddress);
 
-	Executive e(m_s, lastHashes, depth + 1);
-	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
-	{
-		e.go(_onOp);
-		e.accrueSubState(sub);
-	}
-	io_gas = e.gas();
-	return e.newAddress();
+class Transaction;
+
+/// @brief Verified block info, does not hold block data, but a reference instead
+struct VerifiedBlockRef
+{
+	bytesConstRef block; 					///<  Block data reference
+	BlockInfo info;							///< Prepopulated block info
+	std::vector<Transaction> transactions;	///< Verified list of block transactions
+};
+
+/// @brief Verified block info, combines block data and verified info/transactions
+struct VerifiedBlock
+{
+	VerifiedBlockRef verified;				///< Verified block structures
+	bytes blockData;						///< Block data
+};
+
+using VerifiedBlocks = std::vector<VerifiedBlock>;
+
 }
-
+}
