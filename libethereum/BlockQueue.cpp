@@ -197,8 +197,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, BlockChain const& _bc, boo
 
 	try
 	{
-		// TODO: quick verify
-		bi.populate(_block);
+		bi.populate(_block, CheckEverything);
 		bi.verifyInternals(_block);
 	}
 	catch (Exception const& _e)
