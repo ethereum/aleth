@@ -17,7 +17,7 @@ endif()
 
 # LLVM
 if(LLVM_DIR OR APPLE)	# local LLVM build
-	find_package(LLVM REQUIRED CONFIG)
+	find_package(LLVM 3.5 REQUIRED CONFIG)
 	message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 	message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 	add_definitions(${LLVM_DEFINITIONS})
