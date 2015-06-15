@@ -14,44 +14,25 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Common.cpp
+/** @file Hash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
+ *
+ * The FixedHash fixed-size "hash" container type.
  */
 
-#include "Common.h"
-#include "Exceptions.h"
-#include "Log.h"
-using namespace std;
-using namespace dev;
+#pragma once
+
+#include <string>
+#include <libdevcore/FixedHash.h>
+#include <libdevcore/vector_ref.h>
+#include "SHA3.h"
 
 namespace dev
 {
 
-char const* Version = "0.9.26";
+h256 sha256(bytesConstRef _input);
 
-const u256 UndefinedU256 = ~(u256)0;
-
-void HasInvariants::checkInvariants() const
-{
-	if (!invariants())
-		BOOST_THROW_EXCEPTION(FailedInvariant());
-}
-
-struct TimerChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
-
-#ifdef _WIN32
-const char* TimerChannel::name() { return EthRed " ! "; }
-#else
-const char* TimerChannel::name() { return EthRed " ⚡ "; }
-#endif
-
-TimerHelper::~TimerHelper()
-{
-	auto e = m_t.elapsed();
-	if (!m_ms || e * 1000 > m_ms)
-		clog(TimerChannel) << m_id << e << "s";
-}
+h160 ripemd160(bytesConstRef _input);
 
 }
-

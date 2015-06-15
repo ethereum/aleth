@@ -21,8 +21,9 @@
 
 #pragma once
 
-#include <map>
+#include <unordered_map>
 #include <libdevcore/Common.h>
+#include <libdevcore/Guards.h>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
@@ -31,8 +32,8 @@
 namespace dev
 {
 
-struct DBChannel: public LogChannel  { static const char* name() { return "TDB"; } static const int verbosity = 18; };
-struct DBWarn: public LogChannel  { static const char* name() { return "TDB"; } static const int verbosity = 1; };
+struct DBChannel: public LogChannel  { static const char* name(); static const int verbosity = 18; };
+struct DBWarn: public LogChannel  { static const char* name(); static const int verbosity = 1; };
 
 #define dbdebug clog(DBChannel)
 #define dbwarn clog(DBWarn)
@@ -43,29 +44,31 @@ class MemoryDB
 
 public:
 	MemoryDB() {}
+	MemoryDB(MemoryDB const& _c) { operator=(_c); }
 
-	void clear() { m_over.clear(); }
-	std::map<h256, std::string> get() const;
+	MemoryDB& operator=(MemoryDB const& _c);
 
-	std::string lookup(h256 _h) const;
-	bool exists(h256 _h) const;
-	void insert(h256 _h, bytesConstRef _v);
-	bool kill(h256 _h);
+	void clear() { m_main.clear(); }	// WARNING !!!! didn't originally clear m_refCount!!!
+	std::unordered_map<h256, std::string> get() const;
+
+	std::string lookup(h256 const& _h) const;
+	bool exists(h256 const& _h) const;
+	void insert(h256 const& _h, bytesConstRef _v);
+	bool kill(h256 const& _h);
 	void purge();
 
-	bytes lookupAux(h256 _h) const { auto h = aux(_h); return m_aux.count(h) ? m_aux.at(h) : bytes(); }
-	void removeAux(h256 _h) { m_auxActive.erase(aux(_h)); }
-	void insertAux(h256 _h, bytesConstRef _v) { auto h = aux(_h); m_auxActive.insert(h); m_aux[h] = _v.toBytes(); }
+	bytes lookupAux(h256 const& _h) const;
+	void removeAux(h256 const& _h);
+	void insertAux(h256 const& _h, bytesConstRef _v);
 
-	std::set<h256> keys() const;
+	h256Hash keys() const;
 
 protected:
-	static h256 aux(h256 _k) { return h256(sha3(_k).ref().cropped(0, 24), h256::AlignLeft); }
-
-	std::map<h256, std::string> m_over;
-	std::map<h256, unsigned> m_refCount;
-	std::set<h256> m_auxActive;
-	std::map<h256, bytes> m_aux;
+#if DEV_GUARDED_DB
+	mutable SharedMutex x_this;
+#endif
+	std::unordered_map<h256, std::pair<std::string, unsigned>> m_main;
+	std::unordered_map<h256, std::pair<bytes, bool>> m_aux;
 
 	mutable bool m_enforceRefs = false;
 };
@@ -83,7 +86,7 @@ private:
 
 inline std::ostream& operator<<(std::ostream& _out, MemoryDB const& _m)
 {
-	for (auto i: _m.get())
+	for (auto const& i: _m.get())
 	{
 		_out << i.first << ": ";
 		_out << RLP(i.second);

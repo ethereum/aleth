@@ -14,44 +14,33 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Common.cpp
+/** @file TrieHash.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Common.h"
-#include "Exceptions.h"
-#include "Log.h"
-using namespace std;
-using namespace dev;
+#pragma once
+
+#include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
 
-char const* Version = "0.9.26";
+bytes rlp256(BytesMap const& _s);
+h256 hash256(BytesMap const& _s);
 
-const u256 UndefinedU256 = ~(u256)0;
+h256 orderedTrieRoot(std::vector<bytes> const& _data);
 
-void HasInvariants::checkInvariants() const
+template <class T, class U> inline h256 trieRootOver(unsigned _itemCount, T const& _getKey, U const& _getValue)
 {
-	if (!invariants())
-		BOOST_THROW_EXCEPTION(FailedInvariant());
+	BytesMap m;
+	for (unsigned i = 0; i < _itemCount; ++i)
+		m[_getKey(i)] = _getValue(i);
+	return hash256(m);
 }
 
-struct TimerChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
-
-#ifdef _WIN32
-const char* TimerChannel::name() { return EthRed " ! "; }
-#else
-const char* TimerChannel::name() { return EthRed " ⚡ "; }
-#endif
-
-TimerHelper::~TimerHelper()
-{
-	auto e = m_t.elapsed();
-	if (!m_ms || e * 1000 > m_ms)
-		clog(TimerChannel) << m_id << e << "s";
-}
+h256 orderedTrieRoot(std::vector<bytesConstRef> const& _data);
+h256 orderedTrieRoot(std::vector<bytes> const& _data);
 
 }
-
