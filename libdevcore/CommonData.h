@@ -253,24 +253,21 @@ inline std::vector<_T>& operator+=(std::vector<typename std::enable_if<!std::is_
 /// Insert the contents of a container into a set
 template <class T, class U> std::set<T>& operator+=(std::set<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.insert(i);
+	_a.insert(std::begin(_b), std::end(_b));
 	return _a;
 }
 
 /// Insert the contents of a container into an unordered_st
 template <class T, class U> std::unordered_set<T>& operator+=(std::unordered_set<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.insert(i);
+	_a.insert(std::begin(_b), std::end(_b));
 	return _a;
 }
 
 /// Concatenate the contents of a container onto a vector
 template <class T, class U> std::vector<T>& operator+=(std::vector<T>& _a, U const& _b)
 {
-	for (auto const& i: _b)
-		_a.push_back(i);
+	_a.insert(_a.end(), std::begin(_b), std::end(_b));
 	return _a;
 }
 
@@ -290,16 +287,18 @@ template <class T, class U> std::vector<T> operator+(std::vector<T> _a, U const&
 template <class _T>
 inline std::vector<_T> operator+(std::vector<_T> const& _a, std::vector<_T> const& _b)
 {
-	std::vector<_T> ret(_a);
-	return ret += _b;
+	std::vector<_T> ret;
+	ret.reserve(_a.size() + _b.size());
+	ret += _a;
+	ret += _b;
+	return ret;
 }
 
 /// Merge two sets of elements.
 template <class _T>
 inline std::set<_T>& operator+=(std::set<_T>& _a, std::set<_T> const& _b)
 {
-	for (auto& i: _b)
-		_a.insert(i);
+	_a.insert(std::begin(_b), std::end(_b));
 	return _a;
 }
 
@@ -307,8 +306,9 @@ inline std::set<_T>& operator+=(std::set<_T>& _a, std::set<_T> const& _b)
 template <class _T>
 inline std::set<_T> operator+(std::set<_T> const& _a, std::set<_T> const& _b)
 {
-	std::set<_T> ret(_a);
-	return ret += _b;
+	std::set<_T> ret;
+	std::set_union(_a.cbegin(), _a.cend(), _b.cbegin(), _b.cend(), std::inserter(ret, ret.begin()));
+	return ret;
 }
 
 /// Make normal string from fixed-length string.
@@ -318,6 +318,7 @@ template<class T, class U>
 std::vector<T> keysOf(std::map<T, U> const& _m)
 {
 	std::vector<T> ret;
+	ret.reserve(_m.size());
 	for (auto const& i: _m)
 		ret.push_back(i.first);
 	return ret;
@@ -327,6 +328,7 @@ template<class T, class U>
 std::vector<T> keysOf(std::unordered_map<T, U> const& _m)
 {
 	std::vector<T> ret;
+	ret.reserve(_m.size());
 	for (auto const& i: _m)
 		ret.push_back(i.first);
 	return ret;
