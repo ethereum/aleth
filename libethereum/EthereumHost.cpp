@@ -573,11 +573,22 @@ void EthereumHost::onPeerNewBlock(EthereumPeer* _peer, RLP const& _r)
 		case ImportResult::UnknownParent:
 			if (h)
 			{
-				u256 difficulty = _r[1].toInt<u256>();
-				if (m_syncingTotalDifficulty < difficulty)
+				BlockInfo bi;
+				RLP root(_r[0].data());
+				try
+				{
+					bi.populateFromHeader(root[0], CheckEverything, h);
+				}
+				catch (Exception const& _e)
+				{
+					_peer->disable("Malformed block received.");
+					return;
+				}
+
+				if (m_syncingTotalDifficulty < bi.difficulty)
 				{
 					_peer->m_latestHash = h;
-					_peer->m_totalDifficulty = difficulty;
+					_peer->m_totalDifficulty = bi.difficulty;
 					if (peerShouldGrabChain(_peer))
 					{
 						clog(NetMessageSummary) << "Received block with no known parent. Resyncing...";
