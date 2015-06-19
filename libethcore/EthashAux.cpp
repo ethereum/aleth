@@ -122,7 +122,11 @@ EthashAux::LightAllocation::LightAllocation(h256 const& _seedHash)
 	uint64_t blockNumber = EthashAux::number(_seedHash);
 	light = ethash_light_new(blockNumber);
 	if (!light)
+	{
+		// LTODO: If at some point we know how to flush our LogOutputstream, use that one here
+		cout << "ERROR: Cache Generation failure." << endl;
 		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("ethash_light_new()"));
+	}
 	size = ethash_get_cachesize(blockNumber);
 }
 
@@ -138,12 +142,11 @@ bytesConstRef EthashAux::LightAllocation::data() const
 
 EthashAux::FullAllocation::FullAllocation(ethash_light_t _light, ethash_callback_t _cb)
 {
-//	cdebug << "About to call ethash_full_new...";
 	full = ethash_full_new(_light, _cb);
-//	cdebug << "Called OK.";
 	if (!full)
 	{
-		clog(DAGChannel) << "DAG Generation Failure. Reason: "  << strerror(errno);
+		// LTODO: If at some point we know how to flush our LogOutputstream, use that one here
+		cout << "ERROR: DAG Generation failure. Reason: " << strerror(errno) << endl;
 		BOOST_THROW_EXCEPTION(ExternalFunctionFailure("ethash_full_new"));
 	}
 }
