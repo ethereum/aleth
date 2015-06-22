@@ -14,44 +14,23 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Common.cpp
+/** @file DB.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Common.h"
-#include "Exceptions.h"
-#include "Log.h"
-using namespace std;
-using namespace dev;
+#pragma once
 
-namespace dev
-{
-
-char const* Version = "0.9.27";
-
-const u256 UndefinedU256 = ~(u256)0;
-
-void HasInvariants::checkInvariants() const
-{
-	if (!invariants())
-		BOOST_THROW_EXCEPTION(FailedInvariant());
-}
-
-struct TimerChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
-
-#ifdef _WIN32
-const char* TimerChannel::name() { return EthRed " ! "; }
+#pragma warning(push)
+#pragma warning(disable: 4100 4267)
+#if ETH_ROCKSDB || !ETH_TRUE
+#include <rocksdb/db.h>
+#include <rocksdb/write_batch.h>
+namespace ldb = rocksdb;
 #else
-const char* TimerChannel::name() { return EthRed " ⚡ "; }
+#include <leveldb/db.h>
+#include <leveldb/write_batch.h>
+namespace ldb = leveldb;
 #endif
-
-TimerHelper::~TimerHelper()
-{
-	auto e = m_t.elapsed();
-	if (!m_ms || e * 1000 > m_ms)
-		clog(TimerChannel) << m_id << e << "s";
-}
-
-}
-
+#pragma warning(pop)
+#define DEV_LDB 1
