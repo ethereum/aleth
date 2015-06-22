@@ -274,6 +274,19 @@ void stopMiningAfterXBlocks(eth::Client* _c, unsigned _start, unsigned _mining)
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
+void assertDatadirExists()
+{
+	try
+	{
+		bfs::exists(getDataDir()) || bfs::create_directory(getDataDir());
+	}
+	catch (const bfs::filesystem_error& e)
+	{
+		cout << "Failed to create data directory with: " << e.code().message();
+		exit(1);
+	}
+}
+
 int main(int argc, char** argv)
 {
 	// Init defaults
@@ -341,17 +354,6 @@ int main(int argc, char** argv)
 
 	/// Wallet password stuff
 	string masterPassword;
-
-	// make sure data dir exists
-	try
-	{
-		bfs::exists(getDataDir()) || bfs::create_directory(getDataDir());
-	}
-	catch (const bfs::filesystem_error& e)
-	{
-		cout << "Failed to create data directory with: " << e.code().message();
-		exit(1);
-	}
 
 	string configFile = getDataDir() + "/config.rlp";
 	bytes b = contents(configFile);
@@ -676,6 +678,7 @@ int main(int argc, char** argv)
 	{
 		RLPStream config(2);
 		config << signingKey << beneficiary;
+		assertDatadirExists();
 		writeFile(configFile, config.out());
 	}
 
