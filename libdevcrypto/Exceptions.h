@@ -14,46 +14,22 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file OverlayDB.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
+/** @file Exceptions.h
+ * @author Christian <c@ethdev.com>
+ * @date 2016
  */
 
 #pragma once
 
-#include <memory>
-#include <libdevcore/db.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/MemoryDB.h>
+#include <libdevcore/Exceptions.h>
 
 namespace dev
 {
-
-class OverlayDB: public MemoryDB
+namespace crypto
 {
-public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
-	~OverlayDB();
 
-	ldb::DB* db() const { return m_db.get(); }
+/// Rare malfunction of cryptographic functions.
+DEV_SIMPLE_EXCEPTION(CryptoException);
 
-	void commit();
-	void rollback();
-
-	std::string lookup(h256 const& _h) const;
-	bool exists(h256 const& _h) const;
-	void kill(h256 const& _h);
-
-	bytes lookupAux(h256 const& _h) const;
-
-private:
-	using MemoryDB::clear;
-
-	std::shared_ptr<ldb::DB> m_db;
-
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
-};
-
+}
 }
