@@ -29,12 +29,13 @@ BOOST_AUTO_TEST_SUITE(CoreLibTests)
 BOOST_AUTO_TEST_CASE(byteRef)
 {	
 	cnote << "bytesRef copyTo and toString...";
-	dev::bytesRef _out(&dev::fromHex("0102030405060708091011121314151617181920212223242526272829303132").at(0), 32);
+	dev::bytes originalSequence = dev::fromHex("0102030405060708091011121314151617181920212223242526272829303132");
+	dev::bytesRef _out(&originalSequence.at(0), 32);
 	dev::h256 ret("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
 	ret.ref().copyTo(_out);
 
 	BOOST_CHECK_MESSAGE(_out.size() == 32, "Error wrong result size when h256::ref().copyTo(dev::bytesRef out)");
-	BOOST_CHECK_MESSAGE(_out.toString() == "1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347", "Error when h256::ref().copyTo(dev::bytesRef out)");
+	BOOST_CHECK_MESSAGE(_out.toBytes() == originalSequence, "Error when h256::ref().copyTo(dev::bytesRef out)");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
