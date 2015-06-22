@@ -109,6 +109,16 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(StateTests)
 
+BOOST_AUTO_TEST_CASE(stVector)
+{
+	dev::bytesRef _out;
+	h256 ret("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
+	ret.ref().copyTo(_out);
+
+	BOOST_CHECK_MESSAGE(_out.size() == 32, "Error wrong reult size when h256::ref().copyTo(dev::bytesRef out)");
+	BOOST_CHECK_MESSAGE(_out.toString() == "1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347", "Error when h256::ref().copyTo(dev::bytesRef out)");
+}
+
 BOOST_AUTO_TEST_CASE(stExample)
 {
 	dev::test::executeTests("stExample", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
