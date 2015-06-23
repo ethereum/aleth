@@ -26,6 +26,7 @@
 #include <iostream>
 #include <signal.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
 
@@ -65,6 +66,7 @@ using namespace dev::p2p;
 using namespace dev::eth;
 using namespace boost::algorithm;
 using dev::eth::Instruction;
+namespace bfs = boost::filesystem;
 
 static bool g_silence = false;
 
@@ -270,6 +272,19 @@ void stopMiningAfterXBlocks(eth::Client* _c, unsigned _start, unsigned _mining)
 	if (_c->isMining() && _c->blockChain().details().number - _start == _mining)
 		_c->stopMining();
 	this_thread::sleep_for(chrono::milliseconds(100));
+}
+
+void assertDatadirExists()
+{
+	try
+	{
+		bfs::exists(getDataDir()) || bfs::create_directory(getDataDir());
+	}
+	catch (const bfs::filesystem_error& e)
+	{
+		cout << "Failed to create data directory with: " << e.code().message();
+		exit(1);
+	}
 }
 
 int main(int argc, char** argv)
@@ -663,6 +678,7 @@ int main(int argc, char** argv)
 	{
 		RLPStream config(2);
 		config << signingKey << beneficiary;
+		assertDatadirExists();
 		writeFile(configFile, config.out());
 	}
 
