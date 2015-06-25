@@ -368,6 +368,7 @@ Item {
 		}
 
 		function getState(index) {
+			console.log(stateList.length + " jj")
 			return stateList[index];
 		}
 
@@ -418,6 +419,7 @@ Item {
 
 		function loadStatesFromProject(projectData)
 		{
+			console.log("projectdata " + projectData)
 			data = projectData
 			if (!projectData.states)
 				projectData.states = [];
@@ -432,6 +434,7 @@ Item {
 				var item = fromPlainStateItem(items[i]);
 				stateListModel.append(item);
 				stateList.push(item);
+				console.log("addstate " + JSON.stringify(item))
 			}
 			stateListModelReady();
 		}

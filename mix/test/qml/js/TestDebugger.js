@@ -1,3 +1,5 @@
+Qt.include("TestScenarioPanelActions.js")
+
 function test_defaultTransactionSequence()
 {
 	newProject();
@@ -14,8 +16,14 @@ function test_defaultTransactionSequence()
 	"	uint z;\r" +
 	"}\r"
 	);
+	newScenario()
+	rebuild()
 	waitForExecution();
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel, "count", 3);
+	var bc = mainApplication.mainContent.scenarioPanel.bc.model;
+	tryCompare(bc.blocks, "length", 1);
+	tryCompare(bc.blocks[0], "status", "pending");
+	tryCompare(bc.blocks[0].transactions, "length", 1);
+
 }
 
 function test_transactionWithParameter()

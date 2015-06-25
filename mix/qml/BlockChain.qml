@@ -74,6 +74,19 @@ ColumnLayout {
 		previousWidth = width
 	}
 
+	function clear()
+	{
+		model = []
+		blockModel.clear()
+	}
+
+	Connections
+	{
+		id: projectModel
+		onProjectClosed: clear()
+		onNewProject: clear()
+	}
+
 	property int statusWidth: 30
 	property int fromWidth: 150
 	property int toWidth: 100

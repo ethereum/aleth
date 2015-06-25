@@ -32,6 +32,7 @@ Dialog {
 	property bool saveStatus
 	signal accepted;
 	property int rowWidth: 500
+	property variant updateAction: updateBtn
 	StateDialogStyle {
 		id: transactionDialogStyle
 	}
@@ -126,7 +127,7 @@ Dialog {
 		if (functionComboBox.currentIndex >= 0 && functionComboBox.currentIndex < functionsModel.count) {
 			var contract = codeModel.contracts[contractFromToken(contractCreationComboBox.currentValue())];
 			if (contract) {
-				var func = contract.contract.functions[functionComboBox.currentIndex + 1];
+				var func = contract.contract.functions[functionComboBox.currentIndex];
 				if (func) {
 					var parameters = func.parameters;
 					for (var p = 0; p < parameters.length; p++)
@@ -681,14 +682,15 @@ Dialog {
 						width: parent.width
 						anchors.right: parent.right
 						Button {
-							id: updateBtn
 							text: qsTr("Cancel");
 							onClicked: close();
 						}
 
 						Button {
+							id: updateBtn
 							text: qsTr("Update");
-							onClicked: {
+							function save()
+							{
 								var invalid = InputValidator.validate(paramsModel, paramValues);
 								if (invalid.length === 0)
 								{
@@ -703,6 +705,7 @@ Dialog {
 									errorDialog.open();
 								}
 							}
+							onClicked: save()
 						}
 					}
 

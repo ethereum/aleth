@@ -91,8 +91,11 @@ ColumnLayout
 				target: blockChainSelector
 				onLoaded:
 				{
-					scenarioName.text = scenario.title
-					scenarioNameEdit.text = scenario.title
+					if (scenario)
+					{
+						scenarioName.text = scenario.title
+						scenarioNameEdit.text = scenario.title
+					}
 				}
 			}
 
@@ -208,6 +211,7 @@ ColumnLayout
 								Connections {
 									target: blockChainSelector
 									onLoaded: {
+											console.log(scenarioList.currentIndex + " flkdsds")
 										comboLabel.text = projectModel.stateListModel.getState(scenarioList.currentIndex).title
 									}
 									onRenamed: {

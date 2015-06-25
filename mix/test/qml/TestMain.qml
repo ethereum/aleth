@@ -101,8 +101,8 @@ TestCase
 
 	/* Test cases */
 	function test_tutorial() { TestTutorial.test_tutorial(); }
-	/*function test_dbg_defaultTransactionSequence() { TestDebugger.test_defaultTransactionSequence(); }
-	function test_dbg_transactionWithParameter() { TestDebugger.test_transactionWithParameter(); }
+	function test_dbg_defaultTransactionSequence() { TestDebugger.test_defaultTransactionSequence(); }
+	/*function test_dbg_transactionWithParameter() { TestDebugger.test_transactionWithParameter(); }
 	function test_dbg_constructorParameters() { TestDebugger.test_constructorParameters(); }
 	function test_dbg_arrayParametersAndStorage() { TestDebugger.test_arrayParametersAndStorage(); }
 	function test_dbg_solidity() { TestDebugger.test_solidityDebugging(); }

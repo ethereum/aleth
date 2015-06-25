@@ -46,31 +46,25 @@ function test_tutorial()
 	"</html>\r"
 	);
 
+	newScenario()
 	rebuild()
+	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog;
 	addTx()
-/*
-	mainApplication.projectModel.stateListModel.editState(0);
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	ts.waitForRendering(transactionDialog, 3000);
-	transactionDialog.selectFunction("setRating");
-	clickElement(transactionDialog, 200, 310);
-	ts.typeString("Titanic", transactionDialog);
-	clickElement(transactionDialog, 200, 330);
-	ts.typeString("2", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.acceptAndClose();
-	mainApplication.mainContent.startQuickDebugging();
-	if (!ts.waitForSignal(mainApplication.clientModel, "debugDataReady(QObject*)", 5000))
+	selectExecuteTrType(transactionDialog)
+	transactionDialog.selectFunction("setRating")
+	fillParamInput(transactionDialog, 0, "Titanic")
+	fillParamInput(transactionDialog, 1, "2")
+	applyTr(transactionDialog)
+	if (!ts.waitForSignal(mainApplication.clientModel, "runComplete()", 5000))
 		fail("Error running transaction");
-	wait(1);
 	clickElement(mainApplication.mainContent.webView.webView, 1, 1);
+	mainApplication.mainContent.webView.reload()
+	ts.waitForSignal(mainApplication.mainContent.webView, "ready()", 5000);
 	ts.typeString("\t\t\t\t");
 	ts.typeString("Titanic");
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.callModel, "count", 8); //wait for 8 calls
+	wait(1)
 	mainApplication.mainContent.webView.getContent();
 	ts.waitForSignal(mainApplication.mainContent.webView, "webContentReady()", 5000);
 	var body = mainApplication.mainContent.webView.webContent;
 	verify(body.indexOf("<div id=\"queryres\">2</div>") != -1, "Web content not updated")
-*/
 }

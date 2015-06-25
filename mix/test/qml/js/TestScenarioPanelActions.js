@@ -1,7 +1,7 @@
 function rebuild()
 {
 	mainApplication.mainContent.scenarioPanel.bc.rebuildBtn.build()
-	wait(3000)
+	wait(2000)
 }
 
 function addTx()
@@ -52,3 +52,32 @@ function saveTitle()
 {
 	mainApplication.mainContent.scenarioPanel.load.scenarioNameEditAction.save()
 }
+
+/* Tr Panel */
+function selectSendEtherTrType(trDialog)
+{
+	clickElement(trDialog, 243, 60);
+}
+
+function selectCreationTrType(trDialog)
+{
+	clickElement(trDialog, 243, 90);
+}
+
+function selectExecuteTrType(trDialog)
+{
+	clickElement(trDialog, 243, 125);
+}
+
+function applyTr(trDialog)
+{
+	trDialog.updateAction.save()
+}
+
+function fillParamInput(trDialog, index, value)
+{
+	clickElement(trDialog, 226, 220 + (36 * index));
+	ts.typeString(value, trDialog);
+}
+
+
