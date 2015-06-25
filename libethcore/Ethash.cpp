@@ -256,7 +256,6 @@ public:
 
 	void abort()
 	{
-		UniqueGuard l(x_all);
 		if (m_aborted)
 			return;
 //		cdebug << "Attempting to abort";
