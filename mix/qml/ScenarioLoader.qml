@@ -18,6 +18,11 @@ ColumnLayout
 	signal duplicated(variant scenario)
 	signal loaded(variant scenario)
 	signal renamed(variant scenario)
+	property alias addScenarioBtn: addScenario
+	property alias restoreScenarioBtn: restoreScenario
+	property alias duplicateScenarioBtn: duplicateScenario
+	property alias saveScenarioBtn: saveScenario
+	property alias scenarioNameEditAction: scenarioNameEdit
 	spacing: 0
 	function init()
 	{
@@ -229,7 +234,8 @@ ColumnLayout
 					height: parent.height
 					buttonShortcut: ""
 					sourceImg: "qrc:/qml/img/restoreicon@2x.png"
-					onClicked: {
+					function add()
+					{
 						var item = projectModel.stateListModel.createDefaultState();
 						item.title = qsTr("New Scenario")
 						projectModel.stateListModel.appendState(item)
@@ -237,6 +243,7 @@ ColumnLayout
 						scenarioList.currentIndex = projectModel.stateListModel.count - 1
 						scenarioNameEdit.edit()
 					}
+					onClicked: add()
 					text: qsTr("New..")
 					roundRight: true
 					roundLeft: false
@@ -297,6 +304,11 @@ ColumnLayout
 					anchors.left: restoreScenario.right
 					text: qsTr("Save")
 					onClicked: {
+						save()
+					}
+
+					function save()
+					{
 						projectModel.saveProjectFile()
 						saved(state)
 					}
@@ -321,7 +333,9 @@ ColumnLayout
 					id: duplicateScenario
 					anchors.left: saveScenario.right
 					text: qsTr("Duplicate")
-					onClicked: {
+					onClicked: duplicate()
+					function duplicate()
+					{
 						projectModel.stateListModel.duplicateState(scenarioList.currentIndex)
 						duplicated(state)
 					}

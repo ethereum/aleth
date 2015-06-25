@@ -1,4 +1,5 @@
 //Test case to cover Mix tutorial
+Qt.include("TestScenarioPanelActions.js")
 
 function test_tutorial()
 {
@@ -45,6 +46,9 @@ function test_tutorial()
 	"</html>\r"
 	);
 
+	rebuild()
+	addTx()
+/*
 	mainApplication.projectModel.stateListModel.editState(0);
 	mainApplication.projectModel.stateDialog.model.addTransaction();
 	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
@@ -68,4 +72,5 @@ function test_tutorial()
 	ts.waitForSignal(mainApplication.mainContent.webView, "webContentReady()", 5000);
 	var body = mainApplication.mainContent.webView.webContent;
 	verify(body.indexOf("<div id=\"queryres\">2</div>") != -1, "Web content not updated")
+*/
 }

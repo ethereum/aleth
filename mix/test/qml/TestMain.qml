@@ -99,8 +99,9 @@ TestCase
 		ts.mouseClick(el, x, y, Qt.LeftButton, Qt.NoModifier, 10)
 	}
 
+	/* Test cases */
 	function test_tutorial() { TestTutorial.test_tutorial(); }
-	function test_dbg_defaultTransactionSequence() { TestDebugger.test_defaultTransactionSequence(); }
+	/*function test_dbg_defaultTransactionSequence() { TestDebugger.test_defaultTransactionSequence(); }
 	function test_dbg_transactionWithParameter() { TestDebugger.test_transactionWithParameter(); }
 	function test_dbg_constructorParameters() { TestDebugger.test_constructorParameters(); }
 	function test_dbg_arrayParametersAndStorage() { TestDebugger.test_arrayParametersAndStorage(); }
@@ -113,6 +114,9 @@ TestCase
 	function test_project_contractRename() { TestProject.test_contractRename(); }
 	function test_project_multipleWebPages() { TestProject.test_multipleWebPages(); }
 	function test_project_multipleContractsSameFile() { TestProject.test_multipleContractsSameFile(); }
-	function test_project_deleteFile() { TestProject.test_deleteFile(); }
+	function test_project_deleteFile() { TestProject.test_deleteFile(); }*/
+
+
+
 }
 

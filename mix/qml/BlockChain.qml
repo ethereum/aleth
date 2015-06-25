@@ -14,11 +14,18 @@ import "."
 ColumnLayout {
 	id: blockChainPanel
 	property variant model
+	property variant transactionDialog: transactionDialog
 	spacing: 0
 	property int previousWidth
 	property variant debugTrRequested: []
 	signal chainChanged
 	signal chainReloaded
+	/* btn */
+	property alias addBlockBtn: addBlockBtn
+	property alias rebuildBtn: rebuild
+	property alias newAccountBtn: newAccountBtn
+	property alias addTxBtn: addTransaction
+
 
 	Connections
 	{
@@ -266,7 +273,7 @@ ColumnLayout {
 					height: 30
 					roundLeft: true
 					roundRight: true
-					onClicked:
+					function build()
 					{
 						if (ensureNotFuturetime.running)
 							return;
@@ -318,6 +325,7 @@ ColumnLayout {
 						ensureNotFuturetime.start()
 						clientModel.setupScenario(model);
 					}
+					onClicked: build()
 					buttonShortcut: ""
 					sourceImg: "qrc:/qml/img/recycleicon@2x.png"
 				}
@@ -333,7 +341,7 @@ ColumnLayout {
 				ScenarioButton {
 					id: addTransaction
 					text: qsTr("Add Tx")
-					onClicked:
+					function addTx()
 					{
 						var lastBlock = model.blocks[model.blocks.length - 1];
 						if (lastBlock.status === "mined")
@@ -348,6 +356,7 @@ ColumnLayout {
 						transactionDialog.execute = true
 						transactionDialog.open(model.blocks[model.blocks.length - 1].transactions.length, model.blocks.length - 1, item)
 					}
+					onClicked: addTx()
 					width: 100
 					height: 30
 					buttonShortcut: ""
@@ -378,7 +387,7 @@ ColumnLayout {
 					anchors.left: addTransaction.right
 					roundLeft: false
 					roundRight: true
-					onClicked:
+					function addBlockClicked()
 					{
 						if (ensureNotFuturetime.running)
 							return
@@ -397,9 +406,8 @@ ColumnLayout {
 						}
 						else
 							addNewBlock()
-
 					}
-
+					onClicked: addBlockClicked()
 					function addNewBlock()
 					{
 						var block = projectModel.stateListModel.createEmptyBlock()
@@ -481,9 +489,11 @@ ColumnLayout {
 			}
 
 			ScenarioButton {
-				id: newAccount
+				id: newAccountBtn
 				text: qsTr("New Account..")
-				onClicked: {
+				onClicked: newAccount()
+				function newAccount()
+				{
 					model.accounts.push(projectModel.stateListModel.newAccount("1000000", QEther.Ether))
 				}
 				Layout.preferredWidth: 100

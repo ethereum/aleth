@@ -11,6 +11,7 @@ import "."
 Rectangle {
 	color: "#ededed"
 	property alias bc: blockChain
+	property alias load: loader
 
 	Connections
 	{
