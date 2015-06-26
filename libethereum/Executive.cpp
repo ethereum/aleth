@@ -229,7 +229,9 @@ bool Executive::execute()
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _gas, _value, _data, {}, {}};
+	dev::bytes defaultOutput = dev::fromHex("0000000000000000000000000000000000000000000000000000000000000000");
+	dev::bytesRef _out(&defaultOutput.at(0), 32);
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _gas, _value, _data, _out, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 
@@ -250,6 +252,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		{
 			m_gas = (u256)(_p.gas - g);
 			it->second.exec(_p.data, _p.out);
+			m_res->output = _p.out.toBytes();
 		}
 	}
 	else
