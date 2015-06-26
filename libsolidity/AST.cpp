@@ -21,6 +21,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/Utils.h>
 #include <libsolidity/AST.h>
@@ -410,7 +411,14 @@ void InheritanceSpecifier::checkTypeRequirements()
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructer call."));
+			BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+				"Invalid type for argument in constructor call. "
+				"Invalid implicit conversion from " +
+				m_arguments[i]->getType()->toString() +
+				" to " +
+				parameterTypes[i]->toString() +
+				" requested."
+			));
 }
 
 TypePointer StructDefinition::getType(ContractDefinition const*) const
@@ -427,23 +435,29 @@ void StructDefinition::checkMemberTypes() const
 
 void StructDefinition::checkRecursion() const
 {
-	set<StructDefinition const*> definitionsSeen;
-	vector<StructDefinition const*> queue = {this};
-	while (!queue.empty())
+	using StructPointer = StructDefinition const*;
+	using StructPointersSet = set<StructPointer>;
+	function<void(StructPointer,StructPointersSet const&)> check = [&](StructPointer _struct, StructPointersSet const& _parents)
 	{
-		StructDefinition const* def = queue.back();
-		queue.pop_back();
-		if (definitionsSeen.count(def))
-			BOOST_THROW_EXCEPTION(ParserError() << errinfo_sourceLocation(def->getLocation())
-												<< errinfo_comment("Recursive struct definition."));
-		definitionsSeen.insert(def);
-		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
+		if (_parents.count(_struct))
+			BOOST_THROW_EXCEPTION(
+				ParserError() <<
+				errinfo_sourceLocation(_struct->getLocation()) <<
+				errinfo_comment("Recursive struct definition.")
+			);
+		set<StructDefinition const*> parents = _parents;
+		parents.insert(_struct);
+		for (ASTPointer<VariableDeclaration> const& member: _struct->getMembers())
 			if (member->getType()->getCategory() == Type::Category::Struct)
 			{
-				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
-				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
+				auto const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
+				check(
+					&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()),
+					parents
+				);
 			}
-	}
+	};
+	check(this, {});
 }
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const
@@ -462,9 +476,6 @@ void FunctionDefinition::checkTypeRequirements()
 	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
-		// todo delete when will be implemented arrays as parameter type in internal functions
-		if (getVisibility() == Visibility::Public && var->getType()->getCategory() == Type::Category::Array)
-			BOOST_THROW_EXCEPTION(var->createTypeError("Arrays only implemented for external functions."));
 		if (getVisibility() >= Visibility::Public && !(var->getType()->externalType()))
 			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for public and external functions."));
 	}
@@ -484,7 +495,7 @@ string FunctionDefinition::externalSignature() const
 bool VariableDeclaration::isLValue() const
 {
 	// External function parameters and constant declared variables are Read-Only
-	return !isExternalFunctionParameter() && !m_isConstant;
+	return !isExternalCallableParameter() && !m_isConstant;
 }
 
 void VariableDeclaration::checkTypeRequirements()
@@ -512,28 +523,41 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Assignment necessary for type detection."));
 		m_value->checkTypeRequirements(nullptr);
 
-		TypePointer type = m_value->getType();
-		if (type->getCategory() == Type::Category::IntegerConstant)
-		{
-			auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
-			if (!intType)
-				BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
-			type = intType;
-		}
+		TypePointer const& type = m_value->getType();
+		if (
+			type->getCategory() == Type::Category::IntegerConstant &&
+			!dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType()
+		)
+			BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
 		else if (type->getCategory() == Type::Category::Void)
 			BOOST_THROW_EXCEPTION(createTypeError("Variable cannot have void type."));
-		m_type = type;
+		m_type = type->mobileType();
 	}
 	if (m_isStateVariable && getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
 		BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
 }
 
-bool VariableDeclaration::isExternalFunctionParameter() const
+bool VariableDeclaration::isCallableParameter() const
 {
-	auto const* function = dynamic_cast<FunctionDefinition const*>(getScope());
-	if (!function || function->getVisibility() != Declaration::Visibility::External)
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(getScope());
+	if (!callable)
 		return false;
-	for (auto const& variable: function->getParameters())
+	for (auto const& variable: callable->getParameters())
+		if (variable.get() == this)
+			return true;
+	if (callable->getReturnParameterList())
+		for (auto const& variable: callable->getReturnParameterList()->getParameters())
+			if (variable.get() == this)
+				return true;
+	return false;
+}
+
+bool VariableDeclaration::isExternalCallableParameter() const
+{
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(getScope());
+	if (!callable || callable->getVisibility() != Declaration::Visibility::External)
+		return false;
+	for (auto const& variable: callable->getParameters())
 		if (variable.get() == this)
 			return true;
 	return false;
@@ -581,7 +605,14 @@ void ModifierInvocation::checkTypeRequirements(vector<ContractDefinition const*>
 		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for modifier invocation."));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*(*parameters)[i]->getType()))
-			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in modifier invocation."));
+			BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+				"Invalid type for argument in modifier invocation. "
+				"Invalid implicit conversion from " +
+				m_arguments[i]->getType()->toString() +
+				" to " +
+				(*parameters)[i]->getType()->toString() +
+				" requested."
+			));
 }
 
 void EventDefinition::checkTypeRequirements()
@@ -686,9 +717,14 @@ void Expression::expectType(Type const& _expectedType)
 	checkTypeRequirements(nullptr);
 	Type const& type = *getType();
 	if (!type.isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(createTypeError("Type " + type.toString() +
-											  " not implicitly convertible to expected type "
-											  + _expectedType.toString() + "."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Type " +
+			type.toString() +
+			" is not implicitly convertible to expected type " +
+			_expectedType.toString() +
+			"."
+		)
+		);
 }
 
 void Expression::requireLValue()
@@ -766,9 +802,18 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 		{
 			// call by positional arguments
 			for (size_t i = 0; i < m_arguments.size(); ++i)
-				if (!functionType->takesArbitraryParameters() &&
-						!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-					BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("Invalid type for argument in function call."));
+				if (
+					!functionType->takesArbitraryParameters() &&
+					!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i])
+				)
+					BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+						"Invalid type for argument in function call. "
+						"Invalid implicit conversion from " +
+						m_arguments[i]->getType()->toString() +
+						" to " +
+						parameterTypes[i]->toString() +
+						" requested."
+					));
 		}
 		else
 		{
@@ -792,7 +837,14 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 					if (parameterNames[j] == *m_names[i]) {
 						// check type convertible
 						if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[j]))
-							BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
+							BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+								"Invalid type for argument in function call. "
+								"Invalid implicit conversion from " +
+								m_arguments[i]->getType()->toString() +
+								" to " +
+								parameterTypes[i]->toString() +
+								" requested."
+							));
 
 						found = true;
 						break;
@@ -874,7 +926,7 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(type));
 		m_isLValue = (*m_memberName == "length" &&
-			arrayType.getLocation() != ArrayType::Location::CallData && arrayType.isDynamicallySized());
+			arrayType.location() != DataLocation::CallData && arrayType.isDynamicallySized());
 	}
 	else
 		m_isLValue = false;
@@ -897,7 +949,7 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 			m_type = make_shared<FixedBytesType>(1);
 		else
 			m_type = type.getBaseType();
-		m_isLValue = type.getLocation() != ArrayType::Location::CallData;
+		m_isLValue = type.location() != DataLocation::CallData;
 		break;
 	}
 	case Type::Category::Mapping:
@@ -914,7 +966,7 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*m_base->getType());
 		if (!m_index)
-			m_type = make_shared<TypeType>(make_shared<ArrayType>(ArrayType::Location::Memory, type.getActualType()));
+			m_type = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, type.getActualType()));
 		else
 		{
 			m_index->checkTypeRequirements(nullptr);
@@ -922,7 +974,9 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 			if (!length)
 				BOOST_THROW_EXCEPTION(m_index->createTypeError("Integer constant expected."));
 			m_type = make_shared<TypeType>(make_shared<ArrayType>(
-				ArrayType::Location::Memory, type.getActualType(), length->literalValue(nullptr)));
+				DataLocation::Memory, type.getActualType(),
+				length->literalValue(nullptr)
+			));
 		}
 		break;
 	}

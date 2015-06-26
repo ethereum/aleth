@@ -40,10 +40,23 @@
 #include "HostCapability.h"
 #include "Network.h"
 #include "Peer.h"
-#include "RLPxFrameIO.h"
+#include "RLPXSocket.h"
+#include "RLPXFrameCoder.h"
 #include "Common.h"
 namespace ba = boost::asio;
 namespace bi = ba::ip;
+
+namespace std
+{
+template<> struct hash<pair<dev::p2p::NodeId, string>>
+{
+	size_t operator()(pair<dev::p2p::NodeId, string> const& _value) const
+	{
+		size_t ret = hash<dev::p2p::NodeId>()(_value.first);
+		return ret ^ (hash<string>()(_value.second) + 0x9e3779b9 + (ret << 6) + (ret >> 2));
+	}
+};
+}
 
 namespace dev
 {
@@ -64,6 +77,33 @@ private:
 	virtual void processEvent(NodeId const& _n, NodeTableEventType const& _e);
 
 	Host& m_host;
+};
+
+struct SubReputation
+{
+	bool isRude = false;
+	int utility = 0;
+	bytes data;
+};
+
+struct Reputation
+{
+	std::unordered_map<std::string, SubReputation> subs;
+};
+
+class ReputationManager
+{
+public:
+	ReputationManager();
+
+	void noteRude(Session const& _s, std::string const& _sub = std::string());
+	bool isRude(Session const& _s, std::string const& _sub = std::string()) const;
+	void setData(Session const& _s, std::string const& _sub, bytes const& _data);
+	bytes data(Session const& _s, std::string const& _subs) const;
+
+private:
+	std::unordered_map<std::pair<p2p::NodeId, std::string>, Reputation> m_nodes;	///< Nodes that were impolite while syncing. We avoid syncing from these if possible.
+	SharedMutex mutable x_nodes;
 };
 
 /**
@@ -152,13 +192,16 @@ public:
 	/// @returns if network has been started.
 	bool isStarted() const { return isWorking(); }
 
+	/// @returns our reputation manager.
+	ReputationManager& repMan() { return m_repMan; }
+
 	/// @returns if network is started and interactive.
 	bool haveNetwork() const { return m_run && !!m_nodeTable; }
 	
 	NodeId id() const { return m_alias.pub(); }
 
 	/// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
-	void startPeerSession(Public const& _id, RLP const& _hello, RLPXFrameIO* _io, bi::tcp::endpoint _endpoint);
+	void startPeerSession(Public const& _id, RLP const& _hello, RLPXFrameCoder* _io, std::shared_ptr<RLPXSocket> const& _s);
 
 protected:
 	void onNodeTableEvent(NodeId const& _n, NodeTableEventType const& _e);
@@ -255,6 +298,8 @@ private:
 	std::chrono::steady_clock::time_point m_lastPing;						///< Time we sent the last ping to all peers.
 	bool m_accepting = false;
 	bool m_dropPeers = false;
+
+	ReputationManager m_repMan;
 };
 
 }

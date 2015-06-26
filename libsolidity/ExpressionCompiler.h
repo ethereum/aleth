@@ -26,9 +26,9 @@
 #include <boost/noncopyable.hpp>
 #include <libdevcore/Common.h>
 #include <libevmasm/SourceLocation.h>
-#include <libsolidity/Utils.h>
 #include <libsolidity/ASTVisitor.h>
 #include <libsolidity/LValue.h>
+#include <libsolidity/Utils.h>
 
 namespace dev {
 namespace eth
@@ -39,6 +39,7 @@ namespace solidity {
 
 // forward declarations
 class CompilerContext;
+class CompilerUtils;
 class Type;
 class IntegerType;
 class ArrayType;
@@ -63,14 +64,15 @@ public:
 	/// Appends code to set a state variable to its initial value/expression.
 	void appendStateVariableInitialization(VariableDeclaration const& _varDecl);
 
+	/// Appends code to initialise a local variable.
+	/// If @a _toMemory is false, leaves the value on the stack. For memory references, this
+	/// allocates new memory.
+	/// If @a _toMemory is true, directly stores the data in the memory pos on the stack and
+	/// updates it.
+	void appendStackVariableInitialisation(Type const& _type, bool _toMemory = false);
+
 	/// Appends code for a State Variable accessor function
 	void appendStateVariableAccessor(VariableDeclaration const& _varDecl);
-
-	/// Appends an implicit or explicit type conversion. For now this comprises only erasing
-	/// higher-order bits (@see appendHighBitCleanup) when widening integer.
-	/// If @a _cleanupNeeded, high order bits cleanup is also done if no type conversion would be
-	/// necessary.
-	void appendTypeConversion(Type const& _typeOnStack, Type const& _targetType, bool _cleanupNeeded = false);
 
 private:
 	virtual bool visit(Assignment const& _assignment) override;
@@ -94,26 +96,11 @@ private:
 	void appendShiftOperatorCode(Token::Value _operator);
 	/// @}
 
-	//// Appends code that cleans higher-order bits for integer types.
-	void appendHighBitsCleanup(IntegerType const& _typeOnStack);
-
 	/// Appends code to call a function of the given type with the given arguments.
-	void appendExternalFunctionCall(FunctionType const& _functionType, std::vector<ASTPointer<Expression const>> const& _arguments);
-	/// Appends code that evaluates the given arguments and moves the result to memory encoded as
-	/// specified by the ABI. The memory offset is expected to be on the stack and is updated by
-	/// this call. If @a _padToWordBoundaries is set to false, all values are concatenated without
-	/// padding. If @a _copyDynamicDataInPlace is set, dynamic types is stored (without length)
-	/// together with fixed-length data.
-	void appendArgumentsCopyToMemory(
-		std::vector<ASTPointer<Expression const>> const& _arguments,
-		TypePointers const& _types = {},
-		bool _padToWordBoundaries = true,
-		bool _padExceptionIfFourBytes = false,
-		bool _copyDynamicDataInPlace = false
+	void appendExternalFunctionCall(
+		FunctionType const& _functionType,
+		std::vector<ASTPointer<Expression const>> const& _arguments
 	);
-	/// Appends code that moves a stack element of the given type to memory. The memory offset is
-	/// expected below the stack element and is updated by this call.
-	void appendTypeMoveToMemory(Type const& _type, bool _padToWordBoundaries = true);
 	/// Appends code that evaluates a single expression and moves the result to memory. The memory offset is
 	/// expected to be on the stack and is updated by this call.
 	void appendExpressionCopyToMemory(Type const& _expectedType, Expression const& _expression);
@@ -130,9 +117,13 @@ private:
 	template <class _LValueType, class... _Arguments>
 	void setLValue(Expression const& _expression, _Arguments const&... _arguments);
 
+	/// @returns the CompilerUtils object containing the current context.
+	CompilerUtils utils();
+
 	bool m_optimize;
 	CompilerContext& m_context;
 	std::unique_ptr<LValue> m_currentLValue;
+
 };
 
 template <class _LValueType, class... _Arguments>

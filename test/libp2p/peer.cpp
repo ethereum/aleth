@@ -24,6 +24,8 @@
 #include <chrono>
 #include <thread>
 #include <libp2p/Host.h>
+#include <test/TestHelper.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -38,8 +40,10 @@ BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(host)
 {
-	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 10;
+	if (test::Options::get().nonetwork)
+		return;
+
+	VerbosityHolder sentinel(10);
 	
 	NetworkPreferences host1prefs("127.0.0.1", 30301, false);
 	NetworkPreferences host2prefs("127.0.0.1", 30302, false);
@@ -61,12 +65,13 @@ BOOST_AUTO_TEST_CASE(host)
 	auto host2peerCount = host2.peerCount();
 	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
 	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
-	
-	g_logVerbosity = oldLogVerbosity;
 }
 
 BOOST_AUTO_TEST_CASE(networkConfig)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	Host save("Test", NetworkPreferences(false));
 	bytes store(save.saveNetwork());
 	
@@ -76,46 +81,62 @@ BOOST_AUTO_TEST_CASE(networkConfig)
 
 BOOST_AUTO_TEST_CASE(saveNodes)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
+	VerbosityHolder reduceVerbosity(2);
+
 	std::list<Host*> hosts;
-	for (auto i:{0,1,2,3,4,5})
+	unsigned const c_step = 10;
+	unsigned const c_nodes = 6;
+	unsigned const c_peers = c_nodes - 1;
+
+	for (unsigned i = 0; i < c_nodes; ++i)
 	{
 		Host* h = new Host("Test", NetworkPreferences("127.0.0.1", 30300 + i, false));
 		h->setIdealPeerCount(10);
 		// starting host is required so listenport is available
 		h->start();
 		while (!h->haveNetwork())
-			this_thread::sleep_for(chrono::milliseconds(2));
+			this_thread::sleep_for(chrono::milliseconds(c_step));
 		hosts.push_back(h);
 	}
 	
 	Host& host = *hosts.front();
 	for (auto const& h: hosts)
 		host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
-	
+
+	for (unsigned i = 0; i < c_peers * 1000 && host.peerCount() < c_peers; i += c_step)
+		this_thread::sleep_for(chrono::milliseconds(c_step));
+
 	Host& host2 = *hosts.back();
 	for (auto const& h: hosts)
 		host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
-	this_thread::sleep_for(chrono::milliseconds(2000));
+	for (unsigned i = 0; i < c_peers * 1000 && host2.peerCount() < c_peers; i += c_step)
+		this_thread::sleep_for(chrono::milliseconds(c_step));
+
+	BOOST_CHECK_EQUAL(host.peerCount(), c_peers);
+	BOOST_CHECK_EQUAL(host2.peerCount(), c_peers);
+
 	bytes firstHostNetwork(host.saveNetwork());
-	bytes secondHostNetwork(host.saveNetwork());
-	
-	BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));
-	
-	BOOST_CHECK_EQUAL(host.peerCount(), 5);
-	BOOST_CHECK_EQUAL(host2.peerCount(), 5);
+	bytes secondHostNetwork(host.saveNetwork());	
+	BOOST_REQUIRE_EQUAL(sha3(firstHostNetwork), sha3(secondHostNetwork));	
 	
 	RLP r(firstHostNetwork);
 	BOOST_REQUIRE(r.itemCount() == 3);
 	BOOST_REQUIRE(r[0].toInt<unsigned>() == dev::p2p::c_protocolVersion);
 	BOOST_REQUIRE_EQUAL(r[1].toBytes().size(), 32); // secret
-	BOOST_REQUIRE(r[2].itemCount() >= 5);
+	BOOST_REQUIRE(r[2].itemCount() >= c_nodes);
 	
 	for (auto i: r[2])
 	{
 		BOOST_REQUIRE(i.itemCount() == 4 || i.itemCount() == 11);
 		BOOST_REQUIRE(i[0].size() == 4 || i[0].size() == 16);
 	}
+
+	for (auto host: hosts)
+		delete host;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -124,8 +145,10 @@ BOOST_FIXTURE_TEST_SUITE(p2pPeer, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(requirePeer)
 {
-	auto oldLogVerbosity = g_logVerbosity;
-	g_logVerbosity = 10;
+	if (test::Options::get().nonetwork)
+		return;
+
+	VerbosityHolder reduceVerbosity(10);
 
 	const char* const localhost = "127.0.0.1";
 	NetworkPreferences prefs1(localhost, 30301, false);
@@ -169,8 +192,6 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	host2peerCount = host2.peerCount();
 	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
 	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
-
-	g_logVerbosity = oldLogVerbosity;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -179,6 +200,9 @@ BOOST_AUTO_TEST_SUITE(peerTypes)
 
 BOOST_AUTO_TEST_CASE(emptySharedPeer)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	shared_ptr<Peer> p;
 	BOOST_REQUIRE(!p);
 	

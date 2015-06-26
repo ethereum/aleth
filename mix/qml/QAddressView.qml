@@ -2,14 +2,14 @@ import QtQuick 2.0
 import QtQuick.Controls 1.3
 import QtQuick.Controls.Styles 1.3
 
-Item
+Row
 {
 	property alias value: textinput.text
 	property alias accountRef: ctrModel
 	property string subType
 	property bool readOnly
 	property alias currentIndex: trCombobox.currentIndex
-	property alias currentText: textinput.text
+	property alias displayInput: textInputRect.visible
 	property variant accounts
 	signal indexChanged()
 	id: editRoot
@@ -22,7 +22,7 @@ Item
 	}
 
 	function currentValue() {
-		return currentText;
+		return value;
 	}
 
 	function currentType()
@@ -38,22 +38,26 @@ Item
 	function load()
 	{
 		accountRef.clear();
-		accountRef.append({"itemid": " - "});
-
-		if (subType === "contract" || subType === "address")
+        if (subType === "contract" || subType === "address")
 		{
 			var trCr = 0;
-			for (var k = 0; k < transactionsModel.count; k++)
-			{
-				if (k >= transactionIndex)
-					break;
-				var tr = transactionsModel.get(k);
-				if (tr.functionId === tr.contractId /*&& (dec[1] === tr.contractId || item.subType === "address")*/)
-				{
-					accountRef.append({ "itemid": tr.contractId + " - " + trCr, "value": "<" + tr.contractId + " - " + trCr + ">", "type": "contract" });
-					trCr++;
-				}
-			}
+            if (blockChainPanel)
+                for (var k = 0; k < blockChainPanel.model.blocks.length; k++)
+                {
+                    if (k > blockIndex)
+                        break;
+                    for (var i = 0; i < blockChainPanel.model.blocks[k].transactions.length; i++)
+                    {
+                        if (i > transactionIndex)
+                            break;
+                        var tr = blockChainPanel.model.blocks[k].transactions[i]
+						if (tr.functionId === tr.contractId)
+                        {
+                            accountRef.append({ "itemid": tr.contractId + " - " + trCr, "value": "<" + tr.contractId + " - " + trCr + ">", "type": "contract" });
+                            trCr++;
+                        }
+                    }
+                }
 		}
 		if (subType === "address")
 		{
@@ -82,6 +86,7 @@ Item
 			}
 			trCombobox.currentIndex = 0;
 		}
+		trCombobox.update()
 	}
 
 	function select(address)
@@ -97,10 +102,10 @@ Item
 	}
 
 	Rectangle {
-		anchors.fill: parent
 		radius: 4
 		anchors.verticalCenter: parent.verticalCenter
 		height: 20
+		id: textInputRect
 		TextInput {
 			id: textinput
 			text: value
@@ -136,12 +141,12 @@ Item
 		property bool selected: false
 		id: trCombobox
 		model: ctrModel
+		width: 350
 		textRole: "itemid"
-		height: 20
 		anchors.verticalCenter: parent.verticalCenter
-		anchors.left: textinput.parent.right
-		anchors.leftMargin: 3
-		onCurrentIndexChanged: {
+
+		function update()
+		{
 			trCombobox.selected = false;
 			if (currentText === "")
 				return;
@@ -158,6 +163,10 @@ Item
 				textinput.text = "";
 			}
 			indexChanged();
+		}
+
+		onCurrentIndexChanged: {
+			update()
 		}
 	}
 }

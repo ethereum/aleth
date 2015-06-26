@@ -424,10 +424,51 @@ void ReferencesResolver::endVisit(VariableDeclaration& _variable)
 	if (_variable.getTypeName())
 	{
 		TypePointer type = _variable.getTypeName()->toType();
-		// All array parameter types should point to call data
-		if (_variable.isExternalFunctionParameter())
-			if (auto const* arrayType = dynamic_cast<ArrayType const*>(type.get()))
-				type = arrayType->copyForLocation(ArrayType::Location::CallData);
+		using Location = VariableDeclaration::Location;
+		Location loc = _variable.referenceLocation();
+		// References are forced to calldata for external function parameters (not return)
+		// and memory for parameters (also return) of publicly visible functions.
+		// They default to memory for function parameters and storage for local variables.
+		if (auto ref = dynamic_cast<ReferenceType const*>(type.get()))
+		{
+			if (_variable.isExternalCallableParameter())
+			{
+				// force location of external function parameters (not return) to calldata
+				if (loc != Location::Default)
+					BOOST_THROW_EXCEPTION(_variable.createTypeError(
+						"Location has to be calldata for external functions "
+						"(remove the \"memory\" or \"storage\" keyword)."
+					));
+				type = ref->copyForLocation(DataLocation::CallData, true);
+			}
+			else if (_variable.isCallableParameter() && _variable.getScope()->isPublic())
+			{
+				// force locations of public or external function (return) parameters to memory
+				if (loc == VariableDeclaration::Location::Storage)
+					BOOST_THROW_EXCEPTION(_variable.createTypeError(
+						"Location has to be memory for publicly visible functions "
+						"(remove the \"storage\" keyword)."
+					));
+				type = ref->copyForLocation(DataLocation::Memory, true);
+			}
+			else
+			{
+				if (loc == Location::Default)
+					loc = _variable.isCallableParameter() ? Location::Memory : Location::Storage;
+				bool isPointer = !_variable.isStateVariable();
+				type = ref->copyForLocation(
+					loc == Location::Memory ?
+					DataLocation::Memory :
+					DataLocation::Storage,
+					isPointer
+				);
+			}
+		}
+		else if (loc != Location::Default && !ref)
+			BOOST_THROW_EXCEPTION(_variable.createTypeError(
+				"Storage location can only be given for array or struct types."
+			));
+
 		_variable.setType(type);
 
 		if (!_variable.getType())

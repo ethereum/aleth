@@ -133,20 +133,24 @@ public:
 
 	/// Resets the gas pricer to some other object.
 	void setGasPricer(std::shared_ptr<GasPricer> _gp) { m_gp = _gp; }
+	std::shared_ptr<GasPricer> gasPricer() const { return m_gp; }
 
 	/// Blocks until all pending transactions have been processed.
 	virtual void flushTransactions() override;
+
+	/// Queues a block for import.
+	ImportResult queueBlock(bytes const& _block, bool _isSafe = false);
 
 	using Interface::call; // to remove warning about hiding virtual function
 	/// Makes the given call. Nothing is recorded into the state. This cheats by creating a null address and endowing it with a lot of ETH.
 	ExecutionResult call(Address _dest, bytes const& _data = bytes(), u256 _gas = 125000, u256 _value = 0, u256 _gasPrice = 1 * ether, Address const& _from = Address());
 
 	/// Get the remaining gas limit in this block.
-	virtual u256 gasLimitRemaining() const { return m_postMine.gasLimitRemaining(); }
+	virtual u256 gasLimitRemaining() const override { return m_postMine.gasLimitRemaining(); }
 
 	// [PRIVATE API - only relevant for base clients, not available in general]
 	dev::eth::State state(unsigned _txi, h256 _block) const;
-	dev::eth::State state(h256 _block) const;
+	dev::eth::State state(h256 const& _block, PopulationStatistics* o_stats = nullptr) const;
 	dev::eth::State state(unsigned _txi) const;
 
 	/// Get the object representing the current state of Ethereum.
@@ -155,10 +159,19 @@ public:
 	CanonBlockChain const& blockChain() const { return m_bc; }
 	/// Get some information on the block queue.
 	BlockQueueStatus blockQueueStatus() const { return m_bq.status(); }
+	/// Get some information on the block queue.
+	SyncStatus syncStatus() const;
+	/// Get the block queue.
+	BlockQueue const& blockQueue() const { return m_bq; }
+	/// Get the block queue.
+	OverlayDB const& stateDB() const { return m_stateDB; }
+
+	/// Freeze worker thread and sync some of the block queue.
+	std::tuple<ImportRoute, bool, unsigned> syncQueue(unsigned _max = 1);
 
 	// Mining stuff:
 
-	void setAddress(Address _us) { WriteGuard l(x_preMine); m_preMine.setAddress(_us); }
+	virtual void setAddress(Address _us) override { WriteGuard l(x_preMine); m_preMine.setAddress(_us); }
 
 	/// Check block validity prior to mining.
 	bool miningParanoia() const { return m_paranoia; }
@@ -173,14 +186,26 @@ public:
 	/// Enable/disable GPU mining.
 	void setTurboMining(bool _enable = true) { m_turboMining = _enable; if (isMining()) startMining(); }
 
+	/// Check to see if we'd mine on an apparently bad chain.
+	bool mineOnBadChain() const { return m_mineOnBadChain; }
+	/// Set true if you want to mine even when the canary says you're on the wrong chain.
+	void setMineOnBadChain(bool _v) { m_mineOnBadChain = _v; }
+
+	/// @returns true if the canary says that the chain is bad.
+	bool isChainBad() const;
+	/// @returns true if the canary says that the client should be upgraded.
+	bool isUpgradeNeeded() const;
+
 	/// Start mining.
 	/// NOT thread-safe - call it & stopMining only from a single thread
 	void startMining() override;
 	/// Stop mining.
 	/// NOT thread-safe
-	void stopMining() override { m_farm.stop(); }
+	void stopMining() override { m_wouldMine = false; rejigMining(); }
 	/// Are we mining now?
 	bool isMining() const override { return m_farm.isMining(); }
+	/// Are we mining now?
+	bool wouldMine() const override { return m_wouldMine; }
 	/// The hashrate...
 	uint64_t hashrate() const override;
 	/// Check the progress of the mining.
@@ -202,6 +227,7 @@ public:
 
 	DownloadMan const* downloadMan() const;
 	bool isSyncing() const;
+	bool isMajorSyncing() const;
 	/// Sets the network id.
 	void setNetworkId(u256 _n);
 	/// Clears pending transactions. Just for debug use.
@@ -209,9 +235,11 @@ public:
 	/// Kills the blockchain. Just for debug use.
 	void killChain();
 	/// Retries all blocks with unknown parents.
-	void retryUnkonwn() { m_bq.retryAllUnknown(); }
+	void retryUnknown() { m_bq.retryAllUnknown(); }
 	/// Get a report of activity.
 	ActivityReport activityReport() { ActivityReport ret; std::swap(m_report, ret); return ret; }
+	/// Set a JSONRPC server to which we can report bad blocks.
+	void setSentinel(std::string const& _server) { m_sentinel = _server; }
 
 protected:
 	/// InterfaceStub methods
@@ -248,6 +276,9 @@ private:
 	/// Called when Worker is exiting.
 	void doneWorking() override;
 
+	/// Called when wouldMine(), turboMining(), isChainBad(), forceMining(), pendingTransactions() have changed.
+	void rejigMining();
+
 	/// Magically called when the chain has changed. An import route is provided.
 	/// Called by either submitWork() or in our main thread through syncBlockQueue().
 	void onChainChanged(ImportRoute const& _ir);
@@ -277,6 +308,10 @@ private:
 	/// @returns true only if it's worth bothering to prep the mining block.
 	bool shouldServeWork() const { return m_bq.items().first == 0 && (isMining() || remoteActive()); }
 
+	/// Called when we have attempted to import a bad block.
+	/// @warning May be called from any thread.
+	void onBadBlock(Exception& _ex) const;
+
 	VersionChecker m_vc;					///< Dummy object to check & update the protocol version.
 	CanonBlockChain m_bc;					///< Maintains block database.
 	BlockQueue m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
@@ -301,8 +336,10 @@ private:
 	Handler m_tqReady;
 	Handler m_bqReady;
 
+	bool m_wouldMine = false;					///< True if we /should/ be mining.
 	bool m_turboMining = false;				///< Don't squander all of our time mining actually just sleeping.
 	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
+	bool m_mineOnBadChain = false;			///< Mine even when the canary says it's a bad chain.
 	bool m_paranoia = false;				///< Should we be paranoid about our state?
 
 	mutable std::chrono::system_clock::time_point m_lastGarbageCollection;
@@ -310,12 +347,16 @@ private:
 	mutable std::chrono::system_clock::time_point m_lastTick = std::chrono::system_clock::now();
 											///< When did we last tick()?
 
+	unsigned m_syncAmount = 50;				///< Number of blocks to sync in each go.
+
 	ActivityReport m_report;
 
 	std::condition_variable m_signalled;
 	Mutex x_signalled;
 	std::atomic<bool> m_syncTransactionQueue = {false};
 	std::atomic<bool> m_syncBlockQueue = {false};
+
+	std::string m_sentinel;
 };
 
 }

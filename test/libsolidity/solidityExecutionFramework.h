@@ -42,19 +42,29 @@ class ExecutionFramework
 public:
 	ExecutionFramework() { g_logVerbosity = 0; }
 
-	bytes const& compileAndRunWthoutCheck(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	bytes const& compileAndRunWithoutCheck(
+		std::string const& _sourceCode,
+		u256 const& _value = 0,
+		std::string const& _contractName = "",
+		bytes const& _arguments = bytes()
+	)
 	{
 		m_compiler.reset(false, m_addStandardSources);
 		m_compiler.addSource("", _sourceCode);
-		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize), "Compiling contract failed");
+		ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
 		bytes code = m_compiler.getBytecode(_contractName);
-		sendMessage(code, true, _value);
+		sendMessage(code + _arguments, true, _value);
 		return m_output;
 	}
 
-	bytes const& compileAndRun(std::string const& _sourceCode, u256 const& _value = 0, std::string const& _contractName = "")
+	bytes const& compileAndRun(
+		std::string const& _sourceCode,
+		u256 const& _value = 0,
+		std::string const& _contractName = "",
+		bytes const& _arguments = bytes()
+	)
 	{
-		compileAndRunWthoutCheck(_sourceCode, _value, _contractName);
+		compileAndRunWithoutCheck(_sourceCode, _value, _contractName, _arguments);
 		BOOST_REQUIRE(!m_output.empty());
 		return m_output;
 	}
@@ -117,6 +127,14 @@ public:
 		return _padLeft ? padding + _value : _value + padding;
 	}
 	static bytes encode(std::string const& _value) { return encode(asBytes(_value), false); }
+	template <class _T>
+	static bytes encode(std::vector<_T> const& _value)
+	{
+		bytes ret;
+		for (auto const& v: _value)
+			ret += encode(v);
+		return ret;
+	}
 
 	template <class FirstArg, class... Args>
 	static bytes encodeArgs(FirstArg const& _firstArg, Args const&... _followingArgs)
@@ -148,6 +166,8 @@ protected:
 	{
 		m_state.addBalance(m_sender, _value); // just in case
 		eth::Executive executive(m_state, eth::LastHashes(), 0);
+		eth::ExecutionResult res;
+		executive.setResultRecipient(res);
 		eth::Transaction t =
 			_isCreation ?
 				eth::Transaction(_value, m_gasPrice, m_gas, _data, 0, KeyPair::create().sec()) :
@@ -172,14 +192,15 @@ protected:
 			BOOST_REQUIRE(m_state.addressHasCode(m_contractAddress));
 			BOOST_REQUIRE(!executive.call(m_contractAddress, m_sender, _value, m_gasPrice, &_data, m_gas));
 		}
-		BOOST_REQUIRE(executive.go());
+		BOOST_REQUIRE(executive.go(/* DEBUG eth::Executive::simpleTrace() */));
 		m_state.noteSending(m_sender);
 		executive.finalize();
-		m_gasUsed = executive.gasUsed();
-		m_output = executive.out().toVector();
+		m_gasUsed = res.gasUsed;
+		m_output = std::move(res.output);
 		m_logs = executive.logs();
 	}
 
+	size_t m_optimizeRuns = 200;
 	bool m_optimize = false;
 	bool m_addStandardSources = false;
 	dev::solidity::CompilerStack m_compiler;

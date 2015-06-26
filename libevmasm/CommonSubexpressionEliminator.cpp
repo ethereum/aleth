@@ -35,6 +35,19 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 {
 	optimizeBreakingItem();
 
+	KnownState nextInitialState = m_state;
+	if (m_breakingItem)
+		nextInitialState.feedItem(*m_breakingItem);
+	KnownState nextState = nextInitialState;
+
+	ScopeGuard reset([&]()
+	{
+		m_breakingItem = nullptr;
+		m_storeOperations.clear();
+		m_initialState = move(nextInitialState);
+		m_state = move(nextState);
+	});
+
 	map<int, Id> initialStackContents;
 	map<int, Id> targetStackContents;
 	int minHeight = m_state.stackHeight() + 1;
@@ -46,20 +59,13 @@ vector<AssemblyItem> CommonSubexpressionEliminator::getOptimizedItems()
 		targetStackContents[height] = m_state.stackElement(height, SourceLocation());
 
 	AssemblyItems items = CSECodeGenerator(m_state.expressionClasses(), m_storeOperations).generateCode(
+		m_initialState.sequenceNumber(),
 		m_initialState.stackHeight(),
 		initialStackContents,
 		targetStackContents
 	);
 	if (m_breakingItem)
-	{
 		items.push_back(*m_breakingItem);
-		m_state.feedItem(*m_breakingItem);
-	}
-
-	// cleanup
-	m_initialState = m_state;
-	m_breakingItem = nullptr;
-	m_storeOperations.clear();
 
 	return items;
 }
@@ -73,31 +79,43 @@ void CommonSubexpressionEliminator::feedItem(AssemblyItem const& _item, bool _co
 
 void CommonSubexpressionEliminator::optimizeBreakingItem()
 {
-	if (!m_breakingItem || *m_breakingItem != AssemblyItem(Instruction::JUMPI))
+	if (!m_breakingItem)
 		return;
 
+	ExpressionClasses& classes = m_state.expressionClasses();
 	SourceLocation const& location = m_breakingItem->getLocation();
-	AssemblyItem::JumpType jumpType = m_breakingItem->getJumpType();
-
-	Id condition = m_state.stackElement(m_state.stackHeight() - 1, location);
-	Id zero = m_state.expressionClasses().find(u256(0));
-	if (m_state.expressionClasses().knownToBeDifferent(condition, zero))
+	if (*m_breakingItem == AssemblyItem(Instruction::JUMPI))
 	{
-		feedItem(AssemblyItem(Instruction::SWAP1, location), true);
-		feedItem(AssemblyItem(Instruction::POP, location), true);
+		AssemblyItem::JumpType jumpType = m_breakingItem->getJumpType();
 
-		AssemblyItem item(Instruction::JUMP, location);
-		item.setJumpType(jumpType);
-		m_breakingItem = m_state.expressionClasses().storeItem(item);
-		return;
+		Id condition = m_state.stackElement(m_state.stackHeight() - 1, location);
+		if (classes.knownNonZero(condition))
+		{
+			feedItem(AssemblyItem(Instruction::SWAP1, location), true);
+			feedItem(AssemblyItem(Instruction::POP, location), true);
+
+			AssemblyItem item(Instruction::JUMP, location);
+			item.setJumpType(jumpType);
+			m_breakingItem = classes.storeItem(item);
+		}
+		else if (classes.knownZero(condition))
+		{
+			AssemblyItem it(Instruction::POP, location);
+			feedItem(it, true);
+			feedItem(it, true);
+			m_breakingItem = nullptr;
+		}
 	}
-	Id negatedCondition = m_state.expressionClasses().find(Instruction::ISZERO, {condition});
-	if (m_state.expressionClasses().knownToBeDifferent(negatedCondition, zero))
+	else if (*m_breakingItem == AssemblyItem(Instruction::RETURN))
 	{
-		AssemblyItem it(Instruction::POP, location);
-		feedItem(it, true);
-		feedItem(it, true);
-		m_breakingItem = nullptr;
+		Id size = m_state.stackElement(m_state.stackHeight() - 1, location);
+		if (classes.knownZero(size))
+		{
+			feedItem(AssemblyItem(Instruction::POP, location), true);
+			feedItem(AssemblyItem(Instruction::POP, location), true);
+			AssemblyItem item(Instruction::STOP, location);
+			m_breakingItem = classes.storeItem(item);
+		}
 	}
 }
 
@@ -112,6 +130,7 @@ CSECodeGenerator::CSECodeGenerator(
 }
 
 AssemblyItems CSECodeGenerator::generateCode(
+	unsigned _initialSequenceNumber,
 	int _initialStackHeight,
 	map<int, Id> const& _initialStack,
 	map<int, Id> const& _targetStackContents
@@ -137,7 +156,14 @@ AssemblyItems CSECodeGenerator::generateCode(
 	for (auto const& p: m_neededBy)
 		for (auto id: {p.first, p.second})
 			if (unsigned seqNr = m_expressionClasses.representative(id).sequenceNumber)
+			{
+				if (seqNr < _initialSequenceNumber)
+					// Invalid sequenced operation.
+					// @todo quick fix for now. Proper fix needs to choose representative with higher
+					// sequence number during dependency analyis.
+					BOOST_THROW_EXCEPTION(StackTooDeepException());
 				sequencedExpressions.insert(make_pair(seqNr, id));
+			}
 
 	// Perform all operations on storage and memory in order, if they are needed.
 	for (auto const& seqAndId: sequencedExpressions)
@@ -428,7 +454,7 @@ void CSECodeGenerator::appendDup(int _fromPosition, SourceLocation const& _locat
 {
 	assertThrow(_fromPosition != c_invalidPosition, OptimizerException, "");
 	int instructionNum = 1 + m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep.");
+	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(dupInstruction(instructionNum), _location));
 	m_stack[m_stackHeight] = m_stack[_fromPosition];
@@ -441,7 +467,7 @@ void CSECodeGenerator::appendOrRemoveSwap(int _fromPosition, SourceLocation cons
 	if (_fromPosition == m_stackHeight)
 		return;
 	int instructionNum = m_stackHeight - _fromPosition;
-	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep.");
+	assertThrow(instructionNum <= 16, StackTooDeepException, "Stack too deep, try removing local variables.");
 	assertThrow(1 <= instructionNum, OptimizerException, "Invalid stack access.");
 	appendItem(AssemblyItem(swapInstruction(instructionNum), _location));
 

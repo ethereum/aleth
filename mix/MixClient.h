@@ -25,6 +25,7 @@
 
 #include <vector>
 #include <string>
+#include <libethereum/ExtVM.h>
 #include <libethereum/ClientBase.h>
 #include <libethereum/Client.h>
 #include "MachineStates.h"
@@ -58,6 +59,7 @@ public:
 	dev::eth::ExecutionResult call(Address const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, eth::BlockNumber _blockNumber = eth::PendingBlock, eth::FudgeFactor _ff = eth::FudgeFactor::Strict) override;
 	dev::eth::ExecutionResult create(Address const& _secret, u256 _value, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * eth::szabo, eth::BlockNumber _blockNumber = eth::PendingBlock, eth::FudgeFactor _ff = eth::FudgeFactor::Strict) override;
 
+	using ClientBase::submitTransaction;
 	void submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, bool _gasAuto);
 	Address submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas, u256 _gasPrice, bool _gasAuto);
 	dev::eth::ExecutionResult call(Address const& _secret, u256 _value, Address _dest, bytes const& _data, u256 _gas, u256 _gasPrice, eth::BlockNumber _blockNumber, bool _gasAuto, eth::FudgeFactor _ff = eth::FudgeFactor::Strict);
@@ -80,7 +82,7 @@ protected:
 	/// ClientBase methods
 	using ClientBase::asOf;
 	virtual dev::eth::State asOf(h256 const& _block) const override;
-	virtual dev::eth::BlockChain& bc() { return *m_bc; }
+	virtual dev::eth::BlockChain& bc() override { return *m_bc; }
 	virtual dev::eth::BlockChain const& bc() const override { return *m_bc; }
 	virtual dev::eth::State preMine() const override { ReadGuard l(x_state);  return m_startState; }
 	virtual dev::eth::State postMine() const override { ReadGuard l(x_state); return m_state; }
@@ -88,7 +90,6 @@ protected:
 
 private:
 	void executeTransaction(dev::eth::Transaction const& _t, eth::State& _state, bool _call, bool _gasAuto, dev::Secret const& _secret = dev::Secret());
-	void noteChanged(h256Set const& _filters);
 	dev::eth::Transaction replaceGas(dev::eth::Transaction const& _t, dev::u256 const& _gas, dev::Secret const& _secret = dev::Secret());
 
 	eth::State m_state;

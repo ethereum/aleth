@@ -58,11 +58,9 @@ Transact::Transact(Context* _c, QWidget* _parent):
 {
 	ui->setupUi(this);
 
-	initUnits(ui->gasPriceUnits);
-	initUnits(ui->valueUnits);
-	ui->valueUnits->setCurrentIndex(6);
-	ui->gasPriceUnits->setCurrentIndex(4);
-	ui->gasPrice->setValue(10);
+	resetGasPrice();
+	setValueUnits(ui->valueUnits, ui->value, 0);
+
 	on_destination_currentTextChanged(QString());
 }
 
@@ -79,17 +77,21 @@ void Transact::setEnvironment(AddressHash const& _accounts, dev::eth::Client* _e
 
 	auto old = ui->from->currentIndex();
 	ui->from->clear();
-	for (auto const& i: m_accounts)
+	for (auto const& address: m_accounts)
 	{
-		auto d = m_context->keyManager().accountDetails()[i];
-		u256 b = ethereum()->balanceAt(i, PendingBlock);
-		QString s = QString("%4 %2: %1").arg(formatBalance(b).c_str()).arg(QString::fromStdString(m_context->render(i))).arg(QString::fromStdString(d.first));
+		u256 b = ethereum()->balanceAt(address, PendingBlock);
+		QString s = QString("%4 %2: %1").arg(formatBalance(b).c_str()).arg(QString::fromStdString(m_context->render(address))).arg(QString::fromStdString(m_context->keyManager().accountName(address)));
 		ui->from->addItem(s);
 	}
 	if (old > -1 && old < ui->from->count())
 		ui->from->setCurrentIndex(old);
 	else if (ui->from->count())
 		ui->from->setCurrentIndex(0);
+}
+
+void Transact::resetGasPrice()
+{
+	setValueUnits(ui->gasPriceUnits, ui->gasPrice, m_context->gasPrice());
 }
 
 bool Transact::isCreation() const
@@ -137,7 +139,7 @@ void Transact::updateDestination()
 
 void Transact::updateFee()
 {
-	ui->fee->setText(QString("(gas sub-total: %1)").arg(formatBalance(fee()).c_str()));
+//	ui->fee->setText(QString("(gas sub-total: %1)").arg(formatBalance(fee()).c_str()));
 	auto totalReq = total();
 	ui->total->setText(QString("Total: %1").arg(formatBalance(totalReq).c_str()));
 
@@ -357,7 +359,7 @@ void Transact::rejigData()
 		return;
 	}
 	else
-		gasNeeded = (qint64)min<bigint>(ethereum()->gasLimitRemaining(), ((b - value()) / gasPrice()));
+		gasNeeded = (qint64)min<bigint>(ethereum()->gasLimitRemaining(), ((b - value()) / max<u256>(gasPrice(), 1)));
 
 	// Dry-run execution to determine gas requirement and any execution errors
 	Address to;
@@ -433,9 +435,18 @@ Address Transact::fromAccount()
 	return *it;
 }
 
+void Transact::updateNonce()
+{
+	u256 n = ethereum()->countAt(fromAccount(), PendingBlock);
+	ui->nonce->setMaximum((unsigned)n);
+	ui->nonce->setMinimum(0);
+	ui->nonce->setValue((unsigned)n);
+}
+
 void Transact::on_send_clicked()
 {
 //	Secret s = findSecret(value() + fee());
+	u256 nonce = ui->autoNonce->isChecked() ? ethereum()->countAt(fromAccount(), PendingBlock) : ui->nonce->value();
 	auto a = fromAccount();
 	auto b = ethereum()->balanceAt(a, PendingBlock);
 
@@ -453,7 +464,7 @@ void Transact::on_send_clicked()
 	{
 		// If execution is a contract creation, add Natspec to
 		// a local Natspec LEVELDB
-		ethereum()->submitTransaction(s, value(), m_data, ui->gas->value(), gasPrice());
+		ethereum()->submitTransaction(s, value(), m_data, ui->gas->value(), gasPrice(), nonce);
 #if ETH_SOLIDITY
 		string src = ui->data->toPlainText().toStdString();
 		if (sourceIsSolidity(src))
@@ -472,7 +483,7 @@ void Transact::on_send_clicked()
 	}
 	else
 		// TODO: cache like m_data.
-		ethereum()->submitTransaction(s, value(), m_context->fromString(ui->destination->currentText().toStdString()).first, m_data, ui->gas->value(), gasPrice());
+		ethereum()->submitTransaction(s, value(), m_context->fromString(ui->destination->currentText().toStdString()).first, m_data, ui->gas->value(), gasPrice(), nonce);
 	close();
 }
 

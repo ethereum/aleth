@@ -42,8 +42,11 @@ void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 {
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
 	if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
-		BOOST_THROW_EXCEPTION(CompilerError()
-			<< errinfo_sourceLocation(_location) << errinfo_comment("Stack too deep."));
+		BOOST_THROW_EXCEPTION(
+			CompilerError() <<
+			errinfo_sourceLocation(_location) <<
+			errinfo_comment("Stack too deep, try removing local variables.")
+		);
 	for (unsigned i = 0; i < m_size; ++i)
 		m_context << eth::dupInstruction(stackPos + 1);
 }
@@ -52,8 +55,11 @@ void StackVariable::storeValue(Type const&, SourceLocation const& _location, boo
 {
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset) - m_size + 1;
 	if (stackDiff > 16)
-		BOOST_THROW_EXCEPTION(CompilerError()
-			<< errinfo_sourceLocation(_location) << errinfo_comment("Stack too deep."));
+		BOOST_THROW_EXCEPTION(
+			CompilerError() <<
+			errinfo_sourceLocation(_location) <<
+			errinfo_comment("Stack too deep, try removing local variables.")
+		);
 	else if (stackDiff > 0)
 		for (unsigned i = 0; i < m_size; ++i)
 			m_context << eth::swapInstruction(stackDiff) << eth::Instruction::POP;
@@ -65,8 +71,11 @@ void StackVariable::setToZero(SourceLocation const& _location, bool) const
 {
 	unsigned stackDiff = m_context.baseToCurrentStackOffset(m_baseStackOffset);
 	if (stackDiff > 16)
-		BOOST_THROW_EXCEPTION(CompilerError()
-			<< errinfo_sourceLocation(_location) << errinfo_comment("Stack too deep."));
+		BOOST_THROW_EXCEPTION(
+			CompilerError() <<
+			errinfo_sourceLocation(_location) <<
+			errinfo_comment("Stack too deep, try removing local variables.")
+		);
 	solAssert(stackDiff >= m_size - 1, "");
 	for (unsigned i = 0; i < m_size; ++i)
 		m_context << u256(0) << eth::swapInstruction(stackDiff + 1 - i)
@@ -189,7 +198,11 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack layout: source_ref source_offset target_ref target_offset
 			// note that we have structs, so offsets should be zero and are ignored
 			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
-			solAssert(structType == _sourceType, "Struct assignment with conversion.");
+			solAssert(
+				structType.structDefinition() ==
+					dynamic_cast<StructType const&>(_sourceType).structDefinition(),
+				"Struct assignment with conversion."
+			);
 			for (auto const& member: structType.getMembers())
 			{
 				// assign each member that is not a mapping
@@ -204,7 +217,10 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 				// stack: source_ref source_off target_ref target_off member_slot_offset member_byte_offset source_member_ref source_member_off
 				StorageItem(m_context, *memberType).retrieveValue(_location, true);
 				// stack: source_ref source_off target_ref target_off member_offset source_value...
-				solAssert(4 + memberType->getSizeOnStack() <= 16, "Stack too deep.");
+				solAssert(
+					4 + memberType->getSizeOnStack() <= 16,
+					"Stack too deep, try removing local varibales."
+				);
 				m_context
 					<< eth::dupInstruction(4 + memberType->getSizeOnStack())
 					<< eth::dupInstruction(3 + memberType->getSizeOnStack()) << eth::Instruction::ADD

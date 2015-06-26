@@ -33,7 +33,8 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/RangeMask.h>
 #include <libdevcore/Guards.h>
-#include "RLPxHandshake.h"
+#include "RLPXFrameCoder.h"
+#include "RLPXSocket.h"
 #include "Common.h"
 
 namespace dev
@@ -43,6 +44,7 @@ namespace p2p
 {
 
 class Peer;
+class ReputationManager;
 
 /**
  * @brief The Session class
@@ -54,7 +56,7 @@ class Session: public std::enable_shared_from_this<Session>
 	friend class HostCapabilityFace;
 
 public:
-	Session(Host* _server, RLPXFrameIO* _io, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
+	Session(Host* _server, RLPXFrameCoder* _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~Session();
 
 	void start();
@@ -62,10 +64,10 @@ public:
 
 	void ping();
 
-	bool isConnected() const { return m_socket.is_open(); }
+	bool isConnected() const { return m_socket->ref().is_open(); }
 
 	NodeId id() const;
-	unsigned socketId() const { return m_info.socketId; }
+	unsigned socketId() const { Guard l(x_info); return m_info.socketId; }
 
 	template <class PeerCap>
 	std::shared_ptr<PeerCap> cap() const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), PeerCap::version()))); } catch (...) { return nullptr; } }
@@ -75,12 +77,13 @@ public:
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
 	void sealAndSend(RLPStream& _s);
 
+	ReputationManager& repMan() const;
 	int rating() const;
 	void addRating(int _r);
 
-	void addNote(std::string const& _k, std::string const& _v) { m_info.notes[_k] = _v; }
+	void addNote(std::string const& _k, std::string const& _v) { Guard l(x_info); m_info.notes[_k] = _v; }
 
-	PeerSessionInfo const& info() const { return m_info; }
+	PeerSessionInfo info() const { Guard l(x_info); return m_info; }
 
 	void ensureNodesRequested();
 	void serviceNodesRequest();
@@ -105,8 +108,8 @@ private:
 
 	Host* m_server;							///< The host that owns us. Never null.
 
-	RLPXFrameIO* m_io;						///< Transport over which packets are sent.
-	bi::tcp::socket& m_socket;				///< Socket for the peer's connection.
+	RLPXFrameCoder* m_io;						///< Transport over which packets are sent.
+	std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
 	Mutex x_writeQueue;						///< Mutex for the write queue.
 	std::deque<bytes> m_writeQueue;			///< The write queue.
 	std::array<byte, 16777216> m_data;			///< Buffer for ingress packet data.
@@ -116,6 +119,7 @@ private:
 	std::shared_ptr<Peer> m_peer;			///< The Peer object.
 	bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 
+	mutable Mutex x_info;
 	PeerSessionInfo m_info;						///< Dynamic information about this peer.
 
 	bool m_theyRequestedNodes = false;		///< Has the peer requested nodes from us without receiveing an answer from us?

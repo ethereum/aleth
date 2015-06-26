@@ -34,6 +34,7 @@
 #include "Common.h"
 #include "WhisperPeer.h"
 #include "Interface.h"
+#include "BloomFilter.h"
 
 namespace dev
 {
@@ -54,13 +55,13 @@ public:
 
 	virtual void inject(Envelope const& _e, WhisperPeer* _from = nullptr) override;
 
-	virtual Topics const& fullTopics(unsigned _id) const { try { return m_filters.at(m_watches.at(_id).id).full; } catch (...) { return EmptyTopics; } }
+	virtual Topics const& fullTopics(unsigned _id) const override { try { return m_filters.at(m_watches.at(_id).id).full; } catch (...) { return EmptyTopics; } }
 	virtual unsigned installWatch(Topics const& _filter) override;
 	virtual unsigned installWatchOnId(h256 _filterId) override;
 	virtual void uninstallWatch(unsigned _watchId) override;
 	virtual h256s peekWatch(unsigned _watchId) const override { dev::Guard l(m_filterLock); try { return m_watches.at(_watchId).changes; } catch (...) { return h256s(); } }
 	virtual h256s checkWatch(unsigned _watchId) override { cleanup(); dev::Guard l(m_filterLock); h256s ret; try { ret = m_watches.at(_watchId).changes; m_watches.at(_watchId).changes.clear(); } catch (...) {} return ret; }
-	virtual h256s watchMessages(unsigned _watchId) override;
+	virtual h256s watchMessages(unsigned _watchId) override; /// returns IDs of messages, which match specific watch criteria
 
 	virtual Envelope envelope(h256 _m) const override { try { dev::ReadGuard l(x_messages); return m_messages.at(_m); } catch (...) { return Envelope(); } }
 
@@ -69,11 +70,11 @@ public:
 	void cleanup();
 
 protected:
-	void doWork();
+	virtual void doWork() override;
 
 private:
-	virtual void onStarting() { startWorking(); }
-	virtual void onStopping() { stopWorking(); }
+	virtual void onStarting() override { startWorking(); }
+	virtual void onStopping() override { stopWorking(); }
 
 	void streamMessage(h256 _m, RLPStream& _s) const;
 
@@ -86,6 +87,7 @@ private:
 	mutable dev::Mutex m_filterLock;
 	std::map<h256, InstalledFilter> m_filters;
 	std::map<unsigned, ClientWatch> m_watches;
+	TopicBloomFilter m_bloom;
 };
 
 }

@@ -9,61 +9,44 @@ Column
 	property alias members: repeater.model  //js array
 	property variant accounts
 	property var value: ({})
+	property int blockIndex
 	property int transactionIndex
 	property string context
 	Layout.fillWidth: true
-	spacing: 0
-
-	DebuggerPaneStyle {
-		id: dbgStyle
-	}
-
+	spacing: 5
 	Repeater
 	{
 		id: repeater
 		visible: model.length > 0
-		Layout.fillWidth: true
-
 		RowLayout
 		{
 			id: row
-			height: 20 + (members[index].type.category === QSolidityType.Struct ? (20 * members[index].type.members.length) : 0)
+			height: 30 + (members[index].type.category === QSolidityType.Struct ? (30 * members[index].type.members.length) : 0)
 			Layout.fillWidth: true
-			DefaultLabel {
-				height: 20
-				id: typeLabel
-				text: modelData.type.name
-				anchors.verticalCenter: parent.verticalCenter
-				font.family: dbgStyle.general.basicFont
-				color: dbgStyle.general.basicColor
-				font.pointSize: dbgStyle.general.basicFontSize
-			}
+			Rectangle
+			{
+				Layout.preferredWidth: 150
+				Row
+				{
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					Label {
+						id: nameLabel
+						text: modelData.name
+					}
 
-			DefaultLabel {
-				height: 20
-				id: nameLabel
-				text: modelData.name
-				anchors.verticalCenter: parent.verticalCenter
-				font.family: dbgStyle.general.basicFont
-				color: dbgStyle.general.basicColor
-				font.pointSize: dbgStyle.general.basicFontSize
-			}
-
-			DefaultLabel {
-				height: 20
-				id: equalLabel
-				text: "="
-				anchors.verticalCenter: parent.verticalCenter
-				font.family: dbgStyle.general.basicFont
-				color: dbgStyle.general.basicColor
-				font.pointSize: dbgStyle.general.basicFontSize
+					Label {
+						id: typeLabel
+						text: " (" + modelData.type.name + ")"
+						font.italic: true
+						font.weight: Font.Light
+					}
+				}
 			}
 
 			Loader
 			{
 				id: typeLoader
-				height: 20
-				anchors.verticalCenter: parent.verticalCenter
 				sourceComponent:
 				{
 					var t = modelData.type.category;
@@ -71,7 +54,7 @@ Column
 						return Qt.createComponent("qrc:/qml/QIntTypeView.qml");
 					else if (t === QSolidityType.Bool)
 						return Qt.createComponent("qrc:/qml/QBoolTypeView.qml");
-					else if (t === QSolidityType.Bytes)
+					else if (t === QSolidityType.Bytes || t === QSolidityType.String)
 						return Qt.createComponent("qrc:/qml/QStringTypeView.qml");
 					else if (t === QSolidityType.Hash)
 						return Qt.createComponent("qrc:/qml/QHashTypeView.qml");

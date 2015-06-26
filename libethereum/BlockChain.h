@@ -21,15 +21,11 @@
 
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#include <leveldb/db.h>
-#pragma warning(pop)
-
 #include <deque>
 #include <chrono>
 #include <unordered_map>
 #include <unordered_set>
+#include <libdevcore/db.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Guards.h>
@@ -40,7 +36,7 @@
 #include "Account.h"
 #include "Transaction.h"
 #include "BlockQueue.h"
-namespace ldb = leveldb;
+#include "VerifiedBlock.h"
 
 namespace std
 {
@@ -79,7 +75,6 @@ ldb::Slice toSlice(h256 const& _h, unsigned _sub = 0);
 using BlocksHash = std::unordered_map<h256, bytes>;
 using TransactionHashes = h256s;
 using UncleHashes = h256s;
-using ImportRoute = std::pair<h256s, h256s>;
 
 enum {
 	ExtraDetails = 0,
@@ -111,7 +106,7 @@ public:
 
 	/// Sync the chain with any incoming blocks. All blocks should, if processed in order.
 	/// @returns fresh blocks, dead blocks and true iff there are additional blocks to be processed waiting.
-	std::tuple<h256s, h256s, bool> sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
+	std::tuple<ImportRoute, bool, unsigned> sync(BlockQueue& _bq, OverlayDB const& _stateDB, unsigned _max);
 
 	/// Attempt to import the given block directly into the CanonBlockChain and sync with the state DB.
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
@@ -120,7 +115,7 @@ public:
 	/// Import block into disk-backed DB
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
 	ImportRoute import(bytes const& _block, OverlayDB const& _stateDB, ImportRequirements::value _ir = ImportRequirements::Default);
-	ImportRoute import(BlockInfo const& _bi, bytes const& _block, OverlayDB const& _stateDB, ImportRequirements::value _ir = ImportRequirements::Default);
+	ImportRoute import(VerifiedBlockRef const& _block, OverlayDB const& _db, ImportRequirements::value _ir = ImportRequirements::Default);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).
 	bool isKnown(h256 const& _hash) const;
@@ -143,6 +138,7 @@ public:
 	BlockLogBlooms logBlooms() const { return logBlooms(currentHash()); }
 
 	/// Get the transactions' receipts of a block (or the most recent mined if none given). Thread-safe.
+	/// receipts are given in the same order are in the same order as the transactions
 	BlockReceipts receipts(h256 const& _hash) const { return queryExtras<BlockReceipts, ExtraReceipts>(_hash, m_receipts, x_receipts, NullBlockReceipts); }
 	BlockReceipts receipts() const { return receipts(currentHash()); }
 
@@ -256,6 +252,12 @@ public:
 	/// Deallocate unused data.
 	void garbageCollect(bool _force = false);
 
+	/// Verify block and prepare it for enactment
+	static VerifiedBlockRef verifyBlock(bytes const& _block, std::function<void(Exception&)> const& _onBad = std::function<void(Exception&)>(), ImportRequirements::value _ir = ImportRequirements::Default);
+
+	/// Change the function that is called with a bad block.
+	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
+
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
@@ -334,6 +336,8 @@ private:
 
 	ldb::ReadOptions m_readOptions;
 	ldb::WriteOptions m_writeOptions;
+
+	std::function<void(Exception&)> m_onBad;									///< Called if we have a block that doesn't verify.
 
 	friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
 };

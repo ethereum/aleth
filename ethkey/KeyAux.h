@@ -44,7 +44,7 @@ class BadArgument: public Exception {};
 
 string getAccountPassword(KeyManager& keyManager, Address const& a)
 {
-	return getPassword("Enter password for address " + keyManager.accountDetails()[a].first + " (" + a.abridged() + "; hint:" + keyManager.accountDetails()[a].second + "): ");
+	return getPassword("Enter password for address " + keyManager.accountName(a) + " (" + a.abridged() + "; hint:" + keyManager.passwordHint(a) + "): ");
 }
 
 string createPassword(std::string const& _prompt)
@@ -102,6 +102,7 @@ public:
 		List,
 		New,
 		Import,
+		ImportWithAddress,
 		Export,
 		Recode,
 		Kill
@@ -159,6 +160,13 @@ public:
 			m_inputs = strings(1, argv[++i]);
 			m_name = argv[++i];
 		}
+		else if ((arg == "-i" || arg == "--import-with-address") && i + 3 < argc)
+		{
+			m_mode = OperationMode::ImportWithAddress;
+			m_inputs = strings(1, argv[++i]);
+			m_address = Address(argv[++i]);
+			m_name = argv[++i];
+		}
 		else if (arg == "--export")
 			m_mode = OperationMode::Export;
 		else if (arg == "--recode")
@@ -190,7 +198,16 @@ public:
 			if (m_masterPassword.empty())
 				cerr << "Aborted (empty password not allowed)." << endl;
 			else
-				wallet.create(m_masterPassword);
+			{
+				try
+				{
+					wallet.create(m_masterPassword);
+				}
+				catch (Exception const& _e)
+				{
+					cerr << "unable to create wallet" << endl << boost::diagnostic_information(_e);
+				}
+			}
 		}
 		else if (m_mode < OperationMode::CreateWallet)
 		{
@@ -213,26 +230,26 @@ public:
 				break;
 			}
 			case OperationMode::ImportBare:
-				for (string const& i: m_inputs)
+				for (string const& input: m_inputs)
 				{
 					h128 u;
 					bytes b;
-					b = fromHex(i);
+					b = fromHex(input);
 					if (b.size() != 32)
 					{
-						std::string s = contentsString(i);
+						std::string s = contentsString(input);
 						b = fromHex(s);
 						if (b.size() != 32)
-							u = store.importKey(i);
+							u = store.importKey(input);
 					}
 					if (!u && b.size() == 32)
 						u = store.importSecret(b, lockPassword(toAddress(Secret(b)).abridged()));
 					if (!u)
 					{
-						cerr << "Cannot import " << i << " not a file or secret." << endl;
+						cerr << "Cannot import " << input << " not a file or secret." << endl;
 						continue;
 					}
-					cout << "Successfully imported " << i << " as " << toUUID(u);
+					cout << "Successfully imported " << input << " as " << toUUID(u);
 				}
 				break;
 			case OperationMode::InspectBare:
@@ -314,6 +331,33 @@ public:
 				cout << "  ICAP: " << ICAP(k.address()).encoded() << endl;
 				break;
 			}
+			case OperationMode::ImportWithAddress:
+			{
+				string const& i = m_inputs[0];
+				h128 u;
+				bytes b;
+				b = fromHex(i);
+				if (b.size() != 32)
+				{
+					std::string s = contentsString(i);
+					b = fromHex(s);
+					if (b.size() != 32)
+						u = wallet.store().importKey(i);
+				}
+				if (!u && b.size() == 32)
+					u = wallet.store().importSecret(b, lockPassword(toAddress(Secret(b)).abridged()));
+				if (!u)
+				{
+					cerr << "Cannot import " << i << " not a file or secret." << endl;
+					break;
+				}
+				wallet.importExisting(u, m_name, m_address);
+				cout << "Successfully imported " << i << ":" << endl;
+				cout << "  Name: " << m_name << endl;
+				cout << "  Address: " << m_address << endl;
+				cout << "  UUID: " << toUUID(u) << endl;
+				break;
+			}
 			case OperationMode::List:
 			{
 				vector<u128> bare;
@@ -324,20 +368,18 @@ public:
 							nonIcap.push_back(u);
 						else
 						{
-							std::pair<std::string, std::string> info = wallet.accountDetails()[a];
 							cout << toUUID(u) << " " << a.abridged();
 							cout << " " << ICAP(a).encoded();
-							cout << " " << info.first << endl;
+							cout << " " <<  wallet.accountName(a) << endl;
 						}
 					else
 						bare.push_back(u);
 				for (auto const& u: nonIcap)
 					if (Address a = wallet.address(u))
 					{
-						std::pair<std::string, std::string> info = wallet.accountDetails()[a];
 						cout << toUUID(u) << " " << a.abridged();
 						cout << "            (Not ICAP)             ";
-						cout << " " << info.first << endl;
+						cout << " " << wallet.accountName(a) << endl;
 					}
 				for (auto const& u: bare)
 					cout << toUUID(u) << " (Bare)" << endl;
@@ -369,6 +411,7 @@ public:
 			<< "    -l,--list  List all keys available in wallet." << endl
 			<< "    -n,--new <name>  Create a new key with given name and add it in the wallet." << endl
 			<< "    -i,--import [<uuid>|<file>|<secret-hex>] <name>  Import keys from given source and place in wallet." << endl
+			<< "    --import-with-address [<uuid>|<file>|<secret-hex>] <address> <name>  Import keys from given source with given address and place in wallet." << endl
 			<< "    -e,--export [ <address>|<uuid> , ... ]  Export given keys." << endl
 			<< "    -r,--recode [ <address>|<uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
 			<< "Wallet configuration:" << endl
@@ -418,8 +461,9 @@ private:
 	string m_lockHint;
 	bool m_icap = true;
 
-	/// Creating
+	/// Creating/importing
 	string m_name;
+	Address m_address;
 
 	/// Importing
 	strings m_inputs;

@@ -22,9 +22,12 @@
 #include "Assembly.h"
 #include <fstream>
 #include <libdevcore/Log.h>
+#include <libevmcore/Params.h>
 #include <libevmasm/CommonSubexpressionEliminator.h>
 #include <libevmasm/ControlFlowGraph.h>
 #include <libevmasm/BlockDeduplicator.h>
+#include <libevmasm/ConstantOptimiser.h>
+#include <libevmasm/GasMeter.h>
 #include <json/json.h>
 using namespace std;
 using namespace dev;
@@ -38,7 +41,7 @@ void Assembly::append(Assembly const& _a)
 		if (i.type() == Tag || i.type() == PushTag)
 			i.setData(i.data() + m_usedTags);
 		else if (i.type() == PushSub || i.type() == PushSubSize)
-			i.setData(i.data() + m_usedTags);
+			i.setData(i.data() + m_subs.size());
 		append(i);
 	}
 	m_deposit = newDeposit;
@@ -106,7 +109,7 @@ string Assembly::getLocationFromSources(StringMap const& _sourceCodes, SourceLoc
 	if (newLinePos != string::npos)
 		cut = cut.substr(0, newLinePos) + "...";
 
-	return move(cut);
+	return cut;
 }
 
 ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap const& _sourceCodes) const
@@ -133,10 +136,10 @@ ostream& Assembly::streamAsm(ostream& _out, string const& _prefix, StringMap con
 				_out << "  PUSH [tag" << dec << i.data() << "]";
 			break;
 		case PushSub:
-			_out << "  PUSH [$" << h256(i.data()).abridged() << "]";
+			_out << "  PUSH [$" << h256(i.data()).abridgedMiddle() << "]";
 			break;
 		case PushSubSize:
-			_out << "  PUSH #[$" << h256(i.data()).abridged() << "]";
+			_out << "  PUSH #[$" << h256(i.data()).abridgedMiddle() << "]";
 			break;
 		case PushProgramSize:
 			_out << "  PUSHSIZE";
@@ -289,20 +292,10 @@ void Assembly::injectStart(AssemblyItem const& _i)
 	m_items.insert(m_items.begin(), _i);
 }
 
-inline bool matches(AssemblyItemsConstRef _a, AssemblyItemsConstRef _b)
-{
-	if (_a.size() != _b.size())
-		return false;
-	for (unsigned i = 0; i < _a.size(); ++i)
-		if (!_a[i].match(_b[i]))
-			return false;
-	return true;
-}
-
 struct OptimiserChannel: public LogChannel { static const char* name() { return "OPT"; } static const int verbosity = 12; };
 #define copt dev::LogOutputStream<OptimiserChannel, true>()
 
-Assembly& Assembly::optimise(bool _enable)
+Assembly& Assembly::optimise(bool _enable, bool _isCreation, size_t _runs)
 {
 	if (!_enable)
 		return *this;
@@ -364,10 +357,17 @@ Assembly& Assembly::optimise(bool _enable)
 		}
 	}
 
+	total += ConstantOptimisationMethod::optimiseConstants(
+		_isCreation,
+		_isCreation ? 1 : _runs,
+		*this,
+		m_items
+	);
+
 	copt << total << " optimisations done.";
 
 	for (auto& sub: m_subs)
-	  sub.optimise(true);
+	  sub.optimise(true, false, _runs);
 
 	return *this;
 }

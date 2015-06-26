@@ -33,7 +33,7 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number), _depth) {}
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number), _depth) {}
 
 h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
@@ -160,7 +160,7 @@ mObject FakeExtVM::exportExec()
 	ret["origin"] = toString(origin);
 	ret["value"] = toCompactHex(value, HexPrefix::Add, 1);
 	ret["gasPrice"] = toCompactHex(gasPrice, HexPrefix::Add, 1);
-	ret["gas"] = toCompactHex(gas, HexPrefix::Add, 1);
+	ret["gas"] = toCompactHex(execGas, HexPrefix::Add, 1);
 	ret["data"] = toHex(data, 2, HexPrefix::Add);
 	ret["code"] = toHex(code, 2, HexPrefix::Add);
 	return ret;
@@ -183,6 +183,7 @@ void FakeExtVM::importExec(mObject& _o)
 	value = toInt(_o["value"]);
 	gasPrice = toInt(_o["gasPrice"]);
 	gas = toInt(_o["gas"]);
+	execGas = gas;
 
 	thisTxCode.clear();
 	code = thisTxCode;
@@ -305,9 +306,9 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		std::cout << "  " << i.first << "\n";
-		BOOST_REQUIRE(o.count("env") > 0);
-		BOOST_REQUIRE(o.count("pre") > 0);
-		BOOST_REQUIRE(o.count("exec") > 0);
+		TBOOST_REQUIRE((o.count("env") > 0));
+		TBOOST_REQUIRE((o.count("pre") > 0));
+		TBOOST_REQUIRE((o.count("exec") > 0));
 
 		FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
@@ -322,6 +323,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
 			fev.code = fev.thisTxCode;
 		}
+		fev.codeHash = sha3(fev.code);
 
 		bytes output;
 		bool vmExceptionOccured = false;
@@ -329,12 +331,10 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			auto vm = eth::VMFactory::create();
 			auto vmtrace = Options::get().vmtrace ? fev.simpleTrace() : OnOpFunc{};
-			auto outputRef = bytesConstRef{};
 			{
 				Listener::ExecTimeGuard guard{i.first};
-				outputRef = vm->go(fev.gas, fev, vmtrace);
+				output = vm->exec(fev.gas, fev, vmtrace);
 			}
-			output = outputRef.toBytes();
 		}
 		catch (VMException const&)
 		{
@@ -344,12 +344,12 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		catch (Exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			TBOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 		catch (std::exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			TBOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 
 		// delete null entries in storage for the sake of comparison
@@ -389,6 +389,19 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHex(output, 2, HexPrefix::Add);
+
+				// compare expected output with post output
+				if (o.count("expectOut") > 0)
+				{
+					std::string warning = "Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
+					if (Options::get().checkState)
+						{TBOOST_CHECK_MESSAGE((o["out"].get_str() == o["expectOut"].get_str()), warning);}
+					else
+						TBOOST_WARN_MESSAGE((o["out"].get_str() == o["expectOut"].get_str()), warning);
+
+					o.erase(o.find("expectOut"));
+				}
+
 				o["gas"] = toCompactHex(fev.gas, HexPrefix::Add, 1);
 				o["logs"] = exportLog(fev.sub.logs);
 			}
@@ -397,13 +410,13 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			if (o.count("post") > 0)	// No exceptions expected
 			{
-				BOOST_CHECK(!vmExceptionOccured);
+				TBOOST_CHECK(!vmExceptionOccured);
 
-				BOOST_REQUIRE(o.count("post") > 0);
-				BOOST_REQUIRE(o.count("callcreates") > 0);
-				BOOST_REQUIRE(o.count("out") > 0);
-				BOOST_REQUIRE(o.count("gas") > 0);
-				BOOST_REQUIRE(o.count("logs") > 0);
+				TBOOST_REQUIRE((o.count("post") > 0));
+				TBOOST_REQUIRE((o.count("callcreates") > 0));
+				TBOOST_REQUIRE((o.count("out") > 0));
+				TBOOST_REQUIRE((o.count("gas") > 0));
+				TBOOST_REQUIRE((o.count("logs") > 0));
 
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
@@ -412,7 +425,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				checkOutput(output, o);
 
-				BOOST_CHECK_EQUAL(toInt(o["gas"]), fev.gas);
+				TBOOST_CHECK_EQUAL(toInt(o["gas"]), fev.gas);
 
 				State postState, expectState;
 				mObject mPostState = fev.exportState();
@@ -422,12 +435,12 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 
-				checkCallCreates(test.callcreates, fev.callcreates);
+				checkCallCreates(fev.callcreates, test.callcreates);
 
 				checkLog(fev.sub.logs, test.sub.logs);
 			}
 			else	// Exception expected
-				BOOST_CHECK(vmExceptionOccured);
+				TBOOST_CHECK(vmExceptionOccured);
 		}
 	}
 }

@@ -55,6 +55,49 @@ void HostNodeTableHandler::processEvent(NodeId const& _n, NodeTableEventType con
 	m_host.onNodeTableEvent(_n, _e);
 }
 
+ReputationManager::ReputationManager()
+{
+}
+
+void ReputationManager::noteRude(Session const& _s, std::string const& _sub)
+{
+	DEV_WRITE_GUARDED(x_nodes)
+		m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].isRude = true;
+}
+
+bool ReputationManager::isRude(Session const& _s, std::string const& _sub) const
+{
+	DEV_READ_GUARDED(x_nodes)
+	{
+		auto nit = m_nodes.find(make_pair(_s.id(), _s.info().clientVersion));
+		if (nit == m_nodes.end())
+			return false;
+		auto sit = nit->second.subs.find(_sub);
+		bool ret = sit == nit->second.subs.end() ? false : sit->second.isRude;
+		return _sub.empty() ? ret : (ret || isRude(_s));
+	}
+	return false;
+}
+
+void ReputationManager::setData(Session const& _s, std::string const& _sub, bytes const& _data)
+{
+	DEV_WRITE_GUARDED(x_nodes)
+		m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].data = _data;
+}
+
+bytes ReputationManager::data(Session const& _s, std::string const& _sub) const
+{
+	DEV_READ_GUARDED(x_nodes)
+	{
+		auto nit = m_nodes.find(make_pair(_s.id(), _s.info().clientVersion));
+		if (nit == m_nodes.end())
+			return bytes();
+		auto sit = nit->second.subs.find(_sub);
+		return sit == nit->second.subs.end() ? bytes() : sit->second.data;
+	}
+	return bytes();
+}
+
 Host::Host(std::string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork):
 	Worker("p2p", 0),
 	m_restoreNetwork(_restoreNetwork.toBytes()),
@@ -172,7 +215,7 @@ void Host::doneWorking()
 	m_sessions.clear();
 }
 
-void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io, bi::tcp::endpoint _endpoint)
+void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameCoder* _io, std::shared_ptr<RLPXSocket> const& _s)
 {
 	// session maybe ingress or egress so m_peers and node table entries may not exist
 	shared_ptr<Peer> p;
@@ -192,7 +235,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io
 	}
 	if (p->isOffline())
 		p->m_lastConnected = std::chrono::system_clock::now();
-	p->endpoint.address = _endpoint.address();
+	p->endpoint.address = _s->remoteEndpoint().address();
 
 	auto protocolVersion = _rlp[0].toInt<unsigned>();
 	auto clientVersion = _rlp[1].toString();
@@ -211,7 +254,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io
 	clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
 	
 	// create session so disconnects are managed
-	auto ps = make_shared<Session>(this, _io, p, PeerSessionInfo({_id, clientVersion, _endpoint.address().to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>()}));
+	auto ps = make_shared<Session>(this, _io, _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>()}));
 	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
 	{
 		ps->disconnect(IncompatibleProtocol);
@@ -241,7 +284,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io
 		for (auto const& i: caps)
 			if (haveCapability(i))
 			{
-				ps->m_capabilities[i] = shared_ptr<Capability>(m_capabilities[i]->newPeerCapability(ps.get(), o, i));
+				ps->m_capabilities[i] = shared_ptr<Capability>(m_capabilities[i]->newPeerCapability(ps, o, i));
 				o += m_capabilities[i]->messageCount();
 			}
 		ps->start();
@@ -283,7 +326,8 @@ void Host::onNodeTableEvent(NodeId const& _n, NodeTableEventType const& _e)
 	{
 		clog(NetP2PNote) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
 		RecursiveGuard l(x_sessions);
-		m_peers.erase(_n);
+		if (m_peers.count(_n) && !m_peers[_n]->required)
+			m_peers.erase(_n);
 	}
 }
 
@@ -347,7 +391,7 @@ void Host::runAcceptor()
 		{
 			if (peerCount() > 9 * m_idealPeerCount)
 			{
-				clog(NetConnect) << "Dropping incoming connect due to maximum peer count (2 * ideal peer count): " << socket->remoteEndpoint();
+				clog(NetConnect) << "Dropping incoming connect due to maximum peer count (9 * ideal peer count): " << socket->remoteEndpoint();
 				socket->close();
 				if (ec.value() < 1)
 					runAcceptor();
@@ -536,7 +580,8 @@ PeerSessionInfos Host::peerSessionInfo() const
 	for (auto& i: m_sessions)
 		if (auto j = i.second.lock())
 			if (j->isConnected())
-				ret.push_back(j->m_info);
+				DEV_GUARDED(j->x_info)
+					ret.push_back(j->m_info);
 	return ret;
 }
 
@@ -594,27 +639,40 @@ void Host::run(boost::system::error_code const&)
 	// updated. // disconnectLatePeers();
 
 	// todo: update peerSlotsAvailable()
-	unsigned pendingCount = 0;
-	DEV_GUARDED(x_pendingNodeConns)
-		pendingCount = m_pendingPeerConns.size();
-	int openSlots = m_idealPeerCount - peerCount() - pendingCount;
-	if (openSlots > 0)
+	
+	list<shared_ptr<Peer>> toConnect;
+	unsigned reqConn = 0;
 	{
-		list<shared_ptr<Peer>> toConnect;
+		RecursiveGuard l(x_sessions);
+		for (auto const& p: m_peers)
 		{
-			RecursiveGuard l(x_sessions);
-			for (auto p: m_peers)
-				if (p.second->shouldReconnect() && !havePeerSession(p.second->id))
-					toConnect.push_back(p.second);
+			bool haveSession = havePeerSession(p.second->id);
+			bool required = p.second->required;
+			if (haveSession && required)
+				reqConn++;
+			else if (!haveSession && p.second->shouldReconnect() && (!m_netPrefs.pin || required))
+				toConnect.push_back(p.second);
 		}
+	}
+
+	for (auto p: toConnect)
+		if (p->required && reqConn++ < m_idealPeerCount)
+			connect(p);
+	
+	if (!m_netPrefs.pin)
+	{
+		unsigned pendingCount = 0;
+		DEV_GUARDED(x_pendingNodeConns)
+			pendingCount = m_pendingPeerConns.size();
+		int openSlots = m_idealPeerCount - peerCount() - pendingCount + reqConn;
+		if (openSlots > 0)
+		{
+			for (auto p: toConnect)
+				if (!p->required && openSlots--)
+					connect(p);
 		
-		for (auto p: toConnect)
-			if (openSlots--)
-				connect(p);
-			else
-				break;
-		
-		m_nodeTable->discover();
+			m_nodeTable->discover();
+		}
 	}
 
 	auto runcb = [this](boost::system::error_code const& error) { run(error); };
@@ -655,7 +713,7 @@ void Host::startedWorking()
 	else
 		clog(NetP2PNote) << "p2p.start.notice id:" << id() << "TCP Listen port is invalid or unavailable.";
 
-	shared_ptr<NodeTable> nodeTable(new NodeTable(m_ioService, m_alias, NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort())));
+	shared_ptr<NodeTable> nodeTable(new NodeTable(m_ioService, m_alias, NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()), m_netPrefs.discovery));
 	nodeTable->setEventHandler(new HostNodeTableHandler(*this));
 	m_nodeTable = nodeTable;
 	restoreNetwork(&m_restoreNetwork);
@@ -834,7 +892,7 @@ KeyPair Host::networkAlias(bytesConstRef _b)
 {
 	RLP r(_b);
 	if (r.itemCount() == 3 && r[0].isInt() && r[0].toInt<unsigned>() >= 3)
-		return move(KeyPair(move(Secret(r[1].toBytes()))));
+		return KeyPair(Secret(r[1].toBytes()));
 	else
-		return move(KeyPair::create());
+		return KeyPair::create();
 }

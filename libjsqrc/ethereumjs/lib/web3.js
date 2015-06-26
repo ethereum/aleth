@@ -35,17 +35,9 @@ var utils = require('./utils/utils');
 var formatters = require('./web3/formatters');
 var RequestManager = require('./web3/requestmanager');
 var c = require('./utils/config');
-var Method = require('./web3/method');
 var Property = require('./web3/property');
 var Batch = require('./web3/batch');
-
-var web3Methods = [
-    new Method({
-        name: 'sha3',
-        call: 'web3_sha3',
-        params: 1
-    })
-];
+var sha3 = require('./utils/sha3');
 
 var web3Properties = [
     new Property({
@@ -101,8 +93,7 @@ web3.eth.filter = function (fil, eventParams, options, formatter) {
         return fil(eventParams, options);
     }
 
-    // what outputLogFormatter? that's wrong
-    //return new Filter(fil, watches.eth(), formatters.outputLogFormatter);
+    // output logs works for blockFilter and pendingTransaction filters?
     return new Filter(fil, watches.eth(), formatter || formatters.outputLogFormatter);
 };
 /*jshint maxparams:3 */
@@ -130,6 +121,8 @@ web3.toBigNumber = utils.toBigNumber;
 web3.toWei = utils.toWei;
 web3.fromWei = utils.fromWei;
 web3.isAddress = utils.isAddress;
+web3.isIBAN = utils.isIBAN;
+web3.sha3 = sha3;
 web3.createBatch = function () {
     return new Batch();
 };
@@ -155,8 +148,24 @@ Object.defineProperty(web3.eth, 'defaultAccount', {
     }
 });
 
+
+// EXTEND
+web3._extend = function(extension){
+    /*jshint maxcomplexity: 6 */
+
+    if(extension.property && !web3[extension.property])
+        web3[extension.property] = {};
+
+    setupMethods(web3[extension.property] || web3, extension.methods || []);
+    setupProperties(web3[extension.property] || web3, extension.properties || []);
+};
+web3._extend.formatters = formatters;
+web3._extend.utils = utils;
+web3._extend.Method = require('./web3/method');
+web3._extend.Property = require('./web3/property');
+
+
 /// setups all api methods
-setupMethods(web3, web3Methods);
 setupProperties(web3, web3Properties);
 setupMethods(web3.net, net.methods);
 setupProperties(web3.net, net.properties);
