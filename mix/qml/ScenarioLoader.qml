@@ -171,6 +171,17 @@ ColumnLayout
 
 				ComboBox
 				{
+					Connections
+					{
+						target: projectModel
+						onProjectClose: {
+							scenarioList.currentIndex = 0
+						}
+						onProjectLoaded: {
+							scenarioList.currentIndex = 0
+						}
+					}
+
 					id: scenarioList
 					model: projectModel.stateListModel
 					textRole: "title"
@@ -211,7 +222,6 @@ ColumnLayout
 								Connections {
 									target: blockChainSelector
 									onLoaded: {
-											console.log(scenarioList.currentIndex + " flkdsds")
 										comboLabel.text = projectModel.stateListModel.getState(scenarioList.currentIndex).title
 									}
 									onRenamed: {

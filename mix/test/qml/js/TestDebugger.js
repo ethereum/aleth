@@ -40,23 +40,24 @@ function test_transactionWithParameter()
 	"	uint z;\r" +
 	"}\r"
 	);
-	mainApplication.projectModel.stateListModel.editState(0);
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	ts.waitForRendering(transactionDialog, 3000);
+	newScenario()
+	rebuild()
+	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog;
+	addTx()
+	selectExecuteTrType(transactionDialog)
 	transactionDialog.selectFunction("setZ");
-	clickElement(transactionDialog, 140, 300);
-	ts.typeString("442", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	ts.waitForRendering(transactionDialog, 3000);
+	fillParamInput(transactionDialog, 0, "442")
+	applyTx(transactionDialog)
+	addTx()
+	selectExecuteTrType(transactionDialog)
 	transactionDialog.selectFunction("getZ");
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.acceptAndClose();
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel, "count", 5);
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel.get(4), "returned", "(442)");
+	applyTx(transactionDialog)
+
+	var bc = mainApplication.mainContent.scenarioPanel.bc.model;
+	tryCompare(bc.blocks, "length", 1);
+	tryCompare(bc.blocks[0], "status", "pending");
+	tryCompare(bc.blocks[0].transactions, "length", 3);
+	tryCompare(bc.blocks[0].transactions[2], "returned", "(442)");
 }
 
 function test_constructorParameters()

@@ -69,9 +69,11 @@ function selectExecuteTrType(trDialog)
 	clickElement(trDialog, 243, 125);
 }
 
-function applyTr(trDialog)
+function applyTx(trDialog)
 {
 	trDialog.updateAction.save()
+	if (!ts.waitForSignal(mainApplication.clientModel, "runComplete()", 5000))
+		fail("Error running transaction");
 }
 
 function fillParamInput(trDialog, index, value)

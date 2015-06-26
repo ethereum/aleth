@@ -183,7 +183,11 @@ Item {
 			stateList = [];
 			codeModel.reset();
 		}
-		onProjectLoading: stateListModel.loadStatesFromProject(projectData);
+		onProjectLoading:
+		{
+			stateListModel.loadStatesFromProject(projectData);
+		}
+
 		onProjectFileSaving: {
 			projectData.states = []
 			for(var i = 0; i < stateListModel.count; i++) {
@@ -198,7 +202,6 @@ Item {
 			state.title = qsTr("Default");
 			projectData.states = [ state ];
 			projectData.defaultStateIndex = 0;
-			stateListModel.loadStatesFromProject(projectData);
 		}
 	}
 
@@ -368,7 +371,6 @@ Item {
 		}
 
 		function getState(index) {
-			console.log(stateList.length + " jj")
 			return stateList[index];
 		}
 
@@ -419,7 +421,6 @@ Item {
 
 		function loadStatesFromProject(projectData)
 		{
-			console.log("projectdata " + projectData)
 			data = projectData
 			if (!projectData.states)
 				projectData.states = [];

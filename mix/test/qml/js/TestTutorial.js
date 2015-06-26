@@ -54,9 +54,7 @@ function test_tutorial()
 	transactionDialog.selectFunction("setRating")
 	fillParamInput(transactionDialog, 0, "Titanic")
 	fillParamInput(transactionDialog, 1, "2")
-	applyTr(transactionDialog)
-	if (!ts.waitForSignal(mainApplication.clientModel, "runComplete()", 5000))
-		fail("Error running transaction");
+	applyTx(transactionDialog)
 	clickElement(mainApplication.mainContent.webView.webView, 1, 1);
 	mainApplication.mainContent.webView.reload()
 	ts.waitForSignal(mainApplication.mainContent.webView, "ready()", 5000);
