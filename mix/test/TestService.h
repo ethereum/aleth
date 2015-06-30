@@ -51,6 +51,7 @@ public slots:
 	bool keyReleaseChar(QObject* _item, QString const& _character, int _modifiers, int _delay);
 	bool keyClickChar(QObject* _item, QString const& _character, int _modifiers, int _delay);
 	bool mouseClick(QObject* _item, qreal _x, qreal _y, int _button, int _modifiers, int _delay);
+	bool mouseDoubleClick(QObject* _item, qreal _x, qreal _y, int _button, int _modifiers, int _delay);
 
 private:
 	QWindow* eventWindow(QObject* _item);

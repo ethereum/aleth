@@ -170,6 +170,15 @@ bool TestService::mouseClick(QObject* _item, qreal _x, qreal _y, int _button, in
 	return true;
 }
 
+bool TestService::mouseDoubleClick(QObject* _item, qreal _x, qreal _y, int _button, int _modifiers, int _delay)
+{
+	QWindow* window = qobject_cast<QWindow*>(_item);
+	if (!window)
+		window = eventWindow(_item);
+	mouseEvent(MouseDoubleClick, window, _item, Qt::MouseButton(_button), Qt::KeyboardModifiers(_modifiers), QPointF(_x, _y), _delay);
+	return true;
+}
+
 void TestService::setTargetWindow(QObject* _window)
 {
 	QQuickWindow* window = qobject_cast<QQuickWindow*>(_window);

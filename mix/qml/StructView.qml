@@ -14,6 +14,12 @@ Column
 	property string context
 	Layout.fillWidth: true
 	spacing: 5
+
+	function getItem(index)
+	{
+		return repeater.itemAt(index).type
+	}
+
 	Repeater
 	{
 		id: repeater
@@ -23,6 +29,7 @@ Column
 			id: row
 			height: 30 + (members[index].type.category === QSolidityType.Struct ? (30 * members[index].type.members.length) : 0)
 			Layout.fillWidth: true
+			property alias type: typeLoader.item
 			Rectangle
 			{
 				Layout.preferredWidth: 150
@@ -67,9 +74,9 @@ Column
 				}
 				onLoaded:
 				{
+
 					var ptype = members[index].type;
 					var pname = members[index].name;
-					var vals = value;
 					item.readOnly = context === "variable";
 					if (ptype.category === QSolidityType.Address)
 					{
@@ -95,13 +102,15 @@ Column
 						item.init();
 
 					item.onValueChanged.connect(function() {
-						vals[pname] = item.value;
+						value[pname] = item.value;
 						valueChanged();
 					});
 
 					var newWidth = nameLabel.width + typeLabel.width + item.width + 108;
 					if (root.width < newWidth)
 						root.width = newWidth;
+
+					value[pname] = item.value;
 				}
 
 				function getValue()

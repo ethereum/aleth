@@ -174,9 +174,6 @@ ColumnLayout
 					Connections
 					{
 						target: projectModel
-						onProjectClose: {
-							scenarioList.currentIndex = 0
-						}
 						onProjectLoaded: {
 							scenarioList.currentIndex = 0
 						}

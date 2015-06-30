@@ -1,7 +1,7 @@
 function rebuild()
 {
 	mainApplication.mainContent.scenarioPanel.bc.rebuildBtn.build()
-	wait(2000)
+	wait(3000)
 }
 
 function addTx()
@@ -26,6 +26,7 @@ function newAccount()
 function newScenario()
 {
 	mainApplication.mainContent.scenarioPanel.load.addScenarioBtn.add()
+	wait(3000)
 }
 
 function restore()
@@ -53,18 +54,28 @@ function saveTitle()
 	mainApplication.mainContent.scenarioPanel.load.scenarioNameEditAction.save()
 }
 
-/* Tr Panel */
+function editTx(blockIndex, txIndex)
+{
+	mainApplication.mainContent.scenarioPanel.bc.blockChainControl.editTx(blockIndex, txIndex)
+}
+
+function debugTx(blockIndex, txIndex)
+{
+	mainApplication.mainContent.scenarioPanel.bc.blockChainControl.debugTx(blockIndex, txIndex)
+}
+
+/* Tx Panel */
 function selectSendEtherTrType(trDialog)
 {
 	clickElement(trDialog, 243, 60);
 }
 
-function selectCreationTrType(trDialog)
+function selectCreationTxType(trDialog)
 {
 	clickElement(trDialog, 243, 90);
 }
 
-function selectExecuteTrType(trDialog)
+function selectExecuteTxType(trDialog)
 {
 	clickElement(trDialog, 243, 125);
 }
@@ -72,14 +83,28 @@ function selectExecuteTrType(trDialog)
 function applyTx(trDialog)
 {
 	trDialog.updateAction.save()
-	if (!ts.waitForSignal(mainApplication.clientModel, "runComplete()", 5000))
-		fail("Error running transaction");
+	if (trDialog.execute)
+	{
+		if (!ts.waitForSignal(mainApplication.clientModel, "runComplete()", 5000))
+			fail("Error running transaction");
+	}
 }
 
 function fillParamInput(trDialog, index, value)
 {
 	clickElement(trDialog, 226, 220 + (36 * index));
 	ts.typeString(value, trDialog);
+}
+
+function fillCtrlParamInput(trDialog, index, value)
+{
+	clickElement(trDialog, 226, 187 + (36 * index));
+	ts.typeString(value, trDialog);
+}
+
+function selectParamInput(trDialog, index, value)
+{
+	trDialog.paramsCtrl.getItem(index).select(value)
 }
 
 

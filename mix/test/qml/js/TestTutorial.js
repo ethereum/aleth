@@ -50,7 +50,7 @@ function test_tutorial()
 	rebuild()
 	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog;
 	addTx()
-	selectExecuteTrType(transactionDialog)
+	selectExecuteTxType(transactionDialog)
 	transactionDialog.selectFunction("setRating")
 	fillParamInput(transactionDialog, 0, "Titanic")
 	fillParamInput(transactionDialog, 1, "2")

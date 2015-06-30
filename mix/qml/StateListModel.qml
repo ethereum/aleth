@@ -179,12 +179,11 @@ Item {
 	Connections {
 		target: projectModel
 		onProjectClosed: {
-			stateListModel.clear();
-			stateList = [];
-			codeModel.reset();
+			stateListModel.init()
 		}
 		onProjectLoading:
 		{
+			stateListModel.init()
 			stateListModel.loadStatesFromProject(projectData);
 		}
 
@@ -198,6 +197,7 @@ Item {
 
 		}
 		onNewProject: {
+			stateListModel.init()
 			var state = toPlainStateItem(stateListModel.createDefaultState());
 			state.title = qsTr("Default");
 			projectData.states = [ state ];
@@ -250,6 +250,13 @@ Item {
 		signal stateRun(int index)
 		signal stateDeleted(int index)
 
+		function init()
+		{
+			stateListModel.clear();
+			stateList = [];
+			codeModel.reset();
+		}
+
 		function defaultTransactionItem() {
 			return TransactionHelper.defaultTransaction();
 		}
@@ -300,7 +307,7 @@ Item {
 				var ctorTr = defaultTransactionItem();
 				ctorTr.functionId = c;
 				ctorTr.contractId = c;
-				ctorTr.label = qsTr("Deploy") + " " + ctorTr.contractId;
+				ctorTr.label = ctorTr.contractId + "." + ctorTr.contractId + "()"
 				ctorTr.sender = item.accounts[0].secret;
 				item.transactions.push(ctorTr);
 				item.blocks[0].transactions.push(ctorTr)
@@ -313,14 +320,16 @@ Item {
 			for(var c in codeModel.contracts) {
 				for (var s = 0; s < stateListModel.count; s++) {
 					var state = stateList[s];
-					for (var t = 0; t < state.transactions.length; t++) {
-						var transaction = state.transactions[t];
-						if (transaction.contractId === oldName) {
-							transaction.contractId = newName;
-							if (transaction.functionId === oldName)
-								transaction.functionId = newName;
-							changed = true;
-							state.transactions[t] = transaction;
+					for (var k = 0; k < state.blocks.length; k++) {
+						for (var t = 0; t < state.blocks[k].transactions.length; t++) {
+							var transaction = state.blocks[k].transactions[t];
+							if (transaction.contractId === oldName) {
+								transaction.contractId = newName;
+								if (transaction.functionId === oldName)
+									transaction.functionId = newName;
+								changed = true;
+								state.transactions[t] = transaction;
+							}
 						}
 					}
 					stateListModel.set(s, state);
@@ -337,14 +346,14 @@ Item {
 			for (var c in codeModel.contracts) {
 				for (var s = 0; s < stateListModel.count; s++) {
 					var state = stateList[s];
-					if (state.transactions.length === 0) {
+					if (state.blocks.length === 1 && state.blocks[0].transactions.length === 0) {
 						//append this contract
-						var ctorTr = defaultTransactionItem();
-						ctorTr.functionId = c;
-						ctorTr.contractId = c;
-						ctorTr.label = qsTr("Deploy") + " " + ctorTr.contractId;
+						var ctorTr = defaultTransactionItem()
+						ctorTr.functionId = c
+						ctorTr.contractId = c
+						ctorTr.label = ctorTr.contractId + "." + ctorTr.contractId + "()"
 						ctorTr.sender = state.accounts[0].secret;
-						state.transactions.push(ctorTr);
+						state.blocks[0].transactions.push(ctorTr);
 						changed = true;
 						stateListModel.set(s, state);
 						stateList[s] = state;
@@ -435,7 +444,6 @@ Item {
 				var item = fromPlainStateItem(items[i]);
 				stateListModel.append(item);
 				stateList.push(item);
-				console.log("addstate " + JSON.stringify(item))
 			}
 			stateListModelReady();
 		}

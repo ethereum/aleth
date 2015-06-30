@@ -212,6 +212,16 @@ Rectangle {
 					anchors.right: parent.right
 				}
 
+				Connections
+				{
+					target: projectModel
+					onProjectClosed: {
+						if (debugPanel.visible)
+							debugPanel.close()
+					}
+
+				}
+
 				Debugger
 				{
 					id: debugPanel

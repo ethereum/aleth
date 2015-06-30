@@ -14,6 +14,12 @@ Rectangle {
 	property alias roundRight: right.visible
 	signal clicked
 
+	function isBlinking()
+	{
+		return blinkTimer.running
+	}
+
+
 	function startBlinking()
 	{
 		if (!blinkTimer.running)

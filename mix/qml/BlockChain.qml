@@ -15,6 +15,7 @@ ColumnLayout {
 	id: blockChainPanel
 	property variant model
 	property variant transactionDialog: transactionDialog
+	property variant blockChainControl: blockChainRepeater
 	spacing: 0
 	property int previousWidth
 	property variant debugTrRequested: []
@@ -25,7 +26,7 @@ ColumnLayout {
 	property alias rebuildBtn: rebuild
 	property alias newAccountBtn: newAccountBtn
 	property alias addTxBtn: addTransaction
-
+	signal blockChainLoaded()
 
 	Connections
 	{
@@ -63,28 +64,18 @@ ColumnLayout {
 
 	function load(scenario)
 	{
-		if (!scenario)
-			return;
-		if (model)
-			rebuild.startBlinking()
 		model = scenario
 		blockModel.clear()
 		for (var b in model.blocks)
 			blockModel.append(model.blocks[b])
 		previousWidth = width
+		blockChainLoaded()
 	}
 
 	function clear()
 	{
 		model = []
 		blockModel.clear()
-	}
-
-	Connections
-	{
-		id: projectModel
-		onProjectClosed: clear()
-		onNewProject: clear()
 	}
 
 	property int statusWidth: 30
@@ -180,6 +171,16 @@ ColumnLayout {
 
 				Repeater // List of blocks
 				{
+					function editTx(blockIndex, txIndex)
+					{
+						itemAt(blockIndex).editTx(txIndex)
+					}
+
+					function debugTx(blockIndex, txIndex)
+					{
+						itemAt(blockIndex).debugTx(txIndex)
+					}
+
 					id: blockChainRepeater
 					model: blockModel
 					Block
@@ -525,6 +526,8 @@ ColumnLayout {
 		onAccepted: {
 			var item = transactionDialog.getItem()
 			if (execute)
+				execute = !rebuild.isBlinking()
+			if (execute && !rebuild.isBlinking())
 			{
 				var lastBlock = model.blocks[model.blocks.length - 1];
 				if (lastBlock.status === "mined")

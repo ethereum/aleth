@@ -424,7 +424,7 @@ void ClientModel::executeTr(QVariantMap _tr)
 
 std::pair<QString, int> ClientModel::resolvePair(QString const& _contractId)
 {
-	std::pair<QString, int> ret = std::make_pair(_contractId, 0);
+	std::pair<QString, int> ret = std::make_pair(_contractId, -1);
 	if (_contractId.startsWith("<") && _contractId.endsWith(">"))
 	{
 		QStringList values = ret.first.remove("<").remove(">").split(" - ");
@@ -439,7 +439,7 @@ QString ClientModel::resolveToken(std::pair<QString, int> const& _value)
 {
 	if (_value.second == -2) //-2: first contains a real address
 		return _value.first;
-	else if (m_contractAddresses.size() > 0)
+	else if (m_contractAddresses.size() > 0 && m_contractAddresses.find(_value) != m_contractAddresses.end())
 		return QString::fromStdString("0x" + dev::toHex(m_contractAddresses[_value].ref()));
 	else
 		return _value.first;

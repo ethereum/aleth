@@ -24,7 +24,7 @@ Dialog {
 	property alias gasPrice: gasPriceField.value;
 	property alias transactionValue: valueField.value;
 	property string contractId: contractCreationComboBox.currentValue();
-	property alias functionId: functionComboBox.currentText;
+	property string functionId: functionComboBox.currentText;
 	property var paramValues;
 	property var paramsModel: [];
 	property bool useTransactionDefaultValue: false
@@ -33,6 +33,7 @@ Dialog {
 	signal accepted;
 	property int rowWidth: 500
 	property variant updateAction: updateBtn
+	property alias paramsCtrl: paramScroll
 	StateDialogStyle {
 		id: transactionDialogStyle
 	}
@@ -43,26 +44,21 @@ Dialog {
 		paramScroll.transactionIndex = index
 		paramScroll.blockIndex = blockIdx
 		saveStatus = item.saveStatus
-		gasValueEdit.gasValue = item.gas;
-		gasAutoCheck.checked = item.gasAuto ? true : false;
-		gasPriceField.value = item.gasPrice;
-		valueField.value = item.value;
-		var contractId = item.contractId;
-		var functionId = item.functionId;
-
-		paramValues = item.parameters !== undefined ? item.parameters : {};
+		gasValueEdit.gasValue = item.gas
+		gasAutoCheck.checked = item.gasAuto ? true : false
+		gasPriceField.value = item.gasPrice
+		valueField.value = item.value
+		var contractId = item.contractId
+		var functionId = item.functionId
+		paramValues = item.parameters !== undefined ? item.parameters : {}
 		if (item.sender)
-			senderComboBox.select(item.sender);
-
-
+			senderComboBox.select(item.sender)
 		trTypeCreate.checked = item.isContractCreation
 		trTypeSend.checked = !item.isFunctionCall
 		trTypeExecute.checked = item.isFunctionCall && !item.isContractCreation
-
 		load(item.isContractCreation, item.isFunctionCall, functionId, contractId)
-
 		estimatedGas.updateView()
-		visible = true;
+		visible = true
 	}
 
 	function loadCtorParameters(contractId)
@@ -88,6 +84,11 @@ Dialog {
 					functionsModel.append({ text: functions[f].name });
 			}
 		}
+	}
+
+	function selectRecipientAddress(token)
+	{
+		recipientsAccount.select(token)
 	}
 
 	function selectContract(contractName)
@@ -125,9 +126,9 @@ Dialog {
 	function loadParameters() {
 		paramsModel = []
 		if (functionComboBox.currentIndex >= 0 && functionComboBox.currentIndex < functionsModel.count) {
-			var contract = codeModel.contracts[contractFromToken(contractCreationComboBox.currentValue())];
+			var contract = codeModel.contracts[contractFromToken(recipientsAccount.currentValue())];
 			if (contract) {
-				var func = contract.contract.functions[functionComboBox.currentIndex];
+				var func = getFunction(contract, functionComboBox.currentText)
 				if (func) {
 					var parameters = func.parameters;
 					for (var p = 0; p < parameters.length; p++)
@@ -136,6 +137,16 @@ Dialog {
 			}
 		}
 		initTypeLoader();
+	}
+
+	function getFunction(contract, name)
+	{
+		for (var k in contract.contract.functions)
+		{
+			if (contract.contract.functions[k].name === name)
+				return contract.contract.functions[k]
+		}
+		return null
 	}
 
 	function initTypeLoader()
@@ -222,6 +233,7 @@ Dialog {
 			recipientsAccount.visible = true
 			recipientsAccount.accounts = senderComboBox.model;
 			amountLabel.text = qsTr("Amount")
+			recipientsAccount.value = ""
 			if (!isFunctionCall)
 				recipientsAccount.subType = "address"
 			else
@@ -375,7 +387,6 @@ Dialog {
 							exclusiveGroup: rbbuttonList
 							height: 30
 							text: qsTr("Send ether to account")
-
 						}
 
 						RadioButton {
