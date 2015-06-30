@@ -210,7 +210,7 @@ protected:
 	void restoreNetwork(bytesConstRef _b);
 
 private:
-	enum PeerSlotRatio { Egress = 2, Ingress = 9 };
+	enum PeerSlotRatio { Egress = 1, Ingress = 4 };
 	
 	bool havePeerSession(NodeId _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? !!m_sessions[_id].lock() : false; }
 	
@@ -224,6 +224,9 @@ private:
 	
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
 	void keepAlivePeers();
+
+	/// Maintain ideal peer connectivity.
+	void maintainPeers();
 
 	/// Disconnect peers which didn't respond to keepAlivePeers ping prior to c_keepAliveTimeOut.
 	void disconnectLatePeers();

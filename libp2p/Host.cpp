@@ -21,6 +21,7 @@
  */
 
 #include <set>
+#include <algorithm>
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -632,48 +633,8 @@ void Host::run(boost::system::error_code const&)
 			pp->serviceNodesRequest();
 
 	keepAlivePeers();
-	
-	// At this time peers will be disconnected based on natural TCP timeout.
-	// disconnectLatePeers needs to be updated for the assumption that Session
-	// is always live and to ensure reputation and fallback timers are properly
-	// updated. // disconnectLatePeers();
 
-	// todo: update peerSlotsAvailable()
-	
-	list<shared_ptr<Peer>> toConnect;
-	unsigned reqConn = 0;
-	{
-		RecursiveGuard l(x_sessions);
-		for (auto const& p: m_peers)
-		{
-			bool haveSession = havePeerSession(p.second->id);
-			bool required = p.second->required;
-			if (haveSession && required)
-				reqConn++;
-			else if (!haveSession && p.second->shouldReconnect() && (!m_netPrefs.pin || required))
-				toConnect.push_back(p.second);
-		}
-	}
-
-	for (auto p: toConnect)
-		if (p->required && reqConn++ < m_idealPeerCount)
-			connect(p);
-	
-	if (!m_netPrefs.pin)
-	{
-		unsigned pendingCount = 0;
-		DEV_GUARDED(x_pendingNodeConns)
-			pendingCount = m_pendingPeerConns.size();
-		int openSlots = m_idealPeerCount - peerCount() - pendingCount + reqConn;
-		if (openSlots > 0)
-		{
-			for (auto p: toConnect)
-				if (!p->required && openSlots--)
-					connect(p);
-		
-			m_nodeTable->discover();
-		}
-	}
+	maintainPeers();
 
 	auto runcb = [this](boost::system::error_code const& error) { run(error); };
 	m_timer->expires_from_now(boost::posix_time::milliseconds(c_timerInterval));
@@ -740,6 +701,98 @@ void Host::keepAlivePeers()
 				pp->ping();
 
 	m_lastPing = chrono::steady_clock::now();
+}
+
+void Host::maintainPeers()
+{
+	Peers candidates = move(getPeers());
+	int slots = 0;
+	unsigned pending = 0;
+	DEV_GUARDED(x_pendingNodeConns)
+		pending = m_pendingPeerConns.size();
+	slots = (int)(Egress * m_idealPeerCount) - peerCount() - pending;
+	bool disconnect = slots < 1;
+	
+	// don't disconnect when pinned
+	if (m_netPrefs.pin && disconnect)
+		return;
+	else if (m_netPrefs.pin)
+	{
+		// pinning enabled: only connect required peers
+		for (auto p: candidates)
+			if (p.required && !havePeerSession(p.id) && --slots)
+				connect(m_peers[p.id]);
+			else if (!slots)
+				return;
+		return;
+	}
+
+	unsigned fallbackMean = 0, karmaMean = 0;
+	unsigned fallbackStdDev = 0, karmaStdDev = 0;
+	unsigned fallbackCutOff, karmaCutOff;
+	for (auto const& p: candidates)
+	{
+		fallbackMean += p.fallbackSeconds();
+		karmaMean += p.m_score < 0 ? 0 : p.m_score;
+	}
+	fallbackMean /= candidates.size();
+	karmaMean /= candidates.size();
+	for (auto const& p: candidates)
+	{
+		fallbackStdDev += pow(p.fallbackSeconds() - (int)fallbackMean, 2);
+		karmaStdDev += pow(p.m_score - (int)fallbackMean, 2);
+	}
+	fallbackStdDev /= candidates.size();
+	fallbackCutOff = fallbackMean + fallbackStdDev * 2;
+	karmaStdDev /= candidates.size();
+	karmaCutOff = karmaMean - karmaStdDev / 2;
+	
+	vector<NodeId&> require;
+	vector<NodeId&> good;
+	vector<NodeId&> meh;
+	slots = abs(slots);
+	for (auto& p: candidates)
+		if ((disconnect && havePeerSession(p.id)) || (!disconnect && !havePeerSession(p.id)))
+		{
+			if (disconnect)
+			{
+				if (--slots && (p.fallbackSeconds() > fallbackCutOff || (unsigned)p.m_score < karmaCutOff))
+					meh.push_back(p.id);
+				else if(slots)
+					good.push_back(p.id);
+				else
+					break;
+			}
+			else if (--slots && p.required)
+				require.push_back(p.id);
+			else if (slots && (p.fallbackSeconds() < fallbackCutOff && (unsigned)p.m_score > karmaCutOff))
+				good.push_back(p.id);
+			else if (slots)
+				meh.push_back(p.id);
+			else
+				break;
+		}
+	
+	std::vector<NodeId&> toConnect;
+	for (NodeId const& p: require)
+		toConnect.push_back(p);
+	pair<vector<NodeId&>&, vector<NodeId&>&> sets = disconnect ? make_pair(meh, good) : make_pair(good, meh);
+	for (NodeId& p: sets.first)
+		toConnect.push_back(p);
+	for (NodeId& p: sets.second)
+		toConnect.push_back(p);
+
+	DEV_RECURSIVE_GUARDED(x_sessions)
+		for (NodeId& p: toConnect)
+			if (disconnect && m_sessions.count(p) && !!m_sessions[p].lock())
+			{
+				if (auto s = m_sessions[p].lock())
+					s->disconnect(TooManyPeers);
+			}
+			else if(!disconnect && m_peers.count(p))
+				connect(m_peers[p]);
+
+	m_nodeTable->discover();
 }
 
 void Host::disconnectLatePeers()
@@ -830,6 +883,7 @@ void Host::restoreNetwork(bytesConstRef _b)
 		// r[1] = key
 		// r[2] = nodes
 
+		set<Peer> candidates;
 		for (auto i: r[2])
 		{
 			// todo: ipv6
@@ -846,44 +900,67 @@ void Host::restoreNetwork(bytesConstRef _b)
 					n.required = i[4].toInt<bool>();
 					if (!n.endpoint.isAllowed() && !n.required)
 						continue;
-					shared_ptr<Peer> p = make_shared<Peer>(n);
-					p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
-					p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[6].toInt<unsigned>()));
-					p->m_failedAttempts = i[7].toInt<unsigned>();
-					p->m_lastDisconnect = (DisconnectReason)i[8].toInt<unsigned>();
-					p->m_score = (int)i[9].toInt<unsigned>();
-					p->m_rating = (int)i[10].toInt<unsigned>();
-					m_peers[p->id] = p;
-					if (p->required)
-						requirePeer(p->id, n.endpoint);
-					else
-						m_nodeTable->addNode(*p.get(), NodeTable::NodeRelation::Known);
+					Peer p(n);
+					p.m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
+					p.m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[6].toInt<unsigned>()));
+					p.m_failedAttempts = i[7].toInt<unsigned>();
+					p.m_lastDisconnect = (DisconnectReason)i[8].toInt<unsigned>();
+					p.m_score = (int)i[9].toInt<unsigned>();
+					p.m_rating = (int)i[10].toInt<unsigned>();
+					candidates.insert(move(p));
 				}
 			}
-			else if (i.itemCount() == 3 || i.itemCount() == 10)
-			{
-				Node n((NodeId)i[2], NodeIPEndpoint(bi::address_v4(i[0].toArray<byte, 4>()), i[1].toInt<uint16_t>(), i[1].toInt<uint16_t>()));
-				if (i.itemCount() == 3 && n.endpoint.isAllowed())
-					m_nodeTable->addNode(n);
-				else if (i.itemCount() == 10)
-				{
-					n.required = i[3].toInt<bool>();
-					if (!n.endpoint.isAllowed() && !n.required)
-						continue;
-					shared_ptr<Peer> p = make_shared<Peer>(n);
-					p->m_lastConnected = chrono::system_clock::time_point(chrono::seconds(i[4].toInt<unsigned>()));
-					p->m_lastAttempted = chrono::system_clock::time_point(chrono::seconds(i[5].toInt<unsigned>()));
-					p->m_failedAttempts = i[6].toInt<unsigned>();
-					p->m_lastDisconnect = (DisconnectReason)i[7].toInt<unsigned>();
-					p->m_score = (int)i[8].toInt<unsigned>();
-					p->m_rating = (int)i[9].toInt<unsigned>();
-					m_peers[p->id] = p;
-					if (p->required)
-						requirePeer(p->id, n.endpoint);
-					else
-						m_nodeTable->addNode(*p.get(), NodeTable::NodeRelation::Known);
-				}
-			}
+		}
+		
+		if (!candidates.size())
+			return;
+
+		unsigned fallbackMean = 0, karmaMean = 0;
+		unsigned fallbackStdDev = 0, karmaStdDev = 0;
+		unsigned fallbackCutOff, karmaCutOff;
+		
+		for (auto const& p: candidates)
+		{
+			fallbackMean += p.fallbackSeconds();
+			karmaMean += p.m_score < 0 ? 0 : p.m_score;
+		}
+		fallbackMean /= candidates.size();
+		karmaMean /= candidates.size();
+		for (auto const& p: candidates)
+		{
+			fallbackStdDev += pow(p.fallbackSeconds() - (int)fallbackMean, 2);
+			karmaStdDev += pow(p.m_score - (int)fallbackMean, 2);
+		}
+		fallbackStdDev /= candidates.size();
+		fallbackCutOff = fallbackMean + fallbackStdDev * 2;
+		karmaStdDev /= candidates.size();
+		karmaCutOff = karmaMean - karmaStdDev / 2;
+		
+		set<Peer> require;
+		set<Peer> good;
+		set<Peer> meh;
+		for (auto& p: candidates)
+			if (p.required)
+				require.insert(move(p));
+			else if (p.fallbackSeconds() > fallbackCutOff || (unsigned)p.m_score > karmaCutOff)
+				meh.insert(move(p));
+			else
+				good.insert(move(p));
+	
+		for (auto& p: require)
+		{
+			m_peers[p.id] = make_shared<Peer>(move(p));
+			requirePeer(p.id, p.endpoint);
+		}
+		for (auto& p: good)
+		{
+			m_peers[p.id] = make_shared<Peer>(move(p));
+			m_nodeTable->addNode(p, NodeTable::NodeRelation::Known);
+		}
+		for (auto& p: meh)
+		{
+			m_peers[p.id] = make_shared<Peer>(move(p));
+			m_nodeTable->addNode(p, NodeTable::NodeRelation::Unknown);
 		}
 	}
 }
