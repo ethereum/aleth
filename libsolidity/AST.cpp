@@ -340,8 +340,10 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
 			{
+				if (!f->isPartOfExternalInterface())
+					continue;
 				string functionSignature = f->externalSignature();
-				if (f->isPartOfExternalInterface() && signaturesSeen.count(functionSignature) == 0)
+				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					signaturesSeen.insert(functionSignature);
@@ -533,7 +535,16 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Variable cannot have void type."));
 		m_type = type->mobileType();
 	}
-	if (m_isStateVariable && getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
+	solAssert(!!m_type, "");
+	if (!m_isStateVariable)
+	{
+		if (m_type->dataStoredIn(DataLocation::Memory) || m_type->dataStoredIn(DataLocation::CallData))
+			if (!m_type->canLiveOutsideStorage())
+				BOOST_THROW_EXCEPTION(createTypeError(
+					"Type " + m_type->toString() + " is only valid in storage."
+				));
+	}
+	else if (getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
 		BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
 }
 
@@ -925,8 +936,11 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 	else if (type.getCategory() == Type::Category::Array)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(type));
-		m_isLValue = (*m_memberName == "length" &&
-			arrayType.location() != DataLocation::CallData && arrayType.isDynamicallySized());
+		m_isLValue = (
+			*m_memberName == "length" &&
+			arrayType.location() == DataLocation::Storage &&
+			arrayType.isDynamicallySized()
+		);
 	}
 	else
 		m_isLValue = false;
