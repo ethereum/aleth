@@ -237,7 +237,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	}
 }
 
-void ImportTest::importTransaction(json_spirit::mObject& _o)
+void ImportTest::importTransaction (json_spirit::mObject& _o, eth::Transaction& _tr)
 {
 	if (_o.count("secretKey") > 0)
 	{
@@ -257,7 +257,7 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		if (bigint(_o["value"].get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-		m_transaction = _o["to"].get_str().empty() ?
+		_tr = _o["to"].get_str().empty() ?
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
 			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
 	}
@@ -267,12 +267,12 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		RLP transactionRLP(transactionRLPStream.out());
 		try
 		{
-			m_transaction = Transaction(transactionRLP.data(), CheckTransaction::Everything);
+			_tr = Transaction(transactionRLP.data(), CheckTransaction::Everything);
 		}
 		catch (InvalidSignature)
 		{
 			// create unsigned transaction
-			m_transaction = _o["to"].get_str().empty() ?
+			_tr = _o["to"].get_str().empty() ?
 				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"])) :
 				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]));
 		}
@@ -281,6 +281,11 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 			cnote << "invalid transaction" << boost::diagnostic_information(_e);
 		}
 	}
+}
+
+void ImportTest::importTransaction(json_spirit::mObject& _o)
+{	
+	importTransaction(_o, m_transaction);
 }
 
 void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const _expectedStateOptions, WhenError _throw)
