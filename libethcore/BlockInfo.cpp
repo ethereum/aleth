@@ -114,8 +114,13 @@ h256 BlockInfo::headerHash(bytesConstRef _block)
 void BlockInfo::populateFromHeader(RLP const& _header, Strictness _s, h256 const& _h)
 {
 	m_hash = _h;
+#if ETH_DEBUG
 	if (_h)
-		assert(_h == dev::sha3(_header.data()));
+	{
+		h256 hAssert = dev::sha3(_header.data());
+		assert(_h == hAssert);
+	}
+#endif
 	m_seedHash = h256();
 
 	int field = 0;
