@@ -91,13 +91,11 @@ Row
 
 	function select(address)
 	{
-		console.log("select !! " + address);
 		for (var k = 0; k < accountRef.count; k++)
 		{
 			if (accountRef.get(k).value === address)
 			{
 				trCombobox.currentIndex = k;
-				console.log(" ds fsd  " + k + " " + JSON.stringify(accountRef.get(k)))
 				break;
 			}
 		}

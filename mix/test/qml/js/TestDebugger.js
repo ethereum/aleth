@@ -52,7 +52,6 @@ function test_transactionWithParameter()
 	transactionDialog.selectFunction("getZ");
 	applyTx(transactionDialog)
 	var bc = mainApplication.mainContent.scenarioPanel.bc.model;
-	console.log(JSON.stringify(bc.blocks))
 	tryCompare(bc.blocks, "length", 1);
 	tryCompare(bc.blocks[0], "status", "pending");
 	tryCompare(bc.blocks[0].transactions, "length", 3);
