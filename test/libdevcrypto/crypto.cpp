@@ -69,12 +69,22 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 #if ETH_HAVE_SECP256K1
 BOOST_AUTO_TEST_CASE(secp256k1lib)
 {
-	secp256k1Init();
-	KeyPair k = KeyPair::create();
+	secp256k1_start(3);
+
+	KeyPair k = KeyPair(sha3(""));
 	BOOST_REQUIRE(!!k.sec());
 	BOOST_REQUIRE(!!k.pub());
 	Public test = toPublic(k.sec());
 	BOOST_REQUIRE(k.pub() == test);
+	
+	bytes o(65);
+	int pubkeylen;
+	BOOST_REQUIRE(secp256k1_ec_pubkey_create(o.data(), &pubkeylen, k.sec().data(), false));
+	Public cpkey(FixedHash<64>(o.data()+1, Public::ConstructFromPointer));
+
+	Public cppkey;
+	s_secp256k1.toPublic(k.sec(), cppkey);
+	BOOST_REQUIRE(cpkey == cppkey);
 }
 #endif
 
@@ -82,7 +92,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
 	KeyPair k = KeyPair::create();
 	bytes io_text;
-	s_secp256k1.decrypt(k.sec(), io_text);
+	s_secp256k1.decryptECIES(k.sec(), io_text);
 	BOOST_REQUIRE_EQUAL(io_text.size(), 0);
 }
 
@@ -103,11 +113,11 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 
 	KeyPair k = KeyPair::create();
 	bytes cipher;
-	encrypt(k.pub(), bcr, cipher);
+	encryptECIES(k.pub(), bcr, cipher);
 	BOOST_REQUIRE(cipher != asBytes(message) && cipher.size() > 0);
 	
 	bytes plain;
-	decrypt(k.sec(), bytesConstRef(&cipher), plain);
+	decryptECIES(k.sec(), bytesConstRef(&cipher), plain);
 	
 	BOOST_REQUIRE(asString(plain) == message);
 	BOOST_REQUIRE(plain == asBytes(message));
@@ -139,7 +149,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 		Integer heInt(he.asBytes().data(), 32);
 		h256 k(crypto::kdf(secret, he));
 		Integer kInt(k.asBytes().data(), 32);
-		kInt %= s_params.GetSubgroupOrder()-1;
+		kInt = 1 + (kInt % (s_params.GetSubgroupOrder()-1));
 
 		ECP::Point rp = s_params.ExponentiateBase(kInt);
 		Integer const& q = s_params.GetGroupOrder();
@@ -150,7 +160,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 		BOOST_REQUIRE(!!r && !!s);
 
 		Signature sig;
-		sig[64] = rp.y.IsOdd() ? 1 : 0;
+		sig[64] |= rp.y.IsOdd() ? 1 : 0;
 		r.Encode(sig.data(), 32);
 		s.Encode(sig.data() + 32, 32);
 
@@ -303,10 +313,10 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	string original = message;
 	
 	bytes b = asBytes(message);
-	s_secp256k1.encrypt(k.pub(), b);
+	s_secp256k1.encryptECIES(k.pub(), b);
 	BOOST_REQUIRE(b != asBytes(original));
 
-	s_secp256k1.decrypt(k.sec(), b);
+	s_secp256k1.decryptECIES(k.sec(), b);
 	BOOST_REQUIRE(b == asBytes(original));
 }
 
