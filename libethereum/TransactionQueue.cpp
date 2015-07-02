@@ -99,9 +99,7 @@ std::unordered_map<h256, Transaction> TransactionQueue::transactions() const
 {
 	ReadGuard l(m_lock);
 	auto ret = m_current;
-	for (auto const& i: m_future)
-		if (i.second.nonce() < maxNonce_WITH_LOCK(i.second.sender()))
-			ret.insert(i);
+	ret.insert(m_future.begin(), m_future.end());
 	return ret;
 }
 
