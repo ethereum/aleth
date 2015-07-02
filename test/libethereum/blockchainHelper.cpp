@@ -26,17 +26,19 @@
 #include <libethereum/BlockChain.h>
 #include <libethereum/CanonBlockChain.h>
 #include "../JsonSpiritHeaders.h"
+#include <memory>
 
 #include <libethereum/GenesisInfo.h>
 #include <libdevcore/TransientDirectory.h>
 
 using namespace dev;
 using namespace eth;
+
 class TestTransaction
 {
 public:
-	TestTransaction(json_spirit::mObject& o_): m_jsonTransaction(o_)	{}
-	json_spirit::mObject&  getJson(){return m_jsonTransaction;}
+	TestTransaction(json_spirit::mObject& _o): m_jsonTransaction(_o)	{}
+	json_spirit::mObject&  getJson(){ return m_jsonTransaction; }
 
 private:
 	json_spirit::mObject m_jsonTransaction;
@@ -45,9 +47,9 @@ private:
 class TestBlock
 {
 public:
-	void addTransaction(TestTransaction& tr_)
+	void addTransaction(TestTransaction& _tr)
 	{
-		m_testTransactions.push_back(tr_);
+		m_testTransactions.push_back(_tr);
 	}
 	std::vector<TestTransaction>& getTransactions()
 	{
@@ -62,13 +64,11 @@ class TestBlockChain
 public:
 	TestBlockChain(BaseState baseState_ = BaseState::CanonGenesis)
 	{
-		//dev::bytes genesisBlockRLP = dev::test::importByteArray(m_genesisRLPString);
-		m_blockchain = new dev::eth::CanonBlockChain(m_td.path(), WithExisting::Kill);
+		m_blockchain = std::unique_ptr<dev::eth::CanonBlockChain>(new dev::eth::CanonBlockChain(m_td.path(), WithExisting::Kill));
 		m_state = dev::eth::State(OverlayDB(State::openDB(m_td2.path())), baseState_, m_blockchain->info().coinbaseAddress);
 	}
 
-	~TestBlockChain() {delete m_blockchain;}
-	unsigned number(){return m_blockchain->number();}
+	unsigned number(){ return m_blockchain->number(); }
 
 	void addBlock(TestBlock& _bl)
 	{
@@ -78,7 +78,7 @@ public:
 		dev::test::ZeroGasPricer gp;
 
 		//import all txs from block in a queue
-		for (unsigned i = 0; i < _bl.getTransactions().size(); i++)
+		for (size_t i = 0; i < _bl.getTransactions().size(); i++)
 		{
 			Transaction tr;
 			dev::test::ImportTest::importTransaction(_bl.getTransactions().at(i).getJson(), tr);
@@ -90,9 +90,9 @@ public:
 		try
 		{
 			//calculate new state
-			m_state.sync(*m_blockchain);
-			m_state.sync(*m_blockchain, txs, gp);
-			mine(m_state, *m_blockchain);
+			m_state.sync(*m_blockchain.get());
+			m_state.sync(*m_blockchain.get(), txs, gp);
+			mine(m_state, *m_blockchain.get());
 		}
 		catch (Exception const& _e)
 		{
@@ -137,7 +137,7 @@ public:
 		{
 			m_blockchain->sync(uncleBlockQueue, m_state.db(), 4);
 			m_blockchain->attemptImport(blockStream.out(), m_state.db());
-			m_state.sync(*m_blockchain);
+			m_state.sync(*m_blockchain.get());
 		}
 		catch (Exception const& _e)
 		{
@@ -153,17 +153,21 @@ public:
 		}
 	}
 
-	void rebuild()
+	dev::eth::BlockChain& get()
 	{
-		delete m_blockchain;
-		m_blockchain = new dev::eth::CanonBlockChain(m_td.path(), WithExisting::Verify);
+		return *m_blockchain.get();
 	}
 
+	void rebuild(WithExisting _withExisiting = WithExisting::Verify)
+	{
+		m_blockchain.reset();
+		m_blockchain.reset(new dev::eth::CanonBlockChain(m_td.path(), _withExisiting));
+	}	
+
 private:
-	dev::TransientDirectory m_td; //BlockChain Dir
-	dev::TransientDirectory m_td2; //State Dir
-	std::string m_genesisRLPString = "0xf901fcf901f7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347948888f1f195afa192cfee860698584c030f4c9db1a07dba07d6b448a186e9612e5f737d1c909dce473e53199901a302c00646d523c1a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b90100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008302000080832fefd8808454c98c8142a0b28caac6b4c3c1f231ff6e4210a78d3b784988be77d89095038b843fb04440408821dbba66d491fb5ac0c0";
-	dev::eth::BlockChain *m_blockchain;
+	dev::TransientDirectory m_td;				//BlockChain Dir
+	dev::TransientDirectory m_td2;				//State Dir
+	std::unique_ptr<dev::eth::BlockChain> m_blockchain;
 	dev::eth::State m_state;	
 	std::vector<TestBlock> m_testBlocks;
 };
@@ -189,7 +193,7 @@ R"ETHEREUM(
 
 BOOST_AUTO_TEST_SUITE(blockchainhelper)
 
-BOOST_AUTO_TEST_CASE(blockChainReload)
+BOOST_AUTO_TEST_CASE(blockChain)
 {
 	std::string genesisTemp = dev::eth::c_genesisInfo;
 
@@ -199,6 +203,23 @@ BOOST_AUTO_TEST_CASE(blockChainReload)
 	*genesis_ptr = c_genesisInfoTest;
 
 	TestBlockChain blChain;
+
+	//Test Nonce
+	Nonce nonce(u64(42));
+	BlockInfo a = blChain.get().info();
+	BOOST_CHECK_MESSAGE(a.nonce == nonce, "Blockchain created with diffrent genesis nonce! (u64(42))");
+
+	nonce = Nonce(u64(142));
+	dev::eth::CanonBlockChain::setGenesisNonce(nonce);
+	blChain.rebuild(WithExisting::Kill);
+	a = blChain.get().info();
+	BOOST_CHECK_MESSAGE(a.nonce == nonce, "Blockchain setGenesisNonce error!");
+
+	//restore original nonce
+	nonce = Nonce(u64(42));
+	dev::eth::CanonBlockChain::setGenesisNonce(nonce);
+	blChain.rebuild(WithExisting::Kill);
+
 	json_spirit::mObject trJson;
 	trJson["data"] = "";
 	trJson["gasLimit"] = "0x59d8";
@@ -231,7 +252,7 @@ BOOST_AUTO_TEST_CASE(blockChainReload)
 
 	blChain.rebuild();
 
-	BOOST_CHECK_MESSAGE(blChain.number() == 2, "Block chain size after rebuild won't match!");
+	BOOST_CHECK_MESSAGE(blChain.number() == 2, "Block chain size mismatch after rebuild!");
 
 	*genesis_ptr = genesisTemp;
 }
