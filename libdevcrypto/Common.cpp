@@ -34,6 +34,9 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
+#if ETH_HAVE_SECP256K1
+#include <secp256k1/secp256k1.h>
+#endif
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
@@ -42,7 +45,7 @@ using namespace dev;
 using namespace dev::crypto;
 
 // wrapper for cryptopp secp256k1
-static Secp256k1 s_secp256k1;
+static Secp256k1PP s_secp256k1pp;
 
 #if ETH_HAVE_SECP256K1
 // thread-safe static initializer for secp256k1/ library
@@ -74,17 +77,17 @@ Public dev::toPublic(Secret const& _secret)
 	int pubkeylen;
 	if (!secp256k1_ec_pubkey_create(o.data(), &pubkeylen, _secret.data(), false))
 		return Public();
-	return move(*(Public*)(o.data()+1));
+	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
 #else
 	Public p;
-	s_secp256k1.toPublic(_secret, p);
+	s_secp256k1pp.toPublic(_secret, p);
 	return p;
 #endif
 }
 
 Address dev::toAddress(Public const& _public)
 {
-	return move(right160(sha3(_public.ref())));
+	return right160(sha3(_public.ref()));
 }
 
 Address dev::toAddress(Secret const& _secret)
@@ -92,39 +95,17 @@ Address dev::toAddress(Secret const& _secret)
 	return move(toAddress(toPublic(_secret)));
 }
 
-Public dev::recover(Signature const& _sig, h256 const& _message)
-{
-	bytes o(65);
-	int pubkeylen;
-	return secp256k1_ecdsa_recover_compact(_message.data(), _sig.data(), o.data(), &pubkeylen, 0, _sig[64]) ? move(*(Public*)(o.data()+1)) : Public();
-}
-
-Signature dev::sign(Secret const& _k, h256 const& _hash)
-{
-	Signature s;
-	return secp256k1_ecdsa_sign_compact(_hash.data(), s.data(), _k.data(), NULL, NULL, (int*)(s.data()+64)) ? move(s) : Signature();
-}
-
-bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
-{
-	bytes o(65);
-	int pubkeylen;
-	if (secp256k1_ecdsa_recover_compact(_hash.data(), _s.data(), o.data(), &pubkeylen, 0, _s[64]) && *(Public*)(o.data()+1) == _p)
-		return true;
-	return false;
-}
-
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
 	bytes io = _plain.toBytes();
-	s_secp256k1.encrypt(_k, io);
+	s_secp256k1pp.encrypt(_k, io);
 	o_cipher = std::move(io);
 }
 
 bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
 	bytes io = _cipher.toBytes();
-	s_secp256k1.decrypt(_k, io);
+	s_secp256k1pp.decrypt(_k, io);
 	if (io.empty())
 		return false;
 	o_plaintext = std::move(io);
@@ -134,14 +115,14 @@ bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
 	bytes io = _plain.toBytes();
-	s_secp256k1.encryptECIES(_k, io);
+	s_secp256k1pp.encryptECIES(_k, io);
 	o_cipher = std::move(io);
 }
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
 	bytes io = _cipher.toBytes();
-	if (!s_secp256k1.decryptECIES(_k, io))
+	if (!s_secp256k1pp.decryptECIES(_k, io))
 		return false;
 	o_plaintext = std::move(io);
 	return true;
@@ -205,6 +186,40 @@ bytes dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _ci
 	}
 }
 
+Public dev::recover(Signature const& _sig, h256 const& _message)
+{
+#if ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	return secp256k1_ecdsa_recover_compact(_message.data(), _sig.data(), o.data(), &pubkeylen, 0, _sig[64]) ? move(*(Public*)(o.data()+1)) : Public();
+#else
+	return s_secp256k1pp.recover(_sig, _message.ref());
+#endif
+}
+
+Signature dev::sign(Secret const& _k, h256 const& _hash)
+{
+#if ETH_HAVE_SECP256K1
+	Signature s;
+	return secp256k1_ecdsa_sign_compact(_hash.data(), s.data(), _k.data(), NULL, NULL, (int*)(s.data()+64)) ? move(s) : Signature();
+#else
+	return s_secp256k1pp.sign(_k, _hash);
+#endif
+}
+
+bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
+{
+#if ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	if (secp256k1_ecdsa_recover_compact(_hash.data(), _s.data(), o.data(), &pubkeylen, 0, _s[64]) && *(Public*)(o.data()+1) == _p)
+		return true;
+	return false;
+#else
+	return s_secp256k1pp.verify(_p, _s, _hash.ref(), true);
+#endif
+}
+
 bytes dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
 	bytes ret(_dkLen);
@@ -261,8 +276,12 @@ KeyPair KeyPair::create()
 KeyPair::KeyPair(h256 _sec):
 	m_secret(_sec)
 {
+#if ETH_HAVE_SECP256K1
 	m_public = toPublic(m_secret);
 	if (m_public)
+#else
+	if (s_secp256k1pp.verifySecret(m_secret, m_public))
+#endif
 		m_address = toAddress(m_public);
 }
 

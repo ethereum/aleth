@@ -22,7 +22,9 @@
  */
 
 #include <random>
+#if ETH_HAVE_SECP256K1
 #include <secp256k1/secp256k1.h>
+#endif
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
@@ -43,7 +45,7 @@ BOOST_GLOBAL_FIXTURE( MoveNonceToTempDir )
 
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
-static Secp256k1 s_secp256k1;
+static Secp256k1PP s_secp256k1;
 static CryptoPP::AutoSeededRandomPool s_rng;
 static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
@@ -63,6 +65,18 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 	h256 emptyListSHA3(fromHex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
 	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
 }
+
+#if ETH_HAVE_SECP256K1
+BOOST_AUTO_TEST_CASE(secp256k1lib)
+{
+	secp256k1Init();
+	KeyPair k = KeyPair::create();
+	BOOST_REQUIRE(!!k.sec());
+	BOOST_REQUIRE(!!k.pub());
+	Public test = toPublic(k.sec());
+	BOOST_REQUIRE(k.pub() == test);
+}
+#endif
 
 BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
@@ -101,7 +115,9 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 
 BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 {
+#if ETH_HAVE_SECP256K1
 	secp256k1_start(3);
+#endif
 	
 	// base secret
 	Secret secret(sha3("privacy"));
@@ -150,13 +166,18 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 		byte dersig[72];
 		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sig.data(), 64, DSA_P1363);
 		BOOST_CHECK(cssz <= 72);
+#if ETH_HAVE_SECP256K1
 		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(he.data(), dersig, cssz, encpub, 65));
+#endif
 	}
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 {
+#ifdef CRYPTOPPNOTBROKEN
+#if ETH_HAVE_SECP256K1
 	secp256k1_start(3);
+#endif
 	
 	// cryptopp integer encoding
 	Integer nHex("f2ee15ea639b73fa3db9b34a245bdfa015c260c598b211bf05a1ecc4b3e3b4f2H");
@@ -187,12 +208,15 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		memcpy(&encpub[1], key.pub().data(), 64);
 		byte dersig[72];
 		
+#if ETH_HAVE_SECP256K1
 		// verify sec256lib sig w/sec256lib
 		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, seclibsig.data(), 64, DSA_P1363);
 		BOOST_CHECK(cssz <= 72);
 		BOOST_REQUIRE(sizeof(hm) == 32);
 		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), dersig, cssz, encpub, 65));
+#endif
 	}
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(sha3_norestart)
@@ -703,8 +727,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 BOOST_AUTO_TEST_CASE(eth_keypairs)
 {
 	cnote << "Testing Crypto...";
-	secp256k1_start(3);
-
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
 	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
@@ -727,8 +749,6 @@ BOOST_AUTO_TEST_CASE(eth_keypairs)
 int cryptoTest()
 {
 	cnote << "Testing Crypto...";
-	secp256k1_start(3);
-
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
 	BOOST_REQUIRE(p.address() == Address(fromHex("8a40bfaa73256b60764c1bf40675a99083efb075")));
