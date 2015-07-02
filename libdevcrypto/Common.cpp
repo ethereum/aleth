@@ -20,8 +20,6 @@
  * @date 2014
  */
 
-#define ETH_HAVE_SECP256K1 1
-
 #include "Common.h"
 #include <random>
 #include <chrono>
@@ -34,9 +32,6 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
-#if ETH_HAVE_SECP256K1
-#include <secp256k1/secp256k1.h>
-#endif
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
