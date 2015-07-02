@@ -1726,6 +1726,25 @@ BOOST_AUTO_TEST_CASE(fixed_bytes_in_calls)
 	BOOST_CHECK(callContractFunction("callHelper(bytes2,bool)", string("\0a", 2), true) == encodeArgs(string("\0a\0\0\0", 5)));
 }
 
+BOOST_AUTO_TEST_CASE(addr_member)
+{
+	char const* sourceCode = R"(
+		contract Other {
+			function send() returns (uint) { return 5; }
+		}
+		contract Test {
+			function bal() returns (uint) {
+				Other o = new Other();
+				o.addr.send(o.send());
+				return this.addr.balance;
+			}
+		}
+	)";
+	compileAndRun(sourceCode, 10, "Test");
+
+	BOOST_CHECK(callContractFunction("bal()") == encodeArgs(u256(5)));
+}
+
 BOOST_AUTO_TEST_CASE(constructor_arguments_internal)
 {
 	char const* sourceCode = R"(

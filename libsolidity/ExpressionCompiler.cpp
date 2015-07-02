@@ -622,6 +622,10 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		}
 		if (!alsoSearchInteger)
 			break;
+		if (member == "addr")
+			// nothing to do;
+			break;
+		// flow into
 	}
 	case Type::Category::Integer:
 		if (member == "balance")

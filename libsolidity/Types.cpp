@@ -888,6 +888,10 @@ MemberList const& ContractType::getMembers() const
 			IntegerType::AddressMemberList.begin(),
 			IntegerType::AddressMemberList.end()
 		);
+		members.push_back(MemberList::Member(
+			"addr",
+			make_shared<IntegerType>(120, IntegerType::Modifier::Address)
+		));
 		if (m_super)
 		{
 			// add the most derived of all functions which are visible in derived contracts
