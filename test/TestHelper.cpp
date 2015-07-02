@@ -283,9 +283,9 @@ void ImportTest::importTransaction (json_spirit::mObject& _o, eth::Transaction& 
 	}
 }
 
-void ImportTest::importTransaction(json_spirit::mObject& _o)
+void ImportTest::importTransaction(json_spirit::mObject& o_tr)
 {	
-	importTransaction(_o, m_transaction);
+	importTransaction(o_tr, m_transaction);
 }
 
 void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const _expectedStateOptions, WhenError _throw)
