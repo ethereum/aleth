@@ -126,9 +126,9 @@ void dev::eth::upgradeDatabase(std::string const& _basePath)
 				}
 			}
 		}
-		catch (...)
+		catch (boost::exception const& _e)
 		{
-			cwarn << "Couldn't upgrade - bad status";
+			cwarn << "Couldn't upgrade - bad status due to " << boost::diagnostic_information(_e);
 		}
 	}
 }
