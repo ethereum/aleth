@@ -25,13 +25,13 @@
 #include <chrono>
 #include <thread>
 #include <mutex>
+#if ETH_HAVE_SECP256K1
+#include <secp256k1/secp256k1.h>
+#endif
 #include <libscrypt/libscrypt.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
-#if ETH_HAVE_SECP256K1
-#include <secp256k1/secp256k1.h>
-#endif
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
@@ -39,17 +39,18 @@ using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
-#ifdef ETH_HAVE_SECP256K1
+// wrapper for cryptopp secp256k1
+static Secp256k1PP s_secp256k1pp;
+
+#if ETH_HAVE_SECP256K1
+// thread-safe static initializer for secp256k1/ library
 struct Secp256k1Context
 {
-	Secp256k1Context() { secp256k1_start(); }
+	Secp256k1Context() { secp256k1_start(SECP256K1_START_SIGN | SECP256K1_START_VERIFY); }
 	~Secp256k1Context() { secp256k1_stop(); }
 };
-static Secp256k1Context s_secp256k1;
-void dev::crypto::secp256k1Init() { (void)s_secp256k1; }
+static Secp256k1Context s_secp256k1Context;
 #endif
-
-static Secp256k1PP s_secp256k1pp;
 
 bool dev::SignatureStruct::isValid() const noexcept
 {
@@ -66,10 +67,10 @@ Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
 {
-#ifdef ETH_HAVE_SECP256K1
+#if ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
-	if (!secp256k1_ecdsa_pubkey_create(o.data(), &pubkeylen, _secret.data(), false))
+	if (!secp256k1_ec_pubkey_create(o.data(), &pubkeylen, _secret.data(), false))
 		return Public();
 	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
 #else
@@ -86,9 +87,7 @@ Address dev::toAddress(Public const& _public)
 
 Address dev::toAddress(Secret const& _secret)
 {
-	Public p;
-	s_secp256k1pp.toPublic(_secret, p);
-	return toAddress(p);
+	return move(toAddress(toPublic(_secret)));
 }
 
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
@@ -184,17 +183,36 @@ bytes dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _ci
 
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
+#if ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	return secp256k1_ecdsa_recover_compact(_message.data(), _sig.data(), o.data(), &pubkeylen, 0, _sig[64]) ? FixedHash<64>(o.data()+1, Public::ConstructFromPointer) : Public();
+#else
 	return s_secp256k1pp.recover(_sig, _message.ref());
+#endif
 }
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
+#if ETH_HAVE_SECP256K1
+	Signature s;
+	return secp256k1_ecdsa_sign_compact(_hash.data(), s.data(), _k.data(), NULL, NULL, (int*)(s.data()+64)) ? move(s) : Signature();
+#else
 	return s_secp256k1pp.sign(_k, _hash);
+#endif
 }
 
 bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 {
+#if ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	if (secp256k1_ecdsa_recover_compact(_hash.data(), _s.data(), o.data(), &pubkeylen, 0, _s[64]) && *(Public*)(o.data()+1) == _p)
+		return true;
+	return false;
+#else
 	return s_secp256k1pp.verify(_p, _s, _hash.ref(), true);
+#endif
 }
 
 bytes dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
@@ -253,7 +271,12 @@ KeyPair KeyPair::create()
 KeyPair::KeyPair(h256 _sec):
 	m_secret(_sec)
 {
+#if ETH_HAVE_SECP256K1
+	m_public = toPublic(m_secret);
+	if (m_public)
+#else
 	if (s_secp256k1pp.verifySecret(m_secret, m_public))
+#endif
 		m_address = toAddress(m_public);
 }
 
