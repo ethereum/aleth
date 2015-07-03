@@ -235,6 +235,8 @@ function doCloseProject() {
 	projectListModel.clear();
 	projectPath = "";
 	currentDocumentId = "";
+	codeModel.reset()
+	clientModel.reset()
 	projectClosed();
 }
 

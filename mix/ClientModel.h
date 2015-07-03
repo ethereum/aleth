@@ -200,6 +200,7 @@ public slots:
 	Q_INVOKABLE QString address(QString const& _secret);
 	/// Encode a string to ABI parameter. Returns a hex string
 	Q_INVOKABLE QString encodeAbiString(QString _string);
+	Q_INVOKABLE void reset() { onStateReset(); }
 
 private slots:
 	/// Update UI with machine states result. Display a modal dialog.

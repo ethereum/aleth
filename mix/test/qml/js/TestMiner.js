@@ -1,8 +1,12 @@
+Qt.include("TestScenarioPanelActions.js")
+
 function test_getDefaultMiner()
 {
 	newProject();
-	var state = mainApplication.projectModel.stateListModel.get(0);
-	compare(state.miner.secret, "cb73d9408c4720e230387d956eb0f829d8a4dd2c1055f96257167e14e7169074");
+	newScenario()
+	rebuild()
+	var scenario = mainApplication.mainContent.scenarioPanel.bc.model
+	compare(scenario.miner.secret, "cb73d9408c4720e230387d956eb0f829d8a4dd2c1055f96257167e14e7169074")
 }
 
 function test_selectMiner()
@@ -20,15 +24,22 @@ function test_selectMiner()
 
 function test_mine()
 {
-	newProject();
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-	mainApplication.clientModel.mine();
+	newProject()
+	newScenario()
+	rebuild()
+	addBlock()
 	waitForMining();
 	wait(1000); //there need to be at least 1 sec diff between block times
-	mainApplication.clientModel.mine();
+	var blocks = mainApplication.mainContent.scenarioPanel.bc.model.blocks
+	tryCompare(blocks, "length", 2)
+	tryCompare(blocks[1], 'status', 'pending')
+	tryCompare(blocks[0], 'status', 'mined')
+	addBlock()
 	waitForMining();
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel.get(3), "contract", " - Block - ");
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel.get(4), "contract", " - Block - ");
+	wait(1000); //there need to be at least 1 sec diff between block times
+	blocks = mainApplication.mainContent.scenarioPanel.bc.model.blocks
+	tryCompare(blocks, "length", 3)
+	tryCompare(blocks[2], 'status', 'pending')
+	tryCompare(blocks[1], 'status', 'mined')
 }
 

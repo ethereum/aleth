@@ -36,6 +36,22 @@ ColumnLayout
 			return trHeight
 	}
 
+	function editTx(txIndex)
+	{
+		transactionDialog.stateAccounts = scenario.accounts
+		transactionDialog.execute = false
+		transactionDialog.open(txIndex, blockIndex,  transactions.get(txIndex))
+	}
+
+	function debugTx(txIndex)
+	{
+		if (transactions.get(txIndex).recordIndex !== undefined)
+		{
+			debugTrRequested = [ blockIndex, txIndex ]
+			clientModel.debugRecord(transactions.get(txIndex).recordIndex);
+		}
+	}
+
 	onOpenedTrChanged:
 	{
 		Layout.preferredHeight = calculateHeight()
@@ -204,9 +220,7 @@ ColumnLayout
 					anchors.fill: parent
 					onDoubleClicked:
 					{
-						transactionDialog.stateAccounts = scenario.accounts
-						transactionDialog.execute = false
-						transactionDialog.open(index, blockIndex,  transactions.get(index))
+						root.editTx(index)
 					}
 				}
 
@@ -389,11 +403,7 @@ ColumnLayout
 					anchors.fill: parent
 					onClicked:
 					{
-						if (transactions.get(index).recordIndex !== undefined)
-						{
-							debugTrRequested = [ blockIndex, index ]
-							clientModel.debugRecord(transactions.get(index).recordIndex);
-						}
+						root.debugTx(index)
 					}
 				}
 			}

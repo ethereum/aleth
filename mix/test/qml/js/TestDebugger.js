@@ -1,3 +1,5 @@
+Qt.include("TestScenarioPanelActions.js")
+
 function test_defaultTransactionSequence()
 {
 	newProject();
@@ -14,8 +16,13 @@ function test_defaultTransactionSequence()
 	"	uint z;\r" +
 	"}\r"
 	);
-	waitForExecution();
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel, "count", 3);
+	newScenario()
+	rebuild()
+	var bc = mainApplication.mainContent.scenarioPanel.bc.model;
+	tryCompare(bc.blocks, "length", 1);
+	tryCompare(bc.blocks[0], "status", "pending");
+	tryCompare(bc.blocks[0].transactions, "length", 1);
+
 }
 
 function test_transactionWithParameter()
@@ -32,23 +39,23 @@ function test_transactionWithParameter()
 	"	uint z;\r" +
 	"}\r"
 	);
-	mainApplication.projectModel.stateListModel.editState(0);
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	ts.waitForRendering(transactionDialog, 3000);
+	newScenario()
+	rebuild()
+	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog;
+	addTx()
+	selectExecuteTxType(transactionDialog)
 	transactionDialog.selectFunction("setZ");
-	clickElement(transactionDialog, 140, 300);
-	ts.typeString("442", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	ts.waitForRendering(transactionDialog, 3000);
+	fillParamInput(transactionDialog, 0, "442")
+	applyTx(transactionDialog)
+	addTx()
+	selectExecuteTxType(transactionDialog)
 	transactionDialog.selectFunction("getZ");
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.acceptAndClose();
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel, "count", 5);
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel.get(4), "returned", "(442)");
+	applyTx(transactionDialog)
+	var bc = mainApplication.mainContent.scenarioPanel.bc.model;
+	tryCompare(bc.blocks, "length", 1);
+	tryCompare(bc.blocks[0], "status", "pending");
+	tryCompare(bc.blocks[0].transactions, "length", 3);
+	tryCompare(bc.blocks[0].transactions[2], "returned", "(442)");
 }
 
 function test_constructorParameters()
@@ -65,21 +72,23 @@ function test_constructorParameters()
 	"	uint z;\r" +
 	"}\r"
 	);
-	mainApplication.projectModel.stateListModel.editState(0);
-	mainApplication.projectModel.stateDialog.model.editTransaction(2);
-	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	ts.waitForRendering(transactionDialog, 3000);
-	clickElement(transactionDialog, 140, 300);
-	ts.typeString("442", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.model.addTransaction();
+	newScenario()
+	rebuild()
+	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog;
+	editTx(0, 0)
+	selectCreationTxType(transactionDialog)
+	fillCtrlParamInput(transactionDialog, 0, "442")
+	applyTx(transactionDialog)
+	rebuild()
+	addTx()
+	selectExecuteTxType(transactionDialog)
 	transactionDialog.selectFunction("getZ");
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.acceptAndClose();
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel, "count", 4);
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel.get(3), "returned", "(442)");
+	applyTx(transactionDialog)
+	var bc = mainApplication.mainContent.scenarioPanel.bc.model
+	tryCompare(bc.blocks, "length", 1);
+	tryCompare(bc.blocks[0], "status", "pending");
+	tryCompare(bc.blocks[0].transactions, "length", 2);
+	tryCompare(bc.blocks[0].transactions[1], "returned", "(442)");
 }
 
 function test_arrayParametersAndStorage()
@@ -106,37 +115,35 @@ function test_arrayParametersAndStorage()
 	"		uint256 s;\r" +
 	"		int48 signed;\r" +
 	"	}\r");
-
-	mainApplication.projectModel.stateListModel.editState(0);
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	ts.waitForRendering(transactionDialog, 3000);
-	transactionDialog.selectFunction("setM");
-	clickElement(transactionDialog, 140, 300);
-	ts.typeString("4,5,6,2,10", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	ts.waitForRendering(transactionDialog, 3000);
-	transactionDialog.selectFunction("setMV");
-	clickElement(transactionDialog, 140, 300);
-	ts.typeString("13,35,1,4", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.acceptAndClose();
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
+	newScenario()
+	rebuild()
+	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog
+	addTx()
+	selectExecuteTxType(transactionDialog)
+	transactionDialog.selectFunction("setM")
+	fillParamInput(transactionDialog, 0, "[4,5,6,2,10]")
+	applyTx(transactionDialog)
+	addTx()
+	selectExecuteTxType(transactionDialog)
+	transactionDialog.selectFunction("setMV")
+	fillParamInput(transactionDialog, 0, "[13,35,1,4,0]")
+	applyTx(transactionDialog)
+	wait(1)
 	//debug setM
-	mainApplication.clientModel.debugRecord(3);
-	mainApplication.mainContent.rightPane.debugSlider.value = mainApplication.mainContent.rightPane.debugSlider.maximumValue;
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "m", ["4","5","6","2","10"]);
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "s", "5");
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "signed", "6534");
+	debugTx(0,1)
+	mainApplication.mainContent.debuggerPanel.debugSlider.value = mainApplication.mainContent.debuggerPanel.debugSlider.maximumValue
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "m", "4, 5, 6, 2, 10");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "s", "5");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "signed", "6534");
+	mainApplication.mainContent.debuggerPanel.close()
 	//debug setMV
-	mainApplication.clientModel.debugRecord(4);
-	mainApplication.mainContent.rightPane.debugSlider.value = mainApplication.mainContent.rightPane.debugSlider.maximumValue - 1;
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "mv", ["13","35","1","4","0"]);
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "s", "42");
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "signed", "-534");
-	tryCompare(mainApplication.mainContent.rightPane.solCallStack.listModel, 0, "setMV");
+	debugTx(0,2)
+	mainApplication.mainContent.debuggerPanel.debugSlider.value = mainApplication.mainContent.debuggerPanel.debugSlider.maximumValue - 1
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "mv", "13, 35, 1, 4, 0");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "s", "42");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "signed", "-534");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solCallStack.listModel, 0, "setMV");
+	mainApplication.mainContent.debuggerPanel.close()
 }
 
 function test_solidityDebugging()
@@ -151,24 +158,23 @@ function test_solidityDebugging()
 	"	function Contract()\r " +
 	"	{\r " +
 	"		uint256 local = add(42, 34);\r " +
-	"		storage = local;\r " +
+	"		sto = local;\r " +
 	"	}\r " +
-	"	uint256 storage;\r " +
+	"	uint256 sto;\r " +
 	"}");
-
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-
-	tryCompare(mainApplication.mainContent.rightPane.debugSlider, "maximumValue", 20);
-	tryCompare(mainApplication.mainContent.rightPane.debugSlider, "value", 0);
-	mainApplication.mainContent.rightPane.debugSlider.value = 13;
-	tryCompare(mainApplication.mainContent.rightPane.solCallStack.listModel, 0, "add");
-	tryCompare(mainApplication.mainContent.rightPane.solCallStack.listModel, 1, "Contract");
-	tryCompare(mainApplication.mainContent.rightPane.solLocals.item.value, "local", "0");
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "storage", undefined);
-	mainApplication.mainContent.rightPane.debugSlider.value = 19;
-	tryCompare(mainApplication.mainContent.rightPane.solLocals.item.value, "local", "76");
-	tryCompare(mainApplication.mainContent.rightPane.solStorage.item.value, "storage", "76");
+	newScenario()
+	rebuild()
+	wait(1)
+	debugTx(0,0)
+	tryCompare(mainApplication.mainContent.debuggerPanel.debugSlider, "maximumValue", 20);
+	tryCompare(mainApplication.mainContent.debuggerPanel.debugSlider, "value", 0);
+	mainApplication.mainContent.debuggerPanel.debugSlider.value = 13;
+	tryCompare(mainApplication.mainContent.debuggerPanel.solCallStack.listModel, 0, "add");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solCallStack.listModel, 1, "Contract");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solLocals.item.value, "local", "0");
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "sto", undefined);
+	mainApplication.mainContent.debuggerPanel.debugSlider.value = 19;
+	tryCompare(mainApplication.mainContent.debuggerPanel.solStorage.item.value, "sto", "76");
 }
 
 function test_vmDebugging()
@@ -183,21 +189,23 @@ function test_vmDebugging()
 	"	function Contract()\r " +
 	"	{\r " +
 	"		uint256 local = add(42, 34);\r " +
-	"		storage = local;\r " +
+	"		sto = local;\r " +
 	"	}\r " +
-	"	uint256 storage;\r " +
+	"	uint256 sto;\r " +
 	"}");
-
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-
-	mainApplication.mainContent.rightPane.assemblyMode = !mainApplication.mainContent.rightPane.assemblyMode;
-	tryCompare(mainApplication.mainContent.rightPane.debugSlider, "maximumValue", 41);
-	tryCompare(mainApplication.mainContent.rightPane.debugSlider, "value", 0);
-	mainApplication.mainContent.rightPane.debugSlider.value = 35;
-	tryCompare(mainApplication.mainContent.rightPane.vmCallStack.listModel, 0, mainApplication.clientModel.contractAddresses["Contract"].substring(2));
-	tryCompare(mainApplication.mainContent.rightPane.vmStorage.listModel, 0, "@ 0 (0x0)	 76 (0x4c)");
-	tryCompare(mainApplication.mainContent.rightPane.vmMemory.listModel, "length", 0);
+	newScenario()
+	rebuild()
+	wait(1)
+	debugTx(0,0)
+	var setting = mainApplication.mainContent.debuggerPanel.assemblyMode
+	mainApplication.mainContent.debuggerPanel.assemblyMode = true
+	tryCompare(mainApplication.mainContent.debuggerPanel.debugSlider, "maximumValue", 44); // before was 41 ??
+	tryCompare(mainApplication.mainContent.debuggerPanel.debugSlider, "value", 0);
+	mainApplication.mainContent.debuggerPanel.debugSlider.value = 38; //before was 35 ??
+	tryCompare(mainApplication.mainContent.debuggerPanel.vmCallStack.listModel, 0, mainApplication.clientModel.contractAddresses["Contract"].substring(2));
+	tryCompare(mainApplication.mainContent.debuggerPanel.vmStorage.listModel, 0, "@ 0 (0x0)	 76 (0x4c)");
+	tryCompare(mainApplication.mainContent.debuggerPanel.vmMemory.listModel, "length", 6); //before was 0 ??
+	mainApplication.mainContent.debuggerPanel.assemblyMode = setting
 }
 
 function test_ctrTypeAsParam()
@@ -221,23 +229,20 @@ function test_ctrTypeAsParam()
 	"       c1 = _c1;\r" +
 	"	}\r " +
 	"}");
-	mainApplication.projectModel.stateListModel.editState(0); //C1 ctor already added
-	var transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	mainApplication.projectModel.stateDialog.model.editTransaction(3);
-	ts.waitForRendering(transactionDialog, 3000);
-	clickElement(transactionDialog, 200, 300);
-	ts.typeString("<C1 - 0>", transactionDialog);
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.model.addTransaction();
-	transactionDialog = mainApplication.projectModel.stateDialog.transactionDialog;
-	ts.waitForRendering(transactionDialog, 3000);
-	transactionDialog.selectContract("C2");
+	newScenario()
+	rebuild()
+	wait(1)
+	editTx(0,1)
+	var transactionDialog = mainApplication.mainContent.scenarioPanel.bc.transactionDialog
+	selectParamInput(transactionDialog, 0, "<C1 - 0>")
+	applyTx(transactionDialog)
+	addTx()
+	selectExecuteTxType(transactionDialog)
+	transactionDialog.selectRecipientAddress("<C2 - 1>");
 	transactionDialog.selectFunction("getFromC1");
-	transactionDialog.acceptAndClose();
-	mainApplication.projectModel.stateDialog.acceptAndClose();
-	mainApplication.mainContent.startQuickDebugging();
-	waitForExecution();
-
-	tryCompare(mainApplication.mainContent.rightPane.transactionLog.transactionModel.get(4), "returned", "(159)");
+	applyTx(transactionDialog)
+	rebuild()
+	var bc = mainApplication.mainContent.scenarioPanel.bc.model;
+	tryCompare(bc.blocks[0].transactions[2], "returned", "(159)");
 }
 

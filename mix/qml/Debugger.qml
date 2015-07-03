@@ -44,6 +44,12 @@ Rectangle {
 		trName.text = tr.label
 	}
 
+	function close()
+	{
+		Debugger.init(null);
+		panelClosed()
+	}
+
 	function displayCompilationErrorIfAny()
 	{
 		debugScrollArea.visible = false;
@@ -112,7 +118,6 @@ Rectangle {
 	ColumnLayout {
 		id: debugScrollArea
 		anchors.fill: parent
-		//orientation: Qt.Vertical
 		spacing: 0
 		RowLayout
 		{
@@ -147,8 +152,7 @@ Rectangle {
 						anchors.fill: parent
 						onClicked:
 						{
-							Debugger.init(null);
-							panelClosed()
+							debugPanel.close()
 						}
 					}
 				}

@@ -4,7 +4,7 @@ import QtQuick.Controls.Styles 1.3
 
 Row
 {
-	property alias value: textinput.text
+	property string value
 	property alias accountRef: ctrModel
 	property string subType
 	property bool readOnly
@@ -22,7 +22,7 @@ Row
 	}
 
 	function currentValue() {
-		return value;
+		return value
 	}
 
 	function currentType()
@@ -127,6 +127,8 @@ Row
 					trCombobox.currentIndex = 0;
 					trCombobox.selected = false;
 				}
+				if (displayInput)
+					value = text
 			}
 		}
 	}
@@ -147,21 +149,18 @@ Row
 
 		function update()
 		{
+			if (model.count === 0)
+				return
 			trCombobox.selected = false;
-			if (currentText === "")
-				return;
-			else if (currentText !== " - ")
-			{
-				if (model.get(currentIndex).type === "contract")
-					textinput.text = "<" + currentText + ">";
-				else
-					textinput.text = model.get(currentIndex).value; //address
-				trCombobox.selected = true;
-			}
-			else if (textinput.text.indexOf("<") === 0)
-			{
-				textinput.text = "";
-			}
+			if (model.get(currentIndex).type === "contract")
+				textinput.text = "<" + currentText + ">";
+			else
+				textinput.text = model.get(currentIndex).value; //address
+			trCombobox.selected = true;
+			if (displayInput)
+				value = textinput.text
+			else
+				value = "<" + currentText + ">"
 			indexChanged();
 		}
 

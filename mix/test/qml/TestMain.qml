@@ -99,6 +99,14 @@ TestCase
 		ts.mouseClick(el, x, y, Qt.LeftButton, Qt.NoModifier, 10)
 	}
 
+	function doubleClickElement(el, x, y)
+	{
+		if (el.contentItem)
+			el = el.contentItem;
+		ts.mouseDoubleClick(el, x, y, Qt.LeftButton, Qt.NoModifier, 10)
+	}
+
+	/* Test cases */
 	function test_tutorial() { TestTutorial.test_tutorial(); }
 	function test_dbg_defaultTransactionSequence() { TestDebugger.test_defaultTransactionSequence(); }
 	function test_dbg_transactionWithParameter() { TestDebugger.test_transactionWithParameter(); }
@@ -108,11 +116,12 @@ TestCase
 	function test_dbg_vm() { TestDebugger.test_vmDebugging(); }
 	function test_dbg_ctrTypeAsParam() { TestDebugger.test_ctrTypeAsParam(); }
 	function test_miner_getDefaultiner() { TestMiner.test_getDefaultMiner(); }
-	function test_miner_selectMiner() { TestMiner.test_selectMiner(); }
+	//function test_miner_selectMiner() { TestMiner.test_selectMiner(); } To readd later, when ui will be integrated
 	function test_miner_mine() { TestMiner.test_mine(); }
 	function test_project_contractRename() { TestProject.test_contractRename(); }
 	function test_project_multipleWebPages() { TestProject.test_multipleWebPages(); }
 	function test_project_multipleContractsSameFile() { TestProject.test_multipleContractsSameFile(); }
-	function test_project_deleteFile() { TestProject.test_deleteFile(); }
+	//function test_project_deleteFile() { TestProject.test_deleteFile(); } To readd later
+
 }
 

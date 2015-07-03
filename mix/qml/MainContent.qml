@@ -32,6 +32,7 @@ Rectangle {
 	property bool webViewHorizontal: codeWebSplitter.orientation === Qt.Vertical //vertical splitter positions elements vertically, splits screen horizontally
 	property bool firstCompile: true
 	property int scenarioMinWidth: 590
+	property alias scenarioPanel: scenarioExe
 
 	Connections {
 		target: codeModel
@@ -209,6 +210,16 @@ Rectangle {
 					Keys.onEscapePressed: visible = false
 					Layout.minimumWidth: scenarioMinWidth
 					anchors.right: parent.right
+				}
+
+				Connections
+				{
+					target: projectModel
+					onProjectClosed: {
+						if (debugPanel.visible)
+							debugPanel.close()
+					}
+
 				}
 
 				Debugger
