@@ -158,6 +158,7 @@ public:
 	
 	/// Set ideal number of peers.
 	void setIdealPeerCount(unsigned _n) { m_idealPeerCount = _n; }
+	void setPeerDropMultiplier(unsigned _n) { m_peerCountDropMultiplier = _n; }
 
 	/// Get peer information.
 	PeerSessionInfos peerSessionInfo() const;
@@ -287,6 +288,7 @@ private:
 	Mutex x_connecting;													///< Mutex for m_connecting.
 
 	unsigned m_idealPeerCount = 11;										///< Ideal number of peers to be connected to.
+	unsigned m_peerCountDropMultiplier = 9;
 
 	std::map<CapDesc, std::shared_ptr<HostCapabilityFace>> m_capabilities;	///< Each of the capabilities we support.
 	

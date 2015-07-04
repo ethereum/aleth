@@ -389,9 +389,10 @@ void Host::runAcceptor()
 		auto socket = make_shared<RLPXSocket>(new bi::tcp::socket(m_ioService));
 		m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
 		{
-			if (peerCount() > 9 * m_idealPeerCount)
+			unsigned maxPeers = m_peerCountDropMultiplier * m_idealPeerCount;
+			if (peerCount() > maxPeers)
 			{
-				clog(NetConnect) << "Dropping incoming connect due to maximum peer count (9 * ideal peer count): " << socket->remoteEndpoint();
+				clog(NetConnect) << "Dropping incoming connect due to maximum peer count (peer drop multiplier * ideal peer count)[" << to_string(maxPeers)<<"]: " << socket->remoteEndpoint();
 				socket->close();
 				if (ec.value() < 1)
 					runAcceptor();
