@@ -166,6 +166,7 @@ public:
 
 	/// Sets the ideal number of peers.
 	void setIdealPeerCount(size_t _n) override;
+	void setPeerDropMultiplier(size_t _n);
 
 	bool haveNetwork() const override { return m_net.haveNetwork(); }
 

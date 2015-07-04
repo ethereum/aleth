@@ -116,6 +116,11 @@ void WebThreeDirect::setIdealPeerCount(size_t _n)
 	return m_net.setIdealPeerCount(_n);
 }
 
+void WebThreeDirect::setPeerDropMultiplier(size_t _n)
+{
+	return m_net.setPeerDropMultiplier(_n);
+}
+
 bytes WebThreeDirect::saveNetwork()
 {
 	return m_net.saveNetwork();
