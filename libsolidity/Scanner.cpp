@@ -682,7 +682,7 @@ Token::Value Scanner::scanNumber(char _charSeen)
 	// scan exponent, if any
 	if (m_char == 'e' || m_char == 'E')
 	{
-		solAssert(kind != HEX, "'e'/'E' must be scanned as part of the hex number");
+		solAssert(kind != HEX, "'e'/'E' must not be scanned as part of the hex number");
 		if (kind != DECIMAL)
 			return Token::Illegal;
 		// scan exponent
