@@ -30,6 +30,7 @@
 
 #include <libethereum/GenesisInfo.h>
 #include <libdevcore/TransientDirectory.h>
+#include <libethereum/TransactionQueue.h>
 
 using namespace dev;
 using namespace eth;
@@ -107,8 +108,8 @@ public:
 
 		//make actual block from it
 		Transactions txList;
-		for (auto const& txi: txs.transactions()) //get valid transactions
-			txList.push_back(txi.second);
+		for (auto const& txi: txs.topTransactions(std::numeric_limits<unsigned>::max()))
+			txList.push_back(txi);			//get valid transactions
 
 		RLPStream txStream;
 		txStream.appendList(txList.size());
