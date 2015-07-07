@@ -78,8 +78,7 @@ BOOST_AUTO_TEST_CASE(AesDecryptFailInvalidSeed2)
 BOOST_AUTO_TEST_CASE(AuthenticatedStreamConstructor)
 {
 	cout << "AuthenticatedStreamConstructor" << endl;
-
-	Secret const sec("test");
+	Secret const sec("0xbadf00d");
 	crypto::aes::AuthenticatedStream as(crypto::aes::Encrypt, sec, 0);
 	BOOST_CHECK(as.getMacInterval() == 0);
 	as.adjustInterval(1);
