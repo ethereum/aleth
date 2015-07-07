@@ -142,7 +142,7 @@ public:
 	void importEnv(json_spirit::mObject& _o);
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
 	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
-	static void importTransaction (json_spirit::mObject& _o, eth::Transaction& _tr);
+	static void importTransaction (json_spirit::mObject& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
