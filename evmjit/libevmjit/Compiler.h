@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Common.h"
 #include "BasicBlock.h"
 
 namespace dev
@@ -38,9 +37,9 @@ private:
 
 	void compileBasicBlock(BasicBlock& _basicBlock, class RuntimeManager& _runtimeManager, class Arith256& _arith, class Memory& _memory, class Ext& _ext, class GasMeter& _gasMeter, llvm::BasicBlock* _nextBasicBlock);
 
-	llvm::BasicBlock* getJumpTableBlock();
+	llvm::BasicBlock* getJumpTableBlock(RuntimeManager& _runtimeManager);
 
-	llvm::BasicBlock* getBadJumpBlock();
+	llvm::BasicBlock* getBadJumpBlock(RuntimeManager& _runtimeManager);
 
 	void removeDeadBlocks();
 
@@ -64,6 +63,9 @@ private:
 
 	/// Stop basic block - terminates execution with STOP code (0)
 	llvm::BasicBlock* m_stopBB = nullptr;
+
+	/// Abort basic block - terminates execution with OOG-like state
+	llvm::BasicBlock* m_abortBB = nullptr;
 
 	/// Block with a jump table.
 	std::unique_ptr<BasicBlock> m_jumpTableBlock;

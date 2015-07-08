@@ -21,9 +21,18 @@
  * @date 2014
  */
 
+#include "WebThreeStubServerBase.h"
+
+// Make sure boost/asio.hpp is included before windows.h.
+#include <boost/asio.hpp>
+
+#include <jsonrpccpp/common/exception.h>
+#include <libdevcore/CommonData.h>
+#if ETH_SOLIDITY || !ETH_TRUE
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/SourceReferenceFormatter.h>
+#endif
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
 #include <libethereum/Client.h>
@@ -31,293 +40,292 @@
 #include <libethcore/CommonJS.h>
 #include <libwhisper/Message.h>
 #include <libwhisper/WhisperHost.h>
-#ifndef _MSC_VER
+#if ETH_SERPENT || !ETH_TRUE
 #include <libserpent/funcs.h>
 #endif
-#include "WebThreeStubServerBase.h"
 #include "AccountHolder.h"
-
+#include "JsonHelper.h"
 using namespace std;
+using namespace jsonrpc;
 using namespace dev;
-using namespace dev::eth;
+using namespace eth;
+using namespace shh;
 
+#if ETH_DEBUG
+const unsigned dev::SensibleHttpThreads = 1;
+#else
+const unsigned dev::SensibleHttpThreads = 4;
+#endif
+const unsigned dev::SensibleHttpPort = 8545;
 
-static Json::Value toJson(dev::eth::BlockInfo const& _bi)
+WebThreeStubServerBase::WebThreeStubServerBase(AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
+	AbstractWebThreeStubServer(_conn),
+	m_ethAccounts(_ethAccounts)
 {
-	Json::Value res;
-	res["hash"] = boost::lexical_cast<string>(_bi.hash);
-	res["parentHash"] = toJS(_bi.parentHash);
-	res["sha3Uncles"] = toJS(_bi.sha3Uncles);
-	res["miner"] = toJS(_bi.coinbaseAddress);
-	res["stateRoot"] = toJS(_bi.stateRoot);
-	res["transactionsRoot"] = toJS(_bi.transactionsRoot);
-	res["difficulty"] = toJS(_bi.difficulty);
-	res["number"] = (int)_bi.number;
-	res["gasLimit"] = (int)_bi.gasLimit;
-	res["timestamp"] = (int)_bi.timestamp;
-	res["extraData"] = jsFromBinary(_bi.extraData);
-	res["nonce"] = toJS(_bi.nonce);
-	return res;
+	setIdentities(_sshAccounts);
 }
 
-static Json::Value toJson(dev::eth::Transaction const& _t)
+void WebThreeStubServerBase::setIdentities(vector<dev::KeyPair> const& _ids)
 {
-	Json::Value res;
-	res["hash"] = toJS(_t.sha3());
-	res["input"] = jsFromBinary(_t.data());
-	res["to"] = toJS(_t.receiveAddress());
-	res["from"] = toJS(_t.safeSender());
-	res["gas"] = (int)_t.gas();
-	res["gasPrice"] = toJS(_t.gasPrice());
-	res["nonce"] = toJS(_t.nonce());
-	res["value"] = toJS(_t.value());
-	return res;
-}
-
-static Json::Value toJson(dev::eth::TransactionSkeleton const& _t)
-{
-	Json::Value res;
-	res["to"] = toJS(_t.to);
-	res["from"] = toJS(_t.from);
-	res["gas"] = toJS(_t.gas);
-	res["gasPrice"] = toJS(_t.gasPrice);
-	res["value"] = toJS(_t.value);
-	res["data"] = jsFromBinary(_t.data);
-	return res;
-}
-
-static Json::Value toJson(dev::eth::LocalisedLogEntry const& _e)
-{
-	Json::Value res;
-	
-	res["data"] = jsFromBinary(_e.data);
-	res["address"] = toJS(_e.address);
-	for (auto const& t: _e.topics)
-		res["topic"].append(toJS(t));
-	res["number"] = _e.number;
-	return res;
-}
-
-static Json::Value toJson(dev::eth::LocalisedLogEntries const& _es)	// commented to avoid warning. Uncomment once in use @ poC-7.
-{
-	Json::Value res(Json::arrayValue);
-	for (dev::eth::LocalisedLogEntry const& e: _es)
-		res.append(toJson(e));
-	return res;
-}
-
-static Json::Value toJson(std::map<u256, u256> const& _storage)
-{
-	Json::Value res(Json::objectValue);
-	for (auto i: _storage)
-		res[toJS(i.first)] = toJS(i.second);
-	return res;
-}
-
-static dev::eth::LogFilter toLogFilter(Json::Value const& _json)	// commented to avoid warning. Uncomment once in use @ PoC-7.
-{
-	dev::eth::LogFilter filter;
-	if (!_json.isObject() || _json.empty())
-		return filter;
-
-	if (_json["earliest"].isInt())
-		filter.withEarliest(_json["earliest"].asInt());
-	if (_json["latest"].isInt())
-		filter.withLatest(_json["lastest"].asInt());
-	if (_json["max"].isInt())
-		filter.withMax(_json["max"].asInt());
-	if (_json["skip"].isInt())
-		filter.withSkip(_json["skip"].asInt());
-	if (!_json["address"].empty())
-	{
-		if (_json["address"].isArray())
-		{
-			for (auto i : _json["address"])
-				if (i.isString())
-					filter.address(jsToAddress(i.asString()));
-		}
-		else if (_json["address"].isString())
-			filter.address(jsToAddress(_json["address"].asString()));
-	}
-	if (!_json["topic"].empty() && _json["topic"].isArray())
-	{
-		unsigned i = 0;
-		for (auto t: _json["topic"])
-		{
-			if (t.isArray())
-				for (auto tt: t)
-					filter.topic(i, jsToFixed<32>(tt.asString()));
-			else if (t.isString())
-				filter.topic(i, jsToFixed<32>(t.asString()));
-			i++;
-		}
-	}
-	return filter;
-}
-
-static shh::Message toMessage(Json::Value const& _json)
-{
-	shh::Message ret;
-	if (_json["from"].isString())
-		ret.setFrom(jsToPublic(_json["from"].asString()));
-	if (_json["to"].isString())
-		ret.setTo(jsToPublic(_json["to"].asString()));
-	if (_json["payload"].isString())
-		ret.setPayload(jsToBytes(_json["payload"].asString()));
-	return ret;
-}
-
-static shh::Envelope toSealed(Json::Value const& _json, shh::Message const& _m, Secret _from)
-{
-	unsigned ttl = 50;
-	unsigned workToProve = 50;
-	shh::BuildTopic bt;
-
-	if (_json["ttl"].isInt())
-		ttl = _json["ttl"].asInt();
-	if (_json["workToProve"].isInt())
-		workToProve = _json["workToProve"].asInt();
-	if (!_json["topic"].empty())
-	{
-		if (_json["topic"].isString())
-			bt.shift(jsToBytes(_json["topic"].asString()));
-		else if (_json["topic"].isArray())
-			for (auto i: _json["topic"])
-				if (i.isString())
-					bt.shift(jsToBytes(i.asString()));
-	}
-	return _m.seal(_from, bt, ttl, workToProve);
-}
-
-static pair<shh::FullTopic, Public> toWatch(Json::Value const& _json)
-{
-	shh::BuildTopic bt;
-	Public to;
-
-	if (_json["to"].isString())
-		to = jsToPublic(_json["to"].asString());
-
-	if (!_json["topic"].empty())
-	{
-		if (_json["topic"].isString())
-			bt.shift(jsToBytes(_json["topic"].asString()));
-		else if (_json["topic"].isArray())
-			for (auto i: _json["topic"])
-				if (i.isString())
-					bt.shift(jsToBytes(i.asString()));
-	}
-	return make_pair(bt, to);
-}
-
-static Json::Value toJson(h256 const& _h, shh::Envelope const& _e, shh::Message const& _m)
-{
-	Json::Value res;
-	res["hash"] = toJS(_h);
-	res["expiry"] = (int)_e.expiry();
-	res["sent"] = (int)_e.sent();
-	res["ttl"] = (int)_e.ttl();
-	res["workProved"] = (int)_e.workProved();
-	for (auto const& t: _e.topic())
-		res["topic"].append(toJS(t));
-	res["payload"] = toJS(_m.payload());
-	res["from"] = toJS(_m.from());
-	res["to"] = toJS(_m.to());
-	return res;
-}
-
-WebThreeStubServerBase::WebThreeStubServerBase(jsonrpc::AbstractServerConnector& _conn, std::vector<dev::KeyPair> const& _accounts):
-	AbstractWebThreeStubServer(_conn), m_accounts(make_shared<AccountHolder>(std::bind(&WebThreeStubServerBase::client, this)))
-{
-	m_accounts->setAccounts(_accounts);
-}
-
-void WebThreeStubServerBase::setIdentities(std::vector<dev::KeyPair> const& _ids)
-{
-	m_ids.clear();
+	m_shhIds.clear();
 	for (auto i: _ids)
-		m_ids[i.pub()] = i.secret();
+		m_shhIds[i.pub()] = i.secret();
 }
 
-std::string WebThreeStubServerBase::web3_sha3(std::string const& _param1)
+string WebThreeStubServerBase::web3_sha3(string const& _param1)
 {
 	return toJS(sha3(jsToBytes(_param1)));
+}
+
+string WebThreeStubServerBase::net_peerCount()
+{
+	return toJS(network()->peerCount());
+}
+
+bool WebThreeStubServerBase::net_listening()
+{
+	return network()->isNetworkStarted();
+}
+
+string WebThreeStubServerBase::eth_protocolVersion()
+{
+	return toJS(eth::c_protocolVersion);
+}
+
+string WebThreeStubServerBase::eth_coinbase()
+{
+	return toJS(client()->address());
+}
+
+string WebThreeStubServerBase::eth_hashrate()
+{
+	return toJS(client()->hashrate());
+}
+
+bool WebThreeStubServerBase::eth_mining()
+{
+	return client()->isMining();
+}
+
+string WebThreeStubServerBase::eth_gasPrice()
+{
+	return toJS(10 * dev::eth::szabo);
 }
 
 Json::Value WebThreeStubServerBase::eth_accounts()
 {
 	Json::Value ret(Json::arrayValue);
-	for (auto const& i: m_accounts->getAllAccounts())
+	for (auto const& i: m_ethAccounts->allAccounts())
 		ret.append(toJS(i));
 	return ret;
 }
 
-std::string WebThreeStubServerBase::shh_addToGroup(std::string const& _group, std::string const& _who)
+string WebThreeStubServerBase::eth_blockNumber()
 {
-	(void)_group;
-	(void)_who;
-	return "";
+	return toJS(client()->number());
 }
 
-std::string WebThreeStubServerBase::eth_balanceAt(string const& _address)
+
+string WebThreeStubServerBase::eth_getBalance(string const& _address, string const& _blockNumber)
 {
-	return toJS(client()->balanceAt(jsToAddress(_address), client()->getDefault()));
+	try
+	{
+		return toJS(client()->balanceAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-Json::Value WebThreeStubServerBase::eth_blockByHash(std::string const& _hash)
+string WebThreeStubServerBase::eth_getStorageAt(string const& _address, string const& _position, string const& _blockNumber)
 {
-	return toJson(client()->blockInfo(jsToFixed<32>(_hash)));
+	try
+	{
+		return toJS(toCompactBigEndian(client()->stateAt(jsToAddress(_address), jsToU256(_position), jsToBlockNumber(_blockNumber)), 1));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-Json::Value WebThreeStubServerBase::eth_blockByNumber(int _number)
+string WebThreeStubServerBase::eth_getTransactionCount(string const& _address, string const& _blockNumber)
 {
-	return toJson(client()->blockInfo(client()->hashFromNumber(_number)));
+	try
+	{
+		return toJS(client()->countAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-static TransactionSkeleton toTransaction(Json::Value const& _json)
+Json::Value WebThreeStubServerBase::eth_getBlockTransactionCountByHash(string const& _blockHash)
 {
-	TransactionSkeleton ret;
-	if (!_json.isObject() || _json.empty())
-		return ret;
+	try
+	{
+		h256 blockHash = jsToFixed<32>(_blockHash);
+		if (!client()->isKnown(blockHash))
+			return Json::Value(Json::nullValue);
 
-	if (_json["from"].isString())
-		ret.from = jsToAddress(_json["from"].asString());
-	if (_json["to"].isString())
-		ret.to = jsToAddress(_json["to"].asString());
-	else
-		ret.creation = true;
-	if (!_json["value"].empty())
-	{
-		if (_json["value"].isString())
-			ret.value = jsToU256(_json["value"].asString());
-		else if (_json["value"].isInt())
-			ret.value = u256(_json["value"].asInt());
+		return toJS(client()->transactionCount(blockHash));
 	}
-	if (!_json["gas"].empty())
+	catch (...)
 	{
-		if (_json["gas"].isString())
-			ret.gas = jsToU256(_json["gas"].asString());
-		else if (_json["gas"].isInt())
-			ret.gas = u256(_json["gas"].asInt());
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-	if (!_json["gasPrice"].empty())
-	{
-		if (_json["gasPrice"].isString())
-			ret.gasPrice = jsToU256(_json["gasPrice"].asString());
-		else if (_json["gasPrice"].isInt())
-			ret.gas = u256(_json["gas"].asInt());
-	}
-	if (!_json["data"].empty())
-	{
-		if (_json["data"].isString())							// ethereum.js has preconstructed the data array
-			ret.data = jsToBytes(_json["data"].asString());
-		else if (_json["data"].isArray())						// old style: array of 32-byte-padded values. TODO: remove PoC-8
-			for (auto i: _json["data"])
-				dev::operator +=(ret.data, padded(jsToBytes(i.asString()), 32));
-	}
+}
 
-	if (_json["code"].isString())
-		ret.data = jsToBytes(_json["code"].asString());
-	return ret;
+Json::Value WebThreeStubServerBase::eth_getBlockTransactionCountByNumber(string const& _blockNumber)
+{
+	try
+	{
+		BlockNumber blockNumber = jsToBlockNumber(_blockNumber);
+		if (!client()->isKnown(blockNumber))
+			return Json::Value(Json::nullValue);
+
+		return toJS(client()->transactionCount(jsToBlockNumber(_blockNumber)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getUncleCountByBlockHash(string const& _blockHash)
+{
+	try
+	{
+		h256 blockHash = jsToFixed<32>(_blockHash);
+		if (!client()->isKnown(blockHash))
+			return Json::Value(Json::nullValue);
+
+		return toJS(client()->uncleCount(blockHash));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getUncleCountByBlockNumber(string const& _blockNumber)
+{
+	try
+	{
+		BlockNumber blockNumber = jsToBlockNumber(_blockNumber);
+		if (!client()->isKnown(blockNumber))
+			return Json::Value(Json::nullValue);
+
+		return toJS(client()->uncleCount(blockNumber));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string WebThreeStubServerBase::eth_getCode(string const& _address, string const& _blockNumber)
+{
+	try
+	{
+		return toJS(client()->codeAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string WebThreeStubServerBase::eth_sendTransaction(Json::Value const& _json)
+{
+	try
+	{
+		TransactionSkeleton t = toTransactionSkeleton(_json);
+	
+		if (!t.from)
+			t.from = m_ethAccounts->defaultTransactAccount();
+		if (t.gasPrice == UndefinedU256)
+			t.gasPrice = 10 * dev::eth::szabo;		// TODO: should be determined by user somehow.
+		if (t.gas == UndefinedU256)
+			t.gas = min<u256>(client()->gasLimitRemaining() / 5, client()->balanceAt(t.from) / t.gasPrice);
+
+		return toJS(m_ethAccounts->authenticate(t));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string WebThreeStubServerBase::eth_signTransaction(Json::Value const& _json)
+{
+	try
+	{
+		TransactionSkeleton t = toTransactionSkeleton(_json);
+
+		if (!t.from)
+			t.from = m_ethAccounts->defaultTransactAccount();
+		if (t.gasPrice == UndefinedU256)
+			t.gasPrice = 10 * dev::eth::szabo;		// TODO: should be determined by user somehow.
+		if (t.gas == UndefinedU256)
+			t.gas = min<u256>(client()->gasLimitRemaining() / 5, client()->balanceAt(t.from) / t.gasPrice);
+
+		m_ethAccounts->authenticate(t);
+
+		return toJS((t.creation ? Transaction(t.value, t.gasPrice, t.gas, t.data) : Transaction(t.value, t.gasPrice, t.gas, t.to, t.data)).sha3(WithoutSignature));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_inspectTransaction(std::string const& _rlp)
+{
+	try
+	{
+		return toJson(Transaction(jsToBytes(_rlp), CheckTransaction::Everything));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+bool WebThreeStubServerBase::eth_injectTransaction(std::string const& _rlp)
+{
+	try
+	{
+		return client()->injectTransaction(jsToBytes(_rlp)) == ImportResult::Success;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string WebThreeStubServerBase::eth_call(Json::Value const& _json, string const& _blockNumber)
+{
+	try
+	{
+		TransactionSkeleton t = toTransactionSkeleton(_json);
+		if (!t.from)
+			t.from = m_ethAccounts->defaultTransactAccount();
+	//	if (!m_accounts->isRealAccount(t.from))
+	//		return ret;
+		if (t.gasPrice == UndefinedU256)
+			t.gasPrice = 10 * dev::eth::szabo;
+		if (t.gas == UndefinedU256)
+			t.gas = client()->gasLimitRemaining();
+
+		return toJS(client()->call(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, jsToBlockNumber(_blockNumber), FudgeFactor::Lenient).output);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
 bool WebThreeStubServerBase::eth_flush()
@@ -326,435 +334,622 @@ bool WebThreeStubServerBase::eth_flush()
 	return true;
 }
 
-std::string WebThreeStubServerBase::eth_call(Json::Value const& _json)
+Json::Value WebThreeStubServerBase::eth_getBlockByHash(string const& _blockHash, bool _includeTransactions)
 {
-	std::string ret;
-	TransactionSkeleton t = toTransaction(_json);
-	if (!t.from)
-		t.from = m_accounts->getDefaultTransactAccount();
-	if (!m_accounts->isRealAccount(t.from))
-		return ret;
-	if (!t.gasPrice)
-		t.gasPrice = 10 * dev::eth::szabo;
-	if (!t.gas)
-		t.gas = min<u256>(client()->gasLimitRemaining(), client()->balanceAt(t.from) / t.gasPrice);
-	ret = toJS(client()->call(m_accounts->secretKey(t.from), t.value, t.to, t.data, t.gas, t.gasPrice));
-	return ret;
+	try
+	{
+		h256 h = jsToFixed<32>(_blockHash);
+		if (!client()->isKnown(h))
+			return Json::Value(Json::nullValue);
+
+		if (_includeTransactions)
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h));
+		else
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-Json::Value WebThreeStubServerBase::eth_changed(int _id)
+Json::Value WebThreeStubServerBase::eth_getBlockByNumber(string const& _blockNumber, bool _includeTransactions)
 {
-	auto entries = client()->checkWatch(_id);
-	if (entries.size())
-		cnote << "FIRING WATCH" << _id << entries.size();
-	return toJson(entries);
+	try
+	{
+		BlockNumber h = jsToBlockNumber(_blockNumber);
+		if (!client()->isKnown(h))
+			return Json::Value(Json::nullValue);
+
+		if (_includeTransactions)
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h));
+		else
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-std::string WebThreeStubServerBase::eth_codeAt(string const& _address)
+Json::Value WebThreeStubServerBase::eth_getTransactionByHash(string const& _transactionHash)
 {
-	return jsFromBinary(client()->codeAt(jsToAddress(_address), client()->getDefault()));
+	try
+	{
+		h256 h = jsToFixed<32>(_transactionHash);
+		if (!client()->isKnownTransaction(h))
+			return Json::Value(Json::nullValue);
+
+		auto l = client()->transactionLocation(h);
+		return toJson(client()->transaction(h), l, client()->numberFromHash(l.first));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-std::string WebThreeStubServerBase::eth_coinbase()
+Json::Value WebThreeStubServerBase::eth_getTransactionByBlockHashAndIndex(string const& _blockHash, string const& _transactionIndex)
 {
-	return toJS(client()->address());
+	try
+	{
+		h256 bh = jsToFixed<32>(_blockHash);
+		unsigned ti = jsToInt(_transactionIndex);
+		Transaction t = client()->transaction(bh, ti);
+		return toJson(t, make_pair(bh, ti), client()->numberFromHash(bh));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-double WebThreeStubServerBase::eth_countAt(string const& _address)
+Json::Value WebThreeStubServerBase::eth_getTransactionByBlockNumberAndIndex(string const& _blockNumber, string const& _transactionIndex)
 {
-	return (double)(uint64_t)client()->countAt(jsToAddress(_address), client()->getDefault());
+	try
+	{
+		BlockNumber bn = jsToBlockNumber(_blockNumber);
+		unsigned ti = jsToInt(_transactionIndex);
+		Transaction t = client()->transaction(bn, ti);
+		return toJson(t, make_pair(client()->hashFromNumber(bn), ti), bn);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-double WebThreeStubServerBase::eth_transactionCountByHash(std::string const& _hash)
+Json::Value WebThreeStubServerBase::eth_getTransactionReceipt(string const& _transactionHash)
 {
-	return client()->transactionCount(jsToFixed<32>(_hash));
+	try
+	{
+		h256 h = jsToFixed<32>(_transactionHash);
+		if (!client()->isKnownTransaction(h))
+			return Json::Value(Json::nullValue);
+
+		auto l = client()->transactionLocation(h);
+		return toJson(client()->transactionReceipt(h), l, client()->numberFromHash(l.first), client()->transaction(h));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-double WebThreeStubServerBase::eth_transactionCountByNumber(int _number)
+Json::Value WebThreeStubServerBase::eth_getUncleByBlockHashAndIndex(string const& _blockHash, string const& _uncleIndex)
 {
-	return client()->transactionCount(client()->hashFromNumber(_number));
+	try
+	{
+		return toJson(client()->uncle(jsToFixed<32>(_blockHash), jsToInt(_uncleIndex)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-double WebThreeStubServerBase::eth_uncleCountByHash(std::string const& _hash)
+Json::Value WebThreeStubServerBase::eth_getUncleByBlockNumberAndIndex(string const& _blockNumber, string const& _uncleIndex)
 {
-	return client()->transactionCount(jsToFixed<32>(_hash));
+	try
+	{
+		return toJson(client()->uncle(jsToBlockNumber(_blockNumber), jsToInt(_uncleIndex)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-double WebThreeStubServerBase::eth_uncleCountByNumber(int _number)
-{
-	return client()->transactionCount(client()->hashFromNumber(_number));
-}
-
-int WebThreeStubServerBase::eth_defaultBlock()
-{
-	return client()->getDefault();
-}
-
-std::string WebThreeStubServerBase::eth_gasPrice()
-{
-	return toJS(10 * dev::eth::szabo);
-}
-
-std::string WebThreeStubServerBase::db_get(std::string const& _name, std::string const& _key)
-{
-	string ret = db()->get(_name, _key);
-	return toJS(dev::asBytes(ret));
-}
-
-Json::Value WebThreeStubServerBase::eth_filterLogs(int _id)
-{
-	return toJson(client()->logs(_id));
-}
-
-Json::Value WebThreeStubServerBase::eth_logs(Json::Value const& _json)
-{
-	return toJson(client()->logs(toLogFilter(_json)));
-}
-
-std::string WebThreeStubServerBase::db_getString(std::string const& _name, std::string const& _key)
-{
-	return db()->get(_name, _key);;
-}
-
-bool WebThreeStubServerBase::shh_haveIdentity(std::string const& _id)
-{
-	return m_ids.count(jsToPublic(_id)) > 0;
-}
-
-bool WebThreeStubServerBase::eth_listening()
-{
-	return network()->isNetworkStarted();
-}
-
-bool WebThreeStubServerBase::eth_mining()
-{
-	return client()->isMining();
-}
-
-int WebThreeStubServerBase::eth_newFilter(Json::Value const& _json)
-{
-	unsigned ret = -1;
-	ret = client()->installWatch(toLogFilter(_json));
-	return ret;
-}
-
-int WebThreeStubServerBase::eth_newFilterString(std::string const& _filter)
-{
-	unsigned ret = -1;
-	if (_filter.compare("chain") == 0)
-		ret = client()->installWatch(dev::eth::ChainChangedFilter);
-	else if (_filter.compare("pending") == 0)
-		ret = client()->installWatch(dev::eth::PendingChangedFilter);
-	return ret;
-}
-
-Json::Value WebThreeStubServerBase::eth_getWork()
-{
-	Json::Value ret(Json::arrayValue);
-	auto r = client()->getWork();
-	ret.append(toJS(r.first));
-	ret.append(toJS(r.second));
-	return ret;
-}
-
-bool WebThreeStubServerBase::eth_submitWork(std::string const& _nonce)
-{
-	return client()->submitNonce(jsToFixed<32>(_nonce));
-}
-
-int WebThreeStubServerBase::eth_register(std::string const& _address)
-{
-	return m_accounts->addProxyAccount(jsToAddress(_address));
-}
-
-bool WebThreeStubServerBase::eth_unregister(int _id)
-{
-	return m_accounts->removeProxyAccount(_id);
-}
-
-Json::Value WebThreeStubServerBase::eth_queuedTransactions(int _id)
-{
-	Json::Value ret(Json::arrayValue);
-	for (TransactionSkeleton const& t: m_accounts->getQueuedTransactions(_id))
-		ret.append(toJson(t));
-	m_accounts->clearQueue(_id);
-	return ret;
-}
-
-std::string WebThreeStubServerBase::shh_newGroup(std::string const& _id, std::string const& _who)
-{
-	(void)_id;
-	(void)_who;
-	return "";
-}
-
-std::string WebThreeStubServerBase::shh_newIdentity()
-{
-//	cnote << this << m_ids;
-	KeyPair kp = KeyPair::create();
-	m_ids[kp.pub()] = kp.secret();
-	return toJS(kp.pub());
-}
-
-Json::Value WebThreeStubServerBase::eth_compilers()
+Json::Value WebThreeStubServerBase::eth_getCompilers()
 {
 	Json::Value ret(Json::arrayValue);
 	ret.append("lll");
+#if ETH_SOLIDITY || !TRUE
 	ret.append("solidity");
-#ifndef _MSC_VER
+#endif
+#if ETH_SERPENT || !TRUE
 	ret.append("serpent");
 #endif
 	return ret;
 }
 
-std::string WebThreeStubServerBase::eth_lll(std::string const& _code)
+
+string WebThreeStubServerBase::eth_compileLLL(string const& _source)
 {
+	// TODO throw here jsonrpc errors
 	string res;
 	vector<string> errors;
-	res = toJS(dev::eth::compileLLL(_code, true, &errors));
+	res = toJS(dev::eth::compileLLL(_source, true, &errors));
 	cwarn << "LLL compilation errors: " << errors;
 	return res;
 }
 
-std::string WebThreeStubServerBase::eth_serpent(std::string const& _code)
+string WebThreeStubServerBase::eth_compileSerpent(string const& _source)
 {
+	// TODO throw here jsonrpc errors
 	string res;
-#ifndef _MSC_VER
+#if ETH_SERPENT || !ETH_TRUE
 	try
 	{
-		res = toJS(dev::asBytes(::compile(_code)));
+		res = toJS(dev::asBytes(::compile(_source)));
 	}
 	catch (string err)
 	{
-		cwarn << "Solidity compilation error: " << err;
+		cwarn << "Serpent compilation error: " << err;
 	}
 	catch (...)
 	{
 		cwarn << "Uncought serpent compilation exception";
 	}
+#else
+	(void)_source;
 #endif
 	return res;
 }
 
-std::string WebThreeStubServerBase::eth_solidity(std::string const& _code)
+#define ADMIN requires(_session, Priviledge::Admin)
+
+bool WebThreeStubServerBase::admin_web3_setVerbosity(int _v, string const& _session)
 {
-	string res;
-	dev::solidity::CompilerStack compiler;
-	try
+	ADMIN;
+	g_logVerbosity = _v;
+	return true;
+}
+
+bool WebThreeStubServerBase::admin_net_start(std::string const& _session)
+{
+	ADMIN;
+	network()->startNetwork();
+	return true;
+}
+
+bool WebThreeStubServerBase::admin_net_stop(std::string const& _session)
+{
+	ADMIN;
+	network()->stopNetwork();
+	return true;
+}
+
+bool WebThreeStubServerBase::admin_net_connect(std::string const& _node, std::string const& _session)
+{
+	ADMIN;
+	p2p::NodeId id;
+	bi::tcp::endpoint ep;
+	if (_node.substr(0, 8) == "enode://" && _node.find('@') == 136)
 	{
-		res = toJS(compiler.compile(_code, true));
+		id = p2p::NodeId(_node.substr(8, 128));
+		ep = p2p::Network::resolveHost(_node.substr(137));
 	}
-	catch (dev::Exception const& exception)
-	{
-		ostringstream error;
-		solidity::SourceReferenceFormatter::printExceptionInformation(error, exception, "Error", compiler);
-		cwarn << "Solidity compilation error: " << error.str();
-	}
-	catch (...)
-	{
-		cwarn << "Uncought solidity compilation exception";
-	}
-	return res;
-}
-
-int WebThreeStubServerBase::eth_number()
-{
-	return client()->number();
-}
-
-int WebThreeStubServerBase::eth_peerCount()
-{
-	return network()->peerCount();
-}
-
-bool WebThreeStubServerBase::shh_post(Json::Value const& _json)
-{
-	shh::Message m = toMessage(_json);
-	Secret from;
-
-	if (m.from() && m_ids.count(m.from()))
-	{
-		cwarn << "Silently signing message from identity" << m.from().abridged() << ": User validation hook goes here.";
-		// TODO: insert validification hook here.
-		from = m_ids[m.from()];
-	}
-	
-	face()->inject(toSealed(_json, m, from));
-	return true;
-}
-
-bool WebThreeStubServerBase::db_put(std::string const& _name, std::string const& _key, std::string const& _value)
-{
-	string v = asString(jsToBytes(_value));
-	db()->put(_name, _key, v);
-	return true;
-}
-
-bool WebThreeStubServerBase::db_putString(std::string const& _name, std::string const& _key, std::string const& _value)
-{
-	db()->put(_name, _key,_value);
-	return true;
-}
-
-bool WebThreeStubServerBase::eth_setCoinbase(std::string const& _address)
-{
-	client()->setAddress(jsToAddress(_address));
-	return true;
-}
-
-bool WebThreeStubServerBase::eth_setDefaultBlock(int _block)
-{
-	client()->setDefault(_block);
-	return true;
-}
-
-bool WebThreeStubServerBase::eth_setListening(bool _listening)
-{
-	if (_listening)
-		network()->startNetwork();
 	else
-		network()->stopNetwork();
+		ep = p2p::Network::resolveHost(_node);
+	network()->requirePeer(id, ep);
 	return true;
 }
 
-bool WebThreeStubServerBase::eth_setMining(bool _mining)
+Json::Value WebThreeStubServerBase::admin_net_peers(std::string const& _session)
 {
-	if (_mining)
+	ADMIN;
+	Json::Value ret;
+	for (p2p::PeerSessionInfo const& i: network()->peers())
+		ret.append(toJson(i));
+	return ret;
+}
+
+bool WebThreeStubServerBase::admin_eth_setMining(bool _on, std::string const& _session)
+{
+	ADMIN;
+	if (_on)
 		client()->startMining();
 	else
 		client()->stopMining();
 	return true;
 }
 
-Json::Value WebThreeStubServerBase::shh_changed(int _id)
+Json::Value WebThreeStubServerBase::eth_compileSolidity(string const& _source)
+{
+	// TOOD throw here jsonrpc errors
+	Json::Value res(Json::objectValue);
+#if ETH_SOLIDITY || !ETH_TRUE
+	dev::solidity::CompilerStack compiler;
+	try
+	{
+		compiler.addSource("source", _source);
+		compiler.compile();
+
+		for (string const& name: compiler.getContractNames())
+		{
+			Json::Value contract(Json::objectValue);
+			contract["code"] = toJS(compiler.getBytecode(name));
+
+			Json::Value info(Json::objectValue);
+			info["source"] = _source;
+			info["language"] = "";
+			info["languageVersion"] = "";
+			info["compilerVersion"] = "";
+
+			Json::Reader reader;
+			reader.parse(compiler.getInterface(name), info["abiDefinition"]);
+			reader.parse(compiler.getMetadata(name, dev::solidity::DocumentationType::NatspecUser), info["userDoc"]);
+			reader.parse(compiler.getMetadata(name, dev::solidity::DocumentationType::NatspecDev), info["developerDoc"]);
+
+			contract["info"] = info;
+			res[name] = contract;
+		}
+	}
+	catch (dev::Exception const& exception)
+	{
+		ostringstream error;
+		solidity::SourceReferenceFormatter::printExceptionInformation(error, exception, "Error", compiler);
+		cwarn << "Solidity compilation error: " << error.str();
+		return Json::Value(Json::objectValue);
+	}
+	catch (...)
+	{
+		cwarn << "Uncought solidity compilation exception";
+		return Json::Value(Json::objectValue);
+	}
+#else
+	(void)_source;
+#endif
+	return res;
+}
+
+string WebThreeStubServerBase::eth_newFilter(Json::Value const& _json)
+{
+	try
+	{
+		return toJS(client()->installWatch(toLogFilter(_json, *client())));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string WebThreeStubServerBase::eth_newFilterEx(Json::Value const& _json)
+{
+	try
+	{
+		return toJS(client()->installWatch(toLogFilter(_json)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+string WebThreeStubServerBase::eth_newBlockFilter()
+{
+	h256 filter = dev::eth::ChainChangedFilter;
+	return toJS(client()->installWatch(filter));
+}
+
+string WebThreeStubServerBase::eth_newPendingTransactionFilter()
+{
+	h256 filter = dev::eth::PendingChangedFilter;
+	return toJS(client()->installWatch(filter));
+}
+
+bool WebThreeStubServerBase::eth_uninstallFilter(string const& _filterId)
+{
+	try
+	{
+		return client()->uninstallWatch(jsToInt(_filterId));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getFilterChanges(string const& _filterId)
+{
+	try
+	{
+		int id = jsToInt(_filterId);
+		auto entries = client()->checkWatch(id);
+		if (entries.size())
+			cnote << "FIRING WATCH" << id << entries.size();
+		return toJson(entries);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getFilterChangesEx(string const& _filterId)
+{
+	try
+	{
+		int id = jsToInt(_filterId);
+		auto entries = client()->checkWatch(id);
+		if (entries.size())
+			cnote << "FIRING WATCH" << id << entries.size();
+		return toJson(entries);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getFilterLogs(string const& _filterId)
+{
+	try
+	{
+		return toJson(client()->logs(jsToInt(_filterId)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getFilterLogsEx(string const& _filterId)
+{
+	try
+	{
+		return toJson(client()->logs(jsToInt(_filterId)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getLogs(Json::Value const& _json)
+{
+	try
+	{
+		return toJson(client()->logs(toLogFilter(_json)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_getWork()
 {
 	Json::Value ret(Json::arrayValue);
-	auto pub = m_shhWatches[_id];
-	if (!pub || m_ids.count(pub))
-		for (h256 const& h: face()->checkWatch(_id))
-		{
-			auto e = face()->envelope(h);
-			shh::Message m;
-			if (pub)
-			{
-				cwarn << "Silently decrypting message from identity" << pub.abridged() << ": User validation hook goes here.";
-				m = e.open(face()->fullTopic(_id), m_ids[pub]);
-			}
-			else
-				m = e.open(face()->fullTopic(_id));
-			if (!m)
-				continue;
-			ret.append(toJson(h, e, m));
-		}
-	
+	auto r = client()->getWork();
+	ret.append(toJS(r.headerHash));
+	ret.append(toJS(r.seedHash));
+	ret.append(toJS(r.boundary));
 	return ret;
 }
 
-Json::Value WebThreeStubServerBase::shh_getMessages(int _id)
+bool WebThreeStubServerBase::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)
 {
-	Json::Value ret(Json::arrayValue);
-	auto pub = m_shhWatches[_id];
-	if (!pub || m_ids.count(pub))
-		for (h256 const& h: face()->watchMessages(_id))
-		{
-			auto e = face()->envelope(h);
-			shh::Message m;
-			if (pub)
-			{
-				cwarn << "Silently decrypting message from identity" << pub.abridged() << ": User validation hook goes here.";
-				m = e.open(face()->fullTopic(_id), m_ids[pub]);
-			}
-			else
-				m = e.open(face()->fullTopic(_id));
-			if (!m)
-				continue;
-			ret.append(toJson(h, e, m));
-		}
-	return ret;
+	try
+	{
+		return client()->submitWork(ProofOfWork::Solution{jsToFixed<Nonce::size>(_nonce), jsToFixed<32>(_mixHash)});
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-int WebThreeStubServerBase::shh_newFilter(Json::Value const& _json)
+string WebThreeStubServerBase::eth_register(string const& _address)
 {
-	auto w = toWatch(_json);
-	auto ret = face()->installWatch(w.first);
-	m_shhWatches.insert(make_pair(ret, w.second));
-	return ret;
+	try
+	{
+		return toJS(m_ethAccounts->addProxyAccount(jsToAddress(_address)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-bool WebThreeStubServerBase::shh_uninstallFilter(int _id)
+bool WebThreeStubServerBase::eth_unregister(string const& _accountId)
 {
-	face()->uninstallWatch(_id);
+	try
+	{
+		return m_ethAccounts->removeProxyAccount(jsToInt(_accountId));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+Json::Value WebThreeStubServerBase::eth_fetchQueuedTransactions(string const& _accountId)
+{
+	try
+	{
+		auto id = jsToInt(_accountId);
+		Json::Value ret(Json::arrayValue);
+		// TODO: throw an error on no account with given id
+		for (TransactionSkeleton const& t: m_ethAccounts->queuedTransactions(id))
+			ret.append(toJson(t));
+		m_ethAccounts->clearQueue(id);
+		return ret;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
+bool WebThreeStubServerBase::db_put(string const& _name, string const& _key, string const& _value)
+{
+	db()->put(_name, _key,_value);
 	return true;
 }
 
-std::string WebThreeStubServerBase::eth_stateAt(string const& _address, string const& _storage)
+string WebThreeStubServerBase::db_get(string const& _name, string const& _key)
 {
-	return toJS(client()->stateAt(jsToAddress(_address), jsToU256(_storage), client()->getDefault()));
+	return db()->get(_name, _key);;
 }
 
-Json::Value WebThreeStubServerBase::eth_storageAt(string const& _address)
+bool WebThreeStubServerBase::shh_post(Json::Value const& _json)
 {
-	return toJson(client()->storageAt(jsToAddress(_address)));
+	try
+	{
+		shh::Message m = toMessage(_json);
+		Secret from;
+		if (m.from() && m_shhIds.count(m.from()))
+		{
+			cwarn << "Silently signing message from identity" << m.from() << ": User validation hook goes here.";
+			// TODO: insert validification hook here.
+			from = m_shhIds[m.from()];
+		}
+
+		face()->inject(toSealed(_json, m, from));
+		return true;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-std::string WebThreeStubServerBase::eth_transact(Json::Value const& _json)
+string WebThreeStubServerBase::shh_newIdentity()
 {
-	std::string ret;
-	TransactionSkeleton t = toTransaction(_json);
-	if (!t.from)
-		t.from = m_accounts->getDefaultTransactAccount();
-	if (t.creation)
-		ret = toJS(right160(sha3(rlpList(t.from, client()->countAt(t.from)))));;
-	if (!t.gasPrice)
-		t.gasPrice = 10 * dev::eth::szabo;
-	if (!t.gas)
-		t.gas = min<u256>(client()->gasLimitRemaining(), client()->balanceAt(t.from) / t.gasPrice);
-
-	if (m_accounts->isRealAccount(t.from))
-		authenticate(t, false);
-	else if (m_accounts->isProxyAccount(t.from))
-		authenticate(t, true);
-
-	return ret;
+	KeyPair kp = KeyPair::create();
+	m_shhIds[kp.pub()] = kp.secret();
+	return toJS(kp.pub());
 }
 
-void WebThreeStubServerBase::authenticate(TransactionSkeleton const& _t, bool _toProxy)
+bool WebThreeStubServerBase::shh_hasIdentity(string const& _identity)
 {
-	if (_toProxy)
-		m_accounts->queueTransaction(_t);
-	else if (_t.to)
-		client()->transact(m_accounts->secretKey(_t.from), _t.value, _t.to, _t.data, _t.gas, _t.gasPrice);
-	else
-		client()->transact(m_accounts->secretKey(_t.from), _t.value, _t.data, _t.gas, _t.gasPrice);
+	try
+	{
+		return m_shhIds.count(jsToPublic(_identity)) > 0;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-Json::Value WebThreeStubServerBase::eth_transactionByHash(std::string const& _hash, int _i)
+
+string WebThreeStubServerBase::shh_newGroup(string const& _id, string const& _who)
 {
-	return toJson(client()->transaction(jsToFixed<32>(_hash), _i));
+	(void)_id;
+	(void)_who;
+	return "";
 }
 
-Json::Value WebThreeStubServerBase::eth_transactionByNumber(int _number, int _i)
+string WebThreeStubServerBase::shh_addToGroup(string const& _group, string const& _who)
 {
-	return toJson(client()->transaction(client()->hashFromNumber(_number), _i));
+	(void)_group;
+	(void)_who;
+	return "";
 }
 
-Json::Value WebThreeStubServerBase::eth_uncleByHash(std::string const& _hash, int _i)
+string WebThreeStubServerBase::shh_newFilter(Json::Value const& _json)
 {
-	return toJson(client()->uncle(jsToFixed<32>(_hash), _i));
+	try
+	{
+		pair<shh::Topics, Public> w = toWatch(_json);
+		auto ret = face()->installWatch(w.first);
+		m_shhWatches.insert(make_pair(ret, w.second));
+		return toJS(ret);
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-Json::Value WebThreeStubServerBase::eth_uncleByNumber(int _number, int _i)
+bool WebThreeStubServerBase::shh_uninstallFilter(string const& _filterId)
 {
-	return toJson(client()->uncle(client()->hashFromNumber(_number), _i));
+	try
+	{
+		face()->uninstallWatch(jsToInt(_filterId));
+		return true;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-bool WebThreeStubServerBase::eth_uninstallFilter(int _id)
+Json::Value WebThreeStubServerBase::shh_getFilterChanges(string const& _filterId)
 {
-	client()->uninstallWatch(_id);
-	return true;
+	try
+	{
+		Json::Value ret(Json::arrayValue);
+
+		int id = jsToInt(_filterId);
+		auto pub = m_shhWatches[id];
+		if (!pub || m_shhIds.count(pub))
+			for (h256 const& h: face()->checkWatch(id))
+			{
+				auto e = face()->envelope(h);
+				shh::Message m;
+				if (pub)
+				{
+					cwarn << "Silently decrypting message from identity" << pub << ": User validation hook goes here.";
+					m = e.open(face()->fullTopics(id), m_shhIds[pub]);
+				}
+				else
+					m = e.open(face()->fullTopics(id));
+				if (!m)
+					continue;
+				ret.append(toJson(h, e, m));
+			}
+
+		return ret;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
-void WebThreeStubServerBase::setAccounts(const std::vector<KeyPair>& _accounts)
+Json::Value WebThreeStubServerBase::shh_getMessages(string const& _filterId)
 {
-	m_accounts->setAccounts(_accounts);
+	try
+	{
+		Json::Value ret(Json::arrayValue);
+
+		int id = jsToInt(_filterId);
+		auto pub = m_shhWatches[id];
+		if (!pub || m_shhIds.count(pub))
+			for (h256 const& h: face()->watchMessages(id))
+			{
+				auto e = face()->envelope(h);
+				shh::Message m;
+				if (pub)
+				{
+					cwarn << "Silently decrypting message from identity" << pub << ": User validation hook goes here.";
+					m = e.open(face()->fullTopics(id), m_shhIds[pub]);
+				}
+				else
+					m = e.open(face()->fullTopics(id));
+				if (!m)
+					continue;
+				ret.append(toJson(h, e, m));
+			}
+		return ret;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }

@@ -1,18 +1,18 @@
 /*
-    This file is part of cpp-ethereum.
+	This file is part of cpp-ethereum.
 
-    cpp-ethereum is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-    cpp-ethereum is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-    You should have received a copy of the GNU General Public License
-    along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file Web3Server.h
  * @author Arkadiy Paronyan arkadiy@ethdev.com
@@ -25,6 +25,7 @@
 #include <map>
 #include <string>
 #include <QObject>
+#include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/WebThreeStubServerBase.h>
 
 namespace dev
@@ -38,15 +39,16 @@ class Web3Server: public QObject, public dev::WebThreeStubServerBase, public dev
 	Q_OBJECT
 
 public:
-	Web3Server(jsonrpc::AbstractServerConnector& _conn, std::vector<dev::KeyPair> const& _accounts, dev::eth::Interface* _client);
+	Web3Server(jsonrpc::AbstractServerConnector& _conn, std::shared_ptr<eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::Interface* _client);
+	virtual ~Web3Server();
 
 signals:
 	void newTransaction();
 
 protected:
-	virtual Json::Value eth_changed(int _id) override;
-	virtual std::string eth_transact(Json::Value const& _json) override;
-	virtual std::string eth_call(Json::Value const& _json) override;
+	virtual Json::Value eth_getFilterChanges(std::string const& _filterId) override;
+	virtual std::string eth_sendTransaction(Json::Value const& _json) override;
+	virtual std::string eth_call(Json::Value const& _json, std::string const& _blockNumber) override;
 
 private:
 	dev::eth::Interface* client() override { return m_client; }
@@ -60,6 +62,7 @@ private:
 private:
 	dev::eth::Interface* m_client;
 	std::map<std::string, std::string> m_db;
+	std::unique_ptr<dev::WebThreeNetworkFace> m_network;
 };
 
 }

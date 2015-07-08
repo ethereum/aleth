@@ -11,8 +11,18 @@ import "."
 Rectangle {
 	id: debugPanel
 
-	property alias transactionLog : transactionLog
-
+	property alias debugSlider: statesSlider
+	property alias solLocals: solLocals
+	property alias solStorage: solStorage
+	property alias solCallStack: solCallStack
+	property alias vmCallStack: callStack
+	property alias vmStorage: storage
+	property alias vmMemory: memoryDump
+	property alias vmCallData: callDataDump
+	signal debugExecuteLocation(string documentId, var location)
+	property string compilationErrorMessage
+	property bool assemblyMode: false
+	signal panelClosed
 	objectName: "debugPanel"
 	color: "#ededed"
 	clip: true
@@ -23,120 +33,143 @@ Rectangle {
 			forceActiveFocus();
 	}
 
+	onAssemblyModeChanged:
+	{
+		Debugger.updateMode();
+		machineStates.updateHeight();
+	}
+
+	function setTr(tr)
+	{
+		trName.text = tr.label
+	}
+
+	function displayCompilationErrorIfAny()
+	{
+		debugScrollArea.visible = false;
+		compilationErrorArea.visible = true;
+		machineStates.visible = false;
+		var errorInfo = ErrorLocationFormater.extractErrorInfo(compilationErrorMessage, false);
+		errorLocation.text = errorInfo.errorLocation;
+		errorDetail.text = errorInfo.errorDetail;
+		errorLine.text = errorInfo.line;
+	}
+
 	function update(data, giveFocus)
 	{
-		if (statusPane && codeModel.hasContract)
+		if (data === null)
+			Debugger.init(null);
+		else if (data.states.length === 0)
+			Debugger.init(null);
+		else if (codeModel.hasContract)
 		{
 			Debugger.init(data);
 			debugScrollArea.visible = true;
-			compilationErrorArea.visible = false;
 			machineStates.visible = true;
-		}
-		else
-		{
-			debugScrollArea.visible = false;
-			compilationErrorArea.visible = true;
-			machineStates.visible = false;
-			var errorInfo = ErrorLocationFormater.extractErrorInfo(statusPane.result.compilerMessage, false);
-			errorLocation.text = errorInfo.errorLocation;
-			errorDetail.text = errorInfo.errorDetail;
-			errorLine.text = errorInfo.errorLine;
 		}
 		if (giveFocus)
 			forceActiveFocus();
 	}
 
+	function setBreakpoints(bp)
+	{
+		Debugger.setBreakpoints(bp);
+	}
+
+	DebuggerPaneStyle {
+		id: dbgStyle
+	}
+
 	Connections {
 		target: clientModel
 		onDebugDataReady:  {
-			update(_debugData, true);
+			update(_debugData, false);
 		}
 	}
 
 	Connections {
 		target: codeModel
-		onCompilationComplete: update(null, false);
+		onCompilationComplete: {
+			debugPanel.compilationErrorMessage = "";
+		}
+
+		onCompilationError: {
+			debugPanel.compilationErrorMessage = _error;
+		}
 	}
 
 	Settings {
 		id: splitSettings
-		property alias transactionLogHeight: transactionLog.height
 		property alias callStackHeight: callStackRect.height
 		property alias storageHeightSettings: storageRect.height
 		property alias memoryDumpHeightSettings: memoryRect.height
 		property alias callDataHeightSettings: callDataRect.height
-		property alias transactionLogVisible: transactionLog.visible
+		property alias solCallStackHeightSettings: solStackRect.height
+		property alias solStorageHeightSettings: solStorageRect.height
+		property alias solLocalsHeightSettings: solLocalsRect.height
 	}
 
-	Rectangle
-	{
-		visible: false;
-		id: compilationErrorArea
-		width: parent.width - 20
-		height: 500
-		color: "#ededed"
-		anchors.left: parent.left
-		anchors.top: parent.top
-		anchors.margins: 10
-		ColumnLayout
-		{
-			width: parent.width
-			anchors.top: parent.top
-			spacing: 25
-			RowLayout
-			{
-				height: 100
-				ColumnLayout
-				{
-					Text {
-						color: "red"
-						id: errorLocation
-					}
-					Text {
-						color: "#4a4a4a"
-						id: errorDetail
-					}
-				}
-			}
-
-			Rectangle
-			{
-				width: parent.width - 6
-				height: 2
-				color: "#d0d0d0"
-			}
-
-			RowLayout
-			{
-				Text
-				{
-					color: "#4a4a4a"
-					id: errorLine
-				}
-			}
-		}
-	}
-
-	SplitView {
+	ColumnLayout {
 		id: debugScrollArea
 		anchors.fill: parent
-		orientation: Qt.Vertical
-		handleDelegate: Rectangle {
-			height: machineStates.sideMargin
-			color: "transparent"
+		//orientation: Qt.Vertical
+		spacing: 0
+		RowLayout
+		{
+			Layout.preferredWidth: parent.width
+			Layout.preferredHeight: 30
+			Rectangle
+			{
+				Layout.preferredWidth: parent.width
+				Layout.preferredHeight: parent.height
+				color: "transparent"
+				Text {
+					anchors.centerIn: parent
+					text: qsTr("Current Transaction")
+				}
+
+				Rectangle
+				{
+					anchors.left: parent.left
+					anchors.leftMargin: 10
+					width: 30
+					height: parent.height
+					color: "transparent"
+					anchors.verticalCenter: parent.verticalCenter
+					Image {
+						source: "qrc:/qml/img/leftarrow@2x.png"
+						width: parent.width
+						fillMode: Image.PreserveAspectFit
+						anchors.centerIn: parent
+					}
+					MouseArea
+					{
+						anchors.fill: parent
+						onClicked:
+						{
+							Debugger.init(null);
+							panelClosed()
+						}
+					}
+				}
+			}
 		}
 
-		TransactionLog {
-			id: transactionLog
-			Layout.fillWidth: true
-			Layout.minimumHeight: 60
-			height: 250
-			anchors.top: parent.top
-			anchors.left: parent.left
-			anchors.right: parent.right
-			anchors.leftMargin: machineStates.sideMargin
-			anchors.rightMargin: machineStates.sideMargin
-			anchors.topMargin: machineStates.sideMargin
+		RowLayout
+		{
+			Layout.preferredWidth: parent.width
+			Layout.preferredHeight: 30
+			Rectangle
+			{
+				Layout.preferredWidth: parent.width
+				Layout.preferredHeight: parent.height
+				color: "#2C79D3"
+				Text {
+					id: trName
+					color: "white"
+					anchors.centerIn: parent
+				}
+			}
 		}
 
 		ScrollView
@@ -146,8 +179,12 @@ Rectangle {
 			Layout.fillWidth: true
 			Layout.fillHeight: true
 			function updateHeight() {
-				statesLayout.height = buttonRow.childrenRect.height + assemblyCodeRow.childrenRect.height +
-						callStackRect.childrenRect.height + storageRect.childrenRect.height + memoryRect.childrenRect.height + callDataRect.childrenRect.height + 120;
+				var h = buttonRow.childrenRect.height;
+				if (assemblyMode)
+					h += assemblyCodeRow.childrenRect.height + callStackRect.childrenRect.height + storageRect.childrenRect.height + memoryRect.childrenRect.height + callDataRect.childrenRect.height;
+				else
+					h += solStackRect.childrenRect.height + solLocalsRect.childrenRect.height + solStorageRect.childrenRect.height;
+				statesLayout.height = h + 120;
 			}
 
 			Component.onCompleted: updateHeight();
@@ -158,7 +195,7 @@ Rectangle {
 				anchors.topMargin: 15
 				anchors.left: parent.left;
 				anchors.leftMargin: machineStates.sideMargin
-				width: debugScrollArea.width - machineStates.sideMargin * 2 - 20;
+				width: debugScrollArea.width - machineStates.sideMargin * 2 - 20
 				spacing: machineStates.sideMargin
 
 				Rectangle {
@@ -169,23 +206,33 @@ Rectangle {
 					color: "transparent"
 
 					Rectangle {
-						anchors.top: parent.top
-						anchors.bottom: parent.bottom
-						anchors.left: parent.left
+						anchors.fill: parent
 						color: "transparent"
-						width: stateListContainer.width
 						RowLayout {
-							anchors.horizontalCenter: parent.horizontalCenter
+							anchors.fill: parent
 							id: jumpButtons
 							spacing: 3
+							layoutDirection: Qt.LeftToRight
+
+							StepActionImage
+							{
+								id: runBackAction;
+								enabledStateImg: "qrc:/qml/img/jumpoutback.png"
+								disableStateImg: "qrc:/qml/img/jumpoutbackdisabled.png"
+								onClicked: Debugger.runBack()
+								width: 23
+								buttonShortcut: "Ctrl+Shift+F5"
+								buttonTooltip: qsTr("Run Back")
+								visible: false
+							}
+
 							StepActionImage
 							{
 								id: jumpOutBackAction;
 								enabledStateImg: "qrc:/qml/img/jumpoutback.png"
 								disableStateImg: "qrc:/qml/img/jumpoutbackdisabled.png"
 								onClicked: Debugger.stepOutBack()
-								width: 30
-								height: 30
+								width: 23
 								buttonShortcut: "Ctrl+Shift+F11"
 								buttonTooltip: qsTr("Step Out Back")
 							}
@@ -196,8 +243,7 @@ Rectangle {
 								enabledStateImg: "qrc:/qml/img/jumpintoback.png"
 								disableStateImg: "qrc:/qml/img/jumpintobackdisabled.png"
 								onClicked: Debugger.stepIntoBack()
-								width: 30
-								height: 30
+								width: 23
 								buttonShortcut: "Ctrl+F11"
 								buttonTooltip: qsTr("Step Into Back")
 							}
@@ -208,8 +254,7 @@ Rectangle {
 								enabledStateImg: "qrc:/qml/img/jumpoverback.png"
 								disableStateImg: "qrc:/qml/img/jumpoverbackdisabled.png"
 								onClicked: Debugger.stepOverBack()
-								width: 30
-								height: 30
+								width: 23
 								buttonShortcut: "Ctrl+F10"
 								buttonTooltip: qsTr("Step Over Back")
 							}
@@ -220,8 +265,7 @@ Rectangle {
 								enabledStateImg: "qrc:/qml/img/jumpoverforward.png"
 								disableStateImg: "qrc:/qml/img/jumpoverforwarddisabled.png"
 								onClicked: Debugger.stepOverForward()
-								width: 30
-								height: 30
+								width: 23
 								buttonShortcut: "F10"
 								buttonTooltip: qsTr("Step Over Forward")
 							}
@@ -232,8 +276,7 @@ Rectangle {
 								enabledStateImg: "qrc:/qml/img/jumpintoforward.png"
 								disableStateImg: "qrc:/qml/img/jumpintoforwarddisabled.png"
 								onClicked: Debugger.stepIntoForward()
-								width: 30
-								height: 30
+								width: 23
 								buttonShortcut: "F11"
 								buttonTooltip: qsTr("Step Into Forward")
 							}
@@ -244,40 +287,56 @@ Rectangle {
 								enabledStateImg: "qrc:/qml/img/jumpoutforward.png"
 								disableStateImg: "qrc:/qml/img/jumpoutforwarddisabled.png"
 								onClicked: Debugger.stepOutForward()
-								width: 30
-								height: 30
+								width: 45
 								buttonShortcut: "Shift+F11"
 								buttonTooltip: qsTr("Step Out Forward")
+								buttonRight: true
 							}
-						}
-					}
 
-					Rectangle {
-						anchors.top: parent.top
-						anchors.bottom: parent.bottom
-						anchors.right: parent.right
-						width: debugInfoContainer.width
-						color: "transparent"
-						Slider {
-							id: statesSlider
-							anchors.fill: parent
-							tickmarksEnabled: true
-							stepSize: 1.0
-							onValueChanged: Debugger.jumpTo(value);
-							style: SliderStyle {
-								groove: Rectangle {
-									implicitHeight: 3
-									color: "#7da4cd"
-									radius: 8
-								}
-								handle: Rectangle {
-									anchors.centerIn: parent
-									color: control.pressed ? "white" : "lightgray"
-									border.color: "gray"
-									border.width: 2
-									implicitWidth: 10
-									implicitHeight: 10
-									radius: 12
+							StepActionImage
+							{
+								id: runForwardAction
+								enabledStateImg: "qrc:/qml/img/jumpoutforward.png"
+								disableStateImg: "qrc:/qml/img/jumpoutforwarddisabled.png"
+								onClicked: Debugger.runForward()
+								width: 45
+								buttonShortcut: "Ctrl+F5"
+								buttonTooltip: qsTr("Run Forward")
+								visible: false
+								buttonRight: true
+							}
+
+							Rectangle {
+								anchors.top: parent.top
+								anchors.bottom: parent.bottom
+								anchors.right: parent.right
+								color: "transparent"
+								Layout.fillWidth: true
+								Layout.minimumWidth: parent.width * 0.2
+								Layout.alignment: Qt.AlignRight
+
+								Slider {
+									id: statesSlider
+									anchors.fill: parent
+									tickmarksEnabled: true
+									stepSize: 1.0
+									onValueChanged: Debugger.jumpTo(value);
+									style: SliderStyle {
+										groove: Rectangle {
+											implicitHeight: 3
+											color: "#7da4cd"
+											radius: 8
+										}
+										handle: Rectangle {
+											anchors.centerIn: parent
+											color: control.pressed ? "white" : "lightgray"
+											border.color: "gray"
+											border.width: 2
+											implicitWidth: 10
+											implicitHeight: 10
+											radius: 12
+										}
+									}
 								}
 							}
 						}
@@ -291,6 +350,7 @@ Rectangle {
 					height: 405
 					implicitHeight: 405
 					color: "transparent"
+					visible: assemblyMode
 
 					Rectangle
 					{
@@ -354,7 +414,7 @@ Rectangle {
 										color: "#b2b3ae"
 										text: styleData.value.split(' ')[0]
 										font.family: "monospace"
-										font.pointSize: DebuggerPaneStyle.general.basicFontSize
+										font.pointSize: dbgStyle.general.basicFontSize
 										wrapMode: Text.NoWrap
 										id: id
 									}
@@ -364,7 +424,7 @@ Rectangle {
 										color: styleData.selected ? "white" : "black"
 										font.family: "monospace"
 										text: styleData.value.replace(styleData.value.split(' ')[0], '')
-										font.pointSize: DebuggerPaneStyle.general.basicFontSize
+										font.pointSize: dbgStyle.general.basicFontSize
 									}
 								}
 							}
@@ -377,7 +437,7 @@ Rectangle {
 						anchors.top : parent.top
 						anchors.bottom: parent.bottom
 						anchors.right: parent.right
-						height: parent.height //- 2 * stateListContainer.border.width
+						height: parent.height
 						color: "transparent"
 						ColumnLayout
 						{
@@ -417,7 +477,6 @@ Rectangle {
 								title : qsTr("Stack")
 								itemDelegate: Item {
 									id: renderedItem
-									//height: 25
 									width: parent.width
 									RowLayout
 									{
@@ -437,7 +496,7 @@ Rectangle {
 												font.family: "monospace"
 												color: "#4a4a4a"
 												text: styleData.row;
-												font.pointSize: DebuggerPaneStyle.general.basicFontSize
+												font.pointSize: dbgStyle.general.basicFontSize
 											}
 										}
 
@@ -455,18 +514,18 @@ Rectangle {
 												anchors.verticalCenter: parent.verticalCenter
 												color: "#4a4a4a"
 												text: styleData.value
-												font.pointSize: DebuggerPaneStyle.general.basicFontSize
+												font.pointSize: dbgStyle.general.basicFontSize
 											}
 										}
 									}
 
 									Rectangle {
-									   id: separator
-									   width: parent.width;
-									   height: 1;
-									   color: "#cccccc"
-									   anchors.bottom: parent.bottom
-									 }
+										id: separator
+										width: parent.width;
+										height: 1;
+										color: "#cccccc"
+										anchors.bottom: parent.bottom
+									}
 								}
 							}
 						}
@@ -482,80 +541,60 @@ Rectangle {
 
 					Rectangle
 					{
+						id: solStackRect;
+						color: "transparent"
+						Layout.minimumHeight: 25
+						Layout.maximumHeight: 800
+						onHeightChanged: machineStates.updateHeight();
+						visible: !assemblyMode
+						CallStack {
+							anchors.fill: parent
+							id: solCallStack
+						}
+					}
+
+					Rectangle
+					{
+						id: solLocalsRect;
+						color: "transparent"
+						Layout.minimumHeight: 25
+						Layout.maximumHeight: 800
+						onHeightChanged: machineStates.updateHeight();
+						visible: !assemblyMode
+						VariablesView {
+							title : qsTr("Locals")
+							anchors.fill: parent
+							id: solLocals
+						}
+					}
+
+					Rectangle
+					{
+						id: solStorageRect;
+						color: "transparent"
+						Layout.minimumHeight: 25
+						Layout.maximumHeight: 800
+						onHeightChanged: machineStates.updateHeight();
+						visible: !assemblyMode
+						VariablesView {
+							title : qsTr("Members")
+							anchors.fill: parent
+							id: solStorage
+						}
+					}
+
+					Rectangle
+					{
 						id: callStackRect;
 						color: "transparent"
 						Layout.minimumHeight: 25
 						Layout.maximumHeight: 800
 						onHeightChanged: machineStates.updateHeight();
-						DebugInfoList
-						{
-							id: callStack
-							collapsible: true
+						visible: assemblyMode
+						CallStack {
 							anchors.fill: parent
-							title : qsTr("Call Stack")
-							enableSelection: true
+							id: callStack
 							onRowActivated: Debugger.displayFrame(index);
-							itemDelegate:
-								Item {
-								anchors.fill: parent
-
-								Rectangle {
-									anchors.fill: parent
-									color: "#4A90E2"
-									visible: styleData.selected;
-								}
-
-								RowLayout
-								{
-									id: row
-									anchors.fill: parent
-									Rectangle
-									{
-										color: "#f7f7f7"
-										Layout.fillWidth: true
-										Layout.minimumWidth: 30
-										Layout.maximumWidth: 30
-										Text {
-											anchors.verticalCenter: parent.verticalCenter
-											anchors.left: parent.left
-											font.family: "monospace"
-											anchors.leftMargin: 5
-											color: "#4a4a4a"
-											text: styleData.row;
-											font.pointSize: DebuggerPaneStyle.general.basicFontSize
-											width: parent.width - 5
-											elide: Text.ElideRight
-										}
-									}
-									Rectangle
-									{
-										color: "transparent"
-										Layout.fillWidth: true
-										Layout.minimumWidth: parent.width - 30
-										Layout.maximumWidth: parent.width - 30
-										Text {
-											anchors.leftMargin: 5
-											width: parent.width - 5
-											wrapMode: Text.NoWrap
-											anchors.left: parent.left
-											font.family: "monospace"
-											anchors.verticalCenter: parent.verticalCenter
-											color: "#4a4a4a"
-											text: styleData.value;
-											elide: Text.ElideRight
-											font.pointSize: DebuggerPaneStyle.general.basicFontSize
-										}
-									}
-								}
-
-								Rectangle {
-									anchors.top: row.bottom
-									width: parent.width;
-									height: 1;
-									color: "#cccccc"
-									anchors.bottom: parent.bottom
-								}
-							}
 						}
 					}
 
@@ -567,68 +606,10 @@ Rectangle {
 						Layout.minimumHeight: 25
 						Layout.maximumHeight: 800
 						onHeightChanged: machineStates.updateHeight();
-						DebugInfoList
-						{
-							id: storage
+						visible: assemblyMode
+						StorageView {
 							anchors.fill: parent
-							collapsible: true
-							title : qsTr("Storage")
-							itemDelegate:
-								Item {
-								anchors.fill: parent
-								RowLayout
-								{
-									id: row
-									anchors.fill: parent
-									Rectangle
-									{
-										color: "#f7f7f7"
-										Layout.fillWidth: true
-										Layout.minimumWidth: parent.width / 2
-										Layout.maximumWidth: parent.width / 2
-										Text {
-											anchors.verticalCenter: parent.verticalCenter
-											anchors.left: parent.left
-											font.family: "monospace"
-											anchors.leftMargin: 5
-											color: "#4a4a4a"
-											text: styleData.value.split('\t')[0];
-											font.pointSize: DebuggerPaneStyle.general.basicFontSize
-											width: parent.width - 5
-											elide: Text.ElideRight
-										}
-									}
-									Rectangle
-									{
-										color: "transparent"
-										Layout.fillWidth: true
-										Layout.minimumWidth: parent.width / 2
-										Layout.maximumWidth: parent.width / 2
-										Text {
-											maximumLineCount: 1
-											clip: true
-											anchors.leftMargin: 5
-											width: parent.width - 5
-											wrapMode: Text.WrapAnywhere
-											anchors.left: parent.left
-											font.family: "monospace"
-											anchors.verticalCenter: parent.verticalCenter
-											color: "#4a4a4a"
-											text: styleData.value.split('\t')[1];
-											elide: Text.ElideRight
-											font.pointSize: DebuggerPaneStyle.general.basicFontSize
-										}
-									}
-								}
-
-								Rectangle {
-									anchors.top: row.bottom
-									width: parent.width;
-									height: 1;
-									color: "#cccccc"
-									anchors.bottom: parent.bottom
-								}
-							}
+							id: storage
 						}
 					}
 
@@ -640,6 +621,7 @@ Rectangle {
 						Layout.minimumHeight: 25
 						Layout.maximumHeight: 800
 						onHeightChanged: machineStates.updateHeight();
+						visible: assemblyMode
 						DebugInfoList {
 							id: memoryDump
 							anchors.fill: parent
@@ -662,6 +644,7 @@ Rectangle {
 						Layout.minimumHeight: 25
 						Layout.maximumHeight: 800
 						onHeightChanged: machineStates.updateHeight();
+						visible: assemblyMode
 						DebugInfoList {
 							id: callDataDump
 							anchors.fill: parent

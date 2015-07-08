@@ -33,17 +33,20 @@ namespace p2p
 
 bool Peer::shouldReconnect() const
 {
-	return chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
+	return id && endpoint && chrono::system_clock::now() > m_lastAttempted + chrono::seconds(fallbackSeconds());
 }
 	
 unsigned Peer::fallbackSeconds() const
 {
+	if (required)
+		return 5;
 	switch (m_lastDisconnect)
 	{
 	case BadProtocol:
 		return 30 * (m_failedAttempts + 1);
 	case UselessPeer:
 	case TooManyPeers:
+		return 25 * (m_failedAttempts + 1);
 	case ClientQuit:
 		return 15 * (m_failedAttempts + 1);
 	case NoDisconnect:

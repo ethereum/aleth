@@ -37,22 +37,18 @@ void CompilerContext::addMagicGlobal(MagicVariableDeclaration const& _declaratio
 	m_magicGlobals.insert(&_declaration);
 }
 
-void CompilerContext::addStateVariable(VariableDeclaration const& _declaration)
+void CompilerContext::addStateVariable(
+	VariableDeclaration const& _declaration,
+	u256 const& _storageOffset,
+	unsigned _byteOffset
+)
 {
-	m_stateVariables[&_declaration] = m_stateVariablesSize;
-	bigint newSize = bigint(m_stateVariablesSize) + _declaration.getType()->getStorageSize();
-	if (newSize >= bigint(1) << 256)
-		BOOST_THROW_EXCEPTION(TypeError()
-			<< errinfo_comment("State variable does not fit in storage.")
-			<< errinfo_sourceLocation(_declaration.getLocation()));
-	m_stateVariablesSize = u256(newSize);
+	m_stateVariables[&_declaration] = make_pair(_storageOffset, _byteOffset);
 }
 
 void CompilerContext::startFunction(Declaration const& _function)
 {
 	m_functionsWithCode.insert(&_function);
-	m_localVariables.clear();
-	m_asm.setDeposit(0);
 	*this << getFunctionEntryLabel(_function);
 }
 
@@ -63,13 +59,10 @@ void CompilerContext::addVariable(VariableDeclaration const& _declaration,
 	m_localVariables[&_declaration] = unsigned(m_asm.deposit()) - _offsetToCurrent;
 }
 
-void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
+void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 {
-	addVariable(_declaration);
-
-	int const size = _declaration.getType()->getSizeOnStack();
-	for (int i = 0; i < size; ++i)
-		*this << u256(0);
+	solAssert(!!m_localVariables.count(&_declaration), "");
+	m_localVariables.erase(&_declaration);
 }
 
 bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _contract) const
@@ -97,29 +90,32 @@ eth::AssemblyItem CompilerContext::getFunctionEntryLabel(Declaration const& _dec
 		return res->second.tag();
 }
 
+eth::AssemblyItem CompilerContext::getFunctionEntryLabelIfExists(Declaration const& _declaration) const
+{
+	auto res = m_functionEntryLabels.find(&_declaration);
+	return res == m_functionEntryLabels.end() ? eth::AssemblyItem(eth::UndefinedItem) : res->second.tag();
+}
+
 eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefinition const& _function)
 {
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	for (ContractDefinition const* contract: m_inheritanceHierarchy)
-		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
-			if (!function->isConstructor() && function->getName() == _function.getName())
-				return getFunctionEntryLabel(*function);
-	solAssert(false, "Virtual function " + _function.getName() + " not found.");
-	return m_asm.newTag(); // not reached
+	return getVirtualFunctionEntryLabel(_function, m_inheritanceHierarchy.begin());
 }
 
-eth::AssemblyItem CompilerContext::getSuperFunctionEntryLabel(string const& _name, ContractDefinition const& _base)
+eth::AssemblyItem CompilerContext::getSuperFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base)
 {
-	// search for first contract after _base
 	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
-	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_base);
-	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
-	for (++it; it != m_inheritanceHierarchy.end(); ++it)
-		for (ASTPointer<FunctionDefinition> const& function: (*it)->getDefinedFunctions())
-			if (!function->isConstructor() && function->getName() == _name)
-				return getFunctionEntryLabel(*function);
-	solAssert(false, "Super function " + _name + " not found.");
-	return m_asm.newTag(); // not reached
+	return getVirtualFunctionEntryLabel(_function, getSuperContract(_base));
+}
+
+FunctionDefinition const* CompilerContext::getNextConstructor(ContractDefinition const& _contract) const
+{
+	vector<ContractDefinition const*>::const_iterator it = getSuperContract(_contract);
+	for (; it != m_inheritanceHierarchy.end(); ++it)
+		if ((*it)->getConstructor())
+			return (*it)->getConstructor();
+
+	return nullptr;
 }
 
 set<Declaration const*> CompilerContext::getFunctionsWithoutCode()
@@ -128,7 +124,7 @@ set<Declaration const*> CompilerContext::getFunctionsWithoutCode()
 	for (auto const& it: m_functionEntryLabels)
 		if (m_functionsWithCode.count(it.first) == 0)
 			functions.insert(it.first);
-	return move(functions);
+	return functions;
 }
 
 ModifierDefinition const& CompilerContext::getFunctionModifier(string const& _name) const
@@ -159,11 +155,59 @@ unsigned CompilerContext::currentToBaseStackOffset(unsigned _offset) const
 	return m_asm.deposit() - _offset - 1;
 }
 
-u256 CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
+pair<u256, unsigned> CompilerContext::getStorageLocationOfVariable(const Declaration& _declaration) const
 {
 	auto it = m_stateVariables.find(&_declaration);
 	solAssert(it != m_stateVariables.end(), "Variable not found in storage.");
 	return it->second;
+}
+
+CompilerContext& CompilerContext::appendJump(eth::AssemblyItem::JumpType _jumpType)
+{
+	eth::AssemblyItem item(eth::Instruction::JUMP);
+	item.setJumpType(_jumpType);
+	return *this << item;
+}
+
+void CompilerContext::resetVisitedNodes(ASTNode const* _node)
+{
+	stack<ASTNode const*> newStack;
+	newStack.push(_node);
+	std::swap(m_visitedNodes, newStack);
+	updateSourceLocation();
+}
+
+eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(
+	FunctionDefinition const& _function,
+	vector<ContractDefinition const*>::const_iterator _searchStart
+)
+{
+	string name = _function.getName();
+	FunctionType functionType(_function);
+	auto it = _searchStart;
+	for (; it != m_inheritanceHierarchy.end(); ++it)
+		for (ASTPointer<FunctionDefinition> const& function: (*it)->getDefinedFunctions())
+			if (
+				function->getName() == name &&
+				!function->isConstructor() &&
+				FunctionType(*function).hasEqualArgumentTypes(functionType)
+			)
+				return getFunctionEntryLabel(*function);
+	solAssert(false, "Super function " + name + " not found.");
+	return m_asm.newTag(); // not reached
+}
+
+vector<ContractDefinition const*>::const_iterator CompilerContext::getSuperContract(ContractDefinition const& _contract) const
+{
+	solAssert(!m_inheritanceHierarchy.empty(), "No inheritance hierarchy set.");
+	auto it = find(m_inheritanceHierarchy.begin(), m_inheritanceHierarchy.end(), &_contract);
+	solAssert(it != m_inheritanceHierarchy.end(), "Base not found in inheritance hierarchy.");
+	return ++it;
+}
+
+void CompilerContext::updateSourceLocation()
+{
+	m_asm.setSourceLocation(m_visitedNodes.empty() ? SourceLocation() : m_visitedNodes.top()->getLocation());
 }
 
 }

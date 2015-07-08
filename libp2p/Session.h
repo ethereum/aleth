@@ -16,6 +16,7 @@
 */
 /** @file Session.h
  * @author Gav Wood <i@gavwood.com>
+ * @author Alex Leverington <nessence@gmail.com>
  * @date 2014
  */
 
@@ -27,10 +28,12 @@
 #include <set>
 #include <memory>
 #include <utility>
+
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
-#include <libdevcore/RangeMask.h>
 #include <libdevcore/Guards.h>
+#include "RLPXFrameCoder.h"
+#include "RLPXSocket.h"
 #include "Common.h"
 
 namespace dev
@@ -40,6 +43,7 @@ namespace p2p
 {
 
 class Peer;
+class ReputationManager;
 
 /**
  * @brief The Session class
@@ -51,7 +55,7 @@ class Session: public std::enable_shared_from_this<Session>
 	friend class HostCapabilityFace;
 
 public:
-	Session(Host* _server, bi::tcp::socket _socket, std::shared_ptr<Peer> const& _n);
+	Session(Host* _server, RLPXFrameCoder* _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~Session();
 
 	void start();
@@ -59,60 +63,70 @@ public:
 
 	void ping();
 
-	bool isConnected() const { return m_socket.is_open(); }
+	bool isConnected() const { return m_socket->ref().is_open(); }
 
 	NodeId id() const;
-	unsigned socketId() const { return m_socket.native_handle(); }
+	unsigned socketId() const { Guard l(x_info); return m_info.socketId; }
 
 	template <class PeerCap>
 	std::shared_ptr<PeerCap> cap() const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), PeerCap::version()))); } catch (...) { return nullptr; } }
+	template <class PeerCap>
+	std::shared_ptr<PeerCap> cap(u256 const& _version) const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), _version))); } catch (...) { return nullptr; } }
 
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
-	static RLPStream& prep(RLPStream& _s);
 	void sealAndSend(RLPStream& _s);
-	void send(bytes&& _msg);
-	void send(bytesConstRef _msg);
 
+	ReputationManager& repMan() const;
 	int rating() const;
-	void addRating(unsigned _r);
+	void addRating(int _r);
 
-	void addNote(std::string const& _k, std::string const& _v) { m_info.notes[_k] = _v; }
+	void addNote(std::string const& _k, std::string const& _v) { Guard l(x_info); m_info.notes[_k] = _v; }
 
-	PeerSessionInfo const& info() const { return m_info; }
+	PeerSessionInfo info() const { Guard l(x_info); return m_info; }
 
 	void ensureNodesRequested();
 	void serviceNodesRequest();
 
 private:
+	void send(bytes&& _msg);
+
 	/// Drop the connection for the reason @a _r.
 	void drop(DisconnectReason _r);
 
 	/// Perform a read on the socket.
 	void doRead();
+	
+	/// Check error code after reading and drop peer if error code.
+	bool checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length);
 
 	/// Perform a single round of the write operation. This could end up calling itself asynchronously.
 	void write();
 
-	/// Interpret an incoming message.
-	bool interpret(RLP const& _r);
+	/// Deliver RLPX packet to Session or Capability for interpretation.
+	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
 
+	/// Interpret an incoming Session packet.
+	bool interpret(PacketType _t, RLP const& _r);
+	
 	/// @returns true iff the _msg forms a valid message for sending or receiving on the network.
 	static bool checkPacket(bytesConstRef _msg);
 
 	Host* m_server;							///< The host that owns us. Never null.
 
-	mutable bi::tcp::socket m_socket;		///< Socket for the peer's connection. Mutable to ask for native_handle().
+	RLPXFrameCoder* m_io;						///< Transport over which packets are sent.
+	std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
 	Mutex x_writeQueue;						///< Mutex for the write queue.
 	std::deque<bytes> m_writeQueue;			///< The write queue.
-	std::array<byte, 65536> m_data;			///< Buffer for ingress packet data.
+	std::array<byte, 16777216> m_data;			///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
 
 	unsigned m_protocolVersion = 0;			///< The protocol version of the peer.
 	std::shared_ptr<Peer> m_peer;			///< The Peer object.
 	bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 
+	mutable Mutex x_info;
 	PeerSessionInfo m_info;						///< Dynamic information about this peer.
-	
+
 	bool m_theyRequestedNodes = false;		///< Has the peer requested nodes from us without receiveing an answer from us?
 	bool m_weRequestedNodes = false;		///< Have we requested nodes from the peer and not received an answer yet?
 

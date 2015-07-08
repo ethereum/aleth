@@ -1,50 +1,53 @@
 {
-  "name": "ethereum.js",
+  "name": "web3",
   "namespace": "ethereum",
-  "version": "0.0.15",
-  "description": "Ethereum Compatible JavaScript API",
+  "version": "0.7.1",
+  "description": "Ethereum JavaScript API, middleware to talk to a ethereum node over RPC",
   "main": "./index.js",
   "directories": {
     "lib": "./lib"
   },
   "dependencies": {
-    "bignumber.js": ">=2.0.0",
-    "ws": "*",
+    "bignumber.js": "debris/bignumber.js#master",
+    "crypto-js": "^3.1.4",
     "xmlhttprequest": "*"
   },
+  "browser": {
+    "xmlhttprequest": "./lib/utils/browser-xhr.js"
+  },
   "devDependencies": {
-    "bower": ">=1.3.0",
-    "browserify": ">=6.0",
+    "bower": ">=1.4.1",
+    "browserify": ">=10.0",
+    "chai": "^3.0.0",
     "coveralls": "^2.11.2",
-    "del": ">=0.1.1",
-    "envify": "^3.0.0",
-    "exorcist": "^0.1.6",
-    "gulp": ">=3.4.0",
+    "del": ">=1.2.0",
+    "exorcist": "^0.4.0",
+    "gulp": ">=3.9.0",
     "gulp-jshint": ">=1.5.0",
     "gulp-rename": ">=1.2.0",
+    "gulp-replace": "^0.5.3",
     "gulp-streamify": "0.0.5",
-    "gulp-uglify": ">=1.0.0",
+    "gulp-uglify": ">=1.2.0",
     "istanbul": "^0.3.5",
     "jshint": ">=2.5.0",
     "mocha": ">=2.1.0",
-    "mocha-lcov-reporter": "0.0.1",
-    "unreachable-branch-transform": "^0.1.0",
-    "vinyl-source-stream": "^1.0.0"
+    "sandboxed-module": "^2.0.2",
+    "vinyl-source-stream": "^1.1.0"
   },
   "scripts": {
     "build": "gulp",
     "watch": "gulp watch",
-    "lint": "gulp lint",
+    "lint": "jshint *.js lib",
     "test": "mocha",
     "test-coveralls": "istanbul cover _mocha -- -R spec && cat coverage/lcov.info | coveralls --verbose"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ethereum/ethereum.js.git"
+    "url": "https://github.com/ethereum/web3.js.git"
   },
-  "homepage": "https://github.com/ethereum/ethereum.js",
+  "homepage": "https://github.com/ethereum/web3.js",
   "bugs": {
-    "url": "https://github.com/ethereum/ethereum.js/issues"
+    "url": "https://github.com/ethereum/web3.js/issues"
   },
   "keywords": [
     "ethereum",
@@ -67,6 +70,16 @@
       "name": "Marian Oancea",
       "email": "marian@ethdev.com",
       "url": "https://github.com/cubedro"
+    },
+    {
+      "name": "Fabian Vogelsteller",
+      "email": "fabian@frozeman.de",
+      "homepage": "http://frozeman.de"
+    },
+    {
+      "name": "Gav Wood",
+      "email": "g@ethdev.com",
+      "homepage": "http://gavwood.com"
     }
   ],
   "license": "LGPL-3.0"

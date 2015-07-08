@@ -1,4 +1,3 @@
-pragma Singleton
 import QtQuick 2.0
 
 QtObject {
@@ -25,7 +24,7 @@ QtObject {
 		property string sectionColor: "#808080"
 		property string selectedColor: "white"
 		property string highlightColor: "#4a90e2"
-		property int height: 25
+		property int height: 35
 		property int fileNameHeight: 30
 		property int fontSize: absoluteSize(2)// 13
 		property int sectionFontSize: absoluteSize(2)// 13

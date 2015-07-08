@@ -19,10 +19,19 @@
  * @date 2015
  * Ethereum IDE client.
  */
-Qt.include("QEtherHelper.js")
 
 var htmlTemplate = "<html>\n<head>\n<script>\n</script>\n</head>\n<body>\n<script>\n</script>\n</body>\n</html>";
 var contractTemplate = "contract Contract {\n}\n";
+
+function saveCurrentDocument()
+{
+	var doc = projectListModel.get(getDocumentIndex(currentDocumentId));
+	documentSaving(doc);
+	if (doc.isContract)
+		contractSaved(currentDocumentId);
+	else
+		documentSaved(currentDocumentId);
+}
 
 function saveAll() {
 	saveProject();
@@ -32,16 +41,34 @@ function createProject() {
 	newProjectDialog.open();
 }
 
-function closeProject() {
-	if (!isEmpty) {
-		if (haveUnsavedChanges)
-			saveMessageDialog.open();
-		else
-			doCloseProject();
+function closeProject(callBack) {
+	if (!isEmpty && unsavedFiles.length > 0)
+	{
+		saveMessageDialog.callBack = callBack;
+		saveMessageDialog.open();
+	}
+	else
+	{
+		projectIsClosing = true;
+		doCloseProject();
+		if (callBack)
+			callBack();
 	}
 }
 
 function saveProject() {
+	if (!isEmpty) {
+		projectSaving();
+		var projectData = saveProjectFile();
+		if (projectData !== null)
+		{
+			projectSaved();
+		}
+	}
+}
+
+function saveProjectFile()
+{
 	if (!isEmpty) {
 		var projectData = {
 			files: [],
@@ -50,61 +77,77 @@ function saveProject() {
 			applicationUrlEth: deploymentDialog.applicationUrlEth,
 			applicationUrlHttp: deploymentDialog.applicationUrlHttp,
 			packageHash: deploymentDialog.packageHash,
-			packageBase64: deploymentDialog.packageBase64
+			packageBase64: deploymentDialog.packageBase64,
+			deploymentDir: projectModel.deploymentDir
 		};
 		for (var i = 0; i < projectListModel.count; i++)
-			projectData.files.push(projectListModel.get(i).fileName)
-		projectSaving(projectData);
+			projectData.files.push({
+									   title: projectListModel.get(i).name,
+									   fileName: projectListModel.get(i).fileName,
+								   });
+
+		projectFileSaving(projectData);
 		var json = JSON.stringify(projectData, null, "\t");
 		var projectFile = projectPath + projectFileName;
 		fileIo.writeFile(projectFile, json);
-		projectSaved();
+		projectFileSaved(projectData);
+		return projectData;
 	}
+	return null;
 }
 
 function loadProject(path) {
-	closeProject();
-	console.log("loading project at " + path);
-	var projectFile = path + projectFileName;
-	var json = fileIo.readFile(projectFile);
-	var projectData = JSON.parse(json);
-	if (projectData.packageHash)
-		deploymentDialog.packageHash =  projectData.packageHash
-	if (projectData.packageBase64)
-		deploymentDialog.packageBase64 =  projectData.packageBase64
-	if (projectData.applicationUrlEth)
-		deploymentDialog.applicationUrlEth = projectData.applicationUrlEth
-	if (projectData.applicationUrlHttp)
-		deploymentDialog.applicationUrlHttp = projectData.applicationUrlHttp
-	if (!projectData.title) {
-		var parts = path.split("/");
-		projectData.title = parts[parts.length - 2];
-	}
-	deploymentAddresses = projectData.deploymentAddresses ? projectData.deploymentAddresses : [];
-	projectTitle = projectData.title;
-	projectPath = path;
-	if (!projectData.files)
-		projectData.files = [];
+	closeProject(function() {
+		console.log("Loading project at " + path);
+		var projectFile = path + projectFileName;
+		var json = fileIo.readFile(projectFile);
+		if (!json)
+			return;
+		var projectData = JSON.parse(json);
+		if (projectData.deploymentDir)
+			projectModel.deploymentDir = projectData.deploymentDir
+		if (projectData.packageHash)
+			deploymentDialog.packageHash =  projectData.packageHash
+		if (projectData.packageBase64)
+			deploymentDialog.packageBase64 =  projectData.packageBase64
+		if (projectData.applicationUrlEth)
+			deploymentDialog.applicationUrlEth = projectData.applicationUrlEth
+		if (projectData.applicationUrlHttp)
+			deploymentDialog.applicationUrlHttp = projectData.applicationUrlHttp
+		if (!projectData.title) {
+			var parts = path.split("/");
+			projectData.title = parts[parts.length - 2];
+		}
+		deploymentAddresses = projectData.deploymentAddresses ? projectData.deploymentAddresses : [];
+		projectTitle = projectData.title;
+		projectPath = path;
+		if (!projectData.files)
+			projectData.files = [];
 
-	for(var i = 0; i < projectData.files.length; i++) {
-		addFile(projectData.files[i]);
-	}
-	projectSettings.lastProjectPath = path;
-	projectLoading(projectData);
-	projectLoaded()
+		for(var i = 0; i < projectData.files.length; i++) {
+			var entry = projectData.files[i];
+			if (typeof(entry) === "string")
+				addFile(entry); //TODO: remove old project file support
+			else
+				addFile(entry.fileName, entry.title);
+		}
+		if (mainApplication.trackLastProject)
+			projectSettings.lastProjectPath = path;
+		projectLoading(projectData);
+		projectLoaded()
 
-	//TODO: move this to codemodel
-	var contractSources = {};
-	for (var d = 0; d < listModel.count; d++) {
-		var doc = listModel.get(d);
-		if (doc.isContract)
-			contractSources[doc.documentId] = fileIo.readFile(doc.path);
-	}
-	codeModel.reset(contractSources);
-
+		//TODO: move this to codemodel
+		var contractSources = {};
+		for (var d = 0; d < listModel.count; d++) {
+			var doc = listModel.get(d);
+			if (doc.isContract)
+				contractSources[doc.documentId] = fileIo.readFile(doc.path);
+		}
+		codeModel.reset(contractSources);
+	});
 }
 
-function addFile(fileName) {
+function addFile(fileName, title) {
 	var p = projectPath + fileName;
 	var extension = fileName.substring(fileName.lastIndexOf("."), fileName.length);
 	var isContract = extension === ".sol";
@@ -118,16 +161,17 @@ function addFile(fileName) {
 		contract: false,
 		path: p,
 		fileName: fileName,
-		name: fileName,
-		documentId: fileName,
-		syntaxMode: syntaxMode,
-		isText: isContract || isHtml || isCss || isJs,
-		isContract: isContract,
-		isHtml: isHtml,
-		groupName: groupName
+		name: title !== undefined ? title : fileName,
+									documentId: fileName,
+									syntaxMode: syntaxMode,
+									isText: isContract || isHtml || isCss || isJs,
+									isContract: isContract,
+									isHtml: isHtml,
+									groupName: groupName
 	};
 
 	projectListModel.append(docData);
+	fileIo.watchFileChanged(p);
 	return docData.documentId;
 }
 
@@ -136,8 +180,19 @@ function getDocumentIndex(documentId)
 	for (var i = 0; i < projectListModel.count; i++)
 		if (projectListModel.get(i).documentId === documentId)
 			return i;
-	console.error("Cant find document " + documentId);
+	console.error("Can't find document " + documentId);
 	return -1;
+}
+
+function getDocumentByPath(_path)
+{
+	for (var i = 0; i < projectListModel.count; i++)
+	{
+		var doc = projectListModel.get(i);
+		if (doc.path.indexOf(_path) !== -1)
+			return doc.documentId;
+	}
+	return null;
 }
 
 function openDocument(documentId) {
@@ -184,27 +239,30 @@ function doCloseProject() {
 }
 
 function doCreateProject(title, path) {
-	closeProject();
-	console.log("creating project " + title + " at " + path);
-	if (path[path.length - 1] !== "/")
-		path += "/";
-	var dirPath = path + title + "/";
-	fileIo.makeDir(dirPath);
-	var projectFile = dirPath + projectFileName;
+	closeProject(function() {
+		console.log("Creating project " + title + " at " + path);
+		if (path[path.length - 1] !== "/")
+			path += "/";
+		var dirPath = path + title + "/";
+		fileIo.makeDir(dirPath);
+		var projectFile = dirPath + projectFileName;
 
-	var indexFile = "index.html";
-	var contractsFile = "contract.sol";
-	var projectData = {
-		title: title,
-		files: [ contractsFile, indexFile ]
-	};
-	//TODO: copy from template
-	fileIo.writeFile(dirPath + indexFile, htmlTemplate);
-	fileIo.writeFile(dirPath + contractsFile, contractTemplate);
-	newProject(projectData);
-	var json = JSON.stringify(projectData, null, "\t");
-	fileIo.writeFile(projectFile, json);
-	loadProject(dirPath);
+		var indexFile = "index.html";
+		var contractsFile = "contract.sol";
+		var projectData = {
+			title: title,
+			files: [ contractsFile, indexFile ]
+		};
+		//TODO: copy from template
+		if (!fileIo.fileExists(dirPath + indexFile))
+			fileIo.writeFile(dirPath + indexFile, htmlTemplate);
+		if (!fileIo.fileExists(dirPath + contractsFile))
+			fileIo.writeFile(dirPath + contractsFile, contractTemplate);
+		newProject(projectData);
+		var json = JSON.stringify(projectData, null, "\t");
+		fileIo.writeFile(projectFile, json);
+		loadProject(dirPath);
+	});
 }
 
 function doAddExistingFiles(files) {
@@ -215,6 +273,7 @@ function doAddExistingFiles(files) {
 		if (sourcePath !== destPath)
 			fileIo.copyFile(sourcePath, destPath);
 		var id = addFile(sourceFileName);
+		saveProjectFile();
 		documentAdded(id)
 	}
 }
@@ -223,28 +282,46 @@ function renameDocument(documentId, newName) {
 	var i = getDocumentIndex(documentId);
 	var document = projectListModel.get(i);
 	if (!document.isContract) {
+		fileIo.stopWatching(document.path);
 		var sourcePath = document.path;
 		var destPath = projectPath + newName;
 		fileIo.moveFile(sourcePath, destPath);
 		document.path = destPath;
 		document.name = newName;
+		document.fileName = newName;
 		projectListModel.set(i, document);
+		fileIo.watchFileChanged(destPath);
+		saveProjectFile();
 		documentUpdated(documentId);
 	}
 }
 
 function getDocument(documentId) {
 	var i = getDocumentIndex(documentId);
-	return projectListModel.get(i);
+	if (i === -1)
+		return undefined;
+	else
+		return projectListModel.get(i);
+}
+
+function getDocumentIdByName(fileName)
+{
+	for (var i = 0; i < projectListModel.count; i++)
+		if (projectListModel.get(i).fileName === fileName)
+			return projectListModel.get(i).documentId;
+	return null;
 }
 
 function removeDocument(documentId) {
 	var i = getDocumentIndex(documentId);
 	var document = projectListModel.get(i);
-	if (!document.isContract) {
-		projectListModel.remove(i);
-		documentRemoved(documentId);
-	}
+	fileIo.stopWatching(document.path);
+	fileIo.deleteFile(document.path);
+	if (document.isContract)
+		codeModel.unregisterContractSrc(documentId);
+	projectListModel.remove(i);
+	saveProjectFile();
+	documentRemoved(documentId);
 }
 
 function newHtmlFile() {
@@ -267,8 +344,10 @@ function newContract() {
 function createAndAddFile(name, extension, content) {
 	var fileName = generateFileName(name, extension);
 	var filePath = projectPath + fileName;
-	fileIo.writeFile(filePath, content);
+	if (!fileIo.fileExists(filePath))
+		fileIo.writeFile(filePath, content);
 	var id = addFile(fileName);
+	saveProjectFile();
 	documentAdded(id);
 }
 
@@ -281,309 +360,3 @@ function generateFileName(name, extension) {
 	} while (fileIo.fileExists(filePath));
 	return fileName
 }
-
-
-var jsonRpcRequestId = 1;
-function deployProject(force) {
-	saveAll(); //TODO: ask user
-	deploymentDialog.open();
-}
-
-function startDeployProject(erasePrevious)
-{
-	var date = new Date();
-	var deploymentId = date.toLocaleString(Qt.locale(), "ddMMyyHHmmsszzz");
-	if (!erasePrevious)
-	{
-		finalizeDeployment(deploymentId, projectModel.deploymentAddresses);
-		return;
-	}
-
-	var jsonRpcUrl = "http://127.0.0.1:8080";
-	console.log("Deploying " + deploymentId + " to " + jsonRpcUrl);
-	deploymentStarted();
-
-	var requests = [];
-	var requestNames = [];
-
-	for (var c in codeModel.contracts) { //TODO: order based on dependencies
-		var code = codeModel.contracts[c].codeHex;
-		requests.push({
-			jsonrpc: "2.0",
-			method: "eth_transact",
-			params: [ { "code": code } ],
-			id: jsonRpcRequestId++
-		});
-		requestNames.push(c);
-	}
-
-	var rpcRequest = JSON.stringify(requests);
-	var httpRequest = new XMLHttpRequest();
-	httpRequest.open("POST", jsonRpcUrl, true);
-	httpRequest.setRequestHeader("Content-type", "application/json");
-	httpRequest.setRequestHeader("Content-length", rpcRequest.length);
-	httpRequest.setRequestHeader("Connection", "close");
-	httpRequest.onreadystatechange = function() {
-		if (httpRequest.readyState === XMLHttpRequest.DONE) {
-			if (httpRequest.status === 200) {
-				var rpcResponse = JSON.parse(httpRequest.responseText);
-				if (rpcResponse.length === requestNames.length) {
-					var contractAddresses = {};
-					for (var r = 0; r < rpcResponse.length; r++)
-						contractAddresses[requestNames[r]] = rpcResponse[r].result;
-					finalizeDeployment(deploymentId, contractAddresses);
-				}
-			} else {
-				var errorText = qsTr("Deployment error: RPC server HTTP status ") + httpRequest.status;
-				console.log(errorText);
-				deploymentError(errorText);
-			}
-		}
-	}
-	httpRequest.send(rpcRequest);
-}
-
-function finalizeDeployment(deploymentId, addresses) {
-	deploymentStepChanged(qsTr("Packaging application ..."));
-	var deploymentDir = projectPath + deploymentId + "/";
-	fileIo.makeDir(deploymentDir);
-	for (var i = 0; i < projectListModel.count; i++) {
-		var doc = projectListModel.get(i);
-		if (doc.isContract)
-			continue;
-		if (doc.isHtml) {
-			//inject the script to access contract API
-			//TODO: use a template
-			var html = fileIo.readFile(doc.path);
-			var insertAt = html.indexOf("<head>")
-			if (insertAt < 0)
-				insertAt = 0;
-			else
-				insertAt += 6;
-			html = html.substr(0, insertAt) +
-					"<script src=\"bignumber.min.js\"></script>" +
-					"<script src=\"ethereum.js\"></script>" +
-					"<script src=\"deployment.js\"></script>" +
-					html.substr(insertAt);
-			fileIo.writeFile(deploymentDir + doc.fileName, html);
-		}
-		else
-			fileIo.copyFile(doc.path, deploymentDir + doc.fileName);
-	}
-	//write deployment js
-	var deploymentJs =
-		"// Autogenerated by Mix\n" +
-		"web3 = require(\"web3\");\n" +
-		"contracts = {};\n";
-	for (var c in codeModel.contracts)  {
-		var contractAccessor = "contracts[\"" + codeModel.contracts[c].contract.name + "\"]";
-		deploymentJs += contractAccessor + " = {\n" +
-		"\tinterface: " + codeModel.contracts[c].contractInterface + ",\n" +
-		"\taddress: \"" + addresses[c] + "\"\n" +
-		"};\n" +
-		contractAccessor + ".contract = web3.eth.contract(" + contractAccessor + ".address, " + contractAccessor + ".interface);\n";
-	}
-	fileIo.writeFile(deploymentDir + "deployment.js", deploymentJs);
-	//copy scripts
-	fileIo.copyFile("qrc:///js/bignumber.min.js", deploymentDir + "bignumber.min.js");
-	fileIo.copyFile("qrc:///js/webthree.js", deploymentDir + "ethereum.js");
-	deploymentAddresses = addresses;
-	saveProject();
-
-	var packageRet = fileIo.makePackage(deploymentDir);
-	deploymentDialog.packageHash = packageRet[0];
-	deploymentDialog.packageBase64 = packageRet[1];
-
-	var applicationUrlEth = deploymentDialog.applicationUrlEth;
-	applicationUrlEth = formatAppUrl(applicationUrlEth);
-
-	deploymentStepChanged(qsTr("Registering application on the Ethereum network ..."));
-	checkRegistration(applicationUrlEth, deploymentDialog.eth, function () {
-		deploymentComplete();
-		deployRessourcesDialog.text = qsTr("Register Web Application to finalize deployment.");
-		deployRessourcesDialog.open();
-	});
-}
-
-function rpcCall(requests, callBack)
-{
-	var jsonRpcUrl = "http://localhost:8080";
-	var rpcRequest = JSON.stringify(requests);
-	var httpRequest = new XMLHttpRequest();
-	httpRequest.open("POST", jsonRpcUrl, true);
-	httpRequest.setRequestHeader("Content-type", "application/json");
-	httpRequest.setRequestHeader("Content-length", rpcRequest.length);
-	httpRequest.setRequestHeader("Connection", "close");
-	httpRequest.onreadystatechange = function() {
-		if (httpRequest.readyState === XMLHttpRequest.DONE) {
-			if (httpRequest.status !== 200)
-			{
-				var errorText = qsTr("Deployment error: Error while registering Dapp ") + httpRequest.status;
-				console.log(errorText);
-				deploymentError(errorText);
-				return;
-			}
-			callBack(httpRequest.status, httpRequest.responseText)
-		}
-	}
-	httpRequest.send(rpcRequest);
-}
-
-
-function checkRegistration(dappUrl, addr, callBack)
-{
-	var requests = [];
-	var data  = "";
-	if (dappUrl.length > 0)
-	{
-		//checking path (register).
-		var str = createString(dappUrl[0]);
-		data  = "0x6be16bed" + str.encodeValueAsString();
-		console.log("checking if path exists (register) => " + JSON.stringify(dappUrl));
-		requests.push({
-			jsonrpc: "2.0",
-			method: "eth_call",
-			params: [ { "to": '0x' + addr, "data": data } ],
-			id: jsonRpcRequestId++
-		});
-
-		rpcCall(requests, function (httpRequest, response) {
-			var address = JSON.parse(response)[0].result.replace('0x', '');
-			if (address === "")
-			{
-				var errorTxt = qsTr("Path does not exists " + JSON.stringify(dappUrl) + " cannot continue");
-				deploymentError(errorTxt);
-				console.log(errorTxt);
-				return;
-			}
-
-			dappUrl.splice(0, 1);
-			checkRegistration(dappUrl, address, callBack);
-		});
-	}
-	else
-	{
-		var paramTitle = createString(projectModel.projectTitle);
-		requests.push({
-						  //owner()
-						  jsonrpc: "2.0",
-						  method: "eth_call",
-						  params: [ { "to": '0x' + addr, "data": "0xec7b9200" + paramTitle.encodeValueAsString() } ],
-						  id: jsonRpcRequestId++
-					  });
-
-		requests.push({
-						  //accounts
-						  jsonrpc: "2.0",
-						  method: "eth_accounts",
-						  params: null,
-						  id: jsonRpcRequestId++
-					  });
-
-		rpcCall(requests, function (httpRequest, response) {
-			requests = [];
-			var res = JSON.parse(response);
-			var currentOwner = res[0].result;
-			var noOwner = currentOwner.replace('0x', '').replace(/0/g, '') === '';
-
-			if (noOwner)
-			{
-				requests.push({
-							  //reserve()
-							  jsonrpc: "2.0",
-							  method: "eth_transact",
-							  params: [ { "to": '0x' + addr, "data": "0x1c83171b" + paramTitle.encodeValueAsString() } ],
-							  id: jsonRpcRequestId++
-						  });
-			}
-			else
-			{
-				var bOwner = false;
-				currentOwner = normalizeAddress(currentOwner);
-				for (var u in res[1].result)
-				{
-					if (normalizeAddress(res[1].result[u]) === currentOwner)
-						bOwner = true;
-				}
-
-				if (!bOwner)
-				{
-					var errorTxt = qsTr("Current user is not the owner of this path. Cannot continue")
-					deploymentError(errorTxt);
-					console.log(errorTxt);
-					return;
-				}
-			}
-			console.log("setContentHash");
-			requests.push({
-						  //setContent()
-						  jsonrpc: "2.0",
-						  method: "eth_transact",
-						  params: [ { "to": '0x' + addr, "data": "0x5d574e32" + paramTitle.encodeValueAsString() + deploymentDialog.packageHash } ],
-						  id: jsonRpcRequestId++
-					  });
-			rpcCall(requests, function (httpRequest, response) {
-				callBack();
-			});
-		});
-	}
-}
-
-function registerToUrlHint()
-{
-	deploymentStepChanged(qsTr("Registering application Resources (" + deploymentDialog.applicationUrlHttp) + ") ...");
-	var requests = [];
-	var paramUrlHttp = createString(deploymentDialog.applicationUrlHttp);
-	requests.push({
-				  //urlHint => suggestUrl
-				  jsonrpc: "2.0",
-				  method: "eth_transact",
-				  params: [ { "to": '0x' + deploymentDialog.urlHintContract, "data": "0x4983e19c" + deploymentDialog.packageHash + paramUrlHttp.encodeValueAsString() } ],
-				  id: jsonRpcRequestId++
-			  });
-
-	rpcCall(requests, function (httpRequest, response) {
-		deploymentComplete();
-	});
-}
-
-function normalizeAddress(addr)
-{
-	addr = addr.replace('0x', '');
-	var i = 0;
-	for (var k in addr)
-	{
-		if (addr[k] !== "0")
-			break;
-		else
-			i++;
-	}
-	return addr.substring(i);
-}
-
-function formatAppUrl(url)
-{
-	var slash = url.indexOf("/");
-	var dot = url.indexOf(".");
-	if (slash === -1 && dot === -1)
-		return url;
-	if ((slash !== -1 && slash < dot) || dot === -1)
-		return url.split("/");
-	else
-	{
-		var dotted;
-		var ret = [];
-		if (slash !== -1)
-		{
-			ret.push(url.split("/"));
-			dotted = ret[0].split(".");
-		}
-		else
-			dotted = url.split(".");
-
-		for (var k in dotted)
-			ret.unshift(dotted[k]);
-		return ret;
-	}
-}
-

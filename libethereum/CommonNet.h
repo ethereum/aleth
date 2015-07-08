@@ -37,15 +37,17 @@ namespace eth
 {
 
 #if ETH_DEBUG
-static const unsigned c_maxHashes = 64;		///< Maximum number of hashes BlockHashes will ever send.
-static const unsigned c_maxHashesAsk = 64;		///< Maximum number of hashes GetBlockHashes will ever ask for.
-static const unsigned c_maxBlocks = 32;		///< Maximum number of blocks Blocks will ever send.
-static const unsigned c_maxBlocksAsk = 32;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
-#else
-static const unsigned c_maxHashes = 256;		///< Maximum number of hashes BlockHashes will ever send.
-static const unsigned c_maxHashesAsk = 256;		///< Maximum number of hashes GetBlockHashes will ever ask for.
+static const unsigned c_maxHashes = 2048;		///< Maximum number of hashes BlockHashes will ever send.
+static const unsigned c_maxHashesAsk = 2048;		///< Maximum number of hashes GetBlockHashes will ever ask for.
 static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks will ever send.
 static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
+static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
+#else
+static const unsigned c_maxHashes = 2048;		///< Maximum number of hashes BlockHashes will ever send.
+static const unsigned c_maxHashesAsk = 2048;	///< Maximum number of hashes GetBlockHashes will ever ask for.
+static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks will ever send.
+static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
+static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
 #endif
 
 class BlockChain;
@@ -56,13 +58,14 @@ class EthereumPeer;
 enum
 {
 	StatusPacket = 0,
-	GetTransactionsPacket,
+	NewBlockHashesPacket,
 	TransactionsPacket,
 	GetBlockHashesPacket,
 	BlockHashesPacket,
 	GetBlocksPacket,
 	BlocksPacket,
 	NewBlockPacket,
+	GetBlockHashesByNumberPacket,
 	PacketCount
 };
 
@@ -74,11 +77,26 @@ enum class Asking
 	Nothing
 };
 
-enum class Syncing
+enum class SyncState
 {
-	Waiting,
-	Executing,
-	Done
+	Idle,				///< Initial chain sync complete. Waiting for new packets
+	Waiting,			///< Block downloading paused. Waiting for block queue to process blocks and free space
+	Hashes,				///< Downloading hashes from multiple peers over
+	Blocks,				///< Downloading blocks
+	NewBlocks,			///< Downloading blocks learned from NewHashes packet
+
+	Size		/// Must be kept last
+};
+
+struct SyncStatus
+{
+	SyncState state = SyncState::Idle;
+	unsigned protocolVersion = 0;
+	unsigned hashesTotal = 0;
+	unsigned hashesReceived = 0;
+	bool hashesEstimated = false;
+	unsigned blocksTotal = 0;
+	unsigned blocksReceived = 0;
 };
 
 }

@@ -38,13 +38,17 @@ using namespace dev::mix;
 
 namespace
 {
-	static QVariantList memDumpToList(bytes const& _bytes, unsigned _width)
+	static QVariantList memDumpToList(bytes const& _bytes, unsigned _width, bool _includeAddress = false)
 	{
 		QVariantList dumpList;
 		for (unsigned i = 0; i < _bytes.size(); i += _width)
 		{
 			std::stringstream ret;
-
+			if (_includeAddress)
+			{
+				ret << std::setfill('0') << std::setw(6) << std::hex << i << " ";
+				ret << "   ";
+			}
 			for (unsigned j = i; j < i + _width; ++j)
 				if (j < _bytes.size())
 					if (_bytes[j] >= 32 && _bytes[j] < 127)
@@ -69,7 +73,7 @@ namespace
 	}
 }
 
-QCode* QMachineState::getHumanReadableCode(QObject* _owner, const bytes& _code)
+QCode* QMachineState::getHumanReadableCode(QObject* _owner, const Address& _address, const bytes& _code, QHash<int, int>& o_codeMap)
 {
 	QVariantList codeStr;
 	for (unsigned i = 0; i <= _code.size(); ++i)
@@ -80,14 +84,15 @@ QCode* QMachineState::getHumanReadableCode(QObject* _owner, const bytes& _code)
 			QString s = QString::fromStdString(instructionInfo((Instruction)b).name);
 			std::ostringstream out;
 			out << std::hex << std::setw(4) << std::setfill('0') << i;
-			int line = i;
+			int offset = i;
 			if (b >= (byte)Instruction::PUSH1 && b <= (byte)Instruction::PUSH32)
 			{
 				unsigned bc = getPushNumber((Instruction)b);
 				s = "PUSH 0x" + QString::fromStdString(toHex(bytesConstRef(&_code[i + 1], bc)));
 				i += bc;
 			}
-			codeStr.append(QVariant::fromValue(new QInstruction(_owner, QString::fromStdString(out.str()) + "  "  + s, line)));
+			o_codeMap[offset] = codeStr.size();
+			codeStr.append(QVariant::fromValue(new QInstruction(_owner, QString::fromStdString(out.str()) + "  "  + s)));
 		}
 		catch (...)
 		{
@@ -96,7 +101,7 @@ QCode* QMachineState::getHumanReadableCode(QObject* _owner, const bytes& _code)
 			break;	// probably hit data segment
 		}
 	}
-	return new QCode(_owner, std::move(codeStr));
+	return new QCode(_owner, QString::fromStdString(toString(_address)), std::move(codeStr));
 }
 
 QBigInt* QMachineState::gasCost()
@@ -136,7 +141,7 @@ QStringList QMachineState::debugStorage()
 
 QVariantList QMachineState::debugMemory()
 {
-	return memDumpToList(m_state.memory, 16);
+	return memDumpToList(m_state.memory, 16, true);
 }
 
 QCallData* QMachineState::getDebugCallData(QObject* _owner, bytes const& _data)
@@ -150,11 +155,6 @@ QVariantList QMachineState::levels()
 	for (unsigned l: m_state.levels)
 		levelList.push_back(l);
 	return levelList;
-}
-
-QString QMachineState::address()
-{
-	return QString::fromStdString(toString(m_state.address));
 }
 
 QString QMachineState::instruction()

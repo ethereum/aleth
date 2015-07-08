@@ -75,6 +75,8 @@ public:
 	
 	/// Adjust mac interval. Next mac will be xored with value.
 	void adjustInterval(unsigned _interval) { m_macInterval = _interval; }
+
+	unsigned getMacInterval() { return m_macInterval;}
 	
 private:
 	AuthenticatedStream(AuthenticatedStream const&) = delete;
@@ -86,4 +88,7 @@ private:
 
 }
 }
+
+bytes aesDecrypt(bytesConstRef _cipher, std::string const& _password, unsigned _rounds = 2000, bytesConstRef _salt = bytesConstRef());
+
 }

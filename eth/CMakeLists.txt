@@ -7,6 +7,10 @@ include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
 
+if (JSCONSOLE)
+	include_directories(${V8_INCLUDE_DIRS})
+endif()
+
 set(EXECUTABLE eth)
 
 file(GLOB HEADERS "*.h")
@@ -23,14 +27,26 @@ endif()
 
 if (JSONRPC)
 	target_link_libraries(${EXECUTABLE} web3jsonrpc)
+	target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
+	target_link_libraries(${EXECUTABLE} ${CURL_LIBRARIES})
+	if (DEFINED WIN32 AND NOT DEFINED CMAKE_COMPILER_IS_MINGW)
+		eth_copy_dlls(${EXECUTABLE} CURL_DLLS)
+	endif()
 endif()
 
 target_link_libraries(${EXECUTABLE} webthree)
-target_link_libraries(${EXECUTABLE} secp256k1)
+target_link_libraries(${EXECUTABLE} ethash)
 
-if (WIN32)
-	add_custom_command(TARGET ${EXECUTABLE} POST_BUILD COMMAND ${CMAKE_COMMAND} ARGS -E copy ${MHD_DLL_RELEASE} "${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}")
+if (JSCONSOLE)
+	target_link_libraries(${EXECUTABLE} jsconsole)
 endif()
 
-install( TARGETS ${EXECUTABLE} DESTINATION bin )
+if (DEFINED WIN32 AND NOT DEFINED CMAKE_COMPILER_IS_MINGW)
+	eth_copy_dlls("${EXECUTABLE}" MHD_DLLS)
+endif()
 
+if (APPLE)
+	install(TARGETS ${EXECUTABLE} DESTINATION bin)
+else()
+	eth_install_executable(${EXECUTABLE})
+endif()

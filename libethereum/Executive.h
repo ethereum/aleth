@@ -21,9 +21,14 @@
 #include <functional>
 #include <libdevcore/Log.h>
 #include <libevmcore/Instruction.h>
-#include <libethcore/CommonEth.h>
+#include <libethcore/Common.h>
 #include <libevm/VMFace.h>
 #include "Transaction.h"
+
+namespace Json
+{
+	class Value;
+}
 
 namespace dev
 {
@@ -35,41 +40,69 @@ class BlockChain;
 class ExtVM;
 struct Manifest;
 
-struct VMTraceChannel: public LogChannel { static const char* name() { return "EVM"; } static const int verbosity = 11; };
+struct VMTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 11; };
+struct ExecutiveWarnChannel: public LogChannel { static const char* name(); static const int verbosity = 6; };
+
+class StandardTrace
+{
+public:
+	StandardTrace();
+	void operator()(uint64_t _steps, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM);
+
+	void setShowMnemonics() { m_showMnemonics = true; }
+
+	std::string json(bool _styled = false) const;
+
+	OnOpFunc onOp() { return [=](uint64_t _steps, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM) { (*this)(_steps, _inst, _newMemSize, _gasCost, _gas, _vm, _extVM); }; }
+
+private:
+	bool m_showMnemonics = false;
+	std::vector<Instruction> m_lastInst;
+	std::shared_ptr<Json::Value> m_trace;
+};
 
 /**
  * @brief Message-call/contract-creation executor; useful for executing transactions.
  *
  * Two ways of using this class - either as a transaction executive or a CALL/CREATE executive.
- * In the first use, after construction, begin with setup() and end with finalize(). Call go()
- * after setup() only if it returns false.
+ *
+ * In the first use, after construction, begin with initialize(), then execute() and end with finalize(). Call go()
+ * after execute() only if it returns false.
+ *
  * In the second use, after construction, begin with call() or create() and end with
  * accrueSubState(). Call go() after call()/create() only if it returns false.
+ *
+ * Example:
+ * @code
+ * Executive e(state, blockchain, 0);
+ * e.initialize(transaction);
+ * if (!e.execute())
+ *    e.go();
+ * e.finalize();
+ * @endcode
  */
 class Executive
 {
 public:
 	/// Basic constructor.
-	Executive(State& _s, LastHashes const& _lh, unsigned _level): m_s(_s), m_lastHashes(_lh), m_depth(_level) {}
+	Executive(State& _s, LastHashes const& _lh, unsigned _level = 0): m_s(_s), m_lastHashes(_lh), m_depth(_level) {}
 	/// Basic constructor.
-	Executive(State& _s, BlockChain const& _bc, unsigned _level);
-	/// Basic destructor.
-	~Executive() = default;
+	Executive(State& _s, BlockChain const& _bc, unsigned _level = 0);
 
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;
 
-	/// Set up the executive for evaluating a transaction. You must call finalize() following this.
-	/// @returns true iff go() must be called (and thus a VM execution in required).
-	bool setup(bytesConstRef _transaction);
-	/// Set up the executive for evaluating a transaction. You must call finalize() following this.
-	/// @returns true iff go() must be called (and thus a VM execution in required).
-	bool setup(Transaction const& _transaction) { m_t = _transaction; return setup(); }
-	/// Finalise a transaction previously set up with setup().
-	/// @warning Only valid after setup(), and possibly go().
+	/// Initializes the executive for evaluating a transaction. You must call finalize() at some point following this.
+	void initialize(bytesConstRef _transaction) { initialize(Transaction(_transaction, CheckTransaction::None)); }
+	void initialize(Transaction const& _transaction);
+	/// Finalise a transaction previously set up with initialize().
+	/// @warning Only valid after initialize() and execute(), and possibly go().
 	void finalize();
-	/// @returns the transaction from setup().
-	/// @warning Only valid after setup().
+	/// Begins execution of a transaction. You must call finalize() following this.
+	/// @returns true if the transaction is done, false if go() must be called.
+	bool execute();
+	/// @returns the transaction from initialize().
+	/// @warning Only valid after initialize().
 	Transaction const& t() const { return m_t; }
 	/// @returns the log entries created by this operation.
 	/// @warning Only valid after finalise().
@@ -77,50 +110,59 @@ public:
 	/// @returns total gas used in the transaction/operation.
 	/// @warning Only valid after finalise().
 	u256 gasUsed() const;
+	/// @returns total gas used in the transaction/operation, excluding anything refunded.
+	/// @warning Only valid after finalise().
+	u256 gasUsedNoRefunds() const;
 
 	/// Set up the executive for evaluating a bare CREATE (contract-creation) operation.
 	/// @returns false iff go() must be called (and thus a VM execution in required).
 	bool create(Address _txSender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _code, Address _originAddress);
 	/// Set up the executive for evaluating a bare CALL (message call) operation.
 	/// @returns false iff go() must be called (and thus a VM execution in required).
-	bool call(Address _myAddress, Address _codeAddress, Address _txSender, u256 _txValue, u256 _gasPrice, bytesConstRef _txData, u256 _gas, Address _originAddress);
+	bool call(Address _receiveAddress, Address _txSender, u256 _txValue, u256 _gasPrice, bytesConstRef _txData, u256 _gas);
+	bool call(CallParameters const& _cp, u256 const& _gasPrice, Address const& _origin);
 	/// Finalise an operation through accruing the substate into the parent context.
 	void accrueSubState(SubState& _parentContext);
 
 	/// Executes (or continues execution of) the VM.
-	/// @returns false iff go() must be called again to finish the transction.
+	/// @returns false iff go() must be called again to finish the transaction.
 	bool go(OnOpFunc const& _onOp = OnOpFunc());
 
 	/// Operation function for providing a simple trace of the VM execution.
 	static OnOpFunc simpleTrace();
 
-	/// @returns gas remaining after the transaction/operation.
-	u256 endGas() const { return m_endGas; }
-	/// @returns output data of the transaction/operation.
-	bytesConstRef out() const { return m_out; }
+	/// Operation function for providing a simple trace of the VM execution.
+	static OnOpFunc standardTrace(std::ostream& o_output);
+
+	/// @returns gas remaining after the transaction/operation. Valid after the transaction has been executed.
+	u256 gas() const { return m_gas; }
+
 	/// @returns the new address for the created contract in the CREATE operation.
 	h160 newAddress() const { return m_newAddress; }
 	/// @returns true iff the operation ended with a VM exception.
-	bool excepted() const { return m_excepted; }
+	bool excepted() const { return m_excepted != TransactionException::None; }
+
+	/// Collect execution results in the result storage provided.
+	void setResultRecipient(ExecutionResult& _res) { m_res = &_res; }
 
 private:
-	bool setup();
-
 	State& m_s;							///< The state to which this operation/transaction is applied.
 	LastHashes m_lastHashes;
-	std::shared_ptr<ExtVM> m_ext;		///< The VM externality object for the VM execution or null if no VM is required.
-	std::unique_ptr<VMFace> m_vm;		///< The VM object or null if no VM is required.
-	bytes m_precompiledOut;				///< Used for the output when there is no VM for a contract (i.e. precompiled).
-	bytesConstRef m_out;				///< The copyable output.
+	std::shared_ptr<ExtVM> m_ext;		///< The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference.
+	bytesRef m_outRef;					///< Reference to "expected output" buffer.
+	ExecutionResult* m_res = nullptr;	///< Optional storage for execution results.
 	Address m_newAddress;				///< The address of the created contract in the case of create() being called.
 
 	unsigned m_depth = 0;				///< The context's call-depth.
 	bool m_isCreation = false;			///< True if the transaction creates a contract, or if create() is called.
-	bool m_excepted = false;			///< True if the VM execution resulted in an exception.
-	u256 m_endGas;						///< The final amount of gas for the transaction.
+	TransactionException m_excepted = TransactionException::None;	///< Details if the VM's execution resulted in an exception.
+	u256 m_gas = 0;						///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
+	u256 m_refunded = 0;				///< The amount of gas refunded.
 
 	Transaction m_t;					///< The original transaction. Set by setup().
 	LogEntries m_logs;					///< The log entries created by this transaction. Set by finalize().
+
+	bigint m_gasCost;
 };
 
 }

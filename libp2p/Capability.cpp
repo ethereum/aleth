@@ -23,47 +23,42 @@
 
 #include <libdevcore/Log.h>
 #include "Session.h"
+#include "Host.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
-#if defined(clogS)
-#undef clogS
-#endif
-#define clogS(X) dev::LogOutputStream<X, true>(false) << "| " << std::setw(2) << session()->socketId() << "] "
-
-Capability::Capability(Session* _s, HostCapabilityFace* _h, unsigned _idOffset): m_session(_s), m_host(_h), m_idOffset(_idOffset)
+Capability::Capability(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset): m_session(_s), m_hostCap(_h), m_idOffset(_idOffset)
 {
-	clogS(NetConnect) << "New session for capability" << m_host->name() << "; idOffset:" << m_idOffset;
+	clog(NetConnect) << "New session for capability" << m_hostCap->name() << "; idOffset:" << m_idOffset;
 }
 
 void Capability::disable(std::string const& _problem)
 {
-	clogS(NetWarn) << "DISABLE: Disabling capability '" << m_host->name() << "'. Reason:" << _problem;
+	clog(NetNote) << "DISABLE: Disabling capability '" << m_hostCap->name() << "'. Reason:" << _problem;
 	m_enabled = false;
 }
 
 RLPStream& Capability::prep(RLPStream& _s, unsigned _id, unsigned _args)
 {
-	return Session::prep(_s).appendList(_args + 1).append(_id + m_idOffset);
+	return _s.appendRaw(bytes(1, _id + m_idOffset)).appendList(_args);
 }
 
 void Capability::sealAndSend(RLPStream& _s)
 {
-	m_session->sealAndSend(_s);
+	shared_ptr<Session> session = m_session.lock();
+	if (session)
+		session->sealAndSend(_s);
 }
 
-void Capability::send(bytesConstRef _msg)
+void Capability::addRating(int _r)
 {
-	m_session->send(_msg);
+	shared_ptr<Session> session = m_session.lock();
+	if (session)
+		session->addRating(_r);
 }
 
-void Capability::send(bytes&& _msg)
+ReputationManager& Capability::repMan() const
 {
-	m_session->send(move(_msg));
-}
-
-void Capability::addRating(unsigned _r)
-{
-	m_session->addRating(_r);
+	return host()->repMan();
 }

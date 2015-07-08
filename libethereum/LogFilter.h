@@ -23,7 +23,7 @@
 
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
-#include <libethcore/CommonEth.h>
+#include <libethcore/Common.h>
 #include "TransactionReceipt.h"
 
 namespace dev
@@ -45,35 +45,31 @@ class State;
 class LogFilter
 {
 public:
-	LogFilter(int _earliest = 0, int _latest = -1, unsigned _max = 10, unsigned _skip = 0): m_earliest(_earliest), m_latest(_latest), m_max(_max), m_skip(_skip) {}
+	LogFilter(h256 _earliest = EarliestBlockHash, h256 _latest = PendingBlockHash): m_earliest(_earliest), m_latest(_latest) {}
 
 	void streamRLP(RLPStream& _s) const;
 	h256 sha3() const;
 
-	int earliest() const { return m_earliest; }
-	int latest() const { return m_latest; }
-	unsigned max() const { return m_max; }
-	unsigned skip() const { return m_skip; }
+	h256 earliest() const { return m_earliest; }
+	h256 latest() const { return m_latest; }
+
+	std::vector<LogBloom> bloomPossibilities() const;
 	bool matches(LogBloom _bloom) const;
 	bool matches(State const& _s, unsigned _i) const;
 	LogEntries matches(TransactionReceipt const& _r) const;
 
 	LogFilter address(Address _a) { m_addresses.insert(_a); return *this; }
 	LogFilter topic(unsigned _index, h256 const& _t) { if (_index < 4) m_topics[_index].insert(_t); return *this; }
-	LogFilter withMax(unsigned _m) { m_max = _m; return *this; }
-	LogFilter withSkip(unsigned _m) { m_skip = _m; return *this; }
-	LogFilter withEarliest(int _e) { m_earliest = _e; return *this; }
-	LogFilter withLatest(int _e) { m_latest = _e; return *this; }
+	LogFilter withEarliest(h256 _e) { m_earliest = _e; return *this; }
+	LogFilter withLatest(h256 _e) { m_latest = _e; return *this; }
 
 	friend std::ostream& dev::eth::operator<<(std::ostream& _out, dev::eth::LogFilter const& _s);
 
 private:
-	AddressSet m_addresses;
-	std::array<h256Set, 4> m_topics;
-	int m_earliest = 0;
-	int m_latest = -1;
-	unsigned m_max = 10;
-	unsigned m_skip = 0;
+	AddressHash m_addresses;
+	std::array<h256Hash, 4> m_topics;
+	h256 m_earliest = EarliestBlockHash;
+	h256 m_latest = PendingBlockHash;
 };
 
 }

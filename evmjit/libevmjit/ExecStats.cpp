@@ -8,9 +8,7 @@
 
 namespace dev
 {
-namespace eth
-{
-namespace jit
+namespace evmjit
 {
 
 void ExecStats::stateChanged(ExecState _state)
@@ -67,6 +65,7 @@ char const* getExecStateName(ExecState _state)
 	case ExecState::CacheLoad: return "CacheLoad";
 	case ExecState::CacheWrite: return "CacheWrite";
 	case ExecState::Compilation: return "Compilation";
+	case ExecState::Optimization: return "Optimization";
 	case ExecState::CodeGen: return "CodeGen";
 	case ExecState::Execution: return "Execution";
 	case ExecState::Return: return "Return";
@@ -92,6 +91,5 @@ StatsCollector::~StatsCollector()
 	}
 }
 
-}
 }
 }

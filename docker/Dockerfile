@@ -1,30 +1,31 @@
-FROM ubuntu:14.04
+FROM ubuntu:utopic
+MAINTAINER caktux
 
 ENV DEBIAN_FRONTEND noninteractive
+
+# Usual update / upgrade
 RUN apt-get update
-RUN apt-get upgrade -y
+RUN apt-get upgrade -q -y
+RUN apt-get dist-upgrade -q -y
 
-# Ethereum dependencies
-RUN apt-get install -qy build-essential g++-4.8 git cmake libboost-all-dev libcurl4-openssl-dev wget
-RUN apt-get install -qy automake unzip libgmp-dev libtool libleveldb-dev yasm libminiupnpc-dev libreadline-dev scons
-RUN apt-get install -qy libjsoncpp-dev libargtable2-dev
+# Let our containers upgrade themselves
+RUN apt-get install -q -y unattended-upgrades
 
-# NCurses based GUI (not optional though for a succesful compilation, see https://github.com/ethereum/cpp-ethereum/issues/452 )
-RUN apt-get install -qy libncurses5-dev
-
-# Qt-based GUI
-# RUN apt-get install -qy qtbase5-dev qt5-default qtdeclarative5-dev libqt5webkit5-dev
-
-# Ethereum PPA
-RUN apt-get install -qy software-properties-common
+# Install Ethereum
+RUN apt-get install -q -y software-properties-common
 RUN add-apt-repository ppa:ethereum/ethereum
+RUN add-apt-repository ppa:ethereum/ethereum-dev
 RUN apt-get update
-RUN apt-get install -qy libcryptopp-dev libjson-rpc-cpp-dev
+RUN apt-get install -q -y eth
 
-# Build Ethereum (HEADLESS)
-RUN git clone --depth=1 https://github.com/ethereum/cpp-ethereum
-RUN mkdir -p cpp-ethereum/build
-RUN cd cpp-ethereum/build && cmake .. -DCMAKE_BUILD_TYPE=Release -DHEADLESS=1 && make -j $(cat /proc/cpuinfo | grep processor | wc -l) && make install
-RUN ldconfig
+# Install supervisor
+RUN apt-get install -q -y supervisor
 
-ENTRYPOINT ["/usr/local/bin/eth"]
+# Add supervisor configs
+ADD supervisord.conf supervisord.conf
+
+EXPOSE 8080
+EXPOSE 30303
+
+CMD ["-n", "-c", "/supervisord.conf"]
+ENTRYPOINT ["/usr/bin/supervisord"]

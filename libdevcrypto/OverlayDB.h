@@ -21,16 +21,11 @@
 
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#include <leveldb/db.h>
-#pragma warning(pop)
-
 #include <memory>
+#include <libdevcore/db.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
-#include "MemoryDB.h"
-namespace ldb = leveldb;
+#include <libdevcore/MemoryDB.h>
 
 namespace dev
 {
@@ -42,14 +37,15 @@ public:
 	~OverlayDB();
 
 	ldb::DB* db() const { return m_db.get(); }
-	void setDB(ldb::DB* _db, bool _clearOverlay = true);
 
 	void commit();
 	void rollback();
 
-	std::string lookup(h256 _h) const;
-	bool exists(h256 _h) const;
-	void kill(h256 _h);
+	std::string lookup(h256 const& _h) const;
+	bool exists(h256 const& _h) const;
+	void kill(h256 const& _h);
+
+	bytes lookupAux(h256 const& _h) const;
 
 private:
 	using MemoryDB::clear;

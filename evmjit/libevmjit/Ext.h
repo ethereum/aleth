@@ -35,7 +35,6 @@ enum class EnvFunc
 	log,
 	blockhash,
 	extcode,
-	calldataload,  // Helper function, not client Env interface
 
 	_size
 };
@@ -51,7 +50,7 @@ public:
 	llvm::Value* balance(llvm::Value* _address);
 	llvm::Value* calldataload(llvm::Value* _index);
 	llvm::Value* create(llvm::Value* _endowment, llvm::Value* _initOff, llvm::Value* _initSize);
-	llvm::Value* call(llvm::Value* _receiveAddress, llvm::Value* _value, llvm::Value* _inOff, llvm::Value* _inSize, llvm::Value* _outOff, llvm::Value* _outSize, llvm::Value* _codeAddress);
+	llvm::Value* call(llvm::Value* _callGas, llvm::Value* _receiveAddress, llvm::Value* _value, llvm::Value* _inOff, llvm::Value* _inSize, llvm::Value* _outOff, llvm::Value* _outSize, llvm::Value* _codeAddress);
 	llvm::Value* blockhash(llvm::Value* _number);
 
 	llvm::Value* sha3(llvm::Value* _inOff, llvm::Value* _inSize);
@@ -63,7 +62,6 @@ private:
 	Memory& m_memoryMan;
 
 	llvm::Value* m_size;
-	llvm::Value* m_data = nullptr;
 
 	std::array<llvm::Function*, sizeOf<EnvFunc>::value> m_funcs;
 	std::array<llvm::Value*, 8> m_argAllocas;

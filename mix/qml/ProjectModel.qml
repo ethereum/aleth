@@ -5,6 +5,7 @@ import QtQuick.Controls 1.0
 import QtQuick.Dialogs 1.1
 import Qt.labs.settings 1.0
 import "js/ProjectModel.js" as ProjectModelCode
+import "js/NetworkDeployment.js" as NetworkDeploymentCode
 
 Item {
 	id: projectModel
@@ -12,36 +13,50 @@ Item {
 	signal projectClosed
 	signal projectLoading(var projectData)
 	signal projectLoaded()
+	signal documentSaving(var document)
+	signal documentChanged(var documentId)
 	signal documentOpened(var document)
 	signal documentRemoved(var documentId)
 	signal documentUpdated(var documentId) //renamed
 	signal documentAdded(var documentId)
-	signal projectSaving(var projectData)
+	signal projectSaving()
+	signal projectFileSaving(var projectData)
 	signal projectSaved()
+	signal projectFileSaved()
 	signal newProject(var projectData)
 	signal documentSaved(var documentId)
+	signal contractSaved(var documentId)
 	signal deploymentStarted()
 	signal deploymentStepChanged(string message)
 	signal deploymentComplete()
 	signal deploymentError(string error)
+	signal isCleanChanged(var isClean, string documentId)
 
 	property bool isEmpty: (projectPath === "")
 	readonly property string projectFileName: ".mix"
 
-	property bool haveUnsavedChanges: false
+	property bool appIsClosing: false
+	property bool projectIsClosing: false
 	property string projectPath: ""
 	property string projectTitle: ""
 	property string currentDocumentId: ""
 	property var deploymentAddresses: []
+	property string deploymentDir
 	property var listModel: projectListModel
 	property var stateListModel: projectStateListModel.model
+	property alias stateDialog: projectStateListModel.stateDialog
 	property CodeEditorView codeEditor: null
+	property var unsavedFiles: []
+	property alias newProjectDialog: newProjectDialog
+	property string deployedState
 
 	//interface
 	function saveAll() { ProjectModelCode.saveAll(); }
+	function saveCurrentDocument() { ProjectModelCode.saveCurrentDocument(); }
 	function createProject() { ProjectModelCode.createProject(); }
-	function closeProject() { ProjectModelCode.closeProject(); }
+	function closeProject(callBack) { ProjectModelCode.closeProject(callBack); }
 	function saveProject() { ProjectModelCode.saveProject(); }
+	function saveProjectFile() { ProjectModelCode.saveProjectFile(); }
 	function loadProject(path) { ProjectModelCode.loadProject(path); }
 	function newHtmlFile() { ProjectModelCode.newHtmlFile(); }
 	function newJsFile() { ProjectModelCode.newJsFile(); }
@@ -53,16 +68,32 @@ Item {
 	function renameDocument(documentId, newName) { ProjectModelCode.renameDocument(documentId, newName); }
 	function removeDocument(documentId) { ProjectModelCode.removeDocument(documentId); }
 	function getDocument(documentId) { return ProjectModelCode.getDocument(documentId); }
+	function getDocumentIdByName(documentName) { return ProjectModelCode.getDocumentIdByName(documentName); }
 	function getDocumentIndex(documentId) { return ProjectModelCode.getDocumentIndex(documentId); }
 	function addExistingFiles(paths) { ProjectModelCode.doAddExistingFiles(paths); }
-	function deployProject() { ProjectModelCode.deployProject(false); }
-	function registerToUrlHint() { ProjectModelCode.registerToUrlHint(); }
+	function deployProject() { NetworkDeploymentCode.deployProject(false); }
+	function registerToUrlHint() { NetworkDeploymentCode.registerToUrlHint(); }
+	function formatAppUrl() { NetworkDeploymentCode.formatAppUrl(url); }
 
 	Connections {
-		target: appContext
-		onAppLoaded: {
-			if (projectSettings.lastProjectPath)
+		target: mainApplication
+		onLoaded: {
+			if (mainApplication.trackLastProject && projectSettings.lastProjectPath && projectSettings.lastProjectPath !== "")
 				projectModel.loadProject(projectSettings.lastProjectPath)
+		}
+	}
+
+	Connections {
+		target: codeEditor
+		onIsCleanChanged: {
+			for (var i in unsavedFiles)
+			{
+				if (unsavedFiles[i] === documentId && isClean)
+					unsavedFiles.splice(i, 1);
+			}
+			if (!isClean)
+				unsavedFiles.push(documentId);
+			isCleanChanged(isClean, documentId);
 		}
 	}
 
@@ -76,54 +107,64 @@ Item {
 		}
 	}
 
+	Connections
+	{
+		target: fileIo
+		property bool saving: false
+		onFileChanged:
+		{
+			fileIo.watchFileChanged(_filePath);
+			var documentId = ProjectModelCode.getDocumentByPath(_filePath);
+			documentChanged(documentId);
+		}
+	}
+
 	MessageDialog {
 		id: saveMessageDialog
 		title: qsTr("Project")
-		text: qsTr("Do you want to save changes?")
-		standardButtons: StandardButton.Ok | StandardButton.Cancel
+		text: qsTr("Some files require to be saved. Do you want to save changes?");
+		standardButtons: StandardButton.Yes | StandardButton.No | StandardButton.Cancel
 		icon: StandardIcon.Question
-		onAccepted: {
+		property var callBack;
+		onYes: {
+			projectIsClosing = true;
 			projectModel.saveAll();
+			unsavedFiles = [];
 			ProjectModelCode.doCloseProject();
+			if (callBack)
+				callBack();
 		}
-		onRejected: {
+		onRejected: {}
+		onNo: {
+			projectIsClosing = true;
+			unsavedFiles = [];
 			ProjectModelCode.doCloseProject();
+			if (callBack)
+				callBack();
 		}
 	}
 
 	MessageDialog {
 		id: deployWarningDialog
-		property bool redeploy
 		title: qsTr("Project")
 		text:
 		{
 			if (Object.keys(projectModel.deploymentAddresses).length > 0)
-			{
-				redeploy = true
-				standardButtons = StandardButton.Ok | StandardButton.Reset | StandardButton.Abort;
-				return qsTr("This project has been already deployed to the network. Do you want to repackage the resources only, or also reset the deployed contract to its initial state?")
-			}
+				return qsTr("This project has been already deployed to the network. Do you want to redeploy it? (Contract state will be reset)")
 			else
-			{
-				redeploy = false;
-				standardButtons = StandardButton.Ok | StandardButton.Abort;
 				return qsTr("This action will deploy to the network. Do you want to deploy it?")
-			}
 		}
 		icon: StandardIcon.Question
+		standardButtons: StandardButton.Ok | StandardButton.Abort
 		onAccepted: {
-			ProjectModelCode.startDeployProject(!redeploy);
-		}
-		onReset: {
-			ProjectModelCode.startDeployProject(true);
+			NetworkDeploymentCode.startDeployProject(true);
 		}
 	}
 
 	MessageDialog {
-		id: deployRessourcesDialog
+		id: deployResourcesDialog
 		title: qsTr("Project")
 		standardButtons: StandardButton.Ok
-		icon: StandardIcon.Info
 	}
 
 	DeploymentDialog
@@ -137,6 +178,14 @@ Item {
 
 	StateListModel {
 		id: projectStateListModel
+	}
+
+	Connections
+	{
+		target: projectModel
+		onProjectClosed: {
+			projectPath = "";
+		}
 	}
 
 	Settings {

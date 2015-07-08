@@ -15,12 +15,14 @@ RowLayout {
 	property bool displayFormattedValue;
 	property bool edit;
 	property variant value;
+	property bool displayUnitSelection
 	onValueChanged: update()
 	Component.onCompleted: update()
 
+
 	function update()
 	{
-		if (value !== undefined)
+		if (value)
 		{
 			etherValueEdit.text = value.value;
 			selectUnit(value.unit);
@@ -45,16 +47,17 @@ RowLayout {
 			}
 		}
 		readOnly: !edit
-		visible: edit
 		id: etherValueEdit;
 	}
 
 	ComboBox
 	{
 		id: units
+		visible: displayUnitSelection;
+		implicitWidth: 145
 		onCurrentTextChanged:
 		{
-			if (value !== undefined)
+			if (value)
 			{
 				value.setUnit(currentText);
 				formattedValue.text = value.format();

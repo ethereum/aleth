@@ -19,41 +19,53 @@
  *   Jeffrey Wilcke <jeff@ethdev.com>
  *   Marek Kotewicz <marek@ethdev.com>
  *   Marian Oancea <marian@ethdev.com>
+ *   Fabian Vogelsteller <fabian@ethdev.com>
  *   Gav Wood <g@ethdev.com>
  * @date 2014
  */
 
-if (process.env.NODE_ENV !== 'build') {
-    var BigNumber = require('bignumber.js');
-}
+var version = require('./version.json');
+var net = require('./web3/net');
+var eth = require('./web3/eth');
+var db = require('./web3/db');
+var shh = require('./web3/shh');
+var watches = require('./web3/watches');
+var Filter = require('./web3/filter');
+var utils = require('./utils/utils');
+var formatters = require('./web3/formatters');
+var RequestManager = require('./web3/requestmanager');
+var c = require('./utils/config');
+var Property = require('./web3/property');
+var Batch = require('./web3/batch');
+var sha3 = require('./utils/sha3');
 
-var eth = require('./eth');
-var db = require('./db');
-var shh = require('./shh');
-var watches = require('./watches');
-var filter = require('./filter');
-var utils = require('./utils');
-var requestManager = require('./requestmanager');
-
-/// @returns an array of objects describing web3 api methods
-var web3Methods = function () {
-    return [
-    { name: 'sha3', call: 'web3_sha3' }
-    ];
-};
+var web3Properties = [
+    new Property({
+        name: 'version.client',
+        getter: 'web3_clientVersion'
+    }),
+    new Property({
+        name: 'version.network',
+        getter: 'net_version',
+        inputFormatter: utils.toDecimal
+    }),
+    new Property({
+        name: 'version.ethereum',
+        getter: 'eth_protocolVersion',
+        inputFormatter: utils.toDecimal
+    }),
+    new Property({
+        name: 'version.whisper',
+        getter: 'shh_version',
+        inputFormatter: utils.toDecimal
+    })
+];
 
 /// creates methods in a given object based on method description on input
 /// setups api calls for these methods
 var setupMethods = function (obj, methods) {
     methods.forEach(function (method) {
-        obj[method.name] = function () {
-            var args = Array.prototype.slice.call(arguments);
-            var call = typeof method.call === 'function' ? method.call(args) : method.call;
-            return web3.manager.send({
-                method: call,
-                params: args
-            });
-        };
+        method.attachToObject(obj);
     });
 };
 
@@ -61,125 +73,100 @@ var setupMethods = function (obj, methods) {
 /// setups api calls for these properties
 var setupProperties = function (obj, properties) {
     properties.forEach(function (property) {
-        var proto = {};
-        proto.get = function () {
-            return web3.manager.send({
-                method: property.getter
-            });
-        };
-
-        if (property.setter) {
-            proto.set = function (val) {
-                return web3.manager.send({
-                    method: property.setter,
-                    params: [val]
-                });
-            };
-        }
-        Object.defineProperty(obj, property.name, proto);
+        property.attachToObject(obj);
     });
 };
 
-var startPolling = function (method, id, callback, uninstall) {
-    web3.manager.startPolling({
-        method: method, 
-        params: [id]
-    }, id,  callback, uninstall); 
-};
-
-var stopPolling = function (id) {
-    web3.manager.stopPolling(id);
-};
-
-var ethWatch = {
-    startPolling: startPolling.bind(null, 'eth_changed'), 
-    stopPolling: stopPolling
-};
-
-var shhWatch = {
-    startPolling: startPolling.bind(null, 'shh_changed'), 
-    stopPolling: stopPolling
-};
-
 /// setups web3 object, and it's in-browser executed methods
-var web3 = {
-    manager: requestManager(),
-    providers: {},
+var web3 = {};
+web3.providers = {};
+web3.currentProvider = null;
+web3.version = {};
+web3.version.api = version.version;
+web3.eth = {};
 
-    /// @returns ascii string representation of hex value prefixed with 0x
-    toAscii: utils.toAscii,
-
-    /// @returns hex representation (prefixed by 0x) of ascii string
-    fromAscii: utils.fromAscii,
-
-    /// @returns decimal representaton of hex value prefixed by 0x
-    toDecimal: function (val) {
-        // remove 0x and place 0, if it's required
-        val = val.length > 2 ? val.substring(2) : "0";
-        return (new BigNumber(val, 16).toString(10));
-    },
-
-    /// @returns hex representation (prefixed by 0x) of decimal value
-    fromDecimal: function (val) {
-        return "0x" + (new BigNumber(val).toString(16));
-    },
-
-    /// used to transform value/string to eth string
-    toEth: utils.toEth,
-
-    /// eth object prototype
-    eth: {
-        contractFromAbi: function (abi) {
-            return function(addr) {
-                // Default to address of Config. TODO: rremove prior to genesis.
-                addr = addr || '0xc6d9d2cd449a754c494264e1809c50e34d64562b';
-                var ret = web3.eth.contract(addr, abi);
-                ret.address = addr;
-                return ret;
-            };
-        },
-
-        /// @param filter may be a string, object or event
-        /// @param indexed is optional, this is an object with optional event indexed params
-        /// @param options is optional, this is an object with optional event options ('max'...)
-        /// TODO: fix it, 4 params? no way
-        watch: function (fil, indexed, options, formatter) {
-            if (fil._isEvent) {
-                return fil(indexed, options);
-            }
-            return filter(fil, ethWatch, formatter);
-        }
-    },
-
-    /// db object prototype
-    db: {},
-
-    /// shh object prototype
-    shh: {
-        /// @param filter may be a string, object or event
-        watch: function (fil) {
-            return filter(fil, shhWatch);
-        }
-    },
-    setProvider: function (provider) {
-        web3.manager.setProvider(provider);
-    },
-    
-    /// Should be called to reset state of web3 object
-    /// Resets everything except manager
-    reset: function () {
-        web3.manager.reset(); 
-    }
+/*jshint maxparams:4 */
+web3.eth.filter = function (fil, callback) {
+    return new Filter(fil, watches.eth(), formatters.outputLogFormatter, callback);
 };
+/*jshint maxparams:3 */
+
+web3.shh = {};
+web3.shh.filter = function (fil, callback) {
+    return new Filter(fil, watches.shh(), formatters.outputPostFormatter, callback);
+};
+web3.net = {};
+web3.db = {};
+web3.setProvider = function (provider) {
+    this.currentProvider = provider;
+    RequestManager.getInstance().setProvider(provider);
+};
+web3.reset = function () {
+    RequestManager.getInstance().reset();
+    c.defaultBlock = 'latest';
+    c.defaultAccount = undefined;
+};
+web3.toHex = utils.toHex;
+web3.toAscii = utils.toAscii;
+web3.fromAscii = utils.fromAscii;
+web3.toDecimal = utils.toDecimal;
+web3.fromDecimal = utils.fromDecimal;
+web3.toBigNumber = utils.toBigNumber;
+web3.toWei = utils.toWei;
+web3.fromWei = utils.fromWei;
+web3.isAddress = utils.isAddress;
+web3.isIBAN = utils.isIBAN;
+web3.sha3 = sha3;
+web3.createBatch = function () {
+    return new Batch();
+};
+
+// ADD defaultblock
+Object.defineProperty(web3.eth, 'defaultBlock', {
+    get: function () {
+        return c.defaultBlock;
+    },
+    set: function (val) {
+        c.defaultBlock = val;
+        return val;
+    }
+});
+
+Object.defineProperty(web3.eth, 'defaultAccount', {
+    get: function () {
+        return c.defaultAccount;
+    },
+    set: function (val) {
+        c.defaultAccount = val;
+        return val;
+    }
+});
+
+
+// EXTEND
+web3._extend = function(extension){
+    /*jshint maxcomplexity: 6 */
+
+    if(extension.property && !web3[extension.property])
+        web3[extension.property] = {};
+
+    setupMethods(web3[extension.property] || web3, extension.methods || []);
+    setupProperties(web3[extension.property] || web3, extension.properties || []);
+};
+web3._extend.formatters = formatters;
+web3._extend.utils = utils;
+web3._extend.Method = require('./web3/method');
+web3._extend.Property = require('./web3/property');
+
 
 /// setups all api methods
-setupMethods(web3, web3Methods());
-setupMethods(web3.eth, eth.methods());
-setupProperties(web3.eth, eth.properties());
-setupMethods(web3.db, db.methods());
-setupMethods(web3.shh, shh.methods());
-setupMethods(ethWatch, watches.eth());
-setupMethods(shhWatch, watches.shh());
+setupProperties(web3, web3Properties);
+setupMethods(web3.net, net.methods);
+setupProperties(web3.net, net.properties);
+setupMethods(web3.eth, eth.methods);
+setupProperties(web3.eth, eth.properties);
+setupMethods(web3.db, db.methods);
+setupMethods(web3.shh, shh.methods);
 
 module.exports = web3;
 

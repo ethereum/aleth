@@ -12,6 +12,7 @@ aux_source_directory(. SRC_LIST)
 
 include_directories(BEFORE ..)
 include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS})
 
 qt5_wrap_ui(ui_Main.h Main.ui)
 
@@ -40,7 +41,6 @@ target_link_libraries(${EXECUTABLE} webthree)
 target_link_libraries(${EXECUTABLE} ethereum)
 target_link_libraries(${EXECUTABLE} evm)
 target_link_libraries(${EXECUTABLE} ethcore) 
-target_link_libraries(${EXECUTABLE} secp256k1) 
 if (NOT ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC"))
 target_link_libraries(${EXECUTABLE} serpent)
 endif()
@@ -51,5 +51,5 @@ target_link_libraries(${EXECUTABLE} web3jsonrpc)
 target_link_libraries(${EXECUTABLE} jsqrc) 
 
 # eth_install_executable is defined in cmake/EthExecutableHelper.cmake
-eth_install_executable(${EXECUTABLE} DLLS ${MHD_DLL_RELEASE})
+eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS)
 

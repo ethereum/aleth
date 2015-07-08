@@ -19,17 +19,22 @@
  * @date 2014
  */
 
-#include "SHA3.h"
-#include "CryptoPP.h"
 #include "ECDHE.h"
+#include <libdevcore/SHA3.h>
+#include "CryptoPP.h"
 
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
-static Secp256k1 s_secp256k1;
+static Secp256k1PP s_secp256k1;
 
-void ECDHE::agree(Public const& _remote, Secret& o_sharedSecret)
+void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, h256& o_s)
+{
+	s_secp256k1.agree(_s, _r, o_s);
+}
+
+void ECDHE::agree(Public const& _remote, Secret& o_sharedSecret) const
 {
 	if (m_remoteEphemeral)
 		// agreement can only occur once

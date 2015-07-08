@@ -16,14 +16,14 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 .solarized.base1 { color: #93a1a1; }
 .solarized.base2 { color: #eee8d5; }
 .solarized.base3  { color: #fdf6e3; }
-.solarized.solar-yellow  { color: #b58900; }
-.solarized.solar-orange  { color: #cb4b16; }
+.solarized.solar-yellow, .solcurrency  { color: #b58900; }
+.solarized.solar-orange, .solkeywords  { color: #cb4b16; }
 .solarized.solar-red { color: #dc322f; }
-.solarized.solar-magenta { color: #d33682; }
+.solarized.solar-magenta, .solstdcontract { color: #d33682; }
 .solarized.solar-violet  { color: #6c71c4; }
-.solarized.solar-blue { color: #268bd2; }
-.solarized.solar-cyan { color: #2aa198; }
-.solarized.solar-green { color: #859900; }
+.solarized.solar-blue, .soltime { color: #268bd2; }
+.solarized.solar-cyan, .soltypes { color: #2aa198; }
+.solarized.solar-green, .solMisc { color: #859900; }
 
 /* Color scheme for code-mirror */
 
@@ -154,12 +154,43 @@ http://ethanschoonover.com/solarized/img/solarized-palette.png
 }
 
 /*
+
 Active line. Negative margin compensates left padding of the text in the
 view-port
+
 */
 .cm-s-solarized.cm-s-dark .CodeMirror-activeline-background {
   background: rgba(255, 255, 255, 0.10);
 }
 .cm-s-solarized.cm-s-light .CodeMirror-activeline-background {
   background: rgba(0, 0, 0, 0.10);
+}
+
+/* Code execution */
+.CodeMirror-exechighlight {
+  border-bottom: double 1px #94A2A2;
+}
+
+
+/* Error annotation */
+.CodeMirror-errorannotation {
+	border-bottom: 1px solid #DD3330;
+  margin-bottom: 4px;
+}
+
+.CodeMirror-errorannotation-context {
+	font-family: monospace;
+	font-size: small;
+	color: #EEE9D5;
+	background: #b58900;
+	padding: 2px;
+  text-shadow: none !important;
+  border-top: solid 2px #063742;
+}
+
+span.CodeMirror-selectedtext { color: #586e75 !important; }
+
+/* Gas Costs */
+.CodeMirror-gasCosts {
+  border-bottom: double 1px #2aa198;
 }

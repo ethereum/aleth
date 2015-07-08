@@ -35,6 +35,7 @@ build_xc
 # build system
 build.*/
 extdep/install
+extdep/download
 
 *.pyc
 
@@ -64,6 +65,8 @@ profile
 DerivedData
 project.pbxproj
 
+# JetBrains stuff
+.idea/
 
 doc/html
 *.autosave

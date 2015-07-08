@@ -20,14 +20,41 @@
  */
 
 #include "Common.h"
-
+#include "Exceptions.h"
+#include "Log.h"
 using namespace std;
 using namespace dev;
 
 namespace dev
 {
 
-char const* Version = "0.8.2";
+char const* Version = "0.9.29";
+
+const u256 UndefinedU256 = ~(u256)0;
+
+void InvariantChecker::checkInvariants() const
+{
+	if (!m_this->invariants())
+	{
+		cwarn << "Invariant failed in" << m_function << "at" << m_file << ":" << m_line;
+		::boost::exception_detail::throw_exception_(FailedInvariant(), m_function, m_file, m_line);
+	}
+}
+
+struct TimerChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
+
+#ifdef _WIN32
+const char* TimerChannel::name() { return EthRed " ! "; }
+#else
+const char* TimerChannel::name() { return EthRed " ⚡ "; }
+#endif
+
+TimerHelper::~TimerHelper()
+{
+	auto e = std::chrono::high_resolution_clock::now() - m_t;
+	if (!m_ms || e > chrono::milliseconds(m_ms))
+		clog(TimerChannel) << m_id << chrono::duration_cast<chrono::milliseconds>(e).count() << "ms";
+}
 
 }
 

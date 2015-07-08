@@ -20,27 +20,43 @@
  */
 
 #include <QObject>
+
+#include "QContractDefinition.h"
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/AST.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/Parser.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/NameAndTypeResolver.h>
-#include "AppContext.h"
-#include "QContractDefinition.h"
 using namespace dev::solidity;
 using namespace dev::mix;
 
-QContractDefinition::QContractDefinition(dev::solidity::ContractDefinition const* _contract): QBasicNodeDefinition(_contract)
+QContractDefinition::QContractDefinition(QObject* _parent, dev::solidity::ContractDefinition const* _contract): QBasicNodeDefinition(_parent, _contract)
 {
+	QObject* parent = _parent ? _parent : this;
 	if (_contract->getConstructor() != nullptr)
-		m_constructor = new QFunctionDefinition(ContractType(*_contract).getConstructorType());
+		m_constructor = new QFunctionDefinition(parent, ContractType(*_contract).getConstructorType());
 	else
-		m_constructor = new QFunctionDefinition();
+		m_constructor = new QFunctionDefinition(parent);
+
+	std::vector<std::string> found;
+	for (auto const& f: _contract->getDefinedFunctions())
+	{
+		m_functions.append(new QFunctionDefinition(parent, f));
+		found.push_back(f->getName());
+	}
 
 	for (auto const& it: _contract->getInterfaceFunctions())
-		m_functions.append(new QFunctionDefinition(it.second));}
+	{
+		if (std::find(found.begin(), found.end(), it.second->getDeclaration().getName()) == found.end())
+			m_functions.append(new QFunctionDefinition(parent, it.second));
+	}
 
+
+	for (auto const& it: _contract->getEvents())
+		m_events.append(new QFunctionDefinition(parent, it));
+
+}
 
 QFunctionDefinition const* QContractDefinition::getFunction(dev::FixedHash<4> _hash) const
 {

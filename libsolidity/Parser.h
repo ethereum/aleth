@@ -34,6 +34,8 @@ class Scanner;
 class Parser
 {
 public:
+	Parser() {}
+
 	ASTPointer<SourceUnit> parse(std::shared_ptr<Scanner> const& _scanner);
 	std::shared_ptr<std::string const> const& getSourceName() const;
 
@@ -45,13 +47,15 @@ private:
 	/// End position of the current token
 	int getEndPosition() const;
 
-	struct VarDeclParserOptions {
+	struct VarDeclParserOptions
+	{
 		VarDeclParserOptions() {}
 		bool allowVar = false;
 		bool isStateVariable = false;
 		bool allowIndexed = false;
 		bool allowEmptyName = false;
 		bool allowInitialValue = false;
+		bool allowLocationSpecifier = false;
 	};
 
 	///@{
@@ -64,8 +68,7 @@ private:
 	ASTPointer<StructDefinition> parseStructDefinition();
 	ASTPointer<EnumDefinition> parseEnumDefinition();
 	ASTPointer<EnumValue> parseEnumValue();
-	ASTPointer<VariableDeclaration> parseVariableDeclaration(
-		VarDeclParserOptions const& _options = VarDeclParserOptions(),
+	ASTPointer<VariableDeclaration> parseVariableDeclaration(VarDeclParserOptions const& _options = VarDeclParserOptions(),
 		ASTPointer<TypeName> const& _lookAheadArrayType = ASTPointer<TypeName>());
 	ASTPointer<ModifierDefinition> parseModifierDefinition();
 	ASTPointer<EventDefinition> parseEventDefinition();
@@ -73,7 +76,10 @@ private:
 	ASTPointer<Identifier> parseIdentifier();
 	ASTPointer<TypeName> parseTypeName(bool _allowVar);
 	ASTPointer<Mapping> parseMapping();
-	ASTPointer<ParameterList> parseParameterList(bool _allowEmpty = true, bool _allowIndexed = false);
+	ASTPointer<ParameterList> parseParameterList(
+		VarDeclParserOptions const& _options,
+		bool _allowEmpty = true
+	);
 	ASTPointer<Block> parseBlock();
 	ASTPointer<Statement> parseStatement();
 	ASTPointer<IfStatement> parseIfStatement();
@@ -114,11 +120,11 @@ private:
 	/// Returns a typename parsed in look-ahead fashion from something like "a[8][2**70]".
 	ASTPointer<TypeName> typeNameIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
-		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
+		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices);
 	/// Returns an expression parsed in look-ahead fashion from something like "a[8][2**70]".
 	ASTPointer<Expression> expressionFromIndexAccessStructure(
 		ASTPointer<PrimaryExpression> const& _primary,
-		std::vector<std::pair<ASTPointer<Expression>, Location>> const& _indices);
+		std::vector<std::pair<ASTPointer<Expression>, SourceLocation>> const& _indices);
 	/// If current token value is not _value, throw exception otherwise advance token.
 	void expectToken(Token::Value _value);
 	Token::Value expectAssignmentOperator();

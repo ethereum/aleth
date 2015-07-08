@@ -29,12 +29,7 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
 
-#if defined(clogS)
-#undef clogS
-#endif
-#define clogS(X) dev::LogOutputStream<X, true>(false) << "| " << std::setw(2) << session()->socketId() << "] "
-
-WhisperHost::WhisperHost()
+WhisperHost::WhisperHost(): Worker("shh")
 {
 }
 
@@ -56,6 +51,9 @@ void WhisperHost::streamMessage(h256 _m, RLPStream& _s) const
 
 void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 {
+	// this function processes both outgoing messages originated both by local host (_p == null)
+	// and incoming messages from remote peers (_p != null)
+
 	cnote << this << ": inject: " << _m.expiry() << _m.ttl() << _m.topic() << toHex(_m.data());
 
 	if (_m.expiry() <= (unsigned)time(0))
@@ -71,12 +69,32 @@ void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 		m_expiryQueue.insert(make_pair(_m.expiry(), h));
 	}
 
-//	if (_p)
+	// rating of incoming message from remote host is assessed according to the following criteria:
+	// 1. installed watch match; 2. bloom filter match; 2. ttl; 3. proof of work
+
+	int rating = 0;
+
+	DEV_GUARDED(m_filterLock)
+		if (_m.matchesBloomFilter(m_bloom))
+		{
+			++rating;
+			for (auto const& f: m_filters)
+				if (f.second.filter.matches(_m))
+					for (auto& i: m_watches)
+						if (i.second.id == f.first)
+						{
+							i.second.changes.push_back(h);
+							rating += 2;
+						}
+		}
+
+	if (_p) // incoming message from remote peer
 	{
-		Guard l(m_filterLock);
-		for (auto const& f: m_filters)
-			if (f.second.filter.matches(_m))
-				noteChanged(h, f.first);
+		rating *= 256;
+		unsigned ttlReward = (256 > _m.ttl() ? 256 - _m.ttl() : 0);
+		rating += ttlReward;
+		rating *= 256;
+		rating += _m.workProved();
 	}
 
 	// TODO p2p: capability-based rating
@@ -84,41 +102,34 @@ void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 	{
 		auto w = i.first->cap<WhisperPeer>().get();
 		if (w == _p)
-			w->addRating(1);
+			w->addRating(rating);
 		else
 			w->noteNewMessage(h, _m);
 	}
 }
 
-void WhisperHost::noteChanged(h256 _messageHash, h256 _filter)
+unsigned WhisperHost::installWatch(shh::Topics const& _t)
 {
-	for (auto& i: m_watches)
-		if (i.second.id == _filter)
-		{
-			cwatshh << "!!!" << i.first << i.second.id;
-			i.second.changes.push_back(_messageHash);
-		}
-}
-
-unsigned WhisperHost::installWatchOnId(h256 _h)
-{
-	auto ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
-	m_watches[ret] = ClientWatch(_h);
-	cwatshh << "+++" << ret << _h;
-	return ret;
-}
-
-unsigned WhisperHost::installWatch(shh::FullTopic const& _ft)
-{
-	Guard l(m_filterLock);
-
-	InstalledFilter f(_ft);
+	InstalledFilter f(_t);
 	h256 h = f.filter.sha3();
+	unsigned ret = 0;
 
-	if (!m_filters.count(h))
-		m_filters.insert(make_pair(h, f));
+	DEV_GUARDED(m_filterLock)
+	{
+		auto it = m_filters.find(h);
+		if (m_filters.end() == it)
+			m_filters.insert(make_pair(h, f));
+		else
+			it->second.refCount++;
 
-	return installWatchOnId(h);
+		m_bloom.addRaw(f.filter.exportBloom());
+		ret = m_watches.size() ? m_watches.rbegin()->first + 1 : 0;
+		m_watches[ret] = ClientWatch(h);
+		cwatshh << "+++" << ret << h;
+	}
+
+	noteAdvertiseTopicsOfInterest();
+	return ret;
 }
 
 h256s WhisperHost::watchMessages(unsigned _watchId)
@@ -146,23 +157,30 @@ void WhisperHost::uninstallWatch(unsigned _i)
 {
 	cwatshh << "XXX" << _i;
 
-	Guard l(m_filterLock);
+	DEV_GUARDED(m_filterLock)
+	{
+		auto it = m_watches.find(_i);
+		if (it == m_watches.end())
+			return;
 
-	auto it = m_watches.find(_i);
-	if (it == m_watches.end())
-		return;
-	auto id = it->second.id;
-	m_watches.erase(it);
+		auto id = it->second.id;
+		m_watches.erase(it);
 
-	auto fit = m_filters.find(id);
-	if (fit != m_filters.end())
-		if (!--fit->second.refCount)
-			m_filters.erase(fit);
+		auto fit = m_filters.find(id);
+		if (fit != m_filters.end())
+		{
+			m_bloom.removeRaw(fit->second.filter.exportBloom());
+			if (!--fit->second.refCount)
+				m_filters.erase(fit);
+		}
+	}
+
+	noteAdvertiseTopicsOfInterest();
 }
 
 void WhisperHost::doWork()
 {
-	for (auto& i: peerSessions())
+	for (auto i: peerSessions())
 		i.first->cap<WhisperPeer>().get()->sendMessages();
 	cleanup();
 }
@@ -175,4 +193,10 @@ void WhisperHost::cleanup()
 	WriteGuard l(x_messages);
 	for (auto it = m_expiryQueue.begin(); it != m_expiryQueue.end() && it->first <= now; it = m_expiryQueue.erase(it))
 		m_messages.erase(it->second);
+}
+
+void WhisperHost::noteAdvertiseTopicsOfInterest()
+{
+	for (auto i: peerSessions())
+		i.first->cap<WhisperPeer>().get()->noteAdvertiseTopicsOfInterest();
 }

@@ -2,7 +2,6 @@ import QtQuick 2.2
 import QtQuick.Controls 1.1
 import QtQuick.Layouts 1.0
 import QtQuick.Controls.Styles 1.1
-import CodeEditorExtensionManager 1.0
 import Qt.labs.settings 1.0
 import org.ethereum.qml.QEther 1.0
 import "js/QEtherHelper.js" as QEtherHelper
@@ -21,22 +20,41 @@ Rectangle {
 	anchors.fill: parent
 	id: root
 
-	property alias rightViewVisible: rightView.visible
+	property alias rightViewVisible: scenarioExe.visible
 	property alias webViewVisible: webPreview.visible
+	property alias webView: webPreview
 	property alias projectViewVisible: projectList.visible
+	property alias projectNavigator: projectList
 	property alias runOnProjectLoad: mainSettings.runOnProjectLoad
-	property alias rightPane: rightView
+	property alias rightPane: scenarioExe
+	property alias debuggerPanel: debugPanel
+	property alias codeEditor: codeEditor
 	property bool webViewHorizontal: codeWebSplitter.orientation === Qt.Vertical //vertical splitter positions elements vertically, splits screen horizontally
 	property bool firstCompile: true
+	property int scenarioMinWidth: 620
 
 	Connections {
 		target: codeModel
 		onCompilationComplete: {
 			if (firstCompile) {
 				firstCompile = false;
-			if (runOnProjectLoad)
-				startQuickDebugging();
+				if (runOnProjectLoad)
+					startQuickDebugging();
 			}
+		}
+	}
+
+	Connections {
+		target: debugPanel
+		onDebugExecuteLocation: {
+			codeEditor.highlightExecution(documentId, location);
+		}
+	}
+
+	Connections {
+		target: codeEditor
+		onBreakpointsChanged: {
+			debugPanel.setBreakpoints(codeEditor.getBreakpoints());
 		}
 	}
 
@@ -47,20 +65,20 @@ Rectangle {
 	}
 
 	function toggleRightView() {
-		rightView.visible = !rightView.visible;
+		scenarioExe.visible = !scenarioExe.visible;
 	}
 
 	function ensureRightView() {
-		rightView.visible = true;
+		scenarioExe.visible = true;
 	}
 
 	function rightViewIsVisible()
 	{
-		return rightView.visible;
+		return scenarioExe.visible;
 	}
 
 	function hideRightView() {
-		rightView.visible = false;
+		scenarioExe.visible = lfalse;
 	}
 
 	function toggleWebPreview() {
@@ -75,8 +93,15 @@ Rectangle {
 		codeWebSplitter.orientation = (codeWebSplitter.orientation === Qt.Vertical ? Qt.Horizontal : Qt.Vertical);
 	}
 
-	CodeEditorExtensionManager {
-		headerView: headerPaneTabs;
+	//TODO: move this to debugger.js after refactoring, introduce events
+	function toggleBreakpoint() {
+		codeEditor.toggleBreakpoint();
+	}
+
+	function displayCompilationErrorIfAny()
+	{
+		scenarioExe.visible = true;
+		scenarioExe.displayCompilationErrorIfAny();
 	}
 
 	Settings {
@@ -86,10 +111,12 @@ Rectangle {
 		property alias webHeight: webPreview.height
 		property alias showProjectView: projectList.visible
 		property bool runOnProjectLoad: true
+		property int scenarioMinWidth: scenarioMinWidth
 	}
 
 	ColumnLayout
 	{
+		id: mainColumn
 		anchors.fill: parent
 		spacing: 0
 		Rectangle {
@@ -107,21 +134,15 @@ Rectangle {
 				}
 				id: headerPaneContainer
 				anchors.fill: parent
-				TabView {
-					id: headerPaneTabs
-					tabsVisible: false
-					antialiasing: true
+				StatusPane
+				{
 					anchors.fill: parent
-					style: TabViewStyle {
-						frameOverlap: 1
-						tab: Rectangle {}
-						frame: Rectangle { color: "transparent" }
-					}
+					webPreview: webPreview
 				}
 			}
 		}
 
-		Rectangle{
+		Rectangle {
 			Layout.fillWidth: true
 			height: 1
 			color: "#8c8c8c"
@@ -135,17 +156,12 @@ Rectangle {
 				id: splitSettings
 				property alias projectWidth: projectList.width
 				property alias contentViewWidth: contentView.width
-				property alias rightViewWidth: rightView.width
+				property alias rightViewWidth: scenarioExe.width
 			}
 
-			SplitView
+			Splitter
 			{
 				anchors.fill: parent
-				handleDelegate: Rectangle {
-				   width: 1
-				   height: 1
-				   color: "#8c8c8c"
-				}
 				orientation: Qt.Horizontal
 
 				ProjectList	{
@@ -153,21 +169,22 @@ Rectangle {
 					width: 350
 					Layout.minimumWidth: 250
 					Layout.fillHeight: true
+					Connections {
+						target: projectModel.codeEditor
+					}
 				}
+
 				Rectangle {
 					id: contentView
 					Layout.fillHeight: true
 					Layout.fillWidth: true
-					SplitView {
-						 handleDelegate: Rectangle {
-							width: 1
-							height: 1
-							color: "#8c8c8c"
-						 }
+
+					Splitter {
 						id: codeWebSplitter
 						anchors.fill: parent
 						orientation: Qt.Vertical
 						CodeEditorView {
+							id: codeEditor
 							height: parent.height * 0.6
 							anchors.top: parent.top
 							Layout.fillWidth: true
@@ -184,19 +201,46 @@ Rectangle {
 					}
 				}
 
-				Debugger {
+				ScenarioExecution
+				{
+					id: scenarioExe;
 					visible: false;
-					id: rightView;
 					Layout.fillHeight: true
 					Keys.onEscapePressed: visible = false
-					Layout.minimumWidth: 515
+					Layout.minimumWidth: scenarioMinWidth
 					anchors.right: parent.right
+				}
+
+				Debugger
+				{
+					id: debugPanel
+					visible: false
+					Layout.fillHeight: true
+					Keys.onEscapePressed: visible = false
+					Layout.minimumWidth: scenarioMinWidth
+					anchors.right: parent.right
+				}
+
+				Connections {
+					target: clientModel
+					onDebugDataReady:  {
+						scenarioExe.visible = false
+						debugPanel.visible = true
+						debugPanel.width = scenarioExe.width
+						if (scenarioExe.bc.debugTrRequested)
+							debugPanel.setTr(scenarioExe.bc.model.blocks[scenarioExe.bc.debugTrRequested[0]].transactions[scenarioExe.bc.debugTrRequested[1]])
+					}
+				}
+
+				Connections {
+					target: debugPanel
+					onPanelClosed:  {
+						debugPanel.visible = false
+						scenarioExe.visible = true
+						scenarioExe.width = debugPanel.width
+					}
 				}
 			}
 		}
 	}
 }
-
-
-
-

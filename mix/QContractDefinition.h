@@ -37,20 +37,27 @@ class QContractDefinition: public QBasicNodeDefinition
 	Q_OBJECT
 	Q_PROPERTY(QQmlListProperty<dev::mix::QFunctionDefinition> functions READ functions CONSTANT)
 	Q_PROPERTY(dev::mix::QFunctionDefinition* constructor READ constructor CONSTANT)
+	Q_PROPERTY(QQmlListProperty<dev::mix::QFunctionDefinition> events READ events CONSTANT)
 
 public:
-	QContractDefinition() {}
-	QContractDefinition(solidity::ContractDefinition const* _contract);
+	QContractDefinition(QObject* _parent, solidity::ContractDefinition const* _contract);
 	/// Get all the functions of the contract.
 	QQmlListProperty<QFunctionDefinition> functions() const { return QQmlListProperty<QFunctionDefinition>(const_cast<QContractDefinition*>(this), const_cast<QContractDefinition*>(this)->m_functions); }
 	/// Get the constructor of the contract.
 	QFunctionDefinition* constructor() const { return m_constructor; }
+	/// Get all the functions of the contract.
 	QList<QFunctionDefinition*> const& functionsList() const { return m_functions; }
 	/// Find function by hash, returns nullptr if not found
 	QFunctionDefinition const* getFunction(dev::FixedHash<4> _hash) const;
+	/// Get events
+	QQmlListProperty<QFunctionDefinition> events() const { return QQmlListProperty<QFunctionDefinition>(const_cast<QContractDefinition*>(this), const_cast<QContractDefinition*>(this)->m_events); }
+	/// Get events
+	QList<QFunctionDefinition*> const& eventsList() const { return m_events; }
+
 private:
 	QList<QFunctionDefinition*> m_functions;
 	QFunctionDefinition* m_constructor;
+	QList<QFunctionDefinition*> m_events;
 };
 
 }

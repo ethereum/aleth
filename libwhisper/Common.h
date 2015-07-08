@@ -23,6 +23,7 @@
 
 #include <string>
 #include <chrono>
+
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
@@ -47,26 +48,30 @@ using h256Set = dev::h256Set;
 class WhisperHost;
 class WhisperPeer;
 class Whisper;
-
 class Envelope;
 
 enum WhisperPacket
 {
 	StatusPacket = 0,
 	MessagesPacket,
-	AddFilterPacket,
-	RemoveFilterPacket,
+	TopicFilterPacket,
 	PacketCount
 };
 
-using CollapsedTopicPart = FixedHash<4>;
-using FullTopicPart = h256;
+static const unsigned TopicBloomFilterSize = 64;
+static const unsigned BitsPerBloom = 3;
+static const unsigned WhisperProtocolVersion = 3;
 
-using CollapsedTopic = std::vector<CollapsedTopicPart>;
-using FullTopic = h256s;
+using AbridgedTopic = FixedHash<4>;
+using Topic = h256;
 
-CollapsedTopicPart collapse(FullTopicPart const& _fullTopicPart);
-CollapsedTopic collapse(FullTopic const& _fullTopic);
+using AbridgedTopics = std::vector<AbridgedTopic>;
+using Topics = h256s;
+
+using TopicBloomFilterHash = FixedHash<TopicBloomFilterSize>;
+
+AbridgedTopic abridge(Topic const& _topic);
+AbridgedTopics abridge(Topics const& _topics);
 
 class BuildTopic
 {
@@ -79,10 +84,10 @@ public:
 
 	BuildTopic& shiftRaw(h256 const& _part) { m_parts.push_back(_part); return *this; }
 
-	operator CollapsedTopic() const { return toTopic(); }
-	operator FullTopic() const { return toFullTopic(); }
-	CollapsedTopic toTopic() const;
-	FullTopic toFullTopic() const { return m_parts; }
+	operator AbridgedTopics() const { return toAbridgedTopics(); }
+	operator Topics() const { return toTopics(); }
+	AbridgedTopics toAbridgedTopics() const;
+	Topics toTopics() const { return m_parts; }
 
 protected:
 	BuildTopic& shiftBytes(bytes const& _b);
@@ -90,30 +95,22 @@ protected:
 	h256s m_parts;
 };
 
-using TopicMask = std::vector<std::pair<CollapsedTopicPart, CollapsedTopicPart>>;
+using TopicMask = std::vector<std::pair<AbridgedTopic, AbridgedTopic>>; // where pair::first is the actual abridged topic hash, pair::second is a constant (probably redundunt)
 using TopicMasks = std::vector<TopicMask>;
 
 class TopicFilter
 {
 public:
 	TopicFilter() {}
-	TopicFilter(FullTopic const& _m) { m_topicMasks.push_back(TopicMask()); for (auto const& h: _m) m_topicMasks.back().push_back(std::make_pair(collapse(h), h ? ~CollapsedTopicPart() : CollapsedTopicPart())); }
+	TopicFilter(Topics const& _m) { m_topicMasks.push_back(TopicMask()); for (auto const& h: _m) m_topicMasks.back().push_back(std::make_pair(abridge(h), h ? ~AbridgedTopic() : AbridgedTopic())); }
 	TopicFilter(TopicMask const& _m): m_topicMasks(1, _m) {}
 	TopicFilter(TopicMasks const& _m): m_topicMasks(_m) {}
-	TopicFilter(RLP const& _r)//: m_topicMasks(_r.toVector<std::vector<>>())
-	{
-		for (RLP i: _r)
-		{
-			m_topicMasks.push_back(TopicMask());
-			for (RLP j: i)
-				m_topicMasks.back().push_back(j.toPair<FixedHash<4>, FixedHash<4>>());
-		}
-	}
+	TopicFilter(RLP const& _r);
 
 	void streamRLP(RLPStream& _s) const { _s << m_topicMasks; }
 	h256 sha3() const;
-
 	bool matches(Envelope const& _m) const;
+	TopicBloomFilterHash exportBloom() const;
 
 private:
 	TopicMasks m_topicMasks;
@@ -131,9 +128,9 @@ public:
 	template <class T> BuildTopicMask& operator()(T const& _t) { shift(_t); return *this; }
 
 	operator TopicMask() const { return toTopicMask(); }
-	operator FullTopic() const { return toFullTopic(); }
+	operator Topics() const { return toTopics(); }
 	TopicMask toTopicMask() const;
-	FullTopic toFullTopic() const { return m_parts; }
+	Topics toTopics() const { return m_parts; }
 };
 
 }

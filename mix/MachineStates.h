@@ -29,6 +29,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libdevcore/Common.h>
 #include <libdevcrypto/Common.h>
 #include <libevmcore/Instruction.h>
+#include <libethereum/Transaction.h>
 #include <libethereum/TransactionReceipt.h>
 
 namespace dev
@@ -36,46 +37,59 @@ namespace dev
 namespace mix
 {
 
-	/**
+/**
 	* @brief Store information about a machine state.
 	*/
-	struct MachineState
-	{
-		uint64_t steps;
-		dev::Address address;
-		dev::u256 curPC;
-		dev::eth::Instruction inst;
-		dev::bigint newMemSize;
-		dev::u256 gas;
-		dev::u256s stack;
-		dev::bytes memory;
-		dev::bigint gasCost;
-		std::map<dev::u256, dev::u256> storage;
-		std::vector<unsigned> levels;
-		unsigned codeIndex;
-		unsigned dataIndex;
-	};
+struct MachineState
+{
+	uint64_t steps;
+	dev::u256 curPC;
+	dev::eth::Instruction inst;
+	dev::bigint newMemSize;
+	dev::u256 gas;
+	dev::u256s stack;
+	dev::bytes memory;
+	dev::bigint gasCost;
+	std::unordered_map<dev::u256, dev::u256> storage;
+	std::vector<unsigned> levels;
+	unsigned codeIndex;
+	unsigned dataIndex;
+};
 
-	/**
+/**
+	* @brief Executed conract code info
+	*/
+struct MachineCode
+{
+	dev::Address address;
+	bytes code;
+};
+
+/**
 	* @brief Store information about a machine states.
 	*/
-	struct ExecutionResult
-	{
-		ExecutionResult(): transactionIndex(std::numeric_limits<unsigned>::max()) {}
+struct ExecutionResult
+{
+	ExecutionResult(): transactionIndex(std::numeric_limits<unsigned>::max()) {}
 
-		std::vector<MachineState> machineStates;
-		std::vector<bytes> transactionData;
-		std::vector<bytes> executionCode;
-		bytes returnValue;
-		dev::Address address;
-		dev::Address sender;
-		dev::Address contractAddress;
-		dev::u256 value;
-		unsigned transactionIndex;
+	std::vector<MachineState> machineStates;
+	std::vector<bytes> transactionData;
+	std::vector<MachineCode> executionCode;
+	dev::eth::ExecutionResult result;
+	dev::Address address;
+	dev::Address sender;
+	dev::Address contractAddress;
+	dev::u256 value;
+	dev::u256 gasUsed;
+	unsigned transactionIndex;
+	unsigned executonIndex = 0;
+	bytes inputParameters;
+	eth::LocalisedLogEntries logs;
 
-		bool isCall() const { return transactionIndex == std::numeric_limits<unsigned>::max(); }
-	};
+	bool isCall() const { return transactionIndex == std::numeric_limits<unsigned>::max(); }
+	bool isConstructor() const { return !isCall() && !address; }
+};
 
-	using ExecutionResults = std::vector<ExecutionResult>;
+using ExecutionResults = std::vector<ExecutionResult>;
 }
 }

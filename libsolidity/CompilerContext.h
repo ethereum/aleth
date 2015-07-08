@@ -23,10 +23,13 @@
 #pragma once
 
 #include <ostream>
+#include <stack>
+#include <utility>
 #include <libevmcore/Instruction.h>
-#include <libevmcore/Assembly.h>
+#include <libevmasm/Assembly.h>
 #include <libsolidity/ASTForward.h>
 #include <libsolidity/Types.h>
+#include <libdevcore/Common.h>
 
 namespace dev {
 namespace solidity {
@@ -40,13 +43,14 @@ class CompilerContext
 {
 public:
 	void addMagicGlobal(MagicVariableDeclaration const& _declaration);
-	void addStateVariable(VariableDeclaration const& _declaration);
+	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
-	void addAndInitializeVariable(VariableDeclaration const& _declaration);
+	void removeVariable(VariableDeclaration const& _declaration);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
 
+	void setStackOffset(int _offset) { m_asm.setDeposit(_offset); }
 	void adjustStackOffset(int _adjustment) { m_asm.adjustDeposit(_adjustment); }
 	unsigned getStackHeight() const { solAssert(m_asm.deposit() >= 0, ""); return unsigned(m_asm.deposit()); }
 
@@ -54,13 +58,19 @@ public:
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
+	/// @returns the entry label of the given function and creates it if it does not exist yet.
 	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration);
+	/// @returns the entry label of the given function. Might return an AssemblyItem of type
+	/// UndefinedItem if it does not exist yet.
+	eth::AssemblyItem getFunctionEntryLabelIfExists(Declaration const& _declaration) const;
 	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
 	/// @returns the entry label of the given function and takes overrides into account.
 	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function);
-	/// @returns the entry label of function with the given name from the most derived class just
+	/// @returns the entry label of a function that overrides the given declaration from the most derived class just
 	/// above _base in the current inheritance hierarchy.
-	eth::AssemblyItem getSuperFunctionEntryLabel(std::string const& _name, ContractDefinition const& _base);
+	eth::AssemblyItem getSuperFunctionEntryLabel(FunctionDefinition const& _function, ContractDefinition const& _base);
+	FunctionDefinition const* getNextConstructor(ContractDefinition const& _contract) const;
+
 	/// @returns the set of functions for which we still need to generate code
 	std::set<Declaration const*> getFunctionsWithoutCode();
 	/// Resets function specific members, inserts the function entry label and marks the function
@@ -76,7 +86,8 @@ public:
 	/// Converts an offset relative to the current stack height to a value that can be used later
 	/// with baseToCurrentStackOffset to point to the same stack element.
 	unsigned currentToBaseStackOffset(unsigned _offset) const;
-	u256 getStorageLocationOfVariable(Declaration const& _declaration) const;
+	/// @returns pair of slot and byte offset of the value inside this slot.
+	std::pair<u256, unsigned> getStorageLocationOfVariable(Declaration const& _declaration) const;
 
 	/// Appends a JUMPI instruction to a new tag and @returns the tag
 	eth::AssemblyItem appendConditionalJump() { return m_asm.appendJumpI().tag(); }
@@ -85,7 +96,9 @@ public:
 	/// Appends a JUMP to a new tag and @returns the tag
 	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
-	CompilerContext&  appendJump() { return *this << eth::Instruction::JUMP; }
+	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
+	/// Returns an "ErrorTag"
+	eth::AssemblyItem errorTag() { return m_asm.errorTag(); }
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
@@ -99,6 +112,12 @@ public:
 	void appendProgramSize() { return m_asm.appendProgramSize(); }
 	/// Adds data to the data section, pushes a reference to the stack
 	eth::AssemblyItem appendData(bytes const& _data) { return m_asm.append(_data); }
+	/// Resets the stack of visited nodes with a new stack having only @c _node
+	void resetVisitedNodes(ASTNode const* _node);
+	/// Pops the stack of visited nodes
+	void popVisitedNodes() { m_visitedNodes.pop(); updateSourceLocation(); }
+	/// Pushes an ASTNode to the stack of visited nodes
+	void pushVisitedNodes(ASTNode const* _node) { m_visitedNodes.push(_node); updateSourceLocation(); }
 
 	/// Append elements to the current instruction list and adjust @a m_stackOffset.
 	CompilerContext& operator<<(eth::AssemblyItem const& _item) { m_asm.append(_item); return *this; }
@@ -106,21 +125,48 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
+	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
+
 	eth::Assembly const& getAssembly() const { return m_asm; }
-	void streamAssembly(std::ostream& _stream) const { _stream << m_asm; }
-	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
+	/// @arg _sourceCodes is the map of input files to source code strings
+	/// @arg _inJsonFormat shows whether the out should be in Json format
+	Json::Value streamAssembly(std::ostream& _stream, StringMap const& _sourceCodes = StringMap(), bool _inJsonFormat = false) const
+	{
+		return m_asm.stream(_stream, "", _sourceCodes, _inJsonFormat);
+	}
+
+	bytes getAssembledBytecode() { return m_asm.assemble(); }
+	bytes getAssembledRuntimeBytecode(size_t _subIndex) { m_asm.assemble(); return m_asm.data(u256(_subIndex)); }
+
+	/**
+	 * Helper class to pop the visited nodes stack when a scope closes
+	 */
+	class LocationSetter: public ScopeGuard
+	{
+	public:
+		LocationSetter(CompilerContext& _compilerContext, ASTNode const& _node):
+			ScopeGuard([&]{ _compilerContext.popVisitedNodes(); }) { _compilerContext.pushVisitedNodes(&_node); }
+	};
 
 private:
-	eth::Assembly m_asm;
+	/// @returns the entry label of the given function - searches the inheritance hierarchy
+	/// startig from the given point towards the base.
+	eth::AssemblyItem getVirtualFunctionEntryLabel(
+		FunctionDefinition const& _function,
+		std::vector<ContractDefinition const*>::const_iterator _searchStart
+	);
+	/// @returns an iterator to the contract directly above the given contract.
+	std::vector<ContractDefinition const*>::const_iterator getSuperContract(const ContractDefinition &_contract) const;
+	/// Updates source location set in the assembly.
+	void updateSourceLocation();
 
+	eth::Assembly m_asm;
 	/// Magic global variables like msg, tx or this, distinguished by type.
 	std::set<Declaration const*> m_magicGlobals;
 	/// Other already compiled contracts to be used in contract creation calls.
 	std::map<ContractDefinition const*, bytes const*> m_compiledContracts;
-	/// Size of the state variables, offset of next variable to be added.
-	u256 m_stateVariablesSize = 0;
 	/// Storage offsets of state variables
-	std::map<Declaration const*, u256> m_stateVariables;
+	std::map<Declaration const*, std::pair<u256, unsigned>> m_stateVariables;
 	/// Offsets of local variables on the stack (relative to stack base).
 	std::map<Declaration const*, unsigned> m_localVariables;
 	/// Labels pointing to the entry points of functions.
@@ -129,6 +175,8 @@ private:
 	std::set<Declaration const*> m_functionsWithCode;
 	/// List of current inheritance hierarchy from derived to base.
 	std::vector<ContractDefinition const*> m_inheritanceHierarchy;
+	/// Stack of current visited AST nodes, used for location attachment
+	std::stack<ASTNode const*> m_visitedNodes;
 };
 
 }

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <array>
+#include <cstdint>
 #include <random>
 #include <algorithm>
 #include "CommonData.h"
@@ -31,7 +32,11 @@
 namespace dev
 {
 
-extern std::mt19937_64 s_fixedHashEngine;
+/// Compile-time calculation of Log2 of constant values.
+template <unsigned N> struct StaticLog2 { enum { result = 1 + StaticLog2<N/2>::result }; };
+template <> struct StaticLog2<1> { enum { result = 0 }; };
+
+extern std::random_device s_fixedHashEngine;
 
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
 /// Transparently converts to/from the corresponding arithmetic type; this will
@@ -53,7 +58,7 @@ public:
 	enum ConstructFromStringType { FromHex, FromBinary };
 
 	/// Method to convert from a string.
-	enum ConstructFromHashType { AlignLeft, AlignRight };
+	enum ConstructFromHashType { AlignLeft, AlignRight, FailIfDifferent };
 
 	/// Construct an empty hash.
 	FixedHash() { m_data.fill(0); }
@@ -64,29 +69,34 @@ public:
 	/// Convert from the corresponding arithmetic type.
 	FixedHash(Arith const& _arith) { toBigEndian(_arith, m_data); }
 
-	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytes const& _b) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); }
+	/// Convert from unsigned
+	explicit FixedHash(unsigned _u) { toBigEndian(_u, m_data); }
 
 	/// Explicitly construct, copying from a byte array.
-	explicit FixedHash(bytesConstRef _b) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); }
+	explicit FixedHash(bytes const& _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
+
+	/// Explicitly construct, copying from a byte array.
+	explicit FixedHash(bytesConstRef _b, ConstructFromHashType _t = FailIfDifferent) { if (_b.size() == N) memcpy(m_data.data(), _b.data(), std::min<unsigned>(_b.size(), N)); else { m_data.fill(0); if (_t != FailIfDifferent) { auto c = std::min<unsigned>(_b.size(), N); for (unsigned i = 0; i < c; ++i) m_data[_t == AlignRight ? N - 1 - i : i] = _b[_t == AlignRight ? _b.size() - 1 - i : i]; } } }
 
 	/// Explicitly construct, copying from a bytes in memory with given pointer.
 	explicit FixedHash(byte const* _bs, ConstructFromPointerType) { memcpy(m_data.data(), _bs, N); }
 
 	/// Explicitly construct, copying from a  string.
-	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex): FixedHash(_t == FromHex ? fromHex(_s) : dev::asBytes(_s)) {}
+	explicit FixedHash(std::string const& _s, ConstructFromStringType _t = FromHex, ConstructFromHashType _ht = FailIfDifferent): FixedHash(_t == FromHex ? fromHex(_s, WhenError::Throw) : dev::asBytes(_s), _ht) {}
 
 	/// Convert to arithmetic type.
 	operator Arith() const { return fromBigEndian<Arith>(m_data); }
 
 	/// @returns true iff this is the empty hash.
-	explicit operator bool() const { return ((Arith)*this) != 0; }
+	explicit operator bool() const { return std::any_of(m_data.begin(), m_data.end(), [](byte _b) { return _b != 0; }); }
 
 	// The obvious comparison operators.
 	bool operator==(FixedHash const& _c) const { return m_data == _c.m_data; }
 	bool operator!=(FixedHash const& _c) const { return m_data != _c.m_data; }
-	bool operator<(FixedHash const& _c) const { return m_data < _c.m_data; }
-	bool operator>=(FixedHash const& _c) const { return m_data >= _c.m_data; }
+	bool operator<(FixedHash const& _c) const { for (unsigned i = 0; i < N; ++i) if (m_data[i] < _c.m_data[i]) return true; else if (m_data[i] > _c.m_data[i]) return false; return false; }
+	bool operator>=(FixedHash const& _c) const { return !operator<(_c); }
+	bool operator<=(FixedHash const& _c) const { return operator==(_c) || operator<(_c); }
+	bool operator>(FixedHash const& _c) const { return !operator<=(_c); }
 
 	// The obvious binary operators.
 	FixedHash& operator^=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] ^= _c.m_data[i]; return *this; }
@@ -95,9 +105,10 @@ public:
 	FixedHash operator|(FixedHash const& _c) const { return FixedHash(*this) |= _c; }
 	FixedHash& operator&=(FixedHash const& _c) { for (unsigned i = 0; i < N; ++i) m_data[i] &= _c.m_data[i]; return *this; }
 	FixedHash operator&(FixedHash const& _c) const { return FixedHash(*this) &= _c; }
-	FixedHash& operator~() { for (unsigned i = 0; i < N; ++i) m_data[i] = ~m_data[i]; return *this; }
+	FixedHash operator~() const { FixedHash ret; for (unsigned i = 0; i < N; ++i) ret[i] = ~m_data[i]; return ret; }
+	FixedHash& operator++() { for (unsigned i = size; i > 0 && !++m_data[--i]; ) {} return *this; }
 
-	/// @returns true if all bytes in @a _c are set in this object.
+	/// @returns true if all one-bits in @a _c are set in this object.
 	bool contains(FixedHash const& _c) const { return (*this & _c) == _c; }
 
 	/// @returns a particular byte from the hash.
@@ -107,6 +118,12 @@ public:
 
 	/// @returns an abridged version of the hash as a user-readable hex string.
 	std::string abridged() const { return toHex(ref().cropped(0, 4)) + "\342\200\246"; }
+
+	/// @returns a version of the hash as a user-readable hex string that leaves out the middle part.
+	std::string abridgedMiddle() const { return toHex(ref().cropped(0, 4)) + "\342\200\246" + toHex(ref().cropped(N - 4)); }
+
+	/// @returns the hash as a user-readable hex string.
+	std::string hex() const { return toHex(ref()); }
 
 	/// @returns a mutable byte vector_ref to the object's data.
 	bytesRef ref() { return bytesRef(m_data.data(), N); }
@@ -135,56 +152,46 @@ public:
 	{
 		FixedHash ret;
 		for (auto& i: ret.m_data)
-			i = std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
+			i = (uint8_t)std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
 		return ret;
 	}
 
+	/// @returns a random valued object.
 	static FixedHash random() { return random(s_fixedHashEngine); }
 
-	/// A generic std::hash compatible function object.
 	struct hash
 	{
 		/// Make a hash of the object's data.
-		size_t operator()(FixedHash const& value) const
-		{
-			size_t h = 0;
-			for (auto i: value.m_data)
-				h = (h << (5 - h)) + i;
-			return h;
-		}
+		size_t operator()(FixedHash const& _value) const { return boost::hash_range(_value.m_data.cbegin(), _value.m_data.cend()); }
 	};
-
-	inline FixedHash<32> bloom() const
-	{
-		FixedHash<32> ret;
-		for (auto i: m_data)
-			ret[i / 8] |= 1 << (i % 8);
-		return ret;
-	}
 
 	template <unsigned P, unsigned M> inline FixedHash& shiftBloom(FixedHash<M> const& _h)
 	{
-		return (*this |= _h.template nbloom<P, N>());
+		return (*this |= _h.template bloomPart<P, N>());
 	}
 
 	template <unsigned P, unsigned M> inline bool containsBloom(FixedHash<M> const& _h)
 	{
-		return contains(_h.template nbloom<P, N>());
+		return contains(_h.template bloomPart<P, N>());
 	}
 
-	template <unsigned P, unsigned M> inline FixedHash<M> nbloom() const
+	template <unsigned P, unsigned M> inline FixedHash<M> bloomPart() const
 	{
-		static const unsigned c_bloomBits = M * 8;
-		unsigned mask = c_bloomBits - 1;
-		unsigned bloomBytes = (dev::toLog2(c_bloomBits) + 7) / 8;
+		unsigned const c_bloomBits = M * 8;
+		unsigned const c_mask = c_bloomBits - 1;
+		unsigned const c_bloomBytes = (StaticLog2<c_bloomBits>::result + 7) / 8;
+
+		static_assert((M & (M - 1)) == 0, "M must be power-of-two");
+		static_assert(P * c_bloomBytes <= N, "out of range");
+
 		FixedHash<M> ret;
 		byte const* p = data();
 		for (unsigned i = 0; i < P; ++i)
 		{
 			unsigned index = 0;
-			for (unsigned j = 0; j < bloomBytes; ++j, ++p)
+			for (unsigned j = 0; j < c_bloomBytes; ++j, ++p)
 				index = (index << 8) | *p;
-			index &= mask;
+			index &= c_mask;
 			ret[M - 1 - index / 8] |= (1 << (index % 8));
 		}
 		return ret;
@@ -220,12 +227,8 @@ template<> inline bool FixedHash<32>::operator==(FixedHash<32> const& _other) co
 /// Fast std::hash compatible hash function object for h256.
 template<> inline size_t FixedHash<32>::hash::operator()(FixedHash<32> const& value) const
 {
-	const uint64_t*data = (const uint64_t*)value.data();
-	uint64_t hash = data[0];
-	hash ^= data[1];
-	hash ^= data[2];
-	hash ^= data[3];
-	return (size_t)hash;
+	uint64_t const* data = reinterpret_cast<uint64_t const*>(value.data());
+	return boost::hash_range(data, data + 4);
 }
 
 /// Stream I/O for the FixedHash class.
@@ -240,16 +243,21 @@ inline std::ostream& operator<<(std::ostream& _out, FixedHash<N> const& _h)
 }
 
 // Common types of FixedHash.
+using h2048 = FixedHash<256>;
+using h1024 = FixedHash<128>;
 using h520 = FixedHash<65>;
 using h512 = FixedHash<64>;
 using h256 = FixedHash<32>;
 using h160 = FixedHash<20>;
 using h128 = FixedHash<16>;
+using h64 = FixedHash<8>;
 using h512s = std::vector<h512>;
 using h256s = std::vector<h256>;
 using h160s = std::vector<h160>;
 using h256Set = std::set<h256>;
 using h160Set = std::set<h160>;
+using h256Hash = std::unordered_set<h256>;
+using h160Hash = std::unordered_set<h160>;
 
 /// Convert the given value into h160 (160-bit unsigned integer) using the right 20 bytes.
 inline h160 right160(h256 const& _t)
@@ -267,6 +275,10 @@ inline h160 left160(h256 const& _t)
 	return ret;
 }
 
+h128 fromUUID(std::string const& _uuid);
+
+std::string toUUID(h128 const& _uuid);
+
 inline std::string toString(h256s const& _bs)
 {
 	std::ostringstream out;
@@ -281,6 +293,10 @@ inline std::string toString(h256s const& _bs)
 
 namespace std
 {
-	/// Forward std::hash<dev::h256> to dev::h256::hash.
+	/// Forward std::hash<dev::FixedHash> to dev::FixedHash::hash.
+	template<> struct hash<dev::h64>: dev::h64::hash {};
+	template<> struct hash<dev::h128>: dev::h128::hash {};
+	template<> struct hash<dev::h160>: dev::h160::hash {};
 	template<> struct hash<dev::h256>: dev::h256::hash {};
+	template<> struct hash<dev::h512>: dev::h512::hash {};
 }

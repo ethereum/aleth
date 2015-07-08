@@ -23,27 +23,38 @@
 
 #include <chrono>
 #include <thread>
+
 #include <boost/filesystem.hpp>
+
 #include <libdevcore/Log.h>
-#include <libp2p/Host.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
+#include "BuildInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 using namespace dev::shh;
 
-WebThreeDirect::WebThreeDirect(std::string const& _clientVersion, std::string const& _dbPath, bool _forceClean, std::set<std::string> const& _interfaces, NetworkPreferences const& _n, bytesConstRef _network, int miners):
+WebThreeDirect::WebThreeDirect(
+	std::string const& _clientVersion,
+	std::string const& _dbPath,
+	WithExisting _we,
+	std::set<std::string> const& _interfaces,
+	NetworkPreferences const& _n,
+	bytesConstRef _network
+):
 	m_clientVersion(_clientVersion),
 	m_net(_clientVersion, _n, _network)
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
-		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _forceClean, 0, miners));
-		
+	{
+		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _we, 0));
+		m_ethereum->setExtraData(rlpList(0, _clientVersion, m_net.id()));
+	}
 
 	if (_interfaces.count("shh"))
 		m_whisper = m_net.registerCapability<WhisperHost>(new WhisperHost);
@@ -65,12 +76,27 @@ WebThreeDirect::~WebThreeDirect()
 	m_ethereum.reset();
 }
 
-void WebThreeDirect::setNetworkPreferences(p2p::NetworkPreferences const& _n)
+std::string WebThreeDirect::composeClientVersion(std::string const& _client, std::string const& _clientName)
 {
-	auto had = haveNetwork();
+#if ETH_EVMJIT
+	char const* jit = "-JIT";
+#else
+	char const* jit = "";
+#endif
+	return _client + "-" + "v" + dev::Version + "-" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + (ETH_CLEAN_REPO ? "" : "*") + "/" + _clientName + "/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM) + jit;
+}
+
+p2p::NetworkPreferences const& WebThreeDirect::networkPreferences() const
+{
+	return m_net.networkPreferences();
+}
+
+void WebThreeDirect::setNetworkPreferences(p2p::NetworkPreferences const& _n, bool _dropPeers)
+{
+	auto had = isNetworkStarted();
 	if (had)
 		stopNetwork();
-	m_net.setNetworkPreferences(_n);
+	m_net.setNetworkPreferences(_n, _dropPeers);
 	if (had)
 		startNetwork();
 }
@@ -95,7 +121,14 @@ bytes WebThreeDirect::saveNetwork()
 	return m_net.saveNetwork();
 }
 
-void WebThreeDirect::connect(std::string const& _seedHost, unsigned short _port)
+void WebThreeDirect::addNode(NodeId const& _node, bi::tcp::endpoint const& _host)
 {
-	m_net.addNode(NodeId(), _seedHost, _port, _port);
+	m_net.addNode(_node, NodeIPEndpoint(_host.address(), _host.port(), _host.port()));
 }
+
+void WebThreeDirect::requirePeer(NodeId const& _node, bi::tcp::endpoint const& _host)
+{
+	m_net.requirePeer(_node, NodeIPEndpoint(_host.address(), _host.port(), _host.port()));
+}
+
+

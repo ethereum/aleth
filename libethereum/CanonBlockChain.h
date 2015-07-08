@@ -21,22 +21,15 @@
 
 #pragma once
 
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#include <leveldb/db.h>
-#pragma warning(pop)
-
 #include <mutex>
 #include <libdevcore/Log.h>
 #include <libdevcore/Exceptions.h>
-#include <libethcore/CommonEth.h>
+#include <libethcore/Common.h>
 #include <libethcore/BlockInfo.h>
 #include <libdevcore/Guards.h>
 #include "BlockDetails.h"
 #include "Account.h"
-#include "BlockQueue.h"
 #include "BlockChain.h"
-namespace ldb = leveldb;
 
 namespace dev
 {
@@ -45,7 +38,7 @@ namespace eth
 {
 
 // TODO: Move all this Genesis stuff into Genesis.h/.cpp
-std::map<Address, Account> const& genesisState();
+std::unordered_map<Address, Account> const& genesisState();
 
 /**
  * @brief Implements the blockchain database. All data this gives is disk-backed.
@@ -55,21 +48,27 @@ std::map<Address, Account> const& genesisState();
 class CanonBlockChain: public BlockChain
 {
 public:
-		CanonBlockChain(bool _killExisting = false): CanonBlockChain(std::string(), _killExisting) {}
-		CanonBlockChain(std::string _path, bool _killExisting = false);
-		~CanonBlockChain() {}
+	CanonBlockChain(WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback()): CanonBlockChain(std::string(), _we, _pc) {}
+	CanonBlockChain(std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
+	~CanonBlockChain() {}
 
-		/// @returns the genesis block header.
-		static BlockInfo const& genesis() { UpgradableGuard l(x_genesis); if (!s_genesis) { auto gb = createGenesisBlock(); UpgradeGuard ul(l); s_genesis.reset(new BlockInfo); s_genesis->populate(&gb); } return *s_genesis; }
+	/// @returns the genesis block header.
+	static BlockInfo const& genesis();
 
-		/// @returns the genesis block as its RLP-encoded byte array.
-		/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
-		static bytes createGenesisBlock();
+	/// @returns the genesis block as its RLP-encoded byte array.
+	/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
+	static bytes createGenesisBlock();
+
+	/// Alter the value of the genesis block's nonce.
+	/// @warning Unless you're very careful, make sure you call this right at the start of the
+	/// program, before anything has had the chance to use this class at all.
+	static void setGenesisNonce(Nonce const& _n);
 
 private:
-		/// Static genesis info and its lock.
-		static boost::shared_mutex x_genesis;
-		static std::unique_ptr<BlockInfo> s_genesis;
+	/// Static genesis info and its lock.
+	static boost::shared_mutex x_genesis;
+	static std::unique_ptr<BlockInfo> s_genesis;
+	static Nonce s_nonce;
 };
 
 }
