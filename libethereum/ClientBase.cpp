@@ -45,14 +45,14 @@ State ClientBase::asOf(BlockNumber _h) const
 	return asOf(bc().numberHash(_h));
 }
 
-h256 ClientBase::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
+h256 ClientBase::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret, u256 o_nonce)
 {
 	prepareForTransaction();
 	
 	TransactionSkeleton ts(_t);
 	ts.from = toAddress(_secret);
 	if (_t.nonce == UndefinedU256)
-		ts.nonce = max<u256>(postMine().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
+		o_nonce = ts.nonce = max<u256>(postMine().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
 
 	Transaction t(ts, _secret);
 	m_tq.import(t.rlp());
