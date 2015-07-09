@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file unit.cpp
+/** @file Blockchain.cpp
  * @author Dimitry Khokhlov <Dimitry@ethdev.com>
  * @date 2015
  * libethereum unit test functions coverage.
@@ -192,9 +192,9 @@ R"ETHEREUM(
 }
 )ETHEREUM";
 
-BOOST_AUTO_TEST_SUITE(blockchainhelper)
+BOOST_AUTO_TEST_SUITE(libethereum)
 
-BOOST_AUTO_TEST_CASE(blockChain)
+BOOST_AUTO_TEST_CASE(canonBlockChain)
 {
 	std::string genesisTemp = dev::eth::c_genesisInfo;
 
