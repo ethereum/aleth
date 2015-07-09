@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file unit.cpp
+/** @file AccountDiff.cpp
  * @author Dimitry Khokhlov <Dimitry@ethdev.com>
  * @date 2015
  * libethereum unit test functions coverage.
