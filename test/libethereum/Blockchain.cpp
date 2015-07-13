@@ -63,13 +63,13 @@ private:
 class TestBlockChain
 {
 public:
-	TestBlockChain(BaseState baseState_ = BaseState::CanonGenesis)
+	TestBlockChain(BaseState _baseState = BaseState::CanonGenesis)
 	{
 		m_blockchain = std::unique_ptr<dev::eth::CanonBlockChain>(new dev::eth::CanonBlockChain(m_td.path(), WithExisting::Kill));
-		m_state = dev::eth::State(OverlayDB(State::openDB(m_td2.path())), baseState_, m_blockchain->info().coinbaseAddress);
+		m_state = dev::eth::State(OverlayDB(State::openDB(m_td2.path())), _baseState, m_blockchain->info().coinbaseAddress);
 	}
 
-	unsigned number(){ return m_blockchain->number(); }
+	unsigned number() { return m_blockchain->number(); }
 
 	void addBlock(TestBlock& _bl)
 	{
