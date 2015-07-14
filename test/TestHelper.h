@@ -142,8 +142,8 @@ public:
 	void importEnv(json_spirit::mObject& _o);
 	static void importState(json_spirit::mObject& _o, eth::State& _state);
 	static void importState(json_spirit::mObject& _o, eth::State& _state, stateOptionsMap& _stateOptionsMap);
-	static void importTransaction (json_spirit::mObject& _o, eth::Transaction& o_tr);
-	void importTransaction(json_spirit::mObject& _o);
+	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
+	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
 	void exportTest(bytes const& _output, eth::State const& _statePost);
@@ -169,7 +169,7 @@ protected:
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
 bytes importCode(json_spirit::mObject& _o);
-bytes importData(json_spirit::mObject& _o);
+bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
@@ -194,7 +194,7 @@ dev::eth::Ethash::BlockHeader constructHeader(
 void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests);
 void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
-RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
+RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);

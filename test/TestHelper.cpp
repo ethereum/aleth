@@ -237,7 +237,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 	}
 }
 
-void ImportTest::importTransaction (json_spirit::mObject& _o, eth::Transaction& o_tr)
+void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr)
 {
 	if (_o.count("secretKey") > 0)
 	{
@@ -248,18 +248,18 @@ void ImportTest::importTransaction (json_spirit::mObject& _o, eth::Transaction& 
 		assert(_o.count("value") > 0);
 		assert(_o.count("data") > 0);
 
-		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
-		if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("gasPrice").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
-		if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("gasLimit").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
-		if (bigint(_o["value"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("value").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-		o_tr = _o["to"].get_str().empty() ?
-			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
-			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
+		o_tr = _o.at("to").get_str().empty() ?
+			Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str())) :
+			Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str()));
 	}
 	else
 	{
@@ -272,9 +272,9 @@ void ImportTest::importTransaction (json_spirit::mObject& _o, eth::Transaction& 
 		catch (InvalidSignature)
 		{
 			// create unsigned transaction
-			o_tr = _o["to"].get_str().empty() ?
-				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"])) :
-				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]));
+			o_tr = _o.at("to").get_str().empty() ?
+				Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce"))) :
+				Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")));
 		}
 		catch (Exception& _e)
 		{
@@ -283,7 +283,7 @@ void ImportTest::importTransaction (json_spirit::mObject& _o, eth::Transaction& 
 	}
 }
 
-void ImportTest::importTransaction(json_spirit::mObject& o_tr)
+void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 {	
 	importTransaction(o_tr, m_transaction);
 }
@@ -472,13 +472,13 @@ bytes importByteArray(std::string const& _str)
 	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
-bytes importData(json_spirit::mObject& _o)
+bytes importData(json_spirit::mObject const& _o)
 {
 	bytes data;
-	if (_o["data"].type() == json_spirit::str_type)
-		data = importByteArray(_o["data"].get_str());
+	if (_o.at("data").type() == json_spirit::str_type)
+		data = importByteArray(_o.at("data").get_str());
 	else
-		for (auto const& j: _o["data"].get_array())
+		for (auto const& j: _o.at("data").get_array())
 			data.push_back(toByte(j));
 	return data;
 }
@@ -684,46 +684,46 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	}
 }
 
-RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
+RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj)
 {
 	//Construct Rlp of the given transaction
 	RLPStream rlpStream;
 	rlpStream.appendList(_tObj.size());
 
 	if (_tObj.count("nonce"))
-		rlpStream << bigint(_tObj["nonce"].get_str());
+		rlpStream << bigint(_tObj.at("nonce").get_str());
 
 	if (_tObj.count("gasPrice"))
-		rlpStream << bigint(_tObj["gasPrice"].get_str());
+		rlpStream << bigint(_tObj.at("gasPrice").get_str());
 
 	if (_tObj.count("gasLimit"))
-		rlpStream << bigint(_tObj["gasLimit"].get_str());
+		rlpStream << bigint(_tObj.at("gasLimit").get_str());
 
 	if (_tObj.count("to"))
 	{
-		if (_tObj["to"].get_str().empty())
+		if (_tObj.at("to").get_str().empty())
 			rlpStream << "";
 		else
-			rlpStream << importByteArray(_tObj["to"].get_str());
+			rlpStream << importByteArray(_tObj.at("to").get_str());
 	}
 
 	if (_tObj.count("value"))
-		rlpStream << bigint(_tObj["value"].get_str());
+		rlpStream << bigint(_tObj.at("value").get_str());
 
 	if (_tObj.count("data"))
 		rlpStream << importData(_tObj);
 
 	if (_tObj.count("v"))
-		rlpStream << bigint(_tObj["v"].get_str());
+		rlpStream << bigint(_tObj.at("v").get_str());
 
 	if (_tObj.count("r"))
-		rlpStream << bigint(_tObj["r"].get_str());
+		rlpStream << bigint(_tObj.at("r").get_str());
 
 	if (_tObj.count("s"))
-		rlpStream <<  bigint(_tObj["s"].get_str());
+		rlpStream <<  bigint(_tObj.at("s").get_str());
 
 	if (_tObj.count("extrafield"))
-		rlpStream << bigint(_tObj["extrafield"].get_str());
+		rlpStream << bigint(_tObj.at("extrafield").get_str());
 
 	return rlpStream;
 }
