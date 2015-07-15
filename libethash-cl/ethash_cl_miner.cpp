@@ -210,8 +210,6 @@ unsigned ethash_cl_miner::s_initialGlobalWorkSize = ethash_cl_miner::c_defaultGl
 bool ethash_cl_miner::searchForAllDevices(function<bool(cl::Device const&)> _callback)
 {
 	vector<cl::Platform> platforms = getPlatforms();
-	if (platforms.empty())
-		return false;
 	for (unsigned i = 0; i < platforms.size(); ++i)
 		if (searchForAllDevices(i, _callback))
 			return true;
@@ -222,8 +220,6 @@ bool ethash_cl_miner::searchForAllDevices(function<bool(cl::Device const&)> _cal
 bool ethash_cl_miner::searchForAllDevices(unsigned _platformId, function<bool(cl::Device const&)> _callback)
 {
 	vector<cl::Platform> platforms = getPlatforms();
-	if (platforms.empty())
-		return false;
 	if (_platformId >= platforms.size())
 		return false;
 
@@ -238,8 +234,6 @@ bool ethash_cl_miner::searchForAllDevices(unsigned _platformId, function<bool(cl
 void ethash_cl_miner::doForAllDevices(function<void(cl::Device const&)> _callback)
 {
 	vector<cl::Platform> platforms = getPlatforms();
-	if (platforms.empty())
-		return;
 	for (unsigned i = 0; i < platforms.size(); ++i)
 		doForAllDevices(i, _callback);
 }
@@ -247,8 +241,6 @@ void ethash_cl_miner::doForAllDevices(function<void(cl::Device const&)> _callbac
 void ethash_cl_miner::doForAllDevices(unsigned _platformId, function<void(cl::Device const&)> _callback)
 {
 	vector<cl::Platform> platforms = getPlatforms();
-	if (platforms.empty())
-		return;
 	if (_platformId >= platforms.size())
 		return;
 
