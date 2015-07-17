@@ -236,7 +236,7 @@ void CodeModel::unregisterContractSrc(QString const& _documentId)
 
 void CodeModel::registerCodeChange(QString const& _documentId, QString const& _code)
 {
-	(**m_pendingContracts)[_documentId] = _code;
+	m_pendingContracts->at(_documentId) = _code;
 
 	// launch the background thread
 	m_compiling = true;
