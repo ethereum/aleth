@@ -34,6 +34,18 @@
 
 using namespace dev;
 using namespace eth;
+json_spirit::mObject& getDefaultTransaction()
+{
+	static json_spirit::mObject trJson;
+	trJson["data"] = "";
+	trJson["gasLimit"] = "0x59d8";
+	trJson["gasPrice"] = "0x01";
+	trJson["nonce"] = "0x00";
+	trJson["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
+	trJson["to"] = "d2571607e241ecf590ed94b12d87c94babe36db6";
+	trJson["value"] = "0x0a";
+	return trJson;
+}
 
 class TestTransaction
 {
@@ -159,6 +171,11 @@ public:
 		return *m_blockchain.get();
 	}
 
+	std::string getDBPath()
+	{
+		return m_td2.path();
+	}
+
 	void rebuild(WithExisting _withExisiting = WithExisting::Verify)
 	{
 		m_blockchain.reset();
@@ -194,6 +211,36 @@ R"ETHEREUM(
 
 BOOST_AUTO_TEST_SUITE(libethereum)
 
+BOOST_AUTO_TEST_CASE(resqueDB)
+{
+	std::unique_ptr<TestBlockChain> blChain(new TestBlockChain());
+	TestBlock block;
+	TestTransaction tr(getDefaultTransaction());
+
+	block.addTransaction(tr);
+	blChain.get()->addBlock(block);
+	std::string dbPath = blChain.get()->getDBPath();
+	blChain.reset(new TestBlockChain()); //clsoe state DB
+
+	OverlayDB ovdb(State::openDB(dbPath));
+	blChain.get()->get().rescue(ovdb);
+}
+
+BOOST_AUTO_TEST_CASE(blockChainOutput)
+{
+	TestBlockChain blChain;
+	TestBlock block;
+	TestTransaction tr(getDefaultTransaction());
+
+	block.addTransaction(tr);
+	blChain.addBlock(block);
+
+	std::stringstream buffer;
+	buffer  << "'" << blChain.get() << "'";
+
+	BOOST_CHECK_MESSAGE(buffer.str().find("fd4af92a79c7fc2fd8bf0d342f2e832e1d4f485c85b9152d2039e03bc604fdca") != std::string::npos,	"blockChainOutput: Not expected output: '" + buffer.str() + "'");
+}
+
 BOOST_AUTO_TEST_CASE(canonBlockChain)
 {
 	std::string genesisTemp = dev::eth::c_genesisInfo;
@@ -221,17 +268,8 @@ BOOST_AUTO_TEST_CASE(canonBlockChain)
 	dev::eth::CanonBlockChain::setGenesisNonce(nonce);
 	blChain.rebuild(WithExisting::Kill);
 
-	json_spirit::mObject trJson;
-	trJson["data"] = "";
-	trJson["gasLimit"] = "0x59d8";
-	trJson["gasPrice"] = "0x01";
-	trJson["nonce"] = "0x00";
-	trJson["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
-	trJson["to"] = "d2571607e241ecf590ed94b12d87c94babe36db6";
-	trJson["value"] = "0x0a";
-
 	TestBlock block;
-	TestTransaction tr(trJson);
+	TestTransaction tr(getDefaultTransaction());
 	block.addTransaction(tr);
 	blChain.addBlock(block);
 
