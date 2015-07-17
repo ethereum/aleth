@@ -213,11 +213,11 @@ void CodeModel::reset(QVariantMap const& _documents)
 	///@todo: cancel bg job
 	Guard l(x_contractMap);
 	releaseContracts();
-	Guard pl(x_pendingContracts);
-	m_pendingContracts.clear();
+	auto contracts = *m_pendingContracts;
+	contracts->clear();
 
 	for (QVariantMap::const_iterator d =  _documents.cbegin(); d != _documents.cend(); ++d)
-		m_pendingContracts[d.key()] = d.value().toString();
+		(*contracts)[d.key()] = d.value().toString();
 	// launch the background thread
 	m_compiling = true;
 	emit stateChanged();
@@ -226,10 +226,7 @@ void CodeModel::reset(QVariantMap const& _documents)
 
 void CodeModel::unregisterContractSrc(QString const& _documentId)
 {
-	{
-		Guard pl(x_pendingContracts);
-		m_pendingContracts.erase(_documentId);
-	}
+	m_pendingContracts->erase(_documentId);
 
 	// launch the background thread
 	m_compiling = true;
@@ -239,10 +236,7 @@ void CodeModel::unregisterContractSrc(QString const& _documentId)
 
 void CodeModel::registerCodeChange(QString const& _documentId, QString const& _code)
 {
-	{
-		Guard pl(x_pendingContracts);
-		m_pendingContracts[_documentId] = _code;
-	}
+	(**m_pendingContracts)[_documentId] = _code;
 
 	// launch the background thread
 	m_compiling = true;
@@ -302,8 +296,8 @@ void CodeModel::runCompilationJob(int _jobId)
 		cs.addSource("configUser", R"(contract configUser{function configAddr()constant returns(address a){ return 0xf025d81196b72fba60a1d4dddad12eeb8360d828;}})");
 		std::vector<std::string> sourceNames;
 		{
-			Guard l(x_pendingContracts);
-			for (auto const& c: m_pendingContracts)
+			auto pendingContracts = *m_pendingContracts;
+			for (auto const& c: *pendingContracts)
 			{
 				cs.addSource(c.first.toStdString(), c.second.toStdString());
 				sourceNames.push_back(c.first.toStdString());
@@ -450,7 +444,7 @@ QVariantList CodeModel::gasCostBy(QString const& _contractName, QString const& _
 
 void CodeModel::collectContracts(dev::solidity::CompilerStack const& _cs, std::vector<std::string> const& _sourceNames)
 {
-	Guard pl(x_pendingContracts);
+	auto pendingContracts = *m_pendingContracts;
 	Guard l(x_contractMap);
 	ContractMap result;
 	SourceMaps sourceMaps;
@@ -471,8 +465,8 @@ void CodeModel::collectContracts(dev::solidity::CompilerStack const& _cs, std::v
 		if (!contractDefinition.isFullyImplemented())
 			continue;
 		QString sourceName = QString::fromStdString(*contractDefinition.getLocation().sourceName);
-		auto sourceIter = m_pendingContracts.find(sourceName);
-		QString source = sourceIter != m_pendingContracts.end() ? sourceIter->second : QString();
+		auto sourceIter = pendingContracts->find(sourceName);
+		QString source = sourceIter != pendingContracts->end() ? sourceIter->second : QString();
 		CompiledContract* contract = new CompiledContract(_cs, name, source);
 		QQmlEngine::setObjectOwnership(contract, QQmlEngine::CppOwnership);
 		result[name] = contract;

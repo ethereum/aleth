@@ -292,8 +292,7 @@ private:
 	BackgroundWorker m_backgroundWorker;
 	int m_backgroundJobId = 0; //protects from starting obsolete compilation job
 	std::map<QString, dev::bytes> m_compiledContracts; //by name
-	dev::Mutex x_pendingContracts;
-	std::map<QString, QString> m_pendingContracts; //name to source
+	LockedObject<std::map<QString, QString>> m_pendingContracts; //name to source
 	bool m_optimizeCode = false;
 	friend class BackgroundWorker;
 };

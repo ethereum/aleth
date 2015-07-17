@@ -53,8 +53,7 @@ private:
 
 	bool validateTransaction(dev::eth::TransactionSkeleton const& _t, bool _toProxy);
 
-	std::queue<dev::eth::TransactionSkeleton> m_queued;
-	dev::Mutex x_queued;
+	dev::LockedObject<std::queue<dev::eth::TransactionSkeleton>> m_queued;
 
 	Main* m_main;
 };

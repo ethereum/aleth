@@ -101,18 +101,17 @@ bool OurAccountHolder::showUnknownCallNotice(TransactionSkeleton const& _t, bool
 
 h256 OurAccountHolder::authenticate(TransactionSkeleton const& _t)
 {
-	Guard l(x_queued);
-	m_queued.push(_t);
+	m_queued->push(_t);
 	return h256();
 }
 
 void OurAccountHolder::doValidations()
 {
-	Guard l(x_queued);
-	while (!m_queued.empty())
+	auto queued(*m_queued);
+	while (!queued->empty())
 	{
-		auto t = m_queued.front();
-		m_queued.pop();
+		auto t = queued->front();
+		queued->pop();
 
 		bool proxy = isProxyAccount(t.from);
 		if (!proxy && !isRealAccount(t.from))
