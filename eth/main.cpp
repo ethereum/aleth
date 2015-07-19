@@ -32,7 +32,6 @@
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
 #include <libdevcore/StructuredLogger.h>
-#include <libethcore/ProofOfWork.h>
 #include <libethcore/EthashAux.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
@@ -1311,7 +1310,7 @@ int main(int argc, char** argv)
 		{
 			try
 			{
-				CanonBlockChain::setGenesisNonce(Nonce(argv[++i]));
+				CanonBlockChain<Ethash>::setGenesisNonce(Nonce(argv[++i]));
 			}
 			catch (...)
 			{
@@ -1700,7 +1699,10 @@ int main(int argc, char** argv)
 	{
 		c->setGasPricer(gasPricer);
 		c->setForceMining(forceMining);
+		// TODO: expose sealant interface.
+#if ETH_USING_ETHASH
 		c->setTurboMining(m.minerType() == MinerCLI::MinerType::GPU);
+#endif
 		c->setAddress(beneficiary);
 		c->setNetworkId(networkId);
 	}
