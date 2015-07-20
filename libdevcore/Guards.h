@@ -22,6 +22,7 @@
 #pragma once
 
 #include <mutex>
+#include <memory>
 #include <atomic>
 #include <boost/thread.hpp>
 
@@ -121,5 +122,51 @@ using SpinGuard = std::lock_guard<SpinLock>;
 	for (GenericUnguardSharedBool<SharedMutex> __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
 #define DEV_WRITE_UNGUARDED(MUTEX) \
 	for (GenericUnguardBool<SharedMutex> __eth_l(MUTEX); __eth_l.b; __eth_l.b = false)
+
+template <class Class, class GuardType, class MutexType>
+class GuardContainer
+{
+public:
+	GuardContainer(Class& _object, MutexType& _mutex): m_guard(new GuardType(_mutex)), m_object(&_object) {}
+	GuardContainer(GuardContainer&&) = default;
+	GuardContainer& operator=(GuardContainer&&) = default;
+
+	Class* operator->() { return m_object; }
+	Class& operator*() { return *m_object; }
+
+private:
+	//@todo make the guard movable without pointer
+	std::unique_ptr<GuardType> m_guard;
+	Class* m_object;
+};
+
+/**
+ * Helper class to prevent unlocked access to an object.
+ */
+template <class Class, class MutexType = Mutex>
+class LockedObject: boost::noncopyable
+{
+	using Container = GuardContainer<Class, Guard, MutexType>;
+public:
+	LockedObject() {}
+	LockedObject(Class&& _object): m_object(std::move(_object)) {}
+	/// Use *lockedObject to access a guard which releases the lock on destruction and allows
+	/// to access the object via ->.
+	Container operator*() { return guard<Guard>(); }
+	/// Use -> to access the object for a single, locked access.
+	Container operator->() { return guard<Guard>(); }
+
+	GuardContainer<Class, ReadGuard, MutexType> read() { return guard<ReadGuard>(); }
+	GuardContainer<Class, WriteGuard, MutexType> write() { return guard<WriteGuard>(); }
+
+	template <class GuardType>
+	GuardContainer<Class, GuardType, MutexType> guard() { return GuardContainer<Class, GuardType, MutexType>(m_object, m_mutex); }
+
+	Class& unsafeAccess() { return m_object; }
+
+private:
+	Class m_object;
+	MutexType m_mutex;
+};
 
 }
