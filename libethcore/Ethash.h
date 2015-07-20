@@ -61,7 +61,7 @@ public:
 
 	class BlockHeaderRaw: public BlockInfo
 	{
-		friend class EthashSealEngine;
+		friend struct EthashSealEngine;
 
 	public:
 		static const unsigned SealFields = 2;
