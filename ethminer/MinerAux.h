@@ -544,16 +544,17 @@ private:
 		exit(0);
 	}
 
+#if ETH_USING_ETHASH
 	/// Operating mode.
 	OperationMode mode;
 
 	/// Mining options
-	MinerType m_minerType = MinerType::CPU;
 	unsigned m_openclPlatform = 0;
 	unsigned m_openclDevice = 0;
 	unsigned m_miningThreads = UINT_MAX;
 	bool m_shouldListDevices = false;
 	bool m_clAllowCPU = false;
+
 #if ETH_ETHASHCL || !ETH_TRUE
 	unsigned m_globalWorkSizeMultiplier = ethash_cl_miner::c_defaultGlobalWorkSizeMultiplier;
 	unsigned m_localWorkSize = ethash_cl_miner::c_defaultLocalWorkSize;
@@ -575,5 +576,7 @@ private:
 	/// Farm params
 	string m_farmURL = "http://127.0.0.1:8545";
 	unsigned m_farmRecheckPeriod = 500;
+#endif
+	MinerType m_minerType = MinerType::CPU;
 	bool m_precompute = true;
 };
