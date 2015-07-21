@@ -40,7 +40,6 @@
 #include <libethcore/ABI.h>
 #include <libp2p/Common.h>
 #include "CanonBlockChain.h"
-#include "TransactionQueue.h"
 #include "State.h"
 #include "CommonNet.h"
 #include "ClientBase.h"
@@ -220,7 +219,7 @@ protected:
 
 	/// Collate the changed filters for the hash of the given block.
 	/// Insert any filters that are activated into @a o_changed.
-	void appendFromNewBlock(h256 const& _blockHash, h256Hash& io_changed);
+	void appendFromBlock(h256 const& _blockHash, BlockPolarity _polarity, h256Hash& io_changed);
 
 	/// Record that the set of filters @a _filters have changed.
 	/// This doesn't actually make any callbacks, but incrememnts some counters in m_watches.
@@ -241,6 +240,15 @@ protected:
 
 	/// Called when wouldMine(), turboMining(), isChainBad(), forceMining(), pendingTransactions() have changed.
 	void rejigMining();
+
+	/// Called on chain changes
+	void onDeadBlocks(h256s const& _blocks, h256Hash& io_changed);
+
+	/// Called on chain changes
+	void onNewBlocks(h256s const& _blocks, h256Hash& io_changed);
+
+	/// Called after processing blocks by onChainChanged(_ir)
+	void restartMining();
 
 	/// Magically called when the chain has changed. An import route is provided.
 	/// Called by either submitWork() or in our main thread through syncBlockQueue().
@@ -371,6 +379,7 @@ public:
 
 	/// Update to the latest transactions and get hash of the current block to be mined minus the
 	/// nonce (the 'work hash') and the difficulty to be met.
+	/// @returns Tuple of target boundary, hash without seal, seed hash.
 	virtual std::tuple<h256, h256, h256> getEthashWork() override;
 
 	/** @brief Submit the proof for the proof-of-work.

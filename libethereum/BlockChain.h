@@ -72,6 +72,7 @@ struct BlockChainDebug: public LogChannel { static const char* name(); static co
 std::unordered_map<Address, Account> const& genesisState();
 
 ldb::Slice toSlice(h256 const& _h, unsigned _sub = 0);
+ldb::Slice toSlice(uint64_t _n, unsigned _sub = 0);
 
 using BlocksHash = std::unordered_map<h256, bytes>;
 using TransactionHashes = h256s;
@@ -153,8 +154,11 @@ public:
 	BlockReceipts receipts(h256 const& _hash) const { return queryExtras<BlockReceipts, ExtraReceipts>(_hash, m_receipts, x_receipts, NullBlockReceipts); }
 	BlockReceipts receipts() const { return receipts(currentHash()); }
 
+	/// Get the transaction by block hash and index;
+	TransactionReceipt transactionReceipt(h256 const& _blockHash, unsigned _i) const { return receipts(_blockHash).receipts[_i]; }
+
 	/// Get the transaction receipt by transaction hash. Thread-safe.
-	TransactionReceipt transactionReceipt(h256 const& _transactionHash) const {TransactionAddress ta = queryExtras<TransactionAddress, ExtraTransactionAddress>(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return bytesConstRef(); return receipts(ta.blockHash).receipts[ta.index]; }
+	TransactionReceipt transactionReceipt(h256 const& _transactionHash) const { TransactionAddress ta = queryExtras<TransactionAddress, ExtraTransactionAddress>(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return bytesConstRef(); return transactionReceipt(ta.blockHash, ta.index); }
 
 	/// Get a list of transaction hashes for a given block. Thread-safe.
 	TransactionHashes transactionHashes(h256 const& _hash) const { auto b = block(_hash); RLP rlp(b); h256s ret; for (auto t: rlp[1]) ret.push_back(sha3(t.data())); return ret; }
@@ -165,7 +169,7 @@ public:
 	UncleHashes uncleHashes() const { return uncleHashes(currentHash()); }
 	
 	/// Get the hash for a given block's number.
-	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, ExtraBlockHash>(h256(_i), m_blockHashes, x_blockHashes, NullBlockHash).value; }
+	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, uint64_t, ExtraBlockHash>(_i, m_blockHashes, x_blockHashes, NullBlockHash).value; }
 
 	/// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
 	LastHashes lastHashes() const { return lastHashes(number()); }
@@ -290,7 +294,7 @@ protected:
 	unsigned open(std::string const& _path, WithExisting _we = WithExisting::Trust);
 	void close();
 
-	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
+	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
 	{
 		{
 			ReadGuard l(_x);
@@ -302,16 +306,18 @@ protected:
 		std::string s;
 		(_extrasDB ? _extrasDB : m_extrasDB)->Get(m_readOptions, toSlice(_h, N), &s);
 		if (s.empty())
-		{
-//			cout << "Not found in DB: " << _h << endl;
 			return _n;
-		}
 
 		noteUsed(_h, N);
 
 		WriteGuard l(_x);
 		auto ret = _m.insert(std::make_pair(_h, T(RLP(s))));
 		return ret.first->second;
+	}
+
+	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
+	{
+		return queryExtras<T, h256, N>(_h, _m, _x, _n, _extrasDB);
 	}
 
 	void checkConsistency();
@@ -337,6 +343,7 @@ protected:
 	mutable std::deque<std::unordered_set<CacheID>> m_cacheUsage;
 	mutable std::unordered_set<CacheID> m_inUse;
 	void noteUsed(h256 const& _h, unsigned _extra = (unsigned)-1) const;
+	void noteUsed(uint64_t const& _h, unsigned _extra = (unsigned)-1) const { (void)_h; (void)_extra; } // don't note non-hash types
 	std::chrono::system_clock::time_point m_lastCollection;
 
 	void noteCanonChanged() const { Guard l(x_lastLastHashes); m_lastLastHashes.clear(); }

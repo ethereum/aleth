@@ -22,16 +22,17 @@
 #include "WhisperDB.h"
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
-
 using namespace std;
 using namespace dev;
 using namespace dev::shh;
+namespace fs = boost::filesystem;
 
 WhisperDB::WhisperDB()
 {
 	m_readOptions.verify_checksums = true;
 	string path = dev::getDataDir("shh");
-	boost::filesystem::create_directories(path);
+	fs::create_directories(path);
+	fs::permissions(path, fs::owner_all);
 	leveldb::Options op;
 	op.create_if_missing = true;
 	op.max_open_files = 256;
@@ -84,8 +85,8 @@ void WhisperDB::loadAll(std::map<h256, Envelope>& o_dst)
 	op.fill_cache = false;
 	op.verify_checksums = true;
 	vector<string> wasted;
-	unsigned now = (unsigned)time(0);
 	unique_ptr<leveldb::Iterator> it(m_db->NewIterator(op));
+	unsigned const now = (unsigned)time(0);
 
 	for (it->SeekToFirst(); it->Valid(); it->Next())
 	{
@@ -134,3 +135,22 @@ void WhisperDB::loadAll(std::map<h256, Envelope>& o_dst)
 	}
 }
 
+void WhisperDB::save(h256 const& _key, Envelope const& _e)
+{
+	try
+	{
+		RLPStream rlp;
+		_e.streamRLP(rlp);
+		bytes b;
+		rlp.swapOut(b);
+		insert(_key, b);
+	}
+	catch(RLPException const& ex)
+	{
+		cwarn << boost::diagnostic_information(ex);
+	}
+	catch(FailedInsertInLevelDB const& ex)
+	{
+		cwarn << boost::diagnostic_information(ex);
+	}
+}
