@@ -35,22 +35,6 @@ using namespace eth;
 
 unsigned EthashCPUMiner::s_numInstances = 0;
 
-static string jsonEncode(map<string, string> const& _m)
-{
-	string ret = "{";
-
-	for (auto const& i: _m)
-	{
-		string k = boost::replace_all_copy(boost::replace_all_copy(i.first, "\\", "\\\\"), "'", "\\'");
-		string v = boost::replace_all_copy(boost::replace_all_copy(i.second, "\\", "\\\\"), "'", "\\'");
-		if (ret.size() > 1)
-			ret += ", ";
-		ret += "\"" + k + "\":\"" + v + "\"";
-	}
-
-	return ret + "}";
-}
-
 void EthashCPUMiner::workLoop()
 {
 	auto tid = std::this_thread::get_id();
