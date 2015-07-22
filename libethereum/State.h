@@ -342,11 +342,11 @@ private:
 
 	BlockInfo m_previousBlock;					///< The previous block's information.
 	BlockInfo m_currentBlock;					///< The current block's information.
-	bytes m_currentBytes;						///< The current block.
+	bytes m_currentBytes;						///< The current block in RLP, only valid after call to sealBlock(...).
 	bool m_committedToMine = false;				///< Have we committed to mine on the present m_currentBlock?
 
-	bytes m_currentTxs;							///< The RLP-encoded block of transactions.
-	bytes m_currentUncles;						///< The RLP-encoded block of uncles.
+	bytes m_currentTxs;							///< The RLP-encoded block of transactions, only valid after call to sealBlock(...).
+	bytes m_currentUncles;						///< The RLP-encoded block of uncles, only valid after call to sealBlock(...).
 
 	Address m_ourAddress;						///< Our address (i.e. the address to which fees go).
 
