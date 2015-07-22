@@ -651,6 +651,8 @@ void Client::onPostStateChanged()
 void Client::startMining()
 {
 	m_wouldMine = true;
+	DEV_WRITE_GUARDED(x_working)
+		m_working = m_preMine;
 	rejigMining();
 }
 
