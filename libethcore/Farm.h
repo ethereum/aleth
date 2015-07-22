@@ -83,6 +83,10 @@ public:
 	 */
 	bool start(std::string const& _sealer)
 	{
+		// call empty setWork to make sure that all workers have stoppedWorking()
+		for (auto& miner: m_miners)
+			miner->setWork();
+
 		WriteGuard l(x_minerWork);
 		cdebug << "start()";
 		if (!m_miners.empty() && m_lastSealer == _sealer)
