@@ -66,6 +66,16 @@ public:
 	 */
 	void setWork(WorkPackage const& _wp)
 	{
+		std::vector<std::shared_ptr<Miner>> minersCopy;
+		{
+			WriteGuard l(x_minerWork);
+			minersCopy = m_miners;
+		}
+		// call empty setWork to make sure that all workers have stoppedWorking()
+		for (auto const& m: minersCopy)
+			m->setWork();
+
+
 		WriteGuard l(x_minerWork);
 		cdebug << "Farm::setWork()";
 		if (_wp.headerHash == m_work.headerHash)
