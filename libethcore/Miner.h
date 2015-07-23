@@ -66,6 +66,7 @@ public:
 	 * @return true iff the solution was good (implying that mining should be .
 	 */
 	virtual bool submitProof(Solution const& _p, Miner* _finder) = 0;
+	virtual ~GenericFarmFace() {}
 };
 
 /**
