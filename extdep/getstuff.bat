@@ -9,7 +9,12 @@ for /f "tokens=2 delims={}" %%g in ('bitsadmin /create nsis-3.0b1-setup.exe') do
 	bitsadmin /cancel {%%g}
 )
 nsis-3.0b1-setup.exe /S
+echo NSIS INSTALL: %ERRORLEVEL%
 cd ..
+
+if exist "C:\Program Files (x86)\NSIS\NSIS.exe" (
+	echo "NSIS INSTALLED!!!!!"
+)
 
 set eth_server=https://build.ethdev.com/builds/windows-precompiled
 
