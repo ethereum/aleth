@@ -666,6 +666,11 @@ void Client::rejigMining()
 	if ((wouldMine() || remoteActive()) && !isMajorSyncing() && (!isChainBad() || mineOnBadChain()) /*&& (forceMining() || transactionsWaiting())*/)
 	{
 		clog(ClientTrace) << "Rejigging mining...";
+		DEV_READ_GUARDED(x_preMine)
+		{
+			DEV_WRITE_GUARDED(x_working)
+				m_working = m_preMine;
+		}
 		DEV_WRITE_GUARDED(x_working)
 			m_working.commitToMine(bc(), m_extraData);
 		DEV_READ_GUARDED(x_working)
