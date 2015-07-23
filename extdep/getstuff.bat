@@ -1,7 +1,15 @@
 REM get stuff!
-if not exist download mkdir download 
+if not exist download mkdir download
 if not exist install mkdir install
 if not exist install\windows mkdir install\windows
+
+cd download
+for /f "tokens=2 delims={}" %%g in ('bitsadmin /create nsis-3.0b1-setup.exe') do (
+	bitsadmin /transfer {%%g} /download /priority normal http://prdownloads.sourceforge.net/nsis/nsis-3.0b1-setup.exe?download %cd%\nsis-3.0b1-setup.exe
+	bitsadmin /cancel {%%g}
+)
+nsis-3.0b1-setup.exe /S
+cd ..
 
 set eth_server=https://build.ethdev.com/builds/windows-precompiled
 
@@ -39,4 +47,3 @@ cmake -E copy_directory %eth_name%-%eth_version% ..\install\windows
 cd ..
 
 goto :EOF
-
