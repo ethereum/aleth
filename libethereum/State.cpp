@@ -159,13 +159,13 @@ State::State(State const& _s):
 	m_transactions(_s.m_transactions),
 	m_receipts(_s.m_receipts),
 	m_transactionSet(_s.m_transactionSet),
+	m_lastTx(_s.m_lastTx),
 	m_touched(_s.m_touched),
 	m_cache(_s.m_cache),
 	m_previousBlock(_s.m_previousBlock),
 	m_currentBlock(_s.m_currentBlock),
 	m_ourAddress(_s.m_ourAddress),
-	m_blockReward(_s.m_blockReward),
-	m_lastTx(_s.m_lastTx)
+	m_blockReward(_s.m_blockReward)
 {
 	paranoia("after state cloning (copy cons).", true);
 }
