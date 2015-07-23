@@ -229,7 +229,7 @@ unsigned EthashAux::computeFull(h256 const& _seedHash, bool _createIfMissing)
 			cnote << "Loading full DAG of seedhash: " << _seedHash;
 			get()->full(_seedHash, true, [](unsigned p){ get()->m_fullProgress = p; return 0; });
 			cnote << "Full DAG loaded";
-			get()->m_fullProgress = 0;
+			get()->m_fullProgress = 100;
 			get()->m_generatingFullNumber = NotGenerating;
 		}));
 	}
