@@ -226,14 +226,8 @@ static tuple<vector<string>, bytes, string> userInputToCode(string const& _user,
 	string solidity;
 	bytes data;
 	vector<string> errors;
-	if (_user.find_first_not_of("1234567890abcdefABCDEF\n\t ") == string::npos && _user.size() % 2 == 0)
-	{
-		std::string u = _user;
-		boost::replace_all_copy(u, "\n", "");
-		boost::replace_all_copy(u, "\t", "");
-		boost::replace_all_copy(u, " ", "");
-		data = fromHex(u);
-	}
+	if (_user.find_first_not_of("1234567890abcdefABCDEF\n\t ") == string::npos)
+		data  = parseData(_user);
 #if ETH_SOLIDITY || !ETH_TRUE
 	else if (sourceIsSolidity(_user))
 	{
