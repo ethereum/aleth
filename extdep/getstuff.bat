@@ -5,7 +5,7 @@ if not exist install\windows mkdir install\windows
 
 cd download
 for /f "tokens=2 delims={}" %%g in ('bitsadmin /create nsis-3.0b1-setup.exe') do (
-	bitsadmin /transfer {%%g} /download /priority normal http://prdownloads.sourceforge.net/nsis/nsis-3.0b1-setup.exe?download %cd%\nsis-3.0b1-setup.exe
+	bitsadmin /transfer {%%g} /download /priority normal https://build.ethdev.com/builds/windows-precompiled/nsis-3.0b1-setup.exe %cd%\nsis-3.0b1-setup.exe
 	bitsadmin /cancel {%%g}
 )
 nsis-3.0b1-setup.exe /S
