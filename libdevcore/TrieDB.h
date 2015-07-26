@@ -96,7 +96,7 @@ public:
 	/// True if the trie is initialised but empty (i.e. that the DB contains the root node which is empty).
 	bool isEmpty() const { return m_root == c_shaNull && node(m_root).size(); }
 
-	h256 const& root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot()); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
+	h256 const& root() const { if (node(m_root).empty()) BOOST_THROW_EXCEPTION(BadRoot(m_root)); /*std::cout << "Returning root as " << ret << " (really " << m_root << ")" << std::endl;*/ return m_root; }	// patch the root in the case of the empty trie. TODO: handle this properly.
 
 	std::string at(bytes const& _key) const { return at(&_key); }
 	std::string at(bytesConstRef _key) const;
@@ -157,8 +157,6 @@ public:
 	iterator end() const { return iterator(); }
 
 	iterator lower_bound(bytesConstRef _key) const { return iterator(this, _key); }
-
-	void debugPrint() {}
 
 	/// Used for debugging, scans the whole trie.
 	void descendKey(h256 const& _k, h256Hash& _keyMask, bool _wasExt, std::ostream* _out, int _indent = 0) const
@@ -231,8 +229,11 @@ public:
 		}
 	}
 
-protected:
-	DB* db() const { return m_db; }
+	/// Get the underlying database.
+	/// @warning This can be used to bypass the trie code. Don't use these unless you *really*
+	/// know what you're doing.
+	DB const* db() const { return m_db; }
+	DB* db() { return m_db; }
 
 private:
 	RLPStream& streamNode(RLPStream& _s, bytes const& _b);
@@ -383,9 +384,11 @@ public:
 	using Super::isEmpty;
 
 	using Super::root;
+	using Super::db;
 
 	using Super::leftOvers;
 	using Super::check;
+	using Super::debugStructure;
 
 	std::string at(bytesConstRef _key) const { return Super::at(sha3(_key)); }
 	bool contains(bytesConstRef _key) { return Super::contains(sha3(_key)); }
@@ -435,6 +438,8 @@ public:
 	using Super::check;
 	using Super::open;
 	using Super::setRoot;
+	using Super::db;
+	using Super::debugStructure;
 
 	std::string at(bytesConstRef _key) const { return Super::at(sha3(_key)); }
 	bool contains(bytesConstRef _key) { return Super::contains(sha3(_key)); }

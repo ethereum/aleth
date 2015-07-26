@@ -89,11 +89,16 @@ contract multiowned {
 
 	// constructor is given number of sigs required to do protected "onlymanyowners" transactions
 	// as well as the selection of addresses capable of confirming them.
-	function multiowned() {
-		m_required = 1;
-		m_numOwners = 1;
-		m_owners[m_numOwners] = uint(msg.sender);
-		m_ownerIndex[uint(msg.sender)] = m_numOwners;
+	function multiowned(address[] _owners, uint _required) {
+		m_numOwners = _owners.length + 1;
+		m_owners[1] = uint(msg.sender);
+		m_ownerIndex[uint(msg.sender)] = 1;
+		for (uint i = 0; i < _owners.length; ++i)
+		{
+			m_owners[2 + i] = uint(_owners[i]);
+			m_ownerIndex[uint(_owners[i])] = 2 + i;
+		}
+		m_required = _required;
 	}
 
 	// Revokes a prior confirmation of the given operation
@@ -111,7 +116,7 @@ contract multiowned {
 	}
 
 	// Replaces an owner `_from` with another `_to`.
-	function changeOwner(address _from, address _to) onlymanyowners(sha3(msg.data, block.number)) external {
+	function changeOwner(address _from, address _to) onlymanyowners(sha3(msg.data)) external {
 		if (isOwner(_to)) return;
 		uint ownerIndex = m_ownerIndex[uint(_from)];
 		if (ownerIndex == 0) return;
@@ -122,7 +127,8 @@ contract multiowned {
 		m_ownerIndex[uint(_to)] = ownerIndex;
 		OwnerChanged(_from, _to);
 	}
-	function addOwner(address _owner) onlymanyowners(sha3(msg.data, block.number)) external {
+
+	function addOwner(address _owner) onlymanyowners(sha3(msg.data)) external {
 		if (isOwner(_owner)) return;
 
 		clearPending();
@@ -136,7 +142,7 @@ contract multiowned {
 		OwnerAdded(_owner);
 	}
 
-	function removeOwner(address _owner) onlymanyowners(sha3(msg.data, block.number)) external {
+	function removeOwner(address _owner) onlymanyowners(sha3(msg.data)) external {
 		uint ownerIndex = m_ownerIndex[uint(_owner)];
 		if (ownerIndex == 0) return;
 		if (m_required > m_numOwners - 1) return;
@@ -148,7 +154,7 @@ contract multiowned {
 		OwnerRemoved(_owner);
 	}
 
-	function changeRequirement(uint _newRequired) onlymanyowners(sha3(msg.data, block.number)) external {
+	function changeRequirement(uint _newRequired) onlymanyowners(sha3(msg.data)) external {
 		if (_newRequired > m_numOwners) return;
 		m_required = _newRequired;
 		clearPending();
@@ -269,16 +275,17 @@ contract daylimit is multiowned {
 
 	// METHODS
 
-	// constructor - just records the present day's index.
-	function daylimit() {
+	// constructor - stores initial daily limit and records the present day's index.
+	function daylimit(uint _limit) {
+		m_dailyLimit = _limit;
 		m_lastDay = today();
 	}
 	// (re)sets the daily limit. needs many of the owners to confirm. doesn't alter the amount already spent today.
-	function setDailyLimit(uint _newLimit) onlymanyowners(sha3(msg.data, block.number)) external {
+	function setDailyLimit(uint _newLimit) onlymanyowners(sha3(msg.data)) external {
 		m_dailyLimit = _newLimit;
 	}
 	// (re)sets the daily limit. needs many of the owners to confirm. doesn't alter the amount already spent today.
-	function resetSpentToday() onlymanyowners(sha3(msg.data, block.number)) external {
+	function resetSpentToday() onlymanyowners(sha3(msg.data)) external {
 		m_spentToday = 0;
 	}
 
@@ -346,19 +353,16 @@ contract Wallet is multisig, multiowned, daylimit {
 		bytes data;
 	}
 
-	// EVENTS
-
-	event Created(bytes32 indexed identifier);
-
 	// METHODS
 
-	// constructor - just pass on the owner arra to the multiowned.
-	function Wallet(bytes32 identifier) {
-		Created(identifier);
+	// constructor - just pass on the owner array to the multiowned and
+	// the limit to daylimit
+	function Wallet(address[] _owners, uint _required, uint _daylimit)
+			multiowned(_owners, _required) daylimit(_daylimit) {
 	}
 
 	// kills the contract sending everything to `_to`.
-	function kill(address _to) onlymanyowners(sha3(msg.data, block.number)) external {
+	function kill(address _to) onlymanyowners(sha3(msg.data)) external {
 		suicide(_to);
 	}
 
@@ -423,7 +427,12 @@ static unique_ptr<bytes> s_compiledWallet;
 class WalletTestFramework: public ExecutionFramework
 {
 protected:
-	void deployWallet(u256 const& _value = 0)
+	void deployWallet(
+		u256 const& _value = 0,
+		vector<u256> const& _owners = vector<u256>{},
+		u256 _required = 1,
+		u256 _dailyLimit = 0
+	)
 	{
 		if (!s_compiledWallet)
 		{
@@ -433,7 +442,8 @@ protected:
 			ETH_TEST_REQUIRE_NO_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), "Compiling contract failed");
 			s_compiledWallet.reset(new bytes(m_compiler.getBytecode("Wallet")));
 		}
-		sendMessage(*s_compiledWallet, true, _value);
+		bytes args = encodeArgs(u256(0x60), _required, _dailyLimit, u256(_owners.size()), _owners);
+		sendMessage(*s_compiledWallet + args, true, _value);
 		BOOST_REQUIRE(!m_output.empty());
 	}
 };
@@ -506,6 +516,26 @@ BOOST_AUTO_TEST_CASE(remove_owner)
 		BOOST_REQUIRE(callContractFunction("isOwner(address)", h256(0x12 + i)) == encodeArgs(true));
 }
 
+BOOST_AUTO_TEST_CASE(initial_owners)
+{
+	vector<u256> owners{
+		u256("0x00000000000000000000000042c56279432962a17176998a4747d1b4d6ed4367"),
+		u256("0x000000000000000000000000d4d4669f5ba9f4c27d38ef02a358c339b5560c47"),
+		u256("0x000000000000000000000000e6716f9544a56c530d868e4bfbacb172315bdead"),
+		u256("0x000000000000000000000000775e18be7a50a0abb8a4e82b1bd697d79f31fe04"),
+		u256("0x000000000000000000000000f4dd5c3794f1fd0cdc0327a83aa472609c806e99"),
+		u256("0x0000000000000000000000004c9113886af165b2de069d6e99430647e94a9fff"),
+		u256("0x0000000000000000000000003fb1cd2cd96c6d5c0b5eb3322d807b34482481d4")
+	};
+	deployWallet(0, owners, 4, 2);
+	BOOST_CHECK(callContractFunction("m_numOwners()") == encodeArgs(u256(8)));
+	BOOST_CHECK(callContractFunction("isOwner(address)", h256(m_sender, h256::AlignRight)) == encodeArgs(true));
+	for (u256 const& owner: owners)
+	{
+		BOOST_CHECK(callContractFunction("isOwner(address)", owner) == encodeArgs(true));
+	}
+}
+
 BOOST_AUTO_TEST_CASE(multisig_value_transfer)
 {
 	deployWallet(200);
@@ -532,7 +562,9 @@ BOOST_AUTO_TEST_CASE(multisig_value_transfer)
 BOOST_AUTO_TEST_CASE(daylimit)
 {
 	deployWallet(200);
+	BOOST_REQUIRE(callContractFunction("m_dailyLimit()") == encodeArgs(u256(0)));
 	BOOST_REQUIRE(callContractFunction("setDailyLimit(uint256)", h256(100)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("m_dailyLimit()") == encodeArgs(u256(100)));
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x12)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x13)) == encodeArgs());
 	BOOST_REQUIRE(callContractFunction("addOwner(address)", h256(0x14)) == encodeArgs());
@@ -561,6 +593,14 @@ BOOST_AUTO_TEST_CASE(daylimit)
 		encodeArgs(u256(0))
 	);
 	BOOST_CHECK_EQUAL(m_state.balance(Address(0x05)), 90);
+}
+
+BOOST_AUTO_TEST_CASE(daylimit_constructor)
+{
+	deployWallet(200, {}, 1, 20);
+	BOOST_REQUIRE(callContractFunction("m_dailyLimit()") == encodeArgs(u256(20)));
+	BOOST_REQUIRE(callContractFunction("setDailyLimit(uint256)", h256(30)) == encodeArgs());
+	BOOST_REQUIRE(callContractFunction("m_dailyLimit()") == encodeArgs(u256(30)));
 }
 
 //@todo test data calls

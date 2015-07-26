@@ -32,7 +32,6 @@
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
 #include <libdevcore/StructuredLogger.h>
-#include <libethcore/ProofOfWork.h>
 #include <libethcore/EthashAux.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
@@ -122,8 +121,16 @@ void help()
 		<< "Usage eth [OPTIONS]" << endl
 		<< "Options:" << endl << endl
 		<< "Client mode (default):" << endl
+		<< "    --olympic  Use the Olympic (0.9) protocol." << endl
+		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
+		<< "    --private <name>  Use a private chain." << endl
+		<< "    --genesis-json <file>  Import the genesis block information from the given json file." << endl
+		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
+#if ETH_JSCONSOLE || !ETH_TRUE
 		<< "    -i,--interactive  Enter interactive mode (default: non-interactive)." << endl
+#endif
+		<< endl
 #if ETH_JSONRPC || !ETH_TRUE
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
@@ -132,7 +139,7 @@ void help()
 		<< "    -K,--kill  First kill the blockchain." << endl
 		<< "    -R,--rebuild  Rebuild the blockchain from the existing database." << endl
 		<< "    --rescue  Attempt to rescue a corrupt database." << endl
-		<< "    --genesis-nonce <nonce>  Set the Genesis Nonce to the given hex nonce." << endl
+		<< endl
 		<< "    -s,--import-secret <secret>  Import a secret key into the key store and use as the default." << endl
 		<< "    -S,--import-session-secret <secret>  Import a secret key into the key store and use as the default for this session only." << endl
 		<< "    --sign-key <address>  Sign all transactions with the key of the given address." << endl
@@ -140,7 +147,6 @@ void help()
 		<< "    --master <password>  Give the master password for the key store." << endl
 		<< "    --password <password>  Give a password for a private key." << endl
 		<< "    --sentinel <server>  Set the sentinel for reporting bad blocks or chain issues." << endl
-		<< "    --prime <n>  Specify n as the 6 digit prime number to start Frontier." << endl
 		<< endl
 		<< "Client transacting:" << endl
 		/*<< "    -B,--block-fees <n>  Set the block fee profit in the reference unit e.g. ¢ (default: 15)." << endl
@@ -169,10 +175,10 @@ void help()
 		<< "    --listen <port>  Listen on the given port for incoming connections (default: 30303)." << endl
 		<< "    -r,--remote <host>(:<port>)  Connect to remote host (default: none)." << endl
 		<< "    --port <port>  Connect to remote port (default: 30303)." << endl
-		<< "    --network-id <n> Only connect to other hosts with this network id (default:0)." << endl
+		<< "    --network-id <n> Only connect to other hosts with this network id." << endl
 		<< "    --upnp <on/off>  Use UPnP for NAT (default: on)." << endl
-		<< "    --no-discovery  Disable Node discovery. (experimental)" << endl
-		<< "    --pin  Only connect to required (trusted) peers. (experimental)" << endl
+		<< "    --no-discovery  Disable Node discovery." << endl
+		<< "    --pin  Only connect to required (trusted) peers." << endl
 //		<< "    --require-peers <peers.json>  List of required (trusted) peers. (experimental)" << endl
 		<< endl;
 	MinerCLI::streamHelp(cout);
@@ -197,9 +203,6 @@ void help()
 		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (default: 8)." << endl
 		<< "    -V,--version  Show the version and exit." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
-#if ETH_JSCONSOLE || !ETH_TRUE
-		<< "    --console Use interactive javascript console" << endl
-#endif
 		;
 		exit(0);
 }
@@ -266,8 +269,7 @@ enum class OperationMode
 {
 	Node,
 	Import,
-	Export,
-	Rescue
+	Export
 };
 
 enum class Format
@@ -911,7 +913,12 @@ void interactiveMode(eth::Client* c, std::shared_ptr<eth::TrivialGasPricer> gasP
 							f << endl << "    STACK" << endl;
 							for (auto i: vm->stack())
 								f << (h256)i << endl;
-							f << "    MEMORY" << endl << dev::memDump(vm->memory());
+							std::string memDump = (
+								(vm->memory().size() > 1000) ?
+								" mem size greater than 1000 bytes " :
+								dev::memDump(vm->memory())
+							);
+							f << "    MEMORY" << endl << memDump;
 							f << "    STORAGE" << endl;
 							for (auto const& i: ext->state().storage(ext->myAddress))
 								f << showbase << hex << i.first << ": " << i.second << endl;
@@ -1065,8 +1072,8 @@ int main(int argc, char** argv)
 	/// Operating mode.
 	OperationMode mode = OperationMode::Node;
 	string dbPath;
-	unsigned prime = 0;
-	bool yesIReallyKnowWhatImDoing = false;
+//	unsigned prime = 0;
+//	bool yesIReallyKnowWhatImDoing = false;
 
 	/// File name for import/export.
 	string filename;
@@ -1080,13 +1087,16 @@ int main(int argc, char** argv)
 	/// General params for Node operation
 	NodeMode nodeMode = NodeMode::Full;
 	bool interactive = false;
-#if ETH_JSONRPC
-	int jsonrpc = -1;
+#if ETH_JSONRPC || !ETH_TRUE
+	int jsonRPCURL = -1;
 #endif
 	string jsonAdmin;
+	string genesisJSON;
+	dev::eth::Network releaseNetwork = c_network;
+	string privateChain;
+
 	bool upnp = true;
-	WithExisting killChain = WithExisting::Trust;
-	bool jit = false;
+	WithExisting withExisting = WithExisting::Trust;
 	string sentinel;
 
 	/// Networking params.
@@ -1190,7 +1200,7 @@ int main(int argc, char** argv)
 			mode = OperationMode::Export;
 			filename = argv[++i];
 		}
-		else if (arg == "--prime" && i + 1 < argc)
+/*		else if (arg == "--prime" && i + 1 < argc)
 			try
 			{
 				prime = stoi(argv[++i]);
@@ -1202,7 +1212,7 @@ int main(int argc, char** argv)
 			}
 		else if (arg == "--yes-i-really-know-what-im-doing")
 			yesIReallyKnowWhatImDoing = true;
-		else if (arg == "--sentinel" && i + 1 < argc)
+*/		else if (arg == "--sentinel" && i + 1 < argc)
 			sentinel = argv[++i];
 		else if (arg == "--mine-on-wrong-chain")
 			mineOnWrongChain = true;
@@ -1251,12 +1261,21 @@ int main(int argc, char** argv)
 				cerr << "Bad " << arg << " option: " << argv[i] << endl;
 				return -1;
 			}
+		else if (arg == "--private" && i + 1 < argc)
+			try {
+				privateChain = argv[++i];
+			}
+			catch (...)
+			{
+				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				return -1;
+			}
 		else if (arg == "-K" || arg == "--kill-blockchain" || arg == "--kill")
-			killChain = WithExisting::Kill;
+			withExisting = WithExisting::Kill;
 		else if (arg == "-R" || arg == "--rebuild")
-			killChain = WithExisting::Verify;
+			withExisting = WithExisting::Verify;
 		else if (arg == "-R" || arg == "--rescue")
-			mode = OperationMode::Rescue;
+			withExisting = WithExisting::Rescue;
 		else if ((arg == "-c" || arg == "--client-name") && i + 1 < argc)
 		{
 			if (arg == "-c")
@@ -1304,11 +1323,11 @@ int main(int argc, char** argv)
 		}
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
-		else if (arg == "--genesis-nonce" && i + 1 < argc)
+		else if (arg == "--genesis-json" && i + 1 < argc)
 		{
 			try
 			{
-				CanonBlockChain::setGenesisNonce(Nonce(argv[++i]));
+				genesisJSON = contentsString(argv[++i]);
 			}
 			catch (...)
 			{
@@ -1316,6 +1335,10 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
+		else if (arg == "--frontier")
+			releaseNetwork = eth::Network::Frontier;
+		else if (arg == "--olympic")
+			releaseNetwork = eth::Network::Olympic;
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
 		{
 			try
@@ -1410,18 +1433,18 @@ int main(int argc, char** argv)
 			pinning = true;
 		else if (arg == "-f" || arg == "--force-mining")
 			forceMining = true;
-		else if (arg == "-i" || arg == "--interactive")
+		else if (arg == "--old-interactive")
 			interactive = true;
-#if ETH_JSONRPC
+#if ETH_JSONRPC || !ETH_TRUE
 		else if ((arg == "-j" || arg == "--json-rpc"))
-			jsonrpc = jsonrpc == -1 ? SensibleHttpPort : jsonrpc;
+			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
 		else if (arg == "--json-rpc-port" && i + 1 < argc)
-			jsonrpc = atoi(argv[++i]);
+			jsonRPCURL = atoi(argv[++i]);
 		else if (arg == "--json-admin" && i + 1 < argc)
 			jsonAdmin = argv[++i];
 #endif
-#if ETH_JSCONSOLE
-		else if (arg == "--console")
+#if ETH_JSCONSOLE || !ETH_TRUE
+		else if (arg == "-i" || arg == "--interactive" || arg == "--console")
 			useConsole = true;
 #endif
 		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
@@ -1468,6 +1491,13 @@ int main(int argc, char** argv)
 			exit(-1);
 		}
 	}
+
+	// Set up all the chain config stuff.
+	resetNetwork(releaseNetwork);
+	if (!privateChain.empty())
+		CanonBlockChain<Ethash>::forceGenesisExtraData(sha3(privateChain).asBytes());
+	if (!genesisJSON.empty())
+		CanonBlockChain<Ethash>::setGenesis(genesisJSON);
 
 	if (g_logVerbosity > 0)
 	{
@@ -1526,15 +1556,15 @@ int main(int argc, char** argv)
 	};
 
 	StructuredLogger::get().initialize(structuredLogging, structuredLoggingFormat, structuredLoggingURL);
-	VMFactory::setKind(jit ? VMKind::JIT : VMKind::Interpreter);
 	auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP ,listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
-	netPrefs.discovery = !disableDiscovery;
-	netPrefs.pin = pinning;
+	netPrefs.discovery = privateChain.empty() && !disableDiscovery;
+	netPrefs.pin = pinning || !privateChain.empty();
+
 	auto nodesState = contents((dbPath.size() ? dbPath : getDataDir()) + "/network.rlp");
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("++eth", clientName),
 		dbPath,
-		killChain,
+		withExisting,
 		nodeMode == NodeMode::Full ? set<string>{"eth"/*, "shh"*/} : set<string>(),
 		netPrefs,
 		&nodesState);
@@ -1555,12 +1585,6 @@ int main(int argc, char** argv)
 			exit(-1);
 		}
 	};
-
-	if (mode == OperationMode::Rescue)
-	{
-		web3.ethereum()->rescue();
-		exit(0);
-	}
 
 	if (mode == OperationMode::Export)
 	{
@@ -1637,7 +1661,7 @@ int main(int argc, char** argv)
 		cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")" << endl;
 		return 0;
 	}
-
+/*
 	if (c_network == eth::Network::Frontier && !yesIReallyKnowWhatImDoing)
 	{
 		auto pd = contents(getDataDir() + "primes");
@@ -1657,7 +1681,7 @@ int main(int argc, char** argv)
 		primes.insert(prime);
 		writeFile(getDataDir() + "primes", rlp(primes));
 	}
-
+*/
 	if (keyManager.exists())
 	{
 		if (masterPassword.empty() || !keyManager.load(masterPassword))
@@ -1704,6 +1728,8 @@ int main(int argc, char** argv)
 	{
 		c->setGasPricer(gasPricer);
 		c->setForceMining(forceMining);
+		// TODO: expose sealant interface.
+		c->setShouldPrecomputeDAG(m.shouldPrecompute());
 		c->setTurboMining(m.minerType() == MinerCLI::MinerType::GPU);
 		c->setAddress(beneficiary);
 		c->setNetworkId(networkId);
@@ -1720,15 +1746,15 @@ int main(int argc, char** argv)
 	else
 		cout << "Networking disabled. To start, use netstart or pass -b or a remote host." << endl;
 
-	if (useConsole && jsonrpc == -1)
-		jsonrpc = SensibleHttpPort;
+	if (useConsole && jsonRPCURL == -1)
+		jsonRPCURL = SensibleHttpPort;
 
 #if ETH_JSONRPC || !ETH_TRUE
 	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
 	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
-	if (jsonrpc > -1)
+	if (jsonRPCURL > -1)
 	{
-		jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::HttpServer(jsonrpc, "", "", SensibleHttpThreads));
+		jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::HttpServer(jsonRPCURL, "", "", SensibleHttpThreads));
 		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
 		jsonrpcServer->setMiningBenefactorChanger([&](Address const& a) { beneficiary = a; });
 		jsonrpcServer->StartListening();
@@ -1737,6 +1763,8 @@ int main(int argc, char** argv)
 		else
 			jsonrpcServer->addSession(jsonAdmin, SessionPermissions{{Priviledge::Admin}});
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
+		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
+		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
 	}
 #endif
 

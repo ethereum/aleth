@@ -43,28 +43,32 @@ BOOST_AUTO_TEST_CASE(host)
 	if (test::Options::get().nonetwork)
 		return;
 
-	VerbosityHolder sentinel(10);
-	
-	NetworkPreferences host1prefs("127.0.0.1", 30301, false);
-	NetworkPreferences host2prefs("127.0.0.1", 30302, false);
-	
+	VerbosityHolder setTemporaryLevel(10);	
+	NetworkPreferences host1prefs("127.0.0.1", 30321, false);
+	NetworkPreferences host2prefs("127.0.0.1", 30322, false);
 	Host host1("Test", host1prefs);
-	host1.start();
-		
 	Host host2("Test", host2prefs);
-	auto node2 = host2.id();
+	host1.start();
 	host2.start();
+	auto node2 = host2.id();
+	int const step = 10;
+
+	for (int i = 0; i < 3000 && (!host1.isStarted() || !host2.isStarted()); i += step)
+		this_thread::sleep_for(chrono::milliseconds(step));
+
+	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
 	
-	while (!host2.haveNetwork())
-		this_thread::sleep_for(chrono::milliseconds(20));
+	for (int i = 0; i < 3000 && (!host1.haveNetwork() || !host2.haveNetwork()); i += step)
+		this_thread::sleep_for(chrono::milliseconds(step));
+
+	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
 	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort));
-	
-	this_thread::sleep_for(chrono::seconds(3));
-	
-	auto host1peerCount = host1.peerCount();
-	auto host2peerCount = host2.peerCount();
-	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
-	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
+
+	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+		this_thread::sleep_for(chrono::milliseconds(step));
+
+	BOOST_REQUIRE_EQUAL(host1.peerCount(), 1);
+	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(networkConfig)
@@ -93,7 +97,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 
 	for (unsigned i = 0; i < c_nodes; ++i)
 	{
-		Host* h = new Host("Test", NetworkPreferences("127.0.0.1", 30300 + i, false));
+		Host* h = new Host("Test", NetworkPreferences("127.0.0.1", 30325 + i, false));
 		h->setIdealPeerCount(10);
 		// starting host is required so listenport is available
 		h->start();
@@ -151,8 +155,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	VerbosityHolder reduceVerbosity(10);
 
 	const char* const localhost = "127.0.0.1";
-	NetworkPreferences prefs1(localhost, 30301, false);
-	NetworkPreferences prefs2(localhost, 30302, false);
+	NetworkPreferences prefs1(localhost, 30323, false);
+	NetworkPreferences prefs2(localhost, 30324, false);
 	Host host1("Test", prefs1);
 	host1.start();
 
@@ -225,9 +229,9 @@ BOOST_AUTO_TEST_SUITE_END()
 int peerTest(int argc, char** argv)
 {
 	Public remoteAlias;
-	short listenPort = 30303;
+	short listenPort = 30304;
 	string remoteHost;
-	short remotePort = 30303;
+	short remotePort = 30304;
 	
 	for (int i = 1; i < argc; ++i)
 	{

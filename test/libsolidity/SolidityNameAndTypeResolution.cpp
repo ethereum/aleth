@@ -2110,6 +2110,45 @@ BOOST_AUTO_TEST_CASE(literal_strings)
 	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
+BOOST_AUTO_TEST_CASE(invalid_integer_literal_fraction)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				var x = 1.20;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				var x = 1e2;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
+{
+	char const* text = R"(
+		contract Test {
+			struct S { uint8 a; mapping(uint => uint) b; uint8 c; }
+			S s;
+			function f() {
+				S memory x;
+				x.b[1];
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }

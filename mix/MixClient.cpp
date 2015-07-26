@@ -24,12 +24,13 @@
 #include <vector>
 #include <utility>
 #include <libdevcore/Exceptions.h>
+#include <libethcore/Params.h>
+#include <libethcore/BasicAuthority.h>
 #include <libethereum/CanonBlockChain.h>
 #include <libethereum/Transaction.h>
 #include <libethereum/Executive.h>
 #include <libethereum/ExtVM.h>
 #include <libethereum/BlockChain.h>
-#include <libethcore/Params.h>
 #include <libevm/VM.h>
 #include "Exceptions.h"
 using namespace std;
@@ -45,23 +46,20 @@ u256 const c_mixGenesisDifficulty = 131072; //TODO: make it lower for Mix someho
 
 namespace
 {
+}
 
-struct MixPow //dummy POW
+MixBlockChain::MixBlockChain(std::string const& _path, h256 _stateRoot):
+	FullBlockChain<NoProof>(createGenesisBlock(_stateRoot), std::unordered_map<Address, Account>(), _path, WithExisting::Kill)
 {
-	typedef int Solution;
-	static void assignResult(int, BlockInfo const&) {}
-	static bool verify(BlockInfo const&) { return true; }
-};
-
 }
 
 bytes MixBlockChain::createGenesisBlock(h256 _stateRoot)
 {
 	RLPStream block(3);
-	block.appendList(15)
+	block.appendList(13)
 			<< h256() << EmptyListSHA3 << h160() << _stateRoot << EmptyTrie << EmptyTrie
-			<< LogBloom() << c_mixGenesisDifficulty << 0 << c_genesisGasLimit << 0 << (unsigned)0
-			<< std::string() << h256() << h64(u64(42));
+			<< LogBloom() << c_mixGenesisDifficulty << 0 << 3141592 << 0 << (unsigned)0
+			<< std::string();
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);
 	return block.out();
@@ -79,7 +77,6 @@ MixClient::~MixClient()
 
 void MixClient::resetState(std::unordered_map<Address, Account> const& _accounts,  Secret const& _miner)
 {
-
 	WriteGuard l(x_state);
 	Guard fl(x_filtersWatches);
 
@@ -92,12 +89,13 @@ void MixClient::resetState(std::unordered_map<Address, Account> const& _accounts
 	SecureTrieDB<Address, MemoryDB> accountState(&m_stateDB);
 	accountState.init();
 
-	dev::eth::commit(_accounts, static_cast<MemoryDB&>(m_stateDB), accountState);
+	dev::eth::commit(_accounts, accountState);
 	h256 stateRoot = accountState.root();
 	m_bc.reset();
 	m_bc.reset(new MixBlockChain(m_dbPath, stateRoot));
-	m_state = eth::State(m_stateDB, BaseState::PreExisting, KeyPair(_miner).address());
-	m_state.sync(bc());
+	State s(m_stateDB, BaseState::PreExisting, KeyPair(_miner).address());
+	s.sync(bc());
+	m_state = s;
 	m_startState = m_state;
 	WriteGuard lx(x_executions);
 	m_executions.clear();
@@ -124,22 +122,16 @@ Transaction MixClient::replaceGas(Transaction const& _t, u256 const& _gas, Secre
 	return ret;
 }
 
-void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _call, bool _gasAuto, Secret const& _secret)
+ExecutionResult MixClient::debugTransaction(Transaction const& _t, State const& _state, LastHashes const& _lastHashes, bool _call)
 {
-	Transaction t = _gasAuto ? replaceGas(_t, m_state.gasLimitRemaining()) : _t;
-	// do debugging run first
-	LastHashes lastHashes(256);
-	lastHashes[0] = bc().numberHash(bc().number());
-	for (unsigned i = 1; i < 256; ++i)
-		lastHashes[i] = lastHashes[i - 1] ? bc().details(lastHashes[i - 1]).parent : h256();
-
 	State execState = _state;
-	execState.addBalance(t.sender(), t.gas() * t.gasPrice()); //give it enough balance for gas estimation
+	execState.addBalance(_t.sender(), _t.gas() * _t.gasPrice()); //give it enough balance for gas estimation
 	eth::ExecutionResult er;
-	Executive execution(execState, lastHashes, 0);
+	Executive execution(execState, _lastHashes, 0);
 	execution.setResultRecipient(er);
-	execution.initialize(t);
+	execution.initialize(_t);
 	execution.execute();
+
 	std::vector<MachineState> machineStates;
 	std::vector<unsigned> levels;
 	std::vector<MachineCode> codes;
@@ -235,7 +227,7 @@ void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _c
 	}
 
 	ExecutionResult d;
-	d.inputParameters = t.data();
+	d.inputParameters = _t.data();
 	d.result = er;
 	d.machineStates = machineStates;
 	d.executionCode = std::move(codes);
@@ -249,12 +241,26 @@ void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _c
 	if (!_call)
 		d.transactionIndex = m_state.pending().size();
 	d.executonIndex = m_executions.size();
+	return d;
+}
+
+
+void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _call, bool _gasAuto, Secret const& _secret)
+{
+	Transaction t = _gasAuto ? replaceGas(_t, m_state.gasLimitRemaining()) : _t;
+	// do debugging run first
+	LastHashes lastHashes(256);
+	lastHashes[0] = bc().numberHash(bc().number());
+	for (unsigned i = 1; i < 256; ++i)
+		lastHashes[i] = lastHashes[i - 1] ? bc().details(lastHashes[i - 1]).parent : h256();
+
+	ExecutionResult d = debugTransaction(t, _state, lastHashes, _call);
 
 	// execute on a state
 	if (!_call)
 	{
 		t = _gasAuto ? replaceGas(_t, d.gasUsed, _secret) : _t;
-		er = _state.execute(lastHashes, t);
+		eth::ExecutionResult er = _state.execute(lastHashes, t);
 		if (t.isCreation() && _state.code(d.contractAddress).empty())
 			BOOST_THROW_EXCEPTION(OutOfGas() << errinfo_comment("Not enough gas for contract deployment"));
 		d.gasUsed = er.gasUsed + er.gasRefunded + er.gasForDeposit + c_callStipend;
@@ -276,11 +282,14 @@ void MixClient::mine()
 {
 	WriteGuard l(x_state);
 	m_state.commitToMine(bc());
-	m_state.completeMine<MixPow>(0);
-	bc().import(m_state.blockData(), m_state.db(), ImportRequirements::Default & ~ImportRequirements::ValidNonce);
+
+	NoProof::BlockHeader h(m_state.info());
+	RLPStream header;
+	h.streamRLP(header);
+	m_state.sealBlock(header.out());
+	bc().import(m_state.blockData(), m_state.db(), ImportRequirements::Everything & ~ImportRequirements::ValidSeal);
 	m_state.sync(bc());
 	m_startState = m_state;
-	h256Set changed { dev::eth::PendingChangedFilter, dev::eth::ChainChangedFilter };
 }
 
 ExecutionResult MixClient::lastExecution() const
@@ -384,9 +393,9 @@ uint64_t MixClient::hashrate() const
 	return 0;
 }
 
-eth::MiningProgress MixClient::miningProgress() const
+eth::WorkingProgress MixClient::miningProgress() const
 {
-	return eth::MiningProgress();
+	return eth::WorkingProgress();
 }
 
 }

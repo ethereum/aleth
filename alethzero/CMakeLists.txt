@@ -7,7 +7,7 @@ if (${CMAKE_MAJOR_VERSION} GREATER 2)
 	cmake_policy(SET CMP0043 OLD)
 endif()
 
-if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.6") AND NOT APPLE)
 	# Supress warnings for qt headers for clang+ccache
 	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
 endif ()
@@ -72,5 +72,5 @@ if (SERPENT)
 endif()
 
 # eth_install_executable is defined in cmake/EthExecutableHelper.cmake
-eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS)
+eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS EVMJIT_DLLS OpenCL_DLLS)
 

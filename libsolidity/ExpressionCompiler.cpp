@@ -48,12 +48,23 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 {
 	if (!_varDecl.getValue())
 		return;
-	solAssert(!!_varDecl.getValue()->getType(), "Type information not available.");
+	TypePointer type = _varDecl.getValue()->getType();
+	solAssert(!!type, "Type information not available.");
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.getValue()->accept(*this);
-	utils().convertType(*_varDecl.getValue()->getType(), *_varDecl.getType(), true);
 
-	StorageItem(m_context, _varDecl).storeValue(*_varDecl.getType(), _varDecl.getLocation(), true);
+	if (_varDecl.getType()->dataStoredIn(DataLocation::Storage))
+	{
+		// reference type, only convert value to mobile type and do final conversion in storeValue.
+		utils().convertType(*type, *type->mobileType());
+		type = type->mobileType();
+	}
+	else
+	{
+		utils().convertType(*type, *_varDecl.getType());
+		type = _varDecl.getType();
+	}
+	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.getLocation(), true);
 }
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -714,7 +725,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		{
 		case DataLocation::Storage:
 		{
-			m_context << eth::Instruction::POP; // structs always align to new slot
 			pair<u256, unsigned> const& offsets = type.getStorageOffsetsOfMember(member);
 			m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
 			setLValueToStorageItem(_memberAccess);
@@ -792,8 +802,6 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	Type const& baseType = *_indexAccess.getBaseExpression().getType();
 	if (baseType.getCategory() == Type::Category::Mapping)
 	{
-		// storage byte offset is ignored for mappings, it should be zero.
-		m_context << eth::Instruction::POP;
 		// stack: storage_base_ref
 		Type const& keyType = *dynamic_cast<MappingType const&>(baseType).getKeyType();
 		m_context << u256(0); // memory position
@@ -811,10 +819,6 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	{
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-
-		// remove storage byte offset
-		if (arrayType.location() == DataLocation::Storage)
-			m_context << eth::Instruction::POP;
 
 		_indexAccess.getIndexExpression()->accept(*this);
 		// stack layout: <base_ref> [<length>] <index>
@@ -942,24 +946,27 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	}
 	else
 	{
-		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-		bool const c_isSigned = type.isSigned();
+		bool isSigned = false;
+		if (auto type = dynamic_cast<IntegerType const*>(&_type))
+			isSigned = type->isSigned();
 
 		switch (_operator)
 		{
 		case Token::GreaterThanOrEqual:
-			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
-					  << eth::Instruction::ISZERO;
+			m_context <<
+				(isSigned ? eth::Instruction::SLT : eth::Instruction::LT) <<
+				eth::Instruction::ISZERO;
 			break;
 		case Token::LessThanOrEqual:
-			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
-					  << eth::Instruction::ISZERO;
+			m_context <<
+				(isSigned ? eth::Instruction::SGT : eth::Instruction::GT) <<
+				eth::Instruction::ISZERO;
 			break;
 		case Token::GreaterThan:
-			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
+			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		case Token::LessThan:
-			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
+			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));

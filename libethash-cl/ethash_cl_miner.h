@@ -75,6 +75,7 @@ public:
 private:
 
 	static std::vector<cl::Device> getDevices(std::vector<cl::Platform> const& _platforms, unsigned _platformId);
+	static std::vector<cl::Platform> getPlatforms();
 
 	cl::Context m_context;
 	cl::CommandQueue m_queue;
@@ -88,6 +89,11 @@ private:
 	unsigned m_globalWorkSize;
 	bool m_openclOnePointOne;
 	unsigned m_deviceBits;
+
+	/// The step used in the work size adjustment
+	unsigned int m_stepWorkSizeAdjust;
+	/// The Work Size way of adjustment, > 0 when previously increased, < 0 when previously decreased
+	int m_wayWorkSizeAdjust = 0;
 
 	/// The local work size for the search
 	static unsigned s_workgroupSize;
