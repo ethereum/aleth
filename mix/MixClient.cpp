@@ -279,7 +279,7 @@ void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _c
 void MixClient::mine()
 {
 	WriteGuard l(x_state);
-	m_state.commitToMine(bc());
+	m_state.commitToSeal(bc());
 
 	NoProof::BlockHeader h(m_state.info());
 	RLPStream header;
@@ -365,10 +365,10 @@ eth::BlockInfo MixClient::blockInfo() const
 	return BlockInfo(bc().block());
 }
 
-void MixClient::setAddress(Address _us)
+void MixClient::setBeneficiary(Address _us)
 {
 	WriteGuard l(x_state);
-	m_state.setAddress(_us);
+	m_state.setBeneficiary(_us);
 }
 
 void MixClient::startMining()

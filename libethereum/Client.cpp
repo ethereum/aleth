@@ -333,16 +333,16 @@ void Client::killChain()
 		WriteGuard l2(x_preMine);
 		WriteGuard l3(x_working);
 
-		m_preMine = State();
-		m_postMine = State();
-		m_working = State();
+		m_preMine = Block();
+		m_postMine = Block();
+		m_working = Block();
 
 		m_stateDB = OverlayDB();
 		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), WithExisting::Kill);
 		bc().reopen(Defaults::dbPath(), WithExisting::Kill);
 
 		m_preMine = bc().genesisBlock(m_stateDB);
-		m_postMine = State(m_stateDB);
+		m_postMine = Block(m_stateDB);
 	}
 
 	if (auto h = m_host.lock())
@@ -478,7 +478,7 @@ ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 
 		clog(ClientDetail) << "Nonce at " << _dest << " pre:" << m_preMine.transactionsFrom(_dest) << " post:" << m_postMine.transactionsFrom(_dest);
 		DEV_READ_GUARDED(x_postMine)
 			temp = m_postMine;
-		temp.addBalance(_from, _value + _gasPrice * _gas);
+		temp.mutableState().addBalance(_from, _value + _gasPrice * _gas);
 		Executive e(temp);
 		e.setResultRecipient(ret);
 		if (!e.call(_dest, _from, _value, _gasPrice, &_data, _gas))
@@ -587,14 +587,14 @@ void Client::restartMining()
 	if (!isMajorSyncing())
 	{
 		bool preChanged = false;
-		State newPreMine;
+		Block newPreMine;
 		DEV_READ_GUARDED(x_preMine)
 			newPreMine = m_preMine;
 
 		// TODO: use m_postMine to avoid re-evaluating our own blocks.
 		preChanged = newPreMine.sync(bc());
 
-		if (preChanged || m_postMine.address() != m_preMine.address())
+		if (preChanged || m_postMine.beneficiary() != m_preMine.beneficiary())
 		{
 			if (isMining())
 				clog(ClientTrace) << "New block on chain.";
@@ -661,7 +661,7 @@ void Client::rejigMining()
 	{
 		clog(ClientTrace) << "Rejigging mining...";
 		DEV_WRITE_GUARDED(x_working)
-			m_working.commitToMine(bc(), m_extraData);
+			m_working.commitToSeal(bc(), m_extraData);
 		DEV_READ_GUARDED(x_working)
 		{
 			DEV_WRITE_GUARDED(x_postMine)
@@ -759,22 +759,6 @@ void Client::checkWatchGarbage()
 	}
 }
 
-State Client::asOf(h256 const& _block) const
-{
-	try
-	{
-		State ret(m_stateDB);
-		ret.populateFromChain(bc(), _block);
-		return ret;
-	}
-	catch (Exception& ex)
-	{
-		ex << errinfo_block(bc().block(_block));
-		onBadBlock(ex);
-		return State();
-	}
-}
-
 void Client::prepareForTransaction()
 {
 	startWorking();
@@ -794,7 +778,7 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 	{
 		ex << errinfo_block(bc().block(_blockHash));
 		onBadBlock(ex);
-		return State();
+		return Block();
 	}
 }
 
@@ -817,7 +801,7 @@ eth::State Client::state(unsigned _txi) const
 	DEV_READ_GUARDED(x_postMine)
 		return m_postMine.fromPending(_txi);
 	assert(false);
-	return Block();
+	return State();
 }
 
 void Client::flushTransactions()

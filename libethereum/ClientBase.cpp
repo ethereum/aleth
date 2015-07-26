@@ -164,7 +164,7 @@ LocalisedLogEntries ClientBase::logs(LogFilter const& _f) const
 	// Handle pending transactions differently as they're not on the block chain.
 	if (begin > bc().number())
 	{
-		State temp = postMine();
+		Block temp = postMine();
 		for (unsigned i = 0; i < temp.pending().size(); ++i)
 		{
 			// Might have a transaction that contains a matching log.
@@ -439,14 +439,14 @@ h256s ClientBase::pendingHashes() const
 
 StateDiff ClientBase::diff(unsigned _txi, h256 _block) const
 {
-	State st = asOf(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1), true);
+	Block b = asOf(_block);
+	return b.fromPending(_txi).diff(b.fromPending(_txi + 1), true);
 }
 
 StateDiff ClientBase::diff(unsigned _txi, BlockNumber _block) const
 {
-	State st = asOf(_block);
-	return st.fromPending(_txi).diff(st.fromPending(_txi + 1), true);
+	Block b = asOf(_block);
+	return b.fromPending(_txi).diff(b.fromPending(_txi + 1), true);
 }
 
 Addresses ClientBase::addresses(BlockNumber _block) const
@@ -464,7 +464,7 @@ u256 ClientBase::gasLimitRemaining() const
 
 Address ClientBase::address() const
 {
-	return preMine().address();
+	return preMine().beneficiary();
 }
 
 h256 ClientBase::hashFromNumber(BlockNumber _number) const

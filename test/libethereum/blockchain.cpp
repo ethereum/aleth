@@ -127,7 +127,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				TransientDirectory td_stateDB, td_bc;
 				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), StateDefinition(), td_bc.path(), WithExisting::Kill);
 				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-				trueState.setAddress(biGenesisBlock.beneficiary());
+				trueState.setBeneficiary(biGenesisBlock.beneficiary());
 				importer.importState(o["pre"].get_obj(), state);
 				state.commit();
 
@@ -180,7 +180,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					}
 				} 
 				bc.sync(uncleBlockQueue, state.db(), 4);
-				state.commitToMine(bc);
+				state.commitToSeal(bc);
 
 				try
 				{

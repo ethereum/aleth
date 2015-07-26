@@ -50,14 +50,14 @@ namespace fs = boost::filesystem;
 static const u256 c_blockReward = c_network == Network::Olympic ? (1500 * finney) : (5 * ether);
 static const unsigned c_maxSyncTransactions = 256;
 
-const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
-const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
-const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
-const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
+const char* BlockSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
+const char* BlockDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
+const char* BlockTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
+const char* BlockChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
 Block::Block(OverlayDB const& _db, BaseState _bs, Address _coinbaseAddress):
 	m_state(_db, _bs),
-	m_ourAddress(_coinbaseAddress),
+	m_beneficiary(_coinbaseAddress),
 	m_blockReward(c_blockReward)
 {
 	m_previousBlock.clear();
@@ -72,7 +72,7 @@ Block::Block(Block const& _s):
 	m_transactionSet(_s.m_transactionSet),
 	m_previousBlock(_s.m_previousBlock),
 	m_currentBlock(_s.m_currentBlock),
-	m_ourAddress(_s.m_ourAddress),
+	m_beneficiary(_s.m_beneficiary),
 	m_blockReward(_s.m_blockReward)
 {
 	m_precommit = m_state;
@@ -87,7 +87,7 @@ Block& Block::operator=(Block const& _s)
 	m_transactionSet = _s.m_transactionSet;
 	m_previousBlock = _s.m_previousBlock;
 	m_currentBlock = _s.m_currentBlock;
-	m_ourAddress = _s.m_ourAddress;
+	m_beneficiary = _s.m_beneficiary;
 	m_blockReward = _s.m_blockReward;
 
 	m_precommit = m_state;
@@ -101,7 +101,7 @@ void Block::resetCurrent()
 	m_receipts.clear();
 	m_transactionSet.clear();
 	m_currentBlock = BlockInfo();
-	m_currentBlock.setCoinbaseAddress(m_ourAddress);
+	m_currentBlock.setCoinbaseAddress(m_beneficiary);
 	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)time(0)));
 	m_currentBlock.populateFromParent(m_previousBlock);
 
@@ -134,7 +134,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 		sync(_bc, bi.parentHash(), bip);
 
 		// 2. Enact the block's transactions onto this state.
-		m_ourAddress = bi.beneficiary();
+		m_beneficiary = bi.beneficiary();
 		Timer t;
 		auto vb = _bc.verifyBlock(&b, function<void(Exception&)>(), _ir);
 		ret.verify = t.elapsed();
@@ -571,19 +571,17 @@ ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Per
 	// transaction as possible.
 	uncommitToMine();
 
-	ExecutionResult ret;
-	TransactionReceipt receipt;
-	tie(ret, receipt) = m_state.execute(EnvInfo(info(), _lh), _t, _p, _onOp);
+	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), _t, _p, _onOp);
 
 	if (_p == Permanence::Committed)
 	{
 		// Add to the user-originated transactions that we've executed.
 		m_transactions.push_back(_t);
-		m_receipts.push_back(receipt);
+		m_receipts.push_back(resultReceipt.second);
 		m_transactionSet.insert(_t.sha3());
 	}
 
-	return ret;
+	return resultReceipt.first;
 }
 
 void Block::applyRewards(vector<BlockInfo> const& _uncleBlockHeaders)
@@ -597,7 +595,7 @@ void Block::applyRewards(vector<BlockInfo> const& _uncleBlockHeaders)
 	m_state.addBalance(m_currentBlock.beneficiary(), r);
 }
 
-void Block::commitToMine(BlockChain const& _bc, bytes const& _extraData)
+void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 {
 	if (m_committedToMine)
 		uncommitToMine();
@@ -662,13 +660,13 @@ void Block::commitToMine(BlockChain const& _bc, bytes const& _extraData)
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
 	m_state.commit();
 
-	clog(StateDetail) << "Post-reward stateRoot:" << m_state.root();
+	clog(StateDetail) << "Post-reward stateRoot:" << m_state.rootHash();
 	clog(StateDetail) << m_state;
 	clog(StateDetail) << *this;
 
 	m_currentBlock.setLogBloom(logBloom());
 	m_currentBlock.setGasUsed(gasUsed());
-	m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(m_currentUncles), m_state.root());
+	m_currentBlock.setRoots(hash256(transactionsMap), hash256(receiptsMap), sha3(m_currentUncles), m_state.rootHash());
 
 	m_currentBlock.setParentHash(m_previousBlock.hash());
 	m_currentBlock.setExtraData(_extraData);
@@ -751,11 +749,11 @@ void Block::cleanup(bool _fullCommit)
 	{
 		// Commit the new trie to disk.
 		if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
-			clog(StateTrace) << "Committing to disk: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(m_db.lookup(rootHash())));
+			clog(StateTrace) << "Committing to disk: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
 
 		try
 		{
-			EnforceRefs er(m_db, true);
+			EnforceRefs er(db(), true);
 			rootHash();
 		}
 		catch (BadRoot const&)
@@ -767,7 +765,7 @@ void Block::cleanup(bool _fullCommit)
 		m_state.db().commit();	// TODO: State API for this?
 
 		if (isChannelVisible<StateTrace>()) // Avoid calling toHex if not needed
-			clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(m_db.lookup(rootHash())));
+			clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
 
 		m_previousBlock = m_currentBlock;
 		m_currentBlock.populateFromParent(m_previousBlock);
@@ -803,4 +801,10 @@ string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequire
 		++i;
 	}
 	return ret.empty() ? "[]" : (ret + "]");
+}
+
+std::ostream& dev::eth::operator<<(std::ostream& _out, Block const& _s)
+{
+	(void)_s;
+	return _out;
 }

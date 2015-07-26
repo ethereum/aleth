@@ -115,16 +115,6 @@ public:
 	 */
 	Executive(State& _s, BlockChain const& _bc, unsigned _number, unsigned _level = 0);
 
-	/**
-	 * Fully automated constructor; executive will operate on the end of a block taken from the chain.
-	 */
-	Executive(OverlayDB const& _db, BlockChain const& _bc, unsigned _number, unsigned _level = 0);
-
-	/**
-	 * Fully automated constructor; executive will operate on the end of a block taken from the chain.
-	 */
-	Executive(OverlayDB const& _db, BlockChain const& _bc, h256 const& _hash, unsigned _level = 0);
-
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;
 

@@ -925,7 +925,7 @@ int main(int argc, char** argv)
 		c->setForceMining(forceMining);
 		// TODO: expose sealant interface.
 		c->setTurboMining(m.minerType() == MinerCLI::MinerType::GPU);
-		c->setAddress(beneficiary);
+		c->setBeneficiary(beneficiary);
 		c->setNetworkId(networkId);
 	}
 

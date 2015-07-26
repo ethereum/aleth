@@ -148,7 +148,7 @@ Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
 {}
 
 Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
-	m_s(_s),
+	m_s(_s.mutableState()),
 	m_envInfo(_s.info(), _lh),
 	m_depth(_level)
 {}
@@ -158,7 +158,7 @@ Executive::Executive(State& _s, BlockChain const& _bc, EnvInfo const& _envInfo, 
 	m_envInfo(_envInfo),
 	m_depth(_level)
 {
-	m_envInfo.setLastHashes(_bc.lastHashes(m_envInfo.number() - 1));
+	m_envInfo.setLastHashes(_bc.lastHashes((unsigned)m_envInfo.number() - 1));
 }
 
 Executive::Executive(State& _s, BlockChain const& _bc, unsigned _number, unsigned _level):
@@ -166,21 +166,6 @@ Executive::Executive(State& _s, BlockChain const& _bc, unsigned _number, unsigne
 	m_envInfo(_bc.info(_bc.numberHash(_number)), _bc.lastHashes(_number - 1)),
 	m_depth(_level)
 {}
-
-Executive::Executive(OverlayDB const& _db, BlockChain const& _bc, unsigned _number, unsigned _level):
-	m_envInfo(_bc.info(_bc.numberHash(_number)), _bc.lastHashes(_number - 1)),
-	m_depth(_level)
-{
-	m_s = Block(_db).populateFromChain(_bc, _bc.numberHash(_number));
-}
-
-Executive::Executive(OverlayDB const& _db, BlockChain const& _bc, h256 const& _hash, unsigned _level):
-	m_envInfo(_bc.info(_hash)),
-	m_depth(_level)
-{
-	m_envInfo.setLastHashes(_bc.lastHashes(m_envInfo.number() - 1));
-	m_s = Block(_db).populateFromChain(_bc, _hash);
-}
 
 u256 Executive::gasUsed() const
 {
@@ -203,12 +188,12 @@ void Executive::initialize(Transaction const& _transaction)
 	m_t = _transaction;
 
 	// Avoid transactions that would take us beyond the block gas limit.
-	u256 startGasUsed = m_s.gasUsed();
-	if (startGasUsed + (bigint)m_t.gas() > m_s.m_currentBlock.gasLimit())
+	u256 startGasUsed = m_envInfo.gasUsed();
+	if (startGasUsed + (bigint)m_t.gas() > m_envInfo.gasLimit())
 	{
-		clog(ExecutiveWarnChannel) << "Too much gas used in this block: Require <" << (m_s.m_currentBlock.gasLimit() - startGasUsed) << " Got" << m_t.gas();
+		clog(ExecutiveWarnChannel) << "Too much gas used in this block: Require <" << (m_envInfo.gasLimit() - startGasUsed) << " Got" << m_t.gas();
 		m_excepted = TransactionException::BlockGasLimitReached;
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_s.m_currentBlock.gasLimit() - startGasUsed), (bigint)m_t.gas()));
+		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_envInfo.gasLimit() - startGasUsed), (bigint)m_t.gas()));
 	}
 
 	// Check gas cost is enough.
@@ -299,7 +284,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_lastHashes, _p.receiveAddress, _p.senderAddress, _origin, _p.value, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_envInfo, _p.receiveAddress, _p.senderAddress, _origin, _p.value, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
@@ -437,7 +422,7 @@ void Executive::finalize()
 	m_s.addBalance(m_t.sender(), m_gas * m_t.gasPrice());
 
 	u256 feesEarned = (m_t.gas() - m_gas) * m_t.gasPrice();
-	m_s.addBalance(m_s.m_currentBlock.beneficiary(), feesEarned);
+	m_s.addBalance(m_envInfo.beneficiary(), feesEarned);
 
 	// Suicides...
 	if (m_ext)

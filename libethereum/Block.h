@@ -80,10 +80,10 @@ public:
 	Block(): m_state(OverlayDB(), BaseState::Empty) {}
 
 	/// Basic state object from database.
-	/// Use the default when you already have a database and you just want to make a State object
+	/// Use the default when you already have a database and you just want to make a Block object
 	/// which uses it. If you have no preexisting database then set BaseState to something other
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
-	/// You can also set the coinbase address.
+	/// You can also set the beneficiary address.
 	explicit Block(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address _coinbaseAddress = Address());
 
 	/// Copy state object.
@@ -92,77 +92,28 @@ public:
 	/// Copy state object.
 	Block& operator=(Block const& _s);
 
-	/// Construct state object from arbitrary point in blockchain.
-	PopulationStatistics populateFromChain(BlockChain const& _bc, h256 const& _hash, ImportRequirements::value _ir = ImportRequirements::None);
+	/// Get the beneficiary address for any transactions we do and rewards we get.
+	Address beneficiary() const { return m_beneficiary; }
 
-	/// Set the coinbase address for any transactions we do and rewards we get.
+	/// Set the beneficiary address for any transactions we do and rewards we get.
 	/// This causes a complete reset of current block.
-	void setAddress(Address _coinbaseAddress) { m_ourAddress = _coinbaseAddress; resetCurrent(); }
-	Address address() const { return m_ourAddress; }
+	void setBeneficiary(Address const& _id) { m_beneficiary = _id; resetCurrent(); }
 
-	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
-	OverlayDB const& db() const { return m_state.db(); }
-	OverlayDB& db() { return m_state.db(); }
+	// Account-getters. All operate on the final state.
 
-	/// @returns the set containing all addresses currently in use in Ethereum.
-	/// @throws InterfaceNotSupported if compiled without ETH_FATDB.
-	std::unordered_map<Address, u256> addresses() const { return m_state.addresses(); }
+	/// Get an account's balance.
+	/// @returns 0 if the address has never been used.
+	u256 balance(Address const& _address) const { return m_state.balance(_address); }
 
-	/// Get the header information on the present block.
-	BlockInfo const& info() const { return m_currentBlock; }
-
-	/// Get the backing state object.
-	State const& state() const { return m_state; }
-
-	/// Prepares the current state for mining.
-	/// Commits all transactions into the trie, compiles uncles and transactions list, applies all
-	/// rewards and populates the current block header with the appropriate hashes.
-	/// The only thing left to do after this is to actually mine().
-	///
-	/// This may be called multiple times and without issue.
-	void commitToMine(BlockChain const& _bc, bytes const& _extraData = {});
-
-	/// Pass in a solution to the proof-of-work.
-	/// @returns true iff we were previously committed to mining.
-	/// TODO: verify it prior to calling this.
-	/** Commit to DB and build the final block if the previous call to mine()'s result is completion.
-	 * Typically looks like:
-	 * @code
-	 * while (notYetMined)
-	 * {
-	 * // lock
-	 * commitToMine(_blockChain);  // will call uncommitToMine if a repeat.
-	 * completeMine();
-	 * // unlock
-	 * @endcode
-	 */
-	bool sealBlock(bytes const& _header) { return sealBlock(&_header); }
-	bool sealBlock(bytesConstRef _header);
-
-	/// Get the complete current block, including valid nonce.
-	/// Only valid after mine() returns true.
-	bytes const& blockData() const { return m_currentBytes; }
-
-	/// Sync our transactions, killing those from the queue that we have and assimilating those that we don't.
-	/// @returns a list of receipts one for each transaction placed from the queue into the state and bool, true iff there are more transactions to be processed.
-	std::pair<TransactionReceipts, bool> sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned _msTimeout = 100);
-
-	/// Execute a given transaction.
-	/// This will append @a _t to the transaction list and change the state accordingly.
-	ExecutionResult execute(LastHashes const& _lh, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
-
-	/// Get the remaining gas limit in this block.
-	u256 gasLimitRemaining() const { return m_currentBlock.gasLimit() - gasUsed(); }
+	/// Get the number of transactions a particular address has sent (used for the transaction nonce).
+	/// @returns 0 if the address has never been used.
+	u256 transactionsFrom(Address const& _address) const { return m_state.transactionsFrom(_address); }
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const { return m_state.addressInUse(_address); }
 
 	/// Check if the address contains executable code.
 	bool addressHasCode(Address const& _address) const { return m_state.addressHasCode(_address); }
-
-	/// Get a mutable State object which is backing this block. Don't expect things to work right
-	/// after this.
-	State& mutableState() { return m_state; }
 
 	/// Get the root of the storage of an account.
 	h256 storageRoot(Address const& _contract) const { return m_state.storageRoot(_contract); }
@@ -184,12 +135,32 @@ public:
 	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
 	h256 codeHash(Address const& _contract) const { return m_state.codeHash(_contract); }
 
-	/// Get the number of transactions a particular address has sent (used for the transaction nonce).
-	/// @returns 0 if the address has never been used.
-	u256 transactionsFrom(Address const& _address) const { return m_state.transactionsFrom(_address); }
+	// General information from state
+
+	/// Get the backing state object.
+	State const& state() const { return m_state; }
+
+	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
+	OverlayDB const& db() const { return m_state.db(); }
 
 	/// The hash of the root of our state tree.
 	h256 rootHash() const { return m_state.rootHash(); }
+
+	/// @returns the set containing all addresses currently in use in Ethereum.
+	/// @throws InterfaceNotSupported if compiled without ETH_FATDB.
+	std::unordered_map<Address, u256> addresses() const { return m_state.addresses(); }
+
+	// For altering accounts behind-the-scenes
+
+	/// Get a mutable State object which is backing this block.
+	/// @warning Only use this is you know what you're doing. If you use it while constructing a
+	/// normal sealable block, don't expect things to work right.
+	State& mutableState() { return m_state; }
+
+	// Information concerning ongoing transactions
+
+	/// Get the remaining gas limit in this block.
+	u256 gasLimitRemaining() const { return m_currentBlock.gasLimit() - gasUsed(); }
 
 	/// Get the list of pending transactions.
 	Transactions const& pending() const { return m_transactions; }
@@ -217,6 +188,19 @@ public:
 	/// @returns the StateDiff caused by the pending transaction of index @a _i.
 	StateDiff pendingDiff(unsigned _i) const { return fromPending(_i).diff(fromPending(_i + 1), true); }
 
+	// State-change operations
+
+	/// Construct state object from arbitrary point in blockchain.
+	PopulationStatistics populateFromChain(BlockChain const& _bc, h256 const& _hash, ImportRequirements::value _ir = ImportRequirements::None);
+
+	/// Execute a given transaction.
+	/// This will append @a _t to the transaction list and change the state accordingly.
+	ExecutionResult execute(LastHashes const& _lh, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
+
+	/// Sync our transactions, killing those from the queue that we have and assimilating those that we don't.
+	/// @returns a list of receipts one for each transaction placed from the queue into the state and bool, true iff there are more transactions to be processed.
+	std::pair<TransactionReceipts, bool> sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned _msTimeout = 100);
+
 	/// Sync our state with the block chain.
 	/// This basically involves wiping ourselves if we've been superceded and rebuilding from the transaction queue.
 	bool sync(BlockChain const& _bc);
@@ -235,6 +219,41 @@ public:
 
 	/// Sets m_currentBlock to a clean state, (i.e. no change from m_previousBlock).
 	void resetCurrent();
+
+	// Sealing
+
+	/// Prepares the current state for mining.
+	/// Commits all transactions into the trie, compiles uncles and transactions list, applies all
+	/// rewards and populates the current block header with the appropriate hashes.
+	/// The only thing left to do after this is to actually mine().
+	///
+	/// This may be called multiple times and without issue.
+	void commitToSeal(BlockChain const& _bc, bytes const& _extraData = {});
+
+	/// Pass in a solution to the proof-of-work.
+	/// @returns true iff we were previously committed to mining.
+	/// TODO: verify it prior to calling this.
+	/** Commit to DB and build the final block if the previous call to mine()'s result is completion.
+	 * Typically looks like:
+	 * @code
+	 * while (notYetMined)
+	 * {
+	 * // lock
+	 * commitToSeal(_blockChain);  // will call uncommitToMine if a repeat.
+	 * completeMine();
+	 * // unlock
+	 * @endcode
+	 */
+	bool sealBlock(bytes const& _header) { return sealBlock(&_header); }
+	bool sealBlock(bytesConstRef _header);
+
+	/// Get the complete current block, including valid nonce.
+	/// Only valid after mine() returns true.
+	bytes const& blockData() const { return m_currentBytes; }
+
+	/// Get the header information on the present block.
+	BlockInfo const& info() const { return m_currentBlock; }
+
 
 private:
 	/// Undo the changes to the state for committing to mine.
@@ -276,10 +295,15 @@ private:
 	bytes m_currentTxs;							///< The RLP-encoded block of transactions.
 	bytes m_currentUncles;						///< The RLP-encoded block of uncles.
 
-	Address m_ourAddress;						///< Our address (i.e. the address to which fees go).
+	Address m_beneficiary;						///< Our address (i.e. the address to which fees go).
 
 	u256 m_blockReward;
+
+	friend std::ostream& operator<<(std::ostream& _out, Block const& _s);
 };
+
+std::ostream& operator<<(std::ostream& _out, Block const& _s);
+
 
 }
 

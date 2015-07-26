@@ -1149,7 +1149,7 @@ void Main::setBeneficiary(Address const& _b)
 		ui->ourAccounts->item(i)->setCheckState(h == _b ? Qt::Checked : Qt::Unchecked);
 	}
 	m_beneficiary = _b;
-	ethereum()->setAddress(_b);
+	ethereum()->setBeneficiary(_b);
 }
 
 void Main::on_ourAccounts_itemClicked(QListWidgetItem* _i)
@@ -2066,7 +2066,7 @@ void Main::on_mine_triggered()
 	if (ui->mine->isChecked())
 	{
 //		EthashAux::computeFull(ethereum()->blockChain().number());
-		ethereum()->setAddress(m_beneficiary);
+		ethereum()->setBeneficiary(m_beneficiary);
 		ethereum()->startMining();
 	}
 	else

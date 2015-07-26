@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(Complex)
 	cout << bc;
 
 	Block s = bc.genesisBlock(stateDB);
-	s.setAddress(myMiner.address());
+	s.setBeneficiary(myMiner.address());
 	cout << s;
 
 	// Sync up - this won't do much until we use the last state.
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(Complex)
 	cout << s;
 
 	// Mine to get some ether and set in stone.
-	s.commitToMine(bc);
-	s.commitToMine(bc);
+	s.commitToSeal(bc);
+	s.commitToSeal(bc);
 	mine(s, bc);
 	bc.attemptImport(s.blockData(), stateDB);
 

@@ -215,159 +215,6 @@ void State::commit()
 	m_cache.clear();
 }
 
-bool State::sync(BlockChain const& _bc)
-{
-	return sync(_bc, _bc.currentHash());
-}
-
-bool State::sync(BlockChain const& _bc, h256 const& _block, BlockInfo const& _bi)
-{
-	bool ret = false;
-	// BLOCK
-	BlockInfo bi = _bi ? _bi : _bc.info(_block);
-#if ETH_PARANOIA
-	if (!bi)
-		while (1)
-		{
-			try
-			{
-				auto b = _bc.block(_block);
-				bi.populate(b);
-				break;
-			}
-			catch (Exception const& _e)
-			{
-				// TODO: Slightly nicer handling? :-)
-				cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-				cerr << diagnostic_information(_e) << endl;
-			}
-			catch (std::exception const& _e)
-			{
-				// TODO: Slightly nicer handling? :-)
-				cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-				cerr << _e.what() << endl;
-			}
-		}
-#endif
-	if (bi == m_currentBlock)
-	{
-		// We mined the last block.
-		// Our state is good - we just need to move on to next.
-		m_previousBlock = m_currentBlock;
-		resetCurrent();
-		ret = true;
-	}
-	else if (bi == m_previousBlock)
-	{
-		// No change since last sync.
-		// Carry on as we were.
-	}
-	else
-	{
-		// New blocks available, or we've switched to a different branch. All change.
-		// Find most recent state dump and replay what's left.
-		// (Most recent state dump might end up being genesis.)
-
-		if (m_db.lookup(bi.stateRoot()).empty())
-		{
-			cwarn << "Unable to sync to" << bi.hash() << "; state root" << bi.stateRoot() << "not found in database.";
-			cwarn << "Database corrupt: contains block without stateRoot:" << bi;
-			cwarn << "Try rescuing the database by running: eth --rescue";
-			BOOST_THROW_EXCEPTION(InvalidStateRoot() << errinfo_target(bi.stateRoot()));
-		}
-		m_previousBlock = bi;
-		resetCurrent();
-		ret = true;
-	}
-#if ALLOW_REBUILD
-	else
-	{
-		// New blocks available, or we've switched to a different branch. All change.
-		// Find most recent state dump and replay what's left.
-		// (Most recent state dump might end up being genesis.)
-
-		std::vector<h256> chain;
-		while (bi.number() != 0 && m_db.lookup(bi.stateRoot()).empty())	// while we don't have the state root of the latest block...
-		{
-			chain.push_back(bi.hash());				// push back for later replay.
-			bi.populate(_bc.block(bi.parentHash()));	// move to parent.
-		}
-
-		m_previousBlock = bi;
-		resetCurrent();
-
-		// Iterate through in reverse, playing back each of the blocks.
-		try
-		{
-			for (auto it = chain.rbegin(); it != chain.rend(); ++it)
-			{
-				auto b = _bc.block(*it);
-				enact(&b, _bc, _ir);
-				cleanup(true);
-			}
-		}
-		catch (...)
-		{
-			// TODO: Slightly nicer handling? :-)
-			cerr << "ERROR: Corrupt block-chain! Delete your block-chain DB and restart." << endl;
-			cerr << boost::current_exception_diagnostic_information() << endl;
-			exit(1);
-		}
-
-		resetCurrent();
-		ret = true;
-	}
-#endif
-	return ret;
-}
-
-u256 State::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
-{
-#if ETH_TIMED_ENACTMENTS
-	Timer t;
-	double populateVerify;
-	double populateGrand;
-	double syncReset;
-	double enactment;
-#endif
-
-	// Check family:
-	BlockInfo biParent = _bc.info(_block.info.parentHash());
-	_block.info.verifyParent(biParent);
-
-#if ETH_TIMED_ENACTMENTS
-	populateVerify = t.elapsed();
-	t.restart();
-#endif
-
-	BlockInfo biGrandParent;
-	if (biParent.number())
-		biGrandParent = _bc.info(biParent.parentHash());
-
-#if ETH_TIMED_ENACTMENTS
-	populateGrand = t.elapsed();
-	t.restart();
-#endif
-
-	sync(_bc, _block.info.parentHash(), BlockInfo());
-	resetCurrent();
-
-#if ETH_TIMED_ENACTMENTS
-	syncReset = t.elapsed();
-	t.restart();
-#endif
-
-	m_previousBlock = biParent;
-	auto ret = enact(_block, _bc);
-
-#if ETH_TIMED_ENACTMENTS
-	enactment = t.elapsed();
-	if (populateVerify + populateGrand + syncReset + enactment > 0.5)
-		clog(StateChat) << "popVer/popGrand/syncReset/enactment = " << populateVerify << "/" << populateGrand << "/" << syncReset << "/" << enactment;
-#endif
-	return ret;
-}
-
 unordered_map<Address, u256> State::addresses() const
 {
 #if ETH_FATDB
@@ -607,7 +454,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	e.initialize(_t);
 
 	// OK - transaction looks valid - execute.
-	u256 startGasUsed = gasUsed();
+	u256 startGasUsed = _envInfo.gasUsed();
 #if ETH_PARANOIA
 	ctrace << "Executing" << e.t() << "on" << h;
 	ctrace << toHex(e.t().rlp());
@@ -630,13 +477,11 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	ctrace << old.diff(*this);
 #endif
 
-	AddressHash touched;
-
 	if (_p == Permanence::Reverted)
 		m_cache.clear();
 	else
 	{
-		m_touched += commit();
+		commit();
 	
 #if ETH_PARANOIA && !ETH_FATDB
 		ctrace << "Executed; now" << rootHash();
