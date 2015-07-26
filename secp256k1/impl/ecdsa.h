@@ -215,6 +215,8 @@ void static secp256k1_ecdsa_pubkey_serialize(secp256k1_ge_t *elem, unsigned char
         pub[0] = 0x04;
         secp256k1_fe_get_b32(&pub[33], &elem->y);
     }
+    if (secp256k1_ge_is_infinity(elem))
+        memset(pub, 0, *size);
 }
 
 int static secp256k1_ecdsa_privkey_parse(secp256k1_num_t *key, const unsigned char *privkey, int privkeylen) {

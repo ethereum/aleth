@@ -138,6 +138,8 @@ int secp256k1_ecdsa_pubkey_create(unsigned char *pubkey, int *pubkeylen, const u
     secp256k1_ecmult_gen(&pj, &sec);
     secp256k1_ge_t p;
     secp256k1_ge_set_gej(&p, &pj);
+    if (secp256k1_ge_is_infinity(&p))
+        return 0;
     secp256k1_ecdsa_pubkey_serialize(&p, pubkey, pubkeylen, compressed);
     return 1;
 }
