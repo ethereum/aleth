@@ -21,7 +21,6 @@
 
 #include "CanonBlockChain.h"
 
-#include <test/JsonSpiritHeaders.h>
 #include <boost/filesystem.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
@@ -36,7 +35,6 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
-namespace js = json_spirit;
 
 #define ETH_CATCH 1
 
@@ -75,25 +73,8 @@ unordered_map<Address, Account> CanonBlockChain<Ethash>::createGenesisState()
 	static std::unordered_map<Address, Account> s_ret;
 
 	if (s_ret.empty())
-	{
-		js::mValue val;
-		json_spirit::read_string(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON, val);
-		for (auto account: val.get_obj())
-		{
-			u256 balance;
-			if (account.second.get_obj().count("wei"))
-				balance = u256(account.second.get_obj()["wei"].get_str());
-			else
-				balance = u256(account.second.get_obj()["finney"].get_str()) * finney;
-			if (account.second.get_obj().count("code"))
-			{
-				s_ret[Address(fromHex(account.first))] = Account(balance, Account::ContractConception);
-				s_ret[Address(fromHex(account.first))].setCode(fromHex(account.second.get_obj()["code"].get_str()));
-			}
-			else
-				s_ret[Address(fromHex(account.first))] = Account(balance, Account::NormalCreation);
-		}
-	}
+		s_ret = jsonToAccountMap(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON);
+
 	return s_ret;
 }
 

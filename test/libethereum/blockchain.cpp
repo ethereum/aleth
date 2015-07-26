@@ -97,7 +97,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		// construct true blockchain
 		TransientDirectory td;
-		FullBlockChain<Ethash> trueBc(rlpGenesisBlock.out(), StateDefinition(), td.path(), WithExisting::Kill);
+		FullBlockChain<Ethash> trueBc(rlpGenesisBlock.out(), AccountMap(), td.path(), WithExisting::Kill);
 
 		if (_fillin)
 		{
@@ -125,7 +125,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				vBiBlocks.push_back(biGenesisBlock);
 
 				TransientDirectory td_stateDB, td_bc;
-				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), StateDefinition(), td_bc.path(), WithExisting::Kill);
+				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), AccountMap(), td_bc.path(), WithExisting::Kill);
 				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
 				trueState.setBeneficiary(biGenesisBlock.beneficiary());
 				importer.importState(o["pre"].get_obj(), state);

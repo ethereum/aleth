@@ -55,6 +55,25 @@ const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
 const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
 const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
+State::State(OverlayDB const& _db, BaseState _bs):
+	m_db(_db),
+	m_state(&m_db)
+{
+	if (_bs != BaseState::PreExisting)
+		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
+		m_state.init();
+	paranoia("end of normal construction.", true);
+}
+
+State::State(State const& _s):
+	m_db(_s.m_db),
+	m_state(&m_db, _s.m_state.root(), Verification::Skip),
+	m_cache(_s.m_cache),
+	m_touched(_s.m_touched)
+{
+	paranoia("after state cloning (copy cons).", true);
+}
+
 OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
 	std::string path = _basePath.empty() ? Defaults::get()->m_dbPath : _basePath;
@@ -93,23 +112,10 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 	return OverlayDB(db);
 }
 
-State::State(OverlayDB const& _db, BaseState _bs):
-	m_db(_db),
-	m_state(&m_db)
+void State::populateFrom(AccountMap const& _map)
 {
-	if (_bs != BaseState::PreExisting)
-		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
-		m_state.init();
-	paranoia("end of normal construction.", true);
-}
-
-State::State(State const& _s):
-	m_db(_s.m_db),
-	m_state(&m_db, _s.m_state.root(), Verification::Skip),
-	m_cache(_s.m_cache),
-	m_touched(_s.m_touched)
-{
-	paranoia("after state cloning (copy cons).", true);
+	eth::commit(_map, m_state);
+	commit();
 }
 
 void State::paranoia(std::string const& _when, bool _enforceRefs) const

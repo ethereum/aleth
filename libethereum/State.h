@@ -121,6 +121,9 @@ public:
 	OverlayDB const& db() const { return m_db; }
 	OverlayDB& db() { return m_db; }
 
+	/// Populate the state from the given AccountMap. Just uses dev::eth::commit().
+	void populateFrom(AccountMap const& _map);
+
 	/// @returns the set containing all addresses currently in use in Ethereum.
 	/// @warning This is slowslowslow. Don't use it unless you want to lock the object for seconds or minutes at a time.
 	/// @throws InterfaceNotSupported if compiled without ETH_FATDB.
@@ -234,7 +237,7 @@ private:
 std::ostream& operator<<(std::ostream& _out, State const& _s);
 
 template <class DB>
-AddressHash commit(std::unordered_map<Address, Account> const& _cache, SecureTrieDB<Address, DB>& _state)
+AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
 {
 	AddressHash ret;
 	for (auto const& i: _cache)

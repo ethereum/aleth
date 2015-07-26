@@ -89,7 +89,6 @@ enum {
 };
 
 using ProgressCallback = std::function<void(unsigned, unsigned)>;
-using StateDefinition = std::unordered_map<Address, Account>;
 
 class VersionChecker
 {
@@ -104,7 +103,7 @@ public:
 class BlockChain
 {
 public:
-	BlockChain(bytes const& _genesisBlock, StateDefinition const& _genesisState, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _p = ProgressCallback());
+	BlockChain(bytes const& _genesisBlock, AccountMap const& _genesisState, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _p = ProgressCallback());
 	~BlockChain();
 
 	/// Attempt a database re-open.
@@ -383,7 +382,7 @@ class FullBlockChain: public BlockChain
 public:
 	using BlockHeader = typename Sealer::BlockHeader;
 
-	FullBlockChain(bytes const& _genesisBlock, StateDefinition const& _genesisState, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _p = ProgressCallback()):
+	FullBlockChain(bytes const& _genesisBlock, AccountMap const& _genesisState, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _p = ProgressCallback()):
 		BlockChain(_genesisBlock, _genesisState, _path, _we, _p)
 	{}
 
