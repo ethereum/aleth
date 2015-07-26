@@ -67,7 +67,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		ImportTest importer(o["pre"].get_obj());
 		TransientDirectory td_stateDB_tmp;
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
-		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty, biGenesisBlock.coinbaseAddress());
+		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty, biGenesisBlock.beneficiary());
 
 		//Imported blocks from the start
 		std::vector<blockSet> blockSets;
@@ -127,7 +127,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				TransientDirectory td_stateDB, td_bc;
 				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), StateDefinition(), td_bc.path(), WithExisting::Kill);
 				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-				trueState.setAddress(biGenesisBlock.coinbaseAddress());
+				trueState.setAddress(biGenesisBlock.beneficiary());
 				importer.importState(o["pre"].get_obj(), state);
 				state.commit();
 
@@ -304,7 +304,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			if (o.count("expect") > 0)
 			{
 				stateOptionsMap expectStateMap;
-				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress());
+				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.beneficiary());
 				importer.importState(o["expect"].get_obj(), stateExpect, expectStateMap);
 				ImportTest::checkExpectedState(stateExpect, trueState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 				o.erase(o.find("expect"));
@@ -315,7 +315,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			o["lastblockhash"] = toString(trueBc.info().hash());
 
 			//make all values hex in pre section
-			State prestate(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress());
+			State prestate(OverlayDB(), BaseState::Empty, biGenesisBlock.beneficiary());
 			importer.importState(o["pre"].get_obj(), prestate);
 			o["pre"] = fillJsonWithState(prestate);
 		}//_fillin
@@ -378,7 +378,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.headerHash(WithProof) == blockFromRlp.headerHash(WithProof)), "hash in given RLP not matching the block hash!");
 					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.parentHash() == blockFromRlp.parentHash()), "parentHash in given RLP not matching the block parentHash!");
 					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.sha3Uncles() == blockFromRlp.sha3Uncles()), "sha3Uncles in given RLP not matching the block sha3Uncles!");
-					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.coinbaseAddress() == blockFromRlp.coinbaseAddress()),"coinbaseAddress in given RLP not matching the block coinbaseAddress!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.beneficiary() == blockFromRlp.beneficiary()),"beneficiary in given RLP not matching the block beneficiary!");
 					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.stateRoot() == blockFromRlp.stateRoot()), "stateRoot in given RLP not matching the block stateRoot!");
 					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.transactionsRoot() == blockFromRlp.transactionsRoot()), "transactionsRoot in given RLP not matching the block transactionsRoot!");
 					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.receiptsRoot() == blockFromRlp.receiptsRoot()), "receiptsRoot in given RLP not matching the block receiptsRoot!");
@@ -570,7 +570,7 @@ mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vect
 			uncleBlockFromFields = constructHeader(
 				overwrite == "parentHash" ? h256(uncleHeaderObj["parentHash"].get_str()) : uncleBlockFromFields.parentHash(),
 				uncleBlockFromFields.sha3Uncles(),
-				uncleBlockFromFields.coinbaseAddress(),
+				uncleBlockFromFields.beneficiary(),
 				overwrite == "stateRoot" ? h256(uncleHeaderObj["stateRoot"].get_str()) : uncleBlockFromFields.stateRoot(),
 				uncleBlockFromFields.transactionsRoot(),
 				uncleBlockFromFields.receiptsRoot(),
@@ -748,7 +748,7 @@ mObject writeBlockHeaderToJson(mObject& _o, BlockHeader const& _bi)
 {
 	_o["parentHash"] = toString(_bi.parentHash());
 	_o["uncleHash"] = toString(_bi.sha3Uncles());
-	_o["coinbase"] = toString(_bi.coinbaseAddress());
+	_o["coinbase"] = toString(_bi.beneficiary());
 	_o["stateRoot"] = toString(_bi.stateRoot());
 	_o["transactionsTrie"] = toString(_bi.transactionsRoot());
 	_o["receiptTrie"] = toString(_bi.receiptsRoot());

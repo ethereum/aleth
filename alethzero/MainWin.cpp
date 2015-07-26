@@ -1715,7 +1715,7 @@ void Main::on_blocks_currentItemChanged()
 			s << "<div>D/TD: <b>" << info.difficulty() << "</b>/<b>" << details.totalDifficulty << "</b> = 2^" << log2((double)info.difficulty()) << "/2^" << log2((double)details.totalDifficulty) << "</div>";
 			s << "&nbsp;&emsp;&nbsp;Children: <b>" << details.children.size() << "</b></div>";
 			s << "<div>Gas used/limit: <b>" << info.gasUsed() << "</b>/<b>" << info.gasLimit() << "</b>" << "</div>";
-			s << "<div>Beneficiary: <b>" << htmlEscaped(pretty(info.coinbaseAddress())) << " " << info.coinbaseAddress() << "</b>" << "</div>";
+			s << "<div>Beneficiary: <b>" << htmlEscaped(pretty(info.beneficiary())) << " " << info.beneficiary() << "</b>" << "</div>";
 			s << "<div>Seed hash: <b>" << info.seedHash() << "</b>" << "</div>";
 			s << "<div>Mix hash: <b>" << info.mixHash() << "</b>" << "</div>";
 			s << "<div>Nonce: <b>" << info.nonce() << "</b>" << "</div>";
@@ -1746,7 +1746,7 @@ void Main::on_blocks_currentItemChanged()
 				s << line << "Hash: <b>" << uncle.hash() << "</b>" << "</div>";
 				s << line << "Parent: <b>" << uncle.parentHash() << "</b>" << "</div>";
 				s << line << "Number: <b>" << uncle.number() << "</b>" << "</div>";
-				s << line << "Coinbase: <b>" << htmlEscaped(pretty(uncle.coinbaseAddress())) << " " << uncle.coinbaseAddress() << "</b>" << "</div>";
+				s << line << "Coinbase: <b>" << htmlEscaped(pretty(uncle.beneficiary())) << " " << uncle.beneficiary() << "</b>" << "</div>";
 				s << line << "Seed hash: <b>" << uncle.seedHash() << "</b>" << "</div>";
 				s << line << "Mix hash: <b>" << uncle.mixHash() << "</b>" << "</div>";
 				s << line << "Nonce: <b>" << uncle.nonce() << "</b>" << "</div>";
@@ -1836,7 +1836,8 @@ void Main::on_debugCurrent_triggered()
 			unsigned txi = item->data(Qt::UserRole + 1).toInt();
 			bytes t = ethereum()->blockChain().transaction(h, txi);
 			State s(ethereum()->state(txi, h));
-			Executive e(s, ethereum()->blockChain());
+			BlockInfo bi(ethereum()->blockChain().info(h));
+			Executive e(s, ethereum()->blockChain(), EnvInfo(bi));
 			Debugger dw(this, this);
 			dw.populate(e, Transaction(t, CheckTransaction::Everything));
 			dw.exec();

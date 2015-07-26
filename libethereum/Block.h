@@ -56,18 +56,6 @@ struct BlockTrace: public LogChannel { static const char* name(); static const i
 struct BlockDetail: public LogChannel { static const char* name(); static const int verbosity = 14; };
 struct BlockSafeExceptions: public LogChannel { static const char* name(); static const int verbosity = 21; };
 
-enum class BaseState
-{
-	PreExisting,
-	Empty
-};
-
-enum class Permanence
-{
-	Reverted,
-	Committed
-};
-
 struct PopulationStatistics
 {
 	double verify;
@@ -123,6 +111,9 @@ public:
 	/// Get the header information on the present block.
 	BlockInfo const& info() const { return m_currentBlock; }
 
+	/// Get the backing state object.
+	State const& state() const { return m_state; }
+
 	/// Prepares the current state for mining.
 	/// Commits all transactions into the trie, compiles uncles and transactions list, applies all
 	/// rewards and populates the current block header with the appropriate hashes.
@@ -169,27 +160,9 @@ public:
 	/// Check if the address contains executable code.
 	bool addressHasCode(Address const& _address) const { return m_state.addressHasCode(_address); }
 
-	/// Get an account's balance.
-	/// @returns 0 if the address has never been used.
-	u256 balance(Address const& _id) const { return m_state.balance(_id); }
-
-	/// Add some amount to balance.
-	/// Will initialise the address if it has never been used.
-	void addBalance(Address const& _id, u256 const& _amount) { m_state.addBalance(_id, _amount); }
-
-	/** Subtract some amount from balance.
-	 * @throws NotEnoughCash if balance of @a _id is less than @a _value (or has never been used).
-	 * @note We use bigint here as we don't want any accidental problems with negative numbers.
-	 */
-	void subBalance(Address const& _id, bigint const& _value) { m_state.subBalance(_id, _value); }
-
-	/**
-	 * @brief Transfers "the balance @a _value between two accounts.
-	 * @param _from Account from which @a _value will be deducted.
-	 * @param _to Account to which @a _value will be added.
-	 * @param _value Amount to be transferred.
-	 */
-	void transferBalance(Address const& _from, Address const& _to, u256 const& _value) { subBalance(_from, _value); addBalance(_to, _value); }
+	/// Get a mutable State object which is backing this block. Don't expect things to work right
+	/// after this.
+	State& mutableState() { return m_state; }
 
 	/// Get the root of the storage of an account.
 	h256 storageRoot(Address const& _contract) const { return m_state.storageRoot(_contract); }
@@ -197,12 +170,6 @@ public:
 	/// Get the value of a storage position of an account.
 	/// @returns 0 if no account exists at that address.
 	u256 storage(Address const& _contract, u256 const& _memory) const { return m_state.storage(_contract, _memory); }
-
-	/// Set the value of a storage position of an account.
-	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value) { m_state.setStorage(_contract, _location, _value); }
-
-	/// Create a new contract.
-	Address newContract(u256 const& _balance, bytes const& _code) { return m_state.newContract(_balance, _code); }
 
 	/// Get the storage of an account.
 	/// @note This is expensive. Don't use it unless you need to.
@@ -217,15 +184,12 @@ public:
 	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
 	h256 codeHash(Address const& _contract) const { return m_state.codeHash(_contract); }
 
-	/// Note that the given address is sending a transaction and thus increment the associated ticker.
-	void noteSending(Address const& _id) { m_state.noteSending(_id); }
-
 	/// Get the number of transactions a particular address has sent (used for the transaction nonce).
 	/// @returns 0 if the address has never been used.
 	u256 transactionsFrom(Address const& _address) const { return m_state.transactionsFrom(_address); }
 
 	/// The hash of the root of our state tree.
-	h256 rootHash() const { return m_state.root(); }
+	h256 rootHash() const { return m_state.rootHash(); }
 
 	/// Get the list of pending transactions.
 	Transactions const& pending() const { return m_transactions; }
@@ -303,7 +267,6 @@ private:
 	TransactionReceipts m_receipts;				///< The corresponding list of transaction receipts.
 	h256Hash m_transactionSet;					///< The set of transaction hashes that we've included in the state.
 	State m_precommit;							///< State at the point immediately prior to rewards.
-	AddressHash m_touched;						///< Tracks all addresses touched by transactions so far.
 
 	BlockInfo m_previousBlock;					///< The previous block's information.
 	BlockInfo m_currentBlock;					///< The current block's information.
@@ -317,3 +280,7 @@ private:
 
 	u256 m_blockReward;
 };
+
+}
+
+}

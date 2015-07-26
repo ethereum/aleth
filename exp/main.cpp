@@ -316,7 +316,7 @@ int main()
 	OverlayDB stateDB = State::openDB(bc.genesisHash());
 	cnote << bc;
 
-	State s = bc.genesisState(stateDB);
+	Block s = bc.genesisBlock(stateDB);
 	s.setAddress(myMiner.address());
 	cnote << s;
 

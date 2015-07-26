@@ -85,12 +85,6 @@ enum class Permanence
 	Committed
 };
 
-struct PopulationStatistics
-{
-	double verify;
-	double enact;
-};
-
 /**
  * @brief Model of an Ethereum state, essentially a facade for the trie.
  * Allows you to query the state of accounts, and has built-in caching for various aspects of the
@@ -113,7 +107,7 @@ public:
 	/// which uses it. If you have no preexisting database then set BaseState to something other
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
 	/// You can also set the coinbase address.
-	explicit State(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address _coinbaseAddress = Address());
+	explicit State(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting);
 
 	/// Copy state object.
 	State(State const& _s);
@@ -134,7 +128,7 @@ public:
 
 	/// Execute a given transaction.
 	/// This will change the state accordingly.
-	std::pair<ExecutionResult, AddressHash> execute(LastHashes const& _lh, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
+	std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
@@ -155,6 +149,14 @@ public:
 	 * @note We use bigint here as we don't want any accidental problems with negative numbers.
 	 */
 	void subBalance(Address const& _id, bigint const& _value);
+
+	/**
+	 * @brief Transfers "the balance @a _value between two accounts.
+	 * @param _from Account from which @a _value will be deducted.
+	 * @param _to Account to which @a _value will be added.
+	 * @param _value Amount to be transferred.
+	 */
+	void transferBalance(Address const& _from, Address const& _to, u256 const& _value) { subBalance(_from, _value); addBalance(_to, _value); }
 
 	/// Get the root of the storage of an account.
 	h256 storageRoot(Address const& _contract) const;
@@ -192,22 +194,16 @@ public:
 	/// The hash of the root of our state tree.
 	h256 rootHash() const { return m_state.root(); }
 
-	/// Get the transaction receipt for the transaction of the given index.
-	TransactionReceipt const& receipt(unsigned _i) const { return m_receipts[_i]; }
-
-	/// Get the list of pending transactions.
-	LogEntries const& log(unsigned _i) const { return m_receipts[_i].log(); }
-
 	/// @return the difference between this state (origin) and @a _c (destination).
 	/// @param _quick if true doesn't check all addresses possible (/very/ slow for a full chain)
 	/// but rather only those touched by the transactions in creating the two States.
 	StateDiff diff(State const& _c, bool _quick = false) const;
 
 	/// Commit all changes waiting in the address cache to the DB.
-	AddressHash commit();
+	void commit();
 
 	/// Resets any uncommitted changes to the cache.
-	void setRoot(h256 const& _root) { m_cache.clear(); m_state.setRoot(_root); }
+	void setRoot(h256 const& _root);
 
 private:
 	/// Retrieve all information about a given address into the cache.
@@ -228,6 +224,7 @@ private:
 	OverlayDB m_db;								///< Our overlay for the state tree.
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
 	mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
+	AddressHash m_touched;						///< Tracks all addresses touched so far.
 
 	static std::string c_defaultPath;
 

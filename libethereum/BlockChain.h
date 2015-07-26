@@ -58,6 +58,7 @@ namespace eth
 static const h256s NullH256s;
 
 class State;
+class Block;
 
 struct AlreadyHaveBlock: virtual Exception {};
 struct UnknownParent: virtual Exception {};
@@ -283,7 +284,7 @@ public:
 	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
 
 	/// Get a pre-made genesis State object.
-	State genesisState(OverlayDB const& _db);
+	Block genesisBlock(OverlayDB const& _db);
 
 	/// Verify block and prepare it for enactment
 	virtual VerifiedBlockRef verifyBlock(bytesConstRef _block, std::function<void(Exception&)> const& _onBad, ImportRequirements::value _ir) const = 0;

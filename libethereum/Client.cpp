@@ -40,6 +40,7 @@
 #include "Executive.h"
 #include "EthereumHost.h"
 #include "Utility.h"
+#include "Block.h"
 #include "TransactionQueue.h"
 
 using namespace std;
@@ -87,7 +88,7 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 	// until after the construction.
 	m_stateDB = State::openDB(_dbPath, bc().genesisHash(), _forceAction);
 	// LAZY. TODO: move genesis state construction/commiting to stateDB openning and have this just take the root from the genesis block.
-	m_preMine = bc().genesisState(m_stateDB);
+	m_preMine = bc().genesisBlock(m_stateDB);
 	m_postMine = m_preMine;
 
 	m_bq.setChain(bc());
@@ -340,7 +341,7 @@ void Client::killChain()
 		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), WithExisting::Kill);
 		bc().reopen(Defaults::dbPath(), WithExisting::Kill);
 
-		m_preMine = bc().genesisState(m_stateDB);
+		m_preMine = bc().genesisBlock(m_stateDB);
 		m_postMine = State(m_stateDB);
 	}
 
@@ -473,12 +474,12 @@ ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 
 	ExecutionResult ret;
 	try
 	{
-		State temp;
+		Block temp;
 		clog(ClientDetail) << "Nonce at " << _dest << " pre:" << m_preMine.transactionsFrom(_dest) << " post:" << m_postMine.transactionsFrom(_dest);
 		DEV_READ_GUARDED(x_postMine)
 			temp = m_postMine;
 		temp.addBalance(_from, _value + _gasPrice * _gas);
-		Executive e(temp, LastHashes(), 0);
+		Executive e(temp);
 		e.setResultRecipient(ret);
 		if (!e.call(_dest, _from, _value, _gasPrice, &_data, _gas))
 			e.go();
@@ -779,35 +780,33 @@ void Client::prepareForTransaction()
 	startWorking();
 }
 
-State Client::state(unsigned _txi, h256 _block) const
+Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 {
 	try
 	{
-		State ret(m_stateDB);
-		ret.populateFromChain(bc(), _block);
-		return ret.fromPending(_txi);
-	}
-	catch (Exception& ex)
-	{
-		ex << errinfo_block(bc().block(_block));
-		onBadBlock(ex);
-		return State();
-	}
-}
-
-State Client::state(h256 const& _block, PopulationStatistics* o_stats) const
-{
-	try
-	{
-		State ret(m_stateDB);
-		PopulationStatistics s = ret.populateFromChain(bc(), _block);
+		Block ret(m_stateDB);
+		PopulationStatistics s = ret.populateFromChain(bc(), _blockHash);
 		if (o_stats)
 			swap(s, *o_stats);
 		return ret;
 	}
 	catch (Exception& ex)
 	{
-		ex << errinfo_block(bc().block(_block));
+		ex << errinfo_block(bc().block(_blockHash));
+		onBadBlock(ex);
+		return State();
+	}
+}
+
+State Client::state(unsigned _txi, h256 const& _blockHash) const
+{
+	try
+	{
+		return block(_blockHash).fromPending(_txi);
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_block(bc().block(_blockHash));
 		onBadBlock(ex);
 		return State();
 	}
@@ -818,7 +817,7 @@ eth::State Client::state(unsigned _txi) const
 	DEV_READ_GUARDED(x_postMine)
 		return m_postMine.fromPending(_txi);
 	assert(false);
-	return State();
+	return Block();
 }
 
 void Client::flushTransactions()

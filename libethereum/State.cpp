@@ -93,78 +93,21 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 	return OverlayDB(db);
 }
 
-State::State(OverlayDB const& _db, BaseState _bs, Address _coinbaseAddress):
+State::State(OverlayDB const& _db, BaseState _bs):
 	m_db(_db),
-	m_state(&m_db),
-	m_ourAddress(_coinbaseAddress),
-	m_blockReward(c_blockReward)
+	m_state(&m_db)
 {
 	if (_bs != BaseState::PreExisting)
 		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
 		m_state.init();
-
-	paranoia("beginning of Genesis construction.", true);
-
-	m_previousBlock.clear();
-	m_currentBlock.clear();
-//	assert(m_state.root() == m_previousBlock.stateRoot());
-
 	paranoia("end of normal construction.", true);
-}
-
-PopulationStatistics State::populateFromChain(BlockChain const& _bc, h256 const& _h, ImportRequirements::value _ir)
-{
-	PopulationStatistics ret { 0.0, 0.0 };
-
-	if (!_bc.isKnown(_h))
-	{
-		// Might be worth throwing here.
-		cwarn << "Invalid block given for state population: " << _h;
-		BOOST_THROW_EXCEPTION(BlockNotFound() << errinfo_target(_h));
-	}
-
-	auto b = _bc.block(_h);
-	BlockInfo bi(b);
-	if (bi.number())
-	{
-		// Non-genesis:
-
-		// 1. Start at parent's end state (state root).
-		BlockInfo bip(_bc.block(bi.parentHash()));
-		sync(_bc, bi.parentHash(), bip);
-
-		// 2. Enact the block's transactions onto this state.
-		m_ourAddress = bi.coinbaseAddress();
-		Timer t;
-		auto vb = _bc.verifyBlock(&b, function<void(Exception&)>(), _ir);
-		ret.verify = t.elapsed();
-		t.restart();
-		enact(vb, _bc);
-		ret.enact = t.elapsed();
-	}
-	else
-	{
-		// Genesis required:
-		// We know there are no transactions, so just populate directly.
-		m_state.init();
-		sync(_bc, _h, bi);
-	}
-
-	return ret;
 }
 
 State::State(State const& _s):
 	m_db(_s.m_db),
 	m_state(&m_db, _s.m_state.root(), Verification::Skip),
-	m_transactions(_s.m_transactions),
-	m_receipts(_s.m_receipts),
-	m_transactionSet(_s.m_transactionSet),
-	m_touched(_s.m_touched),
 	m_cache(_s.m_cache),
-	m_previousBlock(_s.m_previousBlock),
-	m_currentBlock(_s.m_currentBlock),
-	m_ourAddress(_s.m_ourAddress),
-	m_blockReward(_s.m_blockReward)
+	m_touched(_s.m_touched)
 {
 	paranoia("after state cloning (copy cons).", true);
 }
@@ -189,18 +132,9 @@ State& State::operator=(State const& _s)
 {
 	m_db = _s.m_db;
 	m_state.open(&m_db, _s.m_state.root(), Verification::Skip);
-	m_transactions = _s.m_transactions;
-	m_receipts = _s.m_receipts;
-	m_transactionSet = _s.m_transactionSet;
 	m_cache = _s.m_cache;
-	m_previousBlock = _s.m_previousBlock;
-	m_currentBlock = _s.m_currentBlock;
-	m_ourAddress = _s.m_ourAddress;
-	m_blockReward = _s.m_blockReward;
-	m_lastTx = _s.m_lastTx;
+	m_touched = _s.m_touched;
 	paranoia("after state cloning (assignment op)", true);
-
-	m_committedToMine = false;
 	return *this;
 }
 
@@ -275,11 +209,10 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Add
 		it->second.noteCode(it->second.codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(it->second.codeHash())));
 }
 
-AddressHash State::commit()
+void State::commit()
 {
-	auto ret = dev::eth::commit(m_cache, m_state);
+	m_touched += dev::eth::commit(m_cache, m_state);
 	m_cache.clear();
-	return ret;
 }
 
 bool State::sync(BlockChain const& _bc)
@@ -451,25 +384,11 @@ unordered_map<Address, u256> State::addresses() const
 #endif
 }
 
-void State::resetCurrent()
+void State::setRoot(h256 const& _r)
 {
-	m_transactions.clear();
-	m_receipts.clear();
-	m_transactionSet.clear();
 	m_cache.clear();
 	m_touched.clear();
-	m_currentBlock = BlockInfo();
-	m_currentBlock.setCoinbaseAddress(m_ourAddress);
-	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)time(0)));
-	m_currentBlock.populateFromParent(m_previousBlock);
-
-	// TODO: check.
-
-	m_lastTx = m_db;
-	m_state.setRoot(m_previousBlock.stateRoot());
-
-	m_committedToMine = false;
-
+	m_state.setRoot(_r);
 	paranoia("begin resetCurrent", true);
 }
 
@@ -672,7 +591,7 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 	return true;
 }
 
-ExecutionResult State::execute(LastHashes const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
+std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
 #if ETH_PARANOIA
 	paranoia("start of execution.", true);
@@ -682,7 +601,7 @@ ExecutionResult State::execute(LastHashes const& _lh, Transaction const& _t, Per
 
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
-	Executive e(*this, _lh, 0);
+	Executive e(*this, _envInfo);
 	ExecutionResult res;
 	e.setResultRecipient(res);
 	e.initialize(_t);
@@ -717,7 +636,7 @@ ExecutionResult State::execute(LastHashes const& _lh, Transaction const& _t, Per
 		m_cache.clear();
 	else
 	{
-		touched = commit();
+		m_touched += commit();
 	
 #if ETH_PARANOIA && !ETH_FATDB
 		ctrace << "Executed; now" << rootHash();
@@ -735,11 +654,10 @@ ExecutionResult State::execute(LastHashes const& _lh, Transaction const& _t, Per
 			}
 		}
 #endif
-	
 		// TODO: CHECK TRIE after level DB flush to make sure exactly the same.
 	}
 
-	return make_pair(res, touched);
+	return make_pair(res, TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));
 }
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)

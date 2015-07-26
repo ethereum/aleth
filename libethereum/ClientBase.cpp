@@ -36,7 +36,7 @@ const char* WorkInChannel::name() { return EthOrange "⚒" EthGreen "▬▶"; }
 const char* WorkOutChannel::name() { return EthOrange "⚒" EthNavy "◀▬"; }
 const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
-State ClientBase::asOf(BlockNumber _h) const
+Block ClientBase::asOf(BlockNumber _h) const
 {
 	if (_h == PendingBlock)
 		return postMine();
@@ -68,12 +68,12 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 	ExecutionResult ret;
 	try
 	{
-		State temp = asOf(_blockNumber);
+		Block temp = asOf(_blockNumber);
 		u256 n = temp.transactionsFrom(_from);
 		Transaction t(_value, _gasPrice, _gas, _dest, _data, n);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
-			temp.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
+			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
 	}
 	catch (...)
@@ -88,14 +88,13 @@ ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes cons
 	ExecutionResult ret;
 	try
 	{
-		State temp = asOf(_blockNumber);
+		Block temp = asOf(_blockNumber);
 		u256 n = temp.transactionsFrom(_from);
 		//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
-		
 		Transaction t(_value, _gasPrice, _gas, _data, n);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
-			temp.addBalance(_from, (u256)(t.gasRequired() * t.gasPrice() + t.value()));
+			temp.mutableState().addBalance(_from, (u256)(t.gasRequired() * t.gasPrice() + t.value()));
 		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
 	}
 	catch (...)

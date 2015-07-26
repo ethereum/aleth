@@ -122,12 +122,13 @@ Transaction MixClient::replaceGas(Transaction const& _t, u256 const& _gas, Secre
 	return ret;
 }
 
-ExecutionResult MixClient::debugTransaction(Transaction const& _t, State const& _state, LastHashes const& _lastHashes, bool _call)
+// TODO: prototype changed - will need rejigging.
+ExecutionResult MixClient::debugTransaction(Transaction const& _t, State const& _state, EnvInfo const& _envInfo, bool _call)
 {
 	State execState = _state;
 	execState.addBalance(_t.sender(), _t.gas() * _t.gasPrice()); //give it enough balance for gas estimation
 	eth::ExecutionResult er;
-	Executive execution(execState, _lastHashes, 0);
+	Executive execution(execState, _envInfo);
 	execution.setResultRecipient(er);
 	execution.initialize(_t);
 	execution.execute();
@@ -248,13 +249,10 @@ ExecutionResult MixClient::debugTransaction(Transaction const& _t, State const& 
 void MixClient::executeTransaction(Transaction const& _t, State& _state, bool _call, bool _gasAuto, Secret const& _secret)
 {
 	Transaction t = _gasAuto ? replaceGas(_t, m_state.gasLimitRemaining()) : _t;
-	// do debugging run first
-	LastHashes lastHashes(256);
-	lastHashes[0] = bc().numberHash(bc().number());
-	for (unsigned i = 1; i < 256; ++i)
-		lastHashes[i] = lastHashes[i - 1] ? bc().details(lastHashes[i - 1]).parent : h256();
 
-	ExecutionResult d = debugTransaction(t, _state, lastHashes, _call);
+	// do debugging run first
+	EnvInfo envInfo(bc().info(), bc().lastHashes());
+	ExecutionResult d = debugTransaction(t, _state, envInfo, _call);
 
 	// execute on a state
 	if (!_call)

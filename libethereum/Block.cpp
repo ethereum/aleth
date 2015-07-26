@@ -60,10 +60,6 @@ Block::Block(OverlayDB const& _db, BaseState _bs, Address _coinbaseAddress):
 	m_ourAddress(_coinbaseAddress),
 	m_blockReward(c_blockReward)
 {
-	if (_bs != BaseState::PreExisting)
-		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
-		m_state.init();
-
 	m_previousBlock.clear();
 	m_currentBlock.clear();
 //	assert(m_state.root() == m_previousBlock.stateRoot());
@@ -74,7 +70,6 @@ Block::Block(Block const& _s):
 	m_transactions(_s.m_transactions),
 	m_receipts(_s.m_receipts),
 	m_transactionSet(_s.m_transactionSet),
-	m_touched(_s.m_touched),
 	m_previousBlock(_s.m_previousBlock),
 	m_currentBlock(_s.m_currentBlock),
 	m_ourAddress(_s.m_ourAddress),
@@ -105,7 +100,6 @@ void Block::resetCurrent()
 	m_transactions.clear();
 	m_receipts.clear();
 	m_transactionSet.clear();
-	m_touched.clear();
 	m_currentBlock = BlockInfo();
 	m_currentBlock.setCoinbaseAddress(m_ourAddress);
 	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)time(0)));
@@ -140,7 +134,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 		sync(_bc, bi.parentHash(), bip);
 
 		// 2. Enact the block's transactions onto this state.
-		m_ourAddress = bi.coinbaseAddress();
+		m_ourAddress = bi.beneficiary();
 		Timer t;
 		auto vb = _bc.verifyBlock(&b, function<void(Exception&)>(), _ir);
 		ret.verify = t.elapsed();
@@ -152,7 +146,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 	{
 		// Genesis required:
 		// We know there are no transactions, so just populate directly.
-		m_state.init();
+		m_state = State(m_state.db(), BaseState::Empty);	// TODO: try with PreExisting.
 		sync(_bc, _h, bi);
 	}
 
@@ -552,7 +546,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	// Commit all cached state changes to the state trie.
 	DEV_TIMED_ABOVE("commit", 500)
-		m_touched += m_state.commit();
+		m_state.commit();
 
 	// Hash the state trie and check against the state_root hash in m_currentBlock.
 	if (m_currentBlock.stateRoot() != m_previousBlock.stateRoot() && m_currentBlock.stateRoot() != rootHash())
@@ -578,16 +572,15 @@ ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Per
 	uncommitToMine();
 
 	ExecutionResult ret;
-	AddressHash touched;
-	tie(ret, touched) = m_state.execute(_lh, _t, _p, _onOp);
+	TransactionReceipt receipt;
+	tie(ret, receipt) = m_state.execute(EnvInfo(info(), _lh), _t, _p, _onOp);
 
 	if (_p == Permanence::Committed)
 	{
-		m_touched += touched;
 		// Add to the user-originated transactions that we've executed.
-		m_transactions.push_back(e.t());
-		m_receipts.push_back(TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));
-		m_transactionSet.insert(e.t().sha3());
+		m_transactions.push_back(_t);
+		m_receipts.push_back(receipt);
+		m_transactionSet.insert(_t.sha3());
 	}
 
 	return ret;
@@ -598,10 +591,10 @@ void Block::applyRewards(vector<BlockInfo> const& _uncleBlockHeaders)
 	u256 r = m_blockReward;
 	for (auto const& i: _uncleBlockHeaders)
 	{
-		m_state.addBalance(i.coinbaseAddress(), m_blockReward * (8 + i.number() - m_currentBlock.number()) / 8);
+		m_state.addBalance(i.beneficiary(), m_blockReward * (8 + i.number() - m_currentBlock.number()) / 8);
 		r += m_blockReward / 32;
 	}
-	m_state.addBalance(m_currentBlock.coinbaseAddress(), r);
+	m_state.addBalance(m_currentBlock.beneficiary(), r);
 }
 
 void Block::commitToMine(BlockChain const& _bc, bytes const& _extraData)
@@ -667,7 +660,7 @@ void Block::commitToMine(BlockChain const& _bc, bytes const& _extraData)
 	applyRewards(uncleBlockHeaders);
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
-	m_touched += m_state.commit();
+	m_state.commit();
 
 	clog(StateDetail) << "Post-reward stateRoot:" << m_state.root();
 	clog(StateDetail) << m_state;
