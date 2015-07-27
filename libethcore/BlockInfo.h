@@ -150,11 +150,10 @@ public:
 
 	void clear();
 	void noteDirty() const { m_hashWithout = m_boundary = m_hash = h256(); }
+	void streamRLPFields(RLPStream& _s) const;
 
 protected:
 	void populateFromHeader(RLP const& _header, Strictness _s = IgnoreSeal);
-	void streamRLPFields(RLPStream& _s) const;
-
 	mutable h256 m_hash;						///< SHA3 hash of the block header! Not serialised.
 
 	h256 m_parentHash;
