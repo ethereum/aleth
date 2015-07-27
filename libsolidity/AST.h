@@ -281,6 +281,12 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* getFallbackFunction() const;
 
+	std::string const& userDocumentation() const;
+	void setUserDocumentation(std::string const& _userDocumentation);
+
+	std::string const& devDocumentation() const;
+	void setDevDocumentation(std::string const& _devDocumentation);
+
 private:
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
@@ -301,6 +307,10 @@ private:
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 	std::vector<ASTPointer<EventDefinition>> m_events;
+
+	// parsed Natspec documentation of the contract.
+	std::string m_userDocumentation;
+	std::string m_devDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
@@ -1136,9 +1146,11 @@ public:
 	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 	std::vector<ASTPointer<ASTString>> const& getNames() const { return m_names; }
 
-	/// Returns true if this is not an actual function call, but an explicit type conversion
-	/// or constructor call.
+	/// @returns true if this is not an actual function call, but an explicit type conversion.
+	/// Returns false for struct constructor calls.
 	bool isTypeConversion() const;
+	/// @return true if this is a constructor call for a struct, i.e. StructName(...).
+	bool isStructConstructorCall() const;
 
 private:
 	ASTPointer<Expression> m_expression;

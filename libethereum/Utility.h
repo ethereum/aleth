@@ -23,6 +23,7 @@
 
 #include <string>
 #include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
@@ -41,6 +42,8 @@ namespace eth
  * @endcode
  */
 bytes parseData(std::string const& _args);
+
+void upgradeDatabase(std::string const& _basePath, h256 const& _genesisHash);
 
 }
 }

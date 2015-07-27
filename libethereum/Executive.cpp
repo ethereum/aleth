@@ -144,13 +144,18 @@ string StandardTrace::json(bool _styled) const
 
 Executive::Executive(State& _s, BlockChain const& _bc, unsigned _level):
 	m_s(_s),
-	m_lastHashes(_bc.lastHashes((unsigned)_s.info().number - 1)),
+	m_lastHashes(_bc.lastHashes((unsigned)_s.info().number() - 1)),
 	m_depth(_level)
 {}
 
 u256 Executive::gasUsed() const
 {
 	return m_t.gas() - m_gas;
+}
+
+u256 Executive::gasUsedNoRefunds() const
+{
+	return m_t.gas() - m_gas + m_refunded;
 }
 
 void Executive::accrueSubState(SubState& _parentContext)
@@ -165,11 +170,11 @@ void Executive::initialize(Transaction const& _transaction)
 
 	// Avoid transactions that would take us beyond the block gas limit.
 	u256 startGasUsed = m_s.gasUsed();
-	if (startGasUsed + (bigint)m_t.gas() > m_s.m_currentBlock.gasLimit)
+	if (startGasUsed + (bigint)m_t.gas() > m_s.m_currentBlock.gasLimit())
 	{
-		clog(ExecutiveWarnChannel) << "Too much gas used in this block: Require <" << (m_s.m_currentBlock.gasLimit - startGasUsed) << " Got" << m_t.gas();
+		clog(ExecutiveWarnChannel) << "Too much gas used in this block: Require <" << (m_s.m_currentBlock.gasLimit() - startGasUsed) << " Got" << m_t.gas();
 		m_excepted = TransactionException::BlockGasLimitReached;
-		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_s.m_currentBlock.gasLimit - startGasUsed), (bigint)m_t.gas()));
+		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_s.m_currentBlock.gasLimit() - startGasUsed), (bigint)m_t.gas()));
 	}
 
 	// Check gas cost is enough.
@@ -391,14 +396,17 @@ void Executive::finalize()
 
 	// SSTORE refunds...
 	// must be done before the miner gets the fees.
-	if (m_ext)
-		m_gas += min((m_t.gas() - m_gas) / 2, m_ext->sub.refunds);
+	m_refunded = m_ext ? min((m_t.gas() - m_gas) / 2, m_ext->sub.refunds) : 0;
+	m_gas += m_refunded;
 
-	//	cnote << "Refunding" << formatBalance(m_endGas * m_ext->gasPrice) << "to origin (=" << m_endGas << "*" << formatBalance(m_ext->gasPrice) << ")";
-	m_s.addBalance(m_t.sender(), m_gas * m_t.gasPrice());
+	if (m_t)
+	{
+		//	cnote << "Refunding" << formatBalance(m_endGas * m_ext->gasPrice) << "to origin (=" << m_endGas << "*" << formatBalance(m_ext->gasPrice) << ")";
+		m_s.addBalance(m_t.sender(), m_gas * m_t.gasPrice());
 
-	u256 feesEarned = (m_t.gas() - m_gas) * m_t.gasPrice();
-	m_s.addBalance(m_s.m_currentBlock.coinbaseAddress, feesEarned);
+		u256 feesEarned = (m_t.gas() - m_gas) * m_t.gasPrice();
+		m_s.addBalance(m_s.m_currentBlock.coinbaseAddress(), feesEarned);
+	}
 
 	// Suicides...
 	if (m_ext)

@@ -82,6 +82,14 @@ class DownloadMan
 	friend class DownloadSub;
 
 public:
+	struct Overview
+	{
+		size_t total;
+		size_t firstIncomplete;
+		size_t lastComplete;
+		size_t lastStarted;
+	};
+
 	~DownloadMan()
 	{
 		for (auto i: m_subs)
@@ -97,11 +105,9 @@ public:
 
 	void resetToChain(h256s const& _chain)
 	{
-		{
-			ReadGuard l(x_subs);
+		DEV_READ_GUARDED(x_subs)
 			for (auto i: m_subs)
 				i->resetFetch();
-		}
 		WriteGuard l(m_lock);
 		m_chain.clear();
 		m_chain.reserve(_chain.size());
@@ -112,11 +118,9 @@ public:
 
 	void reset()
 	{
-		{
-			ReadGuard l(x_subs);
+		DEV_READ_GUARDED(x_subs)
 			for (auto i: m_subs)
 				i->resetFetch();
-		}
 		WriteGuard l(m_lock);
 		m_chain.clear();
 		m_blocksGot.reset();
@@ -127,11 +131,9 @@ public:
 		ReadGuard l(m_lock);
 		auto ret = m_blocksGot;
 		if (!_desperate)
-		{
-			ReadGuard l(x_subs);
-			for (auto i: m_subs)
-				ret += i->m_asked;
-		}
+			DEV_READ_GUARDED(x_subs)
+				for (auto i: m_subs)
+					ret += i->m_asked;
 		return ret;
 	}
 
@@ -144,11 +146,14 @@ public:
 	h256s remaining() const
 	{
 		h256s ret;
-		ReadGuard l(m_lock);
-		for (auto i: m_blocksGot.inverted())
-			ret.push_back(m_chain[i]);
+		DEV_READ_GUARDED(m_lock)
+			for (auto i: m_blocksGot.inverted())
+				ret.push_back(m_chain[i]);
 		return ret;
 	}
+
+	h256 firstBlock() const { return m_chain.empty() ? h256() : m_chain[0]; }
+	Overview overview() const;
 
 	size_t chainSize() const { ReadGuard l(m_lock); return m_chain.size(); }
 	size_t chainEmpty() const { ReadGuard l(m_lock); return m_chain.empty(); }
@@ -163,110 +168,6 @@ private:
 
 	mutable SharedMutex x_subs;
 	std::unordered_set<DownloadSub*> m_subs;
-};
-
-
-class HashDownloadMan;
-
-class HashDownloadSub
-{
-	friend class HashDownloadMan;
-
-public:
-	HashDownloadSub(HashDownloadMan& _man);
-	~HashDownloadSub();
-
-	/// Finished last fetch - grab the next hash index to download
-	unsigned nextFetch(unsigned _n);
-
-	/// Note that we've received a particular hash range.
-	void noteHash(unsigned _index, unsigned count);
-
-	/// Nothing doing here.
-	void doneFetch() { resetFetch(); }
-
-	bool askedContains(unsigned _i) const { Guard l(m_fetch); return m_asked.contains(_i); }
-	RangeMask<unsigned> const& asked() const { return m_asked; }
-
-private:
-	void resetFetch();		// Called by DownloadMan when we need to reset the download.
-
-	HashDownloadMan* m_man = nullptr;
-	mutable Mutex m_fetch;
-	unsigned m_remaining;
-	RangeMask<unsigned> m_asked;
-};
-
-class HashDownloadMan
-{
-	friend class HashDownloadSub;
-
-public:
-	~HashDownloadMan()
-	{
-		for (auto i: m_subs)
-			i->m_man = nullptr;
-	}
-
-	void resetToRange(unsigned _start, unsigned _count)
-	{
-		{
-			ReadGuard l(x_subs);
-			for (auto i: m_subs)
-				i->resetFetch();
-		}
-		WriteGuard l(m_lock);
-		m_chainStart = _start;
-		m_chainCount = _count;
-		m_got += RangeMask<unsigned>(_start, _start + _count);
-		{
-			ReadGuard l(x_subs);
-			for (auto i: m_subs)
-				i->resetFetch();
-		}
-	}
-
-	void reset(unsigned _start)
-	{
-		WriteGuard l(m_lock);
-		m_chainStart = _start;
-		m_chainCount = 0;
-		m_got = RangeMask<unsigned>(_start, _start);
-	}
-
-	RangeMask<unsigned> taken(bool _desperate = false) const
-	{
-		ReadGuard l(m_lock);
-		auto ret = m_got;
-		if (!_desperate)
-		{
-			ReadGuard l(x_subs);
-			for (auto i: m_subs)
-				ret += i->m_asked;
-		}
-		return ret;
-	}
-
-	bool isComplete() const
-	{
-		ReadGuard l(m_lock);
-		return m_got.full();
-	}
-
-	size_t chainSize() const { ReadGuard l(m_lock); return m_chainCount; }
-	size_t chainEmpty() const { ReadGuard l(m_lock); return m_chainCount == 0; }
-	void foreachSub(std::function<void(HashDownloadSub const&)> const& _f) const { ReadGuard l(x_subs); for(auto i: m_subs) _f(*i); }
-	unsigned subCount() const { ReadGuard l(x_subs); return m_subs.size(); }
-	RangeMask<unsigned> hashesGot() const { ReadGuard l(m_lock); return m_got; }
-
-private:
-	mutable SharedMutex m_lock;
-	unsigned m_chainStart = 0;
-	unsigned m_chainCount = 0;
-	RangeMask<unsigned> m_got;
-
-	mutable SharedMutex x_subs;
-	std::unordered_set<HashDownloadSub*> m_subs;
 };
 
 }

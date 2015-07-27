@@ -42,11 +42,157 @@ boostIntGenerator RandomCode::randOpLengGen = boostIntGenerator(gen, opLengDist)
 boostIntGenerator RandomCode::randUniIntGen = boostIntGenerator(gen, uniIntDist);
 boostUInt64Generator RandomCode::randUInt64Gen = boostUInt64Generator(gen, uInt64Dist);
 
-std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
+int RandomCode::recursiveRLP(std::string& _result, int _depth, std::string& _debug)
+{
+	bool genValidRlp = true;
+	int bugProbability = randUniIntGen() % 100;
+	if (bugProbability < 80)
+		genValidRlp = false;
+
+	if (_depth > 1)
+	{
+		//create rlp blocks
+		int size = 1 + randUniIntGen() % 4;
+		for (auto i = 0; i < size; i++)
+		{
+			std::string blockstr;
+			std::string blockDebug;
+			recursiveRLP(blockstr, _depth - 1, blockDebug);
+			_result += blockstr;
+			_debug += blockDebug;
+		}
+
+		//make rlp header
+		int length = _result.size() / 2;
+		std::string header;
+		int rtype = 0;
+		int rnd = randUniIntGen() % 100;
+		if (rnd < 10)
+		{
+			//make header as array
+			if (length <= 55)
+			{
+				header = toCompactHex(128 + length);
+				rtype = 1;
+			}
+			else
+			{
+				std::string hexlength = toCompactHex(length);
+				header = toCompactHex(183 + hexlength.size() / 2) + hexlength;
+				rtype = 2;
+			}
+		}
+		else
+		{
+			//make header as list
+			if (length <= 55)
+			{
+				header = toCompactHex(192 + length);
+				rtype = 3;
+			}
+			else
+			{
+				std::string hexlength = toCompactHex(length, HexPrefix::DontAdd, 1);
+				header = toCompactHex(247 + hexlength.size() / 2) + hexlength;
+				rtype = 4;
+			}
+		}
+		_result = header + _result;
+		_debug = "[" + header + "(" + toString(length) + "){" + toString(rtype) + "}]" + _debug;
+		return _result.size() / 2;
+	}
+	if (_depth == 1)
+	{
+		bool genbug = false;
+		bool genbug2 = false;
+		int bugProbability = randUniIntGen() % 100;
+		if (bugProbability < 50 && !genValidRlp)
+			genbug = true;
+		bugProbability = randUniIntGen() % 100;   //more randomness
+		if (bugProbability < 50 && !genValidRlp)
+			genbug2 = true;
+
+		std::string emptyZeros = genValidRlp ? "" : genbug ? "00" : "";
+		std::string emptyZeros2 = genValidRlp ? "" : genbug2 ? "00" : "";
+
+		int rnd = randUniIntGen() % 5;
+		switch (rnd)
+		{
+		case 0:
+		{
+			//single byte [0x00, 0x7f]
+			std::string rlp = emptyZeros + toCompactHex(genbug ? randUniIntGen() % 255 : randUniIntGen() % 128, HexPrefix::DontAdd, 1);
+			_result.insert(0, rlp);
+			_debug.insert(0, "[" + rlp + "]");
+			return 1;
+		}
+		case 1:
+		{
+			//string 0-55 [0x80, 0xb7] + string
+			int len = genbug ? randUniIntGen() % 255 : randUniIntGen() % 55;
+			std::string hex = rndByteSequence(len);
+			if (len == 1)
+			if (genValidRlp && fromHex(hex)[0] < 128)
+				hex = toCompactHex((u64)128);
+
+			_result.insert(0, toCompactHex(128 + len) + emptyZeros + hex);
+			_debug.insert(0, "[" + toCompactHex(128 + len) + "(" + toString(len) + ")]" + emptyZeros + hex);
+			return len + 1;
+		}
+		case 2:
+		{
+			//string more 55 [0xb8, 0xbf] + length + string
+			int len = randUniIntGen() % 100;
+			if (len < 56 && genValidRlp)
+				len = 56;
+
+			std::string hex = rndByteSequence(len);
+			std::string hexlen = emptyZeros2 + toCompactHex(len, HexPrefix::DontAdd, 1);
+			std::string rlpblock = toCompactHex(183 + hexlen.size() / 2) + hexlen + emptyZeros + hex;
+			_debug.insert(0, "[" + toCompactHex(183 + hexlen.size() / 2) + hexlen + "(" + toString(len) + "){2}]" + emptyZeros + hex);
+			_result.insert(0, rlpblock);
+			return rlpblock.size() / 2;
+		}
+		case 3:
+		{
+			//list 0-55 [0xc0, 0xf7] + data
+			int len = genbug ? randUniIntGen() % 255 : randUniIntGen() % 55;
+			std::string hex = emptyZeros + rndByteSequence(len);
+			_result.insert(0, toCompactHex(192 + len) + hex);
+			_debug.insert(0, "[" + toCompactHex(192 + len) + "(" + toString(len) + "){3}]" + hex);
+			return len + 1;
+		}
+		case 4:
+		{
+			//list more 55 [0xf8, 0xff] + length + data
+			int len = randUniIntGen() % 100;
+			if (len < 56 && genValidRlp)
+				len = 56;
+			std::string hexlen = emptyZeros2 + toCompactHex(len, HexPrefix::DontAdd, 1);
+			std::string rlpblock = toCompactHex(247 + hexlen.size() / 2) + hexlen + emptyZeros + rndByteSequence(len);
+			_debug.insert(0, "[" + toCompactHex(247 + hexlen.size() / 2) + hexlen + "(" + toString(len) + "){4}]" + emptyZeros + rndByteSequence(len));
+			_result.insert(0, rlpblock);
+			return rlpblock.size() / 2;
+		}
+		}
+	}
+	return 0;
+}
+
+std::string RandomCode::rndRLPSequence(int _depth, std::string& _debug)
 {
 	refreshSeed();
 	std::string hash;
-	_length = (_sizeType == SizeStrictness::Strict) ? std::max(1, _length) : randomUniInt() % _length;
+	_depth = std::min(std::max(1, _depth), 7); //limit depth to avoid overkill
+	recursiveRLP(hash, _depth, _debug);
+	return hash;
+}
+
+std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
+{
+	refreshSeed();
+	std::string hash = "";
+	_length = (_sizeType == SizeStrictness::Strict) ? std::max(0, _length) : randomUniInt() % _length;
 	for (auto i = 0; i < _length; i++)
 	{
 		uint8_t byte = randOpCodeGen();
@@ -74,7 +220,7 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 		uint8_t opcode = weightsDefined ? randOpCodeWeight() : randOpCodeGen();
 		dev::eth::InstructionInfo info = dev::eth::instructionInfo((dev::eth::Instruction) opcode);
 
-		if (info.name.find_first_of("INVALID_INSTRUCTION") > 0)
+		if (info.name.find("INVALID_INSTRUCTION") != std::string::npos)
 		{
 			//Byte code is yet not implemented
 			if (_options.useUndefinedOpCodes == false)
@@ -84,9 +230,17 @@ std::string RandomCode::generate(int _maxOpNumber, RandomCodeOptions _options)
 			}
 		}
 		else
+		{
+			if (info.name.find("PUSH") != std::string::npos)
+				code += toCompactHex(opcode);
 			code += fillArguments((dev::eth::Instruction) opcode, _options);
-		std::string byte = toCompactHex(opcode);
-		code += (byte == "") ? "00" : byte;
+		}
+
+		if (info.name.find("PUSH") == std::string::npos)
+		{
+			std::string byte = toCompactHex(opcode);
+			code += (byte == "") ? "00" : byte;
+		}
 	}
 	return code;
 }
@@ -141,17 +295,58 @@ std::string RandomCode::fillArguments(dev::eth::Instruction _opcode, RandomCodeO
 
 	if (smart)
 	{
+		//PUSH1 ... PUSH32
+		if (dev::eth::Instruction::PUSH1 <= _opcode && _opcode <= dev::eth::Instruction::PUSH32)
+		{
+		  code += rndByteSequence(int(_opcode) - int(dev::eth::Instruction::PUSH1) + 1);
+		  return code;
+		}
+
+		//SWAP1 ... SWAP16 || DUP1 ... DUP16
+		bool isSWAP = (dev::eth::Instruction::SWAP1 <= _opcode && _opcode <= dev::eth::Instruction::SWAP16);
+		bool isDUP = (dev::eth::Instruction::DUP1 <= _opcode && _opcode <= dev::eth::Instruction::DUP16);
+
+		if (isSWAP || isDUP)
+		{
+			int times = 0;
+			if (isSWAP)
+				times = int(_opcode) - int(dev::eth::Instruction::SWAP1) + 2;
+			else
+			if (isDUP)
+				times = int(_opcode) - int(dev::eth::Instruction::DUP1) + 1;
+
+			for (int i = 0; i < times; i ++)
+				code += getPushCode(randUniIntGen() % 32);
+
+			return code;
+		}
+
 		switch (_opcode)
 		{
+		case dev::eth::Instruction::CREATE:
+			//(CREATE value mem1 mem2)
+			code += getPushCode(randUniIntGen() % 128);  //memlen1
+			code += getPushCode(randUniIntGen() % 32);   //memlen1
+			code += getPushCode(randUniIntGen());		 //value
+		break;
 		case dev::eth::Instruction::CALL:
+		case dev::eth::Instruction::CALLCODE:
 			//(CALL gaslimit address value memstart1 memlen1 memstart2 memlen2)
-			code += getPushCode(randUniIntGen() % 32);  //memlen2
+			//(CALLCODE gaslimit address value memstart1 memlen1 memstart2 memlen2)
+			code += getPushCode(randUniIntGen() % 128);  //memlen2
 			code += getPushCode(randUniIntGen() % 32);  //memstart2
-			code += getPushCode(randUniIntGen() % 32);  //memlen1
+			code += getPushCode(randUniIntGen() % 128);  //memlen1
 			code += getPushCode(randUniIntGen() % 32);  //memlen1
 			code += getPushCode(randUniIntGen());		//value
 			code += getPushCode(toString(_options.getRandomAddress()));//address
 			code += getPushCode(randUniIntGen());		//gaslimit
+		break;
+		case dev::eth::Instruction::SUICIDE: //(SUICIDE address)
+			code += getPushCode(toString(_options.getRandomAddress()));
+		break;
+		case dev::eth::Instruction::RETURN:  //(RETURN memlen1 memlen2)
+			code += getPushCode(randUniIntGen() % 128);  //memlen1
+			code += getPushCode(randUniIntGen() % 32);  //memlen1
 		break;
 		default:
 			smart = false;

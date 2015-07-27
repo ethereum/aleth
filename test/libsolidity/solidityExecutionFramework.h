@@ -28,6 +28,7 @@
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
 #include <libsolidity/CompilerStack.h>
+#include <libsolidity/Exceptions.h>
 
 namespace dev
 {
@@ -40,7 +41,11 @@ namespace test
 class ExecutionFramework
 {
 public:
-	ExecutionFramework() { g_logVerbosity = 0; }
+	ExecutionFramework()
+	{
+		g_logVerbosity = 0;
+		m_state.resetCurrent();
+	}
 
 	bytes const& compileAndRunWithoutCheck(
 		std::string const& _sourceCode,
@@ -55,6 +60,14 @@ public:
 		bytes code = m_compiler.getBytecode(_contractName);
 		sendMessage(code + _arguments, true, _value);
 		return m_output;
+	}
+
+	template <class Exceptiontype>
+	void compileRequireThrow(std::string const& _sourceCode)
+	{
+		m_compiler.reset(false, m_addStandardSources);
+		m_compiler.addSource("", _sourceCode);
+		BOOST_REQUIRE_THROW(m_compiler.compile(m_optimize, m_optimizeRuns), Exceptiontype);
 	}
 
 	bytes const& compileAndRun(
@@ -144,6 +157,12 @@ public:
 	static bytes encodeArgs()
 	{
 		return bytes();
+	}
+	//@todo might be extended in the future
+	template <class Arg>
+	static bytes encodeDyn(Arg const& _arg)
+	{
+		return encodeArgs(u256(0x20), u256(_arg.size()), _arg);
 	}
 
 private:

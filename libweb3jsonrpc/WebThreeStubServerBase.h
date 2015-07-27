@@ -106,10 +106,10 @@ public:
 	virtual std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	virtual std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
 	virtual std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
-	virtual std::string eth_getBlockTransactionCountByHash(std::string const& _blockHash);
-	virtual std::string eth_getBlockTransactionCountByNumber(std::string const& _blockNumber);
-	virtual std::string eth_getUncleCountByBlockHash(std::string const& _blockHash);
-	virtual std::string eth_getUncleCountByBlockNumber(std::string const& _blockNumber);
+	virtual Json::Value eth_getBlockTransactionCountByHash(std::string const& _blockHash);
+	virtual Json::Value eth_getBlockTransactionCountByNumber(std::string const& _blockNumber);
+	virtual Json::Value eth_getUncleCountByBlockHash(std::string const& _blockHash);
+	virtual Json::Value eth_getUncleCountByBlockNumber(std::string const& _blockNumber);
 	virtual std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
 	virtual std::string eth_sendTransaction(Json::Value const& _json);
 	virtual std::string eth_call(Json::Value const& _json, std::string const& _blockNumber);
@@ -119,6 +119,7 @@ public:
 	virtual Json::Value eth_getTransactionByHash(std::string const& _transactionHash);
 	virtual Json::Value eth_getTransactionByBlockHashAndIndex(std::string const& _blockHash, std::string const& _transactionIndex);
 	virtual Json::Value eth_getTransactionByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _transactionIndex);
+	virtual Json::Value eth_getTransactionReceipt(std::string const& _transactionHash);
 	virtual Json::Value eth_getUncleByBlockHashAndIndex(std::string const& _blockHash, std::string const& _uncleIndex);
 	virtual Json::Value eth_getUncleByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _uncleIndex);
 	virtual Json::Value eth_getCompilers();
@@ -135,6 +136,7 @@ public:
 	virtual Json::Value eth_getFilterLogs(std::string const& _filterId);
 	virtual Json::Value eth_getFilterLogsEx(std::string const& _filterId);
 	virtual Json::Value eth_getLogs(Json::Value const& _json);
+	virtual Json::Value eth_getLogsEx(Json::Value const& _json);
 	virtual Json::Value eth_getWork();
 	virtual bool eth_submitWork(std::string const& _nonce, std::string const&, std::string const& _mixHash);
 	virtual std::string eth_register(std::string const& _address);

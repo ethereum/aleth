@@ -136,6 +136,23 @@ Main::Main(QWidget *parent) :
 	QtWebEngine::initialize();
 	setWindowFlags(Qt::Window);
 	ui->setupUi(this);
+
+	for (int i = 1; i < qApp->arguments().size(); ++i)
+	{
+		QString arg = qApp->arguments()[i];
+		if (arg == "--frontier")
+			resetNetwork(eth::Network::Frontier);
+		else if (arg == "--olympic")
+			resetNetwork(eth::Network::Olympic);
+		else if (arg == "--genesis-json" && i + 1 < qApp->arguments().size())
+			CanonBlockChain<Ethash>::setGenesis(contentsString(qApp->arguments()[++i].toStdString()));
+	}
+
+	if (c_network == eth::Network::Olympic)
+		setWindowTitle("AlethZero Olympic");
+	else if (c_network == eth::Network::Frontier)
+		setWindowTitle("AlethZero Frontier");
+
 	g_logPost = [=](string const& s, char const* c)
 	{
 		simpleDebugOut(s, c);
@@ -183,9 +200,12 @@ Main::Main(QWidget *parent) :
 #endif
 	m_servers.append(QString::fromStdString(Host::pocHost() + ":30303"));
 
-	cerr << "State root: " << CanonBlockChain::genesis().stateRoot << endl;
-	auto block = CanonBlockChain::createGenesisBlock();
-	cerr << "Block Hash: " << CanonBlockChain::genesis().hash() << endl;
+	if (!dev::contents(getDataDir() + "/genesis.json").empty())
+		CanonBlockChain<Ethash>::setGenesis(contentsString(getDataDir() + "/genesis.json"));
+
+	cerr << "State root: " << CanonBlockChain<Ethash>::genesis().stateRoot() << endl;
+	auto block = CanonBlockChain<Ethash>::createGenesisBlock();
+	cerr << "Block Hash: " << CanonBlockChain<Ethash>::genesis().hash() << endl;
 	cerr << "Block RLP: " << RLP(block) << endl;
 	cerr << "Block Hex: " << toHex(block) << endl;
 	cerr << "eth Network protocol version: " << eth::c_protocolVersion << endl;
@@ -202,12 +222,13 @@ Main::Main(QWidget *parent) :
 	statusBar()->addPermanentWidget(ui->chainStatus);
 	statusBar()->addPermanentWidget(ui->blockCount);
 
-	ui->blockCount->setText(QString("PV%1.%2 D%3 %4-%5 v%6").arg(eth::c_protocolVersion).arg(eth::c_minorProtocolVersion).arg(c_databaseVersion).arg(QString::fromStdString(ProofOfWork::name())).arg(ProofOfWork::revision()).arg(dev::Version));
 
 	QSettings s("ethereum", "alethzero");
 	m_networkConfig = s.value("peers").toByteArray();
 	bytesConstRef network((byte*)m_networkConfig.data(), m_networkConfig.size());
 	m_webThree.reset(new WebThreeDirect(string("AlethZero/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM), getDataDir(), WithExisting::Trust, {"eth"/*, "shh"*/}, p2p::NetworkPreferences(), network));
+
+	ui->blockCount->setText(QString("PV%1.%2 D%3 %4-%5 v%6").arg(eth::c_protocolVersion).arg(eth::c_minorProtocolVersion).arg(c_databaseVersion).arg(QString::fromStdString(ethereum()->sealEngine()->name())).arg(ethereum()->sealEngine()->revision()).arg(dev::Version));
 
 	m_httpConnector.reset(new jsonrpc::HttpServer(SensibleHttpPort, "", "", dev::SensibleHttpThreads));
 	auto w3ss = new OurWebThreeStubServer(*m_httpConnector, this);
@@ -226,6 +247,11 @@ Main::Main(QWidget *parent) :
 	{
 		ui->tabWidget->setTabText(0, ui->webView->title());
 	});
+	connect(ui->webView, &QWebEngineView::urlChanged, [=](QUrl const& _url)
+	{
+		if (!m_dappHost->servesUrl(_url))
+			ui->urlEdit->setText(_url.toString());
+	});
 
 	m_dappHost.reset(new DappHost(8081));
 	m_dappLoader = new DappLoader(this, web3(), getNameReg());
@@ -239,18 +265,31 @@ Main::Main(QWidget *parent) :
 
 	ethereum()->setDefault(LatestBlock);
 
+	m_vmSelectionGroup = new QActionGroup{ui->menu_Debug};
+	m_vmSelectionGroup->addAction(ui->vmInterpreter);
+	m_vmSelectionGroup->addAction(ui->vmJIT);
+	m_vmSelectionGroup->addAction(ui->vmSmart);
+	m_vmSelectionGroup->setExclusive(true);
+
+#if ETH_EVMJIT
+	ui->vmSmart->setChecked(true); // Default when JIT enabled
+	on_vmSmart_triggered();
+#else
+	ui->vmInterpreter->setChecked(true);
+	ui->vmJIT->setEnabled(false);
+	ui->vmSmart->setEnabled(false);
+#endif
+
 	readSettings();
 
 	m_transact = new Transact(this, this);
 	m_transact->setWindowFlags(Qt::Dialog);
 	m_transact->setWindowModality(Qt::WindowModal);
 
+	connect(ui->blockChainDockWidget, &QDockWidget::visibilityChanged, [=]() { refreshBlockChain(); });
+
 #if !ETH_FATDB
 	removeDockWidget(ui->dockWidget_accounts);
-#endif
-#if !ETH_EVMJIT
-	ui->jitvm->setEnabled(false);
-	ui->jitvm->setChecked(false);
 #endif
 	installWatches();
 	startTimer(100);
@@ -350,10 +389,17 @@ NetworkPreferences Main::netPrefs() const
 		publicIP.clear();
 	}
 
+	NetworkPreferences ret;
+
 	if (isPublicAddress(publicIP))
-		return NetworkPreferences(publicIP, listenIP, ui->port->value(), ui->upnp->isChecked());
+		ret = NetworkPreferences(publicIP, listenIP, ui->port->value(), ui->upnp->isChecked());
 	else
-		return NetworkPreferences(listenIP, ui->port->value(), ui->upnp->isChecked());
+		ret = NetworkPreferences(listenIP, ui->port->value(), ui->upnp->isChecked());
+
+	ret.discovery = m_privateChain.isEmpty() && !ui->hermitMode->isChecked();
+	ret.pin = m_privateChain.isEmpty() || ui->hermitMode->isChecked();
+
+	return ret;
 }
 
 void Main::onKeysChanged()
@@ -388,6 +434,7 @@ void Main::installWatches()
 {
 	auto newBlockId = installWatch(ChainChangedFilter, [=](LocalisedLogEntries const&){
 		onNewBlock();
+		onNewPending();
 	});
 	auto newPendingId = installWatch(PendingChangedFilter, [=](LocalisedLogEntries const&){
 		onNewPending();
@@ -569,7 +616,7 @@ void Main::eval(QString const& _js)
 void Main::addConsoleMessage(QString const& _js, QString const& _s)
 {
 	m_consoleHistory.push_back(qMakePair(_js, _s));
-	QString r = "<html><body style=\"margin: 0;\">" Div(Mono "position: absolute; bottom: 0; border: 0px; margin: 0px; width: 100%");
+	QString r = "<html><body style=\"margin: 0;\">" ETH_HTML_DIV(ETH_HTML_MONO "position: absolute; bottom: 0; border: 0px; margin: 0px; width: 100%");
 	for (auto const& i: m_consoleHistory)
 		r +=	"<div style=\"border-bottom: 1 solid #eee; width: 100%\"><span style=\"float: left; width: 1em; color: #888; font-weight: bold\">&gt;</span><span style=\"color: #35d\">" + i.first.toHtmlEscaped() + "</span></div>"
 				"<div style=\"border-bottom: 1 solid #eee; width: 100%\"><span style=\"float: left; width: 1em\">&nbsp;</span><span>" + i.second + "</span></div>";
@@ -619,18 +666,22 @@ pair<Address, bytes> Main::fromString(std::string const& _n) const
 	if (_n == "(Create Contract)")
 		return make_pair(Address(), bytes());
 
+	std::string n = _n;
+	if (n.find("0x") == 0)
+		n.erase(0, 2);
+
 	auto g_newNameReg = getNameReg();
 	if (g_newNameReg)
 	{
-		Address a = abiOut<Address>(ethereum()->call(g_newNameReg, abiIn("addr(bytes32)", ::toString32(_n))).output);
+		Address a = abiOut<Address>(ethereum()->call(g_newNameReg, abiIn("addr(bytes32)", ::toString32(n))).output);
 		if (a)
 			return make_pair(a, bytes());
 	}
-	if (_n.size() == 40)
+	if (n.size() == 40)
 	{
 		try
 		{
-			return make_pair(Address(fromHex(_n, WhenError::Throw)), bytes());
+			return make_pair(Address(fromHex(n, WhenError::Throw)), bytes());
 		}
 		catch (BadHexCharacter& _e)
 		{
@@ -646,7 +697,7 @@ pair<Address, bytes> Main::fromString(std::string const& _n) const
 	}
 	else
 		try {
-			return ICAP::decoded(_n).address([&](Address const& a, bytes const& b) -> bytes
+			return ICAP::decoded(n).address([&](Address const& a, bytes const& b) -> bytes
 			{
 				return ethereum()->call(a, b).output;
 			}, g_newNameReg);
@@ -717,6 +768,7 @@ void Main::writeSettings()
 	s.setValue("askPrice", QString::fromStdString(toString(static_cast<TrivialGasPricer*>(ethereum()->gasPricer().get())->ask())));
 	s.setValue("bidPrice", QString::fromStdString(toString(static_cast<TrivialGasPricer*>(ethereum()->gasPricer().get())->bid())));
 	s.setValue("upnp", ui->upnp->isChecked());
+	s.setValue("hermitMode", ui->hermitMode->isChecked());
 	s.setValue("forceAddress", ui->forcePublicIP->text());
 	s.setValue("forceMining", ui->forceMining->isChecked());
 	s.setValue("turboMining", ui->turboMining->isChecked());
@@ -731,7 +783,8 @@ void Main::writeSettings()
 	s.setValue("url", ui->urlEdit->text());
 	s.setValue("privateChain", m_privateChain);
 	s.setValue("verbosity", ui->verbosity->value());
-	s.setValue("jitvm", ui->jitvm->isChecked());
+	if (auto vm = m_vmSelectionGroup->checkedAction())
+		s.setValue("vm", vm->text());
 
 	bytes d = m_webThree->saveNetwork();
 	if (!d.empty())
@@ -741,6 +794,30 @@ void Main::writeSettings()
 
 	s.setValue("geometry", saveGeometry());
 	s.setValue("windowState", saveState());
+}
+
+void Main::setPrivateChain(QString const& _private, bool _forceConfigure)
+{
+	if (m_privateChain == _private && !_forceConfigure)
+		return;
+
+	m_privateChain = _private;
+	ui->usePrivate->setChecked(!m_privateChain.isEmpty());
+
+	CanonBlockChain<Ethash>::forceGenesisExtraData(m_privateChain.isEmpty() ? bytes() : sha3(m_privateChain.toStdString()).asBytes());
+
+	// rejig blockchain now.
+	writeSettings();
+	ui->mine->setChecked(false);
+	ui->net->setChecked(false);
+	web3()->stopNetwork();
+
+	web3()->setNetworkPreferences(netPrefs());
+	ethereum()->reopenChain();
+
+	readSettings(true);
+	installWatches();
+	refreshAll();
 }
 
 Secret Main::retrieveSecret(Address const& _address) const
@@ -804,6 +881,7 @@ void Main::readSettings(bool _skipGeometry)
 	ui->upnp->setChecked(s.value("upnp", true).toBool());
 	ui->forcePublicIP->setText(s.value("forceAddress", "").toString());
 	ui->dropPeers->setChecked(false);
+	ui->hermitMode->setChecked(s.value("hermitMode", false).toBool());
 	ui->forceMining->setChecked(s.value("forceMining", false).toBool());
 	on_forceMining_triggered();
 	ui->turboMining->setChecked(s.value("turboMining", false).toBool());
@@ -819,11 +897,30 @@ void Main::readSettings(bool _skipGeometry)
 	ui->listenIP->setText(s.value("listenIP", "").toString());
 	ui->port->setValue(s.value("port", ui->port->value()).toInt());
 	ui->nameReg->setText(s.value("nameReg", "").toString());
-	m_privateChain = s.value("privateChain", "").toString();
-	ui->usePrivate->setChecked(m_privateChain.size());
+	setPrivateChain(s.value("privateChain", "").toString());
 	ui->verbosity->setValue(s.value("verbosity", 1).toInt());
-	ui->jitvm->setChecked(s.value("jitvm", true).toBool());
-	on_jitvm_triggered();
+
+#if ETH_EVMJIT // We care only if JIT is enabled. Otherwise it can cause misconfiguration.
+	auto vmName = s.value("vm").toString();
+	if (!vmName.isEmpty())
+	{
+		if (vmName == ui->vmInterpreter->text())
+		{
+			ui->vmInterpreter->setChecked(true);
+			on_vmInterpreter_triggered();
+		}
+		else if (vmName == ui->vmJIT->text())
+		{
+			ui->vmJIT->setChecked(true);
+			on_vmJIT_triggered();
+		}
+		else if (vmName == ui->vmSmart->text())
+		{
+			ui->vmSmart->setChecked(true);
+			on_vmSmart_triggered();
+		}
+	}
+#endif
 
 	ui->urlEdit->setText(s.value("url", "about:blank").toString());	//http://gavwood.com/gavcoin.html
 	on_urlEdit_returnPressed();
@@ -983,27 +1080,30 @@ void Main::on_exportState_triggered()
 
 void Main::on_usePrivate_triggered()
 {
+	QString pc;
 	if (ui->usePrivate->isChecked())
 	{
-		m_privateChain = QInputDialog::getText(this, "Enter Name", "Enter the name of your private chain", QLineEdit::Normal, QString("NewChain-%1").arg(time(0)));
-		if (m_privateChain.isEmpty())
-		{
-			if (ui->usePrivate->isChecked())
-				ui->usePrivate->setChecked(false);
-			else
-				// was cancelled.
-				return;
-		}
+		bool ok;
+		pc = QInputDialog::getText(this, "Enter Name", "Enter the name of your private chain", QLineEdit::Normal, QString("NewChain-%1").arg(time(0)), &ok);
+		if (!ok)
+			return;
 	}
-	else
-		m_privateChain.clear();
-	on_killBlockchain_triggered();
+	setPrivateChain(pc);
 }
 
-void Main::on_jitvm_triggered()
+void Main::on_vmInterpreter_triggered() { VMFactory::setKind(VMKind::Interpreter); }
+void Main::on_vmJIT_triggered() { VMFactory::setKind(VMKind::JIT); }
+void Main::on_vmSmart_triggered() { VMFactory::setKind(VMKind::Smart); }
+
+void Main::on_rewindChain_triggered()
 {
-	bool jit = ui->jitvm->isChecked();
-	VMFactory::setKind(jit ? VMKind::JIT : VMKind::Interpreter);
+	bool ok;
+	int n = QInputDialog::getInt(this, "Rewind Chain", "Enter the number of the new chain head.", ethereum()->number() * 9 / 10, 1, ethereum()->number(), 1, &ok);
+	if (ok)
+	{
+		ethereum()->rewind(n);
+		refreshAll();
+	}
 }
 
 void Main::on_urlEdit_returnPressed()
@@ -1066,7 +1166,7 @@ void Main::refreshMining()
 	QString t;
 	if (gp.first != EthashAux::NotGenerating)
 		t = QString("DAG for #%1-#%2: %3% complete; ").arg(gp.first).arg(gp.first + ETHASH_EPOCH_LENGTH - 1).arg(gp.second);
-	MiningProgress p = ethereum()->miningProgress();
+	WorkingProgress p = ethereum()->miningProgress();
 	ui->mineStatus->setText(t + (ethereum()->isMining() ? p.hashes > 0 ? QString("%1s @ %2kH/s").arg(p.ms / 1000).arg(p.ms ? p.hashes / p.ms : 0) : "Awaiting DAG" : "Not mining"));
 	if (ethereum()->isMining() && p.hashes > 0)
 	{
@@ -1240,7 +1340,9 @@ void Main::refreshAccounts()
 	bool showContract = ui->showContracts->isChecked();
 	bool showBasic = ui->showBasic->isChecked();
 	bool onlyNamed = ui->onlyNamed->isChecked();
-	for (auto const& i: ethereum()->addresses())
+	auto as = ethereum()->addresses();
+	sort(as.begin(), as.end());
+	for (auto const& i: as)
 	{
 		bool isContract = (ethereum()->codeHashAt(i) != EmptySHA3);
 		if (!((showContract && isContract) || (showBasic && !isContract)))
@@ -1260,14 +1362,14 @@ void Main::refreshBlockCount()
 	auto d = ethereum()->blockChain().details();
 	BlockQueueStatus b = ethereum()->blockQueueStatus();
 	SyncStatus sync = ethereum()->syncStatus();
-	QString syncStatus = EthereumHost::stateName(sync.state);
+	QString syncStatus = QString("PV%1 %2").arg(sync.protocolVersion).arg(EthereumHost::stateName(sync.state));
 	if (sync.state == SyncState::Hashes)
 		syncStatus += QString(": %1/%2%3").arg(sync.hashesReceived).arg(sync.hashesEstimated ? "~" : "").arg(sync.hashesTotal);
 	if (sync.state == SyncState::Blocks || sync.state == SyncState::NewBlocks)
 		syncStatus += QString(": %1/%2").arg(sync.blocksReceived).arg(sync.blocksTotal);
 	ui->syncStatus->setText(syncStatus);
 	ui->chainStatus->setText(QString("%3 importing %4 ready %5 verifying %6 unverified %7 future %8 unknown %9 bad  %1 #%2")
-		.arg(m_privateChain.size() ? "[" + m_privateChain + "] " : "testnet").arg(d.number).arg(b.importing).arg(b.verified).arg(b.verifying).arg(b.unverified).arg(b.future).arg(b.unknown).arg(b.bad));
+		.arg(m_privateChain.size() ? "[" + m_privateChain + "] " : c_network == eth::Network::Olympic ? "Olympic" : "Frontier").arg(d.number).arg(b.importing).arg(b.verified).arg(b.verifying).arg(b.unverified).arg(b.future).arg(b.unknown).arg(b.bad));
 }
 
 void Main::on_turboMining_triggered()
@@ -1277,7 +1379,7 @@ void Main::on_turboMining_triggered()
 
 void Main::refreshBlockChain()
 {
-	if (!ui->blocks->isVisible() && isVisible())
+	if (!(ui->blockChainDockWidget->isVisible() || !tabifiedDockWidgets(ui->blockChainDockWidget).isEmpty()))
 		return;
 
 	DEV_TIMED_FUNCTION_ABOVE(500);
@@ -1564,7 +1666,7 @@ void Main::on_transactionQueue_currentItemChanged()
 			if (tx.data().size())
 				s << dev::memDump(tx.data(), 16, true);
 		}
-		s << "<div>Hex: " Span(Mono) << toHex(tx.rlp()) << "</span></div>";
+		s << "<div>Hex: " ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(tx.rlp()) << "</span></div>";
 		s << "<hr/>";
 		if (!!receipt.bloom())
 			s << "<div>Log Bloom: " << receipt.bloom() << "</div>";
@@ -1574,7 +1676,7 @@ void Main::on_transactionQueue_currentItemChanged()
 		s << "<div>End State: <b>" << receipt.stateRoot().abridged() << "</b></div>";
 		auto r = receipt.rlp();
 		s << "<div>Receipt: " << toString(RLP(r)) << "</div>";
-		s << "<div>Receipt-Hex: " Span(Mono) << toHex(receipt.rlp()) << "</span></div>";
+		s << "<div>Receipt-Hex: " ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(receipt.rlp()) << "</span></div>";
 		s << renderDiff(ethereum()->diff(i, PendingBlock));
 //		s << "Pre: " << fs.rootHash() << "<br/>";
 //		s << "Post: <b>" << ts.rootHash() << "</b>";
@@ -1641,32 +1743,39 @@ void Main::on_blocks_currentItemChanged()
 		auto details = ethereum()->blockChain().details(h);
 		auto blockData = ethereum()->blockChain().block(h);
 		auto block = RLP(blockData);
-		BlockInfo info(blockData);
+		Ethash::BlockHeader info(blockData);
 
 		stringstream s;
 
 		if (item->data(Qt::UserRole + 1).isNull())
 		{
 			char timestamp[64];
-			time_t rawTime = (time_t)(uint64_t)info.timestamp;
+			time_t rawTime = (time_t)(uint64_t)info.timestamp();
 			strftime(timestamp, 64, "%c", localtime(&rawTime));
 			s << "<h3>" << h << "</h3>";
-			s << "<h4>#" << info.number;
+			s << "<h4>#" << info.number();
 			s << "&nbsp;&emsp;&nbsp;<b>" << timestamp << "</b></h4>";
-			s << "<div>D/TD: <b>" << info.difficulty << "</b>/<b>" << details.totalDifficulty << "</b> = 2^" << log2((double)info.difficulty) << "/2^" << log2((double)details.totalDifficulty) << "</div>";
-			s << "&nbsp;&emsp;&nbsp;Children: <b>" << details.children.size() << "</b></div>";
-			s << "<div>Gas used/limit: <b>" << info.gasUsed << "</b>/<b>" << info.gasLimit << "</b>" << "</div>";
-			s << "<div>Beneficiary: <b>" << htmlEscaped(pretty(info.coinbaseAddress)) << " " << info.coinbaseAddress << "</b>" << "</div>";
-			s << "<div>Seed hash: <b>" << info.seedHash() << "</b>" << "</div>";
-			s << "<div>Mix hash: <b>" << info.mixHash << "</b>" << "</div>";
-			s << "<div>Nonce: <b>" << info.nonce << "</b>" << "</div>";
-			s << "<div>Hash w/o nonce: <b>" << info.headerHash(WithoutNonce) << "</b>" << "</div>";
-			s << "<div>Difficulty: <b>" << info.difficulty << "</b>" << "</div>";
-			if (info.number)
+			try
 			{
-				auto e = EthashAux::eval(info);
-				s << "<div>Proof-of-Work: <b>" << e.value << " &lt;= " << (h256)u256((bigint(1) << 256) / info.difficulty) << "</b> (mixhash: " << e.mixHash.abridged() << ")" << "</div>";
-				s << "<div>Parent: <b>" << info.parentHash << "</b>" << "</div>";
+				RLP r(info.extraData());
+				if (r[0].toInt<int>() == 0)
+					s << "<div>Sealing client: <b>" << htmlEscaped(r[1].toString()) << "</b>" << "</div>";
+			}
+			catch (...) {}
+			s << "<div>D/TD: <b>" << info.difficulty() << "</b>/<b>" << details.totalDifficulty << "</b> = 2^" << log2((double)info.difficulty()) << "/2^" << log2((double)details.totalDifficulty) << "</div>";
+			s << "&nbsp;&emsp;&nbsp;Children: <b>" << details.children.size() << "</b></div>";
+			s << "<div>Gas used/limit: <b>" << info.gasUsed() << "</b>/<b>" << info.gasLimit() << "</b>" << "</div>";
+			s << "<div>Beneficiary: <b>" << htmlEscaped(pretty(info.coinbaseAddress())) << " " << info.coinbaseAddress() << "</b>" << "</div>";
+			s << "<div>Seed hash: <b>" << info.seedHash() << "</b>" << "</div>";
+			s << "<div>Mix hash: <b>" << info.mixHash() << "</b>" << "</div>";
+			s << "<div>Nonce: <b>" << info.nonce() << "</b>" << "</div>";
+			s << "<div>Hash w/o nonce: <b>" << info.hashWithout() << "</b>" << "</div>";
+			s << "<div>Difficulty: <b>" << info.difficulty() << "</b>" << "</div>";
+			if (info.number())
+			{
+				auto e = EthashAux::eval(info.seedHash(), info.hashWithout(), info.nonce());
+				s << "<div>Proof-of-Work: <b>" << e.value << " &lt;= " << (h256)u256((bigint(1) << 256) / info.difficulty()) << "</b> (mixhash: " << e.mixHash.abridged() << ")" << "</div>";
+				s << "<div>Parent: <b>" << info.parentHash() << "</b>" << "</div>";
 			}
 			else
 			{
@@ -1674,34 +1783,36 @@ void Main::on_blocks_currentItemChanged()
 				s << "<div>Parent: <b><i>It was a virgin birth</i></b></div>";
 			}
 //			s << "<div>Bloom: <b>" << details.bloom << "</b>";
-			if (!!info.logBloom)
-				s << "<div>Log Bloom: " << info.logBloom << "</div>";
+			s << "<div>State root: " << ETH_HTML_SPAN(ETH_HTML_MONO) << info.stateRoot().hex() << "</span></div>";
+			s << "<div>Extra data: " << ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(info.extraData()) << "</span></div>";
+			if (!!info.logBloom())
+				s << "<div>Log Bloom: " << info.logBloom() << "</div>";
 			else
 				s << "<div>Log Bloom: <b><i>Uneventful</i></b></div>";
-			s << "<div>Transactions: <b>" << block[1].itemCount() << "</b> @<b>" << info.transactionsRoot << "</b>" << "</div>";
-			s << "<div>Uncles: <b>" << block[2].itemCount() << "</b> @<b>" << info.sha3Uncles << "</b>" << "</div>";
+			s << "<div>Transactions: <b>" << block[1].itemCount() << "</b> @<b>" << info.transactionsRoot() << "</b>" << "</div>";
+			s << "<div>Uncles: <b>" << block[2].itemCount() << "</b> @<b>" << info.sha3Uncles() << "</b>" << "</div>";
 			for (auto u: block[2])
 			{
-				BlockInfo uncle = BlockInfo::fromHeader(u.data());
+				Ethash::BlockHeader uncle(u.data(), CheckNothing, h256(), HeaderData);
 				char const* line = "<div><span style=\"margin-left: 2em\">&nbsp;</span>";
 				s << line << "Hash: <b>" << uncle.hash() << "</b>" << "</div>";
-				s << line << "Parent: <b>" << uncle.parentHash << "</b>" << "</div>";
-				s << line << "Number: <b>" << uncle.number << "</b>" << "</div>";
-				s << line << "Coinbase: <b>" << htmlEscaped(pretty(uncle.coinbaseAddress)) << " " << uncle.coinbaseAddress << "</b>" << "</div>";
+				s << line << "Parent: <b>" << uncle.parentHash() << "</b>" << "</div>";
+				s << line << "Number: <b>" << uncle.number() << "</b>" << "</div>";
+				s << line << "Coinbase: <b>" << htmlEscaped(pretty(uncle.coinbaseAddress())) << " " << uncle.coinbaseAddress() << "</b>" << "</div>";
 				s << line << "Seed hash: <b>" << uncle.seedHash() << "</b>" << "</div>";
-				s << line << "Mix hash: <b>" << uncle.mixHash << "</b>" << "</div>";
-				s << line << "Nonce: <b>" << uncle.nonce << "</b>" << "</div>";
-				s << line << "Hash w/o nonce: <b>" << uncle.headerHash(WithoutNonce) << "</b>" << "</div>";
-				s << line << "Difficulty: <b>" << uncle.difficulty << "</b>" << "</div>";
-				auto e = EthashAux::eval(uncle);
-				s << line << "Proof-of-Work: <b>" << e.value << " &lt;= " << (h256)u256((bigint(1) << 256) / uncle.difficulty) << "</b> (mixhash: " << e.mixHash.abridged() << ")" << "</div>";
+				s << line << "Mix hash: <b>" << uncle.mixHash() << "</b>" << "</div>";
+				s << line << "Nonce: <b>" << uncle.nonce() << "</b>" << "</div>";
+				s << line << "Hash w/o nonce: <b>" << uncle.headerHash(WithoutProof) << "</b>" << "</div>";
+				s << line << "Difficulty: <b>" << uncle.difficulty() << "</b>" << "</div>";
+				auto e = EthashAux::eval(uncle.seedHash(), uncle.hashWithout(), uncle.nonce());
+				s << line << "Proof-of-Work: <b>" << e.value << " &lt;= " << (h256)u256((bigint(1) << 256) / uncle.difficulty()) << "</b> (mixhash: " << e.mixHash.abridged() << ")" << "</div>";
 			}
-			if (info.parentHash)
-				s << "<div>Pre: <b>" << BlockInfo(ethereum()->blockChain().block(info.parentHash)).stateRoot << "</b>" << "</div>";
+			if (info.parentHash())
+				s << "<div>Pre: <b>" << BlockInfo(ethereum()->blockChain().block(info.parentHash())).stateRoot() << "</b>" << "</div>";
 			else
 				s << "<div>Pre: <b><i>Nothing is before Phil</i></b>" << "</div>";
 
-			s << "<div>Receipts: @<b>" << info.receiptsRoot << "</b>:" << "</div>";
+			s << "<div>Receipts: @<b>" << info.receiptsRoot() << "</b>:" << "</div>";
 			BlockReceipts receipts = ethereum()->blockChain().receipts(h);
 			unsigned ii = 0;
 			for (auto const& i: block[1])
@@ -1709,9 +1820,9 @@ void Main::on_blocks_currentItemChanged()
 				s << "<div>" << sha3(i.data()).abridged() << ": <b>" << receipts.receipts[ii].stateRoot() << "</b> [<b>" << receipts.receipts[ii].gasUsed() << "</b> used]" << "</div>";
 				++ii;
 			}
-			s << "<div>Post: <b>" << info.stateRoot << "</b>" << "</div>";
-			s << "<div>Dump: " Span(Mono) << toHex(block[0].data()) << "</span>" << "</div>";
-			s << "<div>Receipts-Hex: " Span(Mono) << toHex(receipts.rlp()) << "</span></div>";
+			s << "<div>Post: <b>" << info.stateRoot() << "</b>" << "</div>";
+			s << "<div>Dump: " ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(block[0].data()) << "</span>" << "</div>";
+			s << "<div>Receipts-Hex: " ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(receipts.rlp()) << "</span></div>";
 		}
 		else
 		{
@@ -1742,7 +1853,7 @@ void Main::on_blocks_currentItemChanged()
 				else
 					s << "<h4>Data</h4>" << dev::memDump(tx.data(), 16, true);
 			}
-			s << "<div>Hex: " Span(Mono) << toHex(block[1][txi].data()) << "</span></div>";
+			s << "<div>Hex: " ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(block[1][txi].data()) << "</span></div>";
 			s << "<hr/>";
 			if (!!receipt.bloom())
 				s << "<div>Log Bloom: " << receipt.bloom() << "</div>";
@@ -1752,7 +1863,7 @@ void Main::on_blocks_currentItemChanged()
 			s << "<div>End State: <b>" << receipt.stateRoot().abridged() << "</b></div>";
 			auto r = receipt.rlp();
 			s << "<div>Receipt: " << toString(RLP(r)) << "</div>";
-			s << "<div>Receipt-Hex: " Span(Mono) << toHex(receipt.rlp()) << "</span></div>";
+			s << "<div>Receipt-Hex: " ETH_HTML_SPAN(ETH_HTML_MONO) << toHex(receipt.rlp()) << "</span></div>";
 			s << "<h4>Diff</h4>" << renderDiff(ethereum()->diff(txi, h));
 			ui->debugCurrent->setEnabled(true);
 			ui->debugDumpState->setEnabled(true);
@@ -1822,7 +1933,7 @@ void Main::on_accounts_currentItemChanged()
 			for (auto const& i: storage)
 				s << "@" << showbase << hex << prettyU256(i.first) << "&nbsp;&nbsp;&nbsp;&nbsp;" << showbase << hex << prettyU256(i.second) << "<br/>";
 			s << "<h4>Body Code (" << sha3(ethereum()->codeAt(address)).abridged() << ")</h4>" << disassemble(ethereum()->codeAt(address));
-			s << Div(Mono) << toHex(ethereum()->codeAt(address)) << "</div>";
+			s << ETH_HTML_DIV(ETH_HTML_MONO) << toHex(ethereum()->codeAt(address)) << "</div>";
 			ui->accountInfo->appendHtml(QString::fromStdString(s.str()));
 		}
 		catch (dev::InvalidTrie)
@@ -1953,14 +2064,14 @@ void Main::on_net_triggered()
 	{
 		web3()->setIdealPeerCount(ui->idealPeers->value());
 		web3()->setNetworkPreferences(netPrefs(), ui->dropPeers->isChecked());
-		ethereum()->setNetworkId(m_privateChain.size() ? sha3(m_privateChain.toStdString()) : h256());
+		ethereum()->setNetworkId((h256)(u256)(int)c_network);
 		web3()->startNetwork();
-		ui->downloadView->setDownloadMan(ethereum()->downloadMan());
+		ui->downloadView->setEthereum(ethereum());
 		ui->enode->setText(QString::fromStdString(web3()->enode()));
 	}
 	else
 	{
-		ui->downloadView->setDownloadMan(nullptr);
+		ui->downloadView->setEthereum(nullptr);
 		writeSettings();
 		web3()->stopNetwork();
 	}

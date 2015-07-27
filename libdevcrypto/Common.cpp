@@ -22,6 +22,7 @@
 
 #include "Common.h"
 #include <random>
+#include <cstdint>
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -29,8 +30,9 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
+#include <libdevcore/RLP.h>
 #if ETH_HAVE_SECP256K1
-#include <secp256k1/secp256k1.h>
+#include <secp256k1/include/secp256k1.h>
 #endif
 #include "AES.h"
 #include "CryptoPP.h"
@@ -42,11 +44,12 @@ using namespace dev::crypto;
 #ifdef ETH_HAVE_SECP256K1
 struct Secp256k1Context
 {
-	Secp256k1Context() { secp256k1_start(); }
-	~Secp256k1Context() { secp256k1_stop(); }
+	Secp256k1Context() { ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); }
+	~Secp256k1Context() { secp256k1_context_destroy(ctx); }
+	secp256k1_context_t* ctx;
+	operator secp256k1_context_t const*() const { return ctx; }
 };
 static Secp256k1Context s_secp256k1;
-void dev::crypto::secp256k1Init() { (void)s_secp256k1; }
 #endif
 
 static Secp256k1PP s_secp256k1pp;
@@ -62,6 +65,11 @@ bool dev::SignatureStruct::isValid() const noexcept
 	return true;
 }
 
+Public SignatureStruct::recover(h256 const& _hash) const
+{
+	return dev::recover((Signature)*this, _hash);
+}
+
 Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
@@ -69,7 +77,7 @@ Public dev::toPublic(Secret const& _secret)
 #ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
-	if (!secp256k1_ecdsa_pubkey_create(o.data(), &pubkeylen, _secret.data(), false))
+	if (!secp256k1_ec_pubkey_create(s_secp256k1, o.data(), &pubkeylen, _secret.data(), false))
 		return Public();
 	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
 #else
@@ -89,6 +97,11 @@ Address dev::toAddress(Secret const& _secret)
 	Public p;
 	s_secp256k1pp.toPublic(_secret, p);
 	return toAddress(p);
+}
+
+Address dev::toAddress(Address const& _from, u256 const& _nonce)
+{
+	return right160(sha3(rlpList(_from, _nonce)));
 }
 
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
@@ -182,19 +195,48 @@ bytes dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _ci
 	}
 }
 
+static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
+
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
-	return s_secp256k1pp.recover(_sig, _message.ref());
+	Public ret;
+#ifdef ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	if (!secp256k1_ecdsa_recover_compact(s_secp256k1, _message.data(), _sig.data(), o.data(), &pubkeylen, false, _sig[64]))
+		return Public();
+	ret = FixedHash<64>(o.data() + 1, Public::ConstructFromPointer);
+#else
+	ret = s_secp256k1pp.recover(_sig, _message.ref());
+#endif
+	if (ret == c_zeroKey)
+		return Public();
+	return ret;
 }
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
+#ifdef ETH_HAVE_SECP256K1
+	Signature s;
+	int v;
+	if (!secp256k1_ecdsa_sign_compact(s_secp256k1, _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
+		return Signature();
+	s[64] = v;
+	return s;
+#else
 	return s_secp256k1pp.sign(_k, _hash);
+#endif
 }
 
 bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 {
+	if (!_p)
+		return false;
+#ifdef ETH_HAVE_SECP256K1
+	return _p == recover(_s, _hash);
+#else
 	return s_secp256k1pp.verify(_p, _s, _hash.ref(), true);
+#endif
 }
 
 bytes dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
@@ -234,16 +276,9 @@ bytes dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uin
 
 KeyPair KeyPair::create()
 {
-	static boost::thread_specific_ptr<mt19937_64> s_eng;
-	static unsigned s_id = 0;
-	if (!s_eng.get())
-		s_eng.reset(new mt19937_64(time(0) + chrono::high_resolution_clock::now().time_since_epoch().count() + ++s_id));
-
-	uniform_int_distribution<uint16_t> d(0, 255);
-
 	for (int i = 0; i < 100; ++i)
 	{
-		KeyPair ret(FixedHash<32>::random(*s_eng.get()));
+		KeyPair ret(FixedHash<32>::random());
 		if (ret.address())
 			return ret;
 	}
@@ -325,7 +360,7 @@ void Nonce::initialiseIfNeeded()
 		std::mt19937_64 s_eng(time(0) + chrono::high_resolution_clock::now().time_since_epoch().count());
 		std::uniform_int_distribution<uint16_t> d(0, 255);
 		for (unsigned i = 0; i < 32; ++i)
-			m_value[i] = byte(d(s_eng));
+			m_value[i] = (uint8_t)d(s_eng);
 	}
 	if (!m_value)
 		BOOST_THROW_EXCEPTION(InvalidState());

@@ -54,6 +54,9 @@ struct SignatureStruct
 	/// @returns true if r,s,v values are valid, otherwise false
 	bool isValid() const noexcept;
 
+	/// @returns the public part of the key that signed @a _hash to give this sig.
+	Public recover(h256 const& _hash) const;
+
 	h256 r;
 	h256 s;
 	byte v = 0;
@@ -84,6 +87,9 @@ Address toAddress(Public const& _public);
 /// Convert a secret key into address of public key equivalent.
 /// @returns 0 if it's not a valid secret key.
 Address toAddress(Secret const& _secret);
+
+// Convert transaction from and nonce to address.
+Address toAddress(Address const& _from, u256 const& _nonce);
 
 /// Encrypts plain text using Public key.
 void encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
@@ -176,8 +182,6 @@ private:
 namespace crypto
 {
 struct InvalidState: public dev::Exception {};
-
-void secp256k1Init();
 
 /// Key derivation
 h256 kdf(Secret const& _priv, h256 const& _hash);

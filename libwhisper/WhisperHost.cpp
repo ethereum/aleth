@@ -20,21 +20,24 @@
  */
 
 #include "WhisperHost.h"
-
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
 #include <libp2p/All.h>
+#include "WhisperDB.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
 
-WhisperHost::WhisperHost(): Worker("shh")
+WhisperHost::WhisperHost(bool _storeMessagesInDB): Worker("shh"), m_storeMessagesInDB(_storeMessagesInDB)
 {
+	loadMessagesFromBD();
 }
 
 WhisperHost::~WhisperHost()
 {
+	saveMessagesToBD();
 }
 
 void WhisperHost::streamMessage(h256 _m, RLPStream& _s) const
@@ -51,9 +54,12 @@ void WhisperHost::streamMessage(h256 _m, RLPStream& _s) const
 
 void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 {
+	// this function processes both outgoing messages originated both by local host (_p == null)
+	// and incoming messages from remote peers (_p != null)
+
 	cnote << this << ": inject: " << _m.expiry() << _m.ttl() << _m.topic() << toHex(_m.data());
 
-	if (_m.expiry() <= (unsigned)time(0))
+	if (_m.isExpired())
 		return;
 
 	auto h = _m.sha3();
@@ -66,13 +72,32 @@ void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 		m_expiryQueue.insert(make_pair(_m.expiry(), h));
 	}
 
+	// rating of incoming message from remote host is assessed according to the following criteria:
+	// 1. installed watch match; 2. bloom filter match; 2. ttl; 3. proof of work
+
+	int rating = 0;
+
 	DEV_GUARDED(m_filterLock)
+		if (_m.matchesBloomFilter(m_bloom))
+		{
+			++rating;
+			for (auto const& f: m_filters)
+				if (f.second.filter.matches(_m))
+					for (auto& i: m_watches)
+						if (i.second.id == f.first) // match one of the watches
+						{
+							i.second.changes.push_back(h);
+							rating += 2;
+						}
+		}
+
+	if (_p) // incoming message from remote peer
 	{
-		for (auto const& f: m_filters)
-			if (f.second.filter.matches(_m))
-				for (auto& i: m_watches)
-					if (i.second.id == f.first)
-						i.second.changes.push_back(h);
+		rating *= 256;
+		unsigned ttlReward = (256 > _m.ttl() ? 256 - _m.ttl() : 0);
+		rating += ttlReward;
+		rating *= 256;
+		rating += _m.workProved();
 	}
 
 	// TODO p2p: capability-based rating
@@ -80,7 +105,7 @@ void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 	{
 		auto w = i.first->cap<WhisperPeer>().get();
 		if (w == _p)
-			w->addRating(1);
+			w->addRating(rating);
 		else
 			w->noteNewMessage(h, _m);
 	}
@@ -110,27 +135,6 @@ unsigned WhisperHost::installWatch(shh::Topics const& _t)
 	return ret;
 }
 
-h256s WhisperHost::watchMessages(unsigned _watchId)
-{
-	h256s ret;
-	auto wit = m_watches.find(_watchId);
-	if (wit == m_watches.end())
-		return ret;
-	TopicFilter f;
-	{
-		Guard l(m_filterLock);
-		auto fit = m_filters.find(wit->second.id);
-		if (fit == m_filters.end())
-			return ret;
-		f = fit->second.filter;
-	}
-	ReadGuard l(x_messages);
-	for (auto const& m: m_messages)
-		if (f.matches(m.second))
-			ret.push_back(m.first);
-	return ret;
-}
-
 void WhisperHost::uninstallWatch(unsigned _i)
 {
 	cwatshh << "XXX" << _i;
@@ -156,6 +160,45 @@ void WhisperHost::uninstallWatch(unsigned _i)
 	noteAdvertiseTopicsOfInterest();
 }
 
+h256s WhisperHost::watchMessages(unsigned _watchId)
+{
+	h256s ret;
+	auto wit = m_watches.find(_watchId);
+	if (wit == m_watches.end())
+		return ret;
+	TopicFilter f;
+	{
+		Guard l(m_filterLock);
+		auto fit = m_filters.find(wit->second.id);
+		if (fit == m_filters.end())
+			return ret;
+		f = fit->second.filter;
+	}
+	ReadGuard l(x_messages);
+	for (auto const& m: m_messages)
+		if (f.matches(m.second))
+			ret.push_back(m.first);
+	return ret;
+}
+
+h256s WhisperHost::checkWatch(unsigned _watchId)
+{
+	h256s ret;
+	cleanup();
+
+	dev::Guard l(m_filterLock);
+	try
+	{
+		ret = m_watches.at(_watchId).changes;
+		m_watches.at(_watchId).changes.clear();
+	}
+	catch (...)
+	{
+	}
+
+	return ret;
+}
+
 void WhisperHost::doWork()
 {
 	for (auto i: peerSessions())
@@ -177,4 +220,92 @@ void WhisperHost::noteAdvertiseTopicsOfInterest()
 {
 	for (auto i: peerSessions())
 		i.first->cap<WhisperPeer>().get()->noteAdvertiseTopicsOfInterest();
+}
+
+bool WhisperHost::isWatched(Envelope const& _e) const
+{
+	DEV_GUARDED(m_filterLock)
+		if (_e.matchesBloomFilter(m_bloom))
+			for (auto const& f: m_filters)
+				if (f.second.filter.matches(_e))
+					for (auto const& i: m_watches)
+						if (i.second.id == f.first)
+							return true;
+	return false;
+}
+
+void WhisperHost::saveMessagesToBD()
+{
+	if (!m_storeMessagesInDB)
+		return;
+
+	try
+	{
+		WhisperMessagesDB db;
+		ReadGuard g(x_messages);
+		unsigned now = (unsigned)time(0);
+		for (auto const& m: m_messages)
+			if (m.second.expiry() > now)
+				if (isWatched(m.second))
+					db.saveSingleMessage(m.first, m.second);
+	}
+	catch(FailedToOpenLevelDB const& ex)
+	{
+		cwarn << "Exception in WhisperHost::saveMessagesToBD() - failed to open DB:" << ex.what();
+	}
+	catch(Exception const& ex)
+	{
+		cwarn << "Exception in WhisperHost::saveMessagesToBD():" << ex.what();
+	}
+	catch(...)
+	{
+		cwarn << "Unknown Exception in WhisperHost::saveMessagesToBD()";
+	}
+}
+
+void WhisperHost::loadMessagesFromBD()
+{
+	if (!m_storeMessagesInDB)
+		return;
+
+	try
+	{
+		map<h256, Envelope> m;
+		WhisperMessagesDB db;
+		db.loadAllMessages(m);
+		WriteGuard g(x_messages);
+		m_messages.swap(m);
+		for (auto const& msg: m)
+			m_expiryQueue.insert(make_pair(msg.second.expiry(), msg.first));
+	}
+	catch(Exception const& ex)
+	{
+		cwarn << "Exception in WhisperHost::loadMessagesFromBD():" << ex.what();
+	}
+	catch(...)
+	{
+		cwarn << "Unknown Exception in WhisperHost::loadMessagesFromBD()";
+	}
+}
+
+void WhisperHost::exportFilters(RLPStream& o_dst) const
+{
+	DEV_GUARDED(m_filterLock)
+	{
+		o_dst.appendList(m_filters.size());
+
+		for (auto const& x: m_filters)
+		{
+			Topics const& topics = x.second.full;
+			unsigned const RawDataSize = topics.size() * h256::size;
+			unique_ptr<byte> p(new byte[RawDataSize]);
+			unsigned i = 0;
+
+			for (auto const& t: topics)
+				memcpy(p.get() + h256::size * i++, t.data(), h256::size);
+			
+			bytesConstRef ref(p.get(), RawDataSize);
+			o_dst.append(ref);
+		}		
+	}
 }

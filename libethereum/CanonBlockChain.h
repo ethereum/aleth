@@ -26,6 +26,7 @@
 #include <libdevcore/Exceptions.h>
 #include <libethcore/Common.h>
 #include <libethcore/BlockInfo.h>
+#include <libethcore/Ethash.h>
 #include <libdevcore/Guards.h>
 #include "BlockDetails.h"
 #include "Account.h"
@@ -45,30 +46,67 @@ std::unordered_map<Address, Account> const& genesisState();
  * @threadsafe
  * @todo Make not memory hog (should actually act as a cache and deallocate old entries).
  */
-class CanonBlockChain: public BlockChain
+template <class Sealer>
+class CanonBlockChain: public FullBlockChain<Sealer>
+{
+public:
+	CanonBlockChain(WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback()): CanonBlockChain<Sealer>(std::string(), _we, _pc) {}
+	CanonBlockChain(std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback()):
+		FullBlockChain<Sealer>(createGenesisBlock(), StateDefinition(), _path, _we, _pc) {}
+	~CanonBlockChain() {}
+
+	/// @returns the genesis block as its RLP-encoded byte array.
+	/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
+	static bytes createGenesisBlock()
+	{
+		RLPStream block(3);
+		block.appendList(Sealer::BlockHeader::Fields)
+				<< h256() << EmptyListSHA3 << h160() << EmptyTrie << EmptyTrie << EmptyTrie << LogBloom() << 1 << 0 << (u256(1) << 255) << 0 << (unsigned)0 << std::string();
+		bytes sealFields = typename Sealer::BlockHeader().sealFieldsRLP();
+		block.appendRaw(sealFields, Sealer::BlockHeader::SealFields);
+		block.appendRaw(RLPEmptyList);
+		block.appendRaw(RLPEmptyList);
+		return block.out();
+	}
+};
+
+template <>
+class CanonBlockChain<Ethash>: public FullBlockChain<Ethash>
 {
 public:
 	CanonBlockChain(WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback()): CanonBlockChain(std::string(), _we, _pc) {}
 	CanonBlockChain(std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
 	~CanonBlockChain() {}
 
+	/// Reopen everything.
+	virtual void reopen(WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback());
+
 	/// @returns the genesis block header.
-	static BlockInfo const& genesis();
+	static Ethash::BlockHeader const& genesis();
 
 	/// @returns the genesis block as its RLP-encoded byte array.
 	/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
 	static bytes createGenesisBlock();
 
-	/// Alter the value of the genesis block's nonce.
+	/// @returns the genesis block as its RLP-encoded byte array.
+	/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
+	static std::unordered_map<Address, Account> createGenesisState();
+
+	/// Alter all the genesis block's state by giving a JSON string with account details.
 	/// @warning Unless you're very careful, make sure you call this right at the start of the
 	/// program, before anything has had the chance to use this class at all.
-	static void setGenesisNonce(Nonce const& _n);
+	static void setGenesis(std::string const& _genesisInfoJSON);
+
+	/// Override the genesis block's extraData field.
+	static void forceGenesisExtraData(bytes const& _genesisExtraData);
 
 private:
 	/// Static genesis info and its lock.
 	static boost::shared_mutex x_genesis;
-	static std::unique_ptr<BlockInfo> s_genesis;
+	static std::unique_ptr<Ethash::BlockHeader> s_genesis;
 	static Nonce s_nonce;
+	static std::string s_genesisStateJSON;
+	static bytes s_genesisExtraData;
 };
 
 }

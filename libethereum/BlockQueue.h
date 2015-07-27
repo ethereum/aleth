@@ -76,11 +76,13 @@ public:
 	BlockQueue();
 	~BlockQueue();
 
+	void setChain(BlockChain const& _bc) { m_bc = &_bc; }
+
 	/// Import a block into the queue.
-	ImportResult import(bytesConstRef _block, BlockChain const& _bc, bool _isOurs = false);
+	ImportResult import(bytesConstRef _block, bool _isOurs = false);
 
 	/// Notes that time has moved on and some blocks that used to be "in the future" may no be valid.
-	void tick(BlockChain const& _bc);
+	void tick();
 
 	/// Grabs at most @a _max of the blocks that are ready, giving them in the correct order for insertion into the chain.
 	/// Don't forget to call doneDrain() once you're done importing.
@@ -111,8 +113,8 @@ public:
 	/// Get some infomration on the given block's status regarding us.
 	QueueStatus blockStatus(h256 const& _h) const;
 
-	template <class T> Handler onReady(T const& _t) { return m_onReady.add(_t); }
-	template <class T> Handler onRoomAvailable(T const& _t) { return m_onRoomAvailable.add(_t); }
+	template <class T> Handler<> onReady(T const& _t) { return m_onReady.add(_t); }
+	template <class T> Handler<> onRoomAvailable(T const& _t) { return m_onRoomAvailable.add(_t); }
 
 	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
 
@@ -138,6 +140,8 @@ private:
 	void updateBad_WITH_LOCK(h256 const& _bad);
 	void drainVerified_WITH_BOTH_LOCKS();
 
+	BlockChain const* m_bc;												///< The blockchain into which our imports go.
+
 	mutable boost::shared_mutex m_lock;									///< General lock for the sets, m_future and m_unknown.
 	h256Hash m_drainingSet;												///< All blocks being imported.
 	h256Hash m_readySet;												///< All blocks ready for chain import.
@@ -145,12 +149,12 @@ private:
 	std::unordered_multimap<h256, std::pair<h256, bytes>> m_unknown;	///< For blocks that have an unknown parent; we map their parent hash to the block stuff, and insert once the block appears.
 	h256Hash m_knownBad;												///< Set of blocks that we know will never be valid.
 	std::multimap<unsigned, std::pair<h256, bytes>> m_future;			///< Set of blocks that are not yet valid. Ordered by timestamp
-	Signal m_onReady;													///< Called when a subsequent call to import blocks will return a non-empty container. Be nice and exit fast.
-	Signal m_onRoomAvailable;											///< Called when space for new blocks becomes availabe after a drain. Be nice and exit fast.
+	Signal<> m_onReady;													///< Called when a subsequent call to import blocks will return a non-empty container. Be nice and exit fast.
+	Signal<> m_onRoomAvailable;											///< Called when space for new blocks becomes availabe after a drain. Be nice and exit fast.
 
 	mutable Mutex m_verification;										///< Mutex that allows writing to m_verified, m_verifying and m_unverified.
 	std::condition_variable m_moreToVerify;								///< Signaled when m_unverified has a new entry.
-	std::vector<VerifiedBlock> m_verified;								///< List of blocks, in correct order, verified and ready for chain-import.
+	std::deque<VerifiedBlock> m_verified;								///< List of blocks, in correct order, verified and ready for chain-import.
 	std::deque<VerifiedBlock> m_verifying;								///< List of blocks being verified; as long as the block component (bytes) is empty, it's not finished.
 	std::deque<UnverifiedBlock> m_unverified;							///< List of <block hash, parent hash, block data> in correct order, ready for verification.
 

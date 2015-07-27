@@ -82,9 +82,12 @@ public:
 	BigIntVariant internalValue() const { return m_internalValue; }
 	/// @returns a string representation of the big integer used. Invokable from QML.
 	Q_INVOKABLE QString value() const;
+	/// hex value.
+	Q_INVOKABLE QString hexValue() const { return QString::fromStdString(dev::toHex(dev::u256(value().toStdString()))); }
 	/// Set the value of the BigInteger used. Will use u256 type. Invokable from QML.
 	Q_INVOKABLE void setValue(QString const& _value) { m_internalValue = dev::jsToU256(_value.toStdString()); }
 	Q_INVOKABLE void setBigInt(QString const& _value) { m_internalValue = bigint(_value.toStdString()); }
+	void setBigInt(u256 const& _value) { m_internalValue = _value; }
 	/// Subtract by @a _value. Invokable from QML.
 	Q_INVOKABLE QBigInt* subtract(QBigInt* const& _value) const;
 	/// Add @a _value to the current big integer. Invokable from QML.

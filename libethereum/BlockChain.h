@@ -37,6 +37,7 @@
 #include "Transaction.h"
 #include "BlockQueue.h"
 #include "VerifiedBlock.h"
+#include "State.h"
 
 namespace std
 {
@@ -61,6 +62,7 @@ class State;
 struct AlreadyHaveBlock: virtual Exception {};
 struct UnknownParent: virtual Exception {};
 struct FutureTime: virtual Exception {};
+struct TransientError: virtual Exception {};
 
 struct BlockChainChat: public LogChannel { static const char* name(); static const int verbosity = 5; };
 struct BlockChainNote: public LogChannel { static const char* name(); static const int verbosity = 3; };
@@ -71,6 +73,7 @@ struct BlockChainDebug: public LogChannel { static const char* name(); static co
 std::unordered_map<Address, Account> const& genesisState();
 
 ldb::Slice toSlice(h256 const& _h, unsigned _sub = 0);
+ldb::Slice toSlice(uint64_t _n, unsigned _sub = 0);
 
 using BlocksHash = std::unordered_map<h256, bytes>;
 using TransactionHashes = h256s;
@@ -86,6 +89,13 @@ enum {
 };
 
 using ProgressCallback = std::function<void(unsigned, unsigned)>;
+using StateDefinition = std::unordered_map<Address, Account>;
+
+class VersionChecker
+{
+public:
+	VersionChecker(std::string const& _dbPath, h256 const& _genesisHash);
+};
 
 /**
  * @brief Implements the blockchain database. All data this gives is disk-backed.
@@ -94,11 +104,11 @@ using ProgressCallback = std::function<void(unsigned, unsigned)>;
 class BlockChain
 {
 public:
-	BlockChain(bytes const& _genesisBlock, std::string _path, WithExisting _we, ProgressCallback const& _p = ProgressCallback());
+	BlockChain(bytes const& _genesisBlock, StateDefinition const& _genesisState, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _p = ProgressCallback());
 	~BlockChain();
 
-	/// Attempt a database re-open.
-	void reopen(std::string const& _path, WithExisting _we = WithExisting::Trust) { close(); open(_path, _we); }
+	/// Reopen everything.
+	virtual void reopen(WithExisting _we = WithExisting::Trust, ProgressCallback const& _pc = ProgressCallback()) { close(); open(m_genesisBlock, m_genesisState, m_dbPath, _we, _pc); }
 
 	/// (Potentially) renders invalid existing bytesConstRef returned by lastBlock.
 	/// To be called from main loop every 100ms or so.
@@ -110,24 +120,27 @@ public:
 
 	/// Attempt to import the given block directly into the CanonBlockChain and sync with the state DB.
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
-	std::pair<ImportResult, ImportRoute> attemptImport(bytes const& _block, OverlayDB const& _stateDB, ImportRequirements::value _ir = ImportRequirements::Default) noexcept;
+	std::pair<ImportResult, ImportRoute> attemptImport(bytes const& _block, OverlayDB const& _stateDB, ImportRequirements::value _ir = ImportRequirements::Everything) noexcept;
 
 	/// Import block into disk-backed DB
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
-	ImportRoute import(bytes const& _block, OverlayDB const& _stateDB, ImportRequirements::value _ir = ImportRequirements::Default);
-	ImportRoute import(VerifiedBlockRef const& _block, OverlayDB const& _db, ImportRequirements::value _ir = ImportRequirements::Default);
+	ImportRoute import(bytes const& _block, OverlayDB const& _stateDB, ImportRequirements::value _ir = ImportRequirements::Everything);
+	ImportRoute import(VerifiedBlockRef const& _block, OverlayDB const& _db, ImportRequirements::value _ir = ImportRequirements::Everything);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).
 	bool isKnown(h256 const& _hash) const;
 
-	/// Get the familial details concerning a block (or the most recent mined if none given). Thread-safe.
-	BlockInfo info(h256 const& _hash) const { return BlockInfo(block(_hash), IgnoreNonce, _hash); }
+	/// Get the partial-header of a block (or the most recent mined if none given). Thread-safe.
+	BlockInfo info(h256 const& _hash) const { return BlockInfo(headerData(_hash), CheckNothing, _hash, HeaderData); }
 	BlockInfo info() const { return info(currentHash()); }
 
 	/// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.
 	bytes block(h256 const& _hash) const;
 	bytes block() const { return block(currentHash()); }
-	bytes oldBlock(h256 const& _hash) const;
+
+	/// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.
+	bytes headerData(h256 const& _hash) const;
+	bytes headerData() const { return headerData(currentHash()); }
 
 	/// Get the familial details concerning a block (or the most recent mined if none given). Thread-safe.
 	BlockDetails details(h256 const& _hash) const { return queryExtras<BlockDetails, ExtraDetails>(_hash, m_details, x_details, NullBlockDetails); }
@@ -142,6 +155,12 @@ public:
 	BlockReceipts receipts(h256 const& _hash) const { return queryExtras<BlockReceipts, ExtraReceipts>(_hash, m_receipts, x_receipts, NullBlockReceipts); }
 	BlockReceipts receipts() const { return receipts(currentHash()); }
 
+	/// Get the transaction by block hash and index;
+	TransactionReceipt transactionReceipt(h256 const& _blockHash, unsigned _i) const { return receipts(_blockHash).receipts[_i]; }
+
+	/// Get the transaction receipt by transaction hash. Thread-safe.
+	TransactionReceipt transactionReceipt(h256 const& _transactionHash) const { TransactionAddress ta = queryExtras<TransactionAddress, ExtraTransactionAddress>(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return bytesConstRef(); return transactionReceipt(ta.blockHash, ta.index); }
+
 	/// Get a list of transaction hashes for a given block. Thread-safe.
 	TransactionHashes transactionHashes(h256 const& _hash) const { auto b = block(_hash); RLP rlp(b); h256s ret; for (auto t: rlp[1]) ret.push_back(sha3(t.data())); return ret; }
 	TransactionHashes transactionHashes() const { return transactionHashes(currentHash()); }
@@ -151,7 +170,7 @@ public:
 	UncleHashes uncleHashes() const { return uncleHashes(currentHash()); }
 	
 	/// Get the hash for a given block's number.
-	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, ExtraBlockHash>(h256(_i), m_blockHashes, x_blockHashes, NullBlockHash).value; }
+	h256 numberHash(unsigned _i) const { if (!_i) return genesisHash(); return queryExtras<BlockHash, uint64_t, ExtraBlockHash>(_i, m_blockHashes, x_blockHashes, NullBlockHash).value; }
 
 	/// Get the last N hashes for a given block. (N is determined by the LastHashes type.)
 	LastHashes lastHashes() const { return lastHashes(number()); }
@@ -177,6 +196,9 @@ public:
 	LogBloom blockBloom(unsigned _number) const { return blocksBlooms(chunkId(0, _number / c_bloomIndexSize)).blooms[_number % c_bloomIndexSize]; }
 	std::vector<unsigned> withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest) const;
 	std::vector<unsigned> withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest, unsigned _topLevel, unsigned _index) const;
+
+	/// Returns true if transaction is known. Thread-safe
+	bool isKnownTransaction(h256 const& _transactionHash) const { TransactionAddress ta = queryExtras<TransactionAddress, ExtraTransactionAddress>(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); return !!ta; }
 
 	/// Get a transaction from its hash. Thread-safe.
 	bytes transaction(h256 const& _transactionHash) const { TransactionAddress ta = queryExtras<TransactionAddress, ExtraTransactionAddress>(_transactionHash, m_transactionAddresses, x_transactionAddresses, NullTransactionAddress); if (!ta) return bytes(); return transaction(ta.blockHash, ta.index); }
@@ -208,6 +230,12 @@ public:
 	/// Run through database and verify all blocks by reevaluating.
 	/// Will call _progress with the progress in this operation first param done, second total.
 	void rebuild(std::string const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>(), bool _prepPoW = false);
+
+	/// Alter the head of the chain to some prior block along it.
+	void rewind(unsigned _newHead);
+
+	/// Rescue the database.
+	void rescue(OverlayDB& _db);
 
 	/** @returns a tuple of:
 	 * - an vector of hashes of all blocks between @a _from and @a _to, all blocks are ordered first by a number of
@@ -252,19 +280,26 @@ public:
 	/// Deallocate unused data.
 	void garbageCollect(bool _force = false);
 
-	/// Verify block and prepare it for enactment
-	static VerifiedBlockRef verifyBlock(bytes const& _block, std::function<void(Exception&)> const& _onBad = std::function<void(Exception&)>(), ImportRequirements::value _ir = ImportRequirements::Default);
-
 	/// Change the function that is called with a bad block.
 	template <class T> void setOnBad(T const& _t) { m_onBad = _t; }
 
-private:
+	/// Get a pre-made genesis State object.
+	State genesisState(OverlayDB const& _db);
+
+	/// Verify block and prepare it for enactment
+	virtual VerifiedBlockRef verifyBlock(bytesConstRef _block, std::function<void(Exception&)> const& _onBad, ImportRequirements::value _ir) const = 0;
+
+protected:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
-	void open(std::string const& _path, WithExisting _we = WithExisting::Trust);
+	/// Initialise everything and open the database.
+	void open(bytes const& _genesisBlock, std::unordered_map<Address, Account> const& _genesisState, std::string const& _path, WithExisting _we, ProgressCallback const& _p);
+	/// Open the database.
+	unsigned openDatabase(std::string const& _path, WithExisting _we = WithExisting::Trust);
+	/// Finalise everything and close the database.
 	void close();
 
-	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
+	template<class T, class K, unsigned N> T queryExtras(K const& _h, std::unordered_map<K, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
 	{
 		{
 			ReadGuard l(_x);
@@ -276,16 +311,18 @@ private:
 		std::string s;
 		(_extrasDB ? _extrasDB : m_extrasDB)->Get(m_readOptions, toSlice(_h, N), &s);
 		if (s.empty())
-		{
-//			cout << "Not found in DB: " << _h << endl;
 			return _n;
-		}
 
 		noteUsed(_h, N);
 
 		WriteGuard l(_x);
 		auto ret = _m.insert(std::make_pair(_h, T(RLP(s))));
 		return ret.first->second;
+	}
+
+	template<class T, unsigned N> T queryExtras(h256 const& _h, std::unordered_map<h256, T>& _m, boost::shared_mutex& _x, T const& _n, ldb::DB* _extrasDB = nullptr) const
+	{
+		return queryExtras<T, h256, N>(_h, _m, _x, _n, _extrasDB);
 	}
 
 	void checkConsistency();
@@ -311,6 +348,7 @@ private:
 	mutable std::deque<std::unordered_set<CacheID>> m_cacheUsage;
 	mutable std::unordered_set<CacheID> m_inUse;
 	void noteUsed(h256 const& _h, unsigned _extra = (unsigned)-1) const;
+	void noteUsed(uint64_t const& _h, unsigned _extra = (unsigned)-1) const { (void)_h; (void)_extra; } // don't note non-hash types
 	std::chrono::system_clock::time_point m_lastCollection;
 
 	void noteCanonChanged() const { Guard l(x_lastLastHashes); m_lastLastHashes.clear(); }
@@ -333,13 +371,117 @@ private:
 	/// Genesis block info.
 	h256 m_genesisHash;
 	bytes m_genesisBlock;
+	std::unordered_map<Address, Account> m_genesisState;
 
 	ldb::ReadOptions m_readOptions;
 	ldb::WriteOptions m_writeOptions;
 
 	std::function<void(Exception&)> m_onBad;									///< Called if we have a block that doesn't verify.
 
+	std::string m_dbPath;
+
 	friend std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);
+};
+
+template <class Sealer>
+class FullBlockChain: public BlockChain
+{
+public:
+	using BlockHeader = typename Sealer::BlockHeader;
+
+	FullBlockChain(bytes const& _genesisBlock, StateDefinition const& _genesisState, std::string const& _path, WithExisting _we = WithExisting::Trust, ProgressCallback const& _p = ProgressCallback()):
+		BlockChain(_genesisBlock, _genesisState, _path, _we, _p)
+	{}
+
+	/// Get the header of a block (or the most recent mined if none given). Thread-safe.
+	typename Sealer::BlockHeader header(h256 const& _hash) const { return typename Sealer::BlockHeader(headerData(_hash), IgnoreSeal, _hash, HeaderData); }
+	typename Sealer::BlockHeader header() const { return header(currentHash()); }
+
+	virtual VerifiedBlockRef verifyBlock(bytesConstRef _block, std::function<void(Exception&)> const& _onBad, ImportRequirements::value _ir) const override
+	{
+		VerifiedBlockRef res;
+		BlockHeader h;
+		try
+		{
+			h = BlockHeader(_block, (_ir & ImportRequirements::ValidSeal) ? Strictness::CheckEverything : Strictness::QuickNonce);
+			h.verifyInternals(_block);
+			if ((_ir & ImportRequirements::Parent) != 0)
+			{
+				bytes parentHeader(headerData(h.parentHash()));
+				if (parentHeader.empty())
+					BOOST_THROW_EXCEPTION(InvalidParentHash());
+				h.verifyParent(typename Sealer::BlockHeader(parentHeader, IgnoreSeal, h.parentHash(), HeaderData));
+			}
+			res.info = static_cast<BlockInfo&>(h);
+		}
+		catch (Exception& ex)
+		{
+			ex << errinfo_phase(1);
+			ex << errinfo_now(time(0));
+			ex << errinfo_block(_block.toBytes());
+			// only populate extraData if we actually managed to extract it. otherwise,
+			// we might be clobbering the existing one.
+			if (!h.extraData().empty())
+				ex << errinfo_extraData(h.extraData());
+			if (_onBad)
+				_onBad(ex);
+			throw;
+		}
+
+		RLP r(_block);
+		unsigned i = 0;
+		if (_ir && ImportRequirements::UncleBasic)
+			for (auto const& uncle: r[2])
+			{
+				BlockHeader h;
+				try
+				{
+					h.populateFromHeader(RLP(uncle.data()), (_ir & ImportRequirements::UncleSeals) ? Strictness::CheckEverything : Strictness::IgnoreSeal);
+				}
+				catch (Exception& ex)
+				{
+					ex << errinfo_phase(1);
+					ex << errinfo_uncleIndex(i);
+					ex << errinfo_now(time(0));
+					ex << errinfo_block(_block.toBytes());
+					// only populate extraData if we actually managed to extract it. otherwise,
+					// we might be clobbering the existing one.
+					if (!h.extraData().empty())
+						ex << errinfo_extraData(h.extraData());
+					if (_onBad)
+						_onBad(ex);
+					throw;
+				}
+				++i;
+			}
+		i = 0;
+		if (_ir && ImportRequirements::TransactionBasic)
+			for (RLP const& tr: r[1])
+			{
+				bytesConstRef d = tr.data();
+				try
+				{
+					res.transactions.push_back(Transaction(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None));
+				}
+				catch (Exception& ex)
+				{
+					ex << errinfo_phase(1);
+					ex << errinfo_transactionIndex(i);
+					ex << errinfo_transaction(d.toBytes());
+					ex << errinfo_block(_block.toBytes());
+					// only populate extraData if we actually managed to extract it. otherwise,
+					// we might be clobbering the existing one.
+					if (!h.extraData().empty())
+						ex << errinfo_extraData(h.extraData());
+					if (_onBad)
+						_onBad(ex);
+					throw;
+				}
+				++i;
+			}
+		res.block = bytesConstRef(_block);
+		return res;
+	}
 };
 
 std::ostream& operator<<(std::ostream& _out, BlockChain const& _bc);

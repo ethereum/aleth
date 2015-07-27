@@ -63,7 +63,7 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 		try
 		{
 			Listener::ExecTimeGuard guard{i.first};
-			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number), importer.m_transaction).output;
+			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number()), importer.m_transaction).output;
 		}
 		catch (Exception const& _e)
 		{
@@ -127,11 +127,6 @@ BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 {
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
-}
-
-BOOST_AUTO_TEST_CASE(stPreCompiledContractsTransaction)
-{
-	dev::test::executeTests("stPreCompiledContractsTransaction", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stLogTests)

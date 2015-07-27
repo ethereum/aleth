@@ -150,7 +150,7 @@ void Transact::updateFee()
 			ok = true;
 			break;
 		}
-	ui->send->setEnabled(ok);
+//	ui->send->setEnabled(ok);
 	QPalette p = ui->total->palette();
 	p.setColor(QPalette::WindowText, QColor(ok ? 0x00 : 0x80, 0x00, 0x00));
 	ui->total->setPalette(p);
@@ -319,7 +319,7 @@ void Transact::rejigData()
 
 	auto bail = [&](QString he) {
 		m_allGood = false;
-		ui->send->setEnabled(false);
+//		ui->send->setEnabled(false);
 		ui->code->setHtml(he + htmlInfo);
 	};
 
@@ -346,7 +346,7 @@ void Transact::rejigData()
 		htmlInfo = "<h4>Dump</h4>" + QString::fromStdString(dev::memDump(m_data, 8, true));
 	}
 
-	htmlInfo += "<h4>Hex</h4>" + QString(Div(Mono)) + QString::fromStdString(toHex(m_data)) + "</div>";
+	htmlInfo += "<h4>Hex</h4>" + QString(ETH_HTML_DIV(ETH_HTML_MONO)) + QString::fromStdString(toHex(m_data)) + "</div>";
 
 	// Determine the minimum amount of gas we need to play...
 	qint64 baseGas = (qint64)Transaction::gasRequired(m_data, 0);
@@ -402,7 +402,7 @@ void Transact::rejigData()
 	updateFee();
 
 	ui->code->setHtml(htmlInfo);
-	ui->send->setEnabled(m_allGood);
+//	ui->send->setEnabled(m_allGood);
 }
 
 Secret Transact::findSecret(u256 _totalReq) const

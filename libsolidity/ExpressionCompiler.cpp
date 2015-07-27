@@ -48,12 +48,23 @@ void ExpressionCompiler::appendStateVariableInitialization(VariableDeclaration c
 {
 	if (!_varDecl.getValue())
 		return;
-	solAssert(!!_varDecl.getValue()->getType(), "Type information not available.");
+	TypePointer type = _varDecl.getValue()->getType();
+	solAssert(!!type, "Type information not available.");
 	CompilerContext::LocationSetter locationSetter(m_context, _varDecl);
 	_varDecl.getValue()->accept(*this);
-	utils().convertType(*_varDecl.getValue()->getType(), *_varDecl.getType(), true);
 
-	StorageItem(m_context, _varDecl).storeValue(*_varDecl.getType(), _varDecl.getLocation(), true);
+	if (_varDecl.getType()->dataStoredIn(DataLocation::Storage))
+	{
+		// reference type, only convert value to mobile type and do final conversion in storeValue.
+		utils().convertType(*type, *type->mobileType());
+		type = type->mobileType();
+	}
+	else
+	{
+		utils().convertType(*type, *_varDecl.getType());
+		type = _varDecl.getType();
+	}
+	StorageItem(m_context, _varDecl).storeValue(*type, _varDecl.getLocation(), true);
 }
 
 void ExpressionCompiler::appendStateVariableAccessor(VariableDeclaration const& _varDecl)
@@ -155,10 +166,13 @@ bool ExpressionCompiler::visit(Assignment const& _assignment)
 	TypePointer type = _assignment.getRightHandSide().getType();
 	if (!_assignment.getType()->dataStoredIn(DataLocation::Storage))
 	{
-		//@todo we should delay conversion here if RHS is not in memory, LHS is a MemoryItem
-		// and not dynamically-sized.
 		utils().convertType(*type, *_assignment.getType());
 		type = _assignment.getType();
+	}
+	else
+	{
+		utils().convertType(*type, *type->mobileType());
+		type = type->mobileType();
 	}
 
 	_assignment.getLeftHandSide().accept(*this);
@@ -315,38 +329,66 @@ bool ExpressionCompiler::visit(FunctionCall const& _functionCall)
 	using Location = FunctionType::Location;
 	if (_functionCall.isTypeConversion())
 	{
-		//@todo struct construction
 		solAssert(_functionCall.getArguments().size() == 1, "");
 		solAssert(_functionCall.getNames().empty(), "");
 		Expression const& firstArgument = *_functionCall.getArguments().front();
 		firstArgument.accept(*this);
 		utils().convertType(*firstArgument.getType(), *_functionCall.getType());
+		return false;
+	}
+
+	FunctionTypePointer functionType;
+	if (_functionCall.isStructConstructorCall())
+	{
+		auto const& type = dynamic_cast<TypeType const&>(*_functionCall.getExpression().getType());
+		auto const& structType = dynamic_cast<StructType const&>(*type.getActualType());
+		functionType = structType.constructorType();
+	}
+	else
+		functionType = dynamic_pointer_cast<FunctionType const>(_functionCall.getExpression().getType());
+
+	TypePointers const& parameterTypes = functionType->getParameterTypes();
+	vector<ASTPointer<Expression const>> const& callArguments = _functionCall.getArguments();
+	vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.getNames();
+	if (!functionType->takesArbitraryParameters())
+		solAssert(callArguments.size() == parameterTypes.size(), "");
+
+	vector<ASTPointer<Expression const>> arguments;
+	if (callArgumentNames.empty())
+		// normal arguments
+		arguments = callArguments;
+	else
+		// named arguments
+		for (auto const& parameterName: functionType->getParameterNames())
+		{
+			bool found = false;
+			for (size_t j = 0; j < callArgumentNames.size() && !found; j++)
+				if ((found = (parameterName == *callArgumentNames[j])))
+					// we found the actual parameter position
+					arguments.push_back(callArguments[j]);
+			solAssert(found, "");
+		}
+
+	if (_functionCall.isStructConstructorCall())
+	{
+		TypeType const& type = dynamic_cast<TypeType const&>(*_functionCall.getExpression().getType());
+		auto const& structType = dynamic_cast<StructType const&>(*type.getActualType());
+
+		m_context << u256(max(32u, structType.getCalldataEncodedSize(true)));
+		utils().allocateMemory();
+		m_context << eth::Instruction::DUP1;
+
+		for (unsigned i = 0; i < arguments.size(); ++i)
+		{
+			arguments[i]->accept(*this);
+			utils().convertType(*arguments[i]->getType(), *functionType->getParameterTypes()[i]);
+			utils().storeInMemoryDynamic(*functionType->getParameterTypes()[i]);
+		}
+		m_context << eth::Instruction::POP;
 	}
 	else
 	{
-		FunctionType const& function = dynamic_cast<FunctionType const&>(*_functionCall.getExpression().getType());
-		TypePointers const& parameterTypes = function.getParameterTypes();
-		vector<ASTPointer<Expression const>> const& callArguments = _functionCall.getArguments();
-		vector<ASTPointer<ASTString>> const& callArgumentNames = _functionCall.getNames();
-		if (!function.takesArbitraryParameters())
-			solAssert(callArguments.size() == parameterTypes.size(), "");
-
-		vector<ASTPointer<Expression const>> arguments;
-		if (callArgumentNames.empty())
-			// normal arguments
-			arguments = callArguments;
-		else
-			// named arguments
-			for (auto const& parameterName: function.getParameterNames())
-			{
-				bool found = false;
-				for (size_t j = 0; j < callArgumentNames.size() && !found; j++)
-					if ((found = (parameterName == *callArgumentNames[j])))
-						// we found the actual parameter position
-						arguments.push_back(callArguments[j]);
-				solAssert(found, "");
-			}
-
+		FunctionType const& function = *functionType;
 		switch (function.getLocation())
 		{
 		case Location::Internal:
@@ -683,7 +725,6 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		{
 		case DataLocation::Storage:
 		{
-			m_context << eth::Instruction::POP; // structs always align to new slot
 			pair<u256, unsigned> const& offsets = type.getStorageOffsetsOfMember(member);
 			m_context << offsets.first << eth::Instruction::ADD << u256(offsets.second);
 			setLValueToStorageItem(_memberAccess);
@@ -691,7 +732,8 @@ void ExpressionCompiler::endVisit(MemberAccess const& _memberAccess)
 		}
 		case DataLocation::Memory:
 		{
-			solAssert(false, "Member access for memory structs not yet implemented.");
+			m_context << type.memoryOffsetOfMember(member) << eth::Instruction::ADD;
+			setLValue<MemoryItem>(_memberAccess, *_memberAccess.getType());
 			break;
 		}
 		default:
@@ -760,8 +802,6 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	Type const& baseType = *_indexAccess.getBaseExpression().getType();
 	if (baseType.getCategory() == Type::Category::Mapping)
 	{
-		// storage byte offset is ignored for mappings, it should be zero.
-		m_context << eth::Instruction::POP;
 		// stack: storage_base_ref
 		Type const& keyType = *dynamic_cast<MappingType const&>(baseType).getKeyType();
 		m_context << u256(0); // memory position
@@ -779,10 +819,6 @@ bool ExpressionCompiler::visit(IndexAccess const& _indexAccess)
 	{
 		ArrayType const& arrayType = dynamic_cast<ArrayType const&>(baseType);
 		solAssert(_indexAccess.getIndexExpression(), "Index expression expected.");
-
-		// remove storage byte offset
-		if (arrayType.location() == DataLocation::Storage)
-			m_context << eth::Instruction::POP;
 
 		_indexAccess.getIndexExpression()->accept(*this);
 		// stack layout: <base_ref> [<length>] <index>
@@ -871,13 +907,15 @@ void ExpressionCompiler::endVisit(Identifier const& _identifier)
 void ExpressionCompiler::endVisit(Literal const& _literal)
 {
 	CompilerContext::LocationSetter locationSetter(m_context, _literal);
-	switch (_literal.getType()->getCategory())
+	TypePointer type = _literal.getType();
+	switch (type->getCategory())
 	{
 	case Type::Category::IntegerConstant:
 	case Type::Category::Bool:
-	case Type::Category::FixedBytes:
-		m_context << _literal.getType()->literalValue(&_literal);
+		m_context << type->literalValue(&_literal);
 		break;
+	case Type::Category::StringLiteral:
+		break; // will be done during conversion
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Only integer, boolean and string literals implemented for now."));
 	}
@@ -908,24 +946,27 @@ void ExpressionCompiler::appendCompareOperatorCode(Token::Value _operator, Type 
 	}
 	else
 	{
-		IntegerType const& type = dynamic_cast<IntegerType const&>(_type);
-		bool const c_isSigned = type.isSigned();
+		bool isSigned = false;
+		if (auto type = dynamic_cast<IntegerType const*>(&_type))
+			isSigned = type->isSigned();
 
 		switch (_operator)
 		{
 		case Token::GreaterThanOrEqual:
-			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT)
-					  << eth::Instruction::ISZERO;
+			m_context <<
+				(isSigned ? eth::Instruction::SLT : eth::Instruction::LT) <<
+				eth::Instruction::ISZERO;
 			break;
 		case Token::LessThanOrEqual:
-			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT)
-					  << eth::Instruction::ISZERO;
+			m_context <<
+				(isSigned ? eth::Instruction::SGT : eth::Instruction::GT) <<
+				eth::Instruction::ISZERO;
 			break;
 		case Token::GreaterThan:
-			m_context << (c_isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
+			m_context << (isSigned ? eth::Instruction::SGT : eth::Instruction::GT);
 			break;
 		case Token::LessThan:
-			m_context << (c_isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
+			m_context << (isSigned ? eth::Instruction::SLT : eth::Instruction::LT);
 			break;
 		default:
 			BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown comparison operator."));

@@ -30,11 +30,8 @@
 #include <libsolidity/AST.h>
 
 using namespace std;
-
-namespace dev
-{
-namespace solidity
-{
+using namespace dev;
+using namespace dev::solidity;
 
 void StorageOffsets::computeOffsets(TypePointers const& _types)
 {
@@ -213,10 +210,11 @@ TypePointer Type::forLiteral(Literal const& _literal)
 	case Token::FalseLiteral:
 		return make_shared<BoolType>();
 	case Token::Number:
+		if (!IntegerConstantType::isValidLiteral(_literal))
+			return TypePointer();
 		return make_shared<IntegerConstantType>(_literal);
 	case Token::StringLiteral:
-		//@todo put larger strings into dynamic strings
-		return FixedBytesType::smallestTypeForLiteral(_literal.getValue());
+		return make_shared<StringLiteralType>(_literal);
 	default:
 		return shared_ptr<Type>();
 	}
@@ -325,6 +323,19 @@ const MemberList IntegerType::AddressMemberList({
 	{"send", make_shared<FunctionType>(strings{"uint"}, strings{"bool"}, FunctionType::Location::Send)}
 });
 
+bool IntegerConstantType::isValidLiteral(const Literal& _literal)
+{
+	try
+	{
+		bigint x(_literal.getValue());
+	}
+	catch (...)
+	{
+		return false;
+	}
+	return true;
+}
+
 IntegerConstantType::IntegerConstantType(Literal const& _literal)
 {
 	m_value = bigint(_literal.getValue());
@@ -381,7 +392,7 @@ bool IntegerConstantType::isImplicitlyConvertibleTo(Type const& _convertTo) cons
 	else if (_convertTo.getCategory() == Category::FixedBytes)
 	{
 		FixedBytesType const& fixedBytes = dynamic_cast<FixedBytesType const&>(_convertTo);
-		return fixedBytes.getNumBytes() * 8 >= getIntegerType()->getNumBits();
+		return fixedBytes.numBytes() * 8 >= getIntegerType()->getNumBits();
 	}
 	else
 		return false;
@@ -533,6 +544,33 @@ shared_ptr<IntegerType const> IntegerConstantType::getIntegerType() const
 		);
 }
 
+StringLiteralType::StringLiteralType(Literal const& _literal):
+	m_value(_literal.getValue())
+{
+}
+
+bool StringLiteralType::isImplicitlyConvertibleTo(Type const& _convertTo) const
+{
+	if (auto fixedBytes = dynamic_cast<FixedBytesType const*>(&_convertTo))
+		return size_t(fixedBytes->numBytes()) >= m_value.size();
+	else if (auto arrayType = dynamic_cast<ArrayType const*>(&_convertTo))
+		return arrayType->isByteArray();
+	else
+		return false;
+}
+
+bool StringLiteralType::operator==(const Type& _other) const
+{
+	if (_other.getCategory() != getCategory())
+		return false;
+	return m_value == dynamic_cast<StringLiteralType const&>(_other).m_value;
+}
+
+TypePointer StringLiteralType::mobileType() const
+{
+	return make_shared<ArrayType>(DataLocation::Memory, true);
+}
+
 shared_ptr<FixedBytesType> FixedBytesType::smallestTypeForLiteral(string const& _literal)
 {
 	if (_literal.length() <= 32)
@@ -591,15 +629,6 @@ bool FixedBytesType::operator==(Type const& _other) const
 		return false;
 	FixedBytesType const& other = dynamic_cast<FixedBytesType const&>(_other);
 	return other.m_bytes == m_bytes;
-}
-
-u256 FixedBytesType::literalValue(const Literal* _literal) const
-{
-	solAssert(_literal, "");
-	u256 value = 0;
-	for (char c: _literal->getValue())
-		value = (value << 8) | byte(c);
-	return value << ((32 - _literal->getValue().length()) * 8);
 }
 
 bool BoolType::isExplicitlyConvertibleTo(Type const& _convertTo) const
@@ -809,11 +838,9 @@ unsigned ArrayType::getSizeOnStack() const
 	if (m_location == DataLocation::CallData)
 		// offset [length] (stack top)
 		return 1 + (isDynamicallySized() ? 1 : 0);
-	else if (m_location == DataLocation::Storage)
-		// storage_key storage_offset
-		return 2;
 	else
-		// offset
+		// storage slot or memory offset
+		// byte offset inside storage value is omitted
 		return 1;
 }
 
@@ -999,17 +1026,18 @@ unsigned StructType::getCalldataEncodedSize(bool _padded) const
 	return size;
 }
 
+u256 StructType::memorySize() const
+{
+	u256 size;
+	for (auto const& member: getMembers())
+		if (member.type->canLiveOutsideStorage())
+			size += member.type->memoryHeadSize();
+	return size;
+}
+
 u256 StructType::getStorageSize() const
 {
 	return max<u256>(1, getMembers().getStorageSize());
-}
-
-bool StructType::canLiveOutsideStorage() const
-{
-	for (auto const& member: getMembers())
-		if (!member.type->canLiveOutsideStorage())
-			return false;
-	return true;
 }
 
 string StructType::toString(bool _short) const
@@ -1028,9 +1056,13 @@ MemberList const& StructType::getMembers() const
 		MemberList::MemberMap members;
 		for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
 		{
+			TypePointer type = variable->getType();
+			// Skip all mapping members if we are not in storage.
+			if (location() != DataLocation::Storage && !type->canLiveOutsideStorage())
+				continue;
 			members.push_back(MemberList::Member(
 				variable->getName(),
-				copyForLocationIfReference(variable->getType()),
+				copyForLocationIfReference(type),
 				variable.get())
 			);
 		}
@@ -1041,10 +1073,29 @@ MemberList const& StructType::getMembers() const
 
 TypePointer StructType::copyForLocation(DataLocation _location, bool _isPointer) const
 {
-	auto copy = make_shared<StructType>(m_struct);
-	copy->m_location = _location;
+	auto copy = make_shared<StructType>(m_struct, _location);
 	copy->m_isPointer = _isPointer;
 	return copy;
+}
+
+FunctionTypePointer StructType::constructorType() const
+{
+	TypePointers paramTypes;
+	strings paramNames;
+	for (auto const& member: getMembers())
+	{
+		if (!member.type->canLiveOutsideStorage())
+			continue;
+		paramNames.push_back(member.name);
+		paramTypes.push_back(copyForLocationIfReference(DataLocation::Memory, member.type));
+	}
+	return make_shared<FunctionType>(
+		paramTypes,
+		TypePointers{copyForLocation(DataLocation::Memory, false)},
+		paramNames,
+		strings(),
+		FunctionType::Location::Internal
+	);
 }
 
 pair<u256, unsigned> const& StructType::getStorageOffsetsOfMember(string const& _name) const
@@ -1052,6 +1103,27 @@ pair<u256, unsigned> const& StructType::getStorageOffsetsOfMember(string const& 
 	auto const* offsets = getMembers().getMemberStorageOffset(_name);
 	solAssert(offsets, "Storage offset of non-existing member requested.");
 	return *offsets;
+}
+
+u256 StructType::memoryOffsetOfMember(string const& _name) const
+{
+	u256 offset;
+	for (auto const& member: getMembers())
+		if (member.name == _name)
+			return offset;
+		else
+			offset += member.type->memoryHeadSize();
+	solAssert(false, "Member not found in struct.");
+	return 0;
+}
+
+set<string> StructType::membersMissingInMemory() const
+{
+	set<string> missing;
+	for (ASTPointer<VariableDeclaration> const& variable: m_struct.getMembers())
+		if (!variable->getType()->canLiveOutsideStorage())
+			missing.insert(variable->getName());
+	return missing;
 }
 
 TypePointer EnumType::unaryOperatorResult(Token::Value _operator) const
@@ -1662,7 +1734,4 @@ string MagicType::toString(bool) const
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Unknown kind of magic."));
 	}
-}
-
-}
 }

@@ -34,6 +34,7 @@ extern std::string const c_testExampleStateTest;
 extern std::string const c_testExampleTransactionTest;
 extern std::string const c_testExampleVMTest;
 extern std::string const c_testExampleBlockchainTest;
+extern std::string const c_testExampleRLPTest;
 
 //Main Test functinos
 void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug = false);
@@ -62,7 +63,8 @@ int main(int argc, char *argv[])
 		if (arg == "-t" && i + 1 < argc)
 		{
 			testSuite = argv[i + 1];
-			if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests" && testSuite != "VMTests")
+			if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
+				&& testSuite != "VMTests" && testSuite != "RLPTests")
 				testSuite = "";
 		}
 		else
@@ -138,6 +140,14 @@ int main(int argc, char *argv[])
 			}
 			else
 				fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);
+		}
+		else
+		if (testSuite == "RLPTests")
+		{
+			if (checktest)
+				return checkRandomTest(dev::test::doRlpTests, testmValue, debug);
+			else
+				fillRandomTest(dev::test::doRlpTests, (filltest) ? testFillString : c_testExampleRLPTest, filldebug);
 		}
 	}
 
@@ -220,6 +230,7 @@ void parseTestWithTypes(std::string& _test)
 	options.setWeight(dev::eth::Instruction::STOP, 10);		//default 50
 	options.setWeight(dev::eth::Instruction::SSTORE, 70);
 	options.setWeight(dev::eth::Instruction::CALL, 75);
+	options.setWeight(dev::eth::Instruction::CALLCODE, 55);
 	options.addAddress(dev::Address("0xffffffffffffffffffffffffffffffffffffffff"));
 	options.addAddress(dev::Address("0x1000000000000000000000000000000000000000"));
 	options.addAddress(dev::Address("0x095e7baea6a6c7c4c2dfeb977efac326af552d87"));
@@ -230,7 +241,7 @@ void parseTestWithTypes(std::string& _test)
 	options.addAddress(dev::Address("0x0000000000000000000000000000000000000002"));
 	options.addAddress(dev::Address("0x0000000000000000000000000000000000000003"));
 	options.addAddress(dev::Address("0x0000000000000000000000000000000000000004"));
-	options.smartCodeProbability = 35;
+	options.smartCodeProbability = 60;
 
 	std::vector<std::string> types = getTypes();
 	for (unsigned i = 0; i < types.size(); i++)
@@ -238,11 +249,22 @@ void parseTestWithTypes(std::string& _test)
 		std::size_t pos = _test.find(types.at(i));
 		while (pos != std::string::npos)
 		{
+			if (types.at(i) == "[RLP]")
+			{
+				std::string debug;
+				int randomDepth = 1 + dev::test::RandomCode::randomUniInt() % 10;
+				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
+				cnote << debug;
+			}
+			else
 			if (types.at(i) == "[CODE]")
 				_test.replace(pos, 6, "0x"+dev::test::RandomCode::generate(10, options));
 			else
 			if (types.at(i) == "[HEX]")
 				_test.replace(pos, 5, dev::test::RandomCode::randomUniIntHex());
+			else
+			if (types.at(i) == "[HEX32]")
+				_test.replace(pos, 7, dev::test::RandomCode::randomUniIntHex(std::numeric_limits<uint32_t>::max()));
 			else
 			if (types.at(i) == "[GASLIMIT]")
 				_test.replace(pos, 10, dev::test::RandomCode::randomUniIntHex(dev::u256("3000000000")));
@@ -275,7 +297,7 @@ void parseTestWithTypes(std::string& _test)
 
 std::vector<std::string> getTypes()
 {
-	return {"[CODE]", "[HEX]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]"};
+	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]"};
 }
 
 std::string const c_testExampleTransactionTest = R"(
@@ -304,7 +326,7 @@ std::string const c_testExampleStateTest = R"(
 		"currentCoinbase" : "[HASH20]",
 		"currentDifficulty" : "[HEX]",
 		"currentGasLimit" : "[GASLIMIT]",
-		"currentNumber" : "[HEX]",
+		"currentNumber" : "[HEX32]",
 		"currentTimestamp" : "[HEX]",
 		"previousHash" : "[HASH32]"
 		},
@@ -334,7 +356,7 @@ std::string const c_testExampleStateTest = R"(
 	"transaction" : {
 		"data" : "[CODE]",
 		"gasLimit" : "[HEX]",
-		"gasPrice" : "[V]",
+		"gasPrice" : "[HEX32]",
 		"nonce" : "0",
 		"secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
 		"to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -373,6 +395,14 @@ std::string const c_testExampleVMTest = R"(
 				"gas" : "[HEX]"
 		   }
 	   }
+}
+)";
+
+std::string const c_testExampleRLPTest = R"(
+{
+	"randomRLPTest" : {
+			"out" : "[RLP]"
+		}
 }
 )";
 

@@ -50,7 +50,9 @@ enum class Network
 	Frontier = 1,
 	Turbo = 2
 };
-extern const Network c_network;
+extern Network c_network;
+
+Network resetNetwork(Network _n);
 
 /// User-friendly string representation of the amount _b in wei.
 std::string formatBalance(bigint const& _b);
@@ -97,10 +99,13 @@ enum class RelativeBlock: BlockNumber
 	Pending = PendingBlock
 };
 
+class Transaction;
+
 struct ImportRoute
 {
 	h256s deadBlocks;
 	h256s liveBlocks;
+	std::vector<Transaction> goodTranactions;
 };
 
 enum class ImportResult
@@ -121,18 +126,25 @@ struct ImportRequirements
 	using value = unsigned;
 	enum
 	{
-		ValidNonce = 1, ///< Validate nonce
+		ValidSeal = 1, ///< Validate seal
 		DontHave = 2, ///< Avoid old blocks
-		CheckUncles = 4, ///< Check uncle nonces
-		Default = ValidNonce | DontHave | CheckUncles
+		UncleBasic = 4, ///< Check the basic structure of the uncles.
+		TransactionBasic = 8, ///< Check the basic structure of the transactions.
+		UncleSeals = 16, ///< Check the basic structure of the uncles.
+		TransactionSignatures = 32, ///< Check the basic structure of the transactions.
+		Parent = 64, ///< Check parent block header
+		CheckUncles = UncleBasic | UncleSeals, ///< Check uncle seals
+		CheckTransactions = TransactionBasic | TransactionSignatures, ///< Check transaction signatures
+		Everything = ValidSeal | DontHave | CheckUncles | CheckTransactions | Parent,
+		None = 0
 	};
 };
 
 /// Super-duper signal mechanism. TODO: replace with somthing a bit heavier weight.
-class Signal
+template<typename... Args> class Signal
 {
 public:
-	using Callback = std::function<void()>;
+	using Callback = std::function<void(Args...)>;
 
 	class HandlerAux
 	{
@@ -141,7 +153,7 @@ public:
 	public:
 		~HandlerAux() { if (m_s) m_s->m_fire.erase(m_i); m_s = nullptr; }
 		void reset() { m_s = nullptr; }
-		void fire() { m_h(); }
+		void fire(Args&&... _args) { m_h(std::forward<Args>(_args)...); }
 
 	private:
 		HandlerAux(unsigned _i, Signal* _s, Callback const& _h): m_i(_i), m_s(_s), m_h(_h) {}
@@ -154,7 +166,8 @@ public:
 	~Signal()
 	{
 		for (auto const& h : m_fire)
-			h.second->reset();
+			if (auto l = h.second.lock())
+				l->reset();
 	}
 
 	std::shared_ptr<HandlerAux> add(Callback const& _h)
@@ -165,13 +178,18 @@ public:
 		return h;
 	}
 
-	void operator()() { for (auto const& f: m_fire) f.second->fire(); }
+	void operator()(Args&... _args)
+	{
+		for (auto const& f: m_fire)
+			if (auto h = f.second.lock())
+				h->fire(std::forward<Args>(_args)...);
+	}
 
 private:
-	std::map<unsigned, std::shared_ptr<Signal::HandlerAux>> m_fire;
+	std::map<unsigned, std::weak_ptr<typename Signal::HandlerAux>> m_fire;
 };
 
-using Handler = std::shared_ptr<Signal::HandlerAux>;
+template<class... Args> using Handler = std::shared_ptr<typename Signal<Args...>::HandlerAux>;
 
 struct TransactionSkeleton
 {
@@ -180,12 +198,25 @@ struct TransactionSkeleton
 	Address to;
 	u256 value;
 	bytes data;
+	u256 nonce = UndefinedU256;
 	u256 gas = UndefinedU256;
 	u256 gasPrice = UndefinedU256;
 };
 
 void badBlock(bytesConstRef _header, std::string const& _err);
 inline void badBlock(bytes const& _header, std::string const& _err) { badBlock(&_header, _err); }
+
+// TODO: move back into a mining subsystem and have it be accessible from Sealant only via a dynamic_cast.
+/**
+ * @brief Describes the progress of a mining operation.
+ */
+struct WorkingProgress
+{
+//	MiningProgress& operator+=(MiningProgress const& _mp) { hashes += _mp.hashes; ms = std::max(ms, _mp.ms); return *this; }
+	uint64_t hashes = 0;		///< Total number of hashes computed.
+	uint64_t ms = 0;			///< Total number of milliseconds of mining thus far.
+	uint64_t rate() const { return ms == 0 ? 0 : hashes * 1000 / ms; }
+};
 
 }
 }

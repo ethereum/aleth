@@ -41,12 +41,13 @@ StackVariable::StackVariable(CompilerContext& _compilerContext, Declaration cons
 void StackVariable::retrieveValue(SourceLocation const& _location, bool) const
 {
 	unsigned stackPos = m_context.baseToCurrentStackOffset(m_baseStackOffset);
-	if (stackPos >= 15) //@todo correct this by fetching earlier or moving to memory
+	if (stackPos + 1 > 16) //@todo correct this by fetching earlier or moving to memory
 		BOOST_THROW_EXCEPTION(
 			CompilerError() <<
 			errinfo_sourceLocation(_location) <<
 			errinfo_comment("Stack too deep, try removing local variables.")
 		);
+	solAssert(stackPos + 1 >= m_size, "Size and stack pos mismatch.");
 	for (unsigned i = 0; i < m_size; ++i)
 		m_context << eth::dupInstruction(stackPos + 1);
 }
@@ -151,7 +152,14 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 {
 	// stack: storage_key storage_offset
 	if (!m_dataType.isValueType())
-		return; // no distinction between value and reference for non-value types
+	{
+		solAssert(m_dataType.getSizeOnStack() == 1, "Invalid storage ref size.");
+		if (_remove)
+			m_context << eth::Instruction::POP; // remove byte offset
+		else
+			m_context << eth::Instruction::DUP2;
+		return;
+	}
 	if (!_remove)
 		CompilerUtils(m_context).copyToStackTop(sizeOnStack(), sizeOnStack());
 	if (m_dataType.getStorageBytes() == 32)
@@ -175,6 +183,7 @@ void StorageItem::retrieveValue(SourceLocation const&, bool _remove) const
 
 void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _location, bool _move) const
 {
+	CompilerUtils utils(m_context);
 	// stack: value storage_key storage_offset
 	if (m_dataType.isValueType())
 	{
@@ -207,7 +216,7 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			// stack: value storage_ref cleared_value multiplier value
 			if (m_dataType.getCategory() == Type::Category::FixedBytes)
 				m_context
-					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(m_dataType).getNumBytes()))
+					<< (u256(0x1) << (256 - 8 * dynamic_cast<FixedBytesType const&>(m_dataType).numBytes()))
 					<< eth::Instruction::SWAP1 << eth::Instruction::DIV;
 			else if (
 				m_dataType.getCategory() == Type::Category::Integer &&
@@ -234,56 +243,65 @@ void StorageItem::storeValue(Type const& _sourceType, SourceLocation const& _loc
 			"Wrong type conversation for assignment.");
 		if (m_dataType.getCategory() == Type::Category::Array)
 		{
+			m_context << eth::Instruction::POP; // remove byte offset
 			ArrayUtils(m_context).copyArrayToStorage(
 						dynamic_cast<ArrayType const&>(m_dataType),
 						dynamic_cast<ArrayType const&>(_sourceType));
 			if (_move)
-				CompilerUtils(m_context).popStackElement(_sourceType);
+				m_context << eth::Instruction::POP;
 		}
 		else if (m_dataType.getCategory() == Type::Category::Struct)
 		{
-			// stack layout: source_ref source_offset target_ref target_offset
-			// note that we have structs, so offsets should be zero and are ignored
+			// stack layout: source_ref target_ref target_offset
+			// note that we have structs, so offset should be zero and are ignored
+			m_context << eth::Instruction::POP;
 			auto const& structType = dynamic_cast<StructType const&>(m_dataType);
+			auto const& sourceType = dynamic_cast<StructType const&>(_sourceType);
 			solAssert(
-				structType.structDefinition() ==
-					dynamic_cast<StructType const&>(_sourceType).structDefinition(),
+				structType.structDefinition() == sourceType.structDefinition(),
 				"Struct assignment with conversion."
 			);
+			solAssert(sourceType.location() != DataLocation::CallData, "Structs in calldata not supported.");
 			for (auto const& member: structType.getMembers())
 			{
 				// assign each member that is not a mapping
 				TypePointer const& memberType = member.type;
 				if (memberType->getCategory() == Type::Category::Mapping)
 					continue;
+				TypePointer sourceMemberType = sourceType.getMemberType(member.name);
+				if (sourceType.location() == DataLocation::Storage)
+				{
+					// stack layout: source_ref target_ref
+					pair<u256, unsigned> const& offsets = sourceType.getStorageOffsetsOfMember(member.name);
+					m_context << offsets.first << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					m_context << u256(offsets.second);
+					// stack: source_ref target_ref source_member_ref source_member_off
+					StorageItem(m_context, *sourceMemberType).retrieveValue(_location, true);
+					// stack: source_ref target_ref source_value...
+				}
+				else
+				{
+					solAssert(sourceType.location() == DataLocation::Memory, "");
+					// stack layout: source_ref target_ref
+					TypePointer sourceMemberType = sourceType.getMemberType(member.name);
+					m_context << sourceType.memoryOffsetOfMember(member.name);
+					m_context << eth::Instruction::DUP3 << eth::Instruction::ADD;
+					MemoryItem(m_context, *sourceMemberType).retrieveValue(_location, true);
+					// stack layout: source_ref target_ref source_value...
+				}
+				unsigned stackSize = sourceMemberType->getSizeOnStack();
 				pair<u256, unsigned> const& offsets = structType.getStorageOffsetsOfMember(member.name);
-				m_context
-					<< offsets.first << u256(offsets.second)
-					<< eth::Instruction::DUP6 << eth::Instruction::DUP3
-					<< eth::Instruction::ADD << eth::Instruction::DUP2;
-				// stack: source_ref source_off target_ref target_off member_slot_offset member_byte_offset source_member_ref source_member_off
-				StorageItem(m_context, *memberType).retrieveValue(_location, true);
-				// stack: source_ref source_off target_ref target_off member_offset source_value...
-				solAssert(
-					4 + memberType->getSizeOnStack() <= 16,
-					"Stack too deep, try removing local varibales."
-				);
-				m_context
-					<< eth::dupInstruction(4 + memberType->getSizeOnStack())
-					<< eth::dupInstruction(3 + memberType->getSizeOnStack()) << eth::Instruction::ADD
-					<< eth::dupInstruction(2 + memberType->getSizeOnStack());
-				// stack: source_ref source_off target_ref target_off member_slot_offset member_byte_offset source_value... target_member_ref target_member_byte_off
-				StorageItem(m_context, *memberType).storeValue(*memberType, _location, true);
-				m_context << eth::Instruction::POP << eth::Instruction::POP;
+				m_context << eth::dupInstruction(1 + stackSize) << offsets.first << eth::Instruction::ADD;
+				m_context << u256(offsets.second);
+				// stack: source_ref target_ref target_off source_value... target_member_ref target_member_byte_off
+				StorageItem(m_context, *memberType).storeValue(*sourceMemberType, _location, true);
 			}
+			// stack layout: source_ref target_ref
+			solAssert(sourceType.getSizeOnStack() == 1, "Unexpected source size.");
 			if (_move)
-				m_context
-					<< eth::Instruction::POP << eth::Instruction::POP
-					<< eth::Instruction::POP << eth::Instruction::POP;
+				utils.popStackSlots(2);
 			else
-				m_context
-					<< eth::Instruction::SWAP2 << eth::Instruction::POP
-					<< eth::Instruction::SWAP2 << eth::Instruction::POP;
+				m_context << eth::Instruction::SWAP1 << eth::Instruction::POP;
 		}
 		else
 			BOOST_THROW_EXCEPTION(
@@ -413,8 +431,6 @@ StorageArrayLength::StorageArrayLength(CompilerContext& _compilerContext, const 
 	m_arrayType(_arrayType)
 {
 	solAssert(m_arrayType.isDynamicallySized(), "");
-	// storage byte offset must be zero
-	m_context << eth::Instruction::POP;
 }
 
 void StorageArrayLength::retrieveValue(SourceLocation const&, bool _remove) const

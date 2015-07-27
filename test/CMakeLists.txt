@@ -72,11 +72,12 @@ add_executable(testeth ${SRC_LIST} ${HEADERS})
 
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 target_link_libraries(testeth ${CURL_LIBRARIES})
+target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
 target_link_libraries(testeth ethereum)
 target_link_libraries(testeth ethcore)
 if (NOT WIN32)
 	target_link_libraries(testeth secp256k1)
-endif()
+endif ()
 
 if (JSCONSOLE)
 	target_link_libraries(testeth jsengine)

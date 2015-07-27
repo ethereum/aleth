@@ -27,7 +27,6 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/ProofOfWork.h>
 #include <libethcore/BlockInfo.h>
 #include <libethcore/Params.h>
 #include <liblll/Compiler.h>
@@ -39,22 +38,86 @@ using namespace dev;
 using namespace dev::eth;
 namespace js = json_spirit;
 
-#define ETH_CATCH 1
+unique_ptr<Ethash::BlockHeader> CanonBlockChain<Ethash>::s_genesis;
+boost::shared_mutex CanonBlockChain<Ethash>::x_genesis;
+Nonce CanonBlockChain<Ethash>::s_nonce(u64(42));
+string CanonBlockChain<Ethash>::s_genesisStateJSON;
+bytes CanonBlockChain<Ethash>::s_genesisExtraData;
 
-std::unordered_map<Address, Account> const& dev::eth::genesisState()
+CanonBlockChain<Ethash>::CanonBlockChain(std::string const& _path, WithExisting _we, ProgressCallback const& _pc):
+	FullBlockChain<Ethash>(createGenesisBlock(), createGenesisState(), _path, _we, _pc)
+{
+}
+
+void CanonBlockChain<Ethash>::reopen(WithExisting _we, ProgressCallback const& _pc)
+{
+	close();
+	open(createGenesisBlock(), createGenesisState(), m_dbPath, _we, _pc);
+}
+
+bytes CanonBlockChain<Ethash>::createGenesisBlock()
+{
+	RLPStream block(3);
+
+	h256 stateRoot;
+	{
+		MemoryDB db;
+		SecureTrieDB<Address, MemoryDB> state(&db);
+		state.init();
+		dev::eth::commit(createGenesisState(), state);
+		stateRoot = state.root();
+	}
+
+	js::mValue val;
+	json_spirit::read_string(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON, val);
+	js::mObject genesis = val.get_obj();
+
+	h256 mixHash(genesis["mixhash"].get_str());
+	h256 parentHash(genesis["parentHash"].get_str());
+	h160 beneficiary(genesis["coinbase"].get_str());
+	u256 difficulty = fromBigEndian<u256>(fromHex(genesis["difficulty"].get_str()));
+	u256 gasLimit = fromBigEndian<u256>(fromHex(genesis["gasLimit"].get_str()));
+	u256 timestamp = fromBigEndian<u256>(fromHex(genesis["timestamp"].get_str()));
+	bytes extraData = fromHex(genesis["extraData"].get_str());
+	h64 nonce(genesis["nonce"].get_str());
+
+	block.appendList(15)
+			<< parentHash
+			<< EmptyListSHA3	// sha3(uncles)
+			<< beneficiary
+			<< stateRoot
+			<< EmptyTrie	// transactions
+			<< EmptyTrie	// receipts
+			<< LogBloom()
+			<< difficulty
+			<< 0	// number
+			<< gasLimit
+			<< 0	// gasUsed
+			<< timestamp
+			<< (s_genesisExtraData.empty() ? extraData : s_genesisExtraData)
+			<< mixHash
+			<< nonce;
+	block.appendRaw(RLPEmptyList);
+	block.appendRaw(RLPEmptyList);
+	return block.out();
+}
+
+unordered_map<Address, Account> CanonBlockChain<Ethash>::createGenesisState()
 {
 	static std::unordered_map<Address, Account> s_ret;
 
 	if (s_ret.empty())
 	{
 		js::mValue val;
-		json_spirit::read_string(c_genesisInfo, val);
-		for (auto account: val.get_obj())
+		json_spirit::read_string(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON, val);
+		for (auto account: val.get_obj()["alloc"].get_obj())
 		{
 			u256 balance;
 			if (account.second.get_obj().count("wei"))
 				balance = u256(account.second.get_obj()["wei"].get_str());
-			else
+			else if (account.second.get_obj().count("balance"))
+				balance = u256(account.second.get_obj()["balance"].get_str());
+			else if (account.second.get_obj().count("finney"))
 				balance = u256(account.second.get_obj()["finney"].get_str()) * finney;
 			if (account.second.get_obj().count("code"))
 			{
@@ -68,53 +131,29 @@ std::unordered_map<Address, Account> const& dev::eth::genesisState()
 	return s_ret;
 }
 
-// TODO: place Registry in here.
-
-std::unique_ptr<BlockInfo> CanonBlockChain::s_genesis;
-boost::shared_mutex CanonBlockChain::x_genesis;
-Nonce CanonBlockChain::s_nonce(u64(42));
-
-bytes CanonBlockChain::createGenesisBlock()
-{
-	RLPStream block(3);
-
-	h256 stateRoot;
-	{
-		MemoryDB db;
-		SecureTrieDB<Address, MemoryDB> state(&db);
-		state.init();
-		dev::eth::commit(genesisState(), db, state);
-		stateRoot = state.root();
-	}
-
-	block.appendList(15)
-			<< h256() << EmptyListSHA3 << h160() << stateRoot << EmptyTrie << EmptyTrie << LogBloom() << c_genesisDifficulty << 0 << c_genesisGasLimit << 0 << (unsigned)0 << string() << h256() << s_nonce;
-	block.appendRaw(RLPEmptyList);
-	block.appendRaw(RLPEmptyList);
-	return block.out();
-}
-
-CanonBlockChain::CanonBlockChain(std::string const& _path, WithExisting _we, ProgressCallback const& _pc):
-	BlockChain(createGenesisBlock(), _path, _we, _pc)
-{
-}
-
-void CanonBlockChain::setGenesisNonce(Nonce const& _n)
+void CanonBlockChain<Ethash>::setGenesis(std::string const& _json)
 {
 	WriteGuard l(x_genesis);
-	s_nonce = _n;
+	s_genesisStateJSON = _json;
 	s_genesis.reset();
 }
 
-BlockInfo const& CanonBlockChain::genesis()
+void CanonBlockChain<Ethash>::forceGenesisExtraData(bytes const& _genesisExtraData)
+{
+	WriteGuard l(x_genesis);
+	s_genesisExtraData = _genesisExtraData;
+	s_genesis.reset();
+}
+
+Ethash::BlockHeader const& CanonBlockChain<Ethash>::genesis()
 {
 	UpgradableGuard l(x_genesis);
 	if (!s_genesis)
 	{
 		auto gb = createGenesisBlock();
 		UpgradeGuard ul(l);
-		s_genesis.reset(new BlockInfo);
-		s_genesis->populate(&gb);
+		s_genesis.reset(new Ethash::BlockHeader);
+		s_genesis->populate(&gb, CheckEverything);
 	}
 	return *s_genesis;
 }
