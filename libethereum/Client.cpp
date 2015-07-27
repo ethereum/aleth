@@ -218,6 +218,17 @@ void Client::onBadBlock(Exception& _ex) const
 		report["hints"]["ethashResult"]["value"] = get<0>(*r).hex();
 		report["hints"]["ethashResult"]["mixHash"] = get<1>(*r).hex();
 	}
+	if (bytes const* ed = boost::get_error_info<errinfo_extraData>(_ex))
+	{
+		report["hints"]["extraData"] = toHex(*ed);
+		try
+		{
+			RLP r(*ed);
+			if (r[0].toInt<int>() == 0)
+				report["hints"]["minerVersion"] = r[1].toString();
+		}
+		catch (...) {}
+	}
 	DEV_HINT_ERRINFO(required);
 	DEV_HINT_ERRINFO(got);
 	DEV_HINT_ERRINFO_HASH(required_LogBloom);
@@ -317,7 +328,7 @@ void Client::doneWorking()
 	}
 }
 
-void Client::killChain()
+void Client::reopenChain(WithExisting _we)
 {
 	bool wasMining = isMining();
 	if (wasMining)
@@ -338,8 +349,8 @@ void Client::killChain()
 		m_working = Block();
 
 		m_stateDB = OverlayDB();
-		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), WithExisting::Kill);
-		bc().reopen(Defaults::dbPath(), WithExisting::Kill);
+		bc().reopen(_we);
+		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), _we);
 
 		m_preMine = bc().genesisBlock(m_stateDB);
 		m_postMine = Block(m_stateDB);
@@ -441,6 +452,23 @@ void Client::setForceMining(bool _enable)
 {
 	 m_forceMining = _enable;
 	 if (isMining())
+		startMining();
+}
+
+void Client::setShouldPrecomputeDAG(bool _precompute)
+{
+	bytes trueBytes {1};
+	bytes falseBytes {0};
+	sealEngine()->setOption("precomputeDAG", _precompute ? trueBytes: falseBytes);
+}
+
+void Client::setTurboMining(bool _enable)
+{
+	m_turboMining = _enable;
+#if ETH_ETHASHCL || !ETH_TRUE
+	sealEngine()->setSealer(_enable ? "opencl" : "cpu");
+#endif
+	if (isMining())
 		startMining();
 }
 
@@ -580,7 +608,7 @@ void Client::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 		appendFromBlock(h, BlockPolarity::Live, io_changed);
 }
 
-void Client::restartMining()
+void Client::resyncStateFromChain()
 {
 	// RESTART MINING
 
@@ -633,7 +661,7 @@ void Client::onChainChanged(ImportRoute const& _ir)
 		m_tq.dropGood(t);
 	}
 	onNewBlocks(_ir.liveBlocks, changeds);
-	restartMining();
+	resyncStateFromChain();
 	noteChanged(changeds);
 }
 
@@ -833,18 +861,21 @@ bool Client::submitSealed(bytes const& _header)
 	return m_bq.import(&newBlock, true) == ImportResult::Success;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
+Block Client::asOf(h256 const& _block) const
+{
+	try
+	{
+		Block ret(m_stateDB);
+		ret.populateFromChain(bc(), _block);
+		return ret;
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_block(bc().block(_block));
+		onBadBlock(ex);
+		return Block();
+	}
+}
 
 std::tuple<h256, h256, h256> EthashClient::getEthashWork()
 {
@@ -863,7 +894,7 @@ std::tuple<h256, h256, h256> EthashClient::getEthashWork()
 		// otherwise, set this to true so that it gets prepped next time.
 		m_remoteWorking = true;
 	Ethash::BlockHeader bh = Ethash::BlockHeader(m_miningInfo);
-	return std::tuple<h256, h256, h256>(bh.boundary(), bh.hashWithout(), bh.seedHash());
+	return std::tuple<h256, h256, h256>(bh.hashWithout(), bh.seedHash(), bh.boundary());
 }
 
 bool EthashClient::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
