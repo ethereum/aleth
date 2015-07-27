@@ -186,7 +186,8 @@ unsigned BlockChain::openDatabase(std::string const& _path, WithExisting _we)
 
 	bytes status = contents(extrasPath + "/minor");
 	unsigned lastMinor = c_minorProtocolVersion;
-	DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
+	if (!status.empty())
+		DEV_IGNORE_EXCEPTIONS(lastMinor = (unsigned)RLP(status));
 	if (c_minorProtocolVersion != lastMinor)
 	{
 		cnote << "Killing extras database (DB minor version:" << lastMinor << " != our miner version: " << c_minorProtocolVersion << ").";
@@ -620,6 +621,10 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	{
 		ex << errinfo_now(time(0));
 		ex << errinfo_block(_block.block.toBytes());
+		// only populate extraData if we actually managed to extract it. otherwise,
+		// we might be clobbering the existing one.
+		if (!_block.info.extraData().empty())
+			ex << errinfo_extraData(_block.info.extraData());
 		throw;
 	}
 #endif
