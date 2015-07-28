@@ -51,24 +51,7 @@ const unsigned c_databaseBaseVersion = 9;
 const unsigned c_databaseVersionModifier = 0;
 #endif
 
-#if ETH_FRONTIER
-Network c_network = resetNetwork(Network::Frontier);
-#else
-Network c_network = resetNetwork(Network::Olympic);
-#endif
 
-Network resetNetwork(Network _n)
-{
-	c_network = _n;
-	c_maximumExtraDataSize = c_network == Network::Olympic ? 1024 : 32;
-	c_minGasLimit = c_network == Network::Turbo ? 100000000 : 125000;
-	c_gasLimitBoundDivisor = 1024;
-	c_minimumDifficulty = 131072;
-	c_difficultyBoundDivisor = 2048;
-	c_durationLimit = c_network == Network::Turbo ? 2 : c_network == Network::Olympic ? 8 : 12;
-	c_blockReward = c_network == Network::Olympic ? (1500 * finney) : (5 * ether);
-	return _n;
-}
 
 const unsigned c_databaseVersion = c_databaseBaseVersion + (c_databaseVersionModifier << 8) + (23 << 9);
 

@@ -17,11 +17,12 @@
 /** @file gasPricer.cpp
  * @author Christoph Jentzsch <cj@ethdev.com>
  * @date 2015
+ * Gas pricer tests
  */
 
 #include <libtestutils/BlockChainLoader.h>
 #include <libethcore/Ethash.h>
-#include <libethereum/BlockChain.h>
+#include <libethereum/CanonBlockChain.h>
 #include <libethereum/GasPricer.h>
 #include <libethereum/BasicGasPricer.h>
 #include "../TestHelper.h"
@@ -32,7 +33,7 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-void executeGasPricerTest(const string name, double _etherPrice, double _blockFee, const string bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid)
+void executeGasPricerTest(string const& name, double _etherPrice, double _blockFee, string const& bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid)
 {
 	cnote << name;
 	BasicGasPricer gp(u256(double(ether / 1000) / _etherPrice), u256(_blockFee * 1000));
@@ -55,7 +56,7 @@ BOOST_AUTO_TEST_CASE(trivialGasPricer)
 	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
 	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
 	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
-	gp->update(FullBlockChain<Ethash>(bytes(), StateDefinition(), TransientDirectory().path(), WithExisting::Kill));
+	gp->update(CanonBlockChain<Ethash>(TransientDirectory().path(), WithExisting::Kill));
 	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
 	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
 }

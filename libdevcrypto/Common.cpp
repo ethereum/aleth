@@ -32,7 +32,7 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/RLP.h>
 #if ETH_HAVE_SECP256K1
-#include <secp256k1/secp256k1.h>
+#include <secp256k1/include/secp256k1.h>
 #endif
 #include "AES.h"
 #include "CryptoPP.h"
@@ -44,8 +44,10 @@ using namespace dev::crypto;
 #ifdef ETH_HAVE_SECP256K1
 struct Secp256k1Context
 {
-	Secp256k1Context() { secp256k1_start(); }
-	~Secp256k1Context() { secp256k1_stop(); }
+	Secp256k1Context() { ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); }
+	~Secp256k1Context() { secp256k1_context_destroy(ctx); }
+	secp256k1_context_t* ctx;
+	operator secp256k1_context_t const*() const { return ctx; }
 };
 static Secp256k1Context s_secp256k1;
 #endif
@@ -75,7 +77,7 @@ Public dev::toPublic(Secret const& _secret)
 #ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
-	if (!secp256k1_ecdsa_pubkey_create(o.data(), &pubkeylen, _secret.data(), false))
+	if (!secp256k1_ec_pubkey_create(s_secp256k1, o.data(), &pubkeylen, _secret.data(), false))
 		return Public();
 	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
 #else
@@ -147,7 +149,7 @@ bool dev::decryptSym(Secret const& _k, bytesConstRef _cipher, bytes& o_plain)
 	return decrypt(_k, _cipher, o_plain);
 }
 
-std::pair<bytes, h128> dev::encryptSymNoAuth(h128 const& _k, bytesConstRef _plain)
+std::pair<bytes, h128> dev::encryptSymNoAuth(SecureFixedHash<16> const& _k, bytesConstRef _plain)
 {
 	h128 iv(Nonce::get());
 	return make_pair(encryptSymNoAuth(_k, iv, _plain), iv);
@@ -173,23 +175,23 @@ bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _pl
 	}
 }
 
-bytes dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher)
+bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher)
 {
 	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
-		return bytes();
+		return bytesSec();
 	SecByteBlock key(_k.data(), _k.size());
 	try
 	{
 		CTR_Mode<AES>::Decryption d;
 		d.SetKeyWithIV(key, key.size(), _iv.data());
-		bytes ret(_cipher.size());
-		d.ProcessData(ret.data(), _cipher.data(), _cipher.size());
+		bytesSec ret(_cipher.size());
+		d.ProcessData(ret.writable().data(), _cipher.data(), _cipher.size());
 		return ret;
 	}
 	catch (CryptoPP::Exception& _e)
 	{
 		cerr << _e.what() << endl;
-		return bytes();
+		return bytesSec();
 	}
 }
 
@@ -201,7 +203,7 @@ Public dev::recover(Signature const& _sig, h256 const& _message)
 #ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
-	if (!secp256k1_ecdsa_recover_compact(_message.data(), h256::size, _sig.data(), o.data(), &pubkeylen, false, _sig[64]))
+	if (!secp256k1_ecdsa_recover_compact(s_secp256k1, _message.data(), _sig.data(), o.data(), &pubkeylen, false, _sig[64]))
 		return Public();
 	ret = FixedHash<64>(o.data() + 1, Public::ConstructFromPointer);
 #else
@@ -217,7 +219,7 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 #ifdef ETH_HAVE_SECP256K1
 	Signature s;
 	int v;
-	if (!secp256k1_ecdsa_sign_compact(_hash.data(), h256::size, s.data(), _k.data(), Nonce::get().data(), &v))
+	if (!secp256k1_ecdsa_sign_compact(s_secp256k1, _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
 		return Signature();
 	s[64] = v;
 	return s;
@@ -237,12 +239,12 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 #endif
 }
 
-bytes dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
+bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
-	bytes ret(_dkLen);
+	bytesSec ret(_dkLen);
 	if (PKCS5_PBKDF2_HMAC<SHA256>().DeriveKey(
-		ret.data(),
-		ret.size(),
+		ret.writable().data(),
+		_dkLen,
 		0,
 		reinterpret_cast<byte const*>(_pass.data()),
 		_pass.size(),
@@ -254,9 +256,9 @@ bytes dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations,
 	return ret;
 }
 
-bytes dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint32_t _r, uint32_t _p, unsigned _dkLen)
+bytesSec dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint32_t _r, uint32_t _p, unsigned _dkLen)
 {
-	bytes ret(_dkLen);
+	bytesSec ret(_dkLen);
 	if (libscrypt_scrypt(
 		reinterpret_cast<uint8_t const*>(_pass.data()),
 		_pass.size(),
@@ -265,34 +267,34 @@ bytes dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uin
 		_n,
 		_r,
 		_p,
-		ret.data(),
-		ret.size()
+		ret.writable().data(),
+		_dkLen
 	) != 0)
 		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
 	return ret;
+}
+
+void KeyPair::populateFromSecret(Secret const& _sec)
+{
+	m_secret = _sec;
+	if (s_secp256k1pp.verifySecret(m_secret, m_public))
+		m_address = toAddress(m_public);
 }
 
 KeyPair KeyPair::create()
 {
 	for (int i = 0; i < 100; ++i)
 	{
-		KeyPair ret(FixedHash<32>::random());
+		KeyPair ret(Secret::random());
 		if (ret.address())
 			return ret;
 	}
 	return KeyPair();
 }
 
-KeyPair::KeyPair(h256 _sec):
-	m_secret(_sec)
-{
-	if (s_secp256k1pp.verifySecret(m_secret, m_public))
-		m_address = toAddress(m_public);
-}
-
 KeyPair KeyPair::fromEncryptedSeed(bytesConstRef _seed, std::string const& _password)
 {
-	return KeyPair(sha3(aesDecrypt(_seed, _password)));
+	return KeyPair(Secret(sha3(aesDecrypt(_seed, _password))));
 }
 
 h256 crypto::kdf(Secret const& _priv, h256 const& _hash)

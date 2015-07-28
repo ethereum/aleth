@@ -66,7 +66,7 @@ using namespace dev::eth;
 using namespace boost::algorithm;
 using dev::eth::Instruction;
 
-static bool g_silence = false;
+static std::atomic<bool> g_silence = {false};
 
 void interactiveHelp()
 {
@@ -140,6 +140,7 @@ void help()
 		<< "    -R,--rebuild  Rebuild the blockchain from the existing database." << endl
 		<< "    --rescue  Attempt to rescue a corrupt database." << endl
 		<< endl
+		<< "    --import-presale <file>  Import a presale key; you'll need to type the password to this." << endl
 		<< "    -s,--import-secret <secret>  Import a secret key into the key store and use as the default." << endl
 		<< "    -S,--import-session-secret <secret>  Import a secret key into the key store and use as the default for this session only." << endl
 		<< "    --sign-key <address>  Sign all transactions with the key of the given address." << endl
@@ -179,6 +180,7 @@ void help()
 		<< "    --upnp <on/off>  Use UPnP for NAT (default: on)." << endl
 		<< "    --no-discovery  Disable Node discovery." << endl
 		<< "    --pin  Only connect to required (trusted) peers." << endl
+		<< "    --hermit  Equivalent to --no-discovery --pin." << endl
 //		<< "    --require-peers <peers.json>  List of required (trusted) peers. (experimental)" << endl
 		<< endl;
 	MinerCLI::streamHelp(cout);
@@ -203,6 +205,10 @@ void help()
 		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (default: 8)." << endl
 		<< "    -V,--version  Show the version and exit." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
+		<< endl
+		<< "Experimental / Proof of Concept:" << endl
+		<< "    --shh  Enable Whisper" << endl
+		<< endl
 		;
 		exit(0);
 }
@@ -223,6 +229,12 @@ void version()
 	cout << "Client database version: " << dev::eth::c_databaseVersion << endl;
 	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
+}
+
+void importPresale(KeyManager& _km, string const& _file, function<string()> _pass)
+{
+	KeyPair k = _km.presaleSecret(contentsString(_file), [&](bool){ return _pass(); });
+	_km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
 }
 
 Address c_config = Address("ccdeac59d35627b7de09332e819d5159e7bb7250");
@@ -525,7 +537,7 @@ void interactiveMode(eth::Client* c, std::shared_ptr<eth::TrivialGasPricer> gasP
 				{
 					try
 					{
-						Secret secret = h256(fromHex(sechex));
+						Secret secret(fromHex(sechex));
 						Address dest = h160(fromHex(hexAddr));
 						c->submitTransaction(secret, amount, dest, data, gas, gasPrice);
 					}
@@ -593,7 +605,7 @@ void interactiveMode(eth::Client* c, std::shared_ptr<eth::TrivialGasPricer> gasP
 				{
 					try
 					{
-						Secret secret = h256(fromHex(sechex));
+						Secret secret(fromHex(sechex));
 						Address dest = h160(fromHex(hexAddr));
 						c->submitTransaction(secret, amount, dest, data, gas, gasPrice, nonce);
 					}
@@ -653,7 +665,7 @@ void interactiveMode(eth::Client* c, std::shared_ptr<eth::TrivialGasPricer> gasP
 				{
 					try
 					{
-						Secret secret = h256(fromHex(sechex));
+						Secret secret(fromHex(sechex));
 						cout << " new contract address : " << c->submitTransaction(secret, amount, data, gas, gasPrice) << endl;
 					}
 					catch (BadHexCharacter& _e)
@@ -1119,6 +1131,7 @@ int main(int argc, char** argv)
 	Address signingKey;
 	Address sessionKey;
 	Address beneficiary = signingKey;
+	strings presaleImports;
 
 	/// Structured logging params
 	bool structuredLogging = false;
@@ -1137,6 +1150,9 @@ int main(int argc, char** argv)
 
 	/// Wallet password stuff
 	string masterPassword;
+	
+	/// Whisper
+	bool useWhisper = false;
 
 	string configFile = getDataDir() + "/config.rlp";
 	bytes b = contents(configFile);
@@ -1146,13 +1162,7 @@ int main(int argc, char** argv)
 	if (b.size())
 	{
 		RLP config(b);
-		if (config[0].size() == 32)	// secret key - import and forget.
-		{
-			Secret s = config[0].toHash<Secret>();
-			toImport.push_back(s);
-		}
-		else							// new format - just use it as an address.
-			signingKey = config[0].toHash<Address>();
+		signingKey = config[0].toHash<Address>();
 		beneficiary = config[1].toHash<Address>();
 	}
 
@@ -1299,13 +1309,13 @@ int main(int argc, char** argv)
 		else if ((arg == "-s" || arg == "--import-secret") && i + 1 < argc)
 		{
 			Secret s(fromHex(argv[++i]));
-			toImport.push_back(s);
+			toImport.emplace_back(s);
 			signingKey = toAddress(s);
 		}
 		else if ((arg == "-S" || arg == "--import-session-secret") && i + 1 < argc)
 		{
 			Secret s(fromHex(argv[++i]));
-			toImport.push_back(s);
+			toImport.emplace_back(s);
 			sessionKey = toAddress(s);
 		}
 		else if ((arg == "--sign-key") && i + 1 < argc)
@@ -1323,7 +1333,7 @@ int main(int argc, char** argv)
 		}
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
-		else if (arg == "--genesis-json" && i + 1 < argc)
+		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
 		{
 			try
 			{
@@ -1431,6 +1441,10 @@ int main(int argc, char** argv)
 			disableDiscovery = true;
 		else if (arg == "--pin")
 			pinning = true;
+		else if (arg == "--hermit")
+			pinning = disableDiscovery = true;
+		else if (arg == "--import-presale" && i + 1 < argc)
+			presaleImports.push_back(argv[++i]);
 		else if (arg == "-f" || arg == "--force-mining")
 			forceMining = true;
 		else if (arg == "--old-interactive")
@@ -1481,6 +1495,8 @@ int main(int argc, char** argv)
 			}
 		}
 #endif
+		else if (arg == "--shh")
+			useWhisper = true;
 		else if (arg == "-h" || arg == "--help")
 			help();
 		else if (arg == "-V" || arg == "--version")
@@ -1544,7 +1560,7 @@ int main(int argc, char** argv)
 		};
 
 	auto getPassword = [&](string const& prompt){
-		auto s = g_silence;
+		bool s = g_silence;
 		g_silence = true;
 		cout << endl;
 		string ret = dev::getPassword(prompt);
@@ -1561,11 +1577,12 @@ int main(int argc, char** argv)
 	netPrefs.pin = pinning || !privateChain.empty();
 
 	auto nodesState = contents((dbPath.size() ? dbPath : getDataDir()) + "/network.rlp");
+	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("++eth", clientName),
 		dbPath,
 		withExisting,
-		nodeMode == NodeMode::Full ? set<string>{"eth"/*, "shh"*/} : set<string>(),
+		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
 		&nodesState);
 	web3.ethereum()->setMineOnBadChain(mineOnWrongChain);
@@ -1708,6 +1725,9 @@ int main(int argc, char** argv)
 		keyManager.create(masterPassword);
 	}
 
+	for (auto const& presale: presaleImports)
+		importPresale(keyManager, presale, [&](){ return getPassword("Enter your wallet password for " + presale + ": "); });
+
 	for (auto const& s: toImport)
 	{
 		keyManager.import(s, "Imported key (UNSAFE)");
@@ -1759,9 +1779,9 @@ int main(int argc, char** argv)
 		jsonrpcServer->setMiningBenefactorChanger([&](Address const& a) { beneficiary = a; });
 		jsonrpcServer->StartListening();
 		if (jsonAdmin.empty())
-			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Priviledge::Admin}});
+			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 		else
-			jsonrpcServer->addSession(jsonAdmin, SessionPermissions{{Priviledge::Admin}});
+			jsonrpcServer->addSession(jsonAdmin, SessionPermissions{{Privilege::Admin}});
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
@@ -1790,6 +1810,8 @@ int main(int argc, char** argv)
 #if ETH_JSCONSOLE || !ETH_TRUE
 			JSLocalConsole console;
 			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
+			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
+			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
 			while (!g_exit)
 			{
 				console.readExpression();
