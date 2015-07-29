@@ -24,6 +24,7 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Log.h>
+#include <libethereum/Transaction.h>
 #include <libevm/VMFactory.h>
 #include <test/libevm/vm.h>
 #include <test/TestHelper.h>
@@ -86,8 +87,8 @@ bool doStateTest(mValue& _v)
 		bytes output;
 
 		try
-		{
-			output = theState.execute(lastHashes(importer.m_environment.currentBlock.number()), importer.m_transaction).output;
+		{			
+			output = importer.executeTest();
 		}
 		catch (Exception const& _e)
 		{
@@ -126,9 +127,11 @@ bool doStateTest(mValue& _v)
 		}
 
 		//checkLog(theState.pending().size() ? theState.log(0) : LogEntries(), importer.m_environment.sub.logs);
-		eth::LogEntries logs = theState.pending().size() ? theState.log(0) : eth::LogEntries();
+		//eth::LogEntries logs = eth::LogEntries();//theState.pending().size() ? theState.log(0) : eth::LogEntries();
 
-		if (assertsEqual(logs.size(), importer.m_environment.sub.logs.size()))
+		cerr << "Check Random State Test marked for deletion!" << endl;
+
+		/*if (assertsEqual(logs.size(), importer.m_environment.sub.logs.size()))
 			return 1;
 
 		for (size_t i = 0; i < logs.size(); ++i)
@@ -139,7 +142,8 @@ bool doStateTest(mValue& _v)
 				return 1;
 			if (asserts(logs[i].data == importer.m_environment.sub.logs[i].data))
 				return 1;
-		}
+		}*/
+
 
 		// check addresses
 #if ETH_FATDB

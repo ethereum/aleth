@@ -216,6 +216,7 @@ private:
 /**
  * @brief Interface and null implementation of the class for specifying VM externalities.
  */
+
 class ExtVMFace
 {
 public:

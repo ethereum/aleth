@@ -32,6 +32,7 @@
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
 
+
 #ifdef NOBOOST
 	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
 	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
@@ -125,7 +126,6 @@ namespace test
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o): m_environment(m_envInfo), m_testObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 
 	// imports
@@ -135,13 +135,14 @@ public:
 	void importTransaction(json_spirit::mObject& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
-	void exportTest(bytes const& _output, eth::State const& _statePost);
-	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, stateOptionsMap const _expectedStateOptions = stateOptionsMap(), WhenError _throw = WhenError::Throw);
+
+	bytes executeTest();
+	void exportTest(bytes const& _output);
+	static void checkExpectedState(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 
 	eth::State m_statePre;
 	eth::State m_statePost;
 	eth::EnvInfo m_envInfo;
-	eth::ExtVMFace m_environment;
 	eth::Transaction m_transaction;
 
 private:

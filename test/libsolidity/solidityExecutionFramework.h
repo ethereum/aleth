@@ -44,7 +44,8 @@ public:
 	ExecutionFramework()
 	{
 		g_logVerbosity = 0;
-		m_state.resetCurrent();
+		std::cerr << "public: ExecutionFramework() m_sate has no member resetCurrent()!" << std::endl;
+		//m_state.resetCurrent();
 	}
 
 	bytes const& compileAndRunWithoutCheck(

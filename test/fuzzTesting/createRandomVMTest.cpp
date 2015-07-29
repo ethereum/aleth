@@ -141,7 +141,7 @@ void doMyTests(json_spirit::mValue& _v)
 		assert(o.count("pre") > 0);
 		assert(o.count("exec") > 0);
 
-		dev::test::FakeExtVM fev;
+		dev::test::FakeExtVM fev(eth::EnvInfo{});
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 

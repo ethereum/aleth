@@ -82,7 +82,7 @@ bool doVMTest(mValue& _v)
 		assert(o.count("pre") > 0);
 		assert(o.count("exec") > 0);
 
-		FakeExtVM fev;
+		FakeExtVM fev(eth::EnvInfo{});
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -138,7 +138,7 @@ bool doVMTest(mValue& _v)
 			if (asserts(!vmExceptionOccured) || asserts(o.count("post") > 0) || asserts(o.count("callcreates") > 0) || asserts(o.count("out") > 0) || asserts(o.count("gas") > 0) || asserts(o.count("logs") > 0))
 				return 1;
 
-			dev::test::FakeExtVM test;
+			dev::test::FakeExtVM test(eth::EnvInfo{});
 			test.importState(o["post"].get_obj());
 			test.importCallCreates(o["callcreates"].get_array());
 			test.sub.logs = importLog(o["logs"].get_array());

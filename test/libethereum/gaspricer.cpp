@@ -42,7 +42,7 @@ void executeGasPricerTest(const string name, double _etherPrice, double _blockFe
 	BlockChain const& bc = bcLoader.bc();
 
 	gp.update(bc);
-	BOOST_CHECK_EQUAL(gp.ask(State()), _expectedAsk);
+	BOOST_CHECK_EQUAL(gp.ask(Block()), _expectedAsk);
 	BOOST_CHECK_EQUAL(gp.bid(_txPrio), _expectedBid);
 }
 } }
@@ -53,10 +53,10 @@ BOOST_AUTO_TEST_CASE(trivialGasPricer)
 {
 	cnote << "trivialGasPricer";
 	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
-	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
+	BOOST_CHECK_EQUAL(gp->ask(Block()), 10 * szabo);
 	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
 	gp->update(FullBlockChain<Ethash>(bytes(), AccountMap(), TransientDirectory().path(), WithExisting::Kill));
-	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
+	BOOST_CHECK_EQUAL(gp->ask(Block()), 10 * szabo);
 	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
 }
 
@@ -64,27 +64,27 @@ BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
 {
 	cnote << "basicGasPricer";
 	BasicGasPricer gp(u256(double(ether / 1000) / 30.679), u256(15.0 * 1000));
-	BOOST_CHECK_EQUAL(gp.ask(State()), 155632494086);
+	BOOST_CHECK_EQUAL(gp.ask(Block()), 155632494086);
 	BOOST_CHECK_EQUAL(gp.bid(), 155632494086);
 
 	gp.setRefPrice(u256(0));
-	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
+	BOOST_CHECK_EQUAL(gp.ask(Block()), 0);
 	BOOST_CHECK_EQUAL(gp.bid(), 0);
 
 	gp.setRefPrice(u256(1));
 	gp.setRefBlockFees(u256(0));
-	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
+	BOOST_CHECK_EQUAL(gp.ask(Block()), 0);
 	BOOST_CHECK_EQUAL(gp.bid(), 0);
 
 	gp.setRefPrice(u256("0x100000000000000000000000000000000"));
 	BOOST_CHECK_THROW(gp.setRefBlockFees(u256("0x100000000000000000000000000000000")), Overflow);
-	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
+	BOOST_CHECK_EQUAL(gp.ask(Block()), 0);
 	BOOST_CHECK_EQUAL(gp.bid(), 0);
 
 	gp.setRefPrice(1);
 	gp.setRefBlockFees(u256("0x100000000000000000000000000000000"));
 	BOOST_CHECK_THROW(gp.setRefPrice(u256("0x100000000000000000000000000000000")), Overflow);
-	BOOST_CHECK_EQUAL(gp.ask(State()), u256("108315264019305646138446560671076"));
+	BOOST_CHECK_EQUAL(gp.ask(Block()), u256("108315264019305646138446560671076"));
 	BOOST_CHECK_EQUAL(gp.bid(), u256("108315264019305646138446560671076"));
 }
 

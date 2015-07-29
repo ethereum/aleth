@@ -24,6 +24,7 @@
 
 #include <libethereum/Executive.h>
 #include <libevm/VMFactory.h>
+#include <libevm/ExtVMFace.h>
 #include "vm.h"
 
 using namespace std;
@@ -32,9 +33,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number()), _depth) {}
-
+FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
+	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth) {}
+	//ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number()), _depth) {}
+	//ExtVMFace(EnvInfo, Address , Address , Address , u256, u256, bytesConstRef, bytes, h256, unsigned _depth);
 h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
 	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
@@ -83,12 +85,13 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	ret["previousHash"] = toString(currentBlock.parentHash());
+	cerr << "FakeExtVM::exportEnv() not implemented!" << endl;
+	/*ret["previousHash"] = toString(currentBlock.parentHash());
 	ret["currentDifficulty"] = toCompactHex(currentBlock.difficulty(), HexPrefix::Add, 1);
 	ret["currentTimestamp"] =  toCompactHex(currentBlock.timestamp(), HexPrefix::Add, 1);
 	ret["currentCoinbase"] = toString(currentBlock.beneficiary());
 	ret["currentNumber"] = toCompactHex(currentBlock.number(), HexPrefix::Add, 1);
-	ret["currentGasLimit"] = toCompactHex(currentBlock.gasLimit(), HexPrefix::Add, 1);
+	ret["currentGasLimit"] = toCompactHex(currentBlock.gasLimit(), HexPrefix::Add, 1);*/
 	return ret;
 }
 
@@ -119,9 +122,10 @@ void FakeExtVM::importEnv(mObject& _o)
 	rlpStream << 0; //gasUsed
 	rlpStream << toInt(_o["currentTimestamp"]);
 	rlpStream << std::string(); //extra data
-	currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
 
-	lastHashes = test::lastHashes(currentBlock.number());
+	cerr << "check currentBlock and lastHashes in FakeExtVM::importEnv(mObject& _o)";
+	//currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
+	//lastHashes = test::lastHashes(currentBlock.number());
 }
 
 mObject FakeExtVM::exportState()
@@ -323,7 +327,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		TBOOST_REQUIRE((o.count("pre") > 0));
 		TBOOST_REQUIRE((o.count("exec") > 0));
 
-		FakeExtVM fev;
+		FakeExtVM fev(eth::EnvInfo{});
 		fev.importEnv(o["env"].get_obj());
 		fev.importState(o["pre"].get_obj());
 
@@ -393,7 +397,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				{
 					State postState(OverlayDB(), eth::BaseState::Empty);
 					State expectState(OverlayDB(), eth::BaseState::Empty);
-					stateOptionsMap expectStateMap;
+					AccountMaskMap expectStateMap;
 					ImportTest::importState(o["post"].get_obj(), postState);
 					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
 					ImportTest::checkExpectedState(expectState, postState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
@@ -431,7 +435,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				TBOOST_REQUIRE((o.count("gas") > 0));
 				TBOOST_REQUIRE((o.count("logs") > 0));
 
-				dev::test::FakeExtVM test;
+				dev::test::FakeExtVM test(eth::EnvInfo{});
 				test.importState(o["post"].get_obj());
 				test.importCallCreates(o["callcreates"].get_array());
 				test.sub.logs = importLog(o["logs"].get_array());
