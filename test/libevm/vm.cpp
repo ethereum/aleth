@@ -85,28 +85,34 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	cerr << "FakeExtVM::exportEnv() not implemented!" << endl;
-	/*ret["previousHash"] = toString(currentBlock.parentHash());
-	ret["currentDifficulty"] = toCompactHex(currentBlock.difficulty(), HexPrefix::Add, 1);
-	ret["currentTimestamp"] =  toCompactHex(currentBlock.timestamp(), HexPrefix::Add, 1);
-	ret["currentCoinbase"] = toString(currentBlock.beneficiary());
-	ret["currentNumber"] = toCompactHex(currentBlock.number(), HexPrefix::Add, 1);
-	ret["currentGasLimit"] = toCompactHex(currentBlock.gasLimit(), HexPrefix::Add, 1);*/
+	//ret["previousHash"] = toString(currentBlock.parentHash());
+	ret["currentDifficulty"] = toCompactHex(envInfo().difficulty(), HexPrefix::Add, 1);
+	ret["currentTimestamp"] =  toCompactHex(envInfo().timestamp(), HexPrefix::Add, 1);
+	ret["currentCoinbase"] = toString(envInfo().beneficiary());
+	ret["currentNumber"] = toCompactHex(envInfo().number(), HexPrefix::Add, 1);
+	ret["currentGasLimit"] = toCompactHex(envInfo().gasLimit(), HexPrefix::Add, 1);
 	return ret;
 }
 
 void FakeExtVM::importEnv(mObject& _o)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-	assert(_o.count("previousHash") > 0);
+	//assert(_o.count("previousHash") > 0);
 	assert(_o.count("currentGasLimit") > 0);
 	assert(_o.count("currentDifficulty") > 0);
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
+	EnvInfo& info = *(const_cast<EnvInfo*> (&envInfo())); //trick
+	info.setGasLimit(toInt(_o["currentGasLimit"]));
+	info.setDifficulty(toInt(_o["currentDifficulty"]));
+	info.setTimestamp(toInt(_o["currentTimestamp"]));
+	info.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	info.setNumber(toInt(_o["currentNumber"]));
 
-	RLPStream rlpStream;
+	cnote << "Block creation in FakeExtVM::importEnv(mObject& _o) ignored!";
+	/*RLPStream rlpStream;
 	rlpStream.appendList(BlockInfo::BasicFields);
 
 	rlpStream << h256(_o["previousHash"].get_str());
@@ -122,10 +128,8 @@ void FakeExtVM::importEnv(mObject& _o)
 	rlpStream << 0; //gasUsed
 	rlpStream << toInt(_o["currentTimestamp"]);
 	rlpStream << std::string(); //extra data
-
-	cerr << "check currentBlock and lastHashes in FakeExtVM::importEnv(mObject& _o)";
-	//currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
-	//lastHashes = test::lastHashes(currentBlock.number());
+	currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
+	lastHashes = test::lastHashes(currentBlock.number());*/
 }
 
 mObject FakeExtVM::exportState()
