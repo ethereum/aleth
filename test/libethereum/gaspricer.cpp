@@ -48,94 +48,94 @@ void executeGasPricerTest(string const& name, double _etherPrice, double _blockF
 }
 } }
 
-BOOST_AUTO_TEST_SUITE(GasPricer)
+//BOOST_AUTO_TEST_SUITE(GasPricer)
 
-BOOST_AUTO_TEST_CASE(trivialGasPricer)
-{
-	cnote << "trivialGasPricer";
-	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
-	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
-	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
-	gp->update(CanonBlockChain<Ethash>(TransientDirectory().path(), WithExisting::Kill));
-	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
-	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
-}
+//BOOST_AUTO_TEST_CASE(trivialGasPricer)
+//{
+//	cnote << "trivialGasPricer";
+//	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
+//	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
+//	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
+//	gp->update(CanonBlockChain<Ethash>(TransientDirectory().path(), WithExisting::Kill));
+//	BOOST_CHECK_EQUAL(gp->ask(State()), 10 * szabo);
+//	BOOST_CHECK_EQUAL(gp->bid(), 10 * szabo);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
-{
-	cnote << "basicGasPricer";
-	BasicGasPricer gp(u256(double(ether / 1000) / 30.679), u256(15.0 * 1000));
-	BOOST_CHECK_EQUAL(gp.ask(State()), 155632494086);
-	BOOST_CHECK_EQUAL(gp.bid(), 155632494086);
+//BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
+//{
+//	cnote << "basicGasPricer";
+//	BasicGasPricer gp(u256(double(ether / 1000) / 30.679), u256(15.0 * 1000));
+//	BOOST_CHECK_EQUAL(gp.ask(State()), 155632494086);
+//	BOOST_CHECK_EQUAL(gp.bid(), 155632494086);
 
-	gp.setRefPrice(u256(0));
-	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
-	BOOST_CHECK_EQUAL(gp.bid(), 0);
+//	gp.setRefPrice(u256(0));
+//	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
+//	BOOST_CHECK_EQUAL(gp.bid(), 0);
 
-	gp.setRefPrice(u256(1));
-	gp.setRefBlockFees(u256(0));
-	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
-	BOOST_CHECK_EQUAL(gp.bid(), 0);
+//	gp.setRefPrice(u256(1));
+//	gp.setRefBlockFees(u256(0));
+//	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
+//	BOOST_CHECK_EQUAL(gp.bid(), 0);
 
-	gp.setRefPrice(u256("0x100000000000000000000000000000000"));
-	BOOST_CHECK_THROW(gp.setRefBlockFees(u256("0x100000000000000000000000000000000")), Overflow);
-	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
-	BOOST_CHECK_EQUAL(gp.bid(), 0);
+//	gp.setRefPrice(u256("0x100000000000000000000000000000000"));
+//	BOOST_CHECK_THROW(gp.setRefBlockFees(u256("0x100000000000000000000000000000000")), Overflow);
+//	BOOST_CHECK_EQUAL(gp.ask(State()), 0);
+//	BOOST_CHECK_EQUAL(gp.bid(), 0);
 
-	gp.setRefPrice(1);
-	gp.setRefBlockFees(u256("0x100000000000000000000000000000000"));
-	BOOST_CHECK_THROW(gp.setRefPrice(u256("0x100000000000000000000000000000000")), Overflow);
-	BOOST_CHECK_EQUAL(gp.ask(State()), u256("108315264019305646138446560671076"));
-	BOOST_CHECK_EQUAL(gp.bid(), u256("108315264019305646138446560671076"));
-}
+//	gp.setRefPrice(1);
+//	gp.setRefBlockFees(u256("0x100000000000000000000000000000000"));
+//	BOOST_CHECK_THROW(gp.setRefPrice(u256("0x100000000000000000000000000000000")), Overflow);
+//	BOOST_CHECK_EQUAL(gp.ask(State()), u256("108315264019305646138446560671076"));
+//	BOOST_CHECK_EQUAL(gp.bid(), u256("108315264019305646138446560671076"));
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test)
-{
-	dev::test::executeGasPricerTest("RPC_API_Test", 30.679, 15.0, "/BlockchainTests/bcRPC_API_Test.json", TransactionPriority::Medium, 155632494086, 1);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test)
+//{
+//	dev::test::executeGasPricerTest("RPC_API_Test", 30.679, 15.0, "/BlockchainTests/bcRPC_API_Test.json", TransactionPriority::Medium, 155632494086, 1);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_bcValidBlockTest)
-{
-	dev::test::executeGasPricerTest("SimpleTx", 30.679, 15.0, "/BlockchainTests/bcValidBlockTest.json", TransactionPriority::Medium, 155632494086, 10);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_bcValidBlockTest)
+//{
+//	dev::test::executeGasPricerTest("SimpleTx", 30.679, 15.0, "/BlockchainTests/bcValidBlockTest.json", TransactionPriority::Medium, 155632494086, 10);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleTest)
-{
-	dev::test::executeGasPricerTest("twoUncle", 30.679, 15.0, "/BlockchainTests/bcUncleTest.json", TransactionPriority::Medium, 155632494086, 1);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleTest)
+//{
+//	dev::test::executeGasPricerTest("twoUncle", 30.679, 15.0, "/BlockchainTests/bcUncleTest.json", TransactionPriority::Medium, 155632494086, 1);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleHeaderValiditiy)
-{
-	dev::test::executeGasPricerTest("correct", 30.679, 15.0, "/BlockchainTests/bcUncleHeaderValiditiy.json", TransactionPriority::Medium, 155632494086, 1);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_bcUncleHeaderValiditiy)
+//{
+//	dev::test::executeGasPricerTest("correct", 30.679, 15.0, "/BlockchainTests/bcUncleHeaderValiditiy.json", TransactionPriority::Medium, 155632494086, 1);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_notxs)
-{
-	dev::test::executeGasPricerTest("notxs", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Medium, 155632494086, 155632494086);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_notxs)
+//{
+//	dev::test::executeGasPricerTest("notxs", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Medium, 155632494086, 155632494086);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowestPrio)
-{
-	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Lowest, 15731282021, 10000000000000);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowestPrio)
+//{
+//	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Lowest, 15731282021, 10000000000000);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowPrio)
-{
-	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Low, 15731282021, 15734152261884);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_LowPrio)
+//{
+//	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Low, 15731282021, 15734152261884);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_MediumPrio)
-{
-	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Medium, 15731282021, 20000000000000);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_MediumPrio)
+//{
+//	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Medium, 15731282021, 20000000000000);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighPrio)
-{
-	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::High, 15731282021, 24265847738115);
-}
+//BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighPrio)
+//{
+//	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::High, 15731282021, 24265847738115);
+//}
 
-BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighestPrio)
-{
-	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Highest, 15731282021, 30000000000000);
-}
-BOOST_AUTO_TEST_SUITE_END()
+//BOOST_AUTO_TEST_CASE(basicGasPricer_highGasUsage_HighestPrio)
+//{
+//	dev::test::executeGasPricerTest("highGasUsage", 30.679, 15.0, "/BlockchainTests/bcGasPricerTest.json", TransactionPriority::Highest, 15731282021, 30000000000000);
+//}
+//BOOST_AUTO_TEST_SUITE_END()
