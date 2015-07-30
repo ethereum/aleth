@@ -6,12 +6,14 @@
 #include <vector>
 #include <string>
 #include <random>
+#include <boost/random/random_device.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 
 namespace dev
 {
 
 static unsigned char s_cleanseCounter = 0;
-static std::random_device s_vectorRefEngine;
+static boost::random_device s_vectorRefEngine;
 
 /**
  * A modifiable reference to an existing object or vector in memory.
@@ -75,7 +77,7 @@ public:
 	{
 		uint8_t* e = (uint8_t*)end();
 		for (uint8_t* i = (uint8_t*)begin(); i != e; ++i)
-			*i = (uint8_t)std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
+			*i = (uint8_t)boost::random::uniform_int_distribution<uint16_t>(0, 255)(_eng);
 	}
 	/// @returns a random valued object.
 	void randomize() { randomize(s_vectorRefEngine); }

@@ -291,10 +291,13 @@ enum class Format
 	Human
 };
 
-void stopMiningAfterXBlocks(eth::Client* _c, unsigned _start, unsigned _mining)
+void stopMiningAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mining)
 {
-	if (_c->isMining() && _c->blockChain().details().number - _start == _mining)
+	if (io_mining != ~(unsigned)0 && io_mining && _c->isMining() && _c->blockChain().details().number - _start == io_mining)
+	{
 		_c->stopMining();
+		io_mining = ~(unsigned)0;
+	}
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
@@ -1105,6 +1108,7 @@ int main(int argc, char** argv)
 	string jsonAdmin;
 	string genesisJSON;
 	dev::eth::Network releaseNetwork = c_network;
+	u256 gasFloor = UndefinedU256;
 	string privateChain;
 
 	bool upnp = true;
@@ -1347,6 +1351,8 @@ int main(int argc, char** argv)
 		}
 		else if (arg == "--frontier")
 			releaseNetwork = eth::Network::Frontier;
+		else if (arg == "--gas-floor" && i + 1 < argc)
+			gasFloor = u256(argv[++i]);
 		else if (arg == "--olympic")
 			releaseNetwork = eth::Network::Olympic;
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
@@ -1514,6 +1520,8 @@ int main(int argc, char** argv)
 		CanonBlockChain<Ethash>::forceGenesisExtraData(sha3(privateChain).asBytes());
 	if (!genesisJSON.empty())
 		CanonBlockChain<Ethash>::setGenesis(genesisJSON);
+	if (gasFloor != UndefinedU256)
+		c_gasFloorTarget = gasFloor;
 
 	if (g_logVerbosity > 0)
 	{

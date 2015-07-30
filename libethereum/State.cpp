@@ -22,7 +22,6 @@
 #include "State.h"
 
 #include <ctime>
-#include <random>
 #include <boost/filesystem.hpp>
 #include <boost/timer.hpp>
 #include <libdevcore/CommonIO.h>
@@ -906,8 +905,12 @@ bool State::sealBlock(bytesConstRef _header)
 	if (!m_committedToMine)
 		return false;
 
+	// Check that this header is indeed for this block.
+	if (BlockInfo(_header, CheckNothing, h256{}, HeaderData).hashWithout() != m_currentBlock.hashWithout())
+		return false;
+
+	// Looks good!
 	clog(StateDetail) << "Sealing block!";
-	// Got it!
 
 	// Compile block:
 	RLPStream ret;

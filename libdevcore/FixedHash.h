@@ -25,8 +25,9 @@
 
 #include <array>
 #include <cstdint>
-#include <random>
 #include <algorithm>
+#include <boost/random/random_device.hpp>
+#include <boost/random/uniform_int_distribution.hpp>
 #include "CommonData.h"
 
 namespace dev
@@ -36,7 +37,7 @@ namespace dev
 template <unsigned N> struct StaticLog2 { enum { result = 1 + StaticLog2<N/2>::result }; };
 template <> struct StaticLog2<1> { enum { result = 0 }; };
 
-extern std::random_device s_fixedHashEngine;
+extern boost::random_device s_fixedHashEngine;
 
 /// Fixed-size raw-byte array container type, with an API optimised for storing hashes.
 /// Transparently converts to/from the corresponding arithmetic type; this will
@@ -154,7 +155,7 @@ public:
 	{
 		FixedHash ret;
 		for (auto& i: ret.m_data)
-			i = (uint8_t)std::uniform_int_distribution<uint16_t>(0, 255)(_eng);
+			i = (uint8_t)boost::random::uniform_int_distribution<uint16_t>(0, 255)(_eng);
 		return ret;
 	}
 
