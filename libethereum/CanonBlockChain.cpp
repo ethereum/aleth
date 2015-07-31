@@ -45,14 +45,16 @@ string CanonBlockChain<Ethash>::s_genesisStateJSON;
 bytes CanonBlockChain<Ethash>::s_genesisExtraData;
 
 CanonBlockChain<Ethash>::CanonBlockChain(std::string const& _path, WithExisting _we, ProgressCallback const& _pc):
-	FullBlockChain<Ethash>(createGenesisBlock(), createGenesisState(), _path, _we, _pc)
+	FullBlockChain<Ethash>(createGenesisBlock(), createGenesisState(), _path)
 {
+	BlockChain::openDatabase(_path, _we, _pc);
 }
 
 void CanonBlockChain<Ethash>::reopen(WithExisting _we, ProgressCallback const& _pc)
 {
 	close();
-	open(createGenesisBlock(), createGenesisState(), m_dbPath, _we, _pc);
+	open(createGenesisBlock(), createGenesisState(), m_dbPath);
+	openDatabase(m_dbPath, _we, _pc);
 }
 
 bytes CanonBlockChain<Ethash>::createGenesisBlock()
@@ -69,7 +71,7 @@ bytes CanonBlockChain<Ethash>::createGenesisBlock()
 	}
 
 	js::mValue val;
-	json_spirit::read_string(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON, val);
+	json_spirit::read_string(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON, val);
 	js::mObject genesis = val.get_obj();
 
 	h256 mixHash(genesis["mixhash"].get_str());
@@ -109,7 +111,7 @@ unordered_map<Address, Account> CanonBlockChain<Ethash>::createGenesisState()
 	if (s_ret.empty())
 	{
 		js::mValue val;
-		json_spirit::read_string(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON, val);
+		js::read_string(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON, val);
 		for (auto account: val.get_obj()["alloc"].get_obj())
 		{
 			u256 balance;

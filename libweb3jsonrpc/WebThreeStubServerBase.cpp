@@ -510,7 +510,7 @@ string WebThreeStubServerBase::eth_compileSerpent(string const& _source)
 	return res;
 }
 
-#define ADMIN requires(_session, Priviledge::Admin)
+#define ADMIN requires(_session, Privilege::Admin)
 
 bool WebThreeStubServerBase::admin_web3_setVerbosity(int _v, string const& _session)
 {
@@ -555,6 +555,20 @@ Json::Value WebThreeStubServerBase::admin_net_peers(std::string const& _session)
 	Json::Value ret;
 	for (p2p::PeerSessionInfo const& i: network()->peers())
 		ret.append(toJson(i));
+	return ret;
+}
+
+Json::Value WebThreeStubServerBase::admin_net_nodeInfo(const string& _session)
+{
+	ADMIN;
+	Json::Value ret;
+	p2p::NodeInfo i = network()->nodeInfo();
+	ret["name"] = i.version;
+	ret["port"] = i.port;
+	ret["address"] = i.address;
+	ret["listenAddr"] = i.address + ":" + toString(i.port);
+	ret["id"] = i.id.hex();
+	ret["enode"] = i.enode();
 	return ret;
 }
 
