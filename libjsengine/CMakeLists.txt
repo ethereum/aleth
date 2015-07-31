@@ -27,7 +27,7 @@ add_dependencies(${EXECUTABLE} BuildInfo.h)
 # it also needs to be dynamic library
 # xcode needs libstdc++ to be explicitly set as it's attribute
 if (APPLE)
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -std=c++0x")
 	set_property(TARGET ${EXECUTABLE} PROPERTY XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 endif()
 
