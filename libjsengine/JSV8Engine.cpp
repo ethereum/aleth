@@ -21,6 +21,7 @@
  */
 
 #include <memory>
+#include <initializer_list>
 #include "JSV8Engine.h"
 #include "JSV8Printer.h"
 #include "libjsengine/JSEngineResources.hpp"
