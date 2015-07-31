@@ -1168,9 +1168,13 @@ int main(int argc, char** argv)
 	Secrets toImport;
 	if (b.size())
 	{
-		RLP config(b);
-		signingKey = config[0].toHash<Address>();
-		beneficiary = config[1].toHash<Address>();
+		try
+		{
+			RLP config(b);
+			signingKey = config[0].toHash<Address>();
+			beneficiary = config[1].toHash<Address>();
+		}
+		catch (...) {}
 	}
 
 	MinerCLI m(MinerCLI::OperationMode::None);
@@ -1722,7 +1726,7 @@ int main(int argc, char** argv)
 				masterPassword = getPassword("Please enter your MASTER password: ");
 				if (keyManager.load(masterPassword))
 					break;
-				cout << "Password invalid. Try again." << endl;
+				cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " + getDataDir("ethereum") + "/keys.info" << endl;
 			}
 	}
 	else
