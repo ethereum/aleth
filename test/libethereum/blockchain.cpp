@@ -863,15 +863,30 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 
 BOOST_AUTO_TEST_CASE(bcMining)
 {
-	dev::TransientDirectory m_td;				//BlockChain Dir
-	dev::TransientDirectory m_td2;				//State Dir
+	try
+	{
+		dev::TransientDirectory m_td;				//BlockChain Dir
+		dev::TransientDirectory m_td2;				//State Dir
 
-	CanonBlockChain<BasicAuthority> m_blockchain(m_td.path(), WithExisting::Kill);
-	OverlayDB stateDB = State::openDB(m_td2.path(), m_blockchain.genesisHash());
-	State m_state (m_blockchain.genesisState(stateDB));
+		CanonBlockChain<BasicAuthority> m_blockchain(m_td.path(), WithExisting::Kill);
+		OverlayDB stateDB = State::openDB(m_td2.path(), m_blockchain.genesisHash());
+		State m_state (m_blockchain.genesisState(stateDB));
 
-	m_state.sync(m_blockchain);
-	mine(m_state, m_blockchain);
+		m_state.sync(m_blockchain);
+		mine(m_state, m_blockchain);
+	}
+	catch (Exception const& _e)
+	{
+		BOOST_ERROR("Mining Error! " << _e.what());
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Mining Error! " << _e.what());
+	}
+	catch(...)
+	{
+		BOOST_ERROR("Mining Error!");
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()
