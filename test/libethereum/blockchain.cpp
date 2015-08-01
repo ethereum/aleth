@@ -56,8 +56,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 	cerr << "BlockChainTests not implemented!" << endl;
 }
-/*
-void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
+
+/*void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -70,19 +70,19 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		cerr << i.first << endl;
 		TBOOST_REQUIRE(o.count("genesisBlockHeader"));
-
 		TBOOST_REQUIRE(o.count("pre"));
-		ImportTest importer(o["pre"].get_obj());
+
+		ImportTest importer(o["pre"].get_obj(), _fillin);
 		TransientDirectory td_stateDB_tmp;
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
-		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty, biGenesisBlock.beneficiary());
+
+		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
+		ImportTest::importState(o["pre"].get_obj(), trueState);
+		o["pre"] = fillJsonWithState(trueState); //convert all fields to hex
+		trueState.commit();
 
 		//Imported blocks from the start
 		std::vector<blockSet> blockSets;
-
-		importer.importState(o["pre"].get_obj(), trueState);
-		o["pre"] = fillJsonWithState(trueState);
-		trueState.commit();
 
 		if (_fillin)
 			biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), trueState.rootHash());
@@ -135,8 +135,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				TransientDirectory td_stateDB, td_bc;
 				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), AccountMap(), td_bc.path(), WithExisting::Kill);
 				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-				trueState.setBeneficiary(biGenesisBlock.beneficiary());
-				importer.importState(o["pre"].get_obj(), state);
+				//trueState.setBeneficiary(biGenesisBlock.beneficiary());
+				ImportTest::importState(o["pre"].get_obj(), state);
 				state.commit();
 
 				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
@@ -150,7 +150,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					bc.sync(uncleQueue, state.db(), 4);
 					bc.attemptImport(block, state.db());
 					vBiBlocks.push_back(BlockHeader(block));
-					state.sync(bc);
+					//state.sync(bc);
 				}
 
 				// get txs
@@ -188,12 +188,12 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					}
 				} 
 				bc.sync(uncleBlockQueue, state.db(), 4);
-				state.commitToSeal(bc);
+				//state.commitToSeal(bc);
 
 				try
 				{
-					state.sync(bc);
-					state.sync(bc, txs, gp);
+					//state.sync(bc);
+					//state.sync(bc, txs, gp);
 					mine(state, bc);
 				}
 				catch (Exception const& _e)
@@ -206,6 +206,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					cnote << "state sync or mining did throw an exception: " << _e.what();
 					return;
 				}
+
 
 				blObj["rlp"] = toHex(state.blockData(), 2, HexPrefix::Add);
 
@@ -311,9 +312,9 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			if (o.count("expect") > 0)
 			{
-				stateOptionsMap expectStateMap;
+				AccountMaskMap expectStateMap;
 				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.beneficiary());
-				importer.importState(o["expect"].get_obj(), stateExpect, expectStateMap);
+				ImportTest::importState(o["expect"].get_obj(), stateExpect, expectStateMap);
 				ImportTest::checkExpectedState(stateExpect, trueState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 				o.erase(o.find("expect"));
 			}
@@ -323,8 +324,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			o["lastblockhash"] = toString(trueBc.info().hash());
 
 			//make all values hex in pre section
-			State prestate(OverlayDB(), BaseState::Empty, biGenesisBlock.beneficiary());
-			importer.importState(o["pre"].get_obj(), prestate);
+			State prestate(OverlayDB(), BaseState::Empty);
+			ImportTest::importState(o["pre"].get_obj(), prestate);
 			o["pre"] = fillJsonWithState(prestate);
 		}//_fillin
 
@@ -505,8 +506,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					"Boost check: " + i.first + " lastblockhash does not match " + toString(trueBc.info().hash()) + " expected: " + o["lastblockhash"].get_str());
 		}
 	}
-}
-*/
+}*/
 // helping functions
 
 mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet)

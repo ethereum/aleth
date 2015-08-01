@@ -64,6 +64,7 @@ void connectClients(Client& c1, Client& c2)
 
 void mine(State& s, BlockChain const& _bc)
 {
+	cerr << "Test Mining not implemented!" << endl;
 	s.commit();
 	_bc.block(); //unused variable review!!!
 	/*std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
