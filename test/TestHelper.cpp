@@ -107,7 +107,7 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 
 	if (!isFiller)
 	{
-		importState(_o["post"].get_obj(), m_statePost);
+		importState(_o["post"].get_obj(), m_statePost);		
 		cnote << "ImportTest(json_spirit::mObject& _o, bool isFiller) Environment logs check ignored!";
 		//m_environment.sub.logs = importLog(_o["logs"].get_array());
 	}
@@ -156,18 +156,18 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 {
 	assert(_o.count("previousHash") > 0);
 	assert(_o.count("currentGasLimit") > 0);
-	assert(_o.count("currentDifficulty") > 0);
+	assert(_o.count("currentDifficulty") > 0);	
+	assert(_o.count("currentNumber") > 0);
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
-	assert(_o.count("currentNumber") > 0);
-	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
 	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
-	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
-	cnote << "ImportTest::importEnv() setLastHashes and setTimestamp ignored!";
-	//m_envInfo.setLastHashes();
-	//m_envInfo.setTimestamp();
+	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	LastHashes lh;
+	lh.push_back(h256(_o["previousHash"].get_str()));
+	m_envInfo.setLastHashes(lh);
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
