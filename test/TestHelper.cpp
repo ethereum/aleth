@@ -108,8 +108,7 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
 	if (!isFiller)
 	{
 		importState(_o["post"].get_obj(), m_statePost);		
-		cnote << "ImportTest(json_spirit::mObject& _o, bool isFiller) Environment logs check ignored!";
-		//m_environment.sub.logs = importLog(_o["logs"].get_array());
+		m_logsExpected = importLog(_o["logs"].get_array());
 	}
 }
 
@@ -118,7 +117,9 @@ bytes ImportTest::executeTest()
 	ExecutionResult res;
 	eth::State tmpState = m_statePre;
 
-	res = m_statePre.execute(m_envInfo, m_transaction).first;
+	std::pair<ExecutionResult, TransactionReceipt> execOut = m_statePre.execute(m_envInfo, m_transaction);
+	res = execOut.first;
+	m_logs = execOut.second.log();
 	m_statePre.commit();
 	m_statePost = m_statePre;
 	m_statePre = tmpState;
@@ -154,7 +155,7 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	assert(_o.count("previousHash") > 0);
+	//assert(_o.count("previousHash") > 0);
 	assert(_o.count("currentGasLimit") > 0);
 	assert(_o.count("currentDifficulty") > 0);	
 	assert(_o.count("currentNumber") > 0);
@@ -165,9 +166,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
 	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
-	LastHashes lh;
-	lh.push_back(h256(_o["previousHash"].get_str()));
-	m_envInfo.setLastHashes(lh);
+	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
@@ -234,7 +233,7 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
+void ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
 	#define CHECK(a,b)						\
 		{									\
@@ -319,7 +318,7 @@ void ImportTest::exportTest(bytes const& _output)
 		eth::AccountMaskMap stateMap;
 		State expectState(OverlayDB(), eth::BaseState::Empty);
 		importState(m_testObject["expect"].get_obj(), expectState, stateMap);
-		checkExpectedState(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+		compareStates(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 		m_testObject.erase(m_testObject.find("expect"));
 	}
 

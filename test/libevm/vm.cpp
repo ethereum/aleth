@@ -34,9 +34,9 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(EnvInfo const& _envInfo, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth) {}
-	//ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number()), _depth) {}
-	//ExtVMFace(EnvInfo, Address , Address , Address , u256, u256, bytesConstRef, bytes, h256, unsigned _depth);
+	ExtVMFace(_envInfo, Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _depth)
+{}
+
 h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
 	Address na = right160(sha3(rlpList(myAddress, get<1>(addresses[myAddress]))));
@@ -85,7 +85,6 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	//ret["previousHash"] = toString(currentBlock.parentHash());
 	ret["currentDifficulty"] = toCompactHex(envInfo().difficulty(), HexPrefix::Add, 1);
 	ret["currentTimestamp"] =  toCompactHex(envInfo().timestamp(), HexPrefix::Add, 1);
 	ret["currentCoinbase"] = toString(envInfo().beneficiary());
@@ -97,7 +96,6 @@ mObject FakeExtVM::exportEnv()
 void FakeExtVM::importEnv(mObject& _o)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-	//assert(_o.count("previousHash") > 0);
 	assert(_o.count("currentGasLimit") > 0);
 	assert(_o.count("currentDifficulty") > 0);
 	assert(_o.count("currentTimestamp") > 0);
@@ -110,26 +108,7 @@ void FakeExtVM::importEnv(mObject& _o)
 	info.setTimestamp(toInt(_o["currentTimestamp"]));
 	info.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
 	info.setNumber(toInt(_o["currentNumber"]));
-
-	cnote << "Block creation in FakeExtVM::importEnv(mObject& _o) ignored!";
-	/*RLPStream rlpStream;
-	rlpStream.appendList(BlockInfo::BasicFields);
-
-	rlpStream << h256(_o["previousHash"].get_str());
-	rlpStream << EmptyListSHA3;
-	rlpStream << Address(_o["currentCoinbase"].get_str());
-	rlpStream << h256(); // stateRoot
-	rlpStream << EmptyTrie; // transactionTrie
-	rlpStream << EmptyTrie; // receiptTrie
-	rlpStream << LogBloom(); // bloom
-	rlpStream << toInt(_o["currentDifficulty"]);
-	rlpStream << toInt(_o["currentNumber"]);
-	rlpStream << toInt(_o["currentGasLimit"]);
-	rlpStream << 0; //gasUsed
-	rlpStream << toInt(_o["currentTimestamp"]);
-	rlpStream << std::string(); //extra data
-	currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
-	lastHashes = test::lastHashes(currentBlock.number());*/
+	info.setLastHashes( lastHashes( info.number() ) );
 }
 
 mObject FakeExtVM::exportState()
@@ -404,7 +383,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 					AccountMaskMap expectStateMap;
 					ImportTest::importState(o["post"].get_obj(), postState);
 					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
-					ImportTest::checkExpectedState(expectState, postState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+					ImportTest::compareStates(expectState, postState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 					o.erase(o.find("expect"));
 				}
 
@@ -444,6 +423,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				test.importCallCreates(o["callcreates"].get_array());
 				test.sub.logs = importLog(o["logs"].get_array());
 
+
 				checkOutput(output, o);
 
 				TBOOST_CHECK_EQUAL(toInt(o["gas"]), fev.gas);
@@ -452,9 +432,9 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				mObject mPostState = fev.exportState();
 				ImportTest::importState(mPostState, postState);
 				ImportTest::importState(o["post"].get_obj(), expectState);
-				ImportTest::checkExpectedState(expectState, postState);
+				ImportTest::compareStates(expectState, postState);
 
-				checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
+				//checkAddresses<std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes> > >(test.addresses, fev.addresses);
 
 				checkCallCreates(fev.callcreates, test.callcreates);
 

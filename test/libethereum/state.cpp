@@ -91,15 +91,11 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 			checkOutput(output, o);
 
 			// check logs
-			cnote << "State checkLog ignored!";
-			//checkLog(theState.pending().size() ? theState.log(0) : LogEntries(), importer.m_environment.sub.logs);
+			checkLog(importer.m_logs, importer.m_logsExpected);
 
 			// check addresses
 #if ETH_FATDB
-			ImportTest::checkExpectedState(importer.m_statePost, importedStatePost);
-			auto expectedAddrs = importedStatePost.addresses();
-			auto resultAddrs = importer.m_statePost.addresses();
-			checkAddresses(expectedAddrs, resultAddrs); //why do we need this if we fave checkExpectedState ?
+			ImportTest::compareStates(importer.m_statePost, importedStatePost);
 #endif
 			TBOOST_CHECK_MESSAGE((importer.m_statePost.rootHash() == h256(o["postStateRoot"].get_str())), "wrong post state root");
 		}
