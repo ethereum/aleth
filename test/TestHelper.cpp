@@ -155,7 +155,6 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	//assert(_o.count("previousHash") > 0);
 	assert(_o.count("currentGasLimit") > 0);
 	assert(_o.count("currentDifficulty") > 0);	
 	assert(_o.count("currentNumber") > 0);
@@ -310,7 +309,7 @@ void ImportTest::exportTest(bytes const& _output)
 	}
 
 	// export logs	
-	m_testObject["logs"] = exportLog(LogEntries());//exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
+	m_testObject["logs"] = exportLog(m_logs);
 
 	// compare expected state with post state
 	if (m_testObject.count("expect") > 0)
