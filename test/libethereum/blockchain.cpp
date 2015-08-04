@@ -59,6 +59,7 @@ mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vect
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
+	(void)_fillin;
 	for (auto& i: _v.get_obj())
 	{
 		mObject& o = i.second.get_obj();
@@ -72,7 +73,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		TBOOST_REQUIRE(o.count("genesisBlockHeader"));
 		TBOOST_REQUIRE(o.count("pre"));
 
-		ImportTest importer(o["pre"].get_obj(), _fillin);
+		ImportTest importer(o["pre"].get_obj());
 		TransientDirectory td_stateDB_tmp;
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
 

@@ -126,6 +126,7 @@ namespace test
 class ImportTest
 {
 public:
+	ImportTest(json_spirit::mObject& _o): m_testObject(_o) {}
 	ImportTest(json_spirit::mObject& _o, bool isFiller);
 
 	// imports
