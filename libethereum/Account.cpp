@@ -69,13 +69,13 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 
 		bool haveStorage = o.count("storage");
 		if (haveStorage)
-		for (pair<string, js::mValue> const& j: o["storage"].get_obj())
-			ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
+			for (pair<string, js::mValue> const& j: o["storage"].get_obj())
+				ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
 
 		bool haveNonce = o.count("nonce");
 		if (haveNonce)
-		for (auto i = 0; i < u256Safe(o["nonce"].get_str()); ++i)
-			ret[a].incNonce();
+			for (auto i = 0; i < u256Safe(o["nonce"].get_str()); ++i)
+				ret[a].incNonce();
 
 		if (o_mask)
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage);

@@ -107,7 +107,18 @@ unordered_map<Address, Account> CanonBlockChain<Ethash>::createGenesisState()
 	static std::unordered_map<Address, Account> s_ret;
 
 	if (s_ret.empty())
-		s_ret = jsonToAccountMap(s_genesisStateJSON.empty() ? c_genesisInfo : s_genesisStateJSON);
+	{
+		if (s_genesisStateJSON.empty())
+		{
+			js::mValue val;
+			json_spirit::read_string(c_genesisInfo, val);
+			js::mObject obj = val.get_obj();
+			string ss = json_spirit::write_string((js::mValue)obj["alloc"].get_obj(), true);
+			s_ret = jsonToAccountMap(ss);
+		}
+		else
+			s_ret = jsonToAccountMap(s_genesisStateJSON);
+	}
 	return s_ret;
 }
 
