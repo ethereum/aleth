@@ -96,22 +96,31 @@ struct MissingFields : virtual Exception {};
 
 bigint const c_max256plus1 = bigint(1) << 256;
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
 	m_statePre(OverlayDB(), eth::BaseState::Empty),
 	m_statePost(OverlayDB(), eth::BaseState::Empty),
 	m_testObject(_o)
 {
-	importEnv(_o["env"].get_obj());
-	importState(_o["pre"].get_obj(), m_statePre);
-	importTransaction(_o["transaction"].get_obj());
+	if (testTemplate == testType::StateTests)
+	{
+		importEnv(_o["env"].get_obj());
+		importTransaction(_o["transaction"].get_obj());
+	}
 
+	importState(_o["pre"].get_obj(), m_statePre);
 	if (!isFiller)
 	{
-		importState(_o["post"].get_obj(), m_statePost);		
-		m_logsExpected = importLog(_o["logs"].get_array());
+		if (_o.count("post"))
+			importState(_o["post"].get_obj(), m_statePost);
+		else
+			importState(_o["postState"].get_obj(), m_statePost);
+
+		if (testTemplate == testType::StateTests)
+			m_logsExpected = importLog(_o["logs"].get_array());
 	}
 }
 
+//executes an imported transacton on preState
 bytes ImportTest::executeTest()
 {
 	ExecutionResult res;

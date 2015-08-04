@@ -72,7 +72,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		TBOOST_REQUIRE(o.count("genesisBlockHeader"));
 		TBOOST_REQUIRE(o.count("pre"));
 
-		ImportTest importer(o["pre"].get_obj(), _fillin);
+		ImportTest importer(o, _fillin, testType::BlockChainTests);
 		TransientDirectory td_stateDB_tmp;
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
 
