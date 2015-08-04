@@ -62,18 +62,15 @@ void connectClients(Client& c1, Client& c2)
 #endif
 }
 
-void mine(State& s, BlockChain const& _bc)
-{
-	cerr << "Test Mining not implemented!" << endl;
-	s.commit();
-	_bc.block(); //unused variable review!!!
-	/*std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
+void mine(Block& s, BlockChain const& _bc)
+{		
+	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	s.commitToSeal(_bc);
 	Notified<bytes> sealed;
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(s.info());
 	sealed.waitNot({});
-	s.sealBlock(sealed);*/
+	s.sealBlock(sealed);
 }
 
 void mine(Ethash::BlockHeader& _bi)

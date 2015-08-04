@@ -63,7 +63,7 @@ class State;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
-void mine(State& _s, BlockChain const& _bc);
+void mine(Block& _s, BlockChain const& _bc);
 void mine(Ethash::BlockHeader& _bi);
 
 }
