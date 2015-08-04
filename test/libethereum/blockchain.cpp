@@ -26,6 +26,7 @@
 #include <libethereum/CanonBlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <test/TestHelper.h>
+#include <libethereum/Block.h>
 
 using namespace std;
 using namespace json_spirit;
@@ -77,26 +78,26 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
 
 		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-		ImportTest::importState(o["pre"].get_obj(), trueState);
+		trueState = importer.m_statePre;
 		o["pre"] = fillJsonWithState(trueState); //convert all fields to hex
 		trueState.commit();
 
 		//Imported blocks from the start
-		std::vector<blockSet> blockSets;
+		std::vector<blockSet> blockSets;  //Block(bytes) => UncleList(Blocks(bytes))
 
-//		if (_fillin)
-//			biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), trueState.rootHash());
-//		else
+		if (_fillin)
+			biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), trueState.rootHash());
+		else
 			TBOOST_CHECK_MESSAGE((biGenesisBlock.stateRoot() == trueState.rootHash()), "root hash does not match");
 
-//		if (_fillin)
-//		{
-//			// find new valid nonce
-//			updatePoW(biGenesisBlock);
+		if (_fillin)
+		{
+			// find new valid nonce
+			updatePoW(biGenesisBlock);
 
-//			//update genesis block in json file
-//			writeBlockHeaderToJson(o["genesisBlockHeader"].get_obj(), biGenesisBlock);
-//		}
+			//update genesis block in json file
+			writeBlockHeaderToJson(o["genesisBlockHeader"].get_obj(), biGenesisBlock);
+		}
 
 		// create new "genesis" block
 		RLPStream rlpGenesisBlock = createFullBlockFromHeader(biGenesisBlock);
@@ -107,105 +108,109 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		TransientDirectory td;
 		FullBlockChain<Ethash> trueBc(rlpGenesisBlock.out(), AccountMap(), td.path(), WithExisting::Kill);
 
-//		if (_fillin)
-//		{
-//			TBOOST_REQUIRE(o.count("blocks"));
-//			mArray blArray;
+		if (_fillin)
+		{
+			TBOOST_REQUIRE(o.count("blocks"));
+			mArray blArray;
 
-//			blockSet genesis;
-//			genesis.first = rlpGenesisBlock.out();
-//			genesis.second = uncleList();
-//			blockSets.push_back(genesis);
-//			vector<BlockHeader> vBiBlocks;
-//			vBiBlocks.push_back(biGenesisBlock);
+			blockSet genesis;
+			genesis.first = rlpGenesisBlock.out();
+			genesis.second = uncleList();
+			blockSets.push_back(genesis);
+			vector<BlockHeader> vBiBlocks;
+			vBiBlocks.push_back(biGenesisBlock);
 
-//			size_t importBlockNumber = 0;
-//			for (auto const& bl: o["blocks"].get_array())
-//			{
-//				mObject blObj = bl.get_obj();
-//				if (blObj.count("blocknumber") > 0)
-//					importBlockNumber = std::max((int)toInt(blObj["blocknumber"]), 1);
-//				else
-//					importBlockNumber++;
+			size_t importBlockNumber = 0;
+			for (auto const& bl: o["blocks"].get_array())
+			{
+				mObject blObj = bl.get_obj();
+				if (blObj.count("blocknumber") > 0)
+					importBlockNumber = std::max((int)toInt(blObj["blocknumber"]), 1);
+				else
+					importBlockNumber++;
 
-//				//each time construct a new blockchain up to importBlockNumber (to generate next block header)
-//				vBiBlocks.clear();
-//				vBiBlocks.push_back(biGenesisBlock);
+				//each time construct a new blockchain up to importBlockNumber (to generate next block header)
+				vBiBlocks.clear();
+				vBiBlocks.push_back(biGenesisBlock);
 
-//				TransientDirectory td_stateDB, td_bc;
-//				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), AccountMap(), td_bc.path(), WithExisting::Kill);
-//				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-//				//trueState.setBeneficiary(biGenesisBlock.beneficiary());
-//				ImportTest::importState(o["pre"].get_obj(), state);
-//				state.commit();
+				TransientDirectory td_stateDB, td_bc;
+				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), AccountMap(), td_bc.path(), WithExisting::Kill);
 
-//				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
-//				{
-//					BlockQueue uncleQueue;
-//					uncleList uncles = blockSets.at(i).second;
-//					for (size_t j = 0; j < uncles.size(); j++)
-//						uncleQueue.import(&uncles.at(j), false);
+				OverlayDB database (State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill));
+				State state(database, BaseState::Empty);
+				Block block(database, BaseState::Empty, biGenesisBlock.beneficiary());
+				state = importer.m_statePre;
+				state.commit();
 
-//					const bytes block = blockSets.at(i).first;
-//					bc.sync(uncleQueue, state.db(), 4);
-//					bc.attemptImport(block, state.db());
-//					vBiBlocks.push_back(BlockHeader(block));
-//					//state.sync(bc);
-//				}
+				//import previous blocks
+				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
+				{
+					BlockQueue uncleQueue;
+					uncleList uncles = blockSets.at(i).second;
+					for (size_t j = 0; j < uncles.size(); j++)
+						uncleQueue.import(&uncles.at(j), false);
 
-//				// get txs
-//				TransactionQueue txs;
-//				ZeroGasPricer gp;
-//				TBOOST_REQUIRE(blObj.count("transactions"));
-//				for (auto const& txObj: blObj["transactions"].get_array())
-//				{
-//					mObject tx = txObj.get_obj();
-//					importer.importTransaction(tx);
-//					if (txs.import(importer.m_transaction.rlp()) != ImportResult::Success)
-//						cnote << "failed importing transaction\n";
-//				}
+					const bytes blockFromSet = blockSets.at(i).first;
+					bc.sync(uncleQueue, state.db(), 4);
+					bc.attemptImport(blockFromSet, state.db());
+					vBiBlocks.push_back(BlockHeader(blockFromSet));
+					//state.sync(bc);
+				}
 
-//				//get uncles
-//				vector<BlockHeader> vBiUncles;
-//				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
+				// get txs
+				TransactionQueue txs;
+				ZeroGasPricer gp;
+				TBOOST_REQUIRE(blObj.count("transactions"));
+				for (auto const& txObj: blObj["transactions"].get_array())
+				{
+					mObject tx = txObj.get_obj();
+					importer.importTransaction(tx);
+					if (txs.import(importer.m_transaction.rlp()) != ImportResult::Success)
+						cnote << "failed importing transaction\n";
+				}
 
-//				BlockQueue uncleBlockQueue;
-//				uncleList uncleBlockQueueList;
-//				cnote << "import uncle in blockQueue";
-//				for (size_t i = 0; i < vBiUncles.size(); i++)
-//				{
-//					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
-//					try
-//					{
-//						uncleBlockQueue.import(&uncle.out(), false);
-//						uncleBlockQueueList.push_back(uncle.out());
-//						// wait until block is verified
-//						this_thread::sleep_for(chrono::seconds(1));
-//					}
-//					catch(...)
-//					{
-//						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
-//					}
-//				}
-//				bc.sync(uncleBlockQueue, state.db(), 4);
-//				//state.commitToSeal(bc);
+				//get uncles
+				vector<BlockHeader> vBiUncles;
+				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
 
-//				try
-//				{
-//					//state.sync(bc);
-//					//state.sync(bc, txs, gp);
-//					mine(state, bc);
-//				}
-//				catch (Exception const& _e)
-//				{
-//					cnote << "state sync or mining did throw an exception: " << diagnostic_information(_e);
-//					return;
-//				}
-//				catch (std::exception const& _e)
-//				{
-//					cnote << "state sync or mining did throw an exception: " << _e.what();
-//					return;
-//				}
+				BlockQueue uncleBlockQueue;
+				uncleList uncleBlockQueueList;
+				cnote << "import uncle in blockQueue";
+				for (size_t i = 0; i < vBiUncles.size(); i++)
+				{
+					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
+					try
+					{
+						uncleBlockQueue.import(&uncle.out(), false);
+						uncleBlockQueueList.push_back(uncle.out());
+						// wait until block is verified
+						this_thread::sleep_for(chrono::seconds(1));
+					}
+					catch(...)
+					{
+						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
+					}
+				}
+				bc.sync(uncleBlockQueue, state.db(), 4);
+				block.commitToSeal(bc);
+
+				//mine a new block on top of previously imported
+				try
+				{
+					block.sync(bc);
+					block.sync(bc, txs, gp);
+					mine(block, bc);
+				}
+				catch (Exception const& _e)
+				{
+					cnote << "block sync or mining did throw an exception: " << diagnostic_information(_e);
+					return;
+				}
+				catch (std::exception const& _e)
+				{
+					cnote << "block sync or mining did throw an exception: " << _e.what();
+					return;
+				}
 
 
 //				blObj["rlp"] = toHex(state.blockData(), 2, HexPrefix::Add);
@@ -308,7 +313,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 //				}
 //				blArray.push_back(blObj);
 //				this_thread::sleep_for(chrono::seconds(1));
-//			} //for blocks
+			} //for blocks
 
 //			if (o.count("expect") > 0)
 //			{
@@ -327,9 +332,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 //			State prestate(OverlayDB(), BaseState::Empty);
 //			ImportTest::importState(o["pre"].get_obj(), prestate);
 //			o["pre"] = fillJsonWithState(prestate);
-//		}//_fillin
-
-//		else
+		}//_fillin
+		else
 		{
 			for (auto const& bl: o["blocks"].get_array())
 			{
