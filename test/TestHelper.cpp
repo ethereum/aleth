@@ -63,7 +63,7 @@ void connectClients(Client& c1, Client& c2)
 }
 
 void mine(Block& s, BlockChain const& _bc)
-{		
+{
 	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	s.commitToSeal(_bc);
 	Notified<bytes> sealed;

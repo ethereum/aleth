@@ -343,20 +343,12 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				bool importedAndBest = true;
 				mObject blObj = bl.get_obj();
 				bytes blockRLP;
-				//Block trueBlock;
 				try
 				{
 					blockRLP = importByteArray(blObj["rlp"].get_str());
-
-					//std::function<void(Exception&)> onBad = {cout << "verify Block did throw!";} ;
-
 					trueBc.import(blockRLP, trueState.db());
-
-					//trueState.sync(trueBc);
-					//trueBc.import(blockRLP, trueState.db());
 					if (trueBc.info() != BlockHeader(blockRLP))
 						importedAndBest  = false;
-//					trueState.sync(trueBc);
 				}
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (Exception const& _e)
