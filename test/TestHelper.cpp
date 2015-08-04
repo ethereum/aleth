@@ -104,18 +104,15 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTem
 	{
 		importEnv(_o["env"].get_obj());
 		importTransaction(_o["transaction"].get_obj());
-	}
-
-	importState(_o["pre"].get_obj(), m_statePre);
-	if (!isFiller)
-	{
-		if (_o.count("post"))
-			importState(_o["post"].get_obj(), m_statePost);
-		else
-			importState(_o["postState"].get_obj(), m_statePost);
-
-		if (testTemplate == testType::StateTests)
+		importState(_o["pre"].get_obj(), m_statePre);
+		if (!isFiller)
+		{
+			if (_o.count("post"))
+				importState(_o["post"].get_obj(), m_statePost);
+			else
+				importState(_o["postState"].get_obj(), m_statePost);
 			m_logsExpected = importLog(_o["logs"].get_array());
+		}
 	}
 }
 

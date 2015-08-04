@@ -79,7 +79,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
 
 		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-		trueState = importer.m_statePre;
+		importer.importState(o["pre"].get_obj(), trueState);
 		o["pre"] = fillJsonWithState(trueState); //convert all fields to hex
 		trueState.commit();
 
@@ -689,7 +689,7 @@ void overwriteBlockHeader(BlockHeader& _header, mObject& _blObj, BlockHeader con
 		BlockHeader tmp = constructHeader(
 			ho.count("parentHash") ? h256(ho["parentHash"].get_str()) : _header.parentHash(),
 			ho.count("uncleHash") ? h256(ho["uncleHash"].get_str()) : _header.sha3Uncles(),
-			ho.count("coinbase") ? Address(ho["coinbase"].get_str()) : _header.coinbaseAddress(),
+			ho.count("coinbase") ? Address(ho["coinbase"].get_str()) : _header.beneficiary(),
 			ho.count("stateRoot") ? h256(ho["stateRoot"].get_str()): _header.stateRoot(),
 			ho.count("transactionsTrie") ? h256(ho["transactionsTrie"].get_str()) : _header.transactionsRoot(),
 			ho.count("receiptTrie") ? h256(ho["receiptTrie"].get_str()) : _header.receiptsRoot(),
