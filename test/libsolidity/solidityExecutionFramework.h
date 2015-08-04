@@ -44,8 +44,8 @@ public:
 	ExecutionFramework()
 	{
 		g_logVerbosity = 0;
-		std::cerr << "public: ExecutionFramework() m_sate has no member resetCurrent()!" << std::endl;
-		//m_state.resetCurrent();
+		std::cerr << "public: ExecutionFramework() m_state has no member resetCurrent()!" << std::endl;
+		//m_state.resetCurrent(); replace with "m_state = eth::State();" didn't work
 	}
 
 	bytes const& compileAndRunWithoutCheck(
