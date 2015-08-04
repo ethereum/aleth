@@ -123,11 +123,17 @@ namespace test
 	}																	\
 	while (0)
 
+enum class testType
+{
+	StateTests,
+	BlockChainTests,
+	Other
+};
+
 class ImportTest
 {
 public:
-	ImportTest(json_spirit::mObject& _o): m_testObject(_o) {}
-	ImportTest(json_spirit::mObject& _o, bool isFiller);
+	ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate = testType::StateTests);
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);

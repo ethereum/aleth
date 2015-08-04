@@ -59,7 +59,6 @@ mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vect
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	(void)_fillin;
 	for (auto& i: _v.get_obj())
 	{
 		mObject& o = i.second.get_obj();
@@ -73,7 +72,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		TBOOST_REQUIRE(o.count("genesisBlockHeader"));
 		TBOOST_REQUIRE(o.count("pre"));
 
-		ImportTest importer(o["pre"].get_obj());
+		ImportTest importer(o, _fillin, testType::BlockChainTests);
 		TransientDirectory td_stateDB_tmp;
 		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
 
@@ -348,8 +347,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 					//trueState.sync(trueBc);
 					//trueBc.import(blockRLP, trueState.db());
-//					if (trueBc.info() != BlockHeader(blockRLP))
-//						importedAndBest  = false;
+					if (trueBc.info() != BlockHeader(blockRLP))
+						importedAndBest  = false;
 //					trueState.sync(trueBc);
 				}
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
