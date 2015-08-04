@@ -95,6 +95,7 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 
 	m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
 	m_tqReady = m_tq.onReady([=](){ this->onTransactionQueueReady(); });	// TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
+	m_tqReplaced = m_tq.onReplaced([=](h256 const&){ m_needStateReset = true; });
 	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
 	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
@@ -651,6 +652,21 @@ void Client::resyncStateFromChain()
 	}
 }
 
+void Client::resetState()
+{
+	State newPreMine;
+	DEV_READ_GUARDED(x_preMine)
+		newPreMine = m_preMine;
+
+	DEV_WRITE_GUARDED(x_working)
+		m_working = newPreMine;
+	DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postMine)
+		m_postMine = m_working;
+
+	onPostStateChanged();
+	onTransactionQueueReady();
+}
+
 void Client::onChainChanged(ImportRoute const& _ir)
 {
 	h256Hash changeds;
@@ -679,8 +695,14 @@ void Client::onPostStateChanged()
 
 void Client::startMining()
 {
-	m_wouldMine = true;
-	rejigMining();
+	clog(ClientNote) << "MiningBenefactor: " << address();
+	if (address() != Address())
+	{
+		m_wouldMine = true;
+		rejigMining();
+	}
+	else
+		clog(ClientNote) << "You need to set a MiningBenefactor in order to mine!";
 }
 
 void Client::rejigMining()
@@ -737,6 +759,12 @@ void Client::doWork()
 	bool t = true;
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
 		syncBlockQueue();
+
+	if (m_needStateReset)
+	{
+		resetState();
+		m_needStateReset = false;
+	}
 
 	t = true;
 	if (m_syncTransactionQueue.compare_exchange_strong(t, false) && !m_remoteWorking && !isSyncing())
@@ -894,6 +922,7 @@ std::tuple<h256, h256, h256> EthashClient::getEthashWork()
 		// otherwise, set this to true so that it gets prepped next time.
 		m_remoteWorking = true;
 	Ethash::BlockHeader bh = Ethash::BlockHeader(m_miningInfo);
+	Ethash::manuallySetWork(m_sealEngine.get(), bh);
 	return std::tuple<h256, h256, h256>(bh.hashWithout(), bh.seedHash(), bh.boundary());
 }
 
