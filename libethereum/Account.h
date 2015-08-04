@@ -228,7 +228,6 @@ public:
 
 	bool allSet() const { return m_hasBalance && m_hasNonce && m_hasCode && m_hasStorage; }
 
-private:
 	bool m_hasBalance;
 	bool m_hasNonce;
 	bool m_hasCode;

@@ -25,6 +25,7 @@
 #include <chrono>
 #include <libethcore/EthashAux.h>
 #include <libethereum/Client.h>
+#include <libevm/ExtVMFace.h>
 #include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
 #include "Stats.h"
@@ -61,7 +62,7 @@ void connectClients(Client& c1, Client& c2)
 #endif
 }
 
-void mine(State& s, BlockChain const& _bc)
+void mine(Block& s, BlockChain const& _bc)
 {
 	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	s.commitToSeal(_bc);
@@ -69,6 +70,7 @@ void mine(State& s, BlockChain const& _bc)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(s.info());
 	sealed.waitNot({});
+	sealer.reset();
 	s.sealBlock(sealed);
 }
 
@@ -79,7 +81,8 @@ void mine(Ethash::BlockHeader& _bi)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(_bi);
 	sealed.waitNot({});
-	_bi = Ethash::BlockHeader(sealed);
+	sealer.reset();
+	_bi = Ethash::BlockHeader(sealed, CheckNothing, h256{}, HeaderData);
 }
 
 }
@@ -92,21 +95,41 @@ struct MissingFields : virtual Exception {};
 
 bigint const c_max256plus1 = bigint(1) << 256;
 
-ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller):
-	m_statePre(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
-	m_statePost(OverlayDB(), eth::BaseState::Empty, Address(_o["env"].get_obj()["currentCoinbase"].get_str())),
-	m_environment(m_envInfo),
+ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
+	m_statePre(OverlayDB(), eth::BaseState::Empty),
+	m_statePost(OverlayDB(), eth::BaseState::Empty),
 	m_testObject(_o)
 {
-	importEnv(_o["env"].get_obj());
-	importState(_o["pre"].get_obj(), m_statePre);
-	importTransaction(_o["transaction"].get_obj());
-
-	if (!isFiller)
+	if (testTemplate == testType::StateTests)
 	{
-		importState(_o["post"].get_obj(), m_statePost);
-		m_environment.sub.logs = importLog(_o["logs"].get_array());
+		importEnv(_o["env"].get_obj());
+		importTransaction(_o["transaction"].get_obj());
+		importState(_o["pre"].get_obj(), m_statePre);
+		if (!isFiller)
+		{
+			if (_o.count("post"))
+				importState(_o["post"].get_obj(), m_statePost);
+			else
+				importState(_o["postState"].get_obj(), m_statePost);
+			m_logsExpected = importLog(_o["logs"].get_array());
+		}
 	}
+}
+
+//executes an imported transacton on preState
+bytes ImportTest::executeTest()
+{
+	ExecutionResult res;
+	eth::State tmpState = m_statePre;
+
+	std::pair<ExecutionResult, TransactionReceipt> execOut = m_statePre.execute(m_envInfo, m_transaction);
+	res = execOut.first;
+	m_logs = execOut.second.log();
+	m_statePre.commit();
+	m_statePost = m_statePre;
+	m_statePre = tmpState;
+
+	return res.output;
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
@@ -137,24 +160,25 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	assert(_o.count("previousHash") > 0);
 	assert(_o.count("currentGasLimit") > 0);
-	assert(_o.count("currentDifficulty") > 0);
+	assert(_o.count("currentDifficulty") > 0);	
+	assert(_o.count("currentNumber") > 0);
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
-	assert(_o.count("currentNumber") > 0);
-	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
 	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
-	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
+	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
 
 void ImportTest::importState(json_spirit::mObject& _o, State& _state, AccountMaskMap& o_mask)
-{
-	_state.populateFrom(jsonToAccountMap(json_spirit::write_string(_o, false), &o_mask));
+{		
+	std::string jsondata = json_spirit::write_string((json_spirit::mValue)_o, false);
+	_state.populateFrom(jsonToAccountMap(jsondata, &o_mask));
 }
 
 void ImportTest::importState(json_spirit::mObject& _o, State& _state)
@@ -213,7 +237,7 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-void ImportTest::checkExpectedState(State const& _stateExpect, State const& _statePost, stateOptionsMap const _expectedStateOptions, WhenError _throw)
+void ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
 	#define CHECK(a,b)						\
 		{									\
@@ -228,7 +252,7 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 		CHECK(_statePost.addressInUse(a.first), "Filling Test: " << a.first << " missing expected address!");
 		if (_statePost.addressInUse(a.first))
 		{
-			ImportStateOptions addressOptions(true);
+			AccountMask addressOptions(true);
 			if(_expectedStateOptions.size())
 			{
 				try
@@ -242,15 +266,15 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 				}
 			}
 
-			if (addressOptions.m_bHasBalance)
+			if (addressOptions.m_hasBalance)
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
 						"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
-			if (addressOptions.m_bHasNonce)
+			if (addressOptions.m_hasNonce)
 				CHECK((_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first)),
 						"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
 
-			if (addressOptions.m_bHasStorage)
+			if (addressOptions.m_hasStorage)
 			{
 				unordered_map<u256, u256> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
@@ -264,14 +288,14 @@ void ImportTest::checkExpectedState(State const& _stateExpect, State const& _sta
 							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(stateStorage[s.first]));
 			}
 
-			if (addressOptions.m_bHasCode)
+			if (addressOptions.m_hasCode)
 				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
 						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
 }
 
-void ImportTest::exportTest(bytes const& _output, State const& _statePost)
+void ImportTest::exportTest(bytes const& _output)
 {
 	// export output
 
@@ -289,22 +313,22 @@ void ImportTest::exportTest(bytes const& _output, State const& _statePost)
 		m_testObject.erase(m_testObject.find("expectOut"));
 	}
 
-	// export logs
-	m_testObject["logs"] = exportLog(_statePost.pending().size() ? _statePost.log(0) : LogEntries());
+	// export logs	
+	m_testObject["logs"] = exportLog(m_logs);
 
 	// compare expected state with post state
 	if (m_testObject.count("expect") > 0)
 	{
-		stateOptionsMap stateMap;
+		eth::AccountMaskMap stateMap;
 		State expectState(OverlayDB(), eth::BaseState::Empty);
 		importState(m_testObject["expect"].get_obj(), expectState, stateMap);
-		checkExpectedState(expectState, _statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+		compareStates(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 		m_testObject.erase(m_testObject.find("expect"));
 	}
 
 	// export post state
-	m_testObject["post"] = fillJsonWithState(_statePost);
-	m_testObject["postStateRoot"] = toHex(_statePost.rootHash().asBytes());
+	m_testObject["post"] = fillJsonWithState(m_statePost);
+	m_testObject["postStateRoot"] = toHex(m_statePost.rootHash().asBytes());
 
 	// export pre state
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
@@ -771,7 +795,7 @@ dev::eth::Ethash::BlockHeader constructHeader(
 	rlpStream << _parentHash << _sha3Uncles << _coinbaseAddress << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
 		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << Nonce{};
 
-	return Ethash::BlockHeader(rlpStream.out());
+	return Ethash::BlockHeader(rlpStream.out(), CheckNothing, h256{}, HeaderData);
 }
 
 void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce)
@@ -785,7 +809,7 @@ void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHa
 		header << sourceRlp[i];
 
 	header << _mixHash << _nonce;
-	_header = Ethash::BlockHeader(header.out());
+	_header = Ethash::BlockHeader(header.out(), CheckNothing, h256{}, HeaderData);
 }
 
 namespace
