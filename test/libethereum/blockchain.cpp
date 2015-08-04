@@ -49,15 +49,15 @@ void overwriteBlockHeader(BlockHeader& _current_BlockHeader, mObject& _blObj);
 void updatePoW(BlockHeader& _bi);
 mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet);
 
+//void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
+//{
+//	if (_fillin == false)
+//		_v.get_bool();
+
+//	cerr << "BlockChainTests not implemented!" << endl;
+//}
+
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
-{
-	if (_fillin == false)
-		_v.get_bool();
-
-	cerr << "BlockChainTests not implemented!" << endl;
-}
-
-/*void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
 	for (auto& i: _v.get_obj())
 	{
@@ -84,19 +84,19 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		//Imported blocks from the start
 		std::vector<blockSet> blockSets;
 
-		if (_fillin)
-			biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), trueState.rootHash());
-		else
+//		if (_fillin)
+//			biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), trueState.rootHash());
+//		else
 			TBOOST_CHECK_MESSAGE((biGenesisBlock.stateRoot() == trueState.rootHash()), "root hash does not match");
 
-		if (_fillin)
-		{
-			// find new valid nonce
-			updatePoW(biGenesisBlock);
+//		if (_fillin)
+//		{
+//			// find new valid nonce
+//			updatePoW(biGenesisBlock);
 
-			//update genesis block in json file
-			writeBlockHeaderToJson(o["genesisBlockHeader"].get_obj(), biGenesisBlock);
-		}
+//			//update genesis block in json file
+//			writeBlockHeaderToJson(o["genesisBlockHeader"].get_obj(), biGenesisBlock);
+//		}
 
 		// create new "genesis" block
 		RLPStream rlpGenesisBlock = createFullBlockFromHeader(biGenesisBlock);
@@ -107,243 +107,249 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		TransientDirectory td;
 		FullBlockChain<Ethash> trueBc(rlpGenesisBlock.out(), AccountMap(), td.path(), WithExisting::Kill);
 
-		if (_fillin)
-		{
-			TBOOST_REQUIRE(o.count("blocks"));
-			mArray blArray;
+//		if (_fillin)
+//		{
+//			TBOOST_REQUIRE(o.count("blocks"));
+//			mArray blArray;
 
-			blockSet genesis;
-			genesis.first = rlpGenesisBlock.out();
-			genesis.second = uncleList();
-			blockSets.push_back(genesis);
-			vector<BlockHeader> vBiBlocks;
-			vBiBlocks.push_back(biGenesisBlock);
+//			blockSet genesis;
+//			genesis.first = rlpGenesisBlock.out();
+//			genesis.second = uncleList();
+//			blockSets.push_back(genesis);
+//			vector<BlockHeader> vBiBlocks;
+//			vBiBlocks.push_back(biGenesisBlock);
 
-			size_t importBlockNumber = 0;
-			for (auto const& bl: o["blocks"].get_array())
-			{
-				mObject blObj = bl.get_obj();
-				if (blObj.count("blocknumber") > 0)
-					importBlockNumber = std::max((int)toInt(blObj["blocknumber"]), 1);
-				else
-					importBlockNumber++;
+//			size_t importBlockNumber = 0;
+//			for (auto const& bl: o["blocks"].get_array())
+//			{
+//				mObject blObj = bl.get_obj();
+//				if (blObj.count("blocknumber") > 0)
+//					importBlockNumber = std::max((int)toInt(blObj["blocknumber"]), 1);
+//				else
+//					importBlockNumber++;
 
-				//each time construct a new blockchain up to importBlockNumber (to generate next block header)
-				vBiBlocks.clear();
-				vBiBlocks.push_back(biGenesisBlock);
+//				//each time construct a new blockchain up to importBlockNumber (to generate next block header)
+//				vBiBlocks.clear();
+//				vBiBlocks.push_back(biGenesisBlock);
 
-				TransientDirectory td_stateDB, td_bc;
-				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), AccountMap(), td_bc.path(), WithExisting::Kill);
-				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-				//trueState.setBeneficiary(biGenesisBlock.beneficiary());
-				ImportTest::importState(o["pre"].get_obj(), state);
-				state.commit();
+//				TransientDirectory td_stateDB, td_bc;
+//				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), AccountMap(), td_bc.path(), WithExisting::Kill);
+//				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
+//				//trueState.setBeneficiary(biGenesisBlock.beneficiary());
+//				ImportTest::importState(o["pre"].get_obj(), state);
+//				state.commit();
 
-				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
-				{
-					BlockQueue uncleQueue;
-					uncleList uncles = blockSets.at(i).second;
-					for (size_t j = 0; j < uncles.size(); j++)
-						uncleQueue.import(&uncles.at(j), false);
+//				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
+//				{
+//					BlockQueue uncleQueue;
+//					uncleList uncles = blockSets.at(i).second;
+//					for (size_t j = 0; j < uncles.size(); j++)
+//						uncleQueue.import(&uncles.at(j), false);
 
-					const bytes block = blockSets.at(i).first;
-					bc.sync(uncleQueue, state.db(), 4);
-					bc.attemptImport(block, state.db());
-					vBiBlocks.push_back(BlockHeader(block));
-					//state.sync(bc);
-				}
+//					const bytes block = blockSets.at(i).first;
+//					bc.sync(uncleQueue, state.db(), 4);
+//					bc.attemptImport(block, state.db());
+//					vBiBlocks.push_back(BlockHeader(block));
+//					//state.sync(bc);
+//				}
 
-				// get txs
-				TransactionQueue txs;
-				ZeroGasPricer gp;
-				TBOOST_REQUIRE(blObj.count("transactions"));
-				for (auto const& txObj: blObj["transactions"].get_array())
-				{
-					mObject tx = txObj.get_obj();
-					importer.importTransaction(tx);
-					if (txs.import(importer.m_transaction.rlp()) != ImportResult::Success)
-						cnote << "failed importing transaction\n";
-				}
+//				// get txs
+//				TransactionQueue txs;
+//				ZeroGasPricer gp;
+//				TBOOST_REQUIRE(blObj.count("transactions"));
+//				for (auto const& txObj: blObj["transactions"].get_array())
+//				{
+//					mObject tx = txObj.get_obj();
+//					importer.importTransaction(tx);
+//					if (txs.import(importer.m_transaction.rlp()) != ImportResult::Success)
+//						cnote << "failed importing transaction\n";
+//				}
 
-				//get uncles
-				vector<BlockHeader> vBiUncles;
-				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
+//				//get uncles
+//				vector<BlockHeader> vBiUncles;
+//				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
 
-				BlockQueue uncleBlockQueue;
-				uncleList uncleBlockQueueList;
-				cnote << "import uncle in blockQueue";
-				for (size_t i = 0; i < vBiUncles.size(); i++)
-				{
-					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
-					try
-					{
-						uncleBlockQueue.import(&uncle.out(), false);
-						uncleBlockQueueList.push_back(uncle.out());
-						// wait until block is verified
-						this_thread::sleep_for(chrono::seconds(1));
-					}
-					catch(...)
-					{
-						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
-					}
-				} 
-				bc.sync(uncleBlockQueue, state.db(), 4);
-				//state.commitToSeal(bc);
+//				BlockQueue uncleBlockQueue;
+//				uncleList uncleBlockQueueList;
+//				cnote << "import uncle in blockQueue";
+//				for (size_t i = 0; i < vBiUncles.size(); i++)
+//				{
+//					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
+//					try
+//					{
+//						uncleBlockQueue.import(&uncle.out(), false);
+//						uncleBlockQueueList.push_back(uncle.out());
+//						// wait until block is verified
+//						this_thread::sleep_for(chrono::seconds(1));
+//					}
+//					catch(...)
+//					{
+//						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
+//					}
+//				}
+//				bc.sync(uncleBlockQueue, state.db(), 4);
+//				//state.commitToSeal(bc);
 
-				try
-				{
-					//state.sync(bc);
-					//state.sync(bc, txs, gp);
-					mine(state, bc);
-				}
-				catch (Exception const& _e)
-				{
-					cnote << "state sync or mining did throw an exception: " << diagnostic_information(_e);
-					return;
-				}
-				catch (std::exception const& _e)
-				{
-					cnote << "state sync or mining did throw an exception: " << _e.what();
-					return;
-				}
+//				try
+//				{
+//					//state.sync(bc);
+//					//state.sync(bc, txs, gp);
+//					mine(state, bc);
+//				}
+//				catch (Exception const& _e)
+//				{
+//					cnote << "state sync or mining did throw an exception: " << diagnostic_information(_e);
+//					return;
+//				}
+//				catch (std::exception const& _e)
+//				{
+//					cnote << "state sync or mining did throw an exception: " << _e.what();
+//					return;
+//				}
 
 
-				blObj["rlp"] = toHex(state.blockData(), 2, HexPrefix::Add);
+//				blObj["rlp"] = toHex(state.blockData(), 2, HexPrefix::Add);
 
-				//get valid transactions
-				Transactions txList;
-				for (auto const& txi: txs.topTransactions(std::numeric_limits<unsigned>::max()))
-					txList.push_back(txi);
-				blObj["transactions"] = writeTransactionsToJson(txList);
+//				//get valid transactions
+//				Transactions txList;
+//				for (auto const& txi: txs.topTransactions(std::numeric_limits<unsigned>::max()))
+//					txList.push_back(txi);
+//				blObj["transactions"] = writeTransactionsToJson(txList);
 
-				BlockHeader current_BlockHeader = state.info();
+//				BlockHeader current_BlockHeader = state.info();
 
-				RLPStream uncleStream;
-				uncleStream.appendList(vBiUncles.size());
-				for (unsigned i = 0; i < vBiUncles.size(); ++i)
-				{
-					RLPStream uncleRlp;
-					vBiUncles[i].streamRLP(uncleRlp);
-					uncleStream.appendRaw(uncleRlp.out());
-				}
+//				RLPStream uncleStream;
+//				uncleStream.appendList(vBiUncles.size());
+//				for (unsigned i = 0; i < vBiUncles.size(); ++i)
+//				{
+//					RLPStream uncleRlp;
+//					vBiUncles[i].streamRLP(uncleRlp);
+//					uncleStream.appendRaw(uncleRlp.out());
+//				}
 
-				if (blObj.count("blockHeader"))
-					overwriteBlockHeader(current_BlockHeader, blObj);
+//				if (blObj.count("blockHeader"))
+//					overwriteBlockHeader(current_BlockHeader, blObj);
 
-				if (blObj.count("blockHeader") && blObj["blockHeader"].get_obj().count("bruncle"))
-					current_BlockHeader.populateFromParent(vBiBlocks[vBiBlocks.size() -1]);
+//				if (blObj.count("blockHeader") && blObj["blockHeader"].get_obj().count("bruncle"))
+//					current_BlockHeader.populateFromParent(vBiBlocks[vBiBlocks.size() -1]);
 
-				if (vBiUncles.size())
-				{
-					// update unclehash in case of invalid uncles
-					current_BlockHeader.setSha3Uncles(sha3(uncleStream.out()));
-					updatePoW(current_BlockHeader);
-				}
+//				if (vBiUncles.size())
+//				{
+//					// update unclehash in case of invalid uncles
+//					current_BlockHeader.setSha3Uncles(sha3(uncleStream.out()));
+//					updatePoW(current_BlockHeader);
+//				}
 
-				// write block header
-				mObject oBlockHeader;
-				writeBlockHeaderToJson(oBlockHeader, current_BlockHeader);
-				blObj["blockHeader"] = oBlockHeader;
-				vBiBlocks.push_back(current_BlockHeader);
+//				// write block header
+//				mObject oBlockHeader;
+//				writeBlockHeaderToJson(oBlockHeader, current_BlockHeader);
+//				blObj["blockHeader"] = oBlockHeader;
+//				vBiBlocks.push_back(current_BlockHeader);
 
-				// compare blocks from state and from rlp
-				RLPStream txStream;
-				txStream.appendList(txList.size());
-				for (unsigned i = 0; i < txList.size(); ++i)
-				{
-					RLPStream txrlp;
-					txList[i].streamRLP(txrlp);
-					txStream.appendRaw(txrlp.out());
-				}
+//				// compare blocks from state and from rlp
+//				RLPStream txStream;
+//				txStream.appendList(txList.size());
+//				for (unsigned i = 0; i < txList.size(); ++i)
+//				{
+//					RLPStream txrlp;
+//					txList[i].streamRLP(txrlp);
+//					txStream.appendRaw(txrlp.out());
+//				}
 
-				RLPStream block2 = createFullBlockFromHeader(current_BlockHeader, txStream.out(), uncleStream.out());
+//				RLPStream block2 = createFullBlockFromHeader(current_BlockHeader, txStream.out(), uncleStream.out());
 
-				blObj["rlp"] = toHex(block2.out(), 2, HexPrefix::Add);
+//				blObj["rlp"] = toHex(block2.out(), 2, HexPrefix::Add);
 
-				if (sha3(RLP(state.blockData())[0].data()) != sha3(RLP(block2.out())[0].data()))
-				{
-					cnote << "block header mismatch state.blockData() vs updated state.info()\n";
-					cerr << toHex(state.blockData()) << "vs" << toHex(block2.out());
-				}
+//				if (sha3(RLP(state.blockData())[0].data()) != sha3(RLP(block2.out())[0].data()))
+//				{
+//					cnote << "block header mismatch state.blockData() vs updated state.info()\n";
+//					cerr << toHex(state.blockData()) << "vs" << toHex(block2.out());
+//				}
 
-				if (sha3(RLP(state.blockData())[1].data()) != sha3(RLP(block2.out())[1].data()))
-					cnote << "txs mismatch\n";
+//				if (sha3(RLP(state.blockData())[1].data()) != sha3(RLP(block2.out())[1].data()))
+//					cnote << "txs mismatch\n";
 
-				if (sha3(RLP(state.blockData())[2].data()) != sha3(RLP(block2.out())[2].data()))
-					cnote << "uncle list mismatch\n" << RLP(state.blockData())[2].data() << "\n" << RLP(block2.out())[2].data();
+//				if (sha3(RLP(state.blockData())[2].data()) != sha3(RLP(block2.out())[2].data()))
+//					cnote << "uncle list mismatch\n" << RLP(state.blockData())[2].data() << "\n" << RLP(block2.out())[2].data();
 
-				try
-				{
-					state.sync(bc);
-					bc.import(block2.out(), state.db());
-					state.sync(bc);
-					state.commit();
+//				try
+//				{
+//					state.sync(bc);
+//					bc.import(block2.out(), state.db());
+//					state.sync(bc);
+//					state.commit();
 
-					//there we get new blockchain status in state which could have more difficulty than we have in trueState
-					//attempt to import new block to the true blockchain
-					trueBc.sync(uncleBlockQueue, trueState.db(), 4);
-					trueBc.attemptImport(block2.out(), trueState.db());
-					trueState.sync(trueBc);
+//					//there we get new blockchain status in state which could have more difficulty than we have in trueState
+//					//attempt to import new block to the true blockchain
+//					trueBc.sync(uncleBlockQueue, trueState.db(), 4);
+//					trueBc.attemptImport(block2.out(), trueState.db());
+//					trueState.sync(trueBc);
 
-					blockSet newBlock;
-					newBlock.first = block2.out();
-					newBlock.second = uncleBlockQueueList;
-					if (importBlockNumber < blockSets.size())
-					{
-						//make new correct history of imported blocks
-						blockSets[importBlockNumber] = newBlock;
-						for (size_t i = importBlockNumber + 1; i < blockSets.size(); i++)
-							blockSets.pop_back();
-					}
-					else
-						blockSets.push_back(newBlock);
-				}
-				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
-				catch (...)
-				{
-					cnote << "block is invalid!\n";
-					blObj.erase(blObj.find("blockHeader"));
-					blObj.erase(blObj.find("uncleHeaders"));
-					blObj.erase(blObj.find("transactions"));
-				}
-				blArray.push_back(blObj);
-				this_thread::sleep_for(chrono::seconds(1));
-			} //for blocks
+//					blockSet newBlock;
+//					newBlock.first = block2.out();
+//					newBlock.second = uncleBlockQueueList;
+//					if (importBlockNumber < blockSets.size())
+//					{
+//						//make new correct history of imported blocks
+//						blockSets[importBlockNumber] = newBlock;
+//						for (size_t i = importBlockNumber + 1; i < blockSets.size(); i++)
+//							blockSets.pop_back();
+//					}
+//					else
+//						blockSets.push_back(newBlock);
+//				}
+//				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+//				catch (...)
+//				{
+//					cnote << "block is invalid!\n";
+//					blObj.erase(blObj.find("blockHeader"));
+//					blObj.erase(blObj.find("uncleHeaders"));
+//					blObj.erase(blObj.find("transactions"));
+//				}
+//				blArray.push_back(blObj);
+//				this_thread::sleep_for(chrono::seconds(1));
+//			} //for blocks
 
-			if (o.count("expect") > 0)
-			{
-				AccountMaskMap expectStateMap;
-				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.beneficiary());
-				ImportTest::importState(o["expect"].get_obj(), stateExpect, expectStateMap);
-				ImportTest::checkExpectedState(stateExpect, trueState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
-				o.erase(o.find("expect"));
-			}
+//			if (o.count("expect") > 0)
+//			{
+//				AccountMaskMap expectStateMap;
+//				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.beneficiary());
+//				ImportTest::importState(o["expect"].get_obj(), stateExpect, expectStateMap);
+//				ImportTest::checkExpectedState(stateExpect, trueState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+//				o.erase(o.find("expect"));
+//			}
 
-			o["blocks"] = blArray;
-			o["postState"] = fillJsonWithState(trueState);
-			o["lastblockhash"] = toString(trueBc.info().hash());
+//			o["blocks"] = blArray;
+//			o["postState"] = fillJsonWithState(trueState);
+//			o["lastblockhash"] = toString(trueBc.info().hash());
 
-			//make all values hex in pre section
-			State prestate(OverlayDB(), BaseState::Empty);
-			ImportTest::importState(o["pre"].get_obj(), prestate);
-			o["pre"] = fillJsonWithState(prestate);
-		}//_fillin
+//			//make all values hex in pre section
+//			State prestate(OverlayDB(), BaseState::Empty);
+//			ImportTest::importState(o["pre"].get_obj(), prestate);
+//			o["pre"] = fillJsonWithState(prestate);
+//		}//_fillin
 
-		else
+//		else
 		{
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				bool importedAndBest = true;
 				mObject blObj = bl.get_obj();
 				bytes blockRLP;
+				//Block trueBlock;
 				try
 				{
 					blockRLP = importByteArray(blObj["rlp"].get_str());
-					trueState.sync(trueBc);
+
+					//std::function<void(Exception&)> onBad = {cout << "verify Block did throw!";} ;
+
 					trueBc.import(blockRLP, trueState.db());
-					if (trueBc.info() != BlockHeader(blockRLP))
-						importedAndBest  = false;
-					trueState.sync(trueBc);
+
+					//trueState.sync(trueBc);
+					//trueBc.import(blockRLP, trueState.db());
+//					if (trueBc.info() != BlockHeader(blockRLP))
+//						importedAndBest  = false;
+//					trueState.sync(trueBc);
 				}
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (Exception const& _e)
@@ -506,7 +512,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					"Boost check: " + i.first + " lastblockhash does not match " + toString(trueBc.info().hash()) + " expected: " + o["lastblockhash"].get_str());
 		}
 	}
-}*/
+}
 // helping functions
 
 mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet)
