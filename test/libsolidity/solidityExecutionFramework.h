@@ -44,8 +44,8 @@ public:
 	ExecutionFramework()
 	{
 		g_logVerbosity = 0;
-		std::cerr << "public: ExecutionFramework() m_sate has no member resetCurrent()!" << std::endl;
-		//m_state.resetCurrent();
+		std::cerr << "public: ExecutionFramework() m_state has no member resetCurrent()!" << std::endl;
+		//m_state.resetCurrent(); replace with "m_state = eth::State();" didn't work
 	}
 
 	bytes const& compileAndRunWithoutCheck(
@@ -131,6 +131,7 @@ public:
 
 	static bytes encode(bool _value) { return encode(byte(_value)); }
 	static bytes encode(int _value) { return encode(u256(_value)); }
+	static bytes encode(size_t _value) { return encode(u256(_value)); }
 	static bytes encode(char const* _value) { return encode(std::string(_value)); }
 	static bytes encode(byte _value) { return bytes(31, 0) + bytes{_value}; }
 	static bytes encode(u256 const& _value) { return toBigEndian(_value); }

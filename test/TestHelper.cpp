@@ -63,13 +63,14 @@ void connectClients(Client& c1, Client& c2)
 }
 
 void mine(Block& s, BlockChain const& _bc)
-{		
+{
 	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	s.commitToSeal(_bc);
 	Notified<bytes> sealed;
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(s.info());
 	sealed.waitNot({});
+	sealer.reset();
 	s.sealBlock(sealed);
 }
 
@@ -80,7 +81,8 @@ void mine(Ethash::BlockHeader& _bi)
 	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	sealer->generateSeal(_bi);
 	sealed.waitNot({});
-	_bi = Ethash::BlockHeader(sealed);
+	sealer.reset();
+	_bi = Ethash::BlockHeader(sealed, CheckNothing, h256{}, HeaderData);
 }
 
 }
@@ -102,18 +104,15 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTem
 	{
 		importEnv(_o["env"].get_obj());
 		importTransaction(_o["transaction"].get_obj());
-	}
-
-	importState(_o["pre"].get_obj(), m_statePre);
-	if (!isFiller)
-	{
-		if (_o.count("post"))
-			importState(_o["post"].get_obj(), m_statePost);
-		else
-			importState(_o["postState"].get_obj(), m_statePost);
-
-		if (testTemplate == testType::StateTests)
+		importState(_o["pre"].get_obj(), m_statePre);
+		if (!isFiller)
+		{
+			if (_o.count("post"))
+				importState(_o["post"].get_obj(), m_statePost);
+			else
+				importState(_o["postState"].get_obj(), m_statePost);
 			m_logsExpected = importLog(_o["logs"].get_array());
+		}
 	}
 }
 
@@ -796,7 +795,7 @@ dev::eth::Ethash::BlockHeader constructHeader(
 	rlpStream << _parentHash << _sha3Uncles << _coinbaseAddress << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
 		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << Nonce{};
 
-	return Ethash::BlockHeader(rlpStream.out());
+	return Ethash::BlockHeader(rlpStream.out(), CheckNothing, h256{}, HeaderData);
 }
 
 void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce)
@@ -810,7 +809,7 @@ void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHa
 		header << sourceRlp[i];
 
 	header << _mixHash << _nonce;
-	_header = Ethash::BlockHeader(header.out());
+	_header = Ethash::BlockHeader(header.out(), CheckNothing, h256{}, HeaderData);
 }
 
 namespace

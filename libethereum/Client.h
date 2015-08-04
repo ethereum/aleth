@@ -260,6 +260,9 @@ protected:
 	/// Called after processing blocks by onChainChanged(_ir)
 	void resyncStateFromChain();
 
+	/// Clear working state of transactions
+	void resetState();
+
 	/// Magically called when the chain has changed. An import route is provided.
 	/// Called by either submitWork() or in our main thread through syncBlockQueue().
 	void onChainChanged(ImportRoute const& _ir);
@@ -306,6 +309,7 @@ protected:
 	BlockInfo m_miningInfo;					///< The header we're attempting to mine on (derived from m_postMine).
 	bool remoteActive() const;				///< Is there an active and valid remote worker?
 	bool m_remoteWorking = false;			///< Has the remote worker recently been reset?
+	std::atomic<bool> m_needStateReset = { false };			///< Need reset working state to premin on next sync
 	std::chrono::system_clock::time_point m_lastGetWork;	///< Is there an active and valid remote worker?
 
 	std::weak_ptr<EthereumHost> m_host;		///< Our Ethereum Host. Don't do anything if we can't lock.
@@ -313,6 +317,7 @@ protected:
 	std::shared_ptr<SealEngineFace> m_sealEngine;	///< Our block-sealing engine.
 
 	Handler<> m_tqReady;
+	Handler<h256 const&> m_tqReplaced;
 	Handler<> m_bqReady;
 
 	bool m_wouldMine = false;				///< True if we /should/ be mining.

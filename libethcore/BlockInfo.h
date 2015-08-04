@@ -41,6 +41,7 @@ enum IncludeProof
 enum Strictness
 {
 	CheckEverything,
+	JustSeal,
 	QuickNonce,
 	IgnoreSeal,
 	CheckNothing
@@ -115,7 +116,7 @@ public:
 	void populateFromParent(BlockInfo const& parent);
 
 	u256 calculateDifficulty(BlockInfo const& _parent) const;
-	u256 selectGasLimit(BlockInfo const& _parent) const;
+	u256 childGasLimit(u256 const& _gasFloorTarget = UndefinedU256) const;
 	h256 const& boundary() const;
 
 	h256 const& parentHash() const { return m_parentHash; }
@@ -127,6 +128,7 @@ public:
 	void setCoinbaseAddress(Address const& _v) { m_coinbaseAddress = _v; noteDirty(); }
 	void setRoots(h256 const& _t, h256 const& _r, h256 const& _u, h256 const& _s) { m_transactionsRoot = _t; m_receiptsRoot = _r; m_stateRoot = _s; m_sha3Uncles = _u; noteDirty(); }
 	void setGasUsed(u256 const& _v) { m_gasUsed = _v; noteDirty(); }
+	void setGasLimit(u256 const& _v) { m_gasLimit = _v; noteDirty(); }
 	void setExtraData(bytes const& _v) { m_extraData = _v; noteDirty(); }
 	void setLogBloom(LogBloom const& _v) { m_logBloom = _v; noteDirty(); }
 	void setDifficulty(u256 const& _v) { m_difficulty = _v; noteDirty(); }
@@ -146,7 +148,7 @@ public:
 
 	/// sha3 of the header only.
 	h256 const& hashWithout() const;
-	h256 const& hash() const { if (m_hash) return m_hash; throw NoHashRecorded(); }
+	h256 const& hash() const { if (m_hash) return m_hash; BOOST_THROW_EXCEPTION(NoHashRecorded()); }
 
 	void clear();
 	void noteDirty() const { m_hashWithout = m_boundary = m_hash = h256(); }
