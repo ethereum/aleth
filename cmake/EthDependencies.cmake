@@ -32,6 +32,7 @@ endif()
 
 # homebrew installs qts in opt
 if (APPLE)
+	set (CMAKE_PREFIX_PATH "/usr/local/Cellar/llvm/HEAD" ${CMAKE_PREFIX_PATH})
 	set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
 	set (CMAKE_PREFIX_PATH "/usr/local/opt/v8-315" ${CMAKE_PREFIX_PATH})
 endif()
