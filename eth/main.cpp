@@ -904,20 +904,19 @@ void interactiveMode(eth::Client* c, std::shared_ptr<eth::TrivialGasPricer> gasP
 		}
 		else if (c && cmd == "dumptrace")
 		{
-			unsigned block;
+			unsigned blockNumber;
 			unsigned index;
 			string filename;
 			string format;
-			iss >> block >> index >> filename >> format;
+			iss >> blockNumber >> index >> filename >> format;
 			ofstream f;
 			f.open(filename);
 
-			dev::eth::State state = c->state(index + 1,c->blockChain().numberHash(block));
-			if (index < state.pending().size())
+			dev::eth::Block block = c->block(c->blockChain().numberHash(blockNumber));
+			if (index < block.pending().size())
 			{
-				Executive e(state, c->blockChain(), 0);
-				Transaction t = state.pending()[index];
-				state = state.fromPending(index);
+				Executive e(block, c->blockChain(), 0);
+				Transaction t = block.pending()[index];
 				try
 				{
 					OnOpFunc oof;
@@ -1777,7 +1776,7 @@ int main(int argc, char** argv)
 		// TODO: expose sealant interface.
 		c->setShouldPrecomputeDAG(m.shouldPrecompute());
 		c->setTurboMining(m.minerType() == MinerCLI::MinerType::GPU);
-		c->setAddress(beneficiary);
+		c->setBeneficiary(beneficiary);
 		c->setNetworkId(networkId);
 	}
 

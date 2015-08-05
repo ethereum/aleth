@@ -45,7 +45,7 @@ string CanonBlockChain<Ethash>::s_genesisStateJSON;
 bytes CanonBlockChain<Ethash>::s_genesisExtraData;
 
 CanonBlockChain<Ethash>::CanonBlockChain(std::string const& _path, WithExisting _we, ProgressCallback const& _pc):
-	FullBlockChain<Ethash>(createGenesisBlock(), createGenesisState(), _path)
+	FullBlockChain<Ethash>(createGenesisBlock(), createGenesisState(), _path, _we, _pc)
 {
 	BlockChain::openDatabase(_path, _we, _pc);
 }
@@ -109,27 +109,7 @@ unordered_map<Address, Account> CanonBlockChain<Ethash>::createGenesisState()
 	static std::unordered_map<Address, Account> s_ret;
 
 	if (s_ret.empty())
-	{
-		js::mValue val;
-		js::read_string(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON, val);
-		for (auto account: val.get_obj()["alloc"].get_obj())
-		{
-			u256 balance;
-			if (account.second.get_obj().count("wei"))
-				balance = u256(account.second.get_obj()["wei"].get_str());
-			else if (account.second.get_obj().count("balance"))
-				balance = u256(account.second.get_obj()["balance"].get_str());
-			else if (account.second.get_obj().count("finney"))
-				balance = u256(account.second.get_obj()["finney"].get_str()) * finney;
-			if (account.second.get_obj().count("code"))
-			{
-				s_ret[Address(fromHex(account.first))] = Account(balance, Account::ContractConception);
-				s_ret[Address(fromHex(account.first))].setCode(fromHex(account.second.get_obj()["code"].get_str()));
-			}
-			else
-				s_ret[Address(fromHex(account.first))] = Account(balance, Account::NormalCreation);
-		}
-	}
+		s_ret = jsonToAccountMap(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON);
 	return s_ret;
 }
 
