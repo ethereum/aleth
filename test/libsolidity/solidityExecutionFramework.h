@@ -184,7 +184,7 @@ protected:
 	void sendMessage(bytes const& _data, bool _isCreation, u256 const& _value = 0)
 	{
 		m_state.addBalance(m_sender, _value); // just in case
-		eth::Executive executive(m_state, eth::EnvInfo(), 0);
+		eth::Executive executive(m_state, m_envInfo, 0);
 		eth::ExecutionResult res;
 		executive.setResultRecipient(res);
 		eth::Transaction t =
@@ -225,6 +225,7 @@ protected:
 	dev::solidity::CompilerStack m_compiler;
 	Address m_sender;
 	Address m_contractAddress;
+	eth::EnvInfo m_envInfo;
 	eth::State m_state;
 	u256 const m_gasPrice = 100 * eth::szabo;
 	u256 const m_gas = 100000000;
