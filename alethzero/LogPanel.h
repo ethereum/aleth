@@ -14,26 +14,51 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/**
- * @author Christian <c@ethdev.com>
+/** @file AllAccounts.h
+ * @author Gav Wood <i@gavwood.com>
  * @date 2015
- * Versioning.
  */
 
-#include <libsolidity/Version.h>
-#include <string>
-#include <BuildInfo.h>
-#include <libdevcore/Common.h>
+#pragma once
 
-using namespace dev;
-using namespace dev::solidity;
-using namespace std;
+#include <QMutex>
+#include <QString>
+#include <QPair>
+#include <QList>
+#include "MainFace.h"
 
-char const* dev::solidity::VersionNumber = "0.1.1";
-extern string const dev::solidity::VersionString =
-	string(dev::solidity::VersionNumber) +
-	"-" +
-	string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) +
-	(ETH_CLEAN_REPO ? "" : "*") +
-	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
+namespace Ui
+{
+class LogPanel;
+}
 
+namespace dev
+{
+namespace az
+{
+
+class LogPanel: public QObject, public Plugin
+{
+	Q_OBJECT
+
+public:
+	LogPanel(MainFace* _m);
+	~LogPanel();
+
+private slots:
+	void on_verbosity_valueChanged();
+
+private:
+	void timerEvent(QTimerEvent*) override;
+	void readSettings(QSettings const&) override;
+	void writeSettings(QSettings&) override;
+
+	Ui::LogPanel* m_ui;
+
+	QMutex m_logLock;
+	QString m_logHistory;
+	bool m_logChanged = true;
+};
+
+}
+}

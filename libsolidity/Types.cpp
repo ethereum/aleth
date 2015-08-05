@@ -179,6 +179,8 @@ TypePointer Type::fromMapping(ElementaryTypeName& _keyType, TypeName& _valueType
 		BOOST_THROW_EXCEPTION(_valueType.createTypeError("Invalid type name."));
 	// Convert value type to storage reference.
 	valueType = ReferenceType::copyForLocationIfReference(DataLocation::Storage, valueType);
+	// Convert key type to memory.
+	keyType = ReferenceType::copyForLocationIfReference(DataLocation::Memory, keyType);
 	return make_shared<MappingType>(keyType, valueType);
 }
 
@@ -785,6 +787,21 @@ bool ArrayType::isImplicitlyConvertibleTo(const Type& _convertTo) const
 			return false;
 		return true;
 	}
+}
+
+bool ArrayType::isExplicitlyConvertibleTo(const Type& _convertTo) const
+{
+	if (isImplicitlyConvertibleTo(_convertTo))
+		return true;
+	// allow conversion bytes <-> string
+	if (_convertTo.getCategory() != getCategory())
+		return false;
+	auto& convertTo = dynamic_cast<ArrayType const&>(_convertTo);
+	if (convertTo.location() != location())
+		return false;
+	if (!isByteArray() || !convertTo.isByteArray())
+		return false;
+	return true;
 }
 
 bool ArrayType::operator==(Type const& _other) const
