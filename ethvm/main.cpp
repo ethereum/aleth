@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = Block().gasLimitRemaining();
+	u256 gas = u256();
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
