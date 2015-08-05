@@ -1,4 +1,4 @@
-# cmake global
+# cmake global.
 cmake_minimum_required(VERSION 2.8.12)
 
 set(PROJECT_VERSION "0.9.39")
