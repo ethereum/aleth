@@ -14,45 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file UPnP.h
- * @authors:
- *   Gav Wood <i@gavwood.com>
- * @date 2014
+/** @file WordList.h
+ * @author Gav Wood <i@gavwood.com>
+ * @date 2015
  */
 
 #pragma once
 
-#include <set>
-#include <string>
-#include <memory>
-#include <thread>
-
-struct UPNPUrls;
-struct IGDdatas;
+#include "Common.h"
 
 namespace dev
 {
-namespace p2p
-{
 
-class UPnP
-{
-public:
-	UPnP();
-	~UPnP();
+extern strings const WordList;
 
-	std::string externalIP();
-	int addRedirect(char const* addr, int port);
-	void removeRedirect(int port);
-
-	bool isValid() const { return m_ok; }
-
-private:
-	std::set<int> m_reg;
-	bool m_ok;
-	std::shared_ptr<UPNPUrls> m_urls;
-	std::shared_ptr<IGDdatas> m_data;
-};
-
-}
 }
