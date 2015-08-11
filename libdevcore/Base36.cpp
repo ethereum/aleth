@@ -14,45 +14,41 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file commonjs.cpp
+/** @file Base36.cpp
  * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
 #include <boost/test/unit_test.hpp>
-#include <libdevcore/Log.h>
-#include <libethcore/CommonJS.h>
+#include <libdevcore/Base64.h>
+#include <libethcore/ICAP.h>
 
-BOOST_AUTO_TEST_SUITE(commonjs)
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-BOOST_AUTO_TEST_CASE(jsToPublic)
+BOOST_AUTO_TEST_SUITE(Base36Tests)
+
+BOOST_AUTO_TEST_CASE(basicEncoding)
 {
-	cnote << "Testing jsToPublic...";
-	KeyPair kp = KeyPair::create();
-	string s = toJS(kp.pub());
-	Public pub = dev::jsToPublic(s);
-	BOOST_CHECK_EQUAL(kp.pub(), pub);
+	FixedHash<2> value("0x0048");
+	string encoded = toBase36<2>(value);
+	BOOST_CHECK_EQUAL(encoded, "20");
 }
 
-BOOST_AUTO_TEST_CASE(jsToAddress)
+BOOST_AUTO_TEST_CASE(basicEncoding2)
 {
-	cnote << "Testing jsToPublic...";
-	KeyPair kp = KeyPair::create();
-	string s = toJS(kp.address());
-	Address address = dev::jsToAddress(s);
-	BOOST_CHECK_EQUAL(kp.address(), address);
+	FixedHash<2> value("0x0072");
+	string encoded = toBase36<2>(value);
+	BOOST_CHECK_EQUAL(encoded, "36");
 }
 
-BOOST_AUTO_TEST_CASE(jsToSecret)
+BOOST_AUTO_TEST_CASE(basicEncoding3)
 {
-	cnote << "Testing jsToPublic...";
-	KeyPair kp = KeyPair::create();
-	string s = toJS(kp.secret().makeInsecure());
-	Secret secret = dev::jsToSecret(s);
-	BOOST_CHECK_EQUAL(kp.secret().makeInsecure(), secret.makeInsecure());
+	FixedHash<2> value("0xffff");
+	string encoded = toBase36<2>(value);
+	BOOST_CHECK_EQUAL(encoded, "1EKF");
 }
+
 
 BOOST_AUTO_TEST_SUITE_END()
