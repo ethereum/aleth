@@ -14,30 +14,18 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file FixedHash.cpp
+/** @file WordList.h
  * @author Gav Wood <i@gavwood.com>
- * @date 2014
+ * @date 2015
  */
 
-#include "FixedHash.h"
-#include <ctime>
-#include <boost/algorithm/string.hpp>
+#pragma once
 
-using namespace std;
-using namespace dev;
+#include "Common.h"
 
-boost::random_device dev::s_fixedHashEngine;
-
-h128 dev::fromUUID(std::string const& _uuid)
+namespace dev
 {
-	return h128(boost::replace_all_copy(_uuid, "-", ""));
-}
 
-std::string dev::toUUID(h128 const& _uuid)
-{
-	std::string ret = toHex(_uuid.ref());
-	for (unsigned i: {20, 16, 12, 8})
-		ret.insert(ret.begin() + i, '-');
-	return ret;
-}
+extern strings const WordList;
 
+}
