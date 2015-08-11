@@ -19,11 +19,13 @@
  * @date 2015
  * block test functions.
  */
-
+#include "test/fuzzTesting/fuzzHelper.h"
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/TransientDirectory.h>
+#include <libethcore/Params.h>
 #include <libethereum/CanonBlockChain.h>
+#include <libethereum/TransactionQueue.h>
 #include <test/TestHelper.h>
 
 using namespace std;
@@ -33,16 +35,20 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-BlockInfo constructBlock(mObject& _o);
-bytes createBlockRLPFromFields(mObject& _tObj);
-RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs = RLPEmptyList, bytes const& _uncles = RLPEmptyList);
+typedef std::vector<bytes> uncleList;
+typedef std::pair<bytes, uncleList> blockSet;
+
+using BlockHeader = Ethash::BlockHeader;
+
+BlockHeader constructBlock(mObject& _o, h256 const& _stateRoot = h256{});
+bytes createBlockRLPFromFields(mObject& _tObj, h256 const&  _stateRoot = h256{});
+RLPStream createFullBlockFromHeader(BlockHeader const& _bi, bytes const& _txs = RLPEmptyList, bytes const& _uncles = RLPEmptyList);
 
 mArray writeTransactionsToJson(Transactions const& txs);
-mObject writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi);
-void overwriteBlockHeader(BlockInfo& _current_BlockHeader, mObject& _blObj);
-BlockInfo constructBlock(mObject& _o);
-void updatePoW(BlockInfo& _bi);
-mArray importUncles(mObject const& blObj, vector<BlockInfo>& vBiUncles, vector<BlockInfo> const& vBiBlocks);
+mObject writeBlockHeaderToJson(mObject& _o, BlockHeader const& _bi);
+void overwriteBlockHeader(BlockHeader& _current_BlockHeader, mObject& _blObj);
+void updatePoW(BlockHeader& _bi);
+mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet);
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
@@ -56,17 +62,15 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		}
 
 		cerr << i.first << endl;
-		BOOST_REQUIRE(o.count("genesisBlockHeader"));
-		BlockInfo biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj());
+		TBOOST_REQUIRE(o.count("genesisBlockHeader"));
 
-		BOOST_REQUIRE(o.count("pre"));
+		TBOOST_REQUIRE(o.count("pre"));
 		ImportTest importer(o["pre"].get_obj());
 		TransientDirectory td_stateDB_tmp;
-		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path())), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+		BlockHeader biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), h256{});
+		State trueState(OverlayDB(State::openDB(td_stateDB_tmp.path(), h256{}, WithExisting::Kill)), BaseState::Empty, biGenesisBlock.coinbaseAddress());
 
 		//Imported blocks from the start
-		typedef std::vector<bytes> uncleList;
-		typedef std::pair<bytes, uncleList> blockSet;
 		std::vector<blockSet> blockSets;
 
 		importer.importState(o["pre"].get_obj(), trueState);
@@ -74,9 +78,9 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		trueState.commit();
 
 		if (_fillin)
-			biGenesisBlock.stateRoot = trueState.rootHash();
+			biGenesisBlock = constructBlock(o["genesisBlockHeader"].get_obj(), trueState.rootHash());
 		else
-			BOOST_CHECK_MESSAGE(biGenesisBlock.stateRoot == trueState.rootHash(), "root hash does not match");
+			TBOOST_CHECK_MESSAGE((biGenesisBlock.stateRoot() == trueState.rootHash()), "root hash does not match");
 
 		if (_fillin)
 		{
@@ -94,18 +98,18 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		// construct true blockchain
 		TransientDirectory td;
-		BlockChain trueBc(rlpGenesisBlock.out(), td.path(), WithExisting::Kill);
+		FullBlockChain<Ethash> trueBc(rlpGenesisBlock.out(), StateDefinition(), td.path(), WithExisting::Kill);
 
 		if (_fillin)
 		{
-			BOOST_REQUIRE(o.count("blocks"));
+			TBOOST_REQUIRE(o.count("blocks"));
 			mArray blArray;
 
 			blockSet genesis;
 			genesis.first = rlpGenesisBlock.out();
 			genesis.second = uncleList();
 			blockSets.push_back(genesis);
-			vector<BlockInfo> vBiBlocks;
+			vector<BlockHeader> vBiBlocks;
 			vBiBlocks.push_back(biGenesisBlock);
 
 			size_t importBlockNumber = 0;
@@ -122,30 +126,32 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				vBiBlocks.push_back(biGenesisBlock);
 
 				TransientDirectory td_stateDB, td_bc;
-				BlockChain bc(rlpGenesisBlock.out(), td_bc.path(), WithExisting::Kill);
-				State state(OverlayDB(State::openDB(td_stateDB.path())), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+				FullBlockChain<Ethash> bc(rlpGenesisBlock.out(), StateDefinition(), td_bc.path(), WithExisting::Kill);
+				State state(OverlayDB(State::openDB(td_stateDB.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
+				state.setAddress(biGenesisBlock.coinbaseAddress());
 				importer.importState(o["pre"].get_obj(), state);
 				state.commit();
+				state.sync(bc);
 
 				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
 				{
 					BlockQueue uncleQueue;
+					uncleQueue.setChain(bc);
 					uncleList uncles = blockSets.at(i).second;
 					for (size_t j = 0; j < uncles.size(); j++)
-						uncleQueue.import(&uncles.at(j), bc);
+						uncleQueue.import(&uncles.at(j), false);
 
 					const bytes block = blockSets.at(i).first;
 					bc.sync(uncleQueue, state.db(), 4);
 					bc.attemptImport(block, state.db());
-					vBiBlocks.push_back(BlockInfo(block));
-
+					vBiBlocks.push_back(BlockHeader(block));
 					state.sync(bc);
 				}
 
 				// get txs
 				TransactionQueue txs;
 				ZeroGasPricer gp;
-				BOOST_REQUIRE(blObj.count("transactions"));
+				TBOOST_REQUIRE(blObj.count("transactions"));
 				for (auto const& txObj: blObj["transactions"].get_array())
 				{
 					mObject tx = txObj.get_obj();
@@ -155,10 +161,11 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				}
 
 				//get uncles
-				vector<BlockInfo> vBiUncles;
-				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks);
+				vector<BlockHeader> vBiUncles;
+				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
 
 				BlockQueue uncleBlockQueue;
+				uncleBlockQueue.setChain(bc);
 				uncleList uncleBlockQueueList;
 				cnote << "import uncle in blockQueue";
 				for (size_t i = 0; i < vBiUncles.size(); i++)
@@ -166,15 +173,16 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
 					try
 					{
-						uncleBlockQueue.import(&uncle.out(), bc);
+						uncleBlockQueue.import(&uncle.out(), false);
 						uncleBlockQueueList.push_back(uncle.out());
+						// wait until block is verified
+						this_thread::sleep_for(chrono::seconds(1));
 					}
 					catch(...)
 					{
 						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
 					}
 				} 
-
 				bc.sync(uncleBlockQueue, state.db(), 4);
 				state.commitToMine(bc);
 
@@ -199,27 +207,33 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				//get valid transactions
 				Transactions txList;
-				for (auto const& txi: txs.transactions())
-					txList.push_back(txi.second);
+				for (auto const& txi: txs.topTransactions(std::numeric_limits<unsigned>::max()))
+					txList.push_back(txi);
 				blObj["transactions"] = writeTransactionsToJson(txList);
 
-				BlockInfo current_BlockHeader = state.info();
+				BlockHeader current_BlockHeader(state.blockData());
 
 				RLPStream uncleStream;
 				uncleStream.appendList(vBiUncles.size());
 				for (unsigned i = 0; i < vBiUncles.size(); ++i)
 				{
 					RLPStream uncleRlp;
-					vBiUncles[i].streamRLP(uncleRlp, WithNonce);
+					vBiUncles[i].streamRLP(uncleRlp);
 					uncleStream.appendRaw(uncleRlp.out());
 				}
 
-				// update unclehash in case of invalid uncles
-				current_BlockHeader.sha3Uncles = sha3(uncleStream.out());
-				updatePoW(current_BlockHeader);
-
 				if (blObj.count("blockHeader"))
 					overwriteBlockHeader(current_BlockHeader, blObj);
+
+				if (blObj.count("blockHeader") && blObj["blockHeader"].get_obj().count("bruncle"))
+					current_BlockHeader.populateFromParent(vBiBlocks[vBiBlocks.size() -1]);
+
+				if (vBiUncles.size())
+				{
+					// update unclehash in case of invalid uncles
+					current_BlockHeader.setSha3Uncles(sha3(uncleStream.out()));
+					updatePoW(current_BlockHeader);
+				}
 
 				// write block header
 				mObject oBlockHeader;
@@ -242,7 +256,10 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				blObj["rlp"] = toHex(block2.out(), 2, HexPrefix::Add);
 
 				if (sha3(RLP(state.blockData())[0].data()) != sha3(RLP(block2.out())[0].data()))
-					cnote << "block header mismatch\n";
+				{
+					cnote << "block header mismatch state.blockData() vs updated state.info()\n";
+					cerr << toHex(state.blockData()) << "vs" << toHex(block2.out());
+				}
 
 				if (sha3(RLP(state.blockData())[1].data()) != sha3(RLP(block2.out())[1].data()))
 					cnote << "txs mismatch\n";
@@ -291,7 +308,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			if (o.count("expect") > 0)
 			{
 				stateOptionsMap expectStateMap;
-				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+				State stateExpect(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress());
 				importer.importState(o["expect"].get_obj(), stateExpect, expectStateMap);
 				ImportTest::checkExpectedState(stateExpect, trueState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 				o.erase(o.find("expect"));
@@ -302,7 +319,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			o["lastblockhash"] = toString(trueBc.info().hash());
 
 			//make all values hex in pre section
-			State prestate(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress);
+			State prestate(OverlayDB(), BaseState::Empty, biGenesisBlock.coinbaseAddress());
 			importer.importState(o["pre"].get_obj(), prestate);
 			o["pre"] = fillJsonWithState(prestate);
 		}//_fillin
@@ -319,7 +336,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					blockRLP = importByteArray(blObj["rlp"].get_str());
 					trueState.sync(trueBc);
 					trueBc.import(blockRLP, trueState.db());
-					if (trueBc.info() != BlockInfo(blockRLP))
+					if (trueBc.info() != BlockHeader(blockRLP))
 						importedAndBest  = false;
 					trueState.sync(trueBc);
 				}
@@ -327,59 +344,59 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				catch (Exception const& _e)
 				{
 					cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
-					BOOST_CHECK(blObj.count("blockHeader") == 0);
-					BOOST_CHECK(blObj.count("transactions") == 0);
-					BOOST_CHECK(blObj.count("uncleHeaders") == 0);
+					TBOOST_CHECK((blObj.count("blockHeader") == 0));
+					TBOOST_CHECK((blObj.count("transactions") == 0));
+					TBOOST_CHECK((blObj.count("uncleHeaders") == 0));
 					continue;
 				}
 				catch (std::exception const& _e)
 				{
 					cnote << "state sync or block import did throw an exception: " << _e.what();
-					BOOST_CHECK(blObj.count("blockHeader") == 0);
-					BOOST_CHECK(blObj.count("transactions") == 0);
-					BOOST_CHECK(blObj.count("uncleHeaders") == 0);
+					TBOOST_CHECK((blObj.count("blockHeader") == 0));
+					TBOOST_CHECK((blObj.count("transactions") == 0));
+					TBOOST_CHECK((blObj.count("uncleHeaders") == 0));
 					continue;
 				}
 				catch (...)
 				{
 					cnote << "state sync or block import did throw an exception\n";
-					BOOST_CHECK(blObj.count("blockHeader") == 0);
-					BOOST_CHECK(blObj.count("transactions") == 0);
-					BOOST_CHECK(blObj.count("uncleHeaders") == 0);
+					TBOOST_CHECK((blObj.count("blockHeader") == 0));
+					TBOOST_CHECK((blObj.count("transactions") == 0));
+					TBOOST_CHECK((blObj.count("uncleHeaders") == 0));
 					continue;
 				}
 
-				BOOST_REQUIRE(blObj.count("blockHeader"));
+				TBOOST_REQUIRE(blObj.count("blockHeader"));
 
 				mObject tObj = blObj["blockHeader"].get_obj();
-				BlockInfo blockHeaderFromFields;
+				BlockHeader blockHeaderFromFields;
 				const bytes c_rlpBytesBlockHeader = createBlockRLPFromFields(tObj);
 				const RLP c_blockHeaderRLP(c_rlpBytesBlockHeader);
-				blockHeaderFromFields.populateFromHeader(c_blockHeaderRLP, IgnoreNonce);
+				blockHeaderFromFields.populateFromHeader(c_blockHeaderRLP, IgnoreSeal);
 
-				BlockInfo blockFromRlp = trueBc.info();
+				BlockHeader blockFromRlp(trueBc.header());
 
 				if (importedAndBest)
 				{
 					//Check the fields restored from RLP to original fields
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.headerHash(WithNonce) == blockFromRlp.headerHash(WithNonce), "hash in given RLP not matching the block hash!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.parentHash == blockFromRlp.parentHash, "parentHash in given RLP not matching the block parentHash!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.sha3Uncles == blockFromRlp.sha3Uncles, "sha3Uncles in given RLP not matching the block sha3Uncles!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.coinbaseAddress == blockFromRlp.coinbaseAddress,"coinbaseAddress in given RLP not matching the block coinbaseAddress!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.stateRoot == blockFromRlp.stateRoot, "stateRoot in given RLP not matching the block stateRoot!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.transactionsRoot == blockFromRlp.transactionsRoot, "transactionsRoot in given RLP not matching the block transactionsRoot!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.receiptsRoot == blockFromRlp.receiptsRoot, "receiptsRoot in given RLP not matching the block receiptsRoot!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.logBloom == blockFromRlp.logBloom, "logBloom in given RLP not matching the block logBloom!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.difficulty == blockFromRlp.difficulty, "difficulty in given RLP not matching the block difficulty!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.number == blockFromRlp.number, "number in given RLP not matching the block number!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasLimit == blockFromRlp.gasLimit,"gasLimit in given RLP not matching the block gasLimit!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasUsed == blockFromRlp.gasUsed, "gasUsed in given RLP not matching the block gasUsed!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.timestamp == blockFromRlp.timestamp, "timestamp in given RLP not matching the block timestamp!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.extraData == blockFromRlp.extraData, "extraData in given RLP not matching the block extraData!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.mixHash == blockFromRlp.mixHash, "mixHash in given RLP not matching the block mixHash!");
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields.nonce == blockFromRlp.nonce, "nonce in given RLP not matching the block nonce!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.headerHash(WithProof) == blockFromRlp.headerHash(WithProof)), "hash in given RLP not matching the block hash!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.parentHash() == blockFromRlp.parentHash()), "parentHash in given RLP not matching the block parentHash!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.sha3Uncles() == blockFromRlp.sha3Uncles()), "sha3Uncles in given RLP not matching the block sha3Uncles!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.coinbaseAddress() == blockFromRlp.coinbaseAddress()),"coinbaseAddress in given RLP not matching the block coinbaseAddress!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.stateRoot() == blockFromRlp.stateRoot()), "stateRoot in given RLP not matching the block stateRoot!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.transactionsRoot() == blockFromRlp.transactionsRoot()), "transactionsRoot in given RLP not matching the block transactionsRoot!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.receiptsRoot() == blockFromRlp.receiptsRoot()), "receiptsRoot in given RLP not matching the block receiptsRoot!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.logBloom() == blockFromRlp.logBloom()), "logBloom in given RLP not matching the block logBloom!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.difficulty() == blockFromRlp.difficulty()), "difficulty in given RLP not matching the block difficulty!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.number() == blockFromRlp.number()), "number in given RLP not matching the block number!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.gasLimit() == blockFromRlp.gasLimit()),"gasLimit in given RLP not matching the block gasLimit!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.gasUsed() == blockFromRlp.gasUsed()), "gasUsed in given RLP not matching the block gasUsed!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.timestamp() == blockFromRlp.timestamp()), "timestamp in given RLP not matching the block timestamp!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.extraData() == blockFromRlp.extraData()), "extraData in given RLP not matching the block extraData!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.mixHash() == blockFromRlp.mixHash()), "mixHash in given RLP not matching the block mixHash!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields.nonce() == blockFromRlp.nonce()), "nonce in given RLP not matching the block nonce!");
 
-					BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, "However, blockHeaderFromFields != blockFromRlp!");
+					TBOOST_CHECK_MESSAGE((blockHeaderFromFields == blockFromRlp), "However, blockHeaderFromFields != blockFromRlp!");
 
 					//Check transaction list
 
@@ -389,15 +406,15 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					{
 						mObject tx = txObj.get_obj();
 
-						BOOST_REQUIRE(tx.count("nonce"));
-						BOOST_REQUIRE(tx.count("gasPrice"));
-						BOOST_REQUIRE(tx.count("gasLimit"));
-						BOOST_REQUIRE(tx.count("to"));
-						BOOST_REQUIRE(tx.count("value"));
-						BOOST_REQUIRE(tx.count("v"));
-						BOOST_REQUIRE(tx.count("r"));
-						BOOST_REQUIRE(tx.count("s"));
-						BOOST_REQUIRE(tx.count("data"));
+						TBOOST_REQUIRE(tx.count("nonce"));
+						TBOOST_REQUIRE(tx.count("gasPrice"));
+						TBOOST_REQUIRE(tx.count("gasLimit"));
+						TBOOST_REQUIRE(tx.count("to"));
+						TBOOST_REQUIRE(tx.count("value"));
+						TBOOST_REQUIRE(tx.count("v"));
+						TBOOST_REQUIRE(tx.count("r"));
+						TBOOST_REQUIRE(tx.count("s"));
+						TBOOST_REQUIRE(tx.count("data"));
 
 						try
 						{
@@ -406,7 +423,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						}
 						catch (Exception const& _e)
 						{
-							BOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
+							TBOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
 						}
 						catch (exception const& _e)
 						{
@@ -422,65 +439,65 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						txsFromRlp.push_back(tx);
 					}
 
-					BOOST_CHECK_MESSAGE(txsFromRlp.size() == txsFromField.size(), "transaction list size does not match");
+					TBOOST_CHECK_MESSAGE((txsFromRlp.size() == txsFromField.size()), "transaction list size does not match");
 
 					for (size_t i = 0; i < txsFromField.size(); ++i)
 					{
-						BOOST_CHECK_MESSAGE(txsFromField[i].data() == txsFromRlp[i].data(), "transaction data in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].gas() == txsFromRlp[i].gas(), "transaction gasLimit in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].gasPrice() == txsFromRlp[i].gasPrice(), "transaction gasPrice in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].nonce() == txsFromRlp[i].nonce(), "transaction nonce in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].signature().r == txsFromRlp[i].signature().r, "transaction r in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].signature().s == txsFromRlp[i].signature().s, "transaction s in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].signature().v == txsFromRlp[i].signature().v, "transaction v in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].receiveAddress() == txsFromRlp[i].receiveAddress(), "transaction receiveAddress in rlp and in field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].value() == txsFromRlp[i].value(), "transaction receiveAddress in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].data() == txsFromRlp[i].data()), "transaction data in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].gas() == txsFromRlp[i].gas()), "transaction gasLimit in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].gasPrice() == txsFromRlp[i].gasPrice()), "transaction gasPrice in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].nonce() == txsFromRlp[i].nonce()), "transaction nonce in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].signature().r == txsFromRlp[i].signature().r), "transaction r in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].signature().s == txsFromRlp[i].signature().s), "transaction s in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].signature().v == txsFromRlp[i].signature().v), "transaction v in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].receiveAddress() == txsFromRlp[i].receiveAddress()), "transaction receiveAddress in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].value() == txsFromRlp[i].value()), "transaction receiveAddress in rlp and in field do not match");
 
-						BOOST_CHECK_MESSAGE(txsFromField[i] == txsFromRlp[i], "transactions from  rlp and transaction from field do not match");
-						BOOST_CHECK_MESSAGE(txsFromField[i].rlp() == txsFromRlp[i].rlp(), "transactions rlp do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i] == txsFromRlp[i]), "transactions from  rlp and transaction from field do not match");
+						TBOOST_CHECK_MESSAGE((txsFromField[i].rlp() == txsFromRlp[i].rlp()), "transactions rlp do not match");
 					}
 
 					// check uncle list
 
 					// uncles from uncle list field
-					vector<BlockInfo> uBlHsFromField;
+					vector<BlockHeader> uBlHsFromField;
 					if (blObj["uncleHeaders"].type() != json_spirit::null_type)
 						for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
 						{
 							mObject uBlH = uBlHeaderObj.get_obj();
-							BOOST_REQUIRE(uBlH.size() == 16);
+							TBOOST_REQUIRE((uBlH.size() == 16));
 							bytes uncleRLP = createBlockRLPFromFields(uBlH);
 							const RLP c_uRLP(uncleRLP);
-							BlockInfo uncleBlockHeader;
+							BlockHeader uncleBlockHeader;
 							try
 							{
 								uncleBlockHeader.populateFromHeader(c_uRLP);
 							}
 							catch(...)
 							{
-								BOOST_ERROR("invalid uncle header");
+								TBOOST_ERROR("invalid uncle header");
 							}
 							uBlHsFromField.push_back(uncleBlockHeader);
 						}
 
 					// uncles from block RLP
-					vector<BlockInfo> uBlHsFromRlp;
+					vector<BlockHeader> uBlHsFromRlp;
 					for	(auto const& uRLP: root[2])
 					{
-						BlockInfo uBl;
+						BlockHeader uBl;
 						uBl.populateFromHeader(uRLP);
 						uBlHsFromRlp.push_back(uBl);
 					}
 
-					BOOST_REQUIRE_EQUAL(uBlHsFromField.size(), uBlHsFromRlp.size());
+					TBOOST_REQUIRE_EQUAL(uBlHsFromField.size(), uBlHsFromRlp.size());
 
 					for (size_t i = 0; i < uBlHsFromField.size(); ++i)
-						BOOST_CHECK_MESSAGE(uBlHsFromField[i] == uBlHsFromRlp[i], "block header in rlp and in field do not match");
+						TBOOST_CHECK_MESSAGE((uBlHsFromField[i] == uBlHsFromRlp[i]), "block header in rlp and in field do not match");
 				}//importedAndBest
 			}//all blocks
 
-			BOOST_REQUIRE(o.count("lastblockhash") > 0);
-			BOOST_CHECK_MESSAGE(toString(trueBc.info().hash()) == o["lastblockhash"].get_str(),
+			TBOOST_REQUIRE((o.count("lastblockhash") > 0));
+			TBOOST_CHECK_MESSAGE((toString(trueBc.info().hash()) == o["lastblockhash"].get_str()),
 					"Boost check: " + i.first + " lastblockhash does not match " + toString(trueBc.info().hash()) + " expected: " + o["lastblockhash"].get_str());
 		}
 	}
@@ -488,36 +505,48 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 // helping functions
 
-mArray importUncles(mObject const& blObj, vector<BlockInfo>& vBiUncles, vector<BlockInfo> const& vBiBlocks)
+mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet)
 {
 	// write uncle list
 	mArray aUncleList;
 	mObject uncleHeaderObj_pre;
 
-	for (auto const& uHObj: blObj.at("uncleHeaders").get_array())
+	for (auto const& uHObj: _blObj.at("uncleHeaders").get_array())
 	{
 		mObject uncleHeaderObj = uHObj.get_obj();
 		if (uncleHeaderObj.count("sameAsPreviousSibling"))
 		{
-			writeBlockHeaderToJson(uncleHeaderObj_pre, vBiUncles[vBiUncles.size()-1]);
+			writeBlockHeaderToJson(uncleHeaderObj_pre, _vBiUncles[_vBiUncles.size()-1]);
 			aUncleList.push_back(uncleHeaderObj_pre);
-			vBiUncles.push_back(vBiUncles[vBiUncles.size()-1]);
+			_vBiUncles.push_back(_vBiUncles[_vBiUncles.size()-1]);
 			uncleHeaderObj_pre = uncleHeaderObj;
 			continue;
 		}
 
 		if (uncleHeaderObj.count("sameAsBlock"))
 		{
-
 			size_t number = (size_t)toInt(uncleHeaderObj["sameAsBlock"]);
 			uncleHeaderObj.erase("sameAsBlock");
-			BlockInfo currentUncle = vBiBlocks[number];
+			BlockHeader currentUncle = _vBiBlocks[number];
 			writeBlockHeaderToJson(uncleHeaderObj, currentUncle);
 			aUncleList.push_back(uncleHeaderObj);
-			vBiUncles.push_back(currentUncle);
+			_vBiUncles.push_back(currentUncle);
 			uncleHeaderObj_pre = uncleHeaderObj;
 			continue;
 		}
+
+		if (uncleHeaderObj.count("sameAsPreviousBlockUncle"))
+		{
+			bytes uncleRLP = _blockSet[(size_t)toInt(uncleHeaderObj["sameAsPreviousBlockUncle"])].second[0];
+			BlockHeader uncleHeader(uncleRLP);
+			writeBlockHeaderToJson(uncleHeaderObj, uncleHeader);
+			aUncleList.push_back(uncleHeaderObj);
+
+			_vBiUncles.push_back(uncleHeader);
+			uncleHeaderObj_pre = uncleHeaderObj;
+			continue;
+		}
+
 		string overwrite = "false";
 		if (uncleHeaderObj.count("overwriteAndRedoPoW"))
 		{
@@ -525,48 +554,62 @@ mArray importUncles(mObject const& blObj, vector<BlockInfo>& vBiUncles, vector<B
 			uncleHeaderObj.erase("overwriteAndRedoPoW");
 		}
 
-		BlockInfo uncleBlockFromFields = constructBlock(uncleHeaderObj);
+		BlockHeader uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
 		// make uncle header valid
-		uncleBlockFromFields.timestamp = (u256)time(0);
-		cnote << "uncle block n = " << toString(uncleBlockFromFields.number);
-		if (vBiBlocks.size() > 2)
+		uncleBlockFromFields.setTimestamp((u256)time(0));
+		cnote << "uncle block n = " << toString(uncleBlockFromFields.number());
+		if (_vBiBlocks.size() > 2)
 		{
-			if (uncleBlockFromFields.number - 1 < vBiBlocks.size())
-				uncleBlockFromFields.populateFromParent(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
+			if (uncleBlockFromFields.number() - 1 < _vBiBlocks.size())
+				uncleBlockFromFields.populateFromParent(_vBiBlocks[(size_t)uncleBlockFromFields.number() - 1]);
 			else
-				uncleBlockFromFields.populateFromParent(vBiBlocks[vBiBlocks.size() - 2]);
+				uncleBlockFromFields.populateFromParent(_vBiBlocks[_vBiBlocks.size() - 2]);
 		}
 		else
 			continue;
 
 		if (overwrite != "false")
 		{
-			uncleBlockFromFields.difficulty = overwrite == "difficulty" ? toInt(uncleHeaderObj["difficulty"]) : uncleBlockFromFields.difficulty;
-			uncleBlockFromFields.gasLimit = overwrite == "gasLimit" ? toInt(uncleHeaderObj["gasLimit"]) : uncleBlockFromFields.gasLimit;
-			uncleBlockFromFields.gasUsed = overwrite == "gasUsed" ? toInt(uncleHeaderObj["gasUsed"]) : uncleBlockFromFields.gasUsed;
-			uncleBlockFromFields.parentHash = overwrite == "parentHash" ? h256(uncleHeaderObj["parentHash"].get_str()) : uncleBlockFromFields.parentHash;
-			uncleBlockFromFields.stateRoot = overwrite == "stateRoot" ? h256(uncleHeaderObj["stateRoot"].get_str()) : uncleBlockFromFields.stateRoot;
-			if (overwrite == "timestamp")
-			{
-				uncleBlockFromFields.timestamp = toInt(uncleHeaderObj["timestamp"]);
-				uncleBlockFromFields.difficulty = uncleBlockFromFields.calculateDifficulty(vBiBlocks[(size_t)uncleBlockFromFields.number - 1]);
-			}
+			uncleBlockFromFields = constructHeader(
+				overwrite == "parentHash" ? h256(uncleHeaderObj["parentHash"].get_str()) : uncleBlockFromFields.parentHash(),
+				uncleBlockFromFields.sha3Uncles(),
+				uncleBlockFromFields.coinbaseAddress(),
+				overwrite == "stateRoot" ? h256(uncleHeaderObj["stateRoot"].get_str()) : uncleBlockFromFields.stateRoot(),
+				uncleBlockFromFields.transactionsRoot(),
+				uncleBlockFromFields.receiptsRoot(),
+				uncleBlockFromFields.logBloom(),
+				overwrite == "difficulty" ? toInt(uncleHeaderObj["difficulty"]) : overwrite == "timestamp" ? uncleBlockFromFields.calculateDifficulty(_vBiBlocks[(size_t)uncleBlockFromFields.number() - 1]) : uncleBlockFromFields.difficulty(),
+				uncleBlockFromFields.number(),
+				overwrite == "gasLimit" ? toInt(uncleHeaderObj["gasLimit"]) : uncleBlockFromFields.gasLimit(),
+				overwrite == "gasUsed" ? toInt(uncleHeaderObj["gasUsed"]) : uncleBlockFromFields.gasUsed(),
+				overwrite == "timestamp" ? toInt(uncleHeaderObj["timestamp"]) : uncleBlockFromFields.timestamp(),
+				uncleBlockFromFields.extraData());
+
+			if (overwrite == "parentHashIsBlocksParent")
+				uncleBlockFromFields.populateFromParent(_vBiBlocks[_vBiBlocks.size() - 1]);
 		}
 
 		updatePoW(uncleBlockFromFields);
+
+		if (overwrite == "nonce")
+			updateEthashSeal(uncleBlockFromFields, uncleBlockFromFields.mixHash(), Nonce(uncleHeaderObj["nonce"].get_str()));
+
+		if (overwrite == "mixHash")
+			updateEthashSeal(uncleBlockFromFields, h256(uncleHeaderObj["mixHash"].get_str()), uncleBlockFromFields.nonce());
+
 		writeBlockHeaderToJson(uncleHeaderObj, uncleBlockFromFields);
 
 		aUncleList.push_back(uncleHeaderObj);
-		vBiUncles.push_back(uncleBlockFromFields);
+		_vBiUncles.push_back(uncleBlockFromFields);
 
 		uncleHeaderObj_pre = uncleHeaderObj;
-	} //for blObj["uncleHeaders"].get_array()
+	} //for _blObj["uncleHeaders"].get_array()
 
 	return aUncleList;
 }
 
-bytes createBlockRLPFromFields(mObject& _tObj)
+bytes createBlockRLPFromFields(mObject& _tObj, h256 const& _stateRoot)
 {
 	RLPStream rlpStream;
 	rlpStream.appendList(_tObj.count("hash") > 0 ? (_tObj.size() - 1) : _tObj.size());
@@ -580,7 +623,9 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	if (_tObj.count("coinbase"))
 		rlpStream << importByteArray(_tObj["coinbase"].get_str());
 
-	if (_tObj.count("stateRoot"))
+	if (_stateRoot)
+		rlpStream << _stateRoot;
+	else if (_tObj.count("stateRoot"))
 		rlpStream << importByteArray(_tObj["stateRoot"].get_str());
 
 	if (_tObj.count("transactionsTrie"))
@@ -619,67 +664,57 @@ bytes createBlockRLPFromFields(mObject& _tObj)
 	return rlpStream.out();
 }
 
-void overwriteBlockHeader(BlockInfo& _header, mObject& _blObj)
+void overwriteBlockHeader(BlockHeader& _header, mObject& _blObj)
 {
 	auto ho = _blObj["blockHeader"].get_obj();
 	if (ho.size() != 14)
 	{
-		BlockInfo tmp = _header;
-		if (ho.count("parentHash"))
-			tmp.parentHash = h256(ho["parentHash"].get_str());
-		if (ho.count("uncleHash"))
-			tmp.sha3Uncles = h256(ho["uncleHash"].get_str());
-		if (ho.count("coinbase"))
-			tmp.coinbaseAddress = Address(ho["coinbase"].get_str());
-		if (ho.count("stateRoot"))
-			tmp.stateRoot = h256(ho["stateRoot"].get_str());
-		if (ho.count("transactionsTrie"))
-			tmp.transactionsRoot = h256(ho["transactionsTrie"].get_str());
-		if (ho.count("receiptTrie"))
-			tmp.receiptsRoot = h256(ho["receiptTrie"].get_str());
-		if (ho.count("bloom"))
-			tmp.logBloom = LogBloom(ho["bloom"].get_str());
-		if (ho.count("difficulty"))
-			tmp.difficulty = toInt(ho["difficulty"]);
-		if (ho.count("number"))
-			tmp.number = toInt(ho["number"]);
-		if (ho.count("gasLimit"))
-			tmp.gasLimit = toInt(ho["gasLimit"]);
-		if (ho.count("gasUsed"))
-			tmp.gasUsed = toInt(ho["gasUsed"]);
-		if (ho.count("timestamp"))
-			tmp.timestamp = toInt(ho["timestamp"]);
-		if (ho.count("extraData"))
-			tmp.extraData = importByteArray(ho["extraData"].get_str());
-		if (ho.count("mixHash"))
-			tmp.mixHash = h256(ho["mixHash"].get_str());
-		tmp.noteDirty();
+		BlockHeader tmp = constructHeader(
+			ho.count("parentHash") ? h256(ho["parentHash"].get_str()) : _header.parentHash(),
+			ho.count("uncleHash") ? h256(ho["uncleHash"].get_str()) : _header.sha3Uncles(),
+			ho.count("coinbase") ? Address(ho["coinbase"].get_str()) : _header.coinbaseAddress(),
+			ho.count("stateRoot") ? h256(ho["stateRoot"].get_str()): _header.stateRoot(),
+			ho.count("transactionsTrie") ? h256(ho["transactionsTrie"].get_str()) : _header.transactionsRoot(),
+			ho.count("receiptTrie") ? h256(ho["receiptTrie"].get_str()) : _header.receiptsRoot(),
+			ho.count("bloom") ? LogBloom(ho["bloom"].get_str()) : _header.logBloom(),
+			ho.count("difficulty") ? toInt(ho["difficulty"]) : _header.difficulty(),
+			ho.count("number") ? toInt(ho["number"]) : _header.number(),
+			ho.count("gasLimit") ? toInt(ho["gasLimit"]) : _header.gasLimit(),
+			ho.count("gasUsed") ? toInt(ho["gasUsed"]) : _header.gasUsed(),
+			ho.count("timestamp") ? toInt(ho["timestamp"]) : _header.timestamp(),
+			ho.count("extraData") ? importByteArray(ho["extraData"].get_str()) : _header.extraData());
 
 		// find new valid nonce
-		if (tmp != _header)
-		{
+		if (static_cast<BlockInfo>(tmp) != static_cast<BlockInfo>(_header) && tmp.difficulty())
 			mine(tmp);
-			_header = tmp;
-		}
+
+
+		if (ho.count("mixHash"))
+			updateEthashSeal(tmp, h256(ho["mixHash"].get_str()), tmp.nonce());
+		if (ho.count("nonce"))
+			updateEthashSeal(tmp, tmp.mixHash(), Nonce(ho["nonce"].get_str()));
+
+		tmp.noteDirty();
+		_header = tmp;
 	}
 	else
 	{
 		// take the blockheader as is
 		const bytes c_blockRLP = createBlockRLPFromFields(ho);
 		const RLP c_bRLP(c_blockRLP);
-		_header.populateFromHeader(c_bRLP, IgnoreNonce);
+		_header.populateFromHeader(c_bRLP, IgnoreSeal);
 	}
 }
 
-BlockInfo constructBlock(mObject& _o)
+BlockHeader constructBlock(mObject& _o, h256 const& _stateRoot)
 {
-	BlockInfo ret;
+	BlockHeader ret;
 	try
 	{
 		// construct genesis block
-		const bytes c_blockRLP = createBlockRLPFromFields(_o);
+		const bytes c_blockRLP = createBlockRLPFromFields(_o, _stateRoot);
 		const RLP c_bRLP(c_blockRLP);
-		ret.populateFromHeader(c_bRLP, IgnoreNonce);
+		ret.populateFromHeader(c_bRLP, IgnoreSeal);
 	}
 	catch (Exception const& _e)
 	{
@@ -687,16 +722,16 @@ BlockInfo constructBlock(mObject& _o)
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+		TBOOST_ERROR("Failed block population with Exception: " << _e.what());
 	}
 	catch(...)
 	{
-		BOOST_ERROR("block population did throw an unknown exception\n");
+		TBOOST_ERROR("block population did throw an unknown exception\n");
 	}
 	return ret;
 }
 
-void updatePoW(BlockInfo& _bi)
+void updatePoW(BlockHeader& _bi)
 {
 	mine(_bi);
 	_bi.noteDirty();
@@ -713,31 +748,31 @@ mArray writeTransactionsToJson(Transactions const& txs)
 	return txArray;
 }
 
-mObject writeBlockHeaderToJson(mObject& _o, BlockInfo const& _bi)
+mObject writeBlockHeaderToJson(mObject& _o, BlockHeader const& _bi)
 {
-	_o["parentHash"] = toString(_bi.parentHash);
-	_o["uncleHash"] = toString(_bi.sha3Uncles);
-	_o["coinbase"] = toString(_bi.coinbaseAddress);
-	_o["stateRoot"] = toString(_bi.stateRoot);
-	_o["transactionsTrie"] = toString(_bi.transactionsRoot);
-	_o["receiptTrie"] = toString(_bi.receiptsRoot);
-	_o["bloom"] = toString(_bi.logBloom);
-	_o["difficulty"] = toCompactHex(_bi.difficulty, HexPrefix::Add, 1);
-	_o["number"] = toCompactHex(_bi.number, HexPrefix::Add, 1);
-	_o["gasLimit"] = toCompactHex(_bi.gasLimit, HexPrefix::Add, 1);
-	_o["gasUsed"] = toCompactHex(_bi.gasUsed, HexPrefix::Add, 1);
-	_o["timestamp"] = toCompactHex(_bi.timestamp, HexPrefix::Add, 1);
-	_o["extraData"] = toHex(_bi.extraData, 2, HexPrefix::Add);
-	_o["mixHash"] = toString(_bi.mixHash);
-	_o["nonce"] = toString(_bi.nonce);
+	_o["parentHash"] = toString(_bi.parentHash());
+	_o["uncleHash"] = toString(_bi.sha3Uncles());
+	_o["coinbase"] = toString(_bi.coinbaseAddress());
+	_o["stateRoot"] = toString(_bi.stateRoot());
+	_o["transactionsTrie"] = toString(_bi.transactionsRoot());
+	_o["receiptTrie"] = toString(_bi.receiptsRoot());
+	_o["bloom"] = toString(_bi.logBloom());
+	_o["difficulty"] = toCompactHex(_bi.difficulty(), HexPrefix::Add, 1);
+	_o["number"] = toCompactHex(_bi.number(), HexPrefix::Add, 1);
+	_o["gasLimit"] = toCompactHex(_bi.gasLimit(), HexPrefix::Add, 1);
+	_o["gasUsed"] = toCompactHex(_bi.gasUsed(), HexPrefix::Add, 1);
+	_o["timestamp"] = toCompactHex(_bi.timestamp(), HexPrefix::Add, 1);
+	_o["extraData"] = toHex(_bi.extraData(), 2, HexPrefix::Add);
+	_o["mixHash"] = toString(_bi.mixHash());
+	_o["nonce"] = toString(_bi.nonce());
 	_o["hash"] = toString(_bi.hash());
 	return _o;
 }
 
-RLPStream createFullBlockFromHeader(BlockInfo const& _bi, bytes const& _txs, bytes const& _uncles)
+RLPStream createFullBlockFromHeader(BlockHeader const& _bi, bytes const& _txs, bytes const& _uncles)
 {
 	RLPStream rlpStream;
-	_bi.streamRLP(rlpStream, WithNonce);
+	_bi.streamRLP(rlpStream, WithProof);
 
 	RLPStream ret(3);
 	ret.appendRaw(rlpStream.out());
@@ -753,53 +788,63 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
-	dev::test::executeTests("bcForkBlockTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcForkBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
 {
-	dev::test::executeTests("bcTotalDifficultyTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcTotalDifficultyTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
-	dev::test::executeTests("bcInvalidRLPTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcRPC_API_Test)
 {
-	dev::test::executeTests("bcRPC_API_Test", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcRPC_API_Test", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcValidBlockTest)
 {
-	dev::test::executeTests("bcValidBlockTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcValidBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcInvalidHeaderTest)
 {
-	dev::test::executeTests("bcInvalidHeaderTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcInvalidHeaderTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcUncleTest)
 {
-	dev::test::executeTests("bcUncleTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcUncleTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcUncleHeaderValiditiy)
 {
-	dev::test::executeTests("bcUncleHeaderValiditiy", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcUncleHeaderValiditiy", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcGasPricerTest)
 {
-	dev::test::executeTests("bcGasPricerTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcGasPricerTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcBruncleTest)
+{
+	dev::test::executeTests("bcBruncleTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest)
+{
+	dev::test::executeTests("bcBlockGasLimitTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcWalletTest)
 {
 	if (test::Options::get().wallet)
-		dev::test::executeTests("bcWalletTest", "/BlockTests",dev::test::getFolder(__FILE__) + "/BlockTestsFiller", dev::test::doBlockchainTests);
+		dev::test::executeTests("bcWalletTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(userDefinedFile)

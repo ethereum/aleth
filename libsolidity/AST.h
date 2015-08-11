@@ -281,6 +281,12 @@ public:
 	/// Returns the fallback function or nullptr if no fallback function was specified.
 	FunctionDefinition const* getFallbackFunction() const;
 
+	std::string const& userDocumentation() const;
+	void setUserDocumentation(std::string const& _userDocumentation);
+
+	std::string const& devDocumentation() const;
+	void setDevDocumentation(std::string const& _devDocumentation);
+
 private:
 	/// Checks that two functions defined in this contract with the same name have different
 	/// arguments and that there is at most one constructor.
@@ -301,6 +307,10 @@ private:
 	std::vector<ASTPointer<FunctionDefinition>> m_definedFunctions;
 	std::vector<ASTPointer<ModifierDefinition>> m_functionModifiers;
 	std::vector<ASTPointer<EventDefinition>> m_events;
+
+	// parsed Natspec documentation of the contract.
+	std::string m_userDocumentation;
+	std::string m_devDocumentation;
 
 	std::vector<ContractDefinition const*> m_linearizedBaseContracts;
 	mutable std::unique_ptr<std::vector<std::pair<FixedHash<4>, FunctionTypePointer>>> m_interfaceFunctionList;
@@ -406,13 +416,43 @@ private:
 	std::vector<ASTPointer<VariableDeclaration>> m_parameters;
 };
 
-class FunctionDefinition: public Declaration, public VariableScope, public Documented, public ImplementationOptional
+/**
+ * Base class for all nodes that define function-like objects, i.e. FunctionDefinition,
+ * EventDefinition and ModifierDefinition.
+ */
+class CallableDeclaration: public Declaration, public VariableScope
+{
+public:
+	CallableDeclaration(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		Declaration::Visibility _visibility,
+		ASTPointer<ParameterList> const& _parameters,
+		ASTPointer<ParameterList> const& _returnParameters = ASTPointer<ParameterList>()
+	):
+		Declaration(_location, _name, _visibility),
+		m_parameters(_parameters),
+		m_returnParameters(_returnParameters)
+	{
+	}
+
+	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
+	ParameterList const& getParameterList() const { return *m_parameters; }
+	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
+
+protected:
+	ASTPointer<ParameterList> m_parameters;
+	ASTPointer<ParameterList> m_returnParameters;
+};
+
+class FunctionDefinition: public CallableDeclaration, public Documented, public ImplementationOptional
 {
 public:
 	FunctionDefinition(
 		SourceLocation const& _location,
 		ASTPointer<ASTString> const& _name,
-		Declaration::Visibility _visibility, bool _isConstructor,
+		Declaration::Visibility _visibility,
+		bool _isConstructor,
 		ASTPointer<ASTString> const& _documentation,
 		ASTPointer<ParameterList> const& _parameters,
 		bool _isDeclaredConst,
@@ -420,14 +460,12 @@ public:
 		ASTPointer<ParameterList> const& _returnParameters,
 		ASTPointer<Block> const& _body
 	):
-		Declaration(_location, _name, _visibility),
+		CallableDeclaration(_location, _name, _visibility, _parameters, _returnParameters),
 		Documented(_documentation),
 		ImplementationOptional(_body != nullptr),
 		m_isConstructor(_isConstructor),
-		m_parameters(_parameters),
 		m_isDeclaredConst(_isDeclaredConst),
 		m_functionModifiers(_modifiers),
-		m_returnParameters(_returnParameters),
 		m_body(_body)
 	{}
 
@@ -437,10 +475,7 @@ public:
 	bool isConstructor() const { return m_isConstructor; }
 	bool isDeclaredConst() const { return m_isDeclaredConst; }
 	std::vector<ASTPointer<ModifierInvocation>> const& getModifiers() const { return m_functionModifiers; }
-	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
-	ParameterList const& getParameterList() const { return *m_parameters; }
 	std::vector<ASTPointer<VariableDeclaration>> const& getReturnParameters() const { return m_returnParameters->getParameters(); }
-	ASTPointer<ParameterList> const& getReturnParameterList() const { return m_returnParameters; }
 	Block const& getBody() const { return *m_body; }
 
 	virtual bool isVisibleInContract() const override
@@ -460,10 +495,8 @@ public:
 
 private:
 	bool m_isConstructor;
-	ASTPointer<ParameterList> m_parameters;
 	bool m_isDeclaredConst;
 	std::vector<ASTPointer<ModifierInvocation>> m_functionModifiers;
-	ASTPointer<ParameterList> m_returnParameters;
 	ASTPointer<Block> m_body;
 };
 
@@ -474,22 +507,26 @@ private:
 class VariableDeclaration: public Declaration
 {
 public:
+	enum Location { Default, Storage, Memory };
+
 	VariableDeclaration(
-		SourceLocation const& _location,
+		SourceLocation const& _sourceLocation,
 		ASTPointer<TypeName> const& _type,
 		ASTPointer<ASTString> const& _name,
 		ASTPointer<Expression> _value,
 		Visibility _visibility,
 		bool _isStateVar = false,
 		bool _isIndexed = false,
-		bool _isConstant = false
+		bool _isConstant = false,
+		Location _referenceLocation = Location::Default
 	):
-		Declaration(_location, _name, _visibility),
+		Declaration(_sourceLocation, _name, _visibility),
 		m_typeName(_type),
 		m_value(_value),
 		m_isStateVariable(_isStateVar),
 		m_isIndexed(_isIndexed),
-		m_isConstant(_isConstant){}
+		m_isConstant(_isConstant),
+		m_location(_referenceLocation) {}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
@@ -499,7 +536,7 @@ public:
 
 	/// Returns the declared or inferred type. Can be an empty pointer if no type was explicitly
 	/// declared and there is no assignment to the variable that fixes the type.
-	TypePointer getType(ContractDefinition const* = nullptr) const { return m_type; }
+	TypePointer getType(ContractDefinition const* = nullptr) const override { return m_type; }
 	void setType(std::shared_ptr<Type const> const& _type) { m_type = _type; }
 
 	virtual bool isLValue() const override;
@@ -507,20 +544,25 @@ public:
 
 	void checkTypeRequirements();
 	bool isLocalVariable() const { return !!dynamic_cast<FunctionDefinition const*>(getScope()); }
-	bool isExternalFunctionParameter() const;
+	/// @returns true if this variable is a parameter or return parameter of a function.
+	bool isCallableParameter() const;
+	/// @returns true if this variable is a parameter (not return parameter) of an external function.
+	bool isExternalCallableParameter() const;
 	bool isStateVariable() const { return m_isStateVariable; }
 	bool isIndexed() const { return m_isIndexed; }
 	bool isConstant() const { return m_isConstant; }
+	Location referenceLocation() const { return m_location; }
 
 protected:
 	Visibility getDefaultVisibility() const override { return Visibility::Internal; }
 
 private:
-	ASTPointer<TypeName> m_typeName;    ///< can be empty ("var")
-	ASTPointer<Expression> m_value;     ///< the assigned value, can be missing
-	bool m_isStateVariable;             ///< Whether or not this is a contract state variable
-	bool m_isIndexed;                   ///< Whether this is an indexed variable (used by events).
-	bool m_isConstant;                  ///< Whether the variable is a compile-time constant.
+	ASTPointer<TypeName> m_typeName; ///< can be empty ("var")
+	ASTPointer<Expression> m_value; ///< the assigned value, can be missing
+	bool m_isStateVariable; ///< Whether or not this is a contract state variable
+	bool m_isIndexed; ///< Whether this is an indexed variable (used by events).
+	bool m_isConstant; ///< Whether the variable is a compile-time constant.
+	Location m_location; ///< Location of the variable if it is of reference type.
 
 	std::shared_ptr<Type const> m_type; ///< derived type, initially empty
 };
@@ -528,22 +570,25 @@ private:
 /**
  * Definition of a function modifier.
  */
-class ModifierDefinition: public Declaration, public VariableScope, public Documented
+class ModifierDefinition: public CallableDeclaration, public Documented
 {
 public:
-	ModifierDefinition(SourceLocation const& _location,
-					   ASTPointer<ASTString> const& _name,
-					   ASTPointer<ASTString> const& _documentation,
-					   ASTPointer<ParameterList> const& _parameters,
-					   ASTPointer<Block> const& _body):
-		Declaration(_location, _name), Documented(_documentation),
-		m_parameters(_parameters), m_body(_body) {}
+	ModifierDefinition(
+		SourceLocation const& _location,
+		ASTPointer<ASTString> const& _name,
+		ASTPointer<ASTString> const& _documentation,
+		ASTPointer<ParameterList> const& _parameters,
+		ASTPointer<Block> const& _body
+	):
+		CallableDeclaration(_location, _name, Visibility::Default, _parameters),
+		Documented(_documentation),
+		m_body(_body)
+	{
+	}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
-	ParameterList const& getParameterList() const { return *m_parameters; }
 	Block const& getBody() const { return *m_body; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override;
@@ -551,7 +596,6 @@ public:
 	void checkTypeRequirements();
 
 private:
-	ASTPointer<ParameterList> m_parameters;
 	ASTPointer<Block> m_body;
 };
 
@@ -582,7 +626,7 @@ private:
 /**
  * Definition of a (loggable) event.
  */
-class EventDefinition: public Declaration, public VariableScope, public Documented
+class EventDefinition: public CallableDeclaration, public Documented
 {
 public:
 	EventDefinition(
@@ -592,16 +636,15 @@ public:
 		ASTPointer<ParameterList> const& _parameters,
 		bool _anonymous = false
 	):
-		Declaration(_location, _name),
+		CallableDeclaration(_location, _name, Visibility::Default, _parameters),
 		Documented(_documentation),
-		m_parameters(_parameters),
-		m_anonymous(_anonymous){}
+		m_anonymous(_anonymous)
+	{
+	}
 
 	virtual void accept(ASTVisitor& _visitor) override;
 	virtual void accept(ASTConstVisitor& _visitor) const override;
 
-	std::vector<ASTPointer<VariableDeclaration>> const& getParameters() const { return m_parameters->getParameters(); }
-	ParameterList const& getParameterList() const { return *m_parameters; }
 	bool isAnonymous() const { return m_anonymous; }
 
 	virtual TypePointer getType(ContractDefinition const* = nullptr) const override
@@ -612,7 +655,6 @@ public:
 	void checkTypeRequirements();
 
 private:
-	ASTPointer<ParameterList> m_parameters;
 	bool m_anonymous = false;
 };
 
@@ -1104,9 +1146,11 @@ public:
 	std::vector<ASTPointer<Expression const>> getArguments() const { return {m_arguments.begin(), m_arguments.end()}; }
 	std::vector<ASTPointer<ASTString>> const& getNames() const { return m_names; }
 
-	/// Returns true if this is not an actual function call, but an explicit type conversion
-	/// or constructor call.
+	/// @returns true if this is not an actual function call, but an explicit type conversion.
+	/// Returns false for struct constructor calls.
 	bool isTypeConversion() const;
+	/// @return true if this is a constructor call for a struct, i.e. StructName(...).
+	bool isStructConstructorCall() const;
 
 private:
 	ASTPointer<Expression> m_expression;

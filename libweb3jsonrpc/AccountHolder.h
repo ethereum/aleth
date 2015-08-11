@@ -48,11 +48,10 @@ class AccountHolder
 public:
 	explicit AccountHolder(std::function<Interface*()> const& _client): m_client(_client) {}
 
-	// easiest to return keyManager.addresses();
 	virtual AddressHash realAccounts() const = 0;
 	// use m_web3's submitTransaction
 	// or use AccountHolder::queueTransaction(_t) to accept
-	virtual void authenticate(dev::eth::TransactionSkeleton const& _t) = 0;
+	virtual h256 authenticate(dev::eth::TransactionSkeleton const& _t) = 0;
 
 	Addresses allAccounts() const;
 	bool isRealAccount(Address const& _account) const { return realAccounts().count(_account) > 0; }
@@ -86,7 +85,7 @@ public:
 	{}
 
 	AddressHash realAccounts() const override;
-	void authenticate(dev::eth::TransactionSkeleton const& _t) override;
+	h256 authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
 private:
 	std::function<std::string(Address)> m_getPassword;
@@ -118,7 +117,7 @@ public:
 
 	// use m_web3's submitTransaction
 	// or use AccountHolder::queueTransaction(_t) to accept
-	void authenticate(dev::eth::TransactionSkeleton const& _t) override;
+	h256 authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
 private:
 	std::unordered_map<dev::Address, dev::Secret> m_accounts;

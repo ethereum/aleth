@@ -190,6 +190,17 @@ BOOST_AUTO_TEST_CASE(struct_definition_indirectly_recursive)
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
 }
 
+BOOST_AUTO_TEST_CASE(struct_definition_not_really_recursive)
+{
+	char const* text = R"(
+		contract test {
+			struct s1 { uint a; }
+			struct s2 { s1 x; s1 y; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
 BOOST_AUTO_TEST_CASE(struct_definition_recursion_via_mapping)
 {
 	char const* text = "contract test {\n"
@@ -272,7 +283,7 @@ BOOST_AUTO_TEST_CASE(large_string_literal)
 	char const* text = "contract test {\n"
 					   "  function f() { var x = \"123456789012345678901234567890123\"; }"
 					   "}\n";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
 }
 
 BOOST_AUTO_TEST_CASE(balance)
@@ -390,6 +401,23 @@ BOOST_AUTO_TEST_CASE(abstract_contract)
 	BOOST_CHECK(derived);
 	BOOST_CHECK(derived->isFullyImplemented());
 	BOOST_CHECK(derived->getDefinedFunctions()[0]->isFullyImplemented());
+}
+
+BOOST_AUTO_TEST_CASE(abstract_contract_with_overload)
+{
+	ASTPointer<SourceUnit> sourceUnit;
+	char const* text = R"(
+		contract base { function foo(bool); }
+		contract derived is base { function foo(uint) {} }
+		)";
+	ETH_TEST_REQUIRE_NO_THROW(sourceUnit = parseTextAndResolveNames(text), "Parsing and name Resolving failed");
+	std::vector<ASTPointer<ASTNode>> nodes = sourceUnit->getNodes();
+	ContractDefinition* base = dynamic_cast<ContractDefinition*>(nodes[0].get());
+	ContractDefinition* derived = dynamic_cast<ContractDefinition*>(nodes[1].get());
+	BOOST_REQUIRE(base);
+	BOOST_CHECK(!base->isFullyImplemented());
+	BOOST_REQUIRE(derived);
+	BOOST_CHECK(!derived->isFullyImplemented());
 }
 
 BOOST_AUTO_TEST_CASE(create_abstract_contract)
@@ -554,16 +582,6 @@ BOOST_AUTO_TEST_CASE(function_external_call_not_allowed_conversion)
 				this.g(arg);
 			}
 			function g (C c) external {}
-	})";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
-}
-
-// todo delete when implemented
-BOOST_AUTO_TEST_CASE(arrays_in_internal_functions)
-{
-	char const* text = R"(
-		contract Test {
-			function foo(address[] addresses) {}
 	})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
@@ -1579,7 +1597,6 @@ BOOST_AUTO_TEST_CASE(test_fromElementaryTypeName)
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::UInt256) == *make_shared<IntegerType>(256, IntegerType::Modifier::Unsigned));
 
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Byte) == *make_shared<FixedBytesType>(1));
-	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes0) == *make_shared<FixedBytesType>(0));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes1) == *make_shared<FixedBytesType>(1));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes2) == *make_shared<FixedBytesType>(2));
 	BOOST_CHECK(*Type::fromElementaryTypeName(Token::Bytes3) == *make_shared<FixedBytesType>(3));
@@ -1664,16 +1681,6 @@ BOOST_AUTO_TEST_CASE(local_const_variable)
 			}
 	})";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(text), ParserError);
-}
-
-BOOST_AUTO_TEST_CASE(bytes0_array)
-{
-	char const* text = R"(
-		contract Foo {
-			bytes0[] illegalArray;
-		}
-	)";
-	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_CASE(overloaded_function_cannot_resolve)
@@ -1781,6 +1788,365 @@ BOOST_AUTO_TEST_CASE(uninitialized_var)
 		}
 	)";
 	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(string)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f(string x) external { s = x; }
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(string_index)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f() { var a = s[2]; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(string_length)
+{
+	char const* sourceCode = R"(
+		contract C {
+			string s;
+			function f() { var a = s.length; }
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(negative_integers_to_signed_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public i = -129;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(negative_integers_to_signed_min)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public i = -128;
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public j = 128;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(positive_integers_to_signed_out_of_bound_max)
+{
+	char const* sourceCode = R"(
+		contract test {
+			int8 public j = 127;
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(negative_integers_to_unsigned)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 public x = -1;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(positive_integers_to_unsigned_out_of_bound)
+{
+	char const* sourceCode = R"(
+		contract test {
+			uint8 public x = 700;
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(overwrite_memory_location_external)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint[] memory a) external {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(overwrite_storage_location_external)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint[] storage a) external {}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(storage_location_local_variables)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				uint[] storage x;
+				uint[] memory y;
+				uint[] memory z;
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(no_mappings_in_memory_array)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				mapping(uint=>uint)[] memory x;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_mem_to_local_storage_variable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			function f(uint[] x) {
+				var dataRef = data;
+				dataRef = x;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(storage_assign_to_different_local_variable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			uint8[] otherData;
+			function f() {
+				uint8[] storage x = otherData;
+				uint[] storage y = data;
+				y = x;
+				// note that data = otherData works
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(no_delete_on_storage_pointers)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			function f() {
+				var x = data;
+				delete x;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(assignment_mem_storage_variable_directly)
+{
+	char const* sourceCode = R"(
+		contract C {
+			uint[] data;
+			function f(uint[] x) {
+				data = x;
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(function_argument_mem_to_storage)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint[] storage x) private {
+			}
+			function g(uint[] x) {
+				f(x);
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(function_argument_storage_to_mem)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint[] storage x) private {
+				g(x);
+			}
+			function g(uint[] x) {
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(mem_array_assignment_changes_base_type)
+{
+	// Such an assignment is possible in storage, but not in memory
+	// (because it would incur an otherwise unnecessary copy).
+	// This requirement might be lifted, though.
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint8[] memory x) private {
+				uint[] memory y = x;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(dynamic_return_types_not_possible)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f(uint) returns (string);
+			function g() {
+				var x = this.f(2);
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(memory_arrays_not_resizeable)
+{
+	char const* sourceCode = R"(
+		contract C {
+			function f() {
+				uint[] memory x;
+				x.length = 2;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(sourceCode), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			function f() {
+				S memory s = S(1, true);
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(struct_constructor_nested)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct X { uint x1; uint x2; }
+			struct S { uint s1; uint[3] s2; X s3; }
+			function f() {
+				uint[3] memory s2;
+				S memory s = S(1, s2, X(4, 5));
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(struct_named_constructor)
+{
+	char const* sourceCode = R"(
+		contract C {
+			struct S { uint a; bool x; }
+			function f() {
+				S memory s = S({a: 1, x: true});
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(sourceCode));
+}
+
+BOOST_AUTO_TEST_CASE(literal_strings)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				string memory long = "01234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890";
+				string memory short = "123";
+			}
+		}
+	)";
+	BOOST_CHECK_NO_THROW(parseTextAndResolveNames(text));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_integer_literal_fraction)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				var x = 1.20;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_integer_literal_exp)
+{
+	char const* text = R"(
+		contract Foo {
+			function f() {
+				var x = 1e2;
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
+}
+
+BOOST_AUTO_TEST_CASE(memory_structs_with_mappings)
+{
+	char const* text = R"(
+		contract Test {
+			struct S { uint8 a; mapping(uint => uint) b; uint8 c; }
+			S s;
+			function f() {
+				S memory x;
+				x.b[1];
+			}
+		}
+	)";
+	BOOST_CHECK_THROW(parseTextAndResolveNames(text), TypeError);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

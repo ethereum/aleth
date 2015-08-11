@@ -111,13 +111,6 @@ Rectangle {
 	}
 
 	Connections {
-		target:projectModel
-		onDeploymentStarted: infoMessage(qsTr("Running deployment..."), "Deployment");
-		onDeploymentError: errorMessage(error, "Deployment");
-		onDeploymentComplete: infoMessage(qsTr("Deployment complete"), "Deployment");
-		onDeploymentStepChanged: infoMessage(message, "Deployment");
-	}
-	Connections {
 		target: codeModel
 		onCompilationComplete:
 		{
@@ -186,7 +179,7 @@ Rectangle {
 
 			function updateWidth()
 			{
-				if (text.length > 80)
+				if (text.length > 100)
 					width = parent.width - 10
 				else
 					width = undefined

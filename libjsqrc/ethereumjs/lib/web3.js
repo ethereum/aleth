@@ -35,17 +35,9 @@ var utils = require('./utils/utils');
 var formatters = require('./web3/formatters');
 var RequestManager = require('./web3/requestmanager');
 var c = require('./utils/config');
-var Method = require('./web3/method');
 var Property = require('./web3/property');
 var Batch = require('./web3/batch');
-
-var web3Methods = [
-    new Method({
-        name: 'sha3',
-        call: 'web3_sha3',
-        params: 1
-    })
-];
+var sha3 = require('./utils/sha3');
 
 var web3Properties = [
     new Property({
@@ -88,33 +80,29 @@ var setupProperties = function (obj, properties) {
 /// setups web3 object, and it's in-browser executed methods
 var web3 = {};
 web3.providers = {};
+web3.currentProvider = null;
 web3.version = {};
 web3.version.api = version.version;
 web3.eth = {};
 
 /*jshint maxparams:4 */
-web3.eth.filter = function (fil, eventParams, options, formatter) {
-
-    // if its event, treat it differently
-    // TODO: simplify and remove
-    if (fil._isEvent) {
-        return fil(eventParams, options);
-    }
-
-    // what outputLogFormatter? that's wrong
-    //return new Filter(fil, watches.eth(), formatters.outputLogFormatter);
-    return new Filter(fil, watches.eth(), formatter || formatters.outputLogFormatter);
+web3.eth.filter = function (fil, callback) {
+    return new Filter(fil, watches.eth(), formatters.outputLogFormatter, callback);
 };
 /*jshint maxparams:3 */
 
 web3.shh = {};
-web3.shh.filter = function (fil) {
-    return new Filter(fil, watches.shh(), formatters.outputPostFormatter);
+web3.shh.filter = function (fil, callback) {
+    return new Filter(fil, watches.shh(), formatters.outputPostFormatter, callback);
 };
 web3.net = {};
 web3.db = {};
 web3.setProvider = function (provider) {
+    this.currentProvider = provider;
     RequestManager.getInstance().setProvider(provider);
+};
+web3.isConnected = function(){
+     return (this.currentProvider && this.currentProvider.isConnected());
 };
 web3.reset = function () {
     RequestManager.getInstance().reset();
@@ -130,6 +118,8 @@ web3.toBigNumber = utils.toBigNumber;
 web3.toWei = utils.toWei;
 web3.fromWei = utils.fromWei;
 web3.isAddress = utils.isAddress;
+web3.isIBAN = utils.isIBAN;
+web3.sha3 = sha3;
 web3.createBatch = function () {
     return new Batch();
 };
@@ -155,8 +145,24 @@ Object.defineProperty(web3.eth, 'defaultAccount', {
     }
 });
 
+
+// EXTEND
+web3._extend = function(extension){
+    /*jshint maxcomplexity: 6 */
+
+    if(extension.property && !web3[extension.property])
+        web3[extension.property] = {};
+
+    setupMethods(web3[extension.property] || web3, extension.methods || []);
+    setupProperties(web3[extension.property] || web3, extension.properties || []);
+};
+web3._extend.formatters = formatters;
+web3._extend.utils = utils;
+web3._extend.Method = require('./web3/method');
+web3._extend.Property = require('./web3/property');
+
+
 /// setups all api methods
-setupMethods(web3, web3Methods);
 setupProperties(web3, web3Properties);
 setupMethods(web3.net, net.methods);
 setupProperties(web3.net, net.properties);

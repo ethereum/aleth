@@ -72,7 +72,7 @@ SolidityParam.prototype.combine = function (param) {
  * @returns {Boolean}
  */
 SolidityParam.prototype.isDynamic = function () {
-    return this.value.length > 64;
+    return this.value.length > 64 || this.offset !== undefined;
 };
 
 /**
@@ -182,13 +182,14 @@ var getOffset = function (bytes, index) {
  */
 SolidityParam.decodeBytes = function (bytes, index) {
     index = index || 0;
-    //TODO add support for strings longer than 32 bytes
-    //var length = parseInt('0x' + bytes.substr(offset * 64, 64));
 
     var offset = getOffset(bytes, index);
 
-    // 2 * , cause we also parse length
-    return new SolidityParam(bytes.substr(offset * 2, 2 * 64));
+    var l = parseInt('0x' + bytes.substr(offset * 2, 64));
+    l = Math.floor((l + 31) / 32);
+
+    // (1 + l) * , cause we also parse length
+    return new SolidityParam(bytes.substr(offset * 2, (1 + l) * 64), 0);
 };
 
 /**
@@ -203,7 +204,7 @@ SolidityParam.decodeArray = function (bytes, index) {
     index = index || 0;
     var offset = getOffset(bytes, index);
     var length = parseInt('0x' + bytes.substr(offset * 2, 64));
-    return new SolidityParam(bytes.substr(offset * 2, (length + 1) * 64));
+    return new SolidityParam(bytes.substr(offset * 2, (length + 1) * 64), 0);
 };
 
 module.exports = SolidityParam;

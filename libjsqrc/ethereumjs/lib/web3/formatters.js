@@ -85,12 +85,14 @@ var inputTransactionFormatter = function (options){
  * Formats the output of a transaction to its proper values
  * 
  * @method outputTransactionFormatter
- * @param {Object} transaction
- * @returns {Object} transaction
+ * @param {Object} tx
+ * @returns {Object}
 */
 var outputTransactionFormatter = function (tx){
-    tx.blockNumber = utils.toDecimal(tx.blockNumber);
-    tx.transactionIndex = utils.toDecimal(tx.transactionIndex);
+    if(tx.blockNumber !== null)
+        tx.blockNumber = utils.toDecimal(tx.blockNumber);
+    if(tx.transactionIndex !== null)
+        tx.transactionIndex = utils.toDecimal(tx.transactionIndex);
     tx.nonce = utils.toDecimal(tx.nonce);
     tx.gas = utils.toDecimal(tx.gas);
     tx.gasPrice = utils.toBigNumber(tx.gasPrice);
@@ -99,11 +101,35 @@ var outputTransactionFormatter = function (tx){
 };
 
 /**
+ * Formats the output of a transaction receipt to its proper values
+ * 
+ * @method outputTransactionReceiptFormatter
+ * @param {Object} receipt
+ * @returns {Object}
+*/
+var outputTransactionReceiptFormatter = function (receipt){
+    if(receipt.blockNumber !== null)
+        receipt.blockNumber = utils.toDecimal(receipt.blockNumber);
+    if(receipt.transactionIndex !== null)
+        receipt.transactionIndex = utils.toDecimal(receipt.transactionIndex);
+    receipt.cumulativeGasUsed = utils.toDecimal(receipt.cumulativeGasUsed);
+    receipt.gasUsed = utils.toDecimal(receipt.gasUsed);
+
+    if(utils.isArray(receipt.logs)) {
+        receipt.logs = receipt.logs.map(function(log){
+            return outputLogFormatter(log);
+        });
+    }
+
+    return receipt;
+};
+
+/**
  * Formats the output of a block to its proper values
  *
  * @method outputBlockFormatter
- * @param {Object} block object 
- * @returns {Object} block object
+ * @param {Object} block 
+ * @returns {Object}
 */
 var outputBlockFormatter = function(block) {
 
@@ -112,7 +138,8 @@ var outputBlockFormatter = function(block) {
     block.gasUsed = utils.toDecimal(block.gasUsed);
     block.size = utils.toDecimal(block.size);
     block.timestamp = utils.toDecimal(block.timestamp);
-    block.number = utils.toDecimal(block.number);
+    if(block.number !== null)
+        block.number = utils.toDecimal(block.number);
 
     block.difficulty = utils.toBigNumber(block.difficulty);
     block.totalDifficulty = utils.toBigNumber(block.totalDifficulty);
@@ -135,13 +162,12 @@ var outputBlockFormatter = function(block) {
  * @returns {Object} log
 */
 var outputLogFormatter = function(log) {
-    if (log === null) { // 'pending' && 'latest' filters are nulls
-        return null;
-    }
-
-    log.blockNumber = utils.toDecimal(log.blockNumber);
-    log.transactionIndex = utils.toDecimal(log.transactionIndex);
-    log.logIndex = utils.toDecimal(log.logIndex);
+    if(log.blockNumber !== null)
+        log.blockNumber = utils.toDecimal(log.blockNumber);
+    if(log.transactionIndex !== null)
+        log.transactionIndex = utils.toDecimal(log.transactionIndex);
+    if(log.logIndex !== null)
+        log.logIndex = utils.toDecimal(log.logIndex);
 
     return log;
 };
@@ -211,6 +237,7 @@ module.exports = {
     inputPostFormatter: inputPostFormatter,
     outputBigNumberFormatter: outputBigNumberFormatter,
     outputTransactionFormatter: outputTransactionFormatter,
+    outputTransactionReceiptFormatter: outputTransactionReceiptFormatter,
     outputBlockFormatter: outputBlockFormatter,
     outputLogFormatter: outputLogFormatter,
     outputPostFormatter: outputPostFormatter

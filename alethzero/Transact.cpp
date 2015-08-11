@@ -39,7 +39,8 @@
 #include <libnatspec/NatspecExpressionEvaluator.h>
 #include <libethereum/Client.h>
 #include <libethereum/Utility.h>
-#include <libethereum/KeyManager.h>
+#include <libethcore/KeyManager.h>
+
 #if ETH_SERPENT
 #include <libserpent/funcs.h>
 #include <libserpent/util.h>
@@ -57,11 +58,9 @@ Transact::Transact(Context* _c, QWidget* _parent):
 {
 	ui->setupUi(this);
 
-	initUnits(ui->gasPriceUnits);
-	initUnits(ui->valueUnits);
-	ui->valueUnits->setCurrentIndex(6);
-	ui->gasPriceUnits->setCurrentIndex(4);
-	ui->gasPrice->setValue(10);
+	resetGasPrice();
+	setValueUnits(ui->valueUnits, ui->value, 0);
+
 	on_destination_currentTextChanged(QString());
 }
 
@@ -76,14 +75,23 @@ void Transact::setEnvironment(AddressHash const& _accounts, dev::eth::Client* _e
 	m_ethereum = _eth;
 	m_natSpecDB = _natSpecDB;
 
+	auto old = ui->from->currentIndex();
 	ui->from->clear();
-	for (auto const& i: m_accounts)
+	for (auto const& address: m_accounts)
 	{
-		auto d = m_context->keyManager().accountDetails()[i];
-		u256 b = ethereum()->balanceAt(i, PendingBlock);
-		QString s = QString("%4 %2: %1").arg(formatBalance(b).c_str()).arg(QString::fromStdString(m_context->render(i))).arg(QString::fromStdString(d.first));
+		u256 b = ethereum()->balanceAt(address, PendingBlock);
+		QString s = QString("%4 %2: %1").arg(formatBalance(b).c_str()).arg(QString::fromStdString(m_context->render(address))).arg(QString::fromStdString(m_context->keyManager().accountName(address)));
 		ui->from->addItem(s);
 	}
+	if (old > -1 && old < ui->from->count())
+		ui->from->setCurrentIndex(old);
+	else if (ui->from->count())
+		ui->from->setCurrentIndex(0);
+}
+
+void Transact::resetGasPrice()
+{
+	setValueUnits(ui->gasPriceUnits, ui->gasPrice, m_context->gasPrice());
 }
 
 bool Transact::isCreation() const
@@ -131,7 +139,7 @@ void Transact::updateDestination()
 
 void Transact::updateFee()
 {
-	ui->fee->setText(QString("(gas sub-total: %1)").arg(formatBalance(fee()).c_str()));
+//	ui->fee->setText(QString("(gas sub-total: %1)").arg(formatBalance(fee()).c_str()));
 	auto totalReq = total();
 	ui->total->setText(QString("Total: %1").arg(formatBalance(totalReq).c_str()));
 
@@ -142,7 +150,7 @@ void Transact::updateFee()
 			ok = true;
 			break;
 		}
-	ui->send->setEnabled(ok);
+//	ui->send->setEnabled(ok);
 	QPalette p = ui->total->palette();
 	p.setColor(QPalette::WindowText, QColor(ok ? 0x00 : 0x80, 0x00, 0x00));
 	ui->total->setPalette(p);
@@ -301,6 +309,9 @@ void Transact::rejigData()
 	// Determine how much balance we have to play with...
 	//findSecret(value() + ethereum()->gasLimitRemaining() * gasPrice());
 	auto s = fromAccount();
+	if (!s)
+		return;
+
 	auto b = ethereum()->balanceAt(s, PendingBlock);
 
 	m_allGood = true;
@@ -308,7 +319,7 @@ void Transact::rejigData()
 
 	auto bail = [&](QString he) {
 		m_allGood = false;
-		ui->send->setEnabled(false);
+//		ui->send->setEnabled(false);
 		ui->code->setHtml(he + htmlInfo);
 	};
 
@@ -335,7 +346,7 @@ void Transact::rejigData()
 		htmlInfo = "<h4>Dump</h4>" + QString::fromStdString(dev::memDump(m_data, 8, true));
 	}
 
-	htmlInfo += "<h4>Hex</h4>" + QString(Div(Mono)) + QString::fromStdString(toHex(m_data)) + "</div>";
+	htmlInfo += "<h4>Hex</h4>" + QString(ETH_HTML_DIV(ETH_HTML_MONO)) + QString::fromStdString(toHex(m_data)) + "</div>";
 
 	// Determine the minimum amount of gas we need to play...
 	qint64 baseGas = (qint64)Transaction::gasRequired(m_data, 0);
@@ -344,11 +355,11 @@ void Transact::rejigData()
 	if (b < value() + baseGas * gasPrice())
 	{
 		// Not enough - bail.
-		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> No single account contains enough for paying even the basic amount of gas required.</div>");
+		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> Account doesn't contain enough for paying even the basic amount of gas required.</div>");
 		return;
 	}
 	else
-		gasNeeded = (qint64)min<bigint>(ethereum()->gasLimitRemaining(), ((b - value()) / gasPrice()));
+		gasNeeded = (qint64)min<bigint>(ethereum()->gasLimitRemaining(), ((b - value()) / max<u256>(gasPrice(), 1)));
 
 	// Dry-run execution to determine gas requirement and any execution errors
 	Address to;
@@ -391,7 +402,7 @@ void Transact::rejigData()
 	updateFee();
 
 	ui->code->setHtml(htmlInfo);
-	ui->send->setEnabled(m_allGood);
+//	ui->send->setEnabled(m_allGood);
 }
 
 Secret Transact::findSecret(u256 _totalReq) const
@@ -417,27 +428,43 @@ Secret Transact::findSecret(u256 _totalReq) const
 
 Address Transact::fromAccount()
 {
+	if (ui->from->currentIndex() < 0 || ui->from->currentIndex() >= (int)m_accounts.size())
+		return Address();
 	auto it = m_accounts.begin();
 	std::advance(it, ui->from->currentIndex());
 	return *it;
 }
 
+void Transact::updateNonce()
+{
+	u256 n = ethereum()->countAt(fromAccount(), PendingBlock);
+	ui->nonce->setMaximum((unsigned)n);
+	ui->nonce->setMinimum(0);
+	ui->nonce->setValue((unsigned)n);
+}
+
 void Transact::on_send_clicked()
 {
 //	Secret s = findSecret(value() + fee());
-	Secret s = m_context->retrieveSecret(fromAccount());
-	auto b = ethereum()->balanceAt(KeyPair(s).address(), PendingBlock);
-	if (!s || b < value() + fee())
+	u256 nonce = ui->autoNonce->isChecked() ? ethereum()->countAt(fromAccount(), PendingBlock) : ui->nonce->value();
+	auto a = fromAccount();
+	auto b = ethereum()->balanceAt(a, PendingBlock);
+
+	if (!a || b < value() + fee())
 	{
-		QMessageBox::critical(this, "Transaction Failed", "Couldn't make transaction: no single account contains at least the required amount.");
+		QMessageBox::critical(nullptr, "Transaction Failed", "Couldn't make transaction: account doesn't contain at least the required amount.", QMessageBox::Ok);
 		return;
 	}
+
+	Secret s = m_context->retrieveSecret(a);
+	if (!s)
+		return;
 
 	if (isCreation())
 	{
 		// If execution is a contract creation, add Natspec to
 		// a local Natspec LEVELDB
-		ethereum()->submitTransaction(s, value(), m_data, ui->gas->value(), gasPrice());
+		ethereum()->submitTransaction(s, value(), m_data, ui->gas->value(), gasPrice(), nonce);
 #if ETH_SOLIDITY
 		string src = ui->data->toPlainText().toStdString();
 		if (sourceIsSolidity(src))
@@ -456,7 +483,7 @@ void Transact::on_send_clicked()
 	}
 	else
 		// TODO: cache like m_data.
-		ethereum()->submitTransaction(s, value(), m_context->fromString(ui->destination->currentText().toStdString()).first, m_data, ui->gas->value(), gasPrice());
+		ethereum()->submitTransaction(s, value(), m_context->fromString(ui->destination->currentText().toStdString()).first, m_data, ui->gas->value(), gasPrice(), nonce);
 	close();
 }
 
@@ -467,7 +494,7 @@ void Transact::on_debug_clicked()
 	auto b = ethereum()->balanceAt(from, PendingBlock);
 	if (!from || b < value() + fee())
 	{
-		QMessageBox::critical(this, "Transaction Failed", "Couldn't make transaction: no single account contains at least the required amount.");
+		QMessageBox::critical(this, "Transaction Failed", "Couldn't make transaction: account doesn't contain at least the required amount.");
 		return;
 	}
 

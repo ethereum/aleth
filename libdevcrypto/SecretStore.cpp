@@ -22,45 +22,98 @@
 #include "SecretStore.h"
 #include <thread>
 #include <mutex>
+#include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
 #include <libdevcore/Log.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
 #include <test/JsonSpiritHeaders.h>
+#include <libdevcrypto/Exceptions.h>
 using namespace std;
 using namespace dev;
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
 
-SecretStore::SecretStore()
+static const int c_keyFileVersion = 3;
+
+/// Upgrade the json-format to the current version.
+static js::mValue upgraded(string const& _s)
+{
+	js::mValue v;
+	js::read_string(_s, v);
+	if (v.type() != js::obj_type)
+		return js::mValue();
+	js::mObject ret = v.get_obj();
+	unsigned version = ret.count("Version") ? stoi(ret["Version"].get_str()) : ret.count("version") ? ret["version"].get_int() : 0;
+	if (version == 1)
+	{
+		// upgrade to version 2
+		js::mObject old;
+		swap(old, ret);
+
+		ret["id"] = old["Id"];
+		js::mObject c;
+		c["ciphertext"] = old["Crypto"].get_obj()["CipherText"];
+		c["cipher"] = "aes-128-cbc";
+		{
+			js::mObject cp;
+			cp["iv"] = old["Crypto"].get_obj()["IV"];
+			c["cipherparams"] = cp;
+		}
+		c["kdf"] = old["Crypto"].get_obj()["KeyHeader"].get_obj()["Kdf"];
+		{
+			js::mObject kp;
+			kp["salt"] = old["Crypto"].get_obj()["Salt"];
+			for (auto const& i: old["Crypto"].get_obj()["KeyHeader"].get_obj()["KdfParams"].get_obj())
+				if (i.first != "SaltLen")
+					kp[boost::to_lower_copy(i.first)] = i.second;
+			c["kdfparams"] = kp;
+		}
+		c["sillymac"] = old["Crypto"].get_obj()["MAC"];
+		c["sillymacjson"] = _s;
+		ret["crypto"] = c;
+		version = 2;
+	}
+	if (version == 2)
+	{
+		ret["crypto"].get_obj()["cipher"] = "aes-128-ctr";
+		ret["crypto"].get_obj()["compat"] = "2";
+		version = 3;
+	}
+	if (version == c_keyFileVersion)
+		return ret;
+	return js::mValue();
+}
+
+SecretStore::SecretStore(string const& _path): m_path(_path)
 {
 	load();
 }
 
-SecretStore::~SecretStore()
-{
-}
-
-bytes SecretStore::secret(h128 const& _uuid, function<std::string()> const& _pass) const
+bytes SecretStore::secret(h128 const& _uuid, function<string()> const& _pass, bool _useCache) const
 {
 	auto rit = m_cached.find(_uuid);
-	if (rit != m_cached.end())
+	if (_useCache && rit != m_cached.end())
 		return rit->second;
 	auto it = m_keys.find(_uuid);
-	if (it == m_keys.end())
-		return bytes();
-	bytes key = decrypt(it->second.first, _pass());
-	if (!key.empty())
-		m_cached[_uuid] = key;
+	bytes key;
+	if (it != m_keys.end())
+	{
+		key = decrypt(it->second.encryptedKey, _pass());
+		if (!key.empty())
+			m_cached[_uuid] = key;
+	}
 	return key;
 }
 
-h128 SecretStore::importSecret(bytes const& _s, std::string const& _pass)
+h128 SecretStore::importSecret(bytes const& _s, string const& _pass)
 {
-	h128 r = h128::random();
+	h128 r;
+	EncryptedKey key{encrypt(_s, _pass), string()};
+	r = h128::random();
 	m_cached[r] = _s;
-	m_keys[r] = make_pair(encrypt(_s, _pass), std::string());
+	m_keys[r] = move(key);
 	save();
 	return r;
 }
@@ -70,7 +123,7 @@ void SecretStore::kill(h128 const& _uuid)
 	m_cached.erase(_uuid);
 	if (m_keys.count(_uuid))
 	{
-		boost::filesystem::remove(m_keys[_uuid].second);
+		fs::remove(m_keys[_uuid].filename);
 		m_keys.erase(_uuid);
 	}
 }
@@ -80,73 +133,116 @@ void SecretStore::clearCache() const
 	m_cached.clear();
 }
 
-void SecretStore::save(std::string const& _keysPath)
+void SecretStore::save(string const& _keysPath)
 {
 	fs::path p(_keysPath);
-	boost::filesystem::create_directories(p);
+	fs::create_directories(p);
+	fs::permissions(p, fs::owner_all);
 	for (auto& k: m_keys)
 	{
-		std::string uuid = toUUID(k.first);
-		std::string filename = (p / uuid).string() + ".json";
+		string uuid = toUUID(k.first);
+		string filename = (p / uuid).string() + ".json";
 		js::mObject v;
 		js::mValue crypto;
-		js::read_string(k.second.first, crypto);
+		js::read_string(k.second.encryptedKey, crypto);
 		v["crypto"] = crypto;
 		v["id"] = uuid;
-		v["version"] = 2;
+		v["version"] = c_keyFileVersion;
 		writeFile(filename, js::write_string(js::mValue(v), true));
-		if (!k.second.second.empty() && k.second.second != filename)
-			boost::filesystem::remove(k.second.second);
-		k.second.second = filename;
+		swap(k.second.filename, filename);
+		if (!filename.empty() && !fs::equivalent(filename, k.second.filename))
+			fs::remove(filename);
 	}
 }
 
-void SecretStore::load(std::string const& _keysPath)
+void SecretStore::load(string const& _keysPath)
 {
 	fs::path p(_keysPath);
-	boost::filesystem::create_directories(p);
-	js::mValue v;
+	fs::create_directories(p);
+	fs::permissions(p, fs::owner_all);
 	for (fs::directory_iterator it(p); it != fs::directory_iterator(); ++it)
-		if (is_regular_file(it->path()))
-		{
-			cdebug << "Reading" << it->path();
-			js::read_string(contentsString(it->path().string()), v);
-			if (v.type() == js::obj_type)
-			{
-				js::mObject o = v.get_obj();
-				int version = o.count("Version") ? stoi(o["Version"].get_str()) : o.count("version") ? o["version"].get_int() : 0;
-				if (version == 2)
-					m_keys[fromUUID(o["id"].get_str())] = make_pair(js::write_string(o["crypto"], false), it->path().string());
-				else
-					cwarn << "Cannot read key version" << version;
-			}
-//				else
-//					cwarn << "Invalid JSON in key file" << it->path().string();
-		}
+		if (fs::is_regular_file(it->path()))
+			readKey(it->path().string(), true);
 }
 
-std::string SecretStore::encrypt(bytes const& _v, std::string const& _pass)
+h128 SecretStore::readKey(string const& _file, bool _takeFileOwnership)
+{
+	cnote << "Reading" << _file;
+	return readKeyContent(contentsString(_file), _takeFileOwnership ? _file : string());
+}
+
+h128 SecretStore::readKeyContent(string const& _content, string const& _file)
+{
+	js::mValue u = upgraded(_content);
+	if (u.type() == js::obj_type)
+	{
+		js::mObject& o = u.get_obj();
+		auto uuid = fromUUID(o["id"].get_str());
+		m_keys[uuid] = EncryptedKey{js::write_string(o["crypto"], false), _file};
+		return uuid;
+	}
+	else
+		cwarn << "Invalid JSON in key file" << _file;
+	return h128();
+}
+
+bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
+{
+	bytes s = secret(_uuid, _pass, true);
+	if (s.empty())
+		return false;
+	m_cached.erase(_uuid);
+	m_keys[_uuid].encryptedKey = encrypt(s, _newPass, _kdf);
+	save();
+	return true;
+}
+
+static bytes deriveNewKey(string const& _pass, KDF _kdf, js::mObject& o_ret)
+{
+	unsigned dklen = 32;
+	unsigned iterations = 1 << 18;
+	bytes salt = h256::random().asBytes();
+	if (_kdf == KDF::Scrypt)
+	{
+		unsigned p = 1;
+		unsigned r = 8;
+		o_ret["kdf"] = "scrypt";
+		{
+			js::mObject params;
+			params["n"] = int64_t(iterations);
+			params["r"] = int(r);
+			params["p"] = int(p);
+			params["dklen"] = int(dklen);
+			params["salt"] = toHex(salt);
+			o_ret["kdfparams"] = params;
+		}
+		return scrypt(_pass, salt, iterations, r, p, dklen);
+	}
+	else
+	{
+		o_ret["kdf"] = "pbkdf2";
+		{
+			js::mObject params;
+			params["prf"] = "hmac-sha256";
+			params["c"] = int(iterations);
+			params["salt"] = toHex(salt);
+			params["dklen"] = int(dklen);
+			o_ret["kdfparams"] = params;
+		}
+		return pbkdf2(_pass, salt, iterations, dklen);
+	}
+}
+
+string SecretStore::encrypt(bytes const& _v, string const& _pass, KDF _kdf)
 {
 	js::mObject ret;
 
-	// KDF info
-	unsigned dklen = 16;
-	unsigned iterations = 262144;
-	bytes salt = h256::random().asBytes();
-	ret["kdf"] = "pbkdf2";
-	{
-		js::mObject params;
-		params["prf"] = "hmac-sha256";
-		params["c"] = (int)iterations;
-		params["salt"] = toHex(salt);
-		params["dklen"] = (int)dklen;
-		ret["kdfparams"] = params;
-	}
-	bytes derivedKey = pbkdf2(_pass, salt, iterations, dklen);
+	bytes derivedKey = deriveNewKey(_pass, _kdf, ret);
+	if (derivedKey.empty())
+		BOOST_THROW_EXCEPTION(crypto::CryptoException() << errinfo_comment("Key derivation failed."));
 
-	// cipher info
-	ret["cipher"] = "aes-128-cbc";
-	h128 key(sha3(h128(derivedKey, h128::AlignRight)), h128::AlignRight);
+	ret["cipher"] = "aes-128-ctr";
+	h128 key(derivedKey, h128::AlignLeft);
 	h128 iv = h128::random();
 	{
 		js::mObject params;
@@ -156,16 +252,18 @@ std::string SecretStore::encrypt(bytes const& _v, std::string const& _pass)
 
 	// cipher text
 	bytes cipherText = encryptSymNoAuth(key, iv, &_v);
+	if (cipherText.empty())
+		BOOST_THROW_EXCEPTION(crypto::CryptoException() << errinfo_comment("Key encryption failed."));
 	ret["ciphertext"] = toHex(cipherText);
 
 	// and mac.
-	h256 mac = sha3(bytesConstRef(&derivedKey).cropped(derivedKey.size() - 16).toBytes() + cipherText);
+	h256 mac = sha3(ref(derivedKey).cropped(16, 16).toBytes() + cipherText);
 	ret["mac"] = toHex(mac.ref());
 
-	return js::write_string((js::mValue)ret, true);
+	return js::write_string(js::mValue(ret), true);
 }
 
-bytes SecretStore::decrypt(std::string const& _v, std::string const& _pass)
+bytes SecretStore::decrypt(string const& _v, string const& _pass)
 {
 	js::mObject o;
 	{
@@ -188,30 +286,65 @@ bytes SecretStore::decrypt(std::string const& _v, std::string const& _pass)
 		bytes salt = fromHex(params["salt"].get_str());
 		derivedKey = pbkdf2(_pass, salt, iterations, params["dklen"].get_int());
 	}
+	else if (o["kdf"].get_str() == "scrypt")
+	{
+		auto p = o["kdfparams"].get_obj();
+		derivedKey = scrypt(_pass, fromHex(p["salt"].get_str()), p["n"].get_int(), p["r"].get_int(), p["p"].get_int(), p["dklen"].get_int());
+	}
 	else
 	{
 		cwarn << "Unknown KDF" << o["kdf"].get_str() << "not supported.";
 		return bytes();
 	}
 
-	bytes cipherText = fromHex(o["ciphertext"].get_str());
-
-	// check MAC
-	h256 mac(o["mac"].get_str());
-	h256 macExp = sha3(bytesConstRef(&derivedKey).cropped(derivedKey.size() - 16).toBytes() + cipherText);
-	if (mac != macExp)
+	if (derivedKey.size() < 32 && !(o.count("compat") && o["compat"].get_str() == "2"))
 	{
-		cwarn << "Invalid key - MAC mismatch; expected" << toString(macExp) << ", got" << toString(mac);
+		cwarn << "Derived key's length too short (<32 bytes)";
 		return bytes();
 	}
 
+	bytes cipherText = fromHex(o["ciphertext"].get_str());
+
+	// check MAC
+	if (o.count("mac"))
+	{
+		h256 mac(o["mac"].get_str());
+		h256 macExp;
+		if (o.count("compat") && o["compat"].get_str() == "2")
+			macExp = sha3(bytesConstRef(&derivedKey).cropped(derivedKey.size() - 16).toBytes() + cipherText);
+		else
+			macExp = sha3(bytesConstRef(&derivedKey).cropped(16, 16).toBytes() + cipherText);
+		if (mac != macExp)
+		{
+			cwarn << "Invalid key - MAC mismatch; expected" << toString(macExp) << ", got" << toString(mac);
+			return bytes();
+		}
+	}
+	else if (o.count("sillymac"))
+	{
+		h256 mac(o["sillymac"].get_str());
+		h256 macExp = sha3(asBytes(o["sillymacjson"].get_str()) + bytesConstRef(&derivedKey).cropped(derivedKey.size() - 16).toBytes() + cipherText);
+		if (mac != macExp)
+		{
+			cwarn << "Invalid key - MAC mismatch; expected" << toString(macExp) << ", got" << toString(mac);
+			return bytes();
+		}
+	}
+	else
+		cwarn << "No MAC. Proceeding anyway.";
+
 	// decrypt
-	if (o["cipher"].get_str() == "aes-128-cbc")
+	if (o["cipher"].get_str() == "aes-128-ctr")
 	{
 		auto params = o["cipherparams"].get_obj();
-		h128 key(sha3(h128(derivedKey, h128::AlignRight)), h128::AlignRight);
 		h128 iv(params["iv"].get_str());
-		return decryptSymNoAuth(key, iv, &cipherText);
+		if (o.count("compat") && o["compat"].get_str() == "2")
+		{
+			h128 key(sha3(h128(derivedKey, h128::AlignRight)), h128::AlignRight);
+			return decryptSymNoAuth(key, iv, &cipherText);
+		}
+		else
+			return decryptSymNoAuth(h128(derivedKey, h128::AlignLeft), iv, &cipherText);
 	}
 	else
 	{

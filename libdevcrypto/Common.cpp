@@ -22,21 +22,39 @@
 
 #include "Common.h"
 #include <random>
+#include <cstdint>
 #include <chrono>
 #include <thread>
 #include <mutex>
+#include <libscrypt/libscrypt.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
+#include <libdevcore/RLP.h>
+#if ETH_HAVE_SECP256K1
+#include <secp256k1/include/secp256k1.h>
+#endif
 #include "AES.h"
 #include "CryptoPP.h"
+#include "Exceptions.h"
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
-static Secp256k1 s_secp256k1;
+#ifdef ETH_HAVE_SECP256K1
+struct Secp256k1Context
+{
+	Secp256k1Context() { ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); }
+	~Secp256k1Context() { secp256k1_context_destroy(ctx); }
+	secp256k1_context_t* ctx;
+	operator secp256k1_context_t const*() const { return ctx; }
+};
+static Secp256k1Context s_secp256k1;
+#endif
 
-bool dev::SignatureStruct::isValid() const
+static Secp256k1PP s_secp256k1pp;
+
+bool dev::SignatureStruct::isValid() const noexcept
 {
 	if (v > 1 ||
 		r >= h256("0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141") ||
@@ -47,38 +65,56 @@ bool dev::SignatureStruct::isValid() const
 	return true;
 }
 
+Public SignatureStruct::recover(h256 const& _hash) const
+{
+	return dev::recover((Signature)*this, _hash);
+}
+
 Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
 {
+#ifdef ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	if (!secp256k1_ec_pubkey_create(s_secp256k1, o.data(), &pubkeylen, _secret.data(), false))
+		return Public();
+	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
+#else
 	Public p;
-	s_secp256k1.toPublic(_secret, p);
-	return std::move(p);
+	s_secp256k1pp.toPublic(_secret, p);
+	return p;
+#endif
 }
 
 Address dev::toAddress(Public const& _public)
 {
-	return s_secp256k1.toAddress(_public);
+	return right160(sha3(_public.ref()));
 }
 
 Address dev::toAddress(Secret const& _secret)
 {
 	Public p;
-	s_secp256k1.toPublic(_secret, p);
-	return s_secp256k1.toAddress(p);
+	s_secp256k1pp.toPublic(_secret, p);
+	return toAddress(p);
+}
+
+Address dev::toAddress(Address const& _from, u256 const& _nonce)
+{
+	return right160(sha3(rlpList(_from, _nonce)));
 }
 
 void dev::encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
 	bytes io = _plain.toBytes();
-	s_secp256k1.encrypt(_k, io);
+	s_secp256k1pp.encrypt(_k, io);
 	o_cipher = std::move(io);
 }
 
 bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
 	bytes io = _cipher.toBytes();
-	s_secp256k1.decrypt(_k, io);
+	s_secp256k1pp.decrypt(_k, io);
 	if (io.empty())
 		return false;
 	o_plaintext = std::move(io);
@@ -88,14 +124,14 @@ bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
 	bytes io = _plain.toBytes();
-	s_secp256k1.encryptECIES(_k, io);
+	s_secp256k1pp.encryptECIES(_k, io);
 	o_cipher = std::move(io);
 }
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
 	bytes io = _cipher.toBytes();
-	if (!s_secp256k1.decryptECIES(_k, io))
+	if (!s_secp256k1pp.decryptECIES(_k, io))
 		return false;
 	o_plaintext = std::move(io);
 	return true;
@@ -119,10 +155,11 @@ std::pair<bytes, h128> dev::encryptSymNoAuth(h128 const& _k, bytesConstRef _plai
 	return make_pair(encryptSymNoAuth(_k, iv, _plain), iv);
 }
 
-bytes dev::encryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _plain)
+bytes dev::encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain)
 {
-	const int c_aesKeyLen = 16;
-	SecByteBlock key(_k.data(), c_aesKeyLen);
+	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
+		return bytes();
+	SecByteBlock key(_k.data(), _k.size());
 	try
 	{
 		CTR_Mode<AES>::Encryption e;
@@ -138,10 +175,11 @@ bytes dev::encryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _plai
 	}
 }
 
-bytes dev::decryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _cipher)
+bytes dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher)
 {
-	const size_t c_aesKeyLen = 16;
-	SecByteBlock key(_k.data(), c_aesKeyLen);
+	if (_k.size() != 16 && _k.size() != 24 && _k.size() != 32)
+		return bytes();
+	SecByteBlock key(_k.data(), _k.size());
 	try
 	{
 		CTR_Mode<AES>::Decryption d;
@@ -157,41 +195,90 @@ bytes dev::decryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _ciph
 	}
 }
 
+static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
+
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
-	return s_secp256k1.recover(_sig, _message.ref());
+	Public ret;
+#ifdef ETH_HAVE_SECP256K1
+	bytes o(65);
+	int pubkeylen;
+	if (!secp256k1_ecdsa_recover_compact(s_secp256k1, _message.data(), _sig.data(), o.data(), &pubkeylen, false, _sig[64]))
+		return Public();
+	ret = FixedHash<64>(o.data() + 1, Public::ConstructFromPointer);
+#else
+	ret = s_secp256k1pp.recover(_sig, _message.ref());
+#endif
+	if (ret == c_zeroKey)
+		return Public();
+	return ret;
 }
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
-	return s_secp256k1.sign(_k, _hash);
+#ifdef ETH_HAVE_SECP256K1
+	Signature s;
+	int v;
+	if (!secp256k1_ecdsa_sign_compact(s_secp256k1, _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
+		return Signature();
+	s[64] = v;
+	return s;
+#else
+	return s_secp256k1pp.sign(_k, _hash);
+#endif
 }
 
 bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 {
-	return s_secp256k1.verify(_p, _s, _hash.ref(), true);
+	if (!_p)
+		return false;
+#ifdef ETH_HAVE_SECP256K1
+	return _p == recover(_s, _hash);
+#else
+	return s_secp256k1pp.verify(_p, _s, _hash.ref(), true);
+#endif
 }
 
 bytes dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)
 {
 	bytes ret(_dkLen);
-	PKCS5_PBKDF2_HMAC<SHA256> pbkdf;
-	pbkdf.DeriveKey(ret.data(), ret.size(), 0, (byte*)_pass.data(), _pass.size(), _salt.data(), _salt.size(), _iterations);
+	if (PKCS5_PBKDF2_HMAC<SHA256>().DeriveKey(
+		ret.data(),
+		ret.size(),
+		0,
+		reinterpret_cast<byte const*>(_pass.data()),
+		_pass.size(),
+		_salt.data(),
+		_salt.size(),
+		_iterations
+	) != _iterations)
+		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
+	return ret;
+}
+
+bytes dev::scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint32_t _r, uint32_t _p, unsigned _dkLen)
+{
+	bytes ret(_dkLen);
+	if (libscrypt_scrypt(
+		reinterpret_cast<uint8_t const*>(_pass.data()),
+		_pass.size(),
+		_salt.data(),
+		_salt.size(),
+		_n,
+		_r,
+		_p,
+		ret.data(),
+		ret.size()
+	) != 0)
+		BOOST_THROW_EXCEPTION(CryptoException() << errinfo_comment("Key derivation failed."));
 	return ret;
 }
 
 KeyPair KeyPair::create()
 {
-	static boost::thread_specific_ptr<mt19937_64> s_eng;
-	static unsigned s_id = 0;
-	if (!s_eng.get())
-		s_eng.reset(new mt19937_64(time(0) + chrono::high_resolution_clock::now().time_since_epoch().count() + ++s_id));
-
-	uniform_int_distribution<uint16_t> d(0, 255);
-
 	for (int i = 0; i < 100; ++i)
 	{
-		KeyPair ret(FixedHash<32>::random(*s_eng.get()));
+		KeyPair ret(FixedHash<32>::random());
 		if (ret.address())
 			return ret;
 	}
@@ -201,8 +288,8 @@ KeyPair KeyPair::create()
 KeyPair::KeyPair(h256 _sec):
 	m_secret(_sec)
 {
-	if (s_secp256k1.verifySecret(m_secret, m_public))
-		m_address = s_secp256k1.toAddress(m_public);
+	if (s_secp256k1pp.verifySecret(m_secret, m_public))
+		m_address = toAddress(m_public);
 }
 
 KeyPair KeyPair::fromEncryptedSeed(bytesConstRef _seed, std::string const& _password)
@@ -220,45 +307,87 @@ h256 crypto::kdf(Secret const& _priv, h256 const& _hash)
 	
 	if (!s || !_hash || !_priv)
 		BOOST_THROW_EXCEPTION(InvalidState());
-	return std::move(s);
+	return s;
 }
 
-h256 Nonce::get(bool _commit)
+mutex Nonce::s_x;
+static string s_seedFile;
+
+h256 Nonce::get()
 {
 	// todo: atomic efface bit, periodic save, kdf, rr, rng
 	// todo: encrypt
-	static h256 s_seed;
-	static string s_seedFile(getDataDir() + "/seed");
-	static mutex s_x;
-	Guard l(s_x);
-	if (!s_seed)
-	{
-		static Nonce s_nonce;
-		bytes b = contents(s_seedFile);
-		if (b.size() == 32)
-			memcpy(s_seed.data(), b.data(), 32);
-		else
-		{
-			// todo: replace w/entropy from user and system
-			std::mt19937_64 s_eng(time(0) + chrono::high_resolution_clock::now().time_since_epoch().count());
-			std::uniform_int_distribution<uint16_t> d(0, 255);
-			for (unsigned i = 0; i < 32; ++i)
-				s_seed[i] = (byte)d(s_eng);
-		}
-		if (!s_seed)
-			BOOST_THROW_EXCEPTION(InvalidState());
-		
-		// prevent seed reuse if process terminates abnormally
-		writeFile(s_seedFile, bytes());
-	}
-	h256 prev(s_seed);
-	sha3(prev.ref(), s_seed.ref());
-	if (_commit)
-		writeFile(s_seedFile, s_seed.asBytes());
-	return std::move(s_seed);
+	Guard l(Nonce::s_x);
+	return Nonce::singleton().next();
+}
+
+void Nonce::reset()
+{
+	Guard l(Nonce::s_x);
+	Nonce::singleton().resetInternal();
+}
+
+void Nonce::setSeedFilePath(string const& _filePath)
+{
+	s_seedFile = _filePath;
 }
 
 Nonce::~Nonce()
 {
-	Nonce::get(true);
+	Guard l(Nonce::s_x);
+	if (m_value)
+		// this might throw
+		resetInternal();
+}
+
+Nonce& Nonce::singleton()
+{
+	static Nonce s;
+	return s;
+}
+
+void Nonce::initialiseIfNeeded()
+{
+	if (m_value)
+		return;
+
+	bytes b = contents(seedFile());
+	if (b.size() == 32)
+		memcpy(m_value.data(), b.data(), 32);
+	else
+	{
+		// todo: replace w/entropy from user and system
+		std::mt19937_64 s_eng(time(0) + chrono::high_resolution_clock::now().time_since_epoch().count());
+		std::uniform_int_distribution<uint16_t> d(0, 255);
+		for (unsigned i = 0; i < 32; ++i)
+			m_value[i] = (uint8_t)d(s_eng);
+	}
+	if (!m_value)
+		BOOST_THROW_EXCEPTION(InvalidState());
+
+	// prevent seed reuse if process terminates abnormally
+	// this might throw
+	writeFile(seedFile(), bytes());
+}
+
+h256 Nonce::next()
+{
+	initialiseIfNeeded();
+	m_value = sha3(m_value);
+	return m_value;
+}
+
+void Nonce::resetInternal()
+{
+	// this might throw
+	next();
+	writeFile(seedFile(), m_value.asBytes());
+	m_value = h256();
+}
+
+string const& Nonce::seedFile()
+{
+	if (s_seedFile.empty())
+		s_seedFile = getDataDir() + "/seed";
+	return s_seedFile;
 }

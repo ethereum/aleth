@@ -24,6 +24,9 @@
 #include <string>
 #include <iostream>
 #include <thread>
+#ifdef __APPLE__
+#include <pthread.h>
+#endif
 #include <boost/asio/ip/tcp.hpp>
 #include "Guards.h"
 using namespace std;
@@ -33,7 +36,37 @@ using namespace dev;
 
 // Logging
 int dev::g_logVerbosity = 5;
-map<type_info const*, bool> dev::g_logOverride;
+mutex x_logOverride;
+
+/// Map of Log Channel types to bool, false forces the channel to be disabled, true forces it to be enabled.
+/// If a channel has no entry, then it will output as long as its verbosity (LogChannel::verbosity) is less than
+/// or equal to the currently output verbosity (g_logVerbosity).
+static map<type_info const*, bool> s_logOverride;
+
+bool dev::isChannelVisible(std::type_info const* _ch, bool _default)
+{
+	Guard l(x_logOverride);
+	if (s_logOverride.count(_ch))
+		return s_logOverride[_ch];
+	return _default;
+}
+
+LogOverrideAux::LogOverrideAux(std::type_info const* _ch, bool _value):
+	m_ch(_ch)
+{
+	Guard l(x_logOverride);
+	m_old = s_logOverride.count(_ch) ? (int)s_logOverride[_ch] : c_null;
+	s_logOverride[m_ch] = _value;
+}
+
+LogOverrideAux::~LogOverrideAux()
+{
+	Guard l(x_logOverride);
+	if (m_old == c_null)
+		s_logOverride.erase(m_ch);
+	else
+		s_logOverride[m_ch] = (bool)m_old;
+}
 
 #ifdef _WIN32
 const char* LogChannel::name() { return EthGray "..."; }
@@ -55,8 +88,9 @@ LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* 
 	m_autospacing(_autospacing),
 	m_verbosity(_v)
 {
-	auto it = g_logOverride.find(_info);
-	if ((it != g_logOverride.end() && it->second == true) || (it == g_logOverride.end() && (int)_v <= g_logVerbosity))
+	Guard l(x_logOverride);
+	auto it = s_logOverride.find(_info);
+	if ((it != s_logOverride.end() && it->second == true) || (it == s_logOverride.end() && (int)_v <= g_logVerbosity))
 	{
 		time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 		char buf[24];
@@ -137,7 +171,7 @@ extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* l
 
 string dev::getThreadName()
 {
-#ifdef __linux__
+#if defined(__linux__) || defined(__APPLE__)
 	char buffer[128];
 	pthread_getname_np(pthread_self(), buffer, 127);
 	buffer[127] = 0;
@@ -149,8 +183,10 @@ string dev::getThreadName()
 
 void dev::setThreadName(string const& _n)
 {
-#ifdef __linux__
+#if defined(__linux__)
 	pthread_setname_np(pthread_self(), _n.c_str());
+#elif defined(__APPLE__)
+	pthread_setname_np(_n.c_str());
 #else
 	g_logThreadName.m_name.reset(new std::string(_n));
 #endif

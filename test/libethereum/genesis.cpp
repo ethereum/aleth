@@ -54,15 +54,15 @@ BOOST_AUTO_TEST_CASE(genesis_tests)
 
 	cnote << "Testing Genesis block...";
 	js::mValue v;
-	string s = asString(contents(testPath + "/genesishashestest.json"));
+	string s = contentsString(testPath + "/genesishashestest.json");
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'genesishashestest.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 
 	js::mObject o = v.get_obj();
 
-	BOOST_CHECK_EQUAL(CanonBlockChain::genesis().stateRoot, h256(o["genesis_state_root"].get_str()));
-	BOOST_CHECK_EQUAL(toHex(CanonBlockChain::createGenesisBlock()), toHex(fromHex(o["genesis_rlp_hex"].get_str())));
-	BOOST_CHECK_EQUAL(BlockInfo::headerHash(CanonBlockChain::createGenesisBlock()), h256(o["genesis_hash"].get_str()));
+	BOOST_CHECK_EQUAL(CanonBlockChain<Ethash>::genesis().stateRoot(), h256(o["genesis_state_root"].get_str()));
+	BOOST_CHECK_EQUAL(toHex(CanonBlockChain<Ethash>::createGenesisBlock()), toHex(fromHex(o["genesis_rlp_hex"].get_str())));
+	BOOST_CHECK_EQUAL(Ethash::BlockHeader(CanonBlockChain<Ethash>::createGenesisBlock()).hash(), h256(o["genesis_hash"].get_str()));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -46,7 +46,6 @@ public:
 	void addStateVariable(VariableDeclaration const& _declaration, u256 const& _storageOffset, unsigned _byteOffset);
 	void addVariable(VariableDeclaration const& _declaration, unsigned _offsetToCurrent = 0);
 	void removeVariable(VariableDeclaration const& _declaration);
-	void addAndInitializeVariable(VariableDeclaration const& _declaration);
 
 	void setCompiledContracts(std::map<ContractDefinition const*, bytes const*> const& _contracts) { m_compiledContracts = _contracts; }
 	bytes const& getCompiledContract(ContractDefinition const& _contract) const;
@@ -59,7 +58,11 @@ public:
 	bool isLocalVariable(Declaration const* _declaration) const;
 	bool isStateVariable(Declaration const* _declaration) const { return m_stateVariables.count(_declaration) != 0; }
 
+	/// @returns the entry label of the given function and creates it if it does not exist yet.
 	eth::AssemblyItem getFunctionEntryLabel(Declaration const& _declaration);
+	/// @returns the entry label of the given function. Might return an AssemblyItem of type
+	/// UndefinedItem if it does not exist yet.
+	eth::AssemblyItem getFunctionEntryLabelIfExists(Declaration const& _declaration) const;
 	void setInheritanceHierarchy(std::vector<ContractDefinition const*> const& _hierarchy) { m_inheritanceHierarchy = _hierarchy; }
 	/// @returns the entry label of the given function and takes overrides into account.
 	eth::AssemblyItem getVirtualFunctionEntryLabel(FunctionDefinition const& _function);
@@ -94,6 +97,8 @@ public:
 	eth::AssemblyItem appendJumpToNew() { return m_asm.appendJump().tag(); }
 	/// Appends a JUMP to a tag already on the stack
 	CompilerContext&  appendJump(eth::AssemblyItem::JumpType _jumpType = eth::AssemblyItem::JumpType::Ordinary);
+	/// Returns an "ErrorTag"
+	eth::AssemblyItem errorTag() { return m_asm.errorTag(); }
 	/// Appends a JUMP to a specific tag
 	CompilerContext& appendJumpTo(eth::AssemblyItem const& _tag) { m_asm.appendJump(_tag); return *this; }
 	/// Appends pushing of a new tag and @returns the new tag.
@@ -120,6 +125,8 @@ public:
 	CompilerContext& operator<<(u256 const& _value) { m_asm.append(_value); return *this; }
 	CompilerContext& operator<<(bytes const& _data) { m_asm.append(_data); return *this; }
 
+	void optimise(unsigned _runs = 200) { m_asm.optimise(true, true, _runs); }
+
 	eth::Assembly const& getAssembly() const { return m_asm; }
 	/// @arg _sourceCodes is the map of input files to source code strings
 	/// @arg _inJsonFormat shows whether the out should be in Json format
@@ -128,7 +135,8 @@ public:
 		return m_asm.stream(_stream, "", _sourceCodes, _inJsonFormat);
 	}
 
-	bytes getAssembledBytecode(bool _optimize = false) { return m_asm.optimise(_optimize).assemble(); }
+	bytes getAssembledBytecode() { return m_asm.assemble(); }
+	bytes getAssembledRuntimeBytecode(size_t _subIndex) { m_asm.assemble(); return m_asm.data(u256(_subIndex)); }
 
 	/**
 	 * Helper class to pop the visited nodes stack when a scope closes

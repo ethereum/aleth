@@ -24,6 +24,7 @@
 
 #pragma once
 
+#include <mutex>
 #include <libdevcore/Common.h>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Exceptions.h>
@@ -51,7 +52,10 @@ struct SignatureStruct
 	operator Signature() const { return *(h520 const*)this; }
 
 	/// @returns true if r,s,v values are valid, otherwise false
-	bool isValid() const;
+	bool isValid() const noexcept;
+
+	/// @returns the public part of the key that signed @a _hash to give this sig.
+	Public recover(h256 const& _hash) const;
 
 	h256 r;
 	h256 s;
@@ -84,6 +88,9 @@ Address toAddress(Public const& _public);
 /// @returns 0 if it's not a valid secret key.
 Address toAddress(Secret const& _secret);
 
+// Convert transaction from and nonce to address.
+Address toAddress(Address const& _from, u256 const& _nonce);
+
 /// Encrypts plain text using Public key.
 void encrypt(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
 
@@ -98,18 +105,26 @@ bool decryptSym(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
 
 /// Encrypt payload using ECIES standard with AES128-CTR.
 void encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
-	
+
 /// Decrypt payload using ECIES standard with AES128-CTR.
 bool decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
-	
+
 /// Encrypts payload with random IV/ctr using AES128-CTR.
 std::pair<bytes, h128> encryptSymNoAuth(h128 const& _k, bytesConstRef _plain);
 
 /// Encrypts payload with specified IV/ctr using AES128-CTR.
-bytes encryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _plain);
+bytes encryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _plain);
 
 /// Decrypts payload with specified IV/ctr using AES128-CTR.
-bytes decryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _cipher);
+bytes decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef _cipher);
+
+/// Encrypts payload with specified IV/ctr using AES128-CTR.
+inline bytes encryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
+inline bytes encryptSymNoAuth(h256 const& _k, h128 const& _iv, bytesConstRef _plain) { return encryptAES128CTR(_k.ref(), _iv, _plain); }
+
+/// Decrypts payload with specified IV/ctr using AES128-CTR.
+inline bytes decryptSymNoAuth(h128 const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
+inline bytes decryptSymNoAuth(h256 const& _k, h128 const& _iv, bytesConstRef _cipher) { return decryptAES128CTR(_k.ref(), _iv, _cipher); }
 
 /// Recovers Public key from signed message hash.
 Public recover(Signature const& _sig, h256 const& _hash);
@@ -122,6 +137,9 @@ bool verify(Public const& _k, Signature const& _s, h256 const& _hash);
 
 /// Derive key via PBKDF2.
 bytes pbkdf2(std::string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen = 32);
+
+/// Derive key via Scrypt.
+bytes scrypt(std::string const& _pass, bytes const& _salt, uint64_t _n, uint32_t _r, uint32_t _p, unsigned _dkLen);
 
 /// Simple class that represents a "key pair".
 /// All of the data of the class can be regenerated from the secret key (m_secret) alone.
@@ -169,14 +187,36 @@ struct InvalidState: public dev::Exception {};
 h256 kdf(Secret const& _priv, h256 const& _hash);
 
 /**
- * @brief Generator for nonce material
+ * @brief Generator for nonce material.
  */
 struct Nonce
 {
-	static h256 get(bool _commit = false);
+	/// Returns the next nonce (might be read from a file).
+	static h256 get();
+	/// Stores the current nonce in a file and resets Nonce to the uninitialised state.
+	static void reset();
+	/// Sets the location of the seed file to a non-default place. Used for testing.
+	static void setSeedFilePath(std::string const& _filePath);
+
 private:
 	Nonce() {}
 	~Nonce();
+	/// @returns the singleton instance.
+	static Nonce& singleton();
+	/// Reads the last seed from the seed file.
+	void initialiseIfNeeded();
+	/// @returns the next nonce.
+	h256 next();
+	/// Stores the current seed in the seed file.
+	void resetInternal();
+	/// @returns the path of the seed file.
+	static std::string const& seedFile();
+
+	/// Mutex for the singleton object.
+	/// @note Every access to any private function has to be guarded by this mutex.
+	static std::mutex s_x;
+
+	h256 m_value;
 };
 }
 

@@ -33,13 +33,12 @@ static_assert(dev::Secret::size == 32, "Secret key must be 32 bytes.");
 static_assert(dev::Public::size == 64, "Public key must be 64 bytes.");
 static_assert(dev::Signature::size == 65, "Signature must be 65 bytes.");
 
-bytes Secp256k1::eciesKDF(Secret _z, bytes _s1, unsigned kdByteLen)
+bytes Secp256k1PP::eciesKDF(Secret _z, bytes _s1, unsigned kdByteLen)
 {
-	// interop w/go ecies implementation
-	
-	// for sha3, blocksize is 136 bytes
-	// for sha256, blocksize is 64 bytes
-	auto reps = ((kdByteLen + 7) * 8) / (64 * 8);
+	auto reps = ((kdByteLen + 7) * 8) / (CryptoPP::SHA256::BLOCKSIZE * 8);
+	// SEC/ISO/Shoup specify counter size SHOULD be equivalent
+	// to size of hash output, however, it also notes that
+	// the 4 bytes is okay. NIST specifies 4 bytes.
 	bytes ctr({0, 0, 0, 1});
 	bytes k;
 	CryptoPP::SHA256 ctx;
@@ -61,10 +60,10 @@ bytes Secp256k1::eciesKDF(Secret _z, bytes _s1, unsigned kdByteLen)
 	}
 	
 	k.resize(kdByteLen);
-	return move(k);
+	return k;
 }
 
-void Secp256k1::encryptECIES(Public const& _k, bytes& io_cipher)
+void Secp256k1PP::encryptECIES(Public const& _k, bytes& io_cipher)
 {
 	// interop w/go ecies implementation
 	auto r = KeyPair::create();
@@ -98,12 +97,12 @@ void Secp256k1::encryptECIES(Public const& _k, bytes& io_cipher)
 	io_cipher.swap(msg);
 }
 
-bool Secp256k1::decryptECIES(Secret const& _k, bytes& io_text)
+bool Secp256k1PP::decryptECIES(Secret const& _k, bytes& io_text)
 {
 	// interop w/go ecies implementation
 	
 	// io_cipher[0] must be 2, 3, or 4, else invalidpublickey
-	if (io_text[0] < 2 || io_text[0] > 4)
+	if (io_text.empty() || io_text[0] < 2 || io_text[0] > 4)
 		// invalid message: publickey
 		return false;
 	
@@ -145,7 +144,7 @@ bool Secp256k1::decryptECIES(Secret const& _k, bytes& io_text)
 	return true;
 }
 
-void Secp256k1::encrypt(Public const& _k, bytes& io_cipher)
+void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 {
 	ECIES<ECP>::Encryptor e;
 	initializeDLScheme(_k, e);
@@ -163,7 +162,7 @@ void Secp256k1::encrypt(Public const& _k, bytes& io_cipher)
 	io_cipher = std::move(ciphertext);
 }
 
-void Secp256k1::decrypt(Secret const& _k, bytes& io_text)
+void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 {
 	CryptoPP::ECIES<CryptoPP::ECP>::Decryptor d;
 	initializeDLScheme(_k, d);
@@ -194,12 +193,12 @@ void Secp256k1::decrypt(Secret const& _k, bytes& io_text)
 	io_text = std::move(plain);
 }
 
-Signature Secp256k1::sign(Secret const& _k, bytesConstRef _message)
+Signature Secp256k1PP::sign(Secret const& _k, bytesConstRef _message)
 {
 	return sign(_k, sha3(_message));
 }
 
-Signature Secp256k1::sign(Secret const& _key, h256 const& _hash)
+Signature Secp256k1PP::sign(Secret const& _key, h256 const& _hash)
 {
 	// assumption made by signing alogrithm
 	asserts(m_q == m_qs);
@@ -240,18 +239,18 @@ Signature Secp256k1::sign(Secret const& _key, h256 const& _hash)
 	return sig;
 }
 
-bool Secp256k1::verify(Signature const& _signature, bytesConstRef _message)
+bool Secp256k1PP::verify(Signature const& _signature, bytesConstRef _message)
 {
 	return !!recover(_signature, _message);
 }
 
-bool Secp256k1::verify(Public const& _p, Signature const& _sig, bytesConstRef _message, bool _hashed)
+bool Secp256k1PP::verify(Public const& _p, Signature const& _sig, bytesConstRef _message, bool _hashed)
 {
 	// todo: verify w/o recovery (if faster)
-	return (bool)_p == _hashed ? (bool)recover(_sig, _message) : (bool)recover(_sig, sha3(_message).ref());
+	return _p == (_hashed ? recover(_sig, _message) : recover(_sig, sha3(_message).ref()));
 }
 
-Public Secp256k1::recover(Signature _signature, bytesConstRef _message)
+Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
 {
 	Public recovered;
 	
@@ -264,7 +263,6 @@ Public Secp256k1::recover(Signature _signature, bytesConstRef _message)
 	
 	ECP::Element x;
 	{
-		Guard l(x_curve);
 		m_curve.DecodePoint(x, encodedpoint, 33);
 		if (!m_curve.VerifyPoint(x))
 			return recovered;
@@ -286,16 +284,17 @@ Public Secp256k1::recover(Signature _signature, bytesConstRef _message)
 	ECP::Point p;
 	byte recoveredbytes[65];
 	{
-		Guard l(x_curve);
 		// todo: make generator member
 		p = m_curve.CascadeMultiply(u2, x, u1, m_params.GetSubgroupGenerator());
+		if (p.identity)
+			return Public();
 		m_curve.EncodePoint(recoveredbytes, p, false);
 	}
 	memcpy(recovered.data(), &recoveredbytes[1], 64);
 	return recovered;
 }
 
-bool Secp256k1::verifySecret(Secret const& _s, Public& _p)
+bool Secp256k1PP::verifySecret(Secret const& _s, Public& _p)
 {
 	DL_PrivateKey_EC<ECP> k;
 	k.Initialize(m_params, secretToExponent(_s));
@@ -311,7 +310,7 @@ bool Secp256k1::verifySecret(Secret const& _s, Public& _p)
 	return true;
 }
 
-void Secp256k1::agree(Secret const& _s, Public const& _r, h256& o_s)
+void Secp256k1PP::agree(Secret const& _s, Public const& _r, h256& o_s)
 {
 	// TODO: mutex ASN1::secp256k1() singleton
 	// Creating Domain is non-const for m_oid and m_oid is not thread-safe
@@ -322,7 +321,7 @@ void Secp256k1::agree(Secret const& _s, Public const& _r, h256& o_s)
 	d.Agree(o_s.data(), _s.data(), remote);
 }
 
-void Secp256k1::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p)
+void Secp256k1PP::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p)
 {
 	bytes prefixedKey(_k.GetGroupParameters().GetEncodedElementSize(true));
 	
@@ -335,7 +334,7 @@ void Secp256k1::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& 
 	memcpy(o_p.data(), &prefixedKey[1], Public::size);
 }
 
-void Secp256k1::exponentToPublic(Integer const& _e, Public& o_p)
+void Secp256k1PP::exponentToPublic(Integer const& _e, Public& o_p)
 {
 	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pk;
 	

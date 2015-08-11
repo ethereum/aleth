@@ -23,9 +23,14 @@
 #include <random>
 #include <boost/algorithm/string/case_conv.hpp>
 #include <libdevcore/Base64.h>
+#include <libdevcore/Terminal.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/CommonIO.h>
+#include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
 #include "Exceptions.h"
-#include "ProofOfWork.h"
+#include "Params.h"
+#include "BlockInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -35,7 +40,7 @@ namespace dev
 namespace eth
 {
 
-const unsigned c_protocolVersion = 60;
+const unsigned c_protocolVersion = 61;
 #if ETH_FATDB
 const unsigned c_minorProtocolVersion = 3;
 const unsigned c_databaseBaseVersion = 9;
@@ -46,7 +51,38 @@ const unsigned c_databaseBaseVersion = 9;
 const unsigned c_databaseVersionModifier = 0;
 #endif
 
-const unsigned c_databaseVersion = c_databaseBaseVersion + (c_databaseVersionModifier << 8) + (ProofOfWork::revision() << 9);
+#if ETH_FRONTIER
+Network c_network = resetNetwork(Network::Frontier);
+#else
+Network c_network = resetNetwork(Network::Olympic);
+#endif
+
+Network resetNetwork(Network _n)
+{
+	c_network = _n;
+	c_maximumExtraDataSize = c_network == Network::Olympic ? 1024 : 32;
+	switch(_n)
+	{
+	case Network::Turbo:
+		c_minGasLimit = 100000000;
+		break;
+	case Network::Olympic:
+		c_minGasLimit = 125000;
+		break;
+	case Network::Frontier:
+		c_minGasLimit = 5000;
+		break;
+	}
+
+	c_gasLimitBoundDivisor = 1024;
+	c_minimumDifficulty = 131072;
+	c_difficultyBoundDivisor = 2048;
+	c_durationLimit = c_network == Network::Turbo ? 2 : c_network == Network::Olympic ? 8 : 13;
+	c_blockReward = c_network == Network::Olympic ? (1500 * finney) : (5 * ether);
+	return _n;
+}
+
+const unsigned c_databaseVersion = c_databaseBaseVersion + (c_databaseVersionModifier << 8) + (23 << 9);
 
 vector<pair<u256, string>> const& units()
 {
@@ -102,6 +138,30 @@ std::string formatBalance(bigint const& _b)
 		}
 	ret << b << " wei";
 	return ret.str();
+}
+
+static void badBlockInfo(BlockInfo const& _bi, string const& _err)
+{
+	string const c_line = EthReset EthOnMaroon + string(80, ' ') + EthReset;
+	string const c_border = EthReset EthOnMaroon + string(2, ' ') + EthReset EthMaroonBold;
+	string const c_space = c_border + string(76, ' ') + c_border + EthReset;
+	stringstream ss;
+	ss << c_line << endl;
+	ss << c_space << endl;
+	ss << c_border + "  Import Failure     " + _err + string(max<int>(0, 53 - _err.size()), ' ') + "  " + c_border << endl;
+	ss << c_space << endl;
+	string bin = toString(_bi.number());
+	ss << c_border + ("                     Guru Meditation #" + string(max<int>(0, 8 - bin.size()), '0') + bin + "." + _bi.hash().abridged() + "                    ") + c_border << endl;
+	ss << c_space << endl;
+	ss << c_line;
+	cwarn << "\n" + ss.str();
+}
+
+void badBlock(bytesConstRef _block, string const& _err)
+{
+	BlockInfo bi;
+	DEV_IGNORE_EXCEPTIONS(bi = BlockInfo(_block, CheckNothing));
+	badBlockInfo(bi, _err);
 }
 
 }

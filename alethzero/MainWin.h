@@ -33,9 +33,9 @@
 #include <QtWidgets/QMainWindow>
 #include <libdevcore/RLP.h>
 #include <libethcore/Common.h>
+#include <libethcore/KeyManager.h>
 #include <libethereum/State.h>
 #include <libethereum/Executive.h>
-#include <libethereum/KeyManager.h>
 #include <libwebthree/WebThree.h>
 #include <libsolidity/CompilerStack.h>
 #include "Context.h"
@@ -44,6 +44,7 @@
 #include "Connect.h"
 
 class QListWidgetItem;
+class QActionGroup;
 
 namespace Ui {
 class Main;
@@ -91,12 +92,12 @@ public:
 
 	QList<dev::KeyPair> owned() const { return m_myIdentities; }
 
-	dev::u256 gasPrice() const { return 10 * dev::eth::szabo; }
+	dev::u256 gasPrice() const override;
 
 	dev::eth::KeyManager& keyManager() override { return m_keyManager; }
 	bool doConfirm();
 
-	dev::Secret retrieveSecret(dev::Address const& _a) const override;
+	dev::Secret retrieveSecret(dev::Address const& _address) const override;
 
 public slots:
 	void load(QString _file);
@@ -137,7 +138,10 @@ private slots:
 	void on_newAccount_triggered();
 	void on_killAccount_triggered();
 	void on_importKey_triggered();
+	void on_reencryptKey_triggered();
+	void on_reencryptAll_triggered();
 	void on_importKeyFile_triggered();
+	void on_claimPresale_triggered();
 	void on_exportKey_triggered();
 
 	// Account pane
@@ -179,8 +183,11 @@ private slots:
 	void on_forceMining_triggered();
 	void on_usePrivate_triggered();
 	void on_turboMining_triggered();
-	void on_jitvm_triggered();
 	void on_retryUnknown_triggered();
+	void on_vmInterpreter_triggered();
+	void on_vmJIT_triggered();
+	void on_vmSmart_triggered();
+	void on_rewindChain_triggered();
 
 	// Debugger
 	void on_debugCurrent_triggered();
@@ -190,6 +197,10 @@ private slots:
 	// Whisper
 	void on_newIdentity_triggered();
 	void on_post_clicked();
+
+	// Config
+	void on_gasPrices_triggered();
+	void on_sentinel_triggered();
 
 	void refreshWhisper();
 	void refreshBlockChain();
@@ -215,6 +226,8 @@ private:
 	void readSettings(bool _skipGeometry = false);
 	void writeSettings();
 
+	void setPrivateChain(QString const& _private, bool _forceConfigure = false);
+
 	unsigned installWatch(dev::eth::LogFilter const& _tf, WatchHandler const& _f);
 	unsigned installWatch(dev::h256 _tf, WatchHandler const& _f);
 	void uninstallWatch(unsigned _w);
@@ -232,7 +245,7 @@ private:
 	void installNameRegWatch();
 	void installBalancesWatch();
 
-	virtual void timerEvent(QTimerEvent*);
+	virtual void timerEvent(QTimerEvent*) override;
 
 	void refreshNetwork();
 	void refreshMining();
@@ -246,7 +259,7 @@ private:
 	void refreshBalances();
 
 	void setBeneficiary(dev::Address const& _b);
-	std::string getPassword(std::string const& _title, std::string const& _for);
+	std::string getPassword(std::string const& _title, std::string const& _for, std::string* _hint = nullptr, bool* _ok = nullptr);
 
 	std::unique_ptr<Ui::Main> ui;
 
@@ -265,6 +278,8 @@ private:
 	dev::Address m_nameReg;
 	dev::Address m_beneficiary;
 
+	QActionGroup* m_vmSelectionGroup = nullptr;
+
 	QList<QPair<QString, QString>> m_consoleHistory;
 	QMutex m_logLock;
 	QString m_logHistory;
@@ -276,10 +291,10 @@ private:
 	static std::string fromRaw(dev::h256 _n, unsigned* _inc = nullptr);
 	NatspecHandler m_natSpecDB;
 
-	Transact m_transact;
+	Transact* m_transact;
 	std::unique_ptr<DappHost> m_dappHost;
 	DappLoader* m_dappLoader;
 	QWebEnginePage* m_webPage;
-	
+
 	Connect m_connect;
 };

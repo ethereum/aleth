@@ -25,7 +25,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/Common.h>
-#include <libethcore/ProofOfWork.h>
+#include <libethcore/Ethash.h>
 #include "LogFilter.h"
 #include "Transaction.h"
 #include "AccountDiff.h"
@@ -65,16 +65,16 @@ public:
 
 	// [TRANSACTION API]
 
+	/// Submits a new transaction.
+	/// @returns the transaction's hash.
+	virtual std::pair<h256, Address> submitTransaction(TransactionSkeleton const& _t, Secret const& _secret) = 0;
+
 	/// Submits the given message-call transaction.
-	virtual void submitTransaction(Secret _secret, u256 _value, Address _dest, bytes const& _data = bytes(), u256 _gas = 10000, u256 _gasPrice = 10 * szabo) = 0;
+	void submitTransaction(Secret const& _secret, u256 const& _value, Address const& _dest, bytes const& _data = bytes(), u256 const& _gas = 10000, u256 const& _gasPrice = 10 * szabo, u256 const& _nonce = UndefinedU256);
 
 	/// Submits a new contract-creation transaction.
 	/// @returns the new contract's address (assuming it all goes through).
-	virtual Address submitTransaction(Secret _secret, u256 _endowment, bytes const& _init, u256 _gas = 10000, u256 _gasPrice = 10 * szabo) = 0;
-
-	/// Submits a new contract-creation transaction.
-	/// @returns the new contract's address (assuming it all goes through).
-	Address submitTransaction(Secret const& _secret, TransactionSkeleton const& _t) { if (_t.creation) return submitTransaction(_secret, _t.value, _t.data, _t.gas, _t.gasPrice); submitTransaction(_secret, _t.value, _t.to, _t.data, _t.gas, _t.gasPrice); return Address(); }
+	Address submitTransaction(Secret const& _secret, u256 const& _endowment, bytes const& _init, u256 const& _gas = 10000, u256 const& _gasPrice = 10 * szabo, u256 const& _nonce = UndefinedU256);
 
 	/// Blocks until all pending transactions have been processed.
 	virtual void flushTransactions() = 0;
@@ -133,14 +133,23 @@ public:
 
 	// [BLOCK QUERY API]
 
+	virtual bool isKnownTransaction(h256 const& _transactionHash) const = 0;
+	virtual bool isKnownTransaction(h256 const& _blockHash, unsigned _i) const = 0;
 	virtual Transaction transaction(h256 _transactionHash) const = 0;
+	virtual LocalisedTransaction localisedTransaction(h256 const& _transactionHash) const = 0;
+	virtual TransactionReceipt transactionReceipt(h256 const& _transactionHash) const = 0;
+	virtual LocalisedTransactionReceipt localisedTransactionReceipt(h256 const& _transactionHash) const = 0;
 	virtual std::pair<h256, unsigned> transactionLocation(h256 const& _transactionHash) const = 0;
 	virtual h256 hashFromNumber(BlockNumber _number) const = 0;
 	virtual BlockNumber numberFromHash(h256 _blockHash) const = 0;
+	virtual int compareBlockHashes(h256 _h1, h256 _h2) const = 0;
 
+	virtual bool isKnown(BlockNumber _block) const = 0;
+	virtual bool isKnown(h256 const& _hash) const = 0;
 	virtual BlockInfo blockInfo(h256 _hash) const = 0;
 	virtual BlockDetails blockDetails(h256 _hash) const = 0;
 	virtual Transaction transaction(h256 _blockHash, unsigned _i) const = 0;
+	virtual LocalisedTransaction localisedTransaction(h256 const& _blockHash, unsigned _i) const = 0;
 	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const = 0;
 	virtual UncleHashes uncleHashes(h256 _blockHash) const = 0;
 	virtual unsigned transactionCount(h256 _blockHash) const = 0;
@@ -150,7 +159,7 @@ public:
 
 	BlockInfo blockInfo(BlockNumber _block) const { return blockInfo(hashFromNumber(_block)); }
 	BlockDetails blockDetails(BlockNumber _block) const { return blockDetails(hashFromNumber(_block)); }
-	Transaction transaction(BlockNumber _block, unsigned _i) const { if (_block == PendingBlock) { auto p = pending(); return _i < p.size() ? p[_i] : Transaction(); } return transaction(hashFromNumber(_block)); }
+	Transaction transaction(BlockNumber _block, unsigned _i) const { auto p = transactions(_block); return _i < p.size() ? p[_i] : Transaction(); }
 	unsigned transactionCount(BlockNumber _block) const { if (_block == PendingBlock) { auto p = pending(); return p.size(); } return transactionCount(hashFromNumber(_block)); }
 	Transactions transactions(BlockNumber _block) const { if (_block == PendingBlock) return pending(); return transactions(hashFromNumber(_block)); }
 	TransactionHashes transactionHashes(BlockNumber _block) const { if (_block == PendingBlock) return pendingHashes(); return transactionHashes(hashFromNumber(_block)); }
@@ -196,16 +205,18 @@ public:
 	virtual void stopMining() = 0;
 	/// Are we mining now?
 	virtual bool isMining() const = 0;
+	/// Would we like to mine now?
+	virtual bool wouldMine() const = 0;
 	/// Current hash rate.
 	virtual uint64_t hashrate() const = 0;
 
 	/// Get hash of the current block to be mined minus the nonce (the 'work hash').
-	virtual ProofOfWork::WorkPackage getWork() = 0;
+	virtual std::tuple<h256, h256, h256> getEthashWork() { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::getEthashWork")); }
 	/// Submit the nonce for the proof-of-work.
-	virtual bool submitWork(ProofOfWork::Solution const& _proof) = 0;
+	virtual bool submitEthashWork(h256 const&, h64 const&) { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::submitEthashWork")); }
 
 	/// Check the progress of the mining.
-	virtual MiningProgress miningProgress() const = 0;
+	virtual WorkingProgress miningProgress() const = 0;
 
 protected:
 	int m_default = PendingBlock;

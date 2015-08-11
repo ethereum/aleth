@@ -9,46 +9,44 @@ Column
 	property alias members: repeater.model  //js array
 	property variant accounts
 	property var value: ({})
+	property int blockIndex
 	property int transactionIndex
 	property string context
 	Layout.fillWidth: true
-	spacing: 0
+	spacing: 5
 	Repeater
 	{
 		id: repeater
 		visible: model.length > 0
-		Layout.fillWidth: true
-
 		RowLayout
 		{
 			id: row
-			height: 20 + (members[index].type.category === QSolidityType.Struct ? (20 * members[index].type.members.length) : 0)
+			height: 30 + (members[index].type.category === QSolidityType.Struct ? (30 * members[index].type.members.length) : 0)
 			Layout.fillWidth: true
-			DefaultLabel {
-				height: 20
-				id: typeLabel
-				text: modelData.type.name
-				anchors.verticalCenter: parent.verticalCenter
+			Rectangle
+			{
+				Layout.preferredWidth: 150
+				Row
+				{
+					anchors.right: parent.right
+					anchors.verticalCenter: parent.verticalCenter
+					Label {
+						id: nameLabel
+						text: modelData.name
+					}
+
+					Label {
+						id: typeLabel
+						text: " (" + modelData.type.name + ")"
+						font.italic: true
+						font.weight: Font.Light
+					}
+				}
 			}
 
-			DefaultLabel {
-				height: 20
-				id: nameLabel
-				text: modelData.name
-				anchors.verticalCenter: parent.verticalCenter
-			}
-
-			DefaultLabel {
-				height: 20
-				id: equalLabel
-				text: "="
-				anchors.verticalCenter: parent.verticalCenter
-			}
 			Loader
 			{
 				id: typeLoader
-				height: 20
-				anchors.verticalCenter: parent.verticalCenter
 				sourceComponent:
 				{
 					var t = modelData.type.category;
@@ -56,12 +54,14 @@ Column
 						return Qt.createComponent("qrc:/qml/QIntTypeView.qml");
 					else if (t === QSolidityType.Bool)
 						return Qt.createComponent("qrc:/qml/QBoolTypeView.qml");
-					else if (t === QSolidityType.Bytes)
+					else if (t === QSolidityType.Bytes || t === QSolidityType.String)
 						return Qt.createComponent("qrc:/qml/QStringTypeView.qml");
 					else if (t === QSolidityType.Hash)
 						return Qt.createComponent("qrc:/qml/QHashTypeView.qml");
 					else if (t === QSolidityType.Struct)
 						return Qt.createComponent("qrc:/qml/StructView.qml");
+					else if (t === QSolidityType.Enum)
+						return Qt.createComponent("qrc:/qml/QIntTypeView.qml");
 					else if (t === QSolidityType.Address)
 						return Qt.createComponent("qrc:/qml/QAddressView.qml");
 					else
@@ -92,6 +92,9 @@ Column
 					}
 					else
 						item.value = getValue();
+
+					if (ptype.category === QSolidityType.Bool)
+						item.init();
 
 					item.onValueChanged.connect(function() {
 						vals[pname] = item.value;

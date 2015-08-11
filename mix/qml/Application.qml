@@ -42,6 +42,10 @@ ApplicationWindow {
 	ClientModel {
 		id: clientModel
 		codeModel: codeModel
+		Component.onCompleted:
+		{
+			init("/tmp")
+		}
 	}
 
 	ProjectModel {
@@ -119,6 +123,7 @@ ApplicationWindow {
 		Menu {
 			title: qsTr("Tools")
 			MenuItem { action: gasEstimationAction }
+			MenuItem { action: optimizeCodeAction }
 		}
 		Menu {
 			title: qsTr("Windows")
@@ -127,10 +132,8 @@ ApplicationWindow {
 			MenuSeparator {}
 			MenuItem { action: toggleProjectNavigatorAction }
 			MenuItem { action: showHideRightPanelAction }
-			MenuItem { action: toggleTransactionLogAction }
 			MenuItem { action: toggleWebPreviewAction }
 			MenuItem { action: toggleWebPreviewOrientationAction }
-			//MenuItem { action: toggleCallsInLog }
 		}
 	}
 
@@ -203,15 +206,15 @@ ApplicationWindow {
 		text: qsTr("Deploy")
 		shortcut: "F5"
 		onTriggered: mainContent.startQuickDebugging()
-		enabled: codeModel.hasContract && !clientModel.running
+		enabled: codeModel.hasContract && !clientModel.running && projectModel.stateListModel.defaultStateName() !== ""
 	}
 
 	Action {
 		id: toggleAssemblyDebuggingAction
 		text: qsTr("Show VM Code")
 		shortcut: "Ctrl+Alt+V"
-		onTriggered: mainContent.rightPane.assemblyMode = !mainContent.rightPane.assemblyMode;
-		checked: mainContent.rightPane.assemblyMode;
+		onTriggered: mainContent.debuggerPanel.assemblyMode = !mainContent.debuggerPanel.assemblyMode;
+		checked:  mainContent.debuggerPanel.assemblyMode;
 		enabled: true
 	}
 
@@ -222,15 +225,6 @@ ApplicationWindow {
 		checkable: true
 		checked: mainContent.webViewVisible
 		onTriggered: mainContent.toggleWebPreview();
-	}
-
-	Action {
-		id: toggleTransactionLogAction
-		text: qsTr("Show States and Transactions")
-		shortcut: "Alt+1"
-		checkable: true
-		checked: mainContent.rightPane.transactionLog.visible
-		onTriggered: mainContent.rightPane.transactionLog.visible = !mainContent.rightPane.transactionLog.visible
 	}
 
 	Action {
@@ -419,9 +413,19 @@ ApplicationWindow {
 		text: qsTr("Display gas estimation")
 		shortcut: "Ctrl+G"
 		checkable: true
-		onTriggered:
-		{
-			mainContent.codeEditor.displayGasEstimation(checked);
-		}
+		onTriggered: mainContent.codeEditor.displayGasEstimation(checked);
+	}
+
+	Action {
+		id: optimizeCodeAction
+		text: qsTr("Enable optimized compilation")
+		shortcut: "Ctrl+Shift+O"
+		checkable: true
+		onTriggered: codeModel.setOptimizeCode(checked);
+	}
+
+	Settings {
+		property alias gasEstimation: gasEstimationAction.checked
+		property alias optimizeCode: optimizeCodeAction.checked
 	}
 }

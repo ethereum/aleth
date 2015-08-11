@@ -36,22 +36,30 @@
 var BigNumber = require('bignumber.js');
 
 var unitMap = {
-    'wei':      '1',
-    'kwei':     '1000',
-    'ada':      '1000',
-    'mwei':     '1000000',
-    'babbage':  '1000000',
-    'gwei':     '1000000000',
-    'shannon':  '1000000000',
-    'szabo':    '1000000000000',
-    'finney':   '1000000000000000',
-    'ether':    '1000000000000000000',
-    'kether':   '1000000000000000000000',
-    'grand':    '1000000000000000000000',
-    'einstein': '1000000000000000000000',
-    'mether':   '1000000000000000000000000',
-    'gether':   '1000000000000000000000000000',
-    'tether':   '1000000000000000000000000000000'
+    'wei':          '1',
+    'kwei':         '1000',
+    'ada':          '1000',
+    'femtoether':   '1000',
+    'mwei':         '1000000',
+    'babbage':      '1000000',
+    'picoether':    '1000000',
+    'gwei':         '1000000000',
+    'shannon':      '1000000000',
+    'nanoether':    '1000000000',
+    'nano':         '1000000000',
+    'szabo':        '1000000000000',
+    'microether':   '1000000000000',
+    'micro':        '1000000000000',
+    'finney':       '1000000000000000',
+    'milliether':    '1000000000000000',
+    'milli':         '1000000000000000',
+    'ether':        '1000000000000000000',
+    'kether':       '1000000000000000000000',
+    'grand':        '1000000000000000000000',
+    'einstein':     '1000000000000000000000',
+    'mether':       '1000000000000000000000000',
+    'gether':       '1000000000000000000000000000',
+    'tether':       '1000000000000000000000000000000'
 };
 
 /**
@@ -65,6 +73,19 @@ var unitMap = {
  */
 var padLeft = function (string, chars, sign) {
     return new Array(chars - string.length + 1).join(sign ? sign : "0") + string;
+};
+
+/**
+ * Should be called to pad string to expected length
+ *
+ * @method padRight
+ * @param {String} string to be padded
+ * @param {Number} characters that result string should have
+ * @param {String} sign, by default 0
+ * @returns {String} right aligned string
+ */
+var padRight = function (string, chars, sign) {
+    return string + (new Array(chars - string.length + 1).join(sign ? sign : "0"));
 };
 
 /** 
@@ -83,10 +104,6 @@ var toAscii = function(hex) {
     }
     for (; i < l; i+=2) {
         var code = parseInt(hex.substr(i, 2), 16);
-        if (code === 0) {
-            break;
-        }
-
         str += String.fromCharCode(code);
     }
 
@@ -196,7 +213,7 @@ var fromDecimal = function (value) {
  * @return {String}
  */
 var toHex = function (val) {
-    /*jshint maxcomplexity:7 */
+    /*jshint maxcomplexity: 8 */
 
     if (isBoolean(val))
         return fromDecimal(+val);
@@ -210,9 +227,11 @@ var toHex = function (val) {
     // if its a negative number, pass it through fromDecimal
     if (isString(val)) {
         if (val.indexOf('-0x') === 0)
-           return fromDecimal(val);
+            return fromDecimal(val);
         else if (!isFinite(val))
             return fromAscii(val);
+        else if(val.indexOf('0x') === 0)
+            return val;
     }
 
     return fromDecimal(val);
@@ -239,13 +258,14 @@ var getValueOfUnit = function (unit) {
  * Takes a number of wei and converts it to any other ether unit.
  *
  * Possible units are:
- * - kwei/ada
- * - mwei/babbage
- * - gwei/shannon
- * - szabo
- * - finney
- * - ether
- * - kether/grand/einstein
+ *   SI Short   SI Full        Effigy       Other
+ * - kwei       femtoether     ada
+ * - mwei       picoether      babbage
+ * - gwei       nanoether      shannon      nano
+ * - --         microether     szabo        micro
+ * - --         milliether     finney       milli
+ * - ether      --             --
+ * - kether                    einstein     grand 
  * - mether
  * - gether
  * - tether
@@ -265,13 +285,14 @@ var fromWei = function(number, unit) {
  * Takes a number of a unit and converts it to wei.
  *
  * Possible units are:
- * - kwei/ada
- * - mwei/babbage
- * - gwei/shannon
- * - szabo
- * - finney
- * - ether
- * - kether/grand/einstein
+ *   SI Short   SI Full        Effigy       Other
+ * - kwei       femtoether     ada
+ * - mwei       picoether      babbage       
+ * - gwei       nanoether      shannon      nano
+ * - --         microether     szabo        micro
+ * - --         milliether     finney       milli
+ * - ether      --             --
+ * - kether                    einstein     grand 
  * - mether
  * - gether
  * - tether
@@ -447,8 +468,21 @@ var isJson = function (str) {
     }
 };
 
+/**
+ * This method should be called to check if string is valid ethereum IBAN number
+ * Supports direct and indirect IBANs
+ *
+ * @method isIBAN
+ * @param {String}
+ * @return {Boolean}
+ */
+var isIBAN = function (iban) {
+    return /^XE[0-9]{2}(ETH[0-9A-Z]{13}|[0-9A-Z]{30})$/.test(iban);
+};
+
 module.exports = {
     padLeft: padLeft,
+    padRight: padRight,
     toHex: toHex,
     toDecimal: toDecimal,
     fromDecimal: fromDecimal,
@@ -470,6 +504,7 @@ module.exports = {
     isObject: isObject,
     isBoolean: isBoolean,
     isArray: isArray,
-    isJson: isJson
+    isJson: isJson,
+    isIBAN: isIBAN
 };
 

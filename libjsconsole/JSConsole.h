@@ -22,33 +22,89 @@
 
 #pragma once
 
-#include <libjsengine/JSV8Engine.h>
-#include <libjsengine/JSV8Printer.h>
+#include <libdevcore/Log.h>
 
-class WebThreeStubServer;
-namespace jsonrpc { class AbstractServerConnector; }
+#if ETH_READLINE
+#include <readline/readline.h>
+#include <readline/history.h>
+#endif
 
 namespace dev
 {
 namespace eth
 {
 
-class AccountHolder;
-
+template<typename Engine, typename Printer>
 class JSConsole
 {
 public:
-	JSConsole(WebThreeDirect& _web3, std::shared_ptr<AccountHolder> const& _accounts);
-	~JSConsole();
-	void repl() const;
+	JSConsole(): m_engine(Engine()), m_printer(Printer(m_engine)) {}
+	~JSConsole() {}
 
-private:
-	std::string promptForIndentionLevel(int _i) const;
+	void readExpression() const
+	{
+		std::string cmd = "";
+		g_logPost = [](std::string const& a, char const*)
+		{
+			std::cout << "\r           \r" << a << std::endl << std::flush;
+#if ETH_READLINE
+			rl_forced_update_display();
+#endif
+		};
 
-	JSV8Engine m_engine;
-	JSV8Printer m_printer;
-	std::unique_ptr<WebThreeStubServer> m_jsonrpcServer;
-	std::unique_ptr<jsonrpc::AbstractServerConnector> m_jsonrpcConnector;
+		bool isEmpty = true;
+		int openBrackets = 0;
+		do {
+			std::string rl;
+#if ETH_READLINE
+			char* buff = readline(promptForIndentionLevel(openBrackets).c_str());
+			isEmpty = !buff;
+			if (!isEmpty)
+			{
+				rl = std::string(buff);
+				free(buff);
+			}
+#else
+			std::cout << promptForIndentionLevel(openBrackets) << std::flush;
+			std::getline(std::cin, rl);
+			isEmpty = rl.length() == 0;
+#endif
+			if (!isEmpty)
+			{
+				cmd += rl;
+				cmd += " ";
+				int open = std::count(cmd.begin(), cmd.end(), '{');
+				open += std::count(cmd.begin(), cmd.end(), '(');
+				int closed = std::count(cmd.begin(), cmd.end(), '}');
+				closed += std::count(cmd.begin(), cmd.end(), ')');
+				openBrackets = open - closed;
+			}
+		} while (openBrackets > 0);
+
+		if (!isEmpty)
+		{
+#if ETH_READLINE
+			add_history(cmd.c_str());
+#endif
+			auto value = m_engine.eval(cmd.c_str());
+			std::string result = m_printer.prettyPrint(value).cstr();
+			std::cout << result << std::endl;
+		}
+	}
+
+	void eval(std::string const& _expression) { m_engine.eval(_expression.c_str()); }
+
+protected:
+	Engine m_engine;
+	Printer m_printer;
+
+	virtual std::string promptForIndentionLevel(int _i) const
+	{
+		if (_i == 0)
+			return "> ";
+
+		return std::string((_i + 1) * 2, ' ');
+	}
 };
 
 }

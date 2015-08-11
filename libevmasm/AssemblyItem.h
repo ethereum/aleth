@@ -65,7 +65,7 @@ public:
 	/// @returns the instruction of this item (only valid if type() == Operation)
 	Instruction instruction() const { return Instruction(byte(m_data)); }
 
-	/// @returns true iff the type and data of the items are equal.
+	/// @returns true if the type and data of the items are equal.
 	bool operator==(AssemblyItem const& _other) const { return m_type == _other.m_type && m_data == _other.m_data; }
 	bool operator!=(AssemblyItem const& _other) const { return !operator==(_other); }
 	/// Less-than operator compatible with operator==.
@@ -98,11 +98,14 @@ private:
 };
 
 using AssemblyItems = std::vector<AssemblyItem>;
-using AssemblyItemsConstRef = vector_ref<AssemblyItem const>;
 
 std::ostream& operator<<(std::ostream& _out, AssemblyItem const& _item);
-std::ostream& operator<<(std::ostream& _out, AssemblyItemsConstRef _i);
-inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _i) { return operator<<(_out, AssemblyItemsConstRef(&_i)); }
+inline std::ostream& operator<<(std::ostream& _out, AssemblyItems const& _items)
+{
+	for (AssemblyItem const& item: _items)
+		_out << item;
+	return _out;
+}
 
 }
 }

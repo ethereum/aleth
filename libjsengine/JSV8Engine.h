@@ -22,7 +22,10 @@
 
 #pragma once
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunused-parameter"
 #include <v8.h>
+#pragma clang diagnostic pop
 #include "JSEngine.h"
 
 namespace dev
@@ -53,7 +56,6 @@ public:
 	v8::Handle<v8::Context> const& context() const;
 
 private:
-	static JSV8Env s_env;
 	JSV8Scope* m_scope;
 };
 

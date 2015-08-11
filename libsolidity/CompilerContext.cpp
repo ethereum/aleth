@@ -65,15 +65,6 @@ void CompilerContext::removeVariable(VariableDeclaration const& _declaration)
 	m_localVariables.erase(&_declaration);
 }
 
-void CompilerContext::addAndInitializeVariable(VariableDeclaration const& _declaration)
-{
-	LocationSetter locationSetter(*this, _declaration);
-	addVariable(_declaration);
-	int const size = _declaration.getType()->getSizeOnStack();
-	for (int i = 0; i < size; ++i)
-		*this << u256(0);
-}
-
 bytes const& CompilerContext::getCompiledContract(const ContractDefinition& _contract) const
 {
 	auto ret = m_compiledContracts.find(&_contract);
@@ -97,6 +88,12 @@ eth::AssemblyItem CompilerContext::getFunctionEntryLabel(Declaration const& _dec
 	}
 	else
 		return res->second.tag();
+}
+
+eth::AssemblyItem CompilerContext::getFunctionEntryLabelIfExists(Declaration const& _declaration) const
+{
+	auto res = m_functionEntryLabels.find(&_declaration);
+	return res == m_functionEntryLabels.end() ? eth::AssemblyItem(eth::UndefinedItem) : res->second.tag();
 }
 
 eth::AssemblyItem CompilerContext::getVirtualFunctionEntryLabel(FunctionDefinition const& _function)
@@ -127,7 +124,7 @@ set<Declaration const*> CompilerContext::getFunctionsWithoutCode()
 	for (auto const& it: m_functionEntryLabels)
 		if (m_functionsWithCode.count(it.first) == 0)
 			functions.insert(it.first);
-	return move(functions);
+	return functions;
 }
 
 ModifierDefinition const& CompilerContext::getFunctionModifier(string const& _name) const

@@ -13,7 +13,7 @@ include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 include_directories(BEFORE ..)
 include_directories(${MHD_INCLUDE_DIRS})
 include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-include_directories(${LEVELDB_INCLUDE_DIRS})
+include_directories(${DB_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
 set(EXECUTABLE web3jsonrpc)
@@ -22,13 +22,11 @@ file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-target_link_libraries(${EXECUTABLE} ${LEVELDB_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${MHD_LIBRARIES})
 
 target_link_libraries(${EXECUTABLE} webthree)
-target_link_libraries(${EXECUTABLE} secp256k1)
 
 if (SOLIDITY)
 	target_link_libraries(${EXECUTABLE} solidity)
@@ -55,4 +53,3 @@ install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib L
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
 add_custom_target(aux_json SOURCES "spec.json")
-

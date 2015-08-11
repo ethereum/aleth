@@ -36,6 +36,13 @@ namespace dev
 namespace eth
 {
 
+enum class BlockPolarity
+{
+	Unknown,
+	Dead,
+	Live
+};
+
 struct LogEntry
 {
 	LogEntry() {}
@@ -63,10 +70,45 @@ using LogEntries = std::vector<LogEntry>;
 struct LocalisedLogEntry: public LogEntry
 {
 	LocalisedLogEntry() {}
-	LocalisedLogEntry(LogEntry const& _le, unsigned _number, h256 _transactionHash = h256()): LogEntry(_le), number(_number), transactionHash(_transactionHash) {}
+	explicit LocalisedLogEntry(LogEntry const& _le): LogEntry(_le) {}
 
-	unsigned number = 0;
+	explicit LocalisedLogEntry(
+		LogEntry const& _le,
+		h256 _special
+	):
+		LogEntry(_le),
+		isSpecial(true),
+		special(_special)
+	{}
+
+	explicit LocalisedLogEntry(
+		LogEntry const& _le,
+		h256 const& _blockHash,
+		BlockNumber _blockNumber,
+		h256 const& _transactionHash,
+		unsigned _transactionIndex,
+		unsigned _logIndex,
+		BlockPolarity _polarity = BlockPolarity::Unknown
+	):
+		LogEntry(_le),
+		blockHash(_blockHash),
+		blockNumber(_blockNumber),
+		transactionHash(_transactionHash),
+		transactionIndex(_transactionIndex),
+		logIndex(_logIndex),
+		polarity(_polarity),
+		mined(true)
+	{}
+
+	h256 blockHash;
+	BlockNumber blockNumber = 0;
 	h256 transactionHash;
+	unsigned transactionIndex = 0;
+	unsigned logIndex = 0;
+	BlockPolarity polarity = BlockPolarity::Unknown;
+	bool mined = false;
+	bool isSpecial = false;
+	h256 special;
 };
 
 using LocalisedLogEntries = std::vector<LocalisedLogEntry>;
@@ -106,7 +148,7 @@ class VM;
 
 using LastHashes = std::vector<h256>;
 
-using OnOpFunc = std::function<void(uint64_t /*steps*/, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, VM*, ExtVMFace const*)>;
+using OnOpFunc = std::function<void(uint64_t /*steps*/, Instruction /*instr*/, bigint /*newMemSize*/, bigint /*gasCost*/, bigint /*gas*/, VM*, ExtVMFace const*)>;
 
 struct CallParameters
 {
@@ -130,7 +172,7 @@ public:
 	ExtVMFace() = default;
 
 	/// Full constructor.
-	ExtVMFace(Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes const& _code, BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, LastHashes const& _lh, unsigned _depth);
+	ExtVMFace(Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytes _code, h256 const& _codeHash, BlockInfo const& _previousBlock, BlockInfo const& _currentBlock, LastHashes const& _lh, unsigned _depth);
 
 	virtual ~ExtVMFace() = default;
 
@@ -174,7 +216,7 @@ public:
 	virtual void revert() {}
 
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
-	h256 blockhash(u256 _number) { return _number < currentBlock.number && _number >= (std::max<u256>(256, currentBlock.number) - 256) ? lastHashes[(unsigned)(currentBlock.number - 1 - _number)] : h256(); }
+	h256 blockhash(u256 _number) { return _number < currentBlock.number() && _number >= (std::max<u256>(256, currentBlock.number()) - 256) ? lastHashes[(unsigned)(currentBlock.number() - 1 - _number)] : h256(); }
 
 	/// Get the code at the given location in code ROM.
 	byte getCode(u256 _n) const { return _n < code.size() ? code[(size_t)_n] : 0; }
@@ -186,6 +228,7 @@ public:
 	u256 gasPrice;				///< Price of gas (that we already paid).
 	bytesConstRef data;			///< Current input data.
 	bytes code;					///< Current code that is executing.
+	h256 codeHash;				///< SHA3 hash of the executing code
 	LastHashes lastHashes;		///< Most recent 256 blocks' hashes.
 	BlockInfo previousBlock;	///< The previous block's information.	TODO: PoC-8: REMOVE
 	BlockInfo currentBlock;		///< The current block's information.

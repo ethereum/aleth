@@ -33,7 +33,7 @@ using namespace dev::eth;
 using namespace dev::test;
 
 FakeExtVM::FakeExtVM(eth::BlockInfo const& _previousBlock, eth::BlockInfo const& _currentBlock, unsigned _depth):			/// TODO: XXX: remove the default argument & fix.
-	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number), _depth) {}
+	ExtVMFace(Address(), Address(), Address(), 0, 1, bytesConstRef(), bytes(), EmptySHA3, _previousBlock, _currentBlock, test::lastHashes(_currentBlock.number()), _depth) {}
 
 h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpFunc const&)
 {
@@ -83,12 +83,12 @@ void FakeExtVM::reset(u256 _myBalance, u256 _myNonce, map<u256, u256> const& _st
 mObject FakeExtVM::exportEnv()
 {
 	mObject ret;
-	ret["previousHash"] = toString(currentBlock.parentHash);
-	ret["currentDifficulty"] = toCompactHex(currentBlock.difficulty, HexPrefix::Add, 1);
-	ret["currentTimestamp"] =  toCompactHex(currentBlock.timestamp, HexPrefix::Add, 1);
-	ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress);
-	ret["currentNumber"] = toCompactHex(currentBlock.number, HexPrefix::Add, 1);
-	ret["currentGasLimit"] = toCompactHex(currentBlock.gasLimit, HexPrefix::Add, 1);
+	ret["previousHash"] = toString(currentBlock.parentHash());
+	ret["currentDifficulty"] = toCompactHex(currentBlock.difficulty(), HexPrefix::Add, 1);
+	ret["currentTimestamp"] =  toCompactHex(currentBlock.timestamp(), HexPrefix::Add, 1);
+	ret["currentCoinbase"] = toString(currentBlock.coinbaseAddress());
+	ret["currentNumber"] = toCompactHex(currentBlock.number(), HexPrefix::Add, 1);
+	ret["currentGasLimit"] = toCompactHex(currentBlock.gasLimit(), HexPrefix::Add, 1);
 	return ret;
 }
 
@@ -102,13 +102,26 @@ void FakeExtVM::importEnv(mObject& _o)
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
 
-	currentBlock.parentHash = h256(_o["previousHash"].get_str());
-	currentBlock.number = toInt(_o["currentNumber"]);
-	lastHashes = test::lastHashes(currentBlock.number);
-	currentBlock.gasLimit = toInt(_o["currentGasLimit"]);
-	currentBlock.difficulty = toInt(_o["currentDifficulty"]);
-	currentBlock.timestamp = toInt(_o["currentTimestamp"]);
-	currentBlock.coinbaseAddress = Address(_o["currentCoinbase"].get_str());
+
+	RLPStream rlpStream;
+	rlpStream.appendList(BlockInfo::BasicFields);
+
+	rlpStream << h256(_o["previousHash"].get_str());
+	rlpStream << EmptyListSHA3;
+	rlpStream << Address(_o["currentCoinbase"].get_str());
+	rlpStream << h256(); // stateRoot
+	rlpStream << EmptyTrie; // transactionTrie
+	rlpStream << EmptyTrie; // receiptTrie
+	rlpStream << LogBloom(); // bloom
+	rlpStream << toInt(_o["currentDifficulty"]);
+	rlpStream << toInt(_o["currentNumber"]);
+	rlpStream << toInt(_o["currentGasLimit"]);
+	rlpStream << 0; //gasUsed
+	rlpStream << toInt(_o["currentTimestamp"]);
+	rlpStream << std::string(); //extra data
+	currentBlock = BlockInfo(rlpStream.out(), CheckEverything, h256{}, HeaderData);
+
+	lastHashes = test::lastHashes(currentBlock.number());
 }
 
 mObject FakeExtVM::exportState()
@@ -160,7 +173,7 @@ mObject FakeExtVM::exportExec()
 	ret["origin"] = toString(origin);
 	ret["value"] = toCompactHex(value, HexPrefix::Add, 1);
 	ret["gasPrice"] = toCompactHex(gasPrice, HexPrefix::Add, 1);
-	ret["gas"] = toCompactHex(gas, HexPrefix::Add, 1);
+	ret["gas"] = toCompactHex(execGas, HexPrefix::Add, 1);
 	ret["data"] = toHex(data, 2, HexPrefix::Add);
 	ret["code"] = toHex(code, 2, HexPrefix::Add);
 	return ret;
@@ -183,6 +196,7 @@ void FakeExtVM::importExec(mObject& _o)
 	value = toInt(_o["value"]);
 	gasPrice = toInt(_o["gasPrice"]);
 	gas = toInt(_o["gas"]);
+	execGas = gas;
 
 	thisTxCode.clear();
 	code = thisTxCode;
@@ -231,7 +245,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 eth::OnOpFunc FakeExtVM::simpleTrace()
 {
 
-	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
 	{
 		FakeExtVM const& ext = *static_cast<FakeExtVM const*>(voidExt);
 		eth::VM& vm = *voidVM;
@@ -247,7 +261,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
 
 		dev::LogOutputStream<eth::VMTraceChannel, false>() << o.str();
-		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << vm.gas() << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
+		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
 
 		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
@@ -276,7 +290,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			/*add all the other details*/
 			o_step.push_back(Pair("storage", storage));
 			o_step.push_back(Pair("depth", to_string(ext.depth)));
-			o_step.push_back(Pair("gas", (string)vm.gas()));
+			o_step.push_back(Pair("gas", (string)gas));
 			o_step.push_back(Pair("address", toString(ext.myAddress )));
 			o_step.push_back(Pair("step", steps ));
 			o_step.push_back(Pair("pc", (int)vm.curPC()));
@@ -305,9 +319,9 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		}
 
 		std::cout << "  " << i.first << "\n";
-		BOOST_REQUIRE(o.count("env") > 0);
-		BOOST_REQUIRE(o.count("pre") > 0);
-		BOOST_REQUIRE(o.count("exec") > 0);
+		TBOOST_REQUIRE((o.count("env") > 0));
+		TBOOST_REQUIRE((o.count("pre") > 0));
+		TBOOST_REQUIRE((o.count("exec") > 0));
 
 		FakeExtVM fev;
 		fev.importEnv(o["env"].get_obj());
@@ -322,21 +336,18 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 			fev.thisTxCode = get<3>(fev.addresses.at(fev.myAddress));
 			fev.code = fev.thisTxCode;
 		}
+		fev.codeHash = sha3(fev.code);
 
 		bytes output;
-		u256 gas;
 		bool vmExceptionOccured = false;
 		try
 		{
-			auto vm = eth::VMFactory::create(fev.gas);
+			auto vm = eth::VMFactory::create();
 			auto vmtrace = Options::get().vmtrace ? fev.simpleTrace() : OnOpFunc{};
-			auto outputRef = bytesConstRef{};
 			{
 				Listener::ExecTimeGuard guard{i.first};
-				outputRef = vm->go(fev, vmtrace);
+				output = vm->exec(fev.gas, fev, vmtrace);
 			}
-			output = outputRef.toBytes();
-			gas = vm->gas();
 		}
 		catch (VMException const&)
 		{
@@ -346,12 +357,12 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		catch (Exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << diagnostic_information(_e);
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			TBOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 		catch (std::exception const& _e)
 		{
 			cnote << "VM did throw an exception: " << _e.what();
-			BOOST_ERROR("Failed VM Test with Exception: " << _e.what());
+			TBOOST_ERROR("Failed VM Test with Exception: " << _e.what());
 		}
 
 		// delete null entries in storage for the sake of comparison
@@ -391,7 +402,20 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				o["callcreates"] = fev.exportCallCreates();
 				o["out"] = output.size() > 4096 ? "#" + toString(output.size()) : toHex(output, 2, HexPrefix::Add);
-				o["gas"] = toCompactHex(gas, HexPrefix::Add, 1);
+
+				// compare expected output with post output
+				if (o.count("expectOut") > 0)
+				{
+					std::string warning = "Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
+					if (Options::get().checkState)
+						{TBOOST_CHECK_MESSAGE((o["out"].get_str() == o["expectOut"].get_str()), warning);}
+					else
+						TBOOST_WARN_MESSAGE((o["out"].get_str() == o["expectOut"].get_str()), warning);
+
+					o.erase(o.find("expectOut"));
+				}
+
+				o["gas"] = toCompactHex(fev.gas, HexPrefix::Add, 1);
 				o["logs"] = exportLog(fev.sub.logs);
 			}
 		}
@@ -399,13 +423,13 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 		{
 			if (o.count("post") > 0)	// No exceptions expected
 			{
-				BOOST_CHECK(!vmExceptionOccured);
+				TBOOST_CHECK(!vmExceptionOccured);
 
-				BOOST_REQUIRE(o.count("post") > 0);
-				BOOST_REQUIRE(o.count("callcreates") > 0);
-				BOOST_REQUIRE(o.count("out") > 0);
-				BOOST_REQUIRE(o.count("gas") > 0);
-				BOOST_REQUIRE(o.count("logs") > 0);
+				TBOOST_REQUIRE((o.count("post") > 0));
+				TBOOST_REQUIRE((o.count("callcreates") > 0));
+				TBOOST_REQUIRE((o.count("out") > 0));
+				TBOOST_REQUIRE((o.count("gas") > 0));
+				TBOOST_REQUIRE((o.count("logs") > 0));
 
 				dev::test::FakeExtVM test;
 				test.importState(o["post"].get_obj());
@@ -414,7 +438,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				checkOutput(output, o);
 
-				BOOST_CHECK_EQUAL(toInt(o["gas"]), gas);
+				TBOOST_CHECK_EQUAL(toInt(o["gas"]), fev.gas);
 
 				State postState, expectState;
 				mObject mPostState = fev.exportState();
@@ -429,7 +453,7 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 				checkLog(fev.sub.logs, test.sub.logs);
 			}
 			else	// Exception expected
-				BOOST_CHECK(vmExceptionOccured);
+				TBOOST_CHECK(vmExceptionOccured);
 		}
 	}
 }

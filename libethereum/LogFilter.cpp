@@ -46,31 +46,16 @@ h256 LogFilter::sha3() const
 	return dev::sha3(s.out());
 }
 
-static bool isNoLater(RelativeBlock _logBlockRelation, u256 _logBlockNumber, unsigned _latest)
+bool LogFilter::isRangeFilter() const
 {
-	if (_latest == PendingBlock)
-		return true;
-	else if (_latest == LatestBlock)
-		return _logBlockRelation == RelativeBlock::Latest;
-	else
-		return _logBlockNumber <= _latest;
-}
+	if (m_addresses.size())
+		return false;
 
-static bool isNoEarlier(RelativeBlock _logBlockRelation, u256 _logBlockNumber, unsigned _earliest)
-{
-	if (_earliest == PendingBlock)
-		return _logBlockRelation == RelativeBlock::Pending;
-	else if (_earliest == LatestBlock)
-		return true;
-	else
-		return _logBlockNumber >= _earliest;
-}
+	for (auto const& t: m_topics)
+		if (t.size())
+			return false;
 
-bool LogFilter::envelops(RelativeBlock _logBlockRelation, u256 _logBlockNumber) const
-{
-	return
-		isNoLater(_logBlockRelation, _logBlockNumber, m_latest) &&
-		isNoEarlier(_logBlockRelation, _logBlockNumber, m_earliest);
+	return true;
 }
 
 bool LogFilter::matches(LogBloom _bloom) const
@@ -104,14 +89,67 @@ vector<LogBloom> LogFilter::bloomPossibilities() const
 {
 	// return combination of each of the addresses/topics
 	vector<LogBloom> ret;
-	// TODO proper combinatorics.
-	for (auto i: m_addresses)
-		ret.push_back(LogBloom().shiftBloom<3>(dev::sha3(i)));
+
+	// | every address with every topic
+	for (auto const& i: m_addresses)
+	{
+		// 1st case, there are addresses and topics
+		//
+		// m_addresses = [a0, a1];
+		// m_topics = [[t0], [t1a, t1b], [], []];
+		//
+		// blooms = [
+		// a0 | t0, a0 | t1a | t1b,
+		// a1 | t0, a1 | t1a | t1b
+		// ]
+		//
+		for (auto const& t: m_topics)
+			if (t.size())
+			{
+				LogBloom b = LogBloom().shiftBloom<3>(dev::sha3(i));
+				for (auto const &j: t)
+					b = b.shiftBloom<3>(dev::sha3(j));
+				ret.push_back(b);
+			}
+	}
+
+	// 2nd case, there are no topics
+	//
+	// m_addresses = [a0, a1];
+	// m_topics = [[t0], [t1a, t1b], [], []];
+	//
+	// blooms = [a0, a1];
+	//
+	if (!ret.size())
+		for (auto const& i: m_addresses)
+			ret.push_back(LogBloom().shiftBloom<3>(dev::sha3(i)));
+
+	// 3rd case, there are no addresses, at least create blooms from topics
+	//
+	// m_addresses = [];
+	// m_topics = [[t0], [t1a, t1b], [], []];
+	//
+	// blooms = [t0, t1a | t1b];
+	//
+	if (!m_addresses.size())
+		for (auto const& t: m_topics)
+			if (t.size())
+			{
+				LogBloom b;
+				for (auto const &j: t)
+					b = b.shiftBloom<3>(dev::sha3(j));
+				ret.push_back(b);
+			}
+
 	return ret;
 }
 
 LogEntries LogFilter::matches(TransactionReceipt const& _m) const
 {
+	// there are no addresses or topics to filter
+	if (isRangeFilter())
+		return _m.log();
+
 	LogEntries ret;
 	if (matches(_m.bloom()))
 		for (LogEntry const& e: _m.log())

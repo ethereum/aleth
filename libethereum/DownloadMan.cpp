@@ -24,6 +24,18 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+size_t const c_maxDownloadAhead = 50000; // Must not be higher than BlockQueue::c_maxUnknownCount
+
+DownloadMan::Overview DownloadMan::overview() const
+{
+	ReadGuard l(m_lock);
+	Overview ret;
+	ret.firstIncomplete = m_blocksGot.firstOut();
+	ret.lastComplete = ret.lastStarted = m_blocksGot.lastIn();// TODO: lastStarted properly
+	ret.total = m_blocksGot.size();
+	return ret;
+}
+
 DownloadSub::DownloadSub(DownloadMan& _man): m_man(&_man)
 {
 	WriteGuard l(m_man->x_subs);
@@ -53,9 +65,10 @@ h256Hash DownloadSub::nextFetch(unsigned _n)
 	if (!m_man || m_man->chainEmpty())
 		return h256Hash();
 
-	m_asked = (~(m_man->taken() + m_attempted)).lowest(_n);
-	if (m_asked.empty())
-		m_asked = (~(m_man->taken(true) + m_attempted)).lowest(_n);
+	RangeMask<unsigned> downloaded = m_man->taken(true);
+	m_asked = (~(m_man->taken(false) + m_attempted)).lowest(_n);
+	if (m_asked.empty() || m_asked.lastIn() - downloaded.firstOut() >= c_maxDownloadAhead)
+		m_asked = (~(downloaded + m_attempted)).lowest(_n);
 	m_attempted += m_asked;
 	for (auto i: m_asked)
 	{

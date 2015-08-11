@@ -55,6 +55,49 @@ void HostNodeTableHandler::processEvent(NodeId const& _n, NodeTableEventType con
 	m_host.onNodeTableEvent(_n, _e);
 }
 
+ReputationManager::ReputationManager()
+{
+}
+
+void ReputationManager::noteRude(Session const& _s, std::string const& _sub)
+{
+	DEV_WRITE_GUARDED(x_nodes)
+		m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].isRude = true;
+}
+
+bool ReputationManager::isRude(Session const& _s, std::string const& _sub) const
+{
+	DEV_READ_GUARDED(x_nodes)
+	{
+		auto nit = m_nodes.find(make_pair(_s.id(), _s.info().clientVersion));
+		if (nit == m_nodes.end())
+			return false;
+		auto sit = nit->second.subs.find(_sub);
+		bool ret = sit == nit->second.subs.end() ? false : sit->second.isRude;
+		return _sub.empty() ? ret : (ret || isRude(_s));
+	}
+	return false;
+}
+
+void ReputationManager::setData(Session const& _s, std::string const& _sub, bytes const& _data)
+{
+	DEV_WRITE_GUARDED(x_nodes)
+		m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].data = _data;
+}
+
+bytes ReputationManager::data(Session const& _s, std::string const& _sub) const
+{
+	DEV_READ_GUARDED(x_nodes)
+	{
+		auto nit = m_nodes.find(make_pair(_s.id(), _s.info().clientVersion));
+		if (nit == m_nodes.end())
+			return bytes();
+		auto sit = nit->second.subs.find(_sub);
+		return sit == nit->second.subs.end() ? bytes() : sit->second.data;
+	}
+	return bytes();
+}
+
 Host::Host(std::string const& _clientVersion, NetworkPreferences const& _n, bytesConstRef _restoreNetwork):
 	Worker("p2p", 0),
 	m_restoreNetwork(_restoreNetwork.toBytes()),
@@ -77,6 +120,15 @@ Host::~Host()
 void Host::start()
 {
 	startWorking();
+	while (isWorking() && !haveNetwork())
+		this_thread::sleep_for(chrono::milliseconds(10));
+	
+	// network start failed!
+	if (isWorking())
+		return;
+
+	clog(NetWarn) << "Network start failed!";
+	doneWorking();
 }
 
 void Host::stop()
@@ -87,11 +139,12 @@ void Host::stop()
 
 	{
 		// Although m_run is set by stop() or start(), it effects m_runTimer so x_runTimer is used instead of a mutex for m_run.
-		// when m_run == false, run() will cause this::run() to stop() ioservice
 		Guard l(x_runTimer);
 		// ignore if already stopped/stopping
 		if (!m_run)
 			return;
+		
+		// signal run() to prepare for shutdown and reset m_timer
 		m_run = false;
 	}
 
@@ -100,14 +153,18 @@ void Host::stop()
 		this_thread::sleep_for(chrono::milliseconds(50));
 
 	// stop worker thread
-	stopWorking();
+	if (isWorking())
+		stopWorking();
 }
 
 void Host::doneWorking()
 {
-	// reset ioservice (allows manually polling network, below)
+	// reset ioservice (cancels all timers and allows manually polling network, below)
 	m_ioService.reset();
 
+	DEV_GUARDED(x_timers)
+		m_timers.clear();
+	
 	// shutdown acceptor
 	m_tcp4Acceptor.cancel();
 	if (m_tcp4Acceptor.is_open())
@@ -127,15 +184,13 @@ void Host::doneWorking()
 	// disconnect pending handshake, before peers, as a handshake may create a peer
 	for (unsigned n = 0;; n = 0)
 	{
-		{
-			Guard l(x_connecting);
-			for (auto i: m_connecting)
+		DEV_GUARDED(x_connecting)
+			for (auto const& i: m_connecting)
 				if (auto h = i.lock())
 				{
 					h->cancel();
 					n++;
 				}
-		}
 		if (!n)
 			break;
 		m_ioService.poll();
@@ -144,8 +199,7 @@ void Host::doneWorking()
 	// disconnect peers
 	for (unsigned n = 0;; n = 0)
 	{
-		{
-			RecursiveGuard l(x_sessions);
+		DEV_RECURSIVE_GUARDED(x_sessions)
 			for (auto i: m_sessions)
 				if (auto p = i.second.lock())
 					if (p->isConnected())
@@ -153,7 +207,6 @@ void Host::doneWorking()
 						p->disconnect(ClientQuit);
 						n++;
 					}
-		}
 		if (!n)
 			break;
 
@@ -172,7 +225,7 @@ void Host::doneWorking()
 	m_sessions.clear();
 }
 
-void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io, bi::tcp::endpoint _endpoint)
+void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameCoder* _io, std::shared_ptr<RLPXSocket> const& _s)
 {
 	// session maybe ingress or egress so m_peers and node table entries may not exist
 	shared_ptr<Peer> p;
@@ -192,7 +245,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io
 	}
 	if (p->isOffline())
 		p->m_lastConnected = std::chrono::system_clock::now();
-	p->endpoint.address = _endpoint.address();
+	p->endpoint.address = _s->remoteEndpoint().address();
 
 	auto protocolVersion = _rlp[0].toInt<unsigned>();
 	auto clientVersion = _rlp[1].toString();
@@ -202,12 +255,16 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io
 	// clang error (previously: ... << hex << caps ...)
 	// "'operator<<' should be declared prior to the call site or in an associated namespace of one of its arguments"
 	stringstream capslog;
+
+	if (caps.size() > 1)
+		caps.erase(remove_if(caps.begin(), caps.end(), [&](CapDesc const& _r){ return any_of(caps.begin(), caps.end(), [&](CapDesc const& _o){ return _r.first == _o.first && _o.second > _r.second; }); }), caps.end());
+
 	for (auto cap: caps)
 		capslog << "(" << cap.first << "," << dec << cap.second << ")";
 	clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
 	
 	// create session so disconnects are managed
-	auto ps = make_shared<Session>(this, _io, p, PeerSessionInfo({_id, clientVersion, _endpoint.address().to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>()}));
+	auto ps = make_shared<Session>(this, _io, _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));
 	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
 	{
 		ps->disconnect(IncompatibleProtocol);
@@ -237,7 +294,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, RLPXFrameIO* _io
 		for (auto const& i: caps)
 			if (haveCapability(i))
 			{
-				ps->m_capabilities[i] = shared_ptr<Capability>(m_capabilities[i]->newPeerCapability(ps.get(), o));
+				ps->m_capabilities[i] = shared_ptr<Capability>(m_capabilities[i]->newPeerCapability(ps, o, i));
 				o += m_capabilities[i]->messageCount();
 			}
 		ps->start();
@@ -279,7 +336,8 @@ void Host::onNodeTableEvent(NodeId const& _n, NodeTableEventType const& _e)
 	{
 		clog(NetP2PNote) << "p2p.host.nodeTable.events.NodeEntryDropped " << _n;
 		RecursiveGuard l(x_sessions);
-		m_peers.erase(_n);
+		if (m_peers.count(_n) && !m_peers[_n]->required)
+			m_peers.erase(_n);
 	}
 }
 
@@ -341,43 +399,42 @@ void Host::runAcceptor()
 		auto socket = make_shared<RLPXSocket>(new bi::tcp::socket(m_ioService));
 		m_tcp4Acceptor.async_accept(socket->ref(), [=](boost::system::error_code ec)
 		{
-			if (peerCount() > 9 * m_idealPeerCount)
+			m_accepting = false;
+			if (ec || !m_run)
 			{
-				clog(NetConnect) << "Dropping incoming connect due to maximum peer count (2 * ideal peer count): " << socket->remoteEndpoint();
+				socket->close();
+				return;
+			}
+			if (peerCount() > Ingress * m_idealPeerCount)
+			{
+				clog(NetConnect) << "Dropping incoming connect due to maximum peer count (" << Ingress << " * ideal peer count): " << socket->remoteEndpoint();
 				socket->close();
 				if (ec.value() < 1)
 					runAcceptor();
 				return;
 			}
 			
-			// if no error code
 			bool success = false;
-			if (!ec)
+			try
 			{
-				try
-				{
-					// incoming connection; we don't yet know nodeid
-					auto handshake = make_shared<RLPXHandshake>(this, socket);
-					m_connecting.push_back(handshake);
-					handshake->start();
-					success = true;
-				}
-				catch (Exception const& _e)
-				{
-					clog(NetWarn) << "ERROR: " << diagnostic_information(_e);
-				}
-				catch (std::exception const& _e)
-				{
-					clog(NetWarn) << "ERROR: " << _e.what();
-				}
+				// incoming connection; we don't yet know nodeid
+				auto handshake = make_shared<RLPXHandshake>(this, socket);
+				m_connecting.push_back(handshake);
+				handshake->start();
+				success = true;
+			}
+			catch (Exception const& _e)
+			{
+				clog(NetWarn) << "ERROR: " << diagnostic_information(_e);
+			}
+			catch (std::exception const& _e)
+			{
+				clog(NetWarn) << "ERROR: " << _e.what();
 			}
 
 			if (!success)
 				socket->ref().close();
-			
-			m_accepting = false;
-			if (ec.value() < 1)
-				runAcceptor();
+			runAcceptor();
 		});
 	}
 }
@@ -417,6 +474,9 @@ void Host::addNode(NodeId const& _node, NodeIPEndpoint const& _endpoint)
 
 void Host::requirePeer(NodeId const& _n, NodeIPEndpoint const& _endpoint)
 {
+	if (!m_run)
+		return;
+	
 	Node node(_n, _endpoint, true);
 	if (_n)
 	{
@@ -434,22 +494,21 @@ void Host::requirePeer(NodeId const& _n, NodeIPEndpoint const& _endpoint)
 				p.reset(new Peer(node));
 				m_peers[_n] = p;
 			}
-		connect(p);
 	}
 	else if (m_nodeTable)
 	{
-		shared_ptr<boost::asio::deadline_timer> t(new boost::asio::deadline_timer(m_ioService));
-		m_timers.push_back(t);
-		
 		m_nodeTable->addNode(node);
+		shared_ptr<boost::asio::deadline_timer> t(new boost::asio::deadline_timer(m_ioService));
 		t->expires_from_now(boost::posix_time::milliseconds(600));
 		t->async_wait([this, _n](boost::system::error_code const& _ec)
 		{
-			if (!_ec && m_nodeTable)
-				// FIXME RACE CONDITION (use weak_ptr or mutex).
-				if (auto n = m_nodeTable->node(_n))
-					requirePeer(n.id, n.endpoint);
+			if (!_ec)
+				if (m_nodeTable)
+					if (auto n = m_nodeTable->node(_n))
+						requirePeer(n.id, n.endpoint);
 		});
+		DEV_GUARDED(x_timers)
+			m_timers.push_back(t);
 	}
 }
 
@@ -464,8 +523,6 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
 {
 	if (!m_run)
 		return;
-
-	_p->m_lastAttempted = std::chrono::system_clock::now();
 	
 	if (havePeerSession(_p->id))
 	{
@@ -491,6 +548,8 @@ void Host::connect(std::shared_ptr<Peer> const& _p)
 		m_pendingPeerConns.insert(nptr);
 	}
 
+	_p->m_lastAttempted = std::chrono::system_clock::now();
+	
 	bi::tcp::endpoint ep(_p->endpoint);
 	clog(NetConnect) << "Attempting connection to node" << _p->id << "@" << ep << "from" << id();
 	auto socket = make_shared<RLPXSocket>(new bi::tcp::socket(m_ioService));
@@ -532,7 +591,8 @@ PeerSessionInfos Host::peerSessionInfo() const
 	for (auto& i: m_sessions)
 		if (auto j = i.second.lock())
 			if (j->isConnected())
-				ret.push_back(j->m_info);
+				DEV_GUARDED(j->x_info)
+					ret.push_back(j->m_info);
 	return ret;
 }
 
@@ -566,21 +626,13 @@ void Host::run(boost::system::error_code const&)
 	m_nodeTable->processEvents();
 
 	// cleanup zombies
-	{
-		Guard l(x_connecting);
-		m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.lock(); });
-	}
-	{
-		Guard l(x_timers);
+	DEV_GUARDED(x_connecting)
+		m_connecting.remove_if([](std::weak_ptr<RLPXHandshake> h){ return h.expired(); });
+	DEV_GUARDED(x_timers)
 		m_timers.remove_if([](std::shared_ptr<boost::asio::deadline_timer> t)
 		{
-			return t->expires_from_now().total_milliseconds() > 0;
+			return t->expires_from_now().total_milliseconds() < 0;
 		});
-	}
-	
-	for (auto p: m_sessions)
-		if (auto pp = p.second.lock())
-			pp->serviceNodesRequest();
 
 	keepAlivePeers();
 	
@@ -590,27 +642,36 @@ void Host::run(boost::system::error_code const&)
 	// updated. // disconnectLatePeers();
 
 	// todo: update peerSlotsAvailable()
-	unsigned pendingCount = 0;
-	DEV_GUARDED(x_pendingNodeConns)
-		pendingCount = m_pendingPeerConns.size();
-	int openSlots = m_idealPeerCount - peerCount() - pendingCount;
-	if (openSlots > 0)
+	
+	list<shared_ptr<Peer>> toConnect;
+	unsigned reqConn = 0;
 	{
-		list<shared_ptr<Peer>> toConnect;
+		RecursiveGuard l(x_sessions);
+		for (auto const& p: m_peers)
 		{
-			RecursiveGuard l(x_sessions);
-			for (auto p: m_peers)
-				if (p.second->shouldReconnect() && !havePeerSession(p.second->id))
-					toConnect.push_back(p.second);
+			bool haveSession = havePeerSession(p.second->id);
+			bool required = p.second->required;
+			if (haveSession && required)
+				reqConn++;
+			else if (!haveSession && p.second->shouldReconnect() && (!m_netPrefs.pin || required))
+				toConnect.push_back(p.second);
 		}
-		
-		for (auto p: toConnect)
-			if (openSlots--)
-				connect(p);
-			else
-				break;
-		
-		m_nodeTable->discover();
+	}
+
+	for (auto p: toConnect)
+		if (p->required && reqConn++ < m_idealPeerCount)
+			connect(p);
+	
+	if (!m_netPrefs.pin)
+	{
+		unsigned pendingCount = 0;
+		DEV_GUARDED(x_pendingNodeConns)
+			pendingCount = m_pendingPeerConns.size();
+		int openSlots = m_idealPeerCount - peerCount() - pendingCount + reqConn;
+		if (openSlots > 0)
+			for (auto p: toConnect)
+				if (!p->required && openSlots--)
+					connect(p);
 	}
 
 	auto runcb = [this](boost::system::error_code const& error) { run(error); };
@@ -651,7 +712,7 @@ void Host::startedWorking()
 	else
 		clog(NetP2PNote) << "p2p.start.notice id:" << id() << "TCP Listen port is invalid or unavailable.";
 
-	shared_ptr<NodeTable> nodeTable(new NodeTable(m_ioService, m_alias, NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort())));
+	shared_ptr<NodeTable> nodeTable(new NodeTable(m_ioService, m_alias, NodeIPEndpoint(bi::address::from_string(listenAddress()), listenPort(), listenPort()), m_netPrefs.discovery));
 	nodeTable->setEventHandler(new HostNodeTableHandler(*this));
 	m_nodeTable = nodeTable;
 	restoreNetwork(&m_restoreNetwork);
@@ -663,8 +724,16 @@ void Host::startedWorking()
 
 void Host::doWork()
 {
-	if (m_run)
-		m_ioService.run();
+	try
+	{
+		if (m_run)
+			m_ioService.run();
+	}
+	catch (std::exception const& _e)
+	{
+		clog(NetP2PWarn) << "Exception in Network Thread:" << _e.what();
+		clog(NetP2PWarn) << "Network Restart is Recommended.";
+	}
 }
 
 void Host::keepAlivePeers()
@@ -830,7 +899,7 @@ KeyPair Host::networkAlias(bytesConstRef _b)
 {
 	RLP r(_b);
 	if (r.itemCount() == 3 && r[0].isInt() && r[0].toInt<unsigned>() >= 3)
-		return move(KeyPair(move(Secret(r[1].toBytes()))));
+		return KeyPair(Secret(r[1].toBytes()));
 	else
-		return move(KeyPair::create());
+		return KeyPair::create();
 }

@@ -25,11 +25,13 @@
 #include <thread>
 
 #include <boost/filesystem.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include <libdevcore/Log.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
+#include "BuildInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -50,7 +52,16 @@ WebThreeDirect::WebThreeDirect(
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
-		m_ethereum.reset(new eth::Client(&m_net, _dbPath, _we, 0));
+	{
+		m_ethereum.reset(new eth::EthashClient(&m_net, shared_ptr<GasPricer>(), _dbPath, _we, 0));
+		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
+		vector<string> bps;
+		boost::split(bps, bp, boost::is_any_of("/"));
+		bps[0] = bps[0].substr(0, 5);
+		bps[1] = bps[1].substr(0, 3);
+		bps.back() = bps.back().substr(0, 3);
+		m_ethereum->setExtraData(rlpList(0, string(dev::Version) + "++" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? "-" : "*") + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, "/")));
+	}
 
 	if (_interfaces.count("shh"))
 		m_whisper = m_net.registerCapability<WhisperHost>(new WhisperHost);
@@ -70,6 +81,11 @@ WebThreeDirect::~WebThreeDirect()
 	// use bits of data owned by m_ethereum).
 	m_net.stop();
 	m_ethereum.reset();
+}
+
+std::string WebThreeDirect::composeClientVersion(std::string const& _client, std::string const& _clientName)
+{
+	return _client + "-" + "v" + dev::Version + "-" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + (ETH_CLEAN_REPO ? "" : "*") + "/" + _clientName + "/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
 }
 
 p2p::NetworkPreferences const& WebThreeDirect::networkPreferences() const

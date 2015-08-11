@@ -28,15 +28,18 @@
 #include <libethcore/Common.h>
 
 class QComboBox;
+class QSpinBox;
 
 namespace dev { namespace eth { struct StateDiff; class KeyManager; } }
 
-#define Small "font-size: small; "
-#define Mono "font-family: Ubuntu Mono, Monospace, Lucida Console, Courier New; font-weight: bold; "
-#define Div(S) "<div style=\"" S "\">"
-#define Span(S) "<span style=\"" S "\">"
+#define ETH_HTML_SMALL "font-size: small; "
+#define ETH_HTML_MONO "font-family: Ubuntu Mono, Monospace, Lucida Console, Courier New; font-weight: bold; "
+#define ETH_HTML_DIV(S) "<div style=\"" S "\">"
+#define ETH_HTML_SPAN(S) "<span style=\"" S "\">"
 
 void initUnits(QComboBox* _b);
+void setValueUnits(QComboBox* _units, QSpinBox* _value, dev::u256 _v);
+dev::u256 fromValueUnits(QComboBox* _units, QSpinBox* _value);
 
 std::vector<dev::KeyPair> keysAsVector(QList<dev::KeyPair> const& _keys);
 
@@ -67,5 +70,6 @@ public:
 	virtual dev::Secret retrieveSecret(dev::Address const& _a) const = 0;
 	virtual dev::eth::KeyManager& keyManager() = 0;
 
+	virtual dev::u256 gasPrice() const = 0;
 };
 

@@ -41,6 +41,10 @@ QContractDefinition::QContractDefinition(QObject* _parent, dev::solidity::Contra
 
 	for (auto const& it: _contract->getInterfaceFunctions())
 		m_functions.append(new QFunctionDefinition(parent, it.second));
+
+	for (auto const& it: _contract->getEvents())
+		m_events.append(new QFunctionDefinition(parent, it));
+
 }
 
 QFunctionDefinition const* QContractDefinition::getFunction(dev::FixedHash<4> _hash) const

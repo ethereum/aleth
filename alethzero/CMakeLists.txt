@@ -7,6 +7,11 @@ if (${CMAKE_MAJOR_VERSION} GREATER 2)
 	cmake_policy(SET CMP0043 OLD)
 endif()
 
+if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.6") AND NOT APPLE)
+	# Supress warnings for qt headers for clang+ccache
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
+endif ()
+
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 aux_source_directory(. SRC_LIST)
 
@@ -23,6 +28,8 @@ qt5_wrap_ui(ui_Connect.h Connect.ui)
 qt5_wrap_ui(ui_Debugger.h Debugger.ui)
 qt5_wrap_ui(ui_Transact.h Transact.ui)
 qt5_wrap_ui(ui_ExportState.h ExportState.ui)
+qt5_wrap_ui(ui_GetPassword.h GetPassword.ui)
+qt5_wrap_ui(ui_GasPricing.h GasPricing.ui)
 
 file(GLOB HEADERS "*.h")
 
@@ -35,7 +42,7 @@ endif ()
 # eth_add_executable is defined in cmake/EthExecutableHelper.cmake
 eth_add_executable(${EXECUTABLE} 
 	ICON alethzero
-	UI_RESOURCES alethzero.icns Main.ui Connect.ui Debugger.ui Transact.ui ExportState.ui
+	UI_RESOURCES alethzero.icns Main.ui Connect.ui Debugger.ui Transact.ui ExportState.ui GetPassword.ui GasPricing.ui
 	WIN_RESOURCES alethzero.rc
 )
 
@@ -50,7 +57,6 @@ target_link_libraries(${EXECUTABLE} ethereum)
 target_link_libraries(${EXECUTABLE} evm)
 target_link_libraries(${EXECUTABLE} ethcore)
 target_link_libraries(${EXECUTABLE} devcrypto)
-target_link_libraries(${EXECUTABLE} secp256k1)
 target_link_libraries(${EXECUTABLE} lll)
 if (SOLIDITY)
 	target_link_libraries(${EXECUTABLE} solidity)
@@ -66,5 +72,5 @@ if (SERPENT)
 endif()
 
 # eth_install_executable is defined in cmake/EthExecutableHelper.cmake
-eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS)
+eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS EVMJIT_DLLS OpenCL_DLLS)
 

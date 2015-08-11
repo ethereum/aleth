@@ -22,7 +22,9 @@
  */
 
 #include <random>
-#include <secp256k1/secp256k1.h>
+#if ETH_HAVE_SECP256K1
+#include <secp256k1/include/secp256k1.h>
+#endif
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
@@ -31,15 +33,19 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
+#include <test/TestUtils.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::crypto;
 using namespace CryptoPP;
 
+BOOST_GLOBAL_FIXTURE( MoveNonceToTempDir )
+
 BOOST_AUTO_TEST_SUITE(devcrypto)
 
-static Secp256k1 s_secp256k1;
+static Secp256k1PP s_secp256k1;
 static CryptoPP::AutoSeededRandomPool s_rng;
 static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
@@ -59,6 +65,17 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 	h256 emptyListSHA3(fromHex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
 	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
 }
+
+#if ETH_HAVE_SECP256K1
+BOOST_AUTO_TEST_CASE(secp256k1lib)
+{
+	KeyPair k = KeyPair::create();
+	BOOST_REQUIRE(!!k.sec());
+	BOOST_REQUIRE(!!k.pub());
+	Public test = toPublic(k.sec());
+	BOOST_REQUIRE(k.pub() == test);
+}
+#endif
 
 BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
@@ -97,7 +114,9 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 
 BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 {
-	secp256k1_start();
+#if ETH_HAVE_SECP256K1
+	secp256k1_context_t* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
+#endif
 	
 	// base secret
 	Secret secret(sha3("privacy"));
@@ -146,12 +165,15 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 		byte dersig[72];
 		size_t cssz = DSAConvertSignatureFormat(dersig, 72, DSA_DER, sig.data(), 64, DSA_P1363);
 		BOOST_CHECK(cssz <= 72);
-		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(he.data(), sizeof(he), dersig, cssz, encpub, 65));
+#if ETH_HAVE_SECP256K1
+		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(ctx, he.data(), dersig, cssz, encpub, 65));
+#endif
 	}
 }
 
 BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 {
+#ifdef CRYPTOPPNOTBROKEN
 	secp256k1_start();
 	
 	// cryptopp integer encoding
@@ -233,6 +255,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		BOOST_CHECK(cssz <= 72);
 		BOOST_REQUIRE(1 == secp256k1_ecdsa_verify(hm.data(), sizeof(hm), dersig, cssz, encpub, 65));
 	}
+#endif
 }
 
 BOOST_AUTO_TEST_CASE(sha3_norestart)
@@ -743,7 +766,6 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 BOOST_AUTO_TEST_CASE(eth_keypairs)
 {
 	cnote << "Testing Crypto...";
-	secp256k1_start();
 
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));
@@ -767,7 +789,6 @@ BOOST_AUTO_TEST_CASE(eth_keypairs)
 int cryptoTest()
 {
 	cnote << "Testing Crypto...";
-	secp256k1_start();
 
 	KeyPair p(Secret(fromHex("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4")));
 	BOOST_REQUIRE(p.pub() == Public(fromHex("97466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f")));

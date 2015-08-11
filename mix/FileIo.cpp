@@ -72,8 +72,16 @@ QString FileIo::pathFromUrl(QString const& _url)
 void FileIo::makeDir(QString const& _url)
 {
 	QDir dirPath(pathFromUrl(_url));
-	if (!dirPath.exists())
-		dirPath.mkpath(dirPath.path());
+	if (dirPath.exists())
+		dirPath.removeRecursively();
+	dirPath.mkpath(dirPath.path());
+}
+
+void FileIo::deleteDir(QString const& _url)
+{
+	QDir dirPath(pathFromUrl(_url));
+	if (dirPath.exists())
+		dirPath.removeRecursively();
 }
 
 QString FileIo::readFile(QString const& _url)
@@ -180,13 +188,13 @@ QStringList FileIo::makePackage(QString const& _deploymentFolder)
 	dev::h256 dappHash = dev::sha3(dapp);
 	//encrypt
 	KeyPair key(dappHash);
-	Secp256k1 enc;
+	Secp256k1PP enc;
 	enc.encrypt(key.pub(), dapp);
 
 	QUrl url(_deploymentFolder + "package.dapp");
 	QFile compressed(url.path());
 	QByteArray qFileBytes((char*)dapp.data(), static_cast<int>(dapp.size()));
-	if (compressed.open(QIODevice::WriteOnly))
+	if (compressed.open(QIODevice::WriteOnly | QIODevice::Truncate))
 	{
 		compressed.write(qFileBytes);
 		compressed.flush();

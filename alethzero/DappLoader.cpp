@@ -108,6 +108,7 @@ void DappLoader::downloadComplete(QNetworkReply* _reply)
 		//inject web3 js
 		QByteArray content = "<script>\n";
 		content.append(web3Content());
+		content.append(("web3.admin.setSessionKey('" + m_sessionKey + "');").c_str());
 		content.append("</script>\n");
 		content.append(_reply->readAll());
 		QString contentType = _reply->header(QNetworkRequest::ContentTypeHeader).toString();
@@ -128,7 +129,7 @@ void DappLoader::downloadComplete(QNetworkReply* _reply)
 
 		h256 expected = m_uriHashes[requestUrl];
 		bytes package(reinterpret_cast<unsigned char const*>(data.constData()), reinterpret_cast<unsigned char const*>(data.constData() + data.size()));
-		Secp256k1 dec;
+		Secp256k1PP dec;
 		dec.decrypt(expected, package);
 		h256 got = sha3(package);
 		if (got != expected)
@@ -191,6 +192,8 @@ QByteArray const& DappLoader::web3Content()
 		code += contentsOfQResource(":/js/webthree.js");
 		code += "\n";
 		code += contentsOfQResource(":/js/setup.js");
+		code += "\n";
+		code += contentsOfQResource(":/js/admin.js");
 		code += "\n";
 		m_web3Js = code.toLatin1();
 	}

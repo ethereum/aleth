@@ -27,9 +27,30 @@
 #include <boost/filesystem.hpp>
 
 #include "JsonSpiritHeaders.h"
+#include <libethcore/Ethash.h>
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
+
+#ifdef NOBOOST
+	#define TBOOST_REQUIRE(arg) if(arg == false) throw dev::Exception();
+	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
+	#define TBOOST_CHECK_EQUAL(arg1, arg2) if(arg1 != arg2) throw dev::Exception();
+	#define TBOOST_CHECK(arg) if(arg == false) throw dev::Exception();
+	#define TBOOST_REQUIRE_MESSAGE(arg1, arg2) if(arg1 == false) throw dev::Exception();
+	#define TBOOST_CHECK_MESSAGE(arg1, arg2) if(arg1 == false) throw dev::Exception();
+	#define TBOOST_WARN_MESSAGE(arg1, arg2) throw dev::Exception();
+	#define TBOOST_ERROR(arg) throw dev::Exception();
+#else
+	#define TBOOST_REQUIRE(arg) BOOST_REQUIRE(arg)
+	#define TBOOST_REQUIRE_EQUAL(arg1, arg2) BOOST_REQUIRE_EQUAL(arg1, arg2)
+	#define TBOOST_CHECK(arg) BOOST_CHECK(arg)
+	#define TBOOST_CHECK_EQUAL(arg1, arg2) BOOST_CHECK_EQUAL(arg1, arg2)
+	#define TBOOST_CHECK_MESSAGE(arg1, arg2) BOOST_CHECK_MESSAGE(arg1, arg2)
+	#define TBOOST_REQUIRE_MESSAGE(arg1, arg2) BOOST_REQUIRE_MESSAGE(arg1, arg2)
+	#define TBOOST_WARN_MESSAGE(arg1, arg2) BOOST_WARN_MESSAGE(arg1, arg2)
+	#define TBOOST_ERROR(arg) BOOST_ERROR(arg)
+#endif
 
 namespace dev
 {
@@ -42,7 +63,7 @@ class State;
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 void mine(State& _s, BlockChain const& _bc);
-void mine(BlockInfo& _bi);
+void mine(Ethash::BlockHeader& _bi);
 
 }
 
@@ -155,13 +176,34 @@ void checkOutput(bytes const& _output, json_spirit::mObject& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
-
+dev::eth::Ethash::BlockHeader constructHeader(
+	h256 const& _parentHash,
+	h256 const& _sha3Uncles,
+	Address const& _coinbaseAddress,
+	h256 const& _stateRoot,
+	h256 const& _transactionsRoot,
+	h256 const& _receiptsRoot,
+	dev::eth::LogBloom const& _logBloom,
+	u256 const& _difficulty,
+	u256 const& _number,
+	u256 const& _gasLimit,
+	u256 const& _gasUsed,
+	u256 const& _timestamp,
+	bytes const& _extraData);
+void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests);
 void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
+
+//Fill Test Functions
+void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
+void doStateTests(json_spirit::mValue& v, bool _fillin);
+void doVMTests(json_spirit::mValue& v, bool _fillin);
+void doBlockchainTests(json_spirit::mValue& _v, bool _fillin);
+void doRlpTests(json_spirit::mValue& v, bool _fillin);
 
 template<typename mapType>
 void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
@@ -171,9 +213,9 @@ void checkAddresses(mapType& _expectedAddrs, mapType& _resultAddrs)
 		auto& resultAddr = resultPair.first;
 		auto expectedAddrIt = _expectedAddrs.find(resultAddr);
 		if (expectedAddrIt == _expectedAddrs.end())
-			BOOST_ERROR("Missing result address " << resultAddr);
+			TBOOST_ERROR("Missing result address " << resultAddr);
 	}
-	BOOST_CHECK(_expectedAddrs == _resultAddrs);
+	TBOOST_CHECK((_expectedAddrs == _resultAddrs));
 }
 
 class Options
@@ -184,6 +226,7 @@ public:
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool checkState = false;///< Throw error when checking test states
+	bool fulloutput = false;///< Replace large output to just it's length
 
 	/// Test selection
 	/// @{
@@ -196,6 +239,8 @@ public:
 	bool inputLimits = false;
 	bool bigData = false;
 	bool wallet = false;
+	bool nonetwork = false;
+	bool nodag = true;
 	/// @}
 
 	/// Get reference to options

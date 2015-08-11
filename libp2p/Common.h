@@ -37,6 +37,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/RLP.h>
+#include <libdevcore/Guards.h>
 namespace ba = boost::asio;
 namespace bi = boost::asio::ip;
 
@@ -149,14 +150,15 @@ using CapDescs = std::vector<CapDesc>;
  */
 struct PeerSessionInfo
 {
-	NodeId id;
-	std::string clientVersion;
-	std::string host;
-	unsigned short port;
+	NodeId const id;
+	std::string const clientVersion;
+	std::string const host;
+	unsigned short const port;
 	std::chrono::steady_clock::duration lastPing;
-	std::set<CapDesc> caps;
+	std::set<CapDesc> const caps;
 	unsigned socketId;
 	std::map<std::string, std::string> notes;
+	unsigned const protocolVersion;
 };
 
 using PeerSessionInfos = std::vector<PeerSessionInfo>;
@@ -183,8 +185,8 @@ struct NodeIPEndpoint
 	uint16_t udpPort = 0;
 	uint16_t tcpPort = 0;
 	
-	operator bi::udp::endpoint() const { return std::move(bi::udp::endpoint(address, udpPort)); }
-	operator bi::tcp::endpoint() const { return std::move(bi::tcp::endpoint(address, tcpPort)); }
+	operator bi::udp::endpoint() const { return bi::udp::endpoint(address, udpPort); }
+	operator bi::tcp::endpoint() const { return bi::tcp::endpoint(address, tcpPort); }
 	
 	operator bool() const { return !address.is_unspecified() && udpPort > 0 && tcpPort > 0; }
 	
@@ -213,6 +215,46 @@ struct Node
 	virtual operator bool() const { return (bool)id; }
 };
 
+class DeadlineOps
+{
+	class DeadlineOp
+	{
+	public:
+		DeadlineOp(ba::io_service& _io, unsigned _msInFuture, std::function<void(boost::system::error_code const&)> const& _f): m_timer(new ba::deadline_timer(_io)) { m_timer->expires_from_now(boost::posix_time::milliseconds(_msInFuture)); m_timer->async_wait(_f); }
+		~DeadlineOp() {}
+		
+		DeadlineOp(DeadlineOp&& _s): m_timer(_s.m_timer.release()) {}
+		DeadlineOp& operator=(DeadlineOp&& _s) { m_timer.reset(_s.m_timer.release()); return *this; }
+		
+		bool expired() { Guard l(x_timer); return m_timer->expires_from_now().total_nanoseconds() <= 0; }
+		void wait() { Guard l(x_timer); m_timer->wait(); }
+		
+	private:
+		std::unique_ptr<ba::deadline_timer> m_timer;
+		Mutex x_timer;
+	};
+	
+public:
+	DeadlineOps(ba::io_service& _io, unsigned _reapIntervalMs = 100): m_io(_io), m_reapIntervalMs(_reapIntervalMs), m_stopped(false) { reap(); }
+	~DeadlineOps() { stop(); }
+
+	void schedule(unsigned _msInFuture, std::function<void(boost::system::error_code const&)> const& _f) { if (m_stopped) return; DEV_GUARDED(x_timers) m_timers.emplace_back(m_io, _msInFuture, _f); }	
+
+	void stop() { m_stopped = true; DEV_GUARDED(x_timers) m_timers.clear(); }
+	
+protected:
+	void reap();
+	
+private:
+	ba::io_service& m_io;
+	unsigned m_reapIntervalMs;
+	
+	std::vector<DeadlineOp> m_timers;
+	Mutex x_timers;
+	
+	std::atomic<bool> m_stopped;
+};
+
 }
 	
 /// Simple stream output for a NodeIPEndpoint.
@@ -235,7 +277,7 @@ template <> struct hash<bi::address>
 			return boost::hash_range(range.begin(), range.end());
 		}
 		if (_a.is_unspecified())
-			return static_cast<size_t>(0x3487194039229152ul);  // Chosen by fair dice roll, guaranteed to be random
+			return static_cast<size_t>(0x3487194039229152ull);  // Chosen by fair dice roll, guaranteed to be random
 		return std::hash<std::string>()(_a.to_string());
 	}
 };

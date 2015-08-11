@@ -1,31 +1,26 @@
 import QtQuick 2.0
-
+import QtQuick.Controls 1.1
 Item
 {
 	property alias value: textinput.text
 	property alias readOnly: textinput.readOnly
 	id: editRoot
-	height: 20
-	width: readOnly ? textinput.implicitWidth : 150
-
-	SourceSansProBold
-	{
-		id: boldFont
+	width: 200
+	DebuggerPaneStyle {
+		id: dbgStyle
 	}
 
-	Rectangle {
-		anchors.fill: parent
-		radius: 4
-		TextInput {
-			id: textinput
-			text: value
+	TextField {
+		anchors.verticalCenter: parent.verticalCenter
+		id: textinput
+		selectByMouse: true
+		text: value
+		implicitWidth: 200
+		MouseArea {
+			id: mouseArea
 			anchors.fill: parent
-			font.family: boldFont.name
-			clip: true
-			selectByMouse: true
+			hoverEnabled: true
+			onClicked: textinput.forceActiveFocus()
 		}
 	}
 }
-
-
-

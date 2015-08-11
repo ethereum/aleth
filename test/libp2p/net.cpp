@@ -26,6 +26,8 @@
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
 #include <libp2p/NodeTable.h>
+#include <test/TestHelper.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -74,7 +76,7 @@ struct TestNodeTable: public NodeTable
 			ret.push_back(make_pair(k,s_basePort+i));
 		}
 
-		return std::move(ret);
+		return ret;
 	}
 
 	void pingTestNodes(std::vector<std::pair<KeyPair,unsigned>> const& _testNodes)
@@ -153,6 +155,9 @@ public:
 
 BOOST_AUTO_TEST_CASE(requestTimeout)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	using TimePoint = std::chrono::steady_clock::time_point;
 	using RequestTimeout = std::pair<NodeId, TimePoint>;
 	
@@ -220,6 +225,9 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
 
 BOOST_AUTO_TEST_CASE(v2PingNodePacket)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	// test old versino of pingNode packet w/new
 	RLPStream s;
 	s.appendList(3); s << "1.1.1.1" << 30303 << std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + chrono::seconds(60)).time_since_epoch()).count();
@@ -231,6 +239,9 @@ BOOST_AUTO_TEST_CASE(v2PingNodePacket)
 
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	KeyPair k = KeyPair::create();
 	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
 	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
@@ -256,6 +267,9 @@ BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 
 BOOST_AUTO_TEST_CASE(neighboursPacket)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	KeyPair k = KeyPair::create();
 	std::vector<std::pair<KeyPair,unsigned>> testNodes(TestNodeTable::createTestNodes(16));
 	bi::udp::endpoint to(boost::asio::ip::address::from_string("127.0.0.1"), 30000);
@@ -291,39 +305,27 @@ BOOST_AUTO_TEST_CASE(test_findnode_neighbours)
 
 BOOST_AUTO_TEST_CASE(kademlia)
 {
-	// Not yet a 'real' test.
+	if (test::Options::get().nonetwork)
+		return;
+
 	TestNodeTableHost node(8);
 	node.start();
-	node.nodeTable->discover(); // ideally, joining with empty node table logs warning we can check for
 	node.setup();
 	node.populate();
-	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-
 	node.populateAll();
-	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-
 	auto nodes = node.nodeTable->nodes();
 	nodes.sort();
-
 	node.nodeTable->reset();
-	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-
 	node.populate(1);
-	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-
-	node.nodeTable->discover();
 	this_thread::sleep_for(chrono::milliseconds(2000));
-	clog << "NodeTable:\n" << *node.nodeTable.get() << endl;
-
 	BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
-
-	auto netNodes = node.nodeTable->nodes();
-	netNodes.sort();
-
 }
 
 BOOST_AUTO_TEST_CASE(udpOnce)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300), bytes({65,65,65,65}));
 	TestUDPSocket a; a.m_socket->connect(); a.start();
 	a.m_socket->send(d);
@@ -335,8 +337,33 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(netTypes)
 
+BOOST_AUTO_TEST_CASE(deadlineTimer)
+{
+	ba::io_service io;
+	ba::deadline_timer t(io);
+	bool start = false;
+	boost::system::error_code ec;
+	std::atomic<unsigned> fired(0);
+	
+	thread thread([&](){ while(!start) this_thread::sleep_for(chrono::milliseconds(10)); io.run(); });
+	t.expires_from_now(boost::posix_time::milliseconds(200));
+	start = true;
+	t.async_wait([&](boost::system::error_code const& _ec){ ec = _ec; fired++; });
+	BOOST_REQUIRE_NO_THROW(t.wait());
+	this_thread::sleep_for(chrono::milliseconds(250));
+	auto expire = t.expires_from_now().total_milliseconds();
+	BOOST_REQUIRE(expire <= 0);
+	BOOST_REQUIRE(fired == 1);
+	BOOST_REQUIRE(!ec);
+	io.stop();
+	thread.join();
+}
+
 BOOST_AUTO_TEST_CASE(unspecifiedNode)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	Node n = UnspecifiedNode;
 	BOOST_REQUIRE(!n);
 	
@@ -350,6 +377,9 @@ BOOST_AUTO_TEST_CASE(unspecifiedNode)
 
 BOOST_AUTO_TEST_CASE(nodeTableReturnsUnspecifiedNode)
 {
+	if (test::Options::get().nonetwork)
+		return;
+
 	ba::io_service io;
 	NodeTable t(io, KeyPair::create(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), 30303, 30303));
 	if (Node n = t.node(NodeId()))

@@ -116,6 +116,7 @@ void CompilerStack::parse()
 				resolver.resolveNamesAndTypes(*contract);
 				m_contracts[contract->getName()].contract = contract;
 			}
+	InterfaceHandler interfaceHandler;
 	for (Source const* source: m_sourceOrder)
 		for (ASTPointer<ASTNode> const& node: source->ast->getNodes())
 			if (ContractDefinition* contract = dynamic_cast<ContractDefinition*>(node.get()))
@@ -123,6 +124,8 @@ void CompilerStack::parse()
 				m_globalContext->setCurrentContract(*contract);
 				resolver.updateDeclaration(*m_globalContext->getCurrentThis());
 				resolver.checkTypeRequirements(*contract);
+				contract->setDevDocumentation(interfaceHandler.devDocumentation(*contract));
+				contract->setUserDocumentation(interfaceHandler.userDocumentation(*contract));
 				m_contracts[contract->getName()].contract = contract;
 			}
 	m_parseSuccessful = true;
@@ -145,7 +148,7 @@ vector<string> CompilerStack::getContractNames() const
 }
 
 
-void CompilerStack::compile(bool _optimize)
+void CompilerStack::compile(bool _optimize, unsigned _runs)
 {
 	if (!m_parseSuccessful)
 		parse();
@@ -157,9 +160,9 @@ void CompilerStack::compile(bool _optimize)
 			{
 				if (!contract->isFullyImplemented())
 					continue;
-				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize);
+				shared_ptr<Compiler> compiler = make_shared<Compiler>(_optimize, _runs);
 				compiler->compileContract(*contract, contractBytecode);
-				Contract& compiledContract = m_contracts[contract->getName()];
+				Contract& compiledContract = m_contracts.at(contract->getName());
 				compiledContract.bytecode = compiler->getAssembledBytecode();
 				compiledContract.runtimeBytecode = compiler->getRuntimeBytecode();
 				compiledContract.compiler = move(compiler);
@@ -231,6 +234,8 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	Contract const& contract = getContract(_contractName);
 
 	std::unique_ptr<string const>* doc;
+
+	// checks wheather we already have the documentation
 	switch (_type)
 	{
 	case DocumentationType::NatspecUser:
@@ -248,8 +253,11 @@ string const& CompilerStack::getMetadata(string const& _contractName, Documentat
 	default:
 		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Illegal documentation type."));
 	}
+
+	// caches the result
 	if (!*doc)
-		*doc = contract.interfaceHandler->getDocumentation(*contract.contract, _type);
+		doc->reset(new string(contract.interfaceHandler->getDocumentation(*contract.contract, _type)));
+
 	return *(*doc);
 }
 
@@ -266,6 +274,24 @@ SourceUnit const& CompilerStack::getAST(string const& _sourceName) const
 ContractDefinition const& CompilerStack::getContractDefinition(string const& _contractName) const
 {
 	return *getContract(_contractName).contract;
+}
+
+size_t CompilerStack::getFunctionEntryPoint(
+	std::string const& _contractName,
+	FunctionDefinition const& _function
+) const
+{
+	shared_ptr<Compiler> const& compiler = getContract(_contractName).compiler;
+	if (!compiler)
+		return 0;
+	eth::AssemblyItem tag = compiler->getFunctionEntryLabel(_function);
+	if (tag.type() == eth::UndefinedItem)
+		return 0;
+	eth::AssemblyItems const& items = compiler->getRuntimeAssemblyItems();
+	for (size_t i = 0; i < items.size(); ++i)
+		if (items.at(i).type() == eth::Tag && items.at(i).data() == tag.data())
+			return i;
+	return 0;
 }
 
 bytes CompilerStack::staticCompile(std::string const& _sourceCode, bool _optimize)

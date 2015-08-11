@@ -21,6 +21,7 @@
  */
 
 #include <algorithm>
+#include <functional>
 #include <boost/range/adaptor/reversed.hpp>
 #include <libsolidity/Utils.h>
 #include <libsolidity/AST.h>
@@ -174,24 +175,40 @@ void ContractDefinition::checkDuplicateFunctions() const
 
 void ContractDefinition::checkAbstractFunctions()
 {
-	map<string, bool> functions;
+	// Mapping from name to function definition (exactly one per argument type equality class) and
+	// flag to indicate whether it is fully implemented.
+	using FunTypeAndFlag = std::pair<FunctionTypePointer, bool>;
+	map<string, vector<FunTypeAndFlag>> functions;
 
 	// Search from base to derived
 	for (ContractDefinition const* contract: boost::adaptors::reverse(getLinearizedBaseContracts()))
 		for (ASTPointer<FunctionDefinition> const& function: contract->getDefinedFunctions())
 		{
-			string const& name = function->getName();
-			if (!function->isFullyImplemented() && functions.count(name) && functions[name])
-				BOOST_THROW_EXCEPTION(function->createTypeError("Redeclaring an already implemented function as abstract"));
-			functions[name] = function->isFullyImplemented();
+			auto& overloads = functions[function->getName()];
+			FunctionTypePointer funType = make_shared<FunctionType>(*function);
+			auto it = find_if(overloads.begin(), overloads.end(), [&](FunTypeAndFlag const& _funAndFlag)
+			{
+				return funType->hasEqualArgumentTypes(*_funAndFlag.first);
+			});
+			if (it == overloads.end())
+				overloads.push_back(make_pair(funType, function->isFullyImplemented()));
+			else if (it->second)
+			{
+				if (!function->isFullyImplemented())
+					BOOST_THROW_EXCEPTION(function->createTypeError("Redeclaring an already implemented function as abstract"));
+			}
+			else if (function->isFullyImplemented())
+				it->second = true;
 		}
 
+	// Set to not fully implemented if at least one flag is false.
 	for (auto const& it: functions)
-		if (!it.second)
-		{
-			setFullyImplemented(false);
-			break;
-		}
+		for (auto const& funAndFlag: it.second)
+			if (!funAndFlag.second)
+			{
+				setFullyImplemented(false);
+				return;
+			}
 }
 
 void ContractDefinition::checkAbstractConstructors()
@@ -339,8 +356,10 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 		{
 			for (ASTPointer<FunctionDefinition> const& f: contract->getDefinedFunctions())
 			{
+				if (!f->isPartOfExternalInterface())
+					continue;
 				string functionSignature = f->externalSignature();
-				if (f->isPartOfExternalInterface() && signaturesSeen.count(functionSignature) == 0)
+				if (signaturesSeen.count(functionSignature) == 0)
 				{
 					functionsSeen.insert(f->getName());
 					signaturesSeen.insert(functionSignature);
@@ -362,6 +381,27 @@ vector<pair<FixedHash<4>, FunctionTypePointer>> const& ContractDefinition::getIn
 	}
 	return *m_interfaceFunctionList;
 }
+
+string const& ContractDefinition::devDocumentation() const
+{
+	return m_devDocumentation;
+}
+
+string const& ContractDefinition::userDocumentation() const
+{
+	return m_userDocumentation;
+}
+
+void ContractDefinition::setDevDocumentation(string const& _devDocumentation)
+{
+	m_devDocumentation = _devDocumentation;
+}
+
+void ContractDefinition::setUserDocumentation(string const& _userDocumentation)
+{
+	m_userDocumentation = _userDocumentation;
+}
+
 
 vector<Declaration const*> const& ContractDefinition::getInheritableMembers() const
 {
@@ -407,10 +447,24 @@ void InheritanceSpecifier::checkTypeRequirements()
 	solAssert(base, "Base contract not available.");
 	TypePointers parameterTypes = ContractType(*base).getConstructorType()->getParameterTypes();
 	if (!m_arguments.empty() && parameterTypes.size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for constructor call."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Wrong argument count for constructor call: " +
+			toString(m_arguments.size()) +
+			" arguments given but expected " +
+			toString(parameterTypes.size()) +
+			"."
+		));
+
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in constructer call."));
+			BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+				"Invalid type for argument in constructor call. "
+				"Invalid implicit conversion from " +
+				m_arguments[i]->getType()->toString() +
+				" to " +
+				parameterTypes[i]->toString() +
+				" requested."
+			));
 }
 
 TypePointer StructDefinition::getType(ContractDefinition const*) const
@@ -427,23 +481,29 @@ void StructDefinition::checkMemberTypes() const
 
 void StructDefinition::checkRecursion() const
 {
-	set<StructDefinition const*> definitionsSeen;
-	vector<StructDefinition const*> queue = {this};
-	while (!queue.empty())
+	using StructPointer = StructDefinition const*;
+	using StructPointersSet = set<StructPointer>;
+	function<void(StructPointer,StructPointersSet const&)> check = [&](StructPointer _struct, StructPointersSet const& _parents)
 	{
-		StructDefinition const* def = queue.back();
-		queue.pop_back();
-		if (definitionsSeen.count(def))
-			BOOST_THROW_EXCEPTION(ParserError() << errinfo_sourceLocation(def->getLocation())
-												<< errinfo_comment("Recursive struct definition."));
-		definitionsSeen.insert(def);
-		for (ASTPointer<VariableDeclaration> const& member: def->getMembers())
+		if (_parents.count(_struct))
+			BOOST_THROW_EXCEPTION(
+				ParserError() <<
+				errinfo_sourceLocation(_struct->getLocation()) <<
+				errinfo_comment("Recursive struct definition.")
+			);
+		set<StructDefinition const*> parents = _parents;
+		parents.insert(_struct);
+		for (ASTPointer<VariableDeclaration> const& member: _struct->getMembers())
 			if (member->getType()->getCategory() == Type::Category::Struct)
 			{
-				UserDefinedTypeName const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
-				queue.push_back(&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()));
+				auto const& typeName = dynamic_cast<UserDefinedTypeName const&>(*member->getTypeName());
+				check(
+					&dynamic_cast<StructDefinition const&>(*typeName.getReferencedDeclaration()),
+					parents
+				);
 			}
-	}
+	};
+	check(this, StructPointersSet{});
 }
 
 TypePointer EnumDefinition::getType(ContractDefinition const*) const
@@ -462,9 +522,6 @@ void FunctionDefinition::checkTypeRequirements()
 	{
 		if (!var->getType()->canLiveOutsideStorage())
 			BOOST_THROW_EXCEPTION(var->createTypeError("Type is required to live outside storage."));
-		// todo delete when will be implemented arrays as parameter type in internal functions
-		if (getVisibility() == Visibility::Public && var->getType()->getCategory() == Type::Category::Array)
-			BOOST_THROW_EXCEPTION(var->createTypeError("Arrays only implemented for external functions."));
 		if (getVisibility() >= Visibility::Public && !(var->getType()->externalType()))
 			BOOST_THROW_EXCEPTION(var->createTypeError("Internal type is not allowed for public and external functions."));
 	}
@@ -484,7 +541,7 @@ string FunctionDefinition::externalSignature() const
 bool VariableDeclaration::isLValue() const
 {
 	// External function parameters and constant declared variables are Read-Only
-	return !isExternalFunctionParameter() && !m_isConstant;
+	return !isExternalCallableParameter() && !m_isConstant;
 }
 
 void VariableDeclaration::checkTypeRequirements()
@@ -512,28 +569,50 @@ void VariableDeclaration::checkTypeRequirements()
 			BOOST_THROW_EXCEPTION(createTypeError("Assignment necessary for type detection."));
 		m_value->checkTypeRequirements(nullptr);
 
-		TypePointer type = m_value->getType();
-		if (type->getCategory() == Type::Category::IntegerConstant)
-		{
-			auto intType = dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType();
-			if (!intType)
-				BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
-			type = intType;
-		}
+		TypePointer const& type = m_value->getType();
+		if (
+			type->getCategory() == Type::Category::IntegerConstant &&
+			!dynamic_pointer_cast<IntegerConstantType const>(type)->getIntegerType()
+		)
+			BOOST_THROW_EXCEPTION(m_value->createTypeError("Invalid integer constant " + type->toString() + "."));
 		else if (type->getCategory() == Type::Category::Void)
 			BOOST_THROW_EXCEPTION(createTypeError("Variable cannot have void type."));
-		m_type = type;
+		m_type = type->mobileType();
 	}
-	if (m_isStateVariable && getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
+	solAssert(!!m_type, "");
+	if (!m_isStateVariable)
+	{
+		if (m_type->dataStoredIn(DataLocation::Memory) || m_type->dataStoredIn(DataLocation::CallData))
+			if (!m_type->canLiveOutsideStorage())
+				BOOST_THROW_EXCEPTION(createTypeError(
+					"Type " + m_type->toString() + " is only valid in storage."
+				));
+	}
+	else if (getVisibility() >= Visibility::Public && !FunctionType(*this).externalType())
 		BOOST_THROW_EXCEPTION(createTypeError("Internal type is not allowed for public state variables."));
 }
 
-bool VariableDeclaration::isExternalFunctionParameter() const
+bool VariableDeclaration::isCallableParameter() const
 {
-	auto const* function = dynamic_cast<FunctionDefinition const*>(getScope());
-	if (!function || function->getVisibility() != Declaration::Visibility::External)
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(getScope());
+	if (!callable)
 		return false;
-	for (auto const& variable: function->getParameters())
+	for (auto const& variable: callable->getParameters())
+		if (variable.get() == this)
+			return true;
+	if (callable->getReturnParameterList())
+		for (auto const& variable: callable->getReturnParameterList()->getParameters())
+			if (variable.get() == this)
+				return true;
+	return false;
+}
+
+bool VariableDeclaration::isExternalCallableParameter() const
+{
+	auto const* callable = dynamic_cast<CallableDeclaration const*>(getScope());
+	if (!callable || callable->getVisibility() != Declaration::Visibility::External)
+		return false;
+	for (auto const& variable: callable->getParameters())
 		if (variable.get() == this)
 			return true;
 	return false;
@@ -578,10 +657,23 @@ void ModifierInvocation::checkTypeRequirements(vector<ContractDefinition const*>
 	if (!parameters)
 		BOOST_THROW_EXCEPTION(createTypeError("Referenced declaration is neither modifier nor base class."));
 	if (parameters->size() != m_arguments.size())
-		BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for modifier invocation."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Wrong argument count for modifier invocation: " +
+			toString(m_arguments.size()) +
+			" arguments given but expected " +
+			toString(parameters->size()) +
+			"."
+		));
 	for (size_t i = 0; i < m_arguments.size(); ++i)
 		if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*(*parameters)[i]->getType()))
-			BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in modifier invocation."));
+			BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+				"Invalid type for argument in modifier invocation. "
+				"Invalid implicit conversion from " +
+				m_arguments[i]->getType()->toString() +
+				" to " +
+				(*parameters)[i]->getType()->toString() +
+				" requested."
+			));
 }
 
 void EventDefinition::checkTypeRequirements()
@@ -686,9 +778,14 @@ void Expression::expectType(Type const& _expectedType)
 	checkTypeRequirements(nullptr);
 	Type const& type = *getType();
 	if (!type.isImplicitlyConvertibleTo(_expectedType))
-		BOOST_THROW_EXCEPTION(createTypeError("Type " + type.toString() +
-											  " not implicitly convertible to expected type "
-											  + _expectedType.toString() + "."));
+		BOOST_THROW_EXCEPTION(createTypeError(
+			"Type " +
+			type.toString() +
+			" is not implicitly convertible to expected type " +
+			_expectedType.toString() +
+			"."
+		)
+		);
 }
 
 void Expression::requireLValue()
@@ -739,12 +836,11 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 
 	m_expression->checkTypeRequirements(isPositionalCall ? &argumentTypes : nullptr);
 
-	Type const* expressionType = m_expression->getType().get();
+	TypePointer const& expressionType = m_expression->getType();
+	FunctionTypePointer functionType;
 	if (isTypeConversion())
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*expressionType);
-		//@todo for structs, we have to check the number of arguments to be equal to the
-		// number of non-mapping members
 		if (m_arguments.size() != 1)
 			BOOST_THROW_EXCEPTION(createTypeError("Exactly one argument expected for explicit type conversion."));
 		if (!isPositionalCall)
@@ -752,71 +848,124 @@ void FunctionCall::checkTypeRequirements(TypePointers const*)
 		if (!m_arguments.front()->getType()->isExplicitlyConvertibleTo(*type.getActualType()))
 			BOOST_THROW_EXCEPTION(createTypeError("Explicit type conversion not allowed."));
 		m_type = type.getActualType();
+		return;
 	}
-	else if (FunctionType const* functionType = dynamic_cast<FunctionType const*>(expressionType))
+
+	/// For error message: Struct members that were removed during conversion to memory.
+	set<string> membersRemovedForStructConstructor;
+	if (isStructConstructorCall())
 	{
-		//@todo would be nice to create a struct type from the arguments
-		// and then ask if that is implicitly convertible to the struct represented by the
-		// function parameters
-		TypePointers const& parameterTypes = functionType->getParameterTypes();
-		if (!functionType->takesArbitraryParameters() && parameterTypes.size() != m_arguments.size())
-			BOOST_THROW_EXCEPTION(createTypeError("Wrong argument count for function call."));
-
-		if (isPositionalCall)
-		{
-			// call by positional arguments
-			for (size_t i = 0; i < m_arguments.size(); ++i)
-				if (!functionType->takesArbitraryParameters() &&
-						!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i]))
-					BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("Invalid type for argument in function call."));
-		}
-		else
-		{
-			// call by named arguments
-			if (functionType->takesArbitraryParameters())
-				BOOST_THROW_EXCEPTION(createTypeError("Named arguments cannnot be used for functions "
-													  "that take arbitrary parameters."));
-			auto const& parameterNames = functionType->getParameterNames();
-			if (parameterNames.size() != m_names.size())
-				BOOST_THROW_EXCEPTION(createTypeError("Some argument names are missing."));
-
-			// check duplicate names
-			for (size_t i = 0; i < m_names.size(); i++)
-				for (size_t j = i + 1; j < m_names.size(); j++)
-					if (*m_names[i] == *m_names[j])
-						BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("Duplicate named argument."));
-
-			for (size_t i = 0; i < m_names.size(); i++) {
-				bool found = false;
-				for (size_t j = 0; j < parameterNames.size(); j++) {
-					if (parameterNames[j] == *m_names[i]) {
-						// check type convertible
-						if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[j]))
-							BOOST_THROW_EXCEPTION(createTypeError("Invalid type for argument in function call."));
-
-						found = true;
-						break;
-					}
-				}
-				if (!found)
-					BOOST_THROW_EXCEPTION(createTypeError("Named argument does not match function declaration."));
-			}
-		}
-
-		// @todo actually the return type should be an anonymous struct,
-		// but we change it to the type of the first return value until we have structs
-		if (functionType->getReturnParameterTypes().empty())
-			m_type = make_shared<VoidType>();
-		else
-			m_type = functionType->getReturnParameterTypes().front();
+		TypeType const& type = dynamic_cast<TypeType const&>(*expressionType);
+		auto const& structType = dynamic_cast<StructType const&>(*type.getActualType());
+		functionType = structType.constructorType();
+		membersRemovedForStructConstructor = structType.membersMissingInMemory();
 	}
 	else
+		functionType = dynamic_pointer_cast<FunctionType const>(expressionType);
+
+	if (!functionType)
 		BOOST_THROW_EXCEPTION(createTypeError("Type is not callable."));
+
+	//@todo would be nice to create a struct type from the arguments
+	// and then ask if that is implicitly convertible to the struct represented by the
+	// function parameters
+	TypePointers const& parameterTypes = functionType->getParameterTypes();
+	if (!functionType->takesArbitraryParameters() && parameterTypes.size() != m_arguments.size())
+	{
+		string msg =
+			"Wrong argument count for function call: " +
+			toString(m_arguments.size()) +
+			" arguments given but expected " +
+			toString(parameterTypes.size()) +
+			".";
+		// Extend error message in case we try to construct a struct with mapping member.
+		if (isStructConstructorCall() && !membersRemovedForStructConstructor.empty())
+		{
+			msg += " Members that have to be skipped in memory:";
+			for (auto const& member: membersRemovedForStructConstructor)
+				msg += " " + member;
+		}
+		BOOST_THROW_EXCEPTION(createTypeError(msg));
+	}
+
+	if (isPositionalCall)
+	{
+		// call by positional arguments
+		for (size_t i = 0; i < m_arguments.size(); ++i)
+			if (
+				!functionType->takesArbitraryParameters() &&
+				!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[i])
+			)
+				BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+					"Invalid type for argument in function call. "
+					"Invalid implicit conversion from " +
+					m_arguments[i]->getType()->toString() +
+					" to " +
+					parameterTypes[i]->toString() +
+					" requested."
+				));
+	}
+	else
+	{
+		// call by named arguments
+		if (functionType->takesArbitraryParameters())
+			BOOST_THROW_EXCEPTION(createTypeError(
+				"Named arguments cannnot be used for functions that take arbitrary parameters."
+			));
+		auto const& parameterNames = functionType->getParameterNames();
+		if (parameterNames.size() != m_names.size())
+			BOOST_THROW_EXCEPTION(createTypeError("Some argument names are missing."));
+
+		// check duplicate names
+		for (size_t i = 0; i < m_names.size(); i++)
+			for (size_t j = i + 1; j < m_names.size(); j++)
+				if (*m_names[i] == *m_names[j])
+					BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError("Duplicate named argument."));
+
+		for (size_t i = 0; i < m_names.size(); i++) {
+			bool found = false;
+			for (size_t j = 0; j < parameterNames.size(); j++) {
+				if (parameterNames[j] == *m_names[i]) {
+					// check type convertible
+					if (!m_arguments[i]->getType()->isImplicitlyConvertibleTo(*parameterTypes[j]))
+						BOOST_THROW_EXCEPTION(m_arguments[i]->createTypeError(
+							"Invalid type for argument in function call. "
+							"Invalid implicit conversion from " +
+							m_arguments[i]->getType()->toString() +
+							" to " +
+							parameterTypes[i]->toString() +
+							" requested."
+						));
+
+					found = true;
+					break;
+				}
+			}
+			if (!found)
+				BOOST_THROW_EXCEPTION(createTypeError("Named argument does not match function declaration."));
+		}
+	}
+
+	// @todo actually the return type should be an anonymous struct,
+	// but we change it to the type of the first return value until we have anonymous
+	// structs and tuples
+	if (functionType->getReturnParameterTypes().empty())
+		m_type = make_shared<VoidType>();
+	else
+		m_type = functionType->getReturnParameterTypes().front();
 }
 
 bool FunctionCall::isTypeConversion() const
 {
-	return m_expression->getType()->getCategory() == Type::Category::TypeType;
+	return m_expression->getType()->getCategory() == Type::Category::TypeType && !isStructConstructorCall();
+}
+
+bool FunctionCall::isStructConstructorCall() const
+{
+	if (auto const* type = dynamic_cast<TypeType const*>(m_expression->getType().get()))
+		return type->getActualType()->getCategory() == Type::Category::Struct;
+	else
+		return false;
 }
 
 void NewExpression::checkTypeRequirements(TypePointers const*)
@@ -856,10 +1005,22 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 				++it;
 	}
 	if (possibleMembers.size() == 0)
+	{
+		auto storageType = ReferenceType::copyForLocationIfReference(
+			DataLocation::Storage,
+			m_expression->getType()
+		);
+		if (!storageType->getMembers().membersByName(*m_memberName).empty())
+			BOOST_THROW_EXCEPTION(createTypeError(
+				"Member \"" + *m_memberName + "\" is not available in " +
+				type.toString() +
+				" outside of storage."
+			));
 		BOOST_THROW_EXCEPTION(createTypeError(
 			"Member \"" + *m_memberName + "\" not found or not visible "
 			"after argument-dependent lookup in " + type.toString()
 		));
+	}
 	else if (possibleMembers.size() > 1)
 		BOOST_THROW_EXCEPTION(createTypeError(
 			"Member \"" + *m_memberName + "\" not unique "
@@ -873,8 +1034,11 @@ void MemberAccess::checkTypeRequirements(TypePointers const* _argumentTypes)
 	else if (type.getCategory() == Type::Category::Array)
 	{
 		auto const& arrayType(dynamic_cast<ArrayType const&>(type));
-		m_isLValue = (*m_memberName == "length" &&
-			arrayType.getLocation() != ArrayType::Location::CallData && arrayType.isDynamicallySized());
+		m_isLValue = (
+			*m_memberName == "length" &&
+			arrayType.location() == DataLocation::Storage &&
+			arrayType.isDynamicallySized()
+		);
 	}
 	else
 		m_isLValue = false;
@@ -890,12 +1054,14 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 		ArrayType const& type = dynamic_cast<ArrayType const&>(*m_base->getType());
 		if (!m_index)
 			BOOST_THROW_EXCEPTION(createTypeError("Index expression cannot be omitted."));
+		if (type.isString())
+			BOOST_THROW_EXCEPTION(createTypeError("Index access for string is not possible."));
 		m_index->expectType(IntegerType(256));
 		if (type.isByteArray())
 			m_type = make_shared<FixedBytesType>(1);
 		else
 			m_type = type.getBaseType();
-		m_isLValue = type.getLocation() != ArrayType::Location::CallData;
+		m_isLValue = type.location() != DataLocation::CallData;
 		break;
 	}
 	case Type::Category::Mapping:
@@ -912,7 +1078,7 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 	{
 		TypeType const& type = dynamic_cast<TypeType const&>(*m_base->getType());
 		if (!m_index)
-			m_type = make_shared<TypeType>(make_shared<ArrayType>(ArrayType::Location::Memory, type.getActualType()));
+			m_type = make_shared<TypeType>(make_shared<ArrayType>(DataLocation::Memory, type.getActualType()));
 		else
 		{
 			m_index->checkTypeRequirements(nullptr);
@@ -920,7 +1086,9 @@ void IndexAccess::checkTypeRequirements(TypePointers const*)
 			if (!length)
 				BOOST_THROW_EXCEPTION(m_index->createTypeError("Integer constant expected."));
 			m_type = make_shared<TypeType>(make_shared<ArrayType>(
-				ArrayType::Location::Memory, type.getActualType(), length->literalValue(nullptr)));
+				DataLocation::Memory, type.getActualType(),
+				length->literalValue(nullptr)
+			));
 		}
 		break;
 	}

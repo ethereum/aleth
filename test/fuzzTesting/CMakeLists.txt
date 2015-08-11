@@ -8,10 +8,15 @@ include_directories(${Boost_INCLUDE_DIRS})
 include_directories(${CRYPTOPP_INCLUDE_DIRS})
 include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
 
+add_executable(createRandomTest "./createRandomTest.cpp" "../TestHelper.cpp" "../Stats.cpp" "fuzzHelper.cpp" "../libethereum/transaction.cpp" "../libethereum/state.cpp" "../libevm/vm.cpp" "../libethereum/blockchain.cpp" "../libdevcore/rlp.cpp")
+
 add_executable(createRandomVMTest "./createRandomVMTest.cpp" "../libevm/vm.cpp" "../TestHelper.cpp" "../Stats.cpp")
-add_executable(createRandomStateTest "./createRandomStateTest.cpp" "../TestHelper.cpp" "../Stats.cpp")
-add_executable(checkRandomVMTest "./checkRandomVMTest.cpp" "../libevm/vm.cpp" "../TestHelper.cpp" "../Stats.cpp")
+add_executable(createRandomStateTest "./createRandomStateTest.cpp" "../TestHelper.cpp" "../Stats.cpp" "fuzzHelper.cpp")
+add_executable(checkRandomVMTest "./checkRandomVMTest.cpp" "../libevm/vm.cpp" "../TestHelper.cpp" "../Stats.cpp" )
 add_executable(checkRandomStateTest "./checkRandomStateTest.cpp" "../TestHelper.cpp" "../Stats.cpp")
+
+list(APPEND SRCS "./fuzzHelper.cpp")
+add_sources(${SRCS})
 
 target_link_libraries(createRandomVMTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 target_link_libraries(createRandomVMTest ethereum)
@@ -29,3 +34,7 @@ target_link_libraries(checkRandomStateTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES
 target_link_libraries(checkRandomStateTest ethereum)
 target_link_libraries(checkRandomStateTest ethcore)
 target_link_libraries(checkRandomStateTest testutils)
+target_link_libraries(createRandomTest ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(createRandomTest ethereum)
+target_link_libraries(createRandomTest ethcore)
+target_link_libraries(createRandomTest testutils)

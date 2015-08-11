@@ -26,7 +26,8 @@
 #include <ctime>
 #include <libdevcore/Guards.h>
 #include <libethereum/Client.h>
-#include <libethereum/KeyManager.h>
+#include <libethcore/KeyManager.h>
+
 
 using namespace std;
 using namespace dev;
@@ -102,23 +103,25 @@ void AccountHolder::clearQueue(int _id)
 
 AddressHash SimpleAccountHolder::realAccounts() const
 {
-	return m_keyManager.accounts();
+	return m_keyManager.accountsHash();
 }
 
-void SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+h256 SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
 	if (isRealAccount(_t.from))
-		m_client()->submitTransaction(m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }), _t);
+		return m_client()->submitTransaction(_t, m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); })).first;
 	else if (isProxyAccount(_t.from))
 		queueTransaction(_t);
+	return h256();
 }
 
-void FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+h256 FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
 	if (isRealAccount(_t.from))
-		m_client()->submitTransaction(m_accounts[_t.from], _t);
+		return m_client()->submitTransaction(_t, m_accounts[_t.from]).first;
 	else if (isProxyAccount(_t.from))
 		queueTransaction(_t);
+	return h256();
 }
 
 

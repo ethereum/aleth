@@ -26,6 +26,7 @@
 #include <memory>
 #include <iostream>
 #include <jsonrpccpp/server.h>
+#include <jsonrpccpp/common/exception.h>
 #include <libdevcrypto/Common.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -58,10 +59,28 @@ public:
 	virtual void put(std::string const& _name, std::string const& _key, std::string const& _value) = 0;
 };
 
+enum class Priviledge
+{
+	Admin
+};
+
+}
+
+namespace std
+{
+
+template<> struct hash<dev::Priviledge>
+{
+	size_t operator()(dev::Priviledge _value) const { return (size_t)_value; }
+};
+
+}
+
+namespace dev
+{
+
 /**
  * @brief JSON-RPC api implementation
- * @todo filters should work on unsigned instead of int
- * unsigned are not supported in json-rpc-cpp and there are bugs with double in json-rpc-cpp version 0.2.1
  * @todo split these up according to subprotocol (eth, shh, db, p2p, web3) and make it /very/ clear about how to add other subprotocols.
  * @todo modularise everything so additional subprotocols don't need to change this file.
  */
@@ -87,10 +106,10 @@ public:
 	virtual std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
 	virtual std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
 	virtual std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
-	virtual std::string eth_getBlockTransactionCountByHash(std::string const& _blockHash);
-	virtual std::string eth_getBlockTransactionCountByNumber(std::string const& _blockNumber);
-	virtual std::string eth_getUncleCountByBlockHash(std::string const& _blockHash);
-	virtual std::string eth_getUncleCountByBlockNumber(std::string const& _blockNumber);
+	virtual Json::Value eth_getBlockTransactionCountByHash(std::string const& _blockHash);
+	virtual Json::Value eth_getBlockTransactionCountByNumber(std::string const& _blockNumber);
+	virtual Json::Value eth_getUncleCountByBlockHash(std::string const& _blockHash);
+	virtual Json::Value eth_getUncleCountByBlockNumber(std::string const& _blockNumber);
 	virtual std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
 	virtual std::string eth_sendTransaction(Json::Value const& _json);
 	virtual std::string eth_call(Json::Value const& _json, std::string const& _blockNumber);
@@ -100,18 +119,24 @@ public:
 	virtual Json::Value eth_getTransactionByHash(std::string const& _transactionHash);
 	virtual Json::Value eth_getTransactionByBlockHashAndIndex(std::string const& _blockHash, std::string const& _transactionIndex);
 	virtual Json::Value eth_getTransactionByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _transactionIndex);
+	virtual Json::Value eth_getTransactionReceipt(std::string const& _transactionHash);
 	virtual Json::Value eth_getUncleByBlockHashAndIndex(std::string const& _blockHash, std::string const& _uncleIndex);
 	virtual Json::Value eth_getUncleByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _uncleIndex);
 	virtual Json::Value eth_getCompilers();
 	virtual std::string eth_compileLLL(std::string const& _s);
 	virtual std::string eth_compileSerpent(std::string const& _s);
-	virtual std::string eth_compileSolidity(std::string const& _code);
+	virtual Json::Value eth_compileSolidity(std::string const& _code);
 	virtual std::string eth_newFilter(Json::Value const& _json);
-	virtual std::string eth_newBlockFilter(std::string const& _filter);
+	virtual std::string eth_newFilterEx(Json::Value const& _json);
+	virtual std::string eth_newBlockFilter();
+	virtual std::string eth_newPendingTransactionFilter();
 	virtual bool eth_uninstallFilter(std::string const& _filterId);
 	virtual Json::Value eth_getFilterChanges(std::string const& _filterId);
+	virtual Json::Value eth_getFilterChangesEx(std::string const& _filterId);
 	virtual Json::Value eth_getFilterLogs(std::string const& _filterId);
+	virtual Json::Value eth_getFilterLogsEx(std::string const& _filterId);
 	virtual Json::Value eth_getLogs(Json::Value const& _json);
+	virtual Json::Value eth_getLogsEx(Json::Value const& _json);
 	virtual Json::Value eth_getWork();
 	virtual bool eth_submitWork(std::string const& _nonce, std::string const&, std::string const& _mixHash);
 	virtual std::string eth_register(std::string const& _address);
@@ -120,6 +145,7 @@ public:
 	virtual std::string eth_signTransaction(Json::Value const& _transaction);
 	virtual Json::Value eth_inspectTransaction(std::string const& _rlp);
 	virtual bool eth_injectTransaction(std::string const& _rlp);
+	virtual bool eth_notePassword(std::string const&) { return false; }
 
 	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value);
 	virtual std::string db_get(std::string const& _name, std::string const& _key);
@@ -133,11 +159,40 @@ public:
 	virtual bool shh_uninstallFilter(std::string const& _filterId);
 	virtual Json::Value shh_getFilterChanges(std::string const& _filterId);
 	virtual Json::Value shh_getMessages(std::string const& _filterId);
-	
+
+	virtual bool admin_web3_setVerbosity(int _v, std::string const& _session);
+	virtual bool admin_net_start(std::string const& _session);
+	virtual bool admin_net_stop(std::string const& _session);
+	virtual bool admin_net_connect(std::string const& _node, std::string const& _session);
+	virtual Json::Value admin_net_peers(std::string const& _session);
+
+	virtual bool admin_eth_setMining(bool _on, std::string const& _session);
+	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) { (void)_session; return Json::Value(); }
+	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
+	virtual bool admin_eth_setBidPrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
+	virtual Json::Value admin_eth_findBlock(std::string const& _blockHash, std::string const& _session) { (void)_blockHash; (void)_session; return Json::Value(); }
+	virtual std::string admin_eth_blockQueueFirstUnknown(std::string const& _session) { (void)_session; return ""; }
+	virtual bool admin_eth_blockQueueRetryUnknown(std::string const& _session) { (void)_session; return false; }
+	virtual Json::Value admin_eth_allAccounts(std::string const& _session) { (void)_session; return Json::Value(); }
+	virtual Json::Value admin_eth_newAccount(const Json::Value& _info, std::string const& _session) { (void)_info; (void)_session; return Json::Value(); }
+	virtual bool admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, std::string const& _session) { (void)_uuidOrAddress; (void)_session; return false; }
+	virtual Json::Value admin_eth_inspect(std::string const& _address, std::string const& _session) { (void)_address; (void)_session; return Json::Value(); }
+	virtual Json::Value admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session) { (void)_blockNumberOrHash; (void)_session; return Json::Value(); }
+	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
+	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
+
+	// TODO REMOVE
+	virtual bool admin_eth_setReferencePrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
+	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
+	virtual bool admin_eth_setSigningKey(std::string const& _uuidOrAddress, std::string const& _session) { (void)_uuidOrAddress; (void)_session; return false; }
+
 	void setIdentities(std::vector<dev::KeyPair> const& _ids);
 	std::map<dev::Public, dev::Secret> const& ids() const { return m_shhIds; }
 
 protected:
+	void requires(std::string const& _session, Priviledge _l) const { if (!hasPriviledgeLevel(_session, _l)) throw jsonrpc::JsonRpcException("Invalid priviledges"); }
+	virtual bool hasPriviledgeLevel(std::string const& _session, Priviledge _l) const { (void)_session; (void)_l; return false; }
+
 	virtual dev::eth::Interface* client() = 0;
 	virtual std::shared_ptr<dev::shh::Interface> face() = 0;
 	virtual dev::WebThreeNetworkFace* network() = 0;

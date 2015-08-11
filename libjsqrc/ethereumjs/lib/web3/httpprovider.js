@@ -19,22 +19,42 @@
  *   Marek Kotewicz <marek@ethdev.com>
  *   Marian Oancea <marian@ethdev.com>
  *   Fabian Vogelsteller <fabian@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
 "use strict";
 
-var XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest; // jshint ignore:line
+var XMLHttpRequest = (typeof window !== 'undefined' && window.XMLHttpRequest) ? window.XMLHttpRequest : require('xmlhttprequest').XMLHttpRequest; // jshint ignore:line
 var errors = require('./errors');
 
 var HttpProvider = function (host) {
     this.host = host || 'http://localhost:8545';
 };
 
+HttpProvider.prototype.isConnected = function() {
+    var request = new XMLHttpRequest();
+
+    request.open('POST', this.host, false);
+    request.setRequestHeader('Content-type','application/json');
+    
+    try {
+        request.send(JSON.stringify({
+            id: 9999999999,
+            jsonrpc: '2.0',
+            method: 'net_listening',
+            params: []
+        }));
+        return true;
+    } catch(e) {
+        return false;
+    }
+};
+
 HttpProvider.prototype.send = function (payload) {
     var request = new XMLHttpRequest();
 
     request.open('POST', this.host, false);
+    request.setRequestHeader('Content-type','application/json');
     
     try {
         request.send(JSON.stringify(payload));
@@ -54,7 +74,7 @@ HttpProvider.prototype.send = function (payload) {
     try {
         result = JSON.parse(result);
     } catch(e) {
-        throw errors.InvalidResponse(result);                
+        throw errors.InvalidResponse(request.responseText);                
     }
 
     return result;
@@ -70,7 +90,7 @@ HttpProvider.prototype.sendAsync = function (payload, callback) {
             try {
                 result = JSON.parse(result);
             } catch(e) {
-                error = errors.InvalidResponse(result);                
+                error = errors.InvalidResponse(request.responseText);                
             }
 
             callback(error, result);
@@ -78,7 +98,8 @@ HttpProvider.prototype.sendAsync = function (payload, callback) {
     };
 
     request.open('POST', this.host, true);
-
+    request.setRequestHeader('Content-type','application/json');
+    
     try {
         request.send(JSON.stringify(payload));
     } catch(error) {

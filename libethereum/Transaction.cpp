@@ -39,8 +39,25 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, ExecutionResult const& _e
 	return _out;
 }
 
-TransactionException dev::eth::toTransactionException(VMException const& _e)
+TransactionException dev::eth::toTransactionException(Exception const& _e)
 {
+	// Basic Transaction exceptions
+	if (!!dynamic_cast<RLPException const*>(&_e))
+		return TransactionException::BadRLP;
+	if (!!dynamic_cast<OutOfGasIntrinsic const*>(&_e))
+		return TransactionException::OutOfGasIntrinsic;
+	if (!!dynamic_cast<InvalidSignature const*>(&_e))
+		return TransactionException::InvalidSignature;
+	// Executive exceptions
+	if (!!dynamic_cast<OutOfGasBase const*>(&_e))
+		return TransactionException::OutOfGasBase;
+	if (!!dynamic_cast<InvalidNonce const*>(&_e))
+		return TransactionException::InvalidNonce;
+	if (!!dynamic_cast<NotEnoughCash const*>(&_e))
+		return TransactionException::NotEnoughCash;
+	if (!!dynamic_cast<BlockGasLimitReached const*>(&_e))
+		return TransactionException::BlockGasLimitReached;
+	// VM execution exceptions
 	if (!!dynamic_cast<BadInstruction const*>(&_e))
 		return TransactionException::BadInstruction;
 	if (!!dynamic_cast<BadJumpDestination const*>(&_e))
@@ -54,71 +71,34 @@ TransactionException dev::eth::toTransactionException(VMException const& _e)
 	return TransactionException::Unknown;
 }
 
-Transaction::Transaction(bytesConstRef _rlpData, CheckTransaction _checkSig)
+std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionException const& _er)
 {
-	int field = 0;
-	RLP rlp(_rlpData);
-	try
+	switch (_er)
 	{
-		if (!rlp.isList())
-			BOOST_THROW_EXCEPTION(BadRLP() << errinfo_comment("transaction RLP must be a list"));
-
-		m_nonce = rlp[field = 0].toInt<u256>();
-		m_gasPrice = rlp[field = 1].toInt<u256>();
-		m_gas = rlp[field = 2].toInt<u256>();
-		m_type = rlp[field = 3].isEmpty() ? ContractCreation : MessageCall;
-		m_receiveAddress = rlp[field = 3].isEmpty() ? Address() : rlp[field = 3].toHash<Address>(RLP::VeryStrict);
-		m_value = rlp[field = 4].toInt<u256>();
-
-		if (!rlp[field = 5].isData())
-			BOOST_THROW_EXCEPTION(BadRLP() << errinfo_comment("transaction data RLP must be an array"));
-
-		m_data = rlp[field = 5].toBytes();
-		byte v = rlp[field = 6].toInt<byte>() - 27;
-		h256 r = rlp[field = 7].toInt<u256>();
-		h256 s = rlp[field = 8].toInt<u256>();
-
-		if (rlp.itemCount() > 9)
-			BOOST_THROW_EXCEPTION(BadRLP() << errinfo_comment("to many fields in the transaction RLP"));
-
-		m_vrs = SignatureStruct{ r, s, v };
-		if (_checkSig >= CheckTransaction::Cheap && !m_vrs.isValid())
-			BOOST_THROW_EXCEPTION(InvalidSignature());
-		if (_checkSig == CheckTransaction::Everything)
-			m_sender = sender();
+		case TransactionException::None: _out << "None"; break;
+		case TransactionException::BadRLP: _out << "BadRLP"; break;
+		case TransactionException::InvalidFormat: _out << "InvalidFormat"; break;
+		case TransactionException::OutOfGasIntrinsic: _out << "OutOfGasIntrinsic"; break;
+		case TransactionException::InvalidSignature: _out << "InvalidSignature"; break;
+		case TransactionException::InvalidNonce: _out << "InvalidNonce"; break;
+		case TransactionException::NotEnoughCash: _out << "NotEnoughCash"; break;
+		case TransactionException::OutOfGasBase: _out << "OutOfGasBase"; break;
+		case TransactionException::BlockGasLimitReached: _out << "BlockGasLimitReached"; break;
+		case TransactionException::BadInstruction: _out << "BadInstruction"; break;
+		case TransactionException::BadJumpDestination: _out << "BadJumpDestination"; break;
+		case TransactionException::OutOfGas: _out << "OutOfGas"; break;
+		case TransactionException::OutOfStack: _out << "OutOfStack"; break;
+		case TransactionException::StackUnderflow: _out << "StackUnderflow"; break;
+		default: _out << "Unknown"; break;
 	}
-	catch (Exception& _e)
-	{
-		_e << errinfo_name("invalid transaction format") << BadFieldError(field, toHex(rlp[field].data().toBytes()));
-		throw;
-	}
+	return _out;
+}
+
+Transaction::Transaction(bytesConstRef _rlpData, CheckTransaction _checkSig):
+	TransactionBase(_rlpData, _checkSig)
+{
 	if (_checkSig >= CheckTransaction::Cheap && !checkPayment())
-		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(gasRequired(), (bigint)gas()));
-}
-
-Address const& Transaction::safeSender() const noexcept
-{
-	try
-	{
-		return sender();
-	}
-	catch (...)
-	{
-		cwarn << "safeSender() did throw an exception: " <<  boost::current_exception_diagnostic_information();
-		return ZeroAddress;
-	}
-}
-
-Address const& Transaction::sender() const
-{
-	if (!m_sender)
-	{
-		auto p = recover(m_vrs, sha3(WithoutSignature));
-		if (!p)
-			BOOST_THROW_EXCEPTION(InvalidSignature());
-		m_sender = right160(dev::sha3(bytesConstRef(p.data(), sizeof(p))));
-	}
-	return m_sender;
+		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError(gasRequired(), (bigint)gas()));
 }
 
 bigint Transaction::gasRequired() const
@@ -126,27 +106,4 @@ bigint Transaction::gasRequired() const
 	if (!m_gasRequired)
 		m_gasRequired = Transaction::gasRequired(m_data);
 	return m_gasRequired;
-}
-
-void Transaction::sign(Secret _priv)
-{
-	auto sig = dev::sign(_priv, sha3(WithoutSignature));
-	SignatureStruct sigStruct = *(SignatureStruct const*)&sig;
-	if (sigStruct.isValid())
-		m_vrs = sigStruct;
-}
-
-void Transaction::streamRLP(RLPStream& _s, IncludeSignature _sig) const
-{
-	if (m_type == NullTransaction)
-		return;
-	_s.appendList((_sig ? 3 : 0) + 6);
-	_s << m_nonce << m_gasPrice << m_gas;
-	if (m_type == MessageCall)
-		_s << m_receiveAddress;
-	else
-		_s << "";
-	_s << m_value << m_data;
-	if (_sig)
-		_s << (m_vrs.v + 27) << (u256)m_vrs.r << (u256)m_vrs.s;
 }

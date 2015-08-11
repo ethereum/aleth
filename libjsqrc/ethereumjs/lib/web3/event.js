@@ -22,8 +22,10 @@
 
 var utils = require('../utils/utils');
 var coder = require('../solidity/coder');
-var web3 = require('../web3');
 var formatters = require('./formatters');
+var sha3 = require('../utils/sha3');
+var Filter = require('./filter');
+var watches = require('./watches');
 
 /**
  * This prototype should be used to create event filters
@@ -77,7 +79,7 @@ SolidityEvent.prototype.typeName = function () {
  * @return {String} event signature
  */
 SolidityEvent.prototype.signature = function () {
-    return web3.sha3(web3.fromAscii(this._name)).slice(2);
+    return sha3(this._name);
 };
 
 /**
@@ -101,8 +103,8 @@ SolidityEvent.prototype.encode = function (indexed, options) {
 
     result.topics = [];
 
+    result.address = this._address;
     if (!this._anonymous) {
-        result.address = this._address;
         result.topics.push('0x' + this.signature());
     }
 
@@ -169,10 +171,21 @@ SolidityEvent.prototype.decode = function (data) {
  * @param {Object} options
  * @return {Object} filter object
  */
-SolidityEvent.prototype.execute = function (indexed, options) {
+SolidityEvent.prototype.execute = function (indexed, options, callback) {
+
+    if (utils.isFunction(arguments[arguments.length - 1])) {
+        callback = arguments[arguments.length - 1];
+        if(arguments.length === 2)
+            options = null;
+        if(arguments.length === 1) {
+            options = null;
+            indexed = {};
+        }
+    }
+    
     var o = this.encode(indexed, options);
     var formatter = this.decode.bind(this);
-    return web3.eth.filter(o, undefined, undefined, formatter);
+    return new Filter(o, watches.eth(), formatter, callback);
 };
 
 /**

@@ -12,10 +12,6 @@ aux_source_directory(. SRC_LIST)
 include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})
 
-if (ETHASHCL)
-	include_directories(${OpenCL_INCLUDE_DIRS})
-endif ()
-
 if (CPUID_FOUND)
 	include_directories(${Cpuid_INCLUDE_DIRS})
 endif ()
@@ -28,7 +24,7 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 target_link_libraries(${EXECUTABLE} ethash)
 target_link_libraries(${EXECUTABLE} devcrypto)
-#target_link_libraries(${EXECUTABLE} evmcore)
+target_link_libraries(${EXECUTABLE} evmcore)
 
 if (ETHASHCL)
 	target_link_libraries(${EXECUTABLE} ethash-cl)

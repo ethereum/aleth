@@ -264,6 +264,13 @@ var coder = new SolidityCoder([
         outputFormatter: f.formatOutputBytes
     }),
     new SolidityType({
+        name: 'string',
+        match: 'strict',
+        mode: 'bytes',
+        inputFormatter: f.formatInputString,
+        outputFormatter: f.formatOutputString
+    }),
+    new SolidityType({
         name: 'real',
         match: 'prefix',
         mode: 'value',
@@ -282,7 +289,7 @@ var coder = new SolidityCoder([
 module.exports = coder;
 
 
-},{"../utils/utils":6,"./formatters":2,"./param":3,"bignumber.js":"bignumber.js"}],2:[function(require,module,exports){
+},{"../utils/utils":7,"./formatters":2,"./param":3,"bignumber.js":"bignumber.js"}],2:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -328,26 +335,43 @@ var formatInputInt = function (value) {
 };
 
 /**
- * Formats input value to byte representation of string
+ * Formats input bytes
  *
  * @method formatInputBytes
  * @param {String}
  * @returns {SolidityParam}
  */
 var formatInputBytes = function (value) {
-    var result = utils.fromAscii(value, c.ETH_PADDING).substr(2);
+    var result = utils.padRight(utils.toHex(value).substr(2), 64);
     return new SolidityParam(result);
+};
+
+/**
+ * Formats input bytes
+ *
+ * @method formatDynamicInputBytes
+ * @param {String}
+ * @returns {SolidityParam}
+ */
+var formatInputDynamicBytes = function (value) {
+    value = utils.toHex(value).substr(2);
+    var l = Math.floor((value.length + 63) / 64);
+    var result = utils.padRight(value, l * 64);
+    var length = Math.floor(value.length / 2);
+    return new SolidityParam(formatInputInt(length).value + result, 32);
 };
 
 /**
  * Formats input value to byte representation of string
  *
- * @method formatInputDynamicBytes
+ * @method formatInputString
  * @param {String}
  * @returns {SolidityParam}
  */
-var formatInputDynamicBytes = function (value) {
-    var result = utils.fromAscii(value, c.ETH_PADDING).substr(2);
+var formatInputString = function (value) {
+    var result = utils.fromAscii(value).substr(2);
+    var l = Math.floor((result.length + 63) / 64);
+    result = utils.padRight(result, l * 64);
     return new SolidityParam(formatInputInt(value.length).value + result, 32);
 };
 
@@ -450,27 +474,38 @@ var formatOutputBool = function (param) {
 };
 
 /**
- * Should be used to format output string
+ * Should be used to format output bytes
  *
  * @method formatOutputBytes
  * @param {SolidityParam} left-aligned hex representation of string
- * @returns {String} ascii string
+ * @returns {String} hex string
  */
 var formatOutputBytes = function (param) {
-    // length might also be important!
-    return utils.toAscii(param.staticPart());
+    return '0x' + param.staticPart();
+};
+
+/**
+ * Should be used to format output bytes
+ *
+ * @method formatOutputDynamicBytes
+ * @param {SolidityParam} left-aligned hex representation of string
+ * @returns {String} hex string
+ */
+var formatOutputDynamicBytes = function (param) {
+    var length = (new BigNumber(param.dynamicPart().slice(0, 64), 16)).toNumber() * 2;
+    return '0x' + param.dynamicPart().substr(64, length);
 };
 
 /**
  * Should be used to format output string
  *
- * @method formatOutputDynamicBytes
+ * @method formatOutputString
  * @param {SolidityParam} left-aligned hex representation of string
  * @returns {String} ascii string
  */
-var formatOutputDynamicBytes = function (param) {
-    // length might also be important!
-    return utils.toAscii(param.dynamicPart().slice(64));
+var formatOutputString = function (param) {
+    var length = (new BigNumber(param.dynamicPart().slice(0, 64), 16)).toNumber() * 2;
+    return utils.toAscii(param.dynamicPart().substr(64, length));
 };
 
 /**
@@ -489,6 +524,7 @@ module.exports = {
     formatInputInt: formatInputInt,
     formatInputBytes: formatInputBytes,
     formatInputDynamicBytes: formatInputDynamicBytes,
+    formatInputString: formatInputString,
     formatInputBool: formatInputBool,
     formatInputReal: formatInputReal,
     formatOutputInt: formatOutputInt,
@@ -498,11 +534,12 @@ module.exports = {
     formatOutputBool: formatOutputBool,
     formatOutputBytes: formatOutputBytes,
     formatOutputDynamicBytes: formatOutputDynamicBytes,
+    formatOutputString: formatOutputString,
     formatOutputAddress: formatOutputAddress
 };
 
 
-},{"../utils/config":5,"../utils/utils":6,"./param":3,"bignumber.js":"bignumber.js"}],3:[function(require,module,exports){
+},{"../utils/config":5,"../utils/utils":7,"./param":3,"bignumber.js":"bignumber.js"}],3:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -577,7 +614,7 @@ SolidityParam.prototype.combine = function (param) {
  * @returns {Boolean}
  */
 SolidityParam.prototype.isDynamic = function () {
-    return this.value.length > 64;
+    return this.value.length > 64 || this.offset !== undefined;
 };
 
 /**
@@ -687,13 +724,14 @@ var getOffset = function (bytes, index) {
  */
 SolidityParam.decodeBytes = function (bytes, index) {
     index = index || 0;
-    //TODO add support for strings longer than 32 bytes
-    //var length = parseInt('0x' + bytes.substr(offset * 64, 64));
 
     var offset = getOffset(bytes, index);
 
-    // 2 * , cause we also parse length
-    return new SolidityParam(bytes.substr(offset * 2, 2 * 64));
+    var l = parseInt('0x' + bytes.substr(offset * 2, 64));
+    l = Math.floor((l + 31) / 32);
+
+    // (1 + l) * , cause we also parse length
+    return new SolidityParam(bytes.substr(offset * 2, (1 + l) * 64), 0);
 };
 
 /**
@@ -708,13 +746,13 @@ SolidityParam.decodeArray = function (bytes, index) {
     index = index || 0;
     var offset = getOffset(bytes, index);
     var length = parseInt('0x' + bytes.substr(offset * 2, 64));
-    return new SolidityParam(bytes.substr(offset * 2, (length + 1) * 64));
+    return new SolidityParam(bytes.substr(offset * 2, (length + 1) * 64), 0);
 };
 
 module.exports = SolidityParam;
 
 
-},{"../utils/utils":6}],4:[function(require,module,exports){
+},{"../utils/utils":7}],4:[function(require,module,exports){
 'use strict';
 
 // go env doesn't have and need XMLHttpRequest
@@ -764,26 +802,34 @@ if (typeof XMLHttpRequest === 'undefined') {
 /// required to define ETH_BIGNUMBER_ROUNDING_MODE
 var BigNumber = require('bignumber.js');
 
-var ETH_UNITS = [ 
-    'wei', 
-    'Kwei', 
-    'Mwei', 
-    'Gwei', 
-    'szabo', 
-    'finney', 
-    'ether', 
-    'grand', 
-    'Mether', 
-    'Gether', 
-    'Tether', 
-    'Pether', 
-    'Eether', 
-    'Zether', 
-    'Yether', 
-    'Nether', 
-    'Dether', 
-    'Vether', 
-    'Uether' 
+var ETH_UNITS = [
+    'wei',
+    'kwei',
+    'Mwei',
+    'Gwei',
+    'szabo',
+    'finney',
+    'femtoether',
+    'picoether',
+    'nanoether',
+    'microether',
+    'milliether',
+    'nano',
+    'micro',
+    'milli',
+    'ether',
+    'grand',
+    'Mether',
+    'Gether',
+    'Tether',
+    'Pether',
+    'Eether',
+    'Zether',
+    'Yether',
+    'Nether',
+    'Dether',
+    'Vether',
+    'Uether'
 ];
 
 module.exports = {
@@ -791,13 +837,54 @@ module.exports = {
     ETH_SIGNATURE_LENGTH: 4,
     ETH_UNITS: ETH_UNITS,
     ETH_BIGNUMBER_ROUNDING_MODE: { ROUNDING_MODE: BigNumber.ROUND_DOWN },
-    ETH_POLLING_TIMEOUT: 1000,
+    ETH_POLLING_TIMEOUT: 1000/2,
     defaultBlock: 'latest',
     defaultAccount: undefined
 };
 
 
 },{"bignumber.js":"bignumber.js"}],6:[function(require,module,exports){
+/*
+    This file is part of ethereum.js.
+
+    ethereum.js is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ethereum.js is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** 
+ * @file sha3.js
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
+ */
+
+var utils = require('./utils');
+var sha3 = require('crypto-js/sha3');
+
+module.exports = function (str, isNew) {
+    if (str.substr(0, 2) === '0x' && !isNew) {
+        console.warn('requirement of using web3.fromAscii before sha3 is deprecated');
+        console.warn('new usage: \'web3.sha3("hello")\'');
+        console.warn('see https://github.com/ethereum/web3.js/pull/205');
+        console.warn('if you need to hash hex value, you can do \'sha3("0xfff", true)\'');
+        str = utils.toAscii(str);
+    }
+
+    return sha3(str, {
+        outputLength: 256
+    }).toString();
+};
+
+
+},{"./utils":7,"crypto-js/sha3":34}],7:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -836,22 +923,30 @@ module.exports = {
 var BigNumber = require('bignumber.js');
 
 var unitMap = {
-    'wei':      '1',
-    'kwei':     '1000',
-    'ada':      '1000',
-    'mwei':     '1000000',
-    'babbage':  '1000000',
-    'gwei':     '1000000000',
-    'shannon':  '1000000000',
-    'szabo':    '1000000000000',
-    'finney':   '1000000000000000',
-    'ether':    '1000000000000000000',
-    'kether':   '1000000000000000000000',
-    'grand':    '1000000000000000000000',
-    'einstein': '1000000000000000000000',
-    'mether':   '1000000000000000000000000',
-    'gether':   '1000000000000000000000000000',
-    'tether':   '1000000000000000000000000000000'
+    'wei':          '1',
+    'kwei':         '1000',
+    'ada':          '1000',
+    'femtoether':   '1000',
+    'mwei':         '1000000',
+    'babbage':      '1000000',
+    'picoether':    '1000000',
+    'gwei':         '1000000000',
+    'shannon':      '1000000000',
+    'nanoether':    '1000000000',
+    'nano':         '1000000000',
+    'szabo':        '1000000000000',
+    'microether':   '1000000000000',
+    'micro':        '1000000000000',
+    'finney':       '1000000000000000',
+    'milliether':    '1000000000000000',
+    'milli':         '1000000000000000',
+    'ether':        '1000000000000000000',
+    'kether':       '1000000000000000000000',
+    'grand':        '1000000000000000000000',
+    'einstein':     '1000000000000000000000',
+    'mether':       '1000000000000000000000000',
+    'gether':       '1000000000000000000000000000',
+    'tether':       '1000000000000000000000000000000'
 };
 
 /**
@@ -865,6 +960,19 @@ var unitMap = {
  */
 var padLeft = function (string, chars, sign) {
     return new Array(chars - string.length + 1).join(sign ? sign : "0") + string;
+};
+
+/**
+ * Should be called to pad string to expected length
+ *
+ * @method padRight
+ * @param {String} string to be padded
+ * @param {Number} characters that result string should have
+ * @param {String} sign, by default 0
+ * @returns {String} right aligned string
+ */
+var padRight = function (string, chars, sign) {
+    return string + (new Array(chars - string.length + 1).join(sign ? sign : "0"));
 };
 
 /** 
@@ -883,10 +991,6 @@ var toAscii = function(hex) {
     }
     for (; i < l; i+=2) {
         var code = parseInt(hex.substr(i, 2), 16);
-        if (code === 0) {
-            break;
-        }
-
         str += String.fromCharCode(code);
     }
 
@@ -996,7 +1100,7 @@ var fromDecimal = function (value) {
  * @return {String}
  */
 var toHex = function (val) {
-    /*jshint maxcomplexity:7 */
+    /*jshint maxcomplexity: 8 */
 
     if (isBoolean(val))
         return fromDecimal(+val);
@@ -1010,9 +1114,11 @@ var toHex = function (val) {
     // if its a negative number, pass it through fromDecimal
     if (isString(val)) {
         if (val.indexOf('-0x') === 0)
-           return fromDecimal(val);
+            return fromDecimal(val);
         else if (!isFinite(val))
             return fromAscii(val);
+        else if(val.indexOf('0x') === 0)
+            return val;
     }
 
     return fromDecimal(val);
@@ -1039,13 +1145,14 @@ var getValueOfUnit = function (unit) {
  * Takes a number of wei and converts it to any other ether unit.
  *
  * Possible units are:
- * - kwei/ada
- * - mwei/babbage
- * - gwei/shannon
- * - szabo
- * - finney
- * - ether
- * - kether/grand/einstein
+ *   SI Short   SI Full        Effigy       Other
+ * - kwei       femtoether     ada
+ * - mwei       picoether      babbage
+ * - gwei       nanoether      shannon      nano
+ * - --         microether     szabo        micro
+ * - --         milliether     finney       milli
+ * - ether      --             --
+ * - kether                    einstein     grand 
  * - mether
  * - gether
  * - tether
@@ -1065,13 +1172,14 @@ var fromWei = function(number, unit) {
  * Takes a number of a unit and converts it to wei.
  *
  * Possible units are:
- * - kwei/ada
- * - mwei/babbage
- * - gwei/shannon
- * - szabo
- * - finney
- * - ether
- * - kether/grand/einstein
+ *   SI Short   SI Full        Effigy       Other
+ * - kwei       femtoether     ada
+ * - mwei       picoether      babbage       
+ * - gwei       nanoether      shannon      nano
+ * - --         microether     szabo        micro
+ * - --         milliether     finney       milli
+ * - ether      --             --
+ * - kether                    einstein     grand 
  * - mether
  * - gether
  * - tether
@@ -1247,8 +1355,21 @@ var isJson = function (str) {
     }
 };
 
+/**
+ * This method should be called to check if string is valid ethereum IBAN number
+ * Supports direct and indirect IBANs
+ *
+ * @method isIBAN
+ * @param {String}
+ * @return {Boolean}
+ */
+var isIBAN = function (iban) {
+    return /^XE[0-9]{2}(ETH[0-9A-Z]{13}|[0-9A-Z]{30})$/.test(iban);
+};
+
 module.exports = {
     padLeft: padLeft,
+    padRight: padRight,
     toHex: toHex,
     toDecimal: toDecimal,
     fromDecimal: fromDecimal,
@@ -1270,16 +1391,17 @@ module.exports = {
     isObject: isObject,
     isBoolean: isBoolean,
     isArray: isArray,
-    isJson: isJson
+    isJson: isJson,
+    isIBAN: isIBAN
 };
 
 
-},{"bignumber.js":"bignumber.js"}],7:[function(require,module,exports){
+},{"bignumber.js":"bignumber.js"}],8:[function(require,module,exports){
 module.exports={
-    "version": "0.4.2"
+    "version": "0.9.0"
 }
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -1317,17 +1439,9 @@ var utils = require('./utils/utils');
 var formatters = require('./web3/formatters');
 var RequestManager = require('./web3/requestmanager');
 var c = require('./utils/config');
-var Method = require('./web3/method');
 var Property = require('./web3/property');
 var Batch = require('./web3/batch');
-
-var web3Methods = [
-    new Method({
-        name: 'sha3',
-        call: 'web3_sha3',
-        params: 1
-    })
-];
+var sha3 = require('./utils/sha3');
 
 var web3Properties = [
     new Property({
@@ -1370,33 +1484,29 @@ var setupProperties = function (obj, properties) {
 /// setups web3 object, and it's in-browser executed methods
 var web3 = {};
 web3.providers = {};
+web3.currentProvider = null;
 web3.version = {};
 web3.version.api = version.version;
 web3.eth = {};
 
 /*jshint maxparams:4 */
-web3.eth.filter = function (fil, eventParams, options, formatter) {
-
-    // if its event, treat it differently
-    // TODO: simplify and remove
-    if (fil._isEvent) {
-        return fil(eventParams, options);
-    }
-
-    // what outputLogFormatter? that's wrong
-    //return new Filter(fil, watches.eth(), formatters.outputLogFormatter);
-    return new Filter(fil, watches.eth(), formatter || formatters.outputLogFormatter);
+web3.eth.filter = function (fil, callback) {
+    return new Filter(fil, watches.eth(), formatters.outputLogFormatter, callback);
 };
 /*jshint maxparams:3 */
 
 web3.shh = {};
-web3.shh.filter = function (fil) {
-    return new Filter(fil, watches.shh(), formatters.outputPostFormatter);
+web3.shh.filter = function (fil, callback) {
+    return new Filter(fil, watches.shh(), formatters.outputPostFormatter, callback);
 };
 web3.net = {};
 web3.db = {};
 web3.setProvider = function (provider) {
+    this.currentProvider = provider;
     RequestManager.getInstance().setProvider(provider);
+};
+web3.isConnected = function(){
+     return (this.currentProvider && this.currentProvider.isConnected());
 };
 web3.reset = function () {
     RequestManager.getInstance().reset();
@@ -1412,6 +1522,8 @@ web3.toBigNumber = utils.toBigNumber;
 web3.toWei = utils.toWei;
 web3.fromWei = utils.fromWei;
 web3.isAddress = utils.isAddress;
+web3.isIBAN = utils.isIBAN;
+web3.sha3 = sha3;
 web3.createBatch = function () {
     return new Batch();
 };
@@ -1437,8 +1549,24 @@ Object.defineProperty(web3.eth, 'defaultAccount', {
     }
 });
 
+
+// EXTEND
+web3._extend = function(extension){
+    /*jshint maxcomplexity: 6 */
+
+    if(extension.property && !web3[extension.property])
+        web3[extension.property] = {};
+
+    setupMethods(web3[extension.property] || web3, extension.methods || []);
+    setupProperties(web3[extension.property] || web3, extension.properties || []);
+};
+web3._extend.formatters = formatters;
+web3._extend.utils = utils;
+web3._extend.Method = require('./web3/method');
+web3._extend.Property = require('./web3/property');
+
+
 /// setups all api methods
-setupMethods(web3, web3Methods);
 setupProperties(web3, web3Properties);
 setupMethods(web3.net, net.methods);
 setupProperties(web3.net, net.properties);
@@ -1450,7 +1578,89 @@ setupMethods(web3.shh, shh.methods);
 module.exports = web3;
 
 
-},{"./utils/config":5,"./utils/utils":6,"./version.json":7,"./web3/batch":9,"./web3/db":11,"./web3/eth":13,"./web3/filter":15,"./web3/formatters":16,"./web3/method":20,"./web3/net":21,"./web3/property":22,"./web3/requestmanager":24,"./web3/shh":25,"./web3/watches":26}],9:[function(require,module,exports){
+},{"./utils/config":5,"./utils/sha3":6,"./utils/utils":7,"./version.json":8,"./web3/batch":11,"./web3/db":13,"./web3/eth":15,"./web3/filter":17,"./web3/formatters":18,"./web3/method":24,"./web3/net":26,"./web3/property":27,"./web3/requestmanager":28,"./web3/shh":29,"./web3/watches":31}],10:[function(require,module,exports){
+/*
+    This file is part of ethereum.js.
+
+    ethereum.js is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ethereum.js is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** 
+ * @file allevents.js
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2014
+ */
+
+var sha3 = require('../utils/sha3');
+var SolidityEvent = require('./event');
+var formatters = require('./formatters');
+var utils = require('../utils/utils');
+var Filter = require('./filter');
+var watches = require('./watches');
+
+var AllSolidityEvents = function (json, address) {
+    this._json = json;
+    this._address = address;
+};
+
+AllSolidityEvents.prototype.encode = function (options) {
+    options = options || {};
+    var result = {};
+
+    ['fromBlock', 'toBlock'].filter(function (f) {
+        return options[f] !== undefined;
+    }).forEach(function (f) {
+        result[f] = formatters.inputBlockNumberFormatter(options[f]);
+    });
+
+    result.address = this._address;
+
+    return result;
+};
+
+AllSolidityEvents.prototype.decode = function (data) {
+    data.data = data.data || '';
+    data.topics = data.topics || [];
+
+    var eventTopic = data.topics[0].slice(2);
+    var match = this._json.filter(function (j) {
+        return eventTopic === sha3(utils.transformToFullName(j));
+    })[0];
+
+    if (!match) { // cannot find matching event?
+        console.warn('cannot find event for log');
+        return data;
+    }
+
+    var event = new SolidityEvent(match, this._address);
+    return event.decode(data);
+};
+
+AllSolidityEvents.prototype.execute = function (options, callback) {
+    var o = this.encode(options);
+    var formatter = this.decode.bind(this);
+    return new Filter(o, watches.eth(), formatter, callback);
+};
+
+AllSolidityEvents.prototype.attachToContract = function (contract) {
+    var execute = this.execute.bind(this);
+    contract.allEvents = execute;
+};
+
+module.exports = AllSolidityEvents;
+
+
+},{"../utils/sha3":6,"../utils/utils":7,"./event":16,"./filter":17,"./formatters":18,"./watches":31}],11:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -1474,6 +1684,8 @@ module.exports = web3;
  */
 
 var RequestManager = require('./requestmanager');
+var Jsonrpc = require('./jsonrpc');
+var errors = require('./errors');
 
 var Batch = function () {
     this.requests = [];
@@ -1500,11 +1712,14 @@ Batch.prototype.execute = function () {
         results = results || [];
         requests.map(function (request, index) {
             return results[index] || {};
-        }).map(function (result, index) {
-            return requests[index].format ? requests[index].format(result.result) : result.result;
         }).forEach(function (result, index) {
             if (requests[index].callback) {
-                requests[index].callback(err, result);
+
+                if (!Jsonrpc.getInstance().isValidResponse(result)) {
+                    return requests[index].callback(errors.InvalidResponse(result));
+                }
+
+                requests[index].callback(null, (requests[index].format ? requests[index].format(result.result) : result.result));
             }
         });
     }); 
@@ -1513,7 +1728,7 @@ Batch.prototype.execute = function () {
 module.exports = Batch;
 
 
-},{"./requestmanager":24}],10:[function(require,module,exports){
+},{"./errors":14,"./jsonrpc":23,"./requestmanager":28}],12:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -1541,6 +1756,7 @@ var utils = require('../utils/utils');
 var coder = require('../solidity/coder');
 var SolidityEvent = require('./event');
 var SolidityFunction = require('./function');
+var AllEvents = require('./allevents');
 
 /**
  * Should be called to encode constructor params
@@ -1586,9 +1802,14 @@ var addFunctionsToContract = function (contract, abi) {
  * @param {Array} abi
  */
 var addEventsToContract = function (contract, abi) {
-    abi.filter(function (json) {
+    var events = abi.filter(function (json) {
         return json.type === 'event';
-    }).map(function (json) {
+    });
+
+    var All = new AllEvents(events, contract.address);
+    All.attachToContract(contract);
+    
+    events.map(function (json) {
         return new SolidityEvent(json, contract.address);
     }).forEach(function (e) {
         e.attachToContract(contract);
@@ -1604,6 +1825,79 @@ var addEventsToContract = function (contract, abi) {
  */
 var contract = function (abi) {
     return new ContractFactory(abi);
+};
+
+/**
+ * Should be called to check if the contract gets properly deployed on the blockchain.
+ *
+ * @method checkForContractAddress
+ * @param {Object} contract
+ * @param {Function} callback
+ * @returns {Undefined}
+ */
+var checkForContractAddress = function(contract, abi, callback){
+    var count = 0,
+        callbackFired = false;
+
+    // wait for receipt
+    var filter = web3.eth.filter('latest', function(e){
+        if(!e && !callbackFired) {
+            count++;
+
+            // console.log('Checking for contract address', count);
+
+            // stop watching after 50 blocks (timeout)
+            if(count > 50) {
+                
+                filter.stopWatching();
+                callbackFired = true;
+
+                if(callback)
+                    callback(new Error('Contract transaction couldn\'t be found after 50 blocks'));
+                else
+                    throw new Error('Contract transaction couldn\'t be found after 50 blocks');
+
+
+            } else {
+
+                web3.eth.getTransactionReceipt(contract.transactionHash, function(e, receipt){
+                    if(receipt && !callbackFired) {
+
+                        web3.eth.getCode(receipt.contractAddress, function(e, code){
+                            /*jshint maxcomplexity: 5 */
+
+                            if(callbackFired)
+                                return;
+                            
+                            filter.stopWatching();
+                            callbackFired = true;
+
+                            if(code.length > 2) {
+
+                                // console.log('Contract code deployed!');
+
+                                contract.address = receipt.contractAddress;
+
+                                // attach events and methods
+                                addFunctionsToContract(contract, abi);
+                                addEventsToContract(contract, abi);
+
+                                // call callback for the second time
+                                if(callback)
+                                    callback(null, contract);
+
+                            } else {
+                                if(callback)
+                                    callback(new Error('The contract code couldn\'t be stored, please check your gas amount.'));
+                                else
+                                    throw new Error('The contract code couldn\'t be stored, please check your gas amount.');
+                            }
+                        });
+                    }
+                });
+            }
+        }
+    });
 };
 
 /**
@@ -1624,10 +1918,12 @@ var ContractFactory = function (abi) {
  * @param {Any} contract constructor param2 (optional)
  * @param {Object} contract transaction object (required)
  * @param {Function} callback
- * @returns {Contract} returns contract if no callback was passed,
- * otherwise calls callback function (err, contract)
+ * @returns {Contract} returns contract instance
  */
 ContractFactory.prototype.new = function () {
+    var _this = this;
+    var contract = new Contract(this.abi);
+
     // parse arguments
     var options = {}; // required!
     var callback;
@@ -1647,18 +1943,31 @@ ContractFactory.prototype.new = function () {
     var bytes = encodeConstructorParams(this.abi, args);
     options.data += bytes;
 
-    if (!callback) {
-        var address = web3.eth.sendTransaction(options);
-        return this.at(address);
+
+    if(callback) {
+
+        // wait for the contract address adn check if the code was deployed
+        web3.eth.sendTransaction(options, function (err, hash) {
+            if (err) {
+                callback(err);
+            } else {
+                // add the transaction hash
+                contract.transactionHash = hash;
+
+                // call callback for the first time
+                callback(null, contract);
+
+                checkForContractAddress(contract, _this.abi, callback);
+            }
+        });
+    } else {
+        var hash = web3.eth.sendTransaction(options);
+        // add the transaction hash
+        contract.transactionHash = hash;
+        checkForContractAddress(contract, _this.abi);
     }
-  
-    var self = this;
-    web3.eth.sendTransaction(options, function (err, address) {
-        if (err) {
-            callback(err);
-        }
-        self.at(address, callback); 
-    }); 
+
+    return contract;
 };
 
 /**
@@ -1671,12 +1980,17 @@ ContractFactory.prototype.new = function () {
  * otherwise calls callback function (err, contract)
  */
 ContractFactory.prototype.at = function (address, callback) {
+    var contract = new Contract(this.abi, address);
     // TODO: address is required
+
+    // attach functions
+    addFunctionsToContract(contract, this.abi);
+    addEventsToContract(contract, this.abi);
     
     if (callback) {
-        callback(null, new Contract(this.abi, address));
+        callback(null, contract);
     } 
-    return new Contract(this.abi, address);
+    return contract;
 };
 
 /**
@@ -1688,14 +2002,12 @@ ContractFactory.prototype.at = function (address, callback) {
  */
 var Contract = function (abi, address) {
     this.address = address;
-    addFunctionsToContract(this, abi);
-    addEventsToContract(this, abi);
 };
 
 module.exports = contract;
 
 
-},{"../solidity/coder":1,"../utils/utils":6,"../web3":8,"./event":14,"./function":17}],11:[function(require,module,exports){
+},{"../solidity/coder":1,"../utils/utils":7,"../web3":9,"./allevents":10,"./event":16,"./function":19}],13:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -1753,7 +2065,7 @@ module.exports = {
     methods: methods
 };
 
-},{"./method":20}],12:[function(require,module,exports){
+},{"./method":24}],14:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -1787,13 +2099,13 @@ module.exports = {
         return new Error('Providor not set or invalid');
     },
     InvalidResponse: function (result){
-        var message = !!result && !!result.error && !!result.error.message ? result.error.message : 'Invalid JSON RPC response';
+        var message = !!result && !!result.error && !!result.error.message ? result.error.message : 'Invalid JSON RPC response: '+ result;
         return new Error(message);
     }
 };
 
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -1948,12 +2260,26 @@ var getTransactionFromBlock = new Method({
     outputFormatter: formatters.outputTransactionFormatter
 });
 
+var getTransactionReceipt = new Method({
+    name: 'getTransactionReceipt',
+    call: 'eth_getTransactionReceipt',
+    params: 1,
+    outputFormatter: formatters.outputTransactionReceiptFormatter
+});
+
 var getTransactionCount = new Method({
     name: 'getTransactionCount',
     call: 'eth_getTransactionCount',
     params: 2,
     inputFormatter: [null, formatters.inputDefaultBlockNumberFormatter],
     outputFormatter: utils.toDecimal
+});
+
+var sendRawTransaction = new Method({
+    name: 'sendRawTransaction',
+    call: 'eth_sendRawTransaction',
+    params: 1,
+    inputFormatter: [null]
 });
 
 var sendTransaction = new Method({
@@ -2019,9 +2345,11 @@ var methods = [
     getBlockUncleCount,
     getTransaction,
     getTransactionFromBlock,
+    getTransactionReceipt,
     getTransactionCount,
     call,
     estimateGas,
+    sendRawTransaction,
     sendTransaction,
     compileSolidity,
     compileLLL,
@@ -2070,7 +2398,7 @@ module.exports = {
 };
 
 
-},{"../utils/utils":6,"./formatters":16,"./method":20,"./property":22}],14:[function(require,module,exports){
+},{"../utils/utils":7,"./formatters":18,"./method":24,"./property":27}],16:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -2095,8 +2423,10 @@ module.exports = {
 
 var utils = require('../utils/utils');
 var coder = require('../solidity/coder');
-var web3 = require('../web3');
 var formatters = require('./formatters');
+var sha3 = require('../utils/sha3');
+var Filter = require('./filter');
+var watches = require('./watches');
 
 /**
  * This prototype should be used to create event filters
@@ -2150,7 +2480,7 @@ SolidityEvent.prototype.typeName = function () {
  * @return {String} event signature
  */
 SolidityEvent.prototype.signature = function () {
-    return web3.sha3(web3.fromAscii(this._name)).slice(2);
+    return sha3(this._name);
 };
 
 /**
@@ -2174,8 +2504,8 @@ SolidityEvent.prototype.encode = function (indexed, options) {
 
     result.topics = [];
 
+    result.address = this._address;
     if (!this._anonymous) {
-        result.address = this._address;
         result.topics.push('0x' + this.signature());
     }
 
@@ -2242,10 +2572,21 @@ SolidityEvent.prototype.decode = function (data) {
  * @param {Object} options
  * @return {Object} filter object
  */
-SolidityEvent.prototype.execute = function (indexed, options) {
+SolidityEvent.prototype.execute = function (indexed, options, callback) {
+
+    if (utils.isFunction(arguments[arguments.length - 1])) {
+        callback = arguments[arguments.length - 1];
+        if(arguments.length === 2)
+            options = null;
+        if(arguments.length === 1) {
+            options = null;
+            indexed = {};
+        }
+    }
+    
     var o = this.encode(indexed, options);
     var formatter = this.decode.bind(this);
-    return web3.eth.filter(o, undefined, undefined, formatter);
+    return new Filter(o, watches.eth(), formatter, callback);
 };
 
 /**
@@ -2266,7 +2607,7 @@ SolidityEvent.prototype.attachToContract = function (contract) {
 module.exports = SolidityEvent;
 
 
-},{"../solidity/coder":1,"../utils/utils":6,"../web3":8,"./formatters":16}],15:[function(require,module,exports){
+},{"../solidity/coder":1,"../utils/sha3":6,"../utils/utils":7,"./filter":17,"./formatters":18,"./watches":31}],17:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -2343,21 +2684,38 @@ var getOptions = function (options) {
     }; 
 };
 
-var Filter = function (options, methods, formatter) {
-    var implementation = {};
-    methods.forEach(function (method) {
-        method.attachToObject(implementation);
-    });
-    this.options = getOptions(options);
-    this.implementation = implementation;
-    this.callbacks = [];
-    this.formatter = formatter;
-    this.filterId = this.implementation.newFilter(this.options);
+/**
+Adds the callback and sets up the methods, to iterate over the results.
+
+@method getLogsAtStart
+@param {Object} self
+@param {funciton} 
+*/
+var getLogsAtStart = function(self, callback){
+    // call getFilterLogs for the first watch callback start
+    if (!utils.isString(self.options)) {
+        self.get(function (err, messages) {
+            // don't send all the responses to all the watches again... just to self one
+            if (err) {
+                callback(err);
+            }
+
+            if(utils.isArray(messages)) {
+                messages.forEach(function (message) {
+                    callback(null, message);
+                });
+            }
+        });
+    }
 };
 
-Filter.prototype.watch = function (callback) {
-    this.callbacks.push(callback);
-    var self = this;
+/**
+Adds the callback and sets up the methods, to iterate over the results.
+
+@method pollFilter
+@param {Object} self
+*/
+var pollFilter = function(self) {
 
     var onMessage = function (error, messages) {
         if (error) {
@@ -2374,29 +2732,64 @@ Filter.prototype.watch = function (callback) {
         });
     };
 
-    // call getFilterLogs on start
-    if (!utils.isString(this.options)) {
-        this.get(function (err, messages) {
-            // don't send all the responses to all the watches again... just to this one
-            if (err) {
-                callback(err);
-            }
+    RequestManager.getInstance().startPolling({
+        method: self.implementation.poll.call,
+        params: [self.filterId],
+    }, self.filterId, onMessage, self.stopWatching.bind(self));
 
-            messages.forEach(function (message) {
-                callback(null, message);
+};
+
+var Filter = function (options, methods, formatter, callback) {
+    var self = this;
+    var implementation = {};
+    methods.forEach(function (method) {
+        method.attachToObject(implementation);
+    });
+    this.options = getOptions(options);
+    this.implementation = implementation;
+    this.filterId = null;
+    this.callbacks = [];
+    this.pollFilters = [];
+    this.formatter = formatter;
+    this.implementation.newFilter(this.options, function(error, id){
+        if(error) {
+            self.callbacks.forEach(function(cb){
+                cb(error);
             });
-        });
+        } else {
+            self.filterId = id;
+
+            // get filter logs for the already existing watch calls
+            self.callbacks.forEach(function(cb){
+                getLogsAtStart(self, cb);
+            });
+            if(self.callbacks.length > 0)
+                pollFilter(self);
+
+            // start to watch immediately
+            if(callback) {
+                return self.watch(callback);
+            }
+        }
+    });
+
+};
+
+Filter.prototype.watch = function (callback) {
+    this.callbacks.push(callback);
+
+    if(this.filterId) {
+        getLogsAtStart(this, callback);
+        pollFilter(this);
     }
 
-    RequestManager.getInstance().startPolling({
-        method: this.implementation.poll.call,
-        params: [this.filterId],
-    }, this.filterId, onMessage, this.stopWatching.bind(this));
+    return this;
 };
 
 Filter.prototype.stopWatching = function () {
     RequestManager.getInstance().stopPolling(this.filterId);
-    this.implementation.uninstallFilter(this.filterId);
+    // remove filter async
+    this.implementation.uninstallFilter(this.filterId, function(){});
     this.callbacks = [];
 };
 
@@ -2418,12 +2811,14 @@ Filter.prototype.get = function (callback) {
             return self.formatter ? self.formatter(log) : log;
         });
     }
+
+    return this;
 };
 
 module.exports = Filter;
 
 
-},{"../utils/utils":6,"./formatters":16,"./requestmanager":24}],16:[function(require,module,exports){
+},{"../utils/utils":7,"./formatters":18,"./requestmanager":28}],18:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -2511,12 +2906,14 @@ var inputTransactionFormatter = function (options){
  * Formats the output of a transaction to its proper values
  * 
  * @method outputTransactionFormatter
- * @param {Object} transaction
- * @returns {Object} transaction
+ * @param {Object} tx
+ * @returns {Object}
 */
 var outputTransactionFormatter = function (tx){
-    tx.blockNumber = utils.toDecimal(tx.blockNumber);
-    tx.transactionIndex = utils.toDecimal(tx.transactionIndex);
+    if(tx.blockNumber !== null)
+        tx.blockNumber = utils.toDecimal(tx.blockNumber);
+    if(tx.transactionIndex !== null)
+        tx.transactionIndex = utils.toDecimal(tx.transactionIndex);
     tx.nonce = utils.toDecimal(tx.nonce);
     tx.gas = utils.toDecimal(tx.gas);
     tx.gasPrice = utils.toBigNumber(tx.gasPrice);
@@ -2525,11 +2922,35 @@ var outputTransactionFormatter = function (tx){
 };
 
 /**
+ * Formats the output of a transaction receipt to its proper values
+ * 
+ * @method outputTransactionReceiptFormatter
+ * @param {Object} receipt
+ * @returns {Object}
+*/
+var outputTransactionReceiptFormatter = function (receipt){
+    if(receipt.blockNumber !== null)
+        receipt.blockNumber = utils.toDecimal(receipt.blockNumber);
+    if(receipt.transactionIndex !== null)
+        receipt.transactionIndex = utils.toDecimal(receipt.transactionIndex);
+    receipt.cumulativeGasUsed = utils.toDecimal(receipt.cumulativeGasUsed);
+    receipt.gasUsed = utils.toDecimal(receipt.gasUsed);
+
+    if(utils.isArray(receipt.logs)) {
+        receipt.logs = receipt.logs.map(function(log){
+            return outputLogFormatter(log);
+        });
+    }
+
+    return receipt;
+};
+
+/**
  * Formats the output of a block to its proper values
  *
  * @method outputBlockFormatter
- * @param {Object} block object 
- * @returns {Object} block object
+ * @param {Object} block 
+ * @returns {Object}
 */
 var outputBlockFormatter = function(block) {
 
@@ -2538,7 +2959,8 @@ var outputBlockFormatter = function(block) {
     block.gasUsed = utils.toDecimal(block.gasUsed);
     block.size = utils.toDecimal(block.size);
     block.timestamp = utils.toDecimal(block.timestamp);
-    block.number = utils.toDecimal(block.number);
+    if(block.number !== null)
+        block.number = utils.toDecimal(block.number);
 
     block.difficulty = utils.toBigNumber(block.difficulty);
     block.totalDifficulty = utils.toBigNumber(block.totalDifficulty);
@@ -2561,13 +2983,12 @@ var outputBlockFormatter = function(block) {
  * @returns {Object} log
 */
 var outputLogFormatter = function(log) {
-    if (log === null) { // 'pending' && 'latest' filters are nulls
-        return null;
-    }
-
-    log.blockNumber = utils.toDecimal(log.blockNumber);
-    log.transactionIndex = utils.toDecimal(log.transactionIndex);
-    log.logIndex = utils.toDecimal(log.logIndex);
+    if(log.blockNumber !== null)
+        log.blockNumber = utils.toDecimal(log.blockNumber);
+    if(log.transactionIndex !== null)
+        log.transactionIndex = utils.toDecimal(log.transactionIndex);
+    if(log.logIndex !== null)
+        log.logIndex = utils.toDecimal(log.logIndex);
 
     return log;
 };
@@ -2637,13 +3058,14 @@ module.exports = {
     inputPostFormatter: inputPostFormatter,
     outputBigNumberFormatter: outputBigNumberFormatter,
     outputTransactionFormatter: outputTransactionFormatter,
+    outputTransactionReceiptFormatter: outputTransactionReceiptFormatter,
     outputBlockFormatter: outputBlockFormatter,
     outputLogFormatter: outputLogFormatter,
     outputPostFormatter: outputPostFormatter
 };
 
 
-},{"../utils/config":5,"../utils/utils":6}],17:[function(require,module,exports){
+},{"../utils/config":5,"../utils/utils":7}],19:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -2669,6 +3091,8 @@ module.exports = {
 var web3 = require('../web3');
 var coder = require('../solidity/coder');
 var utils = require('../utils/utils');
+var formatters = require('./formatters');
+var sha3 = require('../utils/sha3');
 
 /**
  * This prototype should be used to call/sendTransaction to solidity functions
@@ -2688,6 +3112,12 @@ var SolidityFunction = function (json, address) {
 SolidityFunction.prototype.extractCallback = function (args) {
     if (utils.isFunction(args[args.length - 1])) {
         return args.pop(); // modify the args array!
+    }
+};
+
+SolidityFunction.prototype.extractDefaultBlock = function (args) {
+    if (args.length > this._inputTypes.length && !utils.isObject(args[args.length -1])) {
+        return formatters.inputDefaultBlockNumberFormatter(args.pop()); // modify the args array!
     }
 };
 
@@ -2715,12 +3145,12 @@ SolidityFunction.prototype.toPayload = function (args) {
  * @return {String} function signature
  */
 SolidityFunction.prototype.signature = function () {
-    return web3.sha3(web3.fromAscii(this._name)).slice(2, 10);
+    return sha3(this._name).slice(0, 8);
 };
 
 
 SolidityFunction.prototype.unpackOutput = function (output) {
-    if (output === null) {
+    if (!output) {
         return;
     }
 
@@ -2740,17 +3170,19 @@ SolidityFunction.prototype.unpackOutput = function (output) {
  * @return {String} output bytes
  */
 SolidityFunction.prototype.call = function () {
-    var args = Array.prototype.slice.call(arguments);
+    var args = Array.prototype.slice.call(arguments).filter(function (a) {return a !== undefined; });
     var callback = this.extractCallback(args);
+    var defaultBlock = this.extractDefaultBlock(args);
     var payload = this.toPayload(args);
 
+
     if (!callback) {
-        var output = web3.eth.call(payload);
+        var output = web3.eth.call(payload, defaultBlock);
         return this.unpackOutput(output);
     } 
         
     var self = this;
-    web3.eth.call(payload, function (error, output) {
+    web3.eth.call(payload, defaultBlock, function (error, output) {
         callback(error, self.unpackOutput(output));
     });
 };
@@ -2762,16 +3194,33 @@ SolidityFunction.prototype.call = function () {
  * @param {Object} options
  */
 SolidityFunction.prototype.sendTransaction = function () {
+    var args = Array.prototype.slice.call(arguments).filter(function (a) {return a !== undefined; });
+    var callback = this.extractCallback(args);
+    var payload = this.toPayload(args);
+
+    if (!callback) {
+        return web3.eth.sendTransaction(payload);
+    }
+
+    web3.eth.sendTransaction(payload, callback);
+};
+
+/**
+ * Should be used to estimateGas of solidity function
+ *
+ * @method estimateGas
+ * @param {Object} options
+ */
+SolidityFunction.prototype.estimateGas = function () {
     var args = Array.prototype.slice.call(arguments);
     var callback = this.extractCallback(args);
     var payload = this.toPayload(args);
 
     if (!callback) {
-        web3.eth.sendTransaction(payload);
-        return;
+        return web3.eth.estimateGas(payload);
     }
 
-    web3.eth.sendTransaction(payload, callback);
+    web3.eth.estimateGas(payload, callback);
 };
 
 /**
@@ -2807,8 +3256,9 @@ SolidityFunction.prototype.request = function () {
     var format = this.unpackOutput.bind(this);
     
     return {
+        method: this._constant ? 'eth_call' : 'eth_sendTransaction',
         callback: callback,
-        payload: payload, 
+        params: [payload], 
         format: format
     };
 };
@@ -2841,6 +3291,7 @@ SolidityFunction.prototype.attachToContract = function (contract) {
     execute.request = this.request.bind(this);
     execute.call = this.call.bind(this);
     execute.sendTransaction = this.sendTransaction.bind(this);
+    execute.estimateGas = this.estimateGas.bind(this);
     var displayName = this.displayName();
     if (!contract[displayName]) {
         contract[displayName] = execute;
@@ -2851,7 +3302,7 @@ SolidityFunction.prototype.attachToContract = function (contract) {
 module.exports = SolidityFunction;
 
 
-},{"../solidity/coder":1,"../utils/utils":6,"../web3":8}],18:[function(require,module,exports){
+},{"../solidity/coder":1,"../utils/sha3":6,"../utils/utils":7,"../web3":9,"./formatters":18}],20:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -2873,22 +3324,42 @@ module.exports = SolidityFunction;
  *   Marek Kotewicz <marek@ethdev.com>
  *   Marian Oancea <marian@ethdev.com>
  *   Fabian Vogelsteller <fabian@ethdev.com>
- * @date 2014
+ * @date 2015
  */
 
 "use strict";
 
-var XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest; // jshint ignore:line
+var XMLHttpRequest = (typeof window !== 'undefined' && window.XMLHttpRequest) ? window.XMLHttpRequest : require('xmlhttprequest').XMLHttpRequest; // jshint ignore:line
 var errors = require('./errors');
 
 var HttpProvider = function (host) {
     this.host = host || 'http://localhost:8545';
 };
 
+HttpProvider.prototype.isConnected = function() {
+    var request = new XMLHttpRequest();
+
+    request.open('POST', this.host, false);
+    request.setRequestHeader('Content-type','application/json');
+    
+    try {
+        request.send(JSON.stringify({
+            id: 9999999999,
+            jsonrpc: '2.0',
+            method: 'net_listening',
+            params: []
+        }));
+        return true;
+    } catch(e) {
+        return false;
+    }
+};
+
 HttpProvider.prototype.send = function (payload) {
     var request = new XMLHttpRequest();
 
     request.open('POST', this.host, false);
+    request.setRequestHeader('Content-type','application/json');
     
     try {
         request.send(JSON.stringify(payload));
@@ -2908,7 +3379,7 @@ HttpProvider.prototype.send = function (payload) {
     try {
         result = JSON.parse(result);
     } catch(e) {
-        throw errors.InvalidResponse(result);                
+        throw errors.InvalidResponse(request.responseText);                
     }
 
     return result;
@@ -2924,7 +3395,7 @@ HttpProvider.prototype.sendAsync = function (payload, callback) {
             try {
                 result = JSON.parse(result);
             } catch(e) {
-                error = errors.InvalidResponse(result);                
+                error = errors.InvalidResponse(request.responseText);                
             }
 
             callback(error, result);
@@ -2932,7 +3403,8 @@ HttpProvider.prototype.sendAsync = function (payload, callback) {
     };
 
     request.open('POST', this.host, true);
-
+    request.setRequestHeader('Content-type','application/json');
+    
     try {
         request.send(JSON.stringify(payload));
     } catch(error) {
@@ -2943,7 +3415,330 @@ HttpProvider.prototype.sendAsync = function (payload, callback) {
 module.exports = HttpProvider;
 
 
-},{"./errors":12,"xmlhttprequest":4}],19:[function(require,module,exports){
+},{"./errors":14,"xmlhttprequest":4}],21:[function(require,module,exports){
+/*
+    This file is part of ethereum.js.
+
+    ethereum.js is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ethereum.js is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** 
+ * @file icap.js
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
+ */
+
+var utils = require('../utils/utils');
+
+/**
+ * This prototype should be used to extract necessary information from iban address
+ *
+ * @param {String} iban
+ */
+var ICAP = function (iban) {
+    this._iban = iban;
+};
+
+/**
+ * Should be called to check if icap is correct
+ *
+ * @method isValid
+ * @returns {Boolean} true if it is, otherwise false
+ */
+ICAP.prototype.isValid = function () {
+    return utils.isIBAN(this._iban);
+};
+
+/**
+ * Should be called to check if iban number is direct
+ *
+ * @method isDirect
+ * @returns {Boolean} true if it is, otherwise false
+ */
+ICAP.prototype.isDirect = function () {
+    return this._iban.length === 34;
+};
+
+/**
+ * Should be called to check if iban number if indirect
+ *
+ * @method isIndirect
+ * @returns {Boolean} true if it is, otherwise false
+ */
+ICAP.prototype.isIndirect = function () {
+    return this._iban.length === 20;
+};
+
+/**
+ * Should be called to get iban checksum
+ * Uses the mod-97-10 checksumming protocol (ISO/IEC 7064:2003)
+ *
+ * @method checksum
+ * @returns {String} checksum
+ */
+ICAP.prototype.checksum = function () {
+    return this._iban.substr(2, 2);
+};
+
+/**
+ * Should be called to get institution identifier
+ * eg. XREG
+ *
+ * @method institution
+ * @returns {String} institution identifier
+ */
+ICAP.prototype.institution = function () {
+    return this.isIndirect() ? this._iban.substr(7, 4) : '';
+};
+
+/**
+ * Should be called to get client identifier within institution
+ * eg. GAVOFYORK
+ *
+ * @method client
+ * @returns {String} client identifier
+ */
+ICAP.prototype.client = function () {
+    return this.isIndirect() ? this._iban.substr(11) : '';
+};
+
+/**
+ * Should be called to get client direct address
+ *
+ * @method address
+ * @returns {String} client direct address
+ */
+ICAP.prototype.address = function () {
+    return this.isDirect() ? this._iban.substr(4) : '';
+};
+
+module.exports = ICAP;
+
+
+},{"../utils/utils":7}],22:[function(require,module,exports){
+/*
+    This file is part of ethereum.js.
+
+    ethereum.js is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ethereum.js is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @file ipcprovider.js
+ * @authors:
+ *   Fabian Vogelsteller <fabian@ethdev.com>
+ * @date 2015
+ */
+
+"use strict";
+
+var utils = require('../utils/utils');
+var errors = require('./errors');
+
+var errorTimeout = '{"jsonrpc": "2.0", "error": {"code": -32603, "message": "IPC Request timed out for method  \'__method__\'"}, "id": "__id__"}';
+
+
+var IpcProvider = function (path, net) {
+    var _this = this;
+    this.responseCallbacks = {};
+    this.path = path;
+    
+    net = net || require('net');
+
+    this.connection = net.connect({path: this.path});
+
+    this.connection.on('error', function(e){
+        console.error('IPC Connection Error', e);
+        _this._timeout();
+    });
+
+    this.connection.on('end', function(){
+        _this._timeout();
+    }); 
+
+
+    // LISTEN FOR CONNECTION RESPONSES
+    this.connection.on('data', function(data) {
+        /*jshint maxcomplexity: 6 */
+
+        _this._parseResponse(data.toString()).forEach(function(result){
+
+            var id = null;
+
+            // get the id which matches the returned id
+            if(utils.isArray(result)) {
+                result.forEach(function(load){
+                    if(_this.responseCallbacks[load.id])
+                        id = load.id;
+                });
+            } else {
+                id = result.id;
+            }
+
+            // fire the callback
+            if(_this.responseCallbacks[id]) {
+                _this.responseCallbacks[id](null, result);
+                delete _this.responseCallbacks[id];
+            }
+        });
+    });
+};
+
+/**
+Will parse the response and make an array out of it.
+
+@method _parseResponse
+@param {String} data
+*/
+IpcProvider.prototype._parseResponse = function(data) {
+    var _this = this,
+        returnValues = [];
+    
+    // DE-CHUNKER
+    var dechunkedData = data
+        .replace(/\}\{/g,'}|--|{') // }{
+        .replace(/\}\]\[\{/g,'}]|--|[{') // }][{
+        .replace(/\}\[\{/g,'}|--|[{') // }[{
+        .replace(/\}\]\{/g,'}]|--|{') // }]{
+        .split('|--|');
+
+    dechunkedData.forEach(function(data){
+
+        // prepend the last chunk
+        if(_this.lastChunk)
+            data = _this.lastChunk + data;
+
+        var result = null;
+
+        try {
+            result = JSON.parse(data);
+
+        } catch(e) {
+
+            _this.lastChunk = data;
+
+            // start timeout to cancel all requests
+            clearTimeout(_this.lastChunkTimeout);
+            _this.lastChunkTimeout = setTimeout(function(){
+                _this.timeout();
+                throw errors.InvalidResponse(data);
+            }, 1000 * 15);
+
+            return;
+        }
+
+        // cancel timeout and set chunk to null
+        clearTimeout(_this.lastChunkTimeout);
+        _this.lastChunk = null;
+
+        if(result)
+            returnValues.push(result);
+    });
+
+    return returnValues;
+};
+
+
+/**
+Get the adds a callback to the responseCallbacks object,
+which will be called if a response matching the response Id will arrive.
+
+@method _addResponseCallback
+*/
+IpcProvider.prototype._addResponseCallback = function(payload, callback) {
+    var id = payload.id || payload[0].id;
+    var method = payload.method || payload[0].method;
+
+    this.responseCallbacks[id] = callback;
+    this.responseCallbacks[id].method = method;
+};
+
+/**
+Timeout all requests when the end/error event is fired
+
+@method _timeout
+*/
+IpcProvider.prototype._timeout = function() {
+    for(var key in this.responseCallbacks) {
+        if(this.responseCallbacks.hasOwnProperty(key)){
+            this.responseCallbacks[key](errorTimeout.replace('__id__', key).replace('__method__', this.responseCallbacks[key].method));
+            delete this.responseCallbacks[key];
+        }
+    }
+};
+
+
+/**
+Check if the current connection is still valid.
+
+@method isConnected
+*/
+IpcProvider.prototype.isConnected = function() {
+    var _this = this;
+
+    // try reconnect, when connection is gone
+    if(!_this.connection.writable)
+        _this.connection.connect({path: _this.path});
+
+    return !!this.connection.writable;
+};
+
+IpcProvider.prototype.send = function (payload) {
+
+    if(this.connection.writeSync) {
+        var result;
+
+        // try reconnect, when connection is gone
+        if(!this.connection.writable)
+            this.connection.connect({path: this.path});
+
+        var data = this.connection.writeSync(JSON.stringify(payload));
+
+        try {
+            result = JSON.parse(data);
+        } catch(e) {
+            throw errors.InvalidResponse(data);                
+        }
+
+        return result;
+
+    } else {
+        throw new Error('You tried to send "'+ payload.method +'" synchronously. Synchronous requests are not supported by the IPC provider.');
+    }
+};
+
+IpcProvider.prototype.sendAsync = function (payload, callback) {
+    // try reconnect, when connection is gone
+    if(!this.connection.writable)
+        this.connection.connect({path: this.path});
+
+
+    this.connection.write(JSON.stringify(payload));
+    this._addResponseCallback(payload, callback);
+};
+
+module.exports = IpcProvider;
+
+
+},{"../utils/utils":7,"./errors":14,"net":32}],23:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3036,7 +3831,7 @@ Jsonrpc.prototype.toBatchPayload = function (messages) {
 module.exports = Jsonrpc;
 
 
-},{}],20:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3133,7 +3928,7 @@ Method.prototype.formatInput = function (args) {
  * @return {Object}
  */
 Method.prototype.formatOutput = function (result) {
-    return this.outputFormatter && result !== null ? this.outputFormatter(result) : result;
+    return this.outputFormatter && result ? this.outputFormatter(result) : result;
 };
 
 /**
@@ -3210,7 +4005,55 @@ Method.prototype.send = function () {
 module.exports = Method;
 
 
-},{"../utils/utils":6,"./errors":12,"./requestmanager":24}],21:[function(require,module,exports){
+},{"../utils/utils":7,"./errors":14,"./requestmanager":28}],25:[function(require,module,exports){
+/*
+    This file is part of ethereum.js.
+
+    ethereum.js is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ethereum.js is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** 
+ * @file namereg.js
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
+ */
+
+var contract = require('./contract');
+
+var address = '0xc6d9d2cd449a754c494264e1809c50e34d64562b';
+
+var abi = [
+    {"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"name","outputs":[{"name":"o_name","type":"bytes32"}],"type":"function"},
+    {"constant":true,"inputs":[{"name":"_name","type":"bytes32"}],"name":"owner","outputs":[{"name":"","type":"address"}],"type":"function"},
+    {"constant":true,"inputs":[{"name":"_name","type":"bytes32"}],"name":"content","outputs":[{"name":"","type":"bytes32"}],"type":"function"},
+    {"constant":true,"inputs":[{"name":"_name","type":"bytes32"}],"name":"addr","outputs":[{"name":"","type":"address"}],"type":"function"},
+    {"constant":false,"inputs":[{"name":"_name","type":"bytes32"}],"name":"reserve","outputs":[],"type":"function"},
+    {"constant":true,"inputs":[{"name":"_name","type":"bytes32"}],"name":"subRegistrar","outputs":[{"name":"o_subRegistrar","type":"address"}],"type":"function"},
+    {"constant":false,"inputs":[{"name":"_name","type":"bytes32"},{"name":"_newOwner","type":"address"}],"name":"transfer","outputs":[],"type":"function"},
+    {"constant":false,"inputs":[{"name":"_name","type":"bytes32"},{"name":"_registrar","type":"address"}],"name":"setSubRegistrar","outputs":[],"type":"function"},
+    {"constant":false,"inputs":[],"name":"Registrar","outputs":[],"type":"function"},
+    {"constant":false,"inputs":[{"name":"_name","type":"bytes32"},{"name":"_a","type":"address"},{"name":"_primary","type":"bool"}],"name":"setAddress","outputs":[],"type":"function"},
+    {"constant":false,"inputs":[{"name":"_name","type":"bytes32"},{"name":"_content","type":"bytes32"}],"name":"setContent","outputs":[],"type":"function"},
+    {"constant":false,"inputs":[{"name":"_name","type":"bytes32"}],"name":"disown","outputs":[],"type":"function"},
+    {"constant":true,"inputs":[{"name":"_name","type":"bytes32"}],"name":"register","outputs":[{"name":"","type":"address"}],"type":"function"},
+    {"anonymous":false,"inputs":[{"indexed":true,"name":"name","type":"bytes32"}],"name":"Changed","type":"event"},
+    {"anonymous":false,"inputs":[{"indexed":true,"name":"name","type":"bytes32"},{"indexed":true,"name":"addr","type":"address"}],"name":"PrimaryChanged","type":"event"}
+];
+
+module.exports = contract(abi).at(address);
+
+
+},{"./contract":12}],26:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3260,7 +4103,7 @@ module.exports = {
 };
 
 
-},{"../utils/utils":6,"./property":22}],22:[function(require,module,exports){
+},{"../utils/utils":7,"./property":27}],27:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3285,6 +4128,7 @@ module.exports = {
  */
 
 var RequestManager = require('./requestmanager');
+var utils = require('../utils/utils');
 
 var Property = function (options) {
     this.name = options.name;
@@ -3317,6 +4161,19 @@ Property.prototype.formatOutput = function (result) {
 };
 
 /**
+ * Should be used to extract callback from array of arguments. Modifies input param
+ *
+ * @method extractCallback
+ * @param {Array} arguments
+ * @return {Function|Null} callback, if exists
+ */
+Property.prototype.extractCallback = function (args) {
+    if (utils.isFunction(args[args.length - 1])) {
+        return args.pop(); // modify the args array!
+    }
+};
+
+/**
  * Should attach function to method
  * 
  * @method attachToObject
@@ -3342,7 +4199,10 @@ Property.prototype.attachToObject = function (obj) {
         return prefix + name.charAt(0).toUpperCase() + name.slice(1);
     };
 
-    obj[toAsyncName('get', name)] = this.getAsync.bind(this);
+    var func = this.getAsync.bind(this);
+    func.request = this.request.bind(this);
+
+    obj[toAsyncName('get', name)] = func;
 };
 
 /**
@@ -3375,45 +4235,27 @@ Property.prototype.getAsync = function (callback) {
     });
 };
 
+/**
+ * Should be called to create pure JSONRPC request which can be used in batch request
+ *
+ * @method request
+ * @param {...} params
+ * @return {Object} jsonrpc request
+ */
+Property.prototype.request = function () {
+    var payload = {
+        method: this.getter,
+        params: [],
+        callback: this.extractCallback(Array.prototype.slice.call(arguments))
+    };
+    payload.format = this.formatOutput.bind(this);
+    return payload;
+};
+
 module.exports = Property;
 
 
-},{"./requestmanager":24}],23:[function(require,module,exports){
-/*
-    This file is part of ethereum.js.
-
-    ethereum.js is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    ethereum.js is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
-*/
-/** @file qtsync.js
- * @authors:
- *   Marek Kotewicz <marek@ethdev.com>
- *   Marian Oancea <marian@ethdev.com>
- * @date 2014
- */
-
-var QtSyncProvider = function () {
-};
-
-QtSyncProvider.prototype.send = function (payload) {
-    var result = navigator.qt.callMethod(JSON.stringify(payload));
-    return JSON.parse(result);
-};
-
-module.exports = QtSyncProvider;
-
-
-},{}],24:[function(require,module,exports){
+},{"../utils/utils":7,"./requestmanager":28}],28:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3459,9 +4301,9 @@ var RequestManager = function (provider) {
     arguments.callee._singletonInstance = this;
 
     this.provider = provider;
-    this.polls = [];
+    this.polls = {};
     this.timeout = null;
-    this.poll();
+    this.isPolling = false;
 };
 
 /**
@@ -3556,6 +4398,11 @@ RequestManager.prototype.sendBatch = function (data, callback) {
  */
 RequestManager.prototype.setProvider = function (p) {
     this.provider = p;
+
+    if (this.provider && !this.isPolling) {
+        this.poll();
+        this.isPolling = true;
+    }
 };
 
 /*jshint maxparams:4 */
@@ -3572,7 +4419,7 @@ RequestManager.prototype.setProvider = function (p) {
  * @todo cleanup number of params
  */
 RequestManager.prototype.startPolling = function (data, pollId, callback, uninstall) {
-    this.polls.push({data: data, id: pollId, callback: callback, uninstall: uninstall});
+    this.polls['poll_'+ pollId] = {data: data, id: pollId, callback: callback, uninstall: uninstall};
 };
 /*jshint maxparams:3 */
 
@@ -3583,24 +4430,19 @@ RequestManager.prototype.startPolling = function (data, pollId, callback, uninst
  * @param {Number} pollId
  */
 RequestManager.prototype.stopPolling = function (pollId) {
-    for (var i = this.polls.length; i--;) {
-        var poll = this.polls[i];
-        if (poll.id === pollId) {
-            this.polls.splice(i, 1);
-        }
-    }
+    delete this.polls['poll_'+ pollId];
 };
 
 /**
- * Should be called to reset polling mechanism of request manager
+ * Should be called to reset the polling mechanism of the request manager
  *
  * @method reset
  */
 RequestManager.prototype.reset = function () {
-    this.polls.forEach(function (poll) {
-        poll.uninstall(poll.id); 
-    });
-    this.polls = [];
+    for (var key in this.polls) {
+        this.polls[key].uninstall();
+    }
+    this.polls = {};
 
     if (this.timeout) {
         clearTimeout(this.timeout);
@@ -3615,9 +4457,10 @@ RequestManager.prototype.reset = function () {
  * @method poll
  */
 RequestManager.prototype.poll = function () {
+    /*jshint maxcomplexity: 6 */
     this.timeout = setTimeout(this.poll.bind(this), c.ETH_POLLING_TIMEOUT);
 
-    if (!this.polls.length) {
+    if (Object.keys(this.polls).length === 0) {
         return;
     }
 
@@ -3626,9 +4469,18 @@ RequestManager.prototype.poll = function () {
         return;
     }
 
-    var payload = Jsonrpc.getInstance().toBatchPayload(this.polls.map(function (data) {
-        return data.data;
-    }));
+    var pollsData = [];
+    var pollsKeys = [];
+    for (var key in this.polls) {
+        pollsData.push(this.polls[key].data);
+        pollsKeys.push(key);
+    }
+
+    if (pollsData.length === 0) {
+        return;
+    }
+
+    var payload = Jsonrpc.getInstance().toBatchPayload(pollsData);
 
     var self = this;
     this.provider.sendAsync(payload, function (error, results) {
@@ -3636,14 +4488,21 @@ RequestManager.prototype.poll = function () {
         if (error) {
             return;
         }
-            
+
         if (!utils.isArray(results)) {
             throw errors.InvalidResponse(results);
         }
 
         results.map(function (result, index) {
-            result.callback = self.polls[index].callback;
-            return result;
+            var key = pollsKeys[index];
+            // make sure the filter is still installed after arrival of the request
+            if (self.polls[key]) {
+                result.callback = self.polls[key].callback;
+                return result;
+            } else
+                return false;
+        }).filter(function (result) {
+            return !!result; 
         }).filter(function (result) {
             var valid = Jsonrpc.getInstance().isValidResponse(result);
             if (!valid) {
@@ -3661,7 +4520,7 @@ RequestManager.prototype.poll = function () {
 module.exports = RequestManager;
 
 
-},{"../utils/config":5,"../utils/utils":6,"./errors":12,"./jsonrpc":19}],25:[function(require,module,exports){
+},{"../utils/config":5,"../utils/utils":7,"./errors":14,"./jsonrpc":23}],29:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3731,7 +4590,103 @@ module.exports = {
 };
 
 
-},{"./formatters":16,"./method":20}],26:[function(require,module,exports){
+},{"./formatters":18,"./method":24}],30:[function(require,module,exports){
+/*
+    This file is part of ethereum.js.
+
+    ethereum.js is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    ethereum.js is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** 
+ * @file transfer.js
+ * @author Marek Kotewicz <marek@ethdev.com>
+ * @date 2015
+ */
+
+var web3 = require('../web3');
+var ICAP = require('./icap');
+var namereg = require('./namereg');
+var contract = require('./contract');
+
+/**
+ * Should be used to make ICAP transfer
+ *
+ * @method transfer
+ * @param {String} iban number
+ * @param {String} from (address)
+ * @param {Value} value to be tranfered
+ * @param {Function} callback, callback
+ */
+var transfer = function (from, iban, value, callback) {
+    var icap = new ICAP(iban); 
+    if (!icap.isValid()) {
+        throw new Error('invalid iban address');
+    }
+
+    if (icap.isDirect()) {
+        return transferToAddress(from, icap.address(), value, callback);
+    }
+    
+    if (!callback) {
+        var address = namereg.addr(icap.institution());
+        return deposit(from, address, value, icap.client());
+    }
+
+    namereg.addr(icap.insitution(), function (err, address) {
+        return deposit(from, address, value, icap.client(), callback);
+    });
+    
+};
+
+/**
+ * Should be used to transfer funds to certain address
+ *
+ * @method transferToAddress
+ * @param {String} address
+ * @param {String} from (address)
+ * @param {Value} value to be tranfered
+ * @param {Function} callback, callback
+ */
+var transferToAddress = function (from, address, value, callback) {
+    return web3.eth.sendTransaction({
+        address: address,
+        from: from,
+        value: value
+    }, callback);
+};
+
+/**
+ * Should be used to deposit funds to generic Exchange contract (must implement deposit(bytes32) method!)
+ *
+ * @method deposit
+ * @param {String} address
+ * @param {String} from (address)
+ * @param {Value} value to be tranfered
+ * @param {String} client unique identifier
+ * @param {Function} callback, callback
+ */
+var deposit = function (from, address, value, client, callback) {
+    var abi = [{"constant":false,"inputs":[{"name":"name","type":"bytes32"}],"name":"deposit","outputs":[],"type":"function"}];
+    return contract(abi).at(address).deposit(client, {
+        from: from,
+        value: value
+    }, callback);
+};
+
+module.exports = transfer;
+
+
+},{"../web3":9,"./contract":12,"./icap":21,"./namereg":25}],31:[function(require,module,exports){
 /*
     This file is part of ethereum.js.
 
@@ -3763,11 +4718,11 @@ var eth = function () {
 
         switch(type) {
             case 'latest':
-                args.pop();
+                args.shift();
                 this.params = 0;
                 return 'eth_newBlockFilter';
             case 'pending':
-                args.pop();
+                args.shift();
                 this.params = 0;
                 return 'eth_newPendingTransactionFilter';
             default:
@@ -3847,9 +4802,1381 @@ module.exports = {
 };
 
 
-},{"./method":20}],27:[function(require,module,exports){
+},{"./method":24}],32:[function(require,module,exports){
 
-},{}],"bignumber.js":[function(require,module,exports){
+},{}],33:[function(require,module,exports){
+;(function (root, factory) {
+	if (typeof exports === "object") {
+		// CommonJS
+		module.exports = exports = factory();
+	}
+	else if (typeof define === "function" && define.amd) {
+		// AMD
+		define([], factory);
+	}
+	else {
+		// Global (browser)
+		root.CryptoJS = factory();
+	}
+}(this, function () {
+
+	/**
+	 * CryptoJS core components.
+	 */
+	var CryptoJS = CryptoJS || (function (Math, undefined) {
+	    /**
+	     * CryptoJS namespace.
+	     */
+	    var C = {};
+
+	    /**
+	     * Library namespace.
+	     */
+	    var C_lib = C.lib = {};
+
+	    /**
+	     * Base object for prototypal inheritance.
+	     */
+	    var Base = C_lib.Base = (function () {
+	        function F() {}
+
+	        return {
+	            /**
+	             * Creates a new object that inherits from this object.
+	             *
+	             * @param {Object} overrides Properties to copy into the new object.
+	             *
+	             * @return {Object} The new object.
+	             *
+	             * @static
+	             *
+	             * @example
+	             *
+	             *     var MyType = CryptoJS.lib.Base.extend({
+	             *         field: 'value',
+	             *
+	             *         method: function () {
+	             *         }
+	             *     });
+	             */
+	            extend: function (overrides) {
+	                // Spawn
+	                F.prototype = this;
+	                var subtype = new F();
+
+	                // Augment
+	                if (overrides) {
+	                    subtype.mixIn(overrides);
+	                }
+
+	                // Create default initializer
+	                if (!subtype.hasOwnProperty('init')) {
+	                    subtype.init = function () {
+	                        subtype.$super.init.apply(this, arguments);
+	                    };
+	                }
+
+	                // Initializer's prototype is the subtype object
+	                subtype.init.prototype = subtype;
+
+	                // Reference supertype
+	                subtype.$super = this;
+
+	                return subtype;
+	            },
+
+	            /**
+	             * Extends this object and runs the init method.
+	             * Arguments to create() will be passed to init().
+	             *
+	             * @return {Object} The new object.
+	             *
+	             * @static
+	             *
+	             * @example
+	             *
+	             *     var instance = MyType.create();
+	             */
+	            create: function () {
+	                var instance = this.extend();
+	                instance.init.apply(instance, arguments);
+
+	                return instance;
+	            },
+
+	            /**
+	             * Initializes a newly created object.
+	             * Override this method to add some logic when your objects are created.
+	             *
+	             * @example
+	             *
+	             *     var MyType = CryptoJS.lib.Base.extend({
+	             *         init: function () {
+	             *             // ...
+	             *         }
+	             *     });
+	             */
+	            init: function () {
+	            },
+
+	            /**
+	             * Copies properties into this object.
+	             *
+	             * @param {Object} properties The properties to mix in.
+	             *
+	             * @example
+	             *
+	             *     MyType.mixIn({
+	             *         field: 'value'
+	             *     });
+	             */
+	            mixIn: function (properties) {
+	                for (var propertyName in properties) {
+	                    if (properties.hasOwnProperty(propertyName)) {
+	                        this[propertyName] = properties[propertyName];
+	                    }
+	                }
+
+	                // IE won't copy toString using the loop above
+	                if (properties.hasOwnProperty('toString')) {
+	                    this.toString = properties.toString;
+	                }
+	            },
+
+	            /**
+	             * Creates a copy of this object.
+	             *
+	             * @return {Object} The clone.
+	             *
+	             * @example
+	             *
+	             *     var clone = instance.clone();
+	             */
+	            clone: function () {
+	                return this.init.prototype.extend(this);
+	            }
+	        };
+	    }());
+
+	    /**
+	     * An array of 32-bit words.
+	     *
+	     * @property {Array} words The array of 32-bit words.
+	     * @property {number} sigBytes The number of significant bytes in this word array.
+	     */
+	    var WordArray = C_lib.WordArray = Base.extend({
+	        /**
+	         * Initializes a newly created word array.
+	         *
+	         * @param {Array} words (Optional) An array of 32-bit words.
+	         * @param {number} sigBytes (Optional) The number of significant bytes in the words.
+	         *
+	         * @example
+	         *
+	         *     var wordArray = CryptoJS.lib.WordArray.create();
+	         *     var wordArray = CryptoJS.lib.WordArray.create([0x00010203, 0x04050607]);
+	         *     var wordArray = CryptoJS.lib.WordArray.create([0x00010203, 0x04050607], 6);
+	         */
+	        init: function (words, sigBytes) {
+	            words = this.words = words || [];
+
+	            if (sigBytes != undefined) {
+	                this.sigBytes = sigBytes;
+	            } else {
+	                this.sigBytes = words.length * 4;
+	            }
+	        },
+
+	        /**
+	         * Converts this word array to a string.
+	         *
+	         * @param {Encoder} encoder (Optional) The encoding strategy to use. Default: CryptoJS.enc.Hex
+	         *
+	         * @return {string} The stringified word array.
+	         *
+	         * @example
+	         *
+	         *     var string = wordArray + '';
+	         *     var string = wordArray.toString();
+	         *     var string = wordArray.toString(CryptoJS.enc.Utf8);
+	         */
+	        toString: function (encoder) {
+	            return (encoder || Hex).stringify(this);
+	        },
+
+	        /**
+	         * Concatenates a word array to this word array.
+	         *
+	         * @param {WordArray} wordArray The word array to append.
+	         *
+	         * @return {WordArray} This word array.
+	         *
+	         * @example
+	         *
+	         *     wordArray1.concat(wordArray2);
+	         */
+	        concat: function (wordArray) {
+	            // Shortcuts
+	            var thisWords = this.words;
+	            var thatWords = wordArray.words;
+	            var thisSigBytes = this.sigBytes;
+	            var thatSigBytes = wordArray.sigBytes;
+
+	            // Clamp excess bits
+	            this.clamp();
+
+	            // Concat
+	            if (thisSigBytes % 4) {
+	                // Copy one byte at a time
+	                for (var i = 0; i < thatSigBytes; i++) {
+	                    var thatByte = (thatWords[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+	                    thisWords[(thisSigBytes + i) >>> 2] |= thatByte << (24 - ((thisSigBytes + i) % 4) * 8);
+	                }
+	            } else {
+	                // Copy one word at a time
+	                for (var i = 0; i < thatSigBytes; i += 4) {
+	                    thisWords[(thisSigBytes + i) >>> 2] = thatWords[i >>> 2];
+	                }
+	            }
+	            this.sigBytes += thatSigBytes;
+
+	            // Chainable
+	            return this;
+	        },
+
+	        /**
+	         * Removes insignificant bits.
+	         *
+	         * @example
+	         *
+	         *     wordArray.clamp();
+	         */
+	        clamp: function () {
+	            // Shortcuts
+	            var words = this.words;
+	            var sigBytes = this.sigBytes;
+
+	            // Clamp
+	            words[sigBytes >>> 2] &= 0xffffffff << (32 - (sigBytes % 4) * 8);
+	            words.length = Math.ceil(sigBytes / 4);
+	        },
+
+	        /**
+	         * Creates a copy of this word array.
+	         *
+	         * @return {WordArray} The clone.
+	         *
+	         * @example
+	         *
+	         *     var clone = wordArray.clone();
+	         */
+	        clone: function () {
+	            var clone = Base.clone.call(this);
+	            clone.words = this.words.slice(0);
+
+	            return clone;
+	        },
+
+	        /**
+	         * Creates a word array filled with random bytes.
+	         *
+	         * @param {number} nBytes The number of random bytes to generate.
+	         *
+	         * @return {WordArray} The random word array.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var wordArray = CryptoJS.lib.WordArray.random(16);
+	         */
+	        random: function (nBytes) {
+	            var words = [];
+
+	            var r = (function (m_w) {
+	                var m_w = m_w;
+	                var m_z = 0x3ade68b1;
+	                var mask = 0xffffffff;
+
+	                return function () {
+	                    m_z = (0x9069 * (m_z & 0xFFFF) + (m_z >> 0x10)) & mask;
+	                    m_w = (0x4650 * (m_w & 0xFFFF) + (m_w >> 0x10)) & mask;
+	                    var result = ((m_z << 0x10) + m_w) & mask;
+	                    result /= 0x100000000;
+	                    result += 0.5;
+	                    return result * (Math.random() > .5 ? 1 : -1);
+	                }
+	            });
+
+	            for (var i = 0, rcache; i < nBytes; i += 4) {
+	                var _r = r((rcache || Math.random()) * 0x100000000);
+
+	                rcache = _r() * 0x3ade67b7;
+	                words.push((_r() * 0x100000000) | 0);
+	            }
+
+	            return new WordArray.init(words, nBytes);
+	        }
+	    });
+
+	    /**
+	     * Encoder namespace.
+	     */
+	    var C_enc = C.enc = {};
+
+	    /**
+	     * Hex encoding strategy.
+	     */
+	    var Hex = C_enc.Hex = {
+	        /**
+	         * Converts a word array to a hex string.
+	         *
+	         * @param {WordArray} wordArray The word array.
+	         *
+	         * @return {string} The hex string.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var hexString = CryptoJS.enc.Hex.stringify(wordArray);
+	         */
+	        stringify: function (wordArray) {
+	            // Shortcuts
+	            var words = wordArray.words;
+	            var sigBytes = wordArray.sigBytes;
+
+	            // Convert
+	            var hexChars = [];
+	            for (var i = 0; i < sigBytes; i++) {
+	                var bite = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+	                hexChars.push((bite >>> 4).toString(16));
+	                hexChars.push((bite & 0x0f).toString(16));
+	            }
+
+	            return hexChars.join('');
+	        },
+
+	        /**
+	         * Converts a hex string to a word array.
+	         *
+	         * @param {string} hexStr The hex string.
+	         *
+	         * @return {WordArray} The word array.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var wordArray = CryptoJS.enc.Hex.parse(hexString);
+	         */
+	        parse: function (hexStr) {
+	            // Shortcut
+	            var hexStrLength = hexStr.length;
+
+	            // Convert
+	            var words = [];
+	            for (var i = 0; i < hexStrLength; i += 2) {
+	                words[i >>> 3] |= parseInt(hexStr.substr(i, 2), 16) << (24 - (i % 8) * 4);
+	            }
+
+	            return new WordArray.init(words, hexStrLength / 2);
+	        }
+	    };
+
+	    /**
+	     * Latin1 encoding strategy.
+	     */
+	    var Latin1 = C_enc.Latin1 = {
+	        /**
+	         * Converts a word array to a Latin1 string.
+	         *
+	         * @param {WordArray} wordArray The word array.
+	         *
+	         * @return {string} The Latin1 string.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var latin1String = CryptoJS.enc.Latin1.stringify(wordArray);
+	         */
+	        stringify: function (wordArray) {
+	            // Shortcuts
+	            var words = wordArray.words;
+	            var sigBytes = wordArray.sigBytes;
+
+	            // Convert
+	            var latin1Chars = [];
+	            for (var i = 0; i < sigBytes; i++) {
+	                var bite = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+	                latin1Chars.push(String.fromCharCode(bite));
+	            }
+
+	            return latin1Chars.join('');
+	        },
+
+	        /**
+	         * Converts a Latin1 string to a word array.
+	         *
+	         * @param {string} latin1Str The Latin1 string.
+	         *
+	         * @return {WordArray} The word array.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var wordArray = CryptoJS.enc.Latin1.parse(latin1String);
+	         */
+	        parse: function (latin1Str) {
+	            // Shortcut
+	            var latin1StrLength = latin1Str.length;
+
+	            // Convert
+	            var words = [];
+	            for (var i = 0; i < latin1StrLength; i++) {
+	                words[i >>> 2] |= (latin1Str.charCodeAt(i) & 0xff) << (24 - (i % 4) * 8);
+	            }
+
+	            return new WordArray.init(words, latin1StrLength);
+	        }
+	    };
+
+	    /**
+	     * UTF-8 encoding strategy.
+	     */
+	    var Utf8 = C_enc.Utf8 = {
+	        /**
+	         * Converts a word array to a UTF-8 string.
+	         *
+	         * @param {WordArray} wordArray The word array.
+	         *
+	         * @return {string} The UTF-8 string.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var utf8String = CryptoJS.enc.Utf8.stringify(wordArray);
+	         */
+	        stringify: function (wordArray) {
+	            try {
+	                return decodeURIComponent(escape(Latin1.stringify(wordArray)));
+	            } catch (e) {
+	                throw new Error('Malformed UTF-8 data');
+	            }
+	        },
+
+	        /**
+	         * Converts a UTF-8 string to a word array.
+	         *
+	         * @param {string} utf8Str The UTF-8 string.
+	         *
+	         * @return {WordArray} The word array.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var wordArray = CryptoJS.enc.Utf8.parse(utf8String);
+	         */
+	        parse: function (utf8Str) {
+	            return Latin1.parse(unescape(encodeURIComponent(utf8Str)));
+	        }
+	    };
+
+	    /**
+	     * Abstract buffered block algorithm template.
+	     *
+	     * The property blockSize must be implemented in a concrete subtype.
+	     *
+	     * @property {number} _minBufferSize The number of blocks that should be kept unprocessed in the buffer. Default: 0
+	     */
+	    var BufferedBlockAlgorithm = C_lib.BufferedBlockAlgorithm = Base.extend({
+	        /**
+	         * Resets this block algorithm's data buffer to its initial state.
+	         *
+	         * @example
+	         *
+	         *     bufferedBlockAlgorithm.reset();
+	         */
+	        reset: function () {
+	            // Initial values
+	            this._data = new WordArray.init();
+	            this._nDataBytes = 0;
+	        },
+
+	        /**
+	         * Adds new data to this block algorithm's buffer.
+	         *
+	         * @param {WordArray|string} data The data to append. Strings are converted to a WordArray using UTF-8.
+	         *
+	         * @example
+	         *
+	         *     bufferedBlockAlgorithm._append('data');
+	         *     bufferedBlockAlgorithm._append(wordArray);
+	         */
+	        _append: function (data) {
+	            // Convert string to WordArray, else assume WordArray already
+	            if (typeof data == 'string') {
+	                data = Utf8.parse(data);
+	            }
+
+	            // Append
+	            this._data.concat(data);
+	            this._nDataBytes += data.sigBytes;
+	        },
+
+	        /**
+	         * Processes available data blocks.
+	         *
+	         * This method invokes _doProcessBlock(offset), which must be implemented by a concrete subtype.
+	         *
+	         * @param {boolean} doFlush Whether all blocks and partial blocks should be processed.
+	         *
+	         * @return {WordArray} The processed data.
+	         *
+	         * @example
+	         *
+	         *     var processedData = bufferedBlockAlgorithm._process();
+	         *     var processedData = bufferedBlockAlgorithm._process(!!'flush');
+	         */
+	        _process: function (doFlush) {
+	            // Shortcuts
+	            var data = this._data;
+	            var dataWords = data.words;
+	            var dataSigBytes = data.sigBytes;
+	            var blockSize = this.blockSize;
+	            var blockSizeBytes = blockSize * 4;
+
+	            // Count blocks ready
+	            var nBlocksReady = dataSigBytes / blockSizeBytes;
+	            if (doFlush) {
+	                // Round up to include partial blocks
+	                nBlocksReady = Math.ceil(nBlocksReady);
+	            } else {
+	                // Round down to include only full blocks,
+	                // less the number of blocks that must remain in the buffer
+	                nBlocksReady = Math.max((nBlocksReady | 0) - this._minBufferSize, 0);
+	            }
+
+	            // Count words ready
+	            var nWordsReady = nBlocksReady * blockSize;
+
+	            // Count bytes ready
+	            var nBytesReady = Math.min(nWordsReady * 4, dataSigBytes);
+
+	            // Process blocks
+	            if (nWordsReady) {
+	                for (var offset = 0; offset < nWordsReady; offset += blockSize) {
+	                    // Perform concrete-algorithm logic
+	                    this._doProcessBlock(dataWords, offset);
+	                }
+
+	                // Remove processed words
+	                var processedWords = dataWords.splice(0, nWordsReady);
+	                data.sigBytes -= nBytesReady;
+	            }
+
+	            // Return processed words
+	            return new WordArray.init(processedWords, nBytesReady);
+	        },
+
+	        /**
+	         * Creates a copy of this object.
+	         *
+	         * @return {Object} The clone.
+	         *
+	         * @example
+	         *
+	         *     var clone = bufferedBlockAlgorithm.clone();
+	         */
+	        clone: function () {
+	            var clone = Base.clone.call(this);
+	            clone._data = this._data.clone();
+
+	            return clone;
+	        },
+
+	        _minBufferSize: 0
+	    });
+
+	    /**
+	     * Abstract hasher template.
+	     *
+	     * @property {number} blockSize The number of 32-bit words this hasher operates on. Default: 16 (512 bits)
+	     */
+	    var Hasher = C_lib.Hasher = BufferedBlockAlgorithm.extend({
+	        /**
+	         * Configuration options.
+	         */
+	        cfg: Base.extend(),
+
+	        /**
+	         * Initializes a newly created hasher.
+	         *
+	         * @param {Object} cfg (Optional) The configuration options to use for this hash computation.
+	         *
+	         * @example
+	         *
+	         *     var hasher = CryptoJS.algo.SHA256.create();
+	         */
+	        init: function (cfg) {
+	            // Apply config defaults
+	            this.cfg = this.cfg.extend(cfg);
+
+	            // Set initial values
+	            this.reset();
+	        },
+
+	        /**
+	         * Resets this hasher to its initial state.
+	         *
+	         * @example
+	         *
+	         *     hasher.reset();
+	         */
+	        reset: function () {
+	            // Reset data buffer
+	            BufferedBlockAlgorithm.reset.call(this);
+
+	            // Perform concrete-hasher logic
+	            this._doReset();
+	        },
+
+	        /**
+	         * Updates this hasher with a message.
+	         *
+	         * @param {WordArray|string} messageUpdate The message to append.
+	         *
+	         * @return {Hasher} This hasher.
+	         *
+	         * @example
+	         *
+	         *     hasher.update('message');
+	         *     hasher.update(wordArray);
+	         */
+	        update: function (messageUpdate) {
+	            // Append
+	            this._append(messageUpdate);
+
+	            // Update the hash
+	            this._process();
+
+	            // Chainable
+	            return this;
+	        },
+
+	        /**
+	         * Finalizes the hash computation.
+	         * Note that the finalize operation is effectively a destructive, read-once operation.
+	         *
+	         * @param {WordArray|string} messageUpdate (Optional) A final message update.
+	         *
+	         * @return {WordArray} The hash.
+	         *
+	         * @example
+	         *
+	         *     var hash = hasher.finalize();
+	         *     var hash = hasher.finalize('message');
+	         *     var hash = hasher.finalize(wordArray);
+	         */
+	        finalize: function (messageUpdate) {
+	            // Final message update
+	            if (messageUpdate) {
+	                this._append(messageUpdate);
+	            }
+
+	            // Perform concrete-hasher logic
+	            var hash = this._doFinalize();
+
+	            return hash;
+	        },
+
+	        blockSize: 512/32,
+
+	        /**
+	         * Creates a shortcut function to a hasher's object interface.
+	         *
+	         * @param {Hasher} hasher The hasher to create a helper for.
+	         *
+	         * @return {Function} The shortcut function.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var SHA256 = CryptoJS.lib.Hasher._createHelper(CryptoJS.algo.SHA256);
+	         */
+	        _createHelper: function (hasher) {
+	            return function (message, cfg) {
+	                return new hasher.init(cfg).finalize(message);
+	            };
+	        },
+
+	        /**
+	         * Creates a shortcut function to the HMAC's object interface.
+	         *
+	         * @param {Hasher} hasher The hasher to use in this HMAC helper.
+	         *
+	         * @return {Function} The shortcut function.
+	         *
+	         * @static
+	         *
+	         * @example
+	         *
+	         *     var HmacSHA256 = CryptoJS.lib.Hasher._createHmacHelper(CryptoJS.algo.SHA256);
+	         */
+	        _createHmacHelper: function (hasher) {
+	            return function (message, key) {
+	                return new C_algo.HMAC.init(hasher, key).finalize(message);
+	            };
+	        }
+	    });
+
+	    /**
+	     * Algorithm namespace.
+	     */
+	    var C_algo = C.algo = {};
+
+	    return C;
+	}(Math));
+
+
+	return CryptoJS;
+
+}));
+},{}],34:[function(require,module,exports){
+;(function (root, factory, undef) {
+	if (typeof exports === "object") {
+		// CommonJS
+		module.exports = exports = factory(require("./core"), require("./x64-core"));
+	}
+	else if (typeof define === "function" && define.amd) {
+		// AMD
+		define(["./core", "./x64-core"], factory);
+	}
+	else {
+		// Global (browser)
+		factory(root.CryptoJS);
+	}
+}(this, function (CryptoJS) {
+
+	(function (Math) {
+	    // Shortcuts
+	    var C = CryptoJS;
+	    var C_lib = C.lib;
+	    var WordArray = C_lib.WordArray;
+	    var Hasher = C_lib.Hasher;
+	    var C_x64 = C.x64;
+	    var X64Word = C_x64.Word;
+	    var C_algo = C.algo;
+
+	    // Constants tables
+	    var RHO_OFFSETS = [];
+	    var PI_INDEXES  = [];
+	    var ROUND_CONSTANTS = [];
+
+	    // Compute Constants
+	    (function () {
+	        // Compute rho offset constants
+	        var x = 1, y = 0;
+	        for (var t = 0; t < 24; t++) {
+	            RHO_OFFSETS[x + 5 * y] = ((t + 1) * (t + 2) / 2) % 64;
+
+	            var newX = y % 5;
+	            var newY = (2 * x + 3 * y) % 5;
+	            x = newX;
+	            y = newY;
+	        }
+
+	        // Compute pi index constants
+	        for (var x = 0; x < 5; x++) {
+	            for (var y = 0; y < 5; y++) {
+	                PI_INDEXES[x + 5 * y] = y + ((2 * x + 3 * y) % 5) * 5;
+	            }
+	        }
+
+	        // Compute round constants
+	        var LFSR = 0x01;
+	        for (var i = 0; i < 24; i++) {
+	            var roundConstantMsw = 0;
+	            var roundConstantLsw = 0;
+
+	            for (var j = 0; j < 7; j++) {
+	                if (LFSR & 0x01) {
+	                    var bitPosition = (1 << j) - 1;
+	                    if (bitPosition < 32) {
+	                        roundConstantLsw ^= 1 << bitPosition;
+	                    } else /* if (bitPosition >= 32) */ {
+	                        roundConstantMsw ^= 1 << (bitPosition - 32);
+	                    }
+	                }
+
+	                // Compute next LFSR
+	                if (LFSR & 0x80) {
+	                    // Primitive polynomial over GF(2): x^8 + x^6 + x^5 + x^4 + 1
+	                    LFSR = (LFSR << 1) ^ 0x71;
+	                } else {
+	                    LFSR <<= 1;
+	                }
+	            }
+
+	            ROUND_CONSTANTS[i] = X64Word.create(roundConstantMsw, roundConstantLsw);
+	        }
+	    }());
+
+	    // Reusable objects for temporary values
+	    var T = [];
+	    (function () {
+	        for (var i = 0; i < 25; i++) {
+	            T[i] = X64Word.create();
+	        }
+	    }());
+
+	    /**
+	     * SHA-3 hash algorithm.
+	     */
+	    var SHA3 = C_algo.SHA3 = Hasher.extend({
+	        /**
+	         * Configuration options.
+	         *
+	         * @property {number} outputLength
+	         *   The desired number of bits in the output hash.
+	         *   Only values permitted are: 224, 256, 384, 512.
+	         *   Default: 512
+	         */
+	        cfg: Hasher.cfg.extend({
+	            outputLength: 512
+	        }),
+
+	        _doReset: function () {
+	            var state = this._state = []
+	            for (var i = 0; i < 25; i++) {
+	                state[i] = new X64Word.init();
+	            }
+
+	            this.blockSize = (1600 - 2 * this.cfg.outputLength) / 32;
+	        },
+
+	        _doProcessBlock: function (M, offset) {
+	            // Shortcuts
+	            var state = this._state;
+	            var nBlockSizeLanes = this.blockSize / 2;
+
+	            // Absorb
+	            for (var i = 0; i < nBlockSizeLanes; i++) {
+	                // Shortcuts
+	                var M2i  = M[offset + 2 * i];
+	                var M2i1 = M[offset + 2 * i + 1];
+
+	                // Swap endian
+	                M2i = (
+	                    (((M2i << 8)  | (M2i >>> 24)) & 0x00ff00ff) |
+	                    (((M2i << 24) | (M2i >>> 8))  & 0xff00ff00)
+	                );
+	                M2i1 = (
+	                    (((M2i1 << 8)  | (M2i1 >>> 24)) & 0x00ff00ff) |
+	                    (((M2i1 << 24) | (M2i1 >>> 8))  & 0xff00ff00)
+	                );
+
+	                // Absorb message into state
+	                var lane = state[i];
+	                lane.high ^= M2i1;
+	                lane.low  ^= M2i;
+	            }
+
+	            // Rounds
+	            for (var round = 0; round < 24; round++) {
+	                // Theta
+	                for (var x = 0; x < 5; x++) {
+	                    // Mix column lanes
+	                    var tMsw = 0, tLsw = 0;
+	                    for (var y = 0; y < 5; y++) {
+	                        var lane = state[x + 5 * y];
+	                        tMsw ^= lane.high;
+	                        tLsw ^= lane.low;
+	                    }
+
+	                    // Temporary values
+	                    var Tx = T[x];
+	                    Tx.high = tMsw;
+	                    Tx.low  = tLsw;
+	                }
+	                for (var x = 0; x < 5; x++) {
+	                    // Shortcuts
+	                    var Tx4 = T[(x + 4) % 5];
+	                    var Tx1 = T[(x + 1) % 5];
+	                    var Tx1Msw = Tx1.high;
+	                    var Tx1Lsw = Tx1.low;
+
+	                    // Mix surrounding columns
+	                    var tMsw = Tx4.high ^ ((Tx1Msw << 1) | (Tx1Lsw >>> 31));
+	                    var tLsw = Tx4.low  ^ ((Tx1Lsw << 1) | (Tx1Msw >>> 31));
+	                    for (var y = 0; y < 5; y++) {
+	                        var lane = state[x + 5 * y];
+	                        lane.high ^= tMsw;
+	                        lane.low  ^= tLsw;
+	                    }
+	                }
+
+	                // Rho Pi
+	                for (var laneIndex = 1; laneIndex < 25; laneIndex++) {
+	                    // Shortcuts
+	                    var lane = state[laneIndex];
+	                    var laneMsw = lane.high;
+	                    var laneLsw = lane.low;
+	                    var rhoOffset = RHO_OFFSETS[laneIndex];
+
+	                    // Rotate lanes
+	                    if (rhoOffset < 32) {
+	                        var tMsw = (laneMsw << rhoOffset) | (laneLsw >>> (32 - rhoOffset));
+	                        var tLsw = (laneLsw << rhoOffset) | (laneMsw >>> (32 - rhoOffset));
+	                    } else /* if (rhoOffset >= 32) */ {
+	                        var tMsw = (laneLsw << (rhoOffset - 32)) | (laneMsw >>> (64 - rhoOffset));
+	                        var tLsw = (laneMsw << (rhoOffset - 32)) | (laneLsw >>> (64 - rhoOffset));
+	                    }
+
+	                    // Transpose lanes
+	                    var TPiLane = T[PI_INDEXES[laneIndex]];
+	                    TPiLane.high = tMsw;
+	                    TPiLane.low  = tLsw;
+	                }
+
+	                // Rho pi at x = y = 0
+	                var T0 = T[0];
+	                var state0 = state[0];
+	                T0.high = state0.high;
+	                T0.low  = state0.low;
+
+	                // Chi
+	                for (var x = 0; x < 5; x++) {
+	                    for (var y = 0; y < 5; y++) {
+	                        // Shortcuts
+	                        var laneIndex = x + 5 * y;
+	                        var lane = state[laneIndex];
+	                        var TLane = T[laneIndex];
+	                        var Tx1Lane = T[((x + 1) % 5) + 5 * y];
+	                        var Tx2Lane = T[((x + 2) % 5) + 5 * y];
+
+	                        // Mix rows
+	                        lane.high = TLane.high ^ (~Tx1Lane.high & Tx2Lane.high);
+	                        lane.low  = TLane.low  ^ (~Tx1Lane.low  & Tx2Lane.low);
+	                    }
+	                }
+
+	                // Iota
+	                var lane = state[0];
+	                var roundConstant = ROUND_CONSTANTS[round];
+	                lane.high ^= roundConstant.high;
+	                lane.low  ^= roundConstant.low;;
+	            }
+	        },
+
+	        _doFinalize: function () {
+	            // Shortcuts
+	            var data = this._data;
+	            var dataWords = data.words;
+	            var nBitsTotal = this._nDataBytes * 8;
+	            var nBitsLeft = data.sigBytes * 8;
+	            var blockSizeBits = this.blockSize * 32;
+
+	            // Add padding
+	            dataWords[nBitsLeft >>> 5] |= 0x1 << (24 - nBitsLeft % 32);
+	            dataWords[((Math.ceil((nBitsLeft + 1) / blockSizeBits) * blockSizeBits) >>> 5) - 1] |= 0x80;
+	            data.sigBytes = dataWords.length * 4;
+
+	            // Hash final blocks
+	            this._process();
+
+	            // Shortcuts
+	            var state = this._state;
+	            var outputLengthBytes = this.cfg.outputLength / 8;
+	            var outputLengthLanes = outputLengthBytes / 8;
+
+	            // Squeeze
+	            var hashWords = [];
+	            for (var i = 0; i < outputLengthLanes; i++) {
+	                // Shortcuts
+	                var lane = state[i];
+	                var laneMsw = lane.high;
+	                var laneLsw = lane.low;
+
+	                // Swap endian
+	                laneMsw = (
+	                    (((laneMsw << 8)  | (laneMsw >>> 24)) & 0x00ff00ff) |
+	                    (((laneMsw << 24) | (laneMsw >>> 8))  & 0xff00ff00)
+	                );
+	                laneLsw = (
+	                    (((laneLsw << 8)  | (laneLsw >>> 24)) & 0x00ff00ff) |
+	                    (((laneLsw << 24) | (laneLsw >>> 8))  & 0xff00ff00)
+	                );
+
+	                // Squeeze state to retrieve hash
+	                hashWords.push(laneLsw);
+	                hashWords.push(laneMsw);
+	            }
+
+	            // Return final computed hash
+	            return new WordArray.init(hashWords, outputLengthBytes);
+	        },
+
+	        clone: function () {
+	            var clone = Hasher.clone.call(this);
+
+	            var state = clone._state = this._state.slice(0);
+	            for (var i = 0; i < 25; i++) {
+	                state[i] = state[i].clone();
+	            }
+
+	            return clone;
+	        }
+	    });
+
+	    /**
+	     * Shortcut function to the hasher's object interface.
+	     *
+	     * @param {WordArray|string} message The message to hash.
+	     *
+	     * @return {WordArray} The hash.
+	     *
+	     * @static
+	     *
+	     * @example
+	     *
+	     *     var hash = CryptoJS.SHA3('message');
+	     *     var hash = CryptoJS.SHA3(wordArray);
+	     */
+	    C.SHA3 = Hasher._createHelper(SHA3);
+
+	    /**
+	     * Shortcut function to the HMAC's object interface.
+	     *
+	     * @param {WordArray|string} message The message to hash.
+	     * @param {WordArray|string} key The secret key.
+	     *
+	     * @return {WordArray} The HMAC.
+	     *
+	     * @static
+	     *
+	     * @example
+	     *
+	     *     var hmac = CryptoJS.HmacSHA3(message, key);
+	     */
+	    C.HmacSHA3 = Hasher._createHmacHelper(SHA3);
+	}(Math));
+
+
+	return CryptoJS.SHA3;
+
+}));
+},{"./core":33,"./x64-core":35}],35:[function(require,module,exports){
+;(function (root, factory) {
+	if (typeof exports === "object") {
+		// CommonJS
+		module.exports = exports = factory(require("./core"));
+	}
+	else if (typeof define === "function" && define.amd) {
+		// AMD
+		define(["./core"], factory);
+	}
+	else {
+		// Global (browser)
+		factory(root.CryptoJS);
+	}
+}(this, function (CryptoJS) {
+
+	(function (undefined) {
+	    // Shortcuts
+	    var C = CryptoJS;
+	    var C_lib = C.lib;
+	    var Base = C_lib.Base;
+	    var X32WordArray = C_lib.WordArray;
+
+	    /**
+	     * x64 namespace.
+	     */
+	    var C_x64 = C.x64 = {};
+
+	    /**
+	     * A 64-bit word.
+	     */
+	    var X64Word = C_x64.Word = Base.extend({
+	        /**
+	         * Initializes a newly created 64-bit word.
+	         *
+	         * @param {number} high The high 32 bits.
+	         * @param {number} low The low 32 bits.
+	         *
+	         * @example
+	         *
+	         *     var x64Word = CryptoJS.x64.Word.create(0x00010203, 0x04050607);
+	         */
+	        init: function (high, low) {
+	            this.high = high;
+	            this.low = low;
+	        }
+
+	        /**
+	         * Bitwise NOTs this word.
+	         *
+	         * @return {X64Word} A new x64-Word object after negating.
+	         *
+	         * @example
+	         *
+	         *     var negated = x64Word.not();
+	         */
+	        // not: function () {
+	            // var high = ~this.high;
+	            // var low = ~this.low;
+
+	            // return X64Word.create(high, low);
+	        // },
+
+	        /**
+	         * Bitwise ANDs this word with the passed word.
+	         *
+	         * @param {X64Word} word The x64-Word to AND with this word.
+	         *
+	         * @return {X64Word} A new x64-Word object after ANDing.
+	         *
+	         * @example
+	         *
+	         *     var anded = x64Word.and(anotherX64Word);
+	         */
+	        // and: function (word) {
+	            // var high = this.high & word.high;
+	            // var low = this.low & word.low;
+
+	            // return X64Word.create(high, low);
+	        // },
+
+	        /**
+	         * Bitwise ORs this word with the passed word.
+	         *
+	         * @param {X64Word} word The x64-Word to OR with this word.
+	         *
+	         * @return {X64Word} A new x64-Word object after ORing.
+	         *
+	         * @example
+	         *
+	         *     var ored = x64Word.or(anotherX64Word);
+	         */
+	        // or: function (word) {
+	            // var high = this.high | word.high;
+	            // var low = this.low | word.low;
+
+	            // return X64Word.create(high, low);
+	        // },
+
+	        /**
+	         * Bitwise XORs this word with the passed word.
+	         *
+	         * @param {X64Word} word The x64-Word to XOR with this word.
+	         *
+	         * @return {X64Word} A new x64-Word object after XORing.
+	         *
+	         * @example
+	         *
+	         *     var xored = x64Word.xor(anotherX64Word);
+	         */
+	        // xor: function (word) {
+	            // var high = this.high ^ word.high;
+	            // var low = this.low ^ word.low;
+
+	            // return X64Word.create(high, low);
+	        // },
+
+	        /**
+	         * Shifts this word n bits to the left.
+	         *
+	         * @param {number} n The number of bits to shift.
+	         *
+	         * @return {X64Word} A new x64-Word object after shifting.
+	         *
+	         * @example
+	         *
+	         *     var shifted = x64Word.shiftL(25);
+	         */
+	        // shiftL: function (n) {
+	            // if (n < 32) {
+	                // var high = (this.high << n) | (this.low >>> (32 - n));
+	                // var low = this.low << n;
+	            // } else {
+	                // var high = this.low << (n - 32);
+	                // var low = 0;
+	            // }
+
+	            // return X64Word.create(high, low);
+	        // },
+
+	        /**
+	         * Shifts this word n bits to the right.
+	         *
+	         * @param {number} n The number of bits to shift.
+	         *
+	         * @return {X64Word} A new x64-Word object after shifting.
+	         *
+	         * @example
+	         *
+	         *     var shifted = x64Word.shiftR(7);
+	         */
+	        // shiftR: function (n) {
+	            // if (n < 32) {
+	                // var low = (this.low >>> n) | (this.high << (32 - n));
+	                // var high = this.high >>> n;
+	            // } else {
+	                // var low = this.high >>> (n - 32);
+	                // var high = 0;
+	            // }
+
+	            // return X64Word.create(high, low);
+	        // },
+
+	        /**
+	         * Rotates this word n bits to the left.
+	         *
+	         * @param {number} n The number of bits to rotate.
+	         *
+	         * @return {X64Word} A new x64-Word object after rotating.
+	         *
+	         * @example
+	         *
+	         *     var rotated = x64Word.rotL(25);
+	         */
+	        // rotL: function (n) {
+	            // return this.shiftL(n).or(this.shiftR(64 - n));
+	        // },
+
+	        /**
+	         * Rotates this word n bits to the right.
+	         *
+	         * @param {number} n The number of bits to rotate.
+	         *
+	         * @return {X64Word} A new x64-Word object after rotating.
+	         *
+	         * @example
+	         *
+	         *     var rotated = x64Word.rotR(7);
+	         */
+	        // rotR: function (n) {
+	            // return this.shiftR(n).or(this.shiftL(64 - n));
+	        // },
+
+	        /**
+	         * Adds this word with the passed word.
+	         *
+	         * @param {X64Word} word The x64-Word to add with this word.
+	         *
+	         * @return {X64Word} A new x64-Word object after adding.
+	         *
+	         * @example
+	         *
+	         *     var added = x64Word.add(anotherX64Word);
+	         */
+	        // add: function (word) {
+	            // var low = (this.low + word.low) | 0;
+	            // var carry = (low >>> 0) < (this.low >>> 0) ? 1 : 0;
+	            // var high = (this.high + word.high + carry) | 0;
+
+	            // return X64Word.create(high, low);
+	        // }
+	    });
+
+	    /**
+	     * An array of 64-bit words.
+	     *
+	     * @property {Array} words The array of CryptoJS.x64.Word objects.
+	     * @property {number} sigBytes The number of significant bytes in this word array.
+	     */
+	    var X64WordArray = C_x64.WordArray = Base.extend({
+	        /**
+	         * Initializes a newly created word array.
+	         *
+	         * @param {Array} words (Optional) An array of CryptoJS.x64.Word objects.
+	         * @param {number} sigBytes (Optional) The number of significant bytes in the words.
+	         *
+	         * @example
+	         *
+	         *     var wordArray = CryptoJS.x64.WordArray.create();
+	         *
+	         *     var wordArray = CryptoJS.x64.WordArray.create([
+	         *         CryptoJS.x64.Word.create(0x00010203, 0x04050607),
+	         *         CryptoJS.x64.Word.create(0x18191a1b, 0x1c1d1e1f)
+	         *     ]);
+	         *
+	         *     var wordArray = CryptoJS.x64.WordArray.create([
+	         *         CryptoJS.x64.Word.create(0x00010203, 0x04050607),
+	         *         CryptoJS.x64.Word.create(0x18191a1b, 0x1c1d1e1f)
+	         *     ], 10);
+	         */
+	        init: function (words, sigBytes) {
+	            words = this.words = words || [];
+
+	            if (sigBytes != undefined) {
+	                this.sigBytes = sigBytes;
+	            } else {
+	                this.sigBytes = words.length * 8;
+	            }
+	        },
+
+	        /**
+	         * Converts this 64-bit word array to a 32-bit word array.
+	         *
+	         * @return {CryptoJS.lib.WordArray} This word array's data as a 32-bit word array.
+	         *
+	         * @example
+	         *
+	         *     var x32WordArray = x64WordArray.toX32();
+	         */
+	        toX32: function () {
+	            // Shortcuts
+	            var x64Words = this.words;
+	            var x64WordsLength = x64Words.length;
+
+	            // Convert
+	            var x32Words = [];
+	            for (var i = 0; i < x64WordsLength; i++) {
+	                var x64Word = x64Words[i];
+	                x32Words.push(x64Word.high);
+	                x32Words.push(x64Word.low);
+	            }
+
+	            return X32WordArray.create(x32Words, this.sigBytes);
+	        },
+
+	        /**
+	         * Creates a copy of this word array.
+	         *
+	         * @return {X64WordArray} The clone.
+	         *
+	         * @example
+	         *
+	         *     var clone = x64WordArray.clone();
+	         */
+	        clone: function () {
+	            var clone = Base.clone.call(this);
+
+	            // Clone "words" array
+	            var words = clone.words = this.words.slice(0);
+
+	            // Clone each X64Word object
+	            var wordsLength = words.length;
+	            for (var i = 0; i < wordsLength; i++) {
+	                words[i] = words[i].clone();
+	            }
+
+	            return clone;
+	        }
+	    });
+	}());
+
+
+	return CryptoJS;
+
+}));
+},{"./core":33}],"bignumber.js":[function(require,module,exports){
 'use strict';
 
 module.exports = BigNumber; // jshint ignore:line
@@ -3857,9 +6184,13 @@ module.exports = BigNumber; // jshint ignore:line
 
 },{}],"web3":[function(require,module,exports){
 var web3 = require('./lib/web3');
+
 web3.providers.HttpProvider = require('./lib/web3/httpprovider');
-web3.providers.QtSyncProvider = require('./lib/web3/qtsync');
+web3.providers.IpcProvider = require('./lib/web3/ipcprovider');
+
 web3.eth.contract = require('./lib/web3/contract');
+web3.eth.namereg = require('./lib/web3/namereg');
+web3.eth.sendIBANTransaction = require('./lib/web3/transfer');
 
 // dont override global variable
 if (typeof window !== 'undefined' && typeof window.web3 === 'undefined') {
@@ -3869,7 +6200,5 @@ if (typeof window !== 'undefined' && typeof window.web3 === 'undefined') {
 module.exports = web3;
 
 
-},{"./lib/web3":8,"./lib/web3/contract":10,"./lib/web3/httpprovider":18,"./lib/web3/qtsync":23}]},{},["web3"])
-
-
+},{"./lib/web3":9,"./lib/web3/contract":12,"./lib/web3/httpprovider":20,"./lib/web3/ipcprovider":22,"./lib/web3/namereg":25,"./lib/web3/transfer":30}]},{},["web3"])
 //# sourceMappingURL=web3-light.js.map

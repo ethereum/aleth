@@ -44,6 +44,8 @@ using FunctionTypePointer = std::shared_ptr<FunctionType const>;
 using TypePointers = std::vector<TypePointer>;
 
 
+enum class DataLocation { Storage, CallData, Memory };
+
 /**
  * Helper class to compute storage offsets of members of structs and contracts.
  */
@@ -129,7 +131,7 @@ class Type: private boost::noncopyable, public std::enable_shared_from_this<Type
 public:
 	enum class Category
 	{
-		Integer, IntegerConstant, Bool, Real, Array,
+		Integer, IntegerConstant, StringLiteral, Bool, Real, Array,
 		FixedBytes, Contract, Struct, Function, Enum,
 		Mapping, Void, TypeType, Modifier, Magic
 	};
@@ -177,6 +179,9 @@ public:
 	/// is not a simple big-endian encoding or the type cannot be stored in calldata.
 	/// If @a _padded then it is assumed that each element is padded to a multiple of 32 bytes.
 	virtual unsigned getCalldataEncodedSize(bool _padded) const { (void)_padded; return 0; }
+	/// @returns the size of this data type in bytes when stored in memory. For memory-reference
+	/// types, this is the size of the memory pointer.
+	virtual unsigned memoryHeadSize() const { return getCalldataEncodedSize(); }
 	/// Convenience version of @see getCalldataEncodedSize(bool)
 	unsigned getCalldataEncodedSize() const { return getCalldataEncodedSize(true); }
 	/// @returns true if the type is dynamically encoded in calldata
@@ -198,19 +203,27 @@ public:
 	/// i.e. it behaves differently in lvalue context and in value context.
 	virtual bool isValueType() const { return false; }
 	virtual unsigned getSizeOnStack() const { return 1; }
-	/// @returns the real type of some types, like e.g: IntegerConstant
-	virtual TypePointer getRealType() const { return shared_from_this(); }
+	/// @returns the mobile (in contrast to static) type corresponding to the given type.
+	/// This returns the corresponding integer type for IntegerConstantTypes and the pointer type
+	/// for storage reference types.
+	virtual TypePointer mobileType() const { return shared_from_this(); }
+	/// @returns true if this is a non-value type and the data of this type is stored at the
+	/// given location.
+	virtual bool dataStoredIn(DataLocation) const { return false; }
 
 	/// Returns the list of all members of this type. Default implementation: no members.
 	virtual MemberList const& getMembers() const { return EmptyMemberList; }
 	/// Convenience method, returns the type of the given named member or an empty pointer if no such member exists.
 	TypePointer getMemberType(std::string const& _name) const { return getMembers().getMemberType(_name); }
 
-	virtual std::string toString() const = 0;
+	virtual std::string toString(bool _short) const = 0;
+	std::string toString() const { return toString(false); }
 	virtual u256 literalValue(Literal const*) const
 	{
-		BOOST_THROW_EXCEPTION(InternalCompilerError() << errinfo_comment("Literal value requested "
-																		 "for type without literals."));
+		BOOST_THROW_EXCEPTION(
+			InternalCompilerError() <<
+			errinfo_comment("Literal value requested for type without literals.")
+		);
 	}
 
 	/// @returns a type suitable for outside of Solidity, i.e. for contract types it returns address.
@@ -249,7 +262,7 @@ public:
 
 	virtual MemberList const& getMembers() const override { return isAddress() ? AddressMemberList : EmptyMemberList; }
 
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 
 	virtual TypePointer externalType() const override { return shared_from_this(); }
 
@@ -273,6 +286,9 @@ class IntegerConstantType: public Type
 public:
 	virtual Category getCategory() const override { return Category::IntegerConstant; }
 
+	/// @returns true if the literal is a valid integer.
+	static bool isValidLiteral(Literal const& _literal);
+
 	explicit IntegerConstantType(Literal const& _literal);
 	explicit IntegerConstantType(bigint _value): m_value(_value) {}
 
@@ -285,17 +301,47 @@ public:
 
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return false; }
-	virtual unsigned getSizeOnStack() const override { return 1; }
 
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 	virtual u256 literalValue(Literal const* _literal) const override;
-	virtual TypePointer getRealType() const override;
+	virtual TypePointer mobileType() const override;
 
 	/// @returns the smallest integer type that can hold the value or an empty pointer if not possible.
 	std::shared_ptr<IntegerType const> getIntegerType() const;
 
 private:
 	bigint m_value;
+};
+
+/**
+ * Literal string, can be converted to bytes, bytesX or string.
+ */
+class StringLiteralType: public Type
+{
+public:
+	virtual Category getCategory() const override { return Category::StringLiteral; }
+
+	explicit StringLiteralType(Literal const& _literal);
+
+	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
+	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override
+	{
+		return TypePointer();
+	}
+
+	virtual bool operator==(Type const& _other) const override;
+
+	virtual bool canBeStored() const override { return false; }
+	virtual bool canLiveOutsideStorage() const override { return false; }
+	virtual unsigned getSizeOnStack() const override { return 0; }
+
+	virtual std::string toString(bool) const override { return "literal_string \"" + m_value + "\""; }
+	virtual TypePointer mobileType() const override;
+
+	std::string const& value() const { return m_value; }
+
+private:
+	std::string m_value;
 };
 
 /**
@@ -322,11 +368,10 @@ public:
 	virtual unsigned getStorageBytes() const override { return m_bytes; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual std::string toString() const override { return "bytes" + dev::toString(m_bytes); }
-	virtual u256 literalValue(Literal const* _literal) const override;
+	virtual std::string toString(bool) const override { return "bytes" + dev::toString(m_bytes); }
 	virtual TypePointer externalType() const override { return shared_from_this(); }
 
-	int getNumBytes() const { return m_bytes; }
+	int numBytes() const { return m_bytes; }
 
 private:
 	int m_bytes;
@@ -348,9 +393,54 @@ public:
 	virtual unsigned getStorageBytes() const override { return 1; }
 	virtual bool isValueType() const override { return true; }
 
-	virtual std::string toString() const override { return "bool"; }
+	virtual std::string toString(bool) const override { return "bool"; }
 	virtual u256 literalValue(Literal const* _literal) const override;
 	virtual TypePointer externalType() const override { return shared_from_this(); }
+};
+
+/**
+ * Base class used by types which are not value types and can be stored either in storage, memory
+ * or calldata. This is currently used by arrays and structs.
+ */
+class ReferenceType: public Type
+{
+public:
+	explicit ReferenceType(DataLocation _location): m_location(_location) {}
+	DataLocation location() const { return m_location; }
+
+	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	virtual unsigned memoryHeadSize() const override { return 32; }
+
+	/// @returns a copy of this type with location (recursively) changed to @a _location,
+	/// whereas isPointer is only shallowly changed - the deep copy is always a bound reference.
+	virtual TypePointer copyForLocation(DataLocation _location, bool _isPointer) const = 0;
+
+	virtual TypePointer mobileType() const override { return copyForLocation(m_location, true); }
+	virtual bool dataStoredIn(DataLocation _location) const override { return m_location == _location; }
+
+	/// Storage references can be pointers or bound references. In general, local variables are of
+	/// pointer type, state variables are bound references. Assignments to pointers or deleting
+	/// them will not modify storage (that will only change the pointer). Assignment from
+	/// non-storage objects to a variable of storage pointer type is not possible.
+	bool isPointer() const { return m_isPointer; }
+
+	bool operator==(ReferenceType const& _other) const
+	{
+		return location() == _other.location() && isPointer() == _other.isPointer();
+	}
+
+	/// @returns a copy of @a _type having the same location as this (and is not a pointer type)
+	/// if _type is a reference type and an unmodified copy of _type otherwise.
+	/// This function is mostly useful to modify inner types appropriately.
+	static TypePointer copyForLocationIfReference(DataLocation _location, TypePointer const& _type);
+
+protected:
+	TypePointer copyForLocationIfReference(TypePointer const& _type) const;
+	/// @returns a human-readable description of the reference part of the type.
+	std::string stringForReferencePart() const;
+
+	DataLocation m_location = DataLocation::Storage;
+	bool m_isPointer = true;
 };
 
 /**
@@ -360,55 +450,61 @@ public:
  * one slot). Dynamically sized arrays (including byte arrays) start with their size as a uint and
  * thus start on their own slot.
  */
-class ArrayType: public Type
+class ArrayType: public ReferenceType
 {
 public:
-	enum class Location { Storage, CallData, Memory };
-
 	virtual Category getCategory() const override { return Category::Array; }
 
-	/// Constructor for a byte array ("bytes")
-	explicit ArrayType(Location _location):
-		m_location(_location),
-		m_isByteArray(true),
+	/// Constructor for a byte array ("bytes") and string.
+	explicit ArrayType(DataLocation _location, bool _isString = false):
+		ReferenceType(_location),
+		m_arrayKind(_isString ? ArrayKind::String : ArrayKind::Bytes),
 		m_baseType(std::make_shared<FixedBytesType>(1))
-	{}
+	{
+	}
 	/// Constructor for a dynamically sized array type ("type[]")
-	ArrayType(Location _location, const TypePointer &_baseType):
-		m_location(_location),
-		m_baseType(_baseType)
-	{}
+	ArrayType(DataLocation _location, TypePointer const& _baseType):
+		ReferenceType(_location),
+		m_baseType(copyForLocationIfReference(_baseType))
+	{
+	}
 	/// Constructor for a fixed-size array type ("type[20]")
-	ArrayType(Location _location, const TypePointer &_baseType, u256 const& _length):
-		m_location(_location),
-		m_baseType(_baseType),
+	ArrayType(DataLocation _location, TypePointer const& _baseType, u256 const& _length):
+		ReferenceType(_location),
+		m_baseType(copyForLocationIfReference(_baseType)),
 		m_hasDynamicLength(false),
 		m_length(_length)
 	{}
 
 	virtual bool isImplicitlyConvertibleTo(Type const& _convertTo) const override;
-	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
 	virtual bool operator==(const Type& _other) const override;
 	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
-	virtual bool isDynamicallySized() const { return m_hasDynamicLength; }
+	virtual bool isDynamicallySized() const override { return m_hasDynamicLength; }
 	virtual u256 getStorageSize() const override;
+	virtual bool canLiveOutsideStorage() const override { return m_baseType->canLiveOutsideStorage(); }
 	virtual unsigned getSizeOnStack() const override;
-	virtual std::string toString() const override;
-	virtual MemberList const& getMembers() const override { return s_arrayTypeMemberList; }
+	virtual std::string toString(bool _short) const override;
+	virtual MemberList const& getMembers() const override
+	{
+		return isString() ? EmptyMemberList : s_arrayTypeMemberList;
+	}
 	virtual TypePointer externalType() const override;
 
-	Location getLocation() const { return m_location; }
-	bool isByteArray() const { return m_isByteArray; }
+	/// @returns true if this is a byte array or a string
+	bool isByteArray() const { return m_arrayKind != ArrayKind::Ordinary; }
+	/// @returns true if this is a string
+	bool isString() const { return m_arrayKind == ArrayKind::String; }
 	TypePointer const& getBaseType() const { solAssert(!!m_baseType, ""); return m_baseType;}
 	u256 const& getLength() const { return m_length; }
 
-	/// @returns a copy of this type with location changed to @a _location
-	/// @todo this might move as far up as Type later
-	std::shared_ptr<ArrayType> copyForLocation(Location _location) const;
+	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
 
 private:
-	Location m_location;
-	bool m_isByteArray = false; ///< Byte arrays ("bytes") have different semantics from ordinary arrays.
+	/// String is interpreted as a subtype of Bytes.
+	enum class ArrayKind { Ordinary, Bytes, String };
+
+	///< Byte arrays ("bytes") and strings have different semantics from ordinary arrays.
+	ArrayKind m_arrayKind = ArrayKind::Ordinary;
 	TypePointer m_baseType;
 	bool m_hasDynamicLength = true;
 	u256 m_length;
@@ -437,7 +533,7 @@ public:
 	virtual unsigned getStorageBytes() const override { return 20; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual bool isValueType() const override { return true; }
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 
 	virtual MemberList const& getMembers() const override;
 	virtual TypePointer externalType() const override
@@ -474,21 +570,35 @@ private:
 /**
  * The type of a struct instance, there is one distinct type per struct definition.
  */
-class StructType: public Type
+class StructType: public ReferenceType
 {
 public:
 	virtual Category getCategory() const override { return Category::Struct; }
-	explicit StructType(StructDefinition const& _struct): m_struct(_struct) {}
-	virtual TypePointer unaryOperatorResult(Token::Value _operator) const override;
+	explicit StructType(StructDefinition const& _struct, DataLocation _location = DataLocation::Storage):
+		ReferenceType(_location), m_struct(_struct) {}
+	virtual bool isImplicitlyConvertibleTo(const Type& _convertTo) const override;
 	virtual bool operator==(Type const& _other) const override;
+	virtual unsigned getCalldataEncodedSize(bool _padded) const override;
+	u256 memorySize() const;
 	virtual u256 getStorageSize() const override;
-	virtual bool canLiveOutsideStorage() const override;
-	virtual unsigned getSizeOnStack() const override { return 2; }
-	virtual std::string toString() const override;
+	virtual bool canLiveOutsideStorage() const override { return true; }
+	virtual std::string toString(bool _short) const override;
 
 	virtual MemberList const& getMembers() const override;
 
+	TypePointer copyForLocation(DataLocation _location, bool _isPointer) const override;
+
+	/// @returns a function that peforms the type conversion between a list of struct members
+	/// and a memory struct of this type.
+	FunctionTypePointer constructorType() const;
+
 	std::pair<u256, unsigned> const& getStorageOffsetsOfMember(std::string const& _name) const;
+	u256 memoryOffsetOfMember(std::string const& _name) const;
+
+	StructDefinition const& structDefinition() const { return m_struct; }
+
+	/// @returns the set of all members that are removed in the memory version (typically mappings).
+	std::set<std::string> membersMissingInMemory() const;
 
 private:
 	StructDefinition const& m_struct;
@@ -510,10 +620,9 @@ public:
 	{
 		return externalType()->getCalldataEncodedSize(_padded);
 	}
-	virtual unsigned getSizeOnStack() const override { return 1; }
 	virtual unsigned getStorageBytes() const override;
 	virtual bool canLiveOutsideStorage() const override { return true; }
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 	virtual bool isValueType() const override { return true; }
 
 	virtual bool isExplicitlyConvertibleTo(Type const& _convertTo) const override;
@@ -576,8 +685,11 @@ public:
 	FunctionTypePointer externalFunctionType() const;
 	virtual TypePointer externalType() const override { return externalFunctionType(); }
 
+	/// Creates the type of a function.
 	explicit FunctionType(FunctionDefinition const& _function, bool _isInternal = true);
+	/// Creates the accessor function type of a state variable.
 	explicit FunctionType(VariableDeclaration const& _varDecl);
+	/// Creates the function type of an event.
 	explicit FunctionType(EventDefinition const& _event);
 	FunctionType(
 		strings const& _parameterTypes,
@@ -601,17 +713,19 @@ public:
 		strings _returnParameterNames = strings(),
 		Location _location = Location::Internal,
 		bool _arbitraryParameters = false,
+		Declaration const* _declaration = nullptr,
 		bool _gasSet = false,
 		bool _valueSet = false
 	):
-		m_parameterTypes (_parameterTypes),
-		m_returnParameterTypes (_returnParameterTypes),
-		m_parameterNames (_parameterNames),
-		m_returnParameterNames (_returnParameterNames),
-		m_location (_location),
-		m_arbitraryParameters (_arbitraryParameters),
-		m_gasSet (_gasSet),
-		m_valueSet (_valueSet)
+		m_parameterTypes(_parameterTypes),
+		m_returnParameterTypes(_returnParameterTypes),
+		m_parameterNames(_parameterNames),
+		m_returnParameterNames(_returnParameterNames),
+		m_location(_location),
+		m_arbitraryParameters(_arbitraryParameters),
+		m_gasSet(_gasSet),
+		m_valueSet(_valueSet),
+		m_declaration(_declaration)
 	{}
 
 	TypePointers const& getParameterTypes() const { return m_parameterTypes; }
@@ -622,7 +736,7 @@ public:
 	std::vector<std::string> const getReturnParameterTypeNames() const;
 
 	virtual bool operator==(Type const& _other) const override;
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
@@ -665,6 +779,12 @@ public:
 	/// of the parameters to fals.
 	TypePointer copyAndSetGasOrValue(bool _setGas, bool _setValue) const;
 
+	/// @returns a copy of this function type where all return parameters of dynamic size are
+	/// removed and the location of reference types is changed from CallData to Memory.
+	/// This is needed if external functions are called on other contracts, as they cannot return
+	/// dynamic values.
+	FunctionTypePointer asMemberFunction() const;
+
 private:
 	static TypePointers parseElementaryTypeVector(strings const& _types);
 
@@ -694,8 +814,7 @@ public:
 		m_keyType(_keyType), m_valueType(_valueType) {}
 
 	virtual bool operator==(Type const& _other) const override;
-	virtual std::string toString() const override;
-	virtual unsigned getSizeOnStack() const override { return 2; }
+	virtual std::string toString(bool _short) const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 
 	TypePointer const& getKeyType() const { return m_keyType; }
@@ -717,7 +836,7 @@ public:
 	VoidType() {}
 
 	virtual TypePointer binaryOperatorResult(Token::Value, TypePointer const&) const override { return TypePointer(); }
-	virtual std::string toString() const override { return "void"; }
+	virtual std::string toString(bool) const override { return "void"; }
 	virtual bool canBeStored() const override { return false; }
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
@@ -742,7 +861,7 @@ public:
 	virtual u256 getStorageSize() const override;
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
-	virtual std::string toString() const override { return "type(" + m_actualType->toString() + ")"; }
+	virtual std::string toString(bool _short) const override { return "type(" + m_actualType->toString(_short) + ")"; }
 	virtual MemberList const& getMembers() const override;
 
 private:
@@ -769,7 +888,7 @@ public:
 	virtual bool canLiveOutsideStorage() const override { return false; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual bool operator==(Type const& _other) const override;
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 
 private:
 	TypePointers m_parameterTypes;
@@ -793,13 +912,13 @@ public:
 		return TypePointer();
 	}
 
-	virtual bool operator==(Type const& _other) const;
+	virtual bool operator==(Type const& _other) const override;
 	virtual bool canBeStored() const override { return false; }
 	virtual bool canLiveOutsideStorage() const override { return true; }
 	virtual unsigned getSizeOnStack() const override { return 0; }
 	virtual MemberList const& getMembers() const override { return m_members; }
 
-	virtual std::string toString() const override;
+	virtual std::string toString(bool _short) const override;
 
 private:
 	Kind m_kind;

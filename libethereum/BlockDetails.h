@@ -22,15 +22,10 @@
 #pragma once
 
 #include <unordered_map>
-#pragma warning(push)
-#pragma warning(disable: 4100 4267)
-#include <leveldb/db.h>
-#pragma warning(pop)
-
+#include <libdevcore/db.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include "TransactionReceipt.h"
-namespace ldb = leveldb;
 
 namespace dev
 {
@@ -64,7 +59,7 @@ struct BlockLogBlooms
 {
 	BlockLogBlooms() {}
 	BlockLogBlooms(RLP const& _r) { blooms = _r.toVector<LogBloom>(); size = _r.data().size(); }
-	bytes rlp() const { RLPStream s; s << blooms; size = s.out().size(); return s.out(); }
+	bytes rlp() const { bytes r = dev::rlp(blooms); size = r.size(); return r; }
 
 	LogBlooms blooms;
 	mutable unsigned size;
@@ -74,7 +69,7 @@ struct BlocksBlooms
 {
 	BlocksBlooms() {}
 	BlocksBlooms(RLP const& _r) { blooms = _r.toArray<LogBloom, c_bloomIndexSize>(); size = _r.data().size(); }
-	bytes rlp() const { RLPStream s; s << blooms; size = s.out().size(); return s.out(); }
+	bytes rlp() const { bytes r = dev::rlp(blooms); size = r.size(); return r; }
 
 	std::array<LogBloom, c_bloomIndexSize> blooms;
 	mutable unsigned size;
@@ -119,7 +114,7 @@ using BlockDetailsHash = std::unordered_map<h256, BlockDetails>;
 using BlockLogBloomsHash = std::unordered_map<h256, BlockLogBlooms>;
 using BlockReceiptsHash = std::unordered_map<h256, BlockReceipts>;
 using TransactionAddressHash = std::unordered_map<h256, TransactionAddress>;
-using BlockHashHash = std::unordered_map<h256, BlockHash>;
+using BlockHashHash = std::unordered_map<uint64_t, BlockHash>;
 using BlocksBloomsHash = std::unordered_map<h256, BlocksBlooms>;
 
 static const BlockDetails NullBlockDetails;

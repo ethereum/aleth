@@ -18,6 +18,8 @@ RowLayout {
 	property bool displayUnitSelection
 	onValueChanged: update()
 	Component.onCompleted: update()
+	signal amountChanged
+	signal unitChanged
 
 
 	function update()
@@ -37,16 +39,17 @@ RowLayout {
 
 	DefaultTextField
 	{
-		implicitWidth: 200
 		onTextChanged:
 		{
 			if (value !== undefined)
 			{
 				value.setValue(text)
 				formattedValue.text = value.format();
+				amountChanged()
 			}
 		}
 		readOnly: !edit
+		visible: edit
 		id: etherValueEdit;
 	}
 
@@ -60,6 +63,7 @@ RowLayout {
 			{
 				value.setUnit(currentText);
 				formattedValue.text = value.format();
+				unitChanged()
 			}
 		}
 

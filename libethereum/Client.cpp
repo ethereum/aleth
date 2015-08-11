@@ -22,127 +22,30 @@
 #include "Client.h"
 
 #include <chrono>
+#include <memory>
 #include <thread>
 #include <boost/filesystem.hpp>
-#include <boost/math/distributions/normal.hpp>
+#if ETH_JSONRPC || !ETH_TRUE
+#include <jsonrpccpp/client.h>
+#include <jsonrpccpp/client/connectors/httpclient.h>
+#endif
 #include <libdevcore/Log.h>
 #include <libdevcore/StructuredLogger.h>
 #include <libp2p/Host.h>
+#include <libethcore/Ethash.h>
+#if ETH_JSONRPC || !ETH_TRUE
+#include "Sentinel.h"
+#endif
 #include "Defaults.h"
 #include "Executive.h"
 #include "EthereumHost.h"
+#include "Utility.h"
+#include "TransactionQueue.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
-
-VersionChecker::VersionChecker(string const& _dbPath):
-	m_path(_dbPath.size() ? _dbPath : Defaults::dbPath())
-{
-	bytes statusBytes = contents(m_path + "/status");
-	RLP status(statusBytes);
-	try
-	{
-		auto protocolVersion = (unsigned)status[0];
-		auto minorProtocolVersion = (unsigned)status[1];
-		auto databaseVersion = (unsigned)status[2];
-		m_action =
-			protocolVersion != eth::c_protocolVersion || databaseVersion != c_databaseVersion ?
-				WithExisting::Kill
-			: minorProtocolVersion != eth::c_minorProtocolVersion ?
-				WithExisting::Verify
-			:
-				WithExisting::Trust;
-	}
-	catch (...)
-	{
-		m_action = WithExisting::Kill;
-	}
-}
-
-void VersionChecker::setOk()
-{
-	if (m_action != WithExisting::Trust)
-	{
-		try
-		{
-			boost::filesystem::create_directory(m_path);
-		}
-		catch (...)
-		{
-			cwarn << "Unhandled exception! Failed to create directory: " << m_path << "\n" << boost::current_exception_diagnostic_information();
-		}
-		writeFile(m_path + "/status", rlpList(eth::c_protocolVersion, eth::c_minorProtocolVersion, c_databaseVersion));
-	}
-}
-
-void BasicGasPricer::update(BlockChain const& _bc)
-{
-	unsigned c = 0;
-	h256 p = _bc.currentHash();
-	m_gasPerBlock = _bc.info(p).gasLimit;
-
-	map<u256, u256> dist;
-	u256 total = 0;
-
-	// make gasPrice versus gasUsed distribution for the last 1000 blocks
-	while (c < 1000 && p)
-	{
-		BlockInfo bi = _bc.info(p);
-		if (bi.transactionsRoot != EmptyTrie)
-		{
-			auto bb = _bc.block(p);
-			RLP r(bb);
-			BlockReceipts brs(_bc.receipts(bi.hash()));
-			size_t i = 0;
-			for (auto const& tr: r[1])
-			{
-				Transaction tx(tr.data(), CheckTransaction::None);
-				u256 gu = brs.receipts[i].gasUsed();
-				dist[tx.gasPrice()] += gu;
-				total += gu;
-				i++;
-			}
-		}
-		p = bi.parentHash;
-		++c;
-	}
-
-	// fill m_octiles with weighted gasPrices
-	if (total > 0)
-	{
-		m_octiles[0] = dist.begin()->first;
-
-		// calc mean
-		u256 mean = 0;
-		for (auto const& i: dist)
-			mean += i.first * i.second;
-		mean /= total;
-
-		// calc standard deviation
-		u256 sdSquared = 0;
-		for (auto const& i: dist)
-			sdSquared += i.second * (i.first - mean) * (i.first - mean);
-		sdSquared /= total;
-
-		if (sdSquared)
-		{
-			long double sd = sqrt(sdSquared.convert_to<long double>());
-			long double normalizedSd = sd / mean.convert_to<long double>();
-
-			// calc octiles normalized to gaussian distribution
-			boost::math::normal gauss(1.0, (normalizedSd > 0.01) ? normalizedSd : 0.01);
-			for (size_t i = 1; i < 8; i++)
-				m_octiles[i] = u256(mean.convert_to<long double>() * boost::math::quantile(gauss, i / 8.0));
-			m_octiles[8] = dist.rbegin()->first;
-		}
-		else
-		{
-			for (size_t i = 0; i < 9; i++)
-				m_octiles[i] = (i + 1) * mean / 5;
-		}
-	}
-}
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 {
@@ -163,61 +66,205 @@ const char* ClientTrace::name() { return EthTeal "⧫" EthGray " ◎"; }
 const char* ClientDetail::name() { return EthTeal "⧫" EthCoal " ●"; }
 #endif
 
-Client::Client(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId):
-	Worker("eth", 0),
-	m_vc(_dbPath),
-	m_bc(_dbPath, max(m_vc.action(), _forceAction), [](unsigned d, unsigned t){ cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
-	m_gp(new TrivialGasPricer),
-	m_stateDB(State::openDB(_dbPath, max(m_vc.action(), _forceAction))),
-	m_preMine(m_stateDB, BaseState::CanonGenesis),
-	m_postMine(m_stateDB)
+static const Addresses c_canaries =
 {
-	m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
-	m_tqReady = m_tq.onReady([=](){ this->onTransactionQueueReady(); });	// TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
-	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
-	m_farm.onSolutionFound([=](ProofOfWork::Solution const& s){ return this->submitWork(s); });
+	Address("4bb7e8ae99b645c2b7860b8f3a2328aae28bd80a"),		// gav
+	Address("1baf27b88c48dd02b744999cf3522766929d2b2a"),		// vitalik
+	Address("a8edb1ac2c86d3d9d78f96cd18001f60df29e52c"),		// jeff
+	Address("ace7813896a84d3f5f80223916a5353ab16e46e6")			// christoph
+};
 
-	m_gp->update(m_bc);
-
-	m_host = _extNet->registerCapability(new EthereumHost(m_bc, m_tq, m_bq, _networkId));
-
-	if (_dbPath.size())
-		Defaults::setDBPath(_dbPath);
-	m_vc.setOk();
-	doWork();
-
-	startWorking();
+Client::Client(std::shared_ptr<GasPricer> _gp):
+	Worker("eth", 0),
+	m_gp(_gp ? _gp : make_shared<TrivialGasPricer>())
+{
 }
 
-Client::Client(p2p::Host* _extNet, std::shared_ptr<GasPricer> _gp, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId):
-	Worker("eth"),
-	m_vc(_dbPath),
-	m_bc(_dbPath, max(m_vc.action(), _forceAction), [](unsigned d, unsigned t){ cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
-	m_gp(_gp),
-	m_stateDB(State::openDB(_dbPath, max(m_vc.action(), _forceAction))),
-	m_preMine(m_stateDB),
-	m_postMine(m_stateDB)
+void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId)
 {
+	// Cannot be opened until after blockchain is open, since BlockChain may upgrade the database.
+	// TODO: consider returning the upgrade mechanism here. will delaying the opening of the blockchain database
+	// until after the construction.
+	m_stateDB = State::openDB(_dbPath, bc().genesisHash(), _forceAction);
+	// LAZY. TODO: move genesis state construction/commiting to stateDB openning and have this just take the root from the genesis block.
+	m_preMine = bc().genesisState(m_stateDB);
+	m_postMine = m_preMine;
+
+	m_bq.setChain(bc());
+
 	m_lastGetWork = std::chrono::system_clock::now() - chrono::seconds(30);
 	m_tqReady = m_tq.onReady([=](){ this->onTransactionQueueReady(); });	// TODO: should read m_tq->onReady(thisThread, syncTransactionQueue);
 	m_bqReady = m_bq.onReady([=](){ this->onBlockQueueReady(); });			// TODO: should read m_bq->onReady(thisThread, syncBlockQueue);
-	m_farm.onSolutionFound([=](ProofOfWork::Solution const& s){ return this->submitWork(s); });
+	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
+	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 
-	m_gp->update(m_bc);
+	if (_forceAction == WithExisting::Rescue)
+		bc().rescue(m_stateDB);
 
-	m_host = _extNet->registerCapability(new EthereumHost(m_bc, m_tq, m_bq, _networkId));
+	m_gp->update(bc());
+
+	auto host = _extNet->registerCapability(new EthereumHost(bc(), m_tq, m_bq, _networkId));
+	m_host = host;
+	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this one v61+ protocol is common
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
-	m_vc.setOk();
 	doWork();
-
 	startWorking();
 }
 
 Client::~Client()
 {
 	stopWorking();
+}
+
+ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)
+{
+	if (m_bq.status().verified + m_bq.status().verifying + m_bq.status().unverified > 10000)
+		this_thread::sleep_for(std::chrono::milliseconds(500));
+	return m_bq.import(&_block, _isSafe);
+}
+
+tuple<ImportRoute, bool, unsigned> Client::syncQueue(unsigned _max)
+{
+	stopWorking();
+	return bc().sync(m_bq, m_stateDB, _max);
+}
+
+void Client::onBadBlock(Exception& _ex) const
+{
+	// BAD BLOCK!!!
+	bytes const* block = boost::get_error_info<errinfo_block>(_ex);
+	if (!block)
+	{
+		cwarn << "ODD: onBadBlock called but exception (" << _ex.what() << ") has no block in it.";
+		cwarn << boost::diagnostic_information(_ex, true);
+		return;
+	}
+
+	badBlock(*block, _ex.what());
+
+#if ETH_JSONRPC || !ETH_TRUE
+	Json::Value report;
+
+	report["client"] = "cpp";
+	report["version"] = Version;
+	report["protocolVersion"] = c_protocolVersion;
+	report["databaseVersion"] = c_databaseVersion;
+	report["errortype"] = _ex.what();
+	report["block"] = toHex(*block);
+
+	// add the various hints.
+	if (unsigned const* uncleIndex = boost::get_error_info<errinfo_uncleIndex>(_ex))
+	{
+		// uncle that failed.
+		report["hints"]["uncleIndex"] = *uncleIndex;
+	}
+	else if (unsigned const* txIndex = boost::get_error_info<errinfo_transactionIndex>(_ex))
+	{
+		// transaction that failed.
+		report["hints"]["transactionIndex"] = *txIndex;
+	}
+	else
+	{
+		// general block failure.
+	}
+
+	if (string const* vmtraceJson = boost::get_error_info<errinfo_vmtrace>(_ex))
+		Json::Reader().parse(*vmtraceJson, report["hints"]["vmtrace"]);
+
+	if (vector<bytes> const* receipts = boost::get_error_info<errinfo_receipts>(_ex))
+	{
+		report["hints"]["receipts"] = Json::arrayValue;
+		for (auto const& r: *receipts)
+			report["hints"]["receipts"].append(toHex(r));
+	}
+	if (h256Hash const* excluded = boost::get_error_info<errinfo_unclesExcluded>(_ex))
+	{
+		report["hints"]["unclesExcluded"] = Json::arrayValue;
+		for (auto const& r: h256Set() + *excluded)
+			report["hints"]["unclesExcluded"].append(Json::Value(r.hex()));
+	}
+
+#define DEV_HINT_ERRINFO(X) \
+		if (auto const* n = boost::get_error_info<errinfo_ ## X>(_ex)) \
+			report["hints"][#X] = toString(*n)
+#define DEV_HINT_ERRINFO_HASH(X) \
+		if (auto const* n = boost::get_error_info<errinfo_ ## X>(_ex)) \
+			report["hints"][#X] = n->hex()
+
+	DEV_HINT_ERRINFO_HASH(hash256);
+	DEV_HINT_ERRINFO(uncleNumber);
+	DEV_HINT_ERRINFO(currentNumber);
+	DEV_HINT_ERRINFO(now);
+	DEV_HINT_ERRINFO(invalidSymbol);
+	DEV_HINT_ERRINFO(wrongAddress);
+	DEV_HINT_ERRINFO(comment);
+	DEV_HINT_ERRINFO(min);
+	DEV_HINT_ERRINFO(max);
+	DEV_HINT_ERRINFO(name);
+	DEV_HINT_ERRINFO(field);
+	DEV_HINT_ERRINFO(transaction);
+	DEV_HINT_ERRINFO(data);
+	DEV_HINT_ERRINFO(phase);
+	DEV_HINT_ERRINFO_HASH(nonce);
+	DEV_HINT_ERRINFO(difficulty);
+	DEV_HINT_ERRINFO(target);
+	DEV_HINT_ERRINFO_HASH(seedHash);
+	DEV_HINT_ERRINFO_HASH(mixHash);
+	if (tuple<h256, h256> const* r = boost::get_error_info<errinfo_ethashResult>(_ex))
+	{
+		report["hints"]["ethashResult"]["value"] = get<0>(*r).hex();
+		report["hints"]["ethashResult"]["mixHash"] = get<1>(*r).hex();
+	}
+	if (bytes const* ed = boost::get_error_info<errinfo_extraData>(_ex))
+	{
+		report["hints"]["extraData"] = toHex(*ed);
+		try
+		{
+			RLP r(*ed);
+			if (r[0].toInt<int>() == 0)
+				report["hints"]["minerVersion"] = r[1].toString();
+		}
+		catch (...) {}
+	}
+	DEV_HINT_ERRINFO(required);
+	DEV_HINT_ERRINFO(got);
+	DEV_HINT_ERRINFO_HASH(required_LogBloom);
+	DEV_HINT_ERRINFO_HASH(got_LogBloom);
+	DEV_HINT_ERRINFO_HASH(required_h256);
+	DEV_HINT_ERRINFO_HASH(got_h256);
+
+	cwarn << ("Report: \n" + Json::StyledWriter().write(report));
+
+	if (!m_sentinel.empty())
+	{
+		jsonrpc::HttpClient client(m_sentinel);
+		Sentinel rpc(client);
+		try
+		{
+			rpc.eth_badBlock(report);
+		}
+		catch (...)
+		{
+			cwarn << "Error reporting to sentinel. Sure the address" << m_sentinel << "is correct?";
+		}
+	}
+#endif
+}
+
+bool Client::isChainBad() const
+{
+	unsigned numberBad = 0;
+	for (auto const& a: c_canaries)
+		if (!!stateAt(a, 0))
+			numberBad++;
+	return numberBad >= 2;
+}
+
+bool Client::isUpgradeNeeded() const
+{
+	return stateAt(c_canaries[0], 0) == 2;
 }
 
 void Client::setNetworkId(u256 _n)
@@ -240,14 +287,22 @@ bool Client::isSyncing() const
 	return false;
 }
 
+bool Client::isMajorSyncing() const
+{
+	// TODO: only return true if it is actually doing a proper chain sync.
+	if (auto h = m_host.lock())
+		return h->isSyncing();
+	return false;
+}
+
 void Client::startedWorking()
 {
 	// Synchronise the state according to the head of the block chain.
 	// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
-	cdebug << "startedWorking()";
+	clog(ClientTrace) << "startedWorking()";
 
 	DEV_WRITE_GUARDED(x_preMine)
-		m_preMine.sync(m_bc);
+		m_preMine.sync(bc());
 	DEV_READ_GUARDED(x_preMine)
 	{
 		DEV_WRITE_GUARDED(x_working)
@@ -262,7 +317,7 @@ void Client::doneWorking()
 	// Synchronise the state according to the head of the block chain.
 	// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
 	DEV_WRITE_GUARDED(x_preMine)
-		m_preMine.sync(m_bc);
+		m_preMine.sync(bc());
 	DEV_READ_GUARDED(x_preMine)
 	{
 		DEV_WRITE_GUARDED(x_working)
@@ -272,7 +327,7 @@ void Client::doneWorking()
 	}
 }
 
-void Client::killChain()
+void Client::reopenChain(WithExisting _we)
 {
 	bool wasMining = isMining();
 	if (wasMining)
@@ -281,26 +336,29 @@ void Client::killChain()
 
 	m_tq.clear();
 	m_bq.clear();
-	m_farm.stop();
+	m_sealEngine->cancelGeneration();
 
 	{
 		WriteGuard l(x_postMine);
 		WriteGuard l2(x_preMine);
+		WriteGuard l3(x_working);
 
 		m_preMine = State();
 		m_postMine = State();
+		m_working = State();
 
 		m_stateDB = OverlayDB();
-		m_stateDB = State::openDB(Defaults::dbPath(), WithExisting::Kill);
-		m_bc.reopen(Defaults::dbPath(), WithExisting::Kill);
+		bc().reopen(_we);
+		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), _we);
 
-		m_preMine = State(m_stateDB, BaseState::CanonGenesis);
-		m_postMine = State(m_stateDB);
+		m_preMine = bc().genesisState(m_stateDB);
+		m_postMine = m_preMine;
 	}
 
 	if (auto h = m_host.lock())
 		h->reset();
 
+	startedWorking();
 	doWork();
 
 	startWorking();
@@ -310,21 +368,17 @@ void Client::killChain()
 
 void Client::clearPending()
 {
-	h256Hash changeds;
 	DEV_WRITE_GUARDED(x_postMine)
 	{
 		if (!m_postMine.pending().size())
 			return;
-//		for (unsigned i = 0; i < m_postMine.pending().size(); ++i)
-//			appendFromNewPending(m_postMine.logBloom(i), changeds);
-		changeds.insert(PendingChangedFilter);
 		m_tq.clear();
 		DEV_READ_GUARDED(x_preMine)
 			m_postMine = m_preMine;
 	}
 
 	startMining();
-
+	h256Hash changeds;
 	noteChanged(changeds);
 }
 
@@ -347,47 +401,50 @@ static S& filtersStreamOut(S& _out, T const& _fs)
 	return _out;
 }
 
-void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Hash& io_changed, h256 _transactionHash)
+void Client::appendFromNewPending(TransactionReceipt const& _receipt, h256Hash& io_changed, h256 _sha3)
 {
 	Guard l(x_filtersWatches);
+	io_changed.insert(PendingChangedFilter);
+	m_specialFilters.at(PendingChangedFilter).push_back(_sha3);
 	for (pair<h256 const, InstalledFilter>& i: m_filters)
-		if (i.second.filter.envelops(RelativeBlock::Pending, m_bc.number() + 1))
+	{
+		// acceptable number.
+		auto m = i.second.filter.matches(_receipt);
+		if (m.size())
 		{
-			// acceptable number.
-			auto m = i.second.filter.matches(_receipt);
+			// filter catches them
+			for (LogEntry const& l: m)
+				i.second.changes.push_back(LocalisedLogEntry(l));
+			io_changed.insert(i.first);
+		}
+	}
+}
+
+void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Hash& io_changed)
+{
+	// TODO: more precise check on whether the txs match.
+	auto receipts = bc().receipts(_block).receipts;
+
+	Guard l(x_filtersWatches);
+	io_changed.insert(ChainChangedFilter);
+	m_specialFilters.at(ChainChangedFilter).push_back(_block);
+	for (pair<h256 const, InstalledFilter>& i: m_filters)
+	{
+		// acceptable number & looks like block may contain a matching log entry.
+		for (size_t j = 0; j < receipts.size(); j++)
+		{
+			auto tr = receipts[j];
+			auto m = i.second.filter.matches(tr);
 			if (m.size())
 			{
+				auto transactionHash = transaction(_block, j).sha3();
 				// filter catches them
 				for (LogEntry const& l: m)
-					i.second.changes.push_back(LocalisedLogEntry(l, m_bc.number() + 1, _transactionHash));
+					i.second.changes.push_back(LocalisedLogEntry(l, _block, (BlockNumber)bc().number(_block), transactionHash, j, 0, _polarity));
 				io_changed.insert(i.first);
 			}
 		}
-}
-
-void Client::appendFromNewBlock(h256 const& _block, h256Hash& io_changed)
-{
-	// TODO: more precise check on whether the txs match.
-	auto d = m_bc.info(_block);
-	auto br = m_bc.receipts(_block);
-
-	Guard l(x_filtersWatches);
-	for (pair<h256 const, InstalledFilter>& i: m_filters)
-		if (i.second.filter.envelops(RelativeBlock::Latest, d.number) && i.second.filter.matches(d.logBloom))
-			// acceptable number & looks like block may contain a matching log entry.
-			for (size_t j = 0; j < br.receipts.size(); j++)
-			{
-				auto tr = br.receipts[j];
-				auto m = i.second.filter.matches(tr);
-				if (m.size())
-				{
-					auto transactionHash = transaction(d.hash(), j).sha3();
-					// filter catches them
-					for (LogEntry const& l: m)
-						i.second.changes.push_back(LocalisedLogEntry(l, (unsigned)d.number, transactionHash));
-					io_changed.insert(i.first);
-				}
-			}
+	}
 }
 
 void Client::setForceMining(bool _enable)
@@ -397,36 +454,46 @@ void Client::setForceMining(bool _enable)
 		startMining();
 }
 
-MiningProgress Client::miningProgress() const
+void Client::setShouldPrecomputeDAG(bool _precompute)
 {
-	if (m_farm.isMining())
-		return m_farm.miningProgress();
-	return MiningProgress();
+	bytes trueBytes {1};
+	bytes falseBytes {0};
+	sealEngine()->setOption("precomputeDAG", _precompute ? trueBytes: falseBytes);
+}
+
+void Client::setTurboMining(bool _enable)
+{
+	m_turboMining = _enable;
+#if ETH_ETHASHCL || !ETH_TRUE
+	sealEngine()->setSealer(_enable ? "opencl" : "cpu");
+#endif
+	if (isMining())
+		startMining();
+}
+
+bool Client::isMining() const
+{
+	return Ethash::isWorking(m_sealEngine.get());
+}
+
+WorkingProgress Client::miningProgress() const
+{
+	if (Ethash::isWorking(m_sealEngine.get()))
+		return Ethash::workingProgress(m_sealEngine.get());
+	return WorkingProgress();
 }
 
 uint64_t Client::hashrate() const
 {
-	if (m_farm.isMining())
-		return m_farm.miningProgress().rate();
+	if (Ethash::isWorking(m_sealEngine.get()))
+		return Ethash::workingProgress(m_sealEngine.get()).rate();
 	return 0;
 }
 
 std::list<MineInfo> Client::miningHistory()
 {
-	std::list<MineInfo> ret;
-/*	ReadGuard l(x_localMiners);
-	if (m_localMiners.empty())
-		return ret;
-	ret = m_localMiners[0].miningHistory();
-	for (unsigned i = 1; i < m_localMiners.size(); ++i)
-	{
-		auto l = m_localMiners[i].miningHistory();
-		auto ri = ret.begin();
-		auto li = l.begin();
-		for (; ri != ret.end() && li != l.end(); ++ri, ++li)
-			ri->combine(*li);
-	}*/
-	return ret;
+	//TODO: reimplement for CPU/GPU miner
+	return std::list<MineInfo> {};
 }
 
 ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice, Address const& _from)
@@ -435,68 +502,45 @@ ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 
 	try
 	{
 		State temp;
-//		cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preMine.transactionsFrom(toAddress(_secret)) << " post:" << m_postMine.transactionsFrom(toAddress(_secret));
+		clog(ClientDetail) << "Nonce at " << _dest << " pre:" << m_preMine.transactionsFrom(_dest) << " post:" << m_postMine.transactionsFrom(_dest);
 		DEV_READ_GUARDED(x_postMine)
 			temp = m_postMine;
 		temp.addBalance(_from, _value + _gasPrice * _gas);
 		Executive e(temp, LastHashes(), 0);
-		if (!e.call(_dest, _dest, _from, _value, _gasPrice, &_data, _gas, _from))
+		e.setResultRecipient(ret);
+		if (!e.call(_dest, _from, _value, _gasPrice, &_data, _gas))
 			e.go();
-		ret = e.executionResult();
+		e.finalize();
 	}
 	catch (...)
 	{
-		// TODO: Some sort of notification of failure.
+		cwarn << "Client::call failed: " << boost::current_exception_diagnostic_information();
 	}
 	return ret;
 }
 
-ProofOfWork::WorkPackage Client::getWork()
-{
-	// lock the work so a later submission isn't invalidated by processing a transaction elsewhere.
-	// this will be reset as soon as a new block arrives, allowing more transactions to be processed.
-	bool oldShould = shouldServeWork();
-	m_lastGetWork = chrono::system_clock::now();
-
-	// if this request has made us bother to serve work, prep it now.
-	if (!oldShould && shouldServeWork())
-		onPostStateChanged();
-	else
-		// otherwise, set this to true so that it gets prepped next time.
-		m_remoteWorking = true;
-	return ProofOfWork::package(m_miningInfo);
-}
-
-bool Client::submitWork(ProofOfWork::Solution const& _solution)
-{
-	bytes newBlock;
-	DEV_WRITE_GUARDED(x_working)
-		if (!m_working.completeMine<ProofOfWork>(_solution))
-			return false;
-
-	DEV_READ_GUARDED(x_working)
-	{
-		DEV_WRITE_GUARDED(x_postMine)
-			m_postMine = m_working;
-		newBlock = m_working.blockData();
-	}
-
-	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postMine that contains all trie changes.
-	m_bq.import(&newBlock, m_bc, true);
-
-	return true;
-}
+unsigned static const c_syncMin = 1;
+unsigned static const c_syncMax = 1000;
+double static const c_targetDuration = 1;
 
 void Client::syncBlockQueue()
 {
-	ImportRoute ir;
-
 	cwork << "BQ ==> CHAIN ==> STATE";
-	{
-		tie(ir.first, ir.second, m_syncBlockQueue) = m_bc.sync(m_bq, m_stateDB, rand() % 90 + 10);
-		if (ir.first.empty())
-			return;
-	}
+	ImportRoute ir;
+	unsigned count;
+	Timer t;
+	tie(ir, m_syncBlockQueue, count) = bc().sync(m_bq, m_stateDB, m_syncAmount);
+	double elapsed = t.elapsed();
+
+	if (count)
+		clog(ClientNote) << count << "blocks imported in" << unsigned(elapsed * 1000) << "ms (" << (count / elapsed) << "blocks/s)";
+
+	if (elapsed > c_targetDuration * 1.1 && count > c_syncMin)
+		m_syncAmount = max(c_syncMin, count * 9 / 10);
+	else if (count == m_syncAmount && elapsed < c_targetDuration * 0.9 && m_syncAmount < c_syncMax)
+		m_syncAmount = min(c_syncMax, m_syncAmount * 11 / 10 + 1);
+	if (ir.liveBlocks.empty())
+		return;
 	onChainChanged(ir);
 }
 
@@ -509,7 +553,7 @@ void Client::syncTransactionQueue()
 	TransactionReceipts newPendingReceipts;
 
 	DEV_WRITE_GUARDED(x_working)
-		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(m_bc, m_tq, *m_gp);
+		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
 
 	if (newPendingReceipts.empty())
 		return;
@@ -521,9 +565,8 @@ void Client::syncTransactionQueue()
 	DEV_READ_GUARDED(x_postMine)
 		for (size_t i = 0; i < newPendingReceipts.size(); i++)
 			appendFromNewPending(newPendingReceipts[i], changeds, m_postMine.pending()[i].sha3());
-	changeds.insert(PendingChangedFilter);
 
-	// Tell farm about new transaction (i.e. restartProofOfWork mining).
+	// Tell farm about new transaction (i.e. restart mining).
 	onPostStateChanged();
 
 	// Tell watches about the new transactions.
@@ -534,77 +577,90 @@ void Client::syncTransactionQueue()
 		h->noteNewTransactions();
 }
 
-void Client::onChainChanged(ImportRoute const& _ir)
+void Client::onDeadBlocks(h256s const& _blocks, h256Hash& io_changed)
 {
 	// insert transactions that we are declaring the dead part of the chain
-	for (auto const& h: _ir.second)
+	for (auto const& h: _blocks)
 	{
-		clog(ClientNote) << "Dead block:" << h;
-		for (auto const& t: m_bc.transactions(h))
+		clog(ClientTrace) << "Dead block:" << h;
+		for (auto const& t: bc().transactions(h))
 		{
-			clog(ClientNote) << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
-			m_tq.import(t, TransactionQueue::ImportCallback(), IfDropped::Retry);
+			clog(ClientTrace) << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
+			m_tq.import(t, IfDropped::Retry);
 		}
 	}
 
+	for (auto const& h: _blocks)
+		appendFromBlock(h, BlockPolarity::Dead, io_changed);
+}
+
+void Client::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
+{
 	// remove transactions from m_tq nicely rather than relying on out of date nonce later on.
-	for (auto const& h: _ir.first)
-	{
-		clog(ClientChat) << "Live block:" << h;
-		for (auto const& th: m_bc.transactionHashes(h))
-		{
-			clog(ClientNote) << "Safely dropping transaction " << th;
-			m_tq.drop(th);
-		}
-	}
+	for (auto const& h: _blocks)
+		clog(ClientTrace) << "Live block:" << h;
 
 	if (auto h = m_host.lock())
 		h->noteNewBlocks();
 
-	h256Hash changeds;
-	for (auto const& h: _ir.first)
-		appendFromNewBlock(h, changeds);
-	changeds.insert(ChainChangedFilter);
+	for (auto const& h: _blocks)
+		appendFromBlock(h, BlockPolarity::Live, io_changed);
+}
 
+void Client::resyncStateFromChain()
+{
 	// RESTART MINING
 
-	bool preChanged = false;
-	State newPreMine;
-	DEV_READ_GUARDED(x_preMine)
-		newPreMine = m_preMine;
-
-	// TODO: use m_postMine to avoid re-evaluating our own blocks.
-	preChanged = newPreMine.sync(m_bc);
-
-	if (preChanged || m_postMine.address() != m_preMine.address())
+	if (!isMajorSyncing())
 	{
-		if (isMining())
-			cnote << "New block on chain.";
+		bool preChanged = false;
+		State newPreMine;
+		DEV_READ_GUARDED(x_preMine)
+			newPreMine = m_preMine;
 
-		DEV_WRITE_GUARDED(x_preMine)
-			m_preMine = newPreMine;
-		DEV_WRITE_GUARDED(x_working)
-			m_working = newPreMine;
-		DEV_READ_GUARDED(x_postMine)
-			for (auto const& t: m_postMine.pending())
-			{
-				clog(ClientNote) << "Resubmitting post-mine transaction " << t;
-				auto ir = m_tq.import(t, TransactionQueue::ImportCallback(), IfDropped::Retry);
-				if (ir != ImportResult::Success)
-					onTransactionQueueReady();
-			}
-		DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postMine)
-			m_postMine = m_working;
+		// TODO: use m_postMine to avoid re-evaluating our own blocks.
+		preChanged = newPreMine.sync(bc());
 
-		changeds.insert(PendingChangedFilter);
+		if (preChanged || m_postMine.address() != m_preMine.address())
+		{
+			if (isMining())
+				clog(ClientTrace) << "New block on chain.";
 
-		onPostStateChanged();
+			DEV_WRITE_GUARDED(x_preMine)
+				m_preMine = newPreMine;
+			DEV_WRITE_GUARDED(x_working)
+				m_working = newPreMine;
+			DEV_READ_GUARDED(x_postMine)
+				for (auto const& t: m_postMine.pending())
+				{
+					clog(ClientTrace) << "Resubmitting post-mine transaction " << t;
+					auto ir = m_tq.import(t, IfDropped::Retry);
+					if (ir != ImportResult::Success)
+						onTransactionQueueReady();
+				}
+			DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postMine)
+				m_postMine = m_working;
+
+			onPostStateChanged();
+		}
+
+		// Quick hack for now - the TQ at this point already has the prior pending transactions in it;
+		// we should resync with it manually until we are stricter about what constitutes "knowing".
+		onTransactionQueueReady();
 	}
+}
 
-	// Quick hack for now - the TQ at this point already has the prior pending transactions in it;
-	// we should resync with it manually until we are stricter about what constitutes "knowing".
-	onTransactionQueueReady();
-
+void Client::onChainChanged(ImportRoute const& _ir)
+{
+	h256Hash changeds;
+	onDeadBlocks(_ir.deadBlocks, changeds);
+	for (auto const& t: _ir.goodTranactions)
+	{
+		clog(ClientTrace) << "Safely dropping transaction " << t.sha3();
+		m_tq.dropGood(t);
+	}
+	onNewBlocks(_ir.liveBlocks, changeds);
+	resyncStateFromChain();
 	noteChanged(changeds);
 }
 
@@ -615,33 +671,36 @@ bool Client::remoteActive() const
 
 void Client::onPostStateChanged()
 {
-	cnote << "Post state changed";
+	clog(ClientTrace) << "Post state changed.";
+	rejigMining();
+	m_remoteWorking = false;
+}
 
-	if (m_bq.items().first == 0 && (isMining() || remoteActive()))
+void Client::startMining()
+{
+	m_wouldMine = true;
+	rejigMining();
+}
+
+void Client::rejigMining()
+{
+	if ((wouldMine() || remoteActive()) && !isMajorSyncing() && (!isChainBad() || mineOnBadChain()) /*&& (forceMining() || transactionsWaiting())*/)
 	{
-		cnote << "Restarting mining...";
+		clog(ClientTrace) << "Rejigging mining...";
 		DEV_WRITE_GUARDED(x_working)
-			m_working.commitToMine(m_bc);
+			m_working.commitToMine(bc(), m_extraData);
 		DEV_READ_GUARDED(x_working)
 		{
 			DEV_WRITE_GUARDED(x_postMine)
 				m_postMine = m_working;
 			m_miningInfo = m_postMine.info();
 		}
-		m_farm.setWork(m_miningInfo);
 
-		Ethash::ensurePrecomputed(m_bc.number());
+		if (m_wouldMine)
+			m_sealEngine->generateSeal(m_miningInfo);
 	}
-	m_remoteWorking = false;
-}
-
-void Client::startMining()
-{
-	if (m_turboMining)
-		m_farm.startGPU();
-	else
-		m_farm.startCPU();
-	onPostStateChanged();
+	if (!m_wouldMine)
+		m_sealEngine->cancelGeneration();
 }
 
 void Client::noteChanged(h256Hash const& _filters)
@@ -658,15 +717,18 @@ void Client::noteChanged(h256Hash const& _filters)
 				cwatch << "!!!" << w.first << w.second.id.abridged();
 				w.second.changes += m_filters.at(w.second.id).changes;
 			}
-			else
-			{
-				cwatch << "!!!" << w.first << LogTag::Special << (w.second.id == PendingChangedFilter ? "pending" : w.second.id == ChainChangedFilter ? "chain" : "???");
-				w.second.changes.push_back(LocalisedLogEntry(SpecialLogEntry, 0));
-			}
+			else if (m_specialFilters.count(w.second.id))
+				for (h256 const& hash: m_specialFilters.at(w.second.id))
+				{
+					cwatch << "!!!" << w.first << LogTag::Special << (w.second.id == PendingChangedFilter ? "pending" : w.second.id == ChainChangedFilter ? "chain" : "???");
+					w.second.changes.push_back(LocalisedLogEntry(SpecialLogEntry, hash));
+				}
 		}
 	// clear the filters now.
 	for (auto& i: m_filters)
 		i.second.changes.clear();
+	for (auto& i: m_specialFilters)
+		i.second.clear();
 }
 
 void Client::doWork()
@@ -676,7 +738,7 @@ void Client::doWork()
 		syncBlockQueue();
 
 	t = true;
-	if (m_syncTransactionQueue.compare_exchange_strong(t, false) && !m_remoteWorking)
+	if (m_syncTransactionQueue.compare_exchange_strong(t, false) && !m_remoteWorking && !isSyncing())
 		syncTransactionQueue();
 
 	tick();
@@ -694,7 +756,7 @@ void Client::tick()
 	{
 		m_report.ticks++;
 		checkWatchGarbage();
-		m_bq.tick(m_bc);
+		m_bq.tick();
 		m_lastTick = chrono::system_clock::now();
 		if (m_report.ticks == 15)
 			clog(ClientTrace) << activityReport();
@@ -712,13 +774,13 @@ void Client::checkWatchGarbage()
 				if (m_watches[key].lastPoll != chrono::system_clock::time_point::max() && chrono::system_clock::now() - m_watches[key].lastPoll > chrono::seconds(20))
 				{
 					toUninstall.push_back(key);
-					cnote << "GC: Uninstall" << key << "(" << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - m_watches[key].lastPoll).count() << "s old)";
+					clog(ClientTrace) << "GC: Uninstall" << key << "(" << chrono::duration_cast<chrono::seconds>(chrono::system_clock::now() - m_watches[key].lastPoll).count() << "s old)";
 				}
 		for (auto i: toUninstall)
 			uninstallWatch(i);
 
 		// blockchain GC
-		m_bc.garbageCollect();
+		bc().garbageCollect();
 
 		m_lastGarbageCollection = chrono::system_clock::now();
 	}
@@ -726,7 +788,18 @@ void Client::checkWatchGarbage()
 
 State Client::asOf(h256 const& _block) const
 {
-	return State(m_stateDB, bc(), _block);
+	try
+	{
+		State ret(m_stateDB);
+		ret.populateFromChain(bc(), _block);
+		return ret;
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_block(bc().block(_block));
+		onBadBlock(ex);
+		return State();
+	}
 }
 
 void Client::prepareForTransaction()
@@ -736,12 +809,36 @@ void Client::prepareForTransaction()
 
 State Client::state(unsigned _txi, h256 _block) const
 {
-	return State(m_stateDB, m_bc, _block).fromPending(_txi);
+	try
+	{
+		State ret(m_stateDB);
+		ret.populateFromChain(bc(), _block);
+		return ret.fromPending(_txi);
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_block(bc().block(_block));
+		onBadBlock(ex);
+		return State();
+	}
 }
 
-eth::State Client::state(h256 _block) const
+State Client::state(h256 const& _block, PopulationStatistics* o_stats) const
 {
-	return State(m_stateDB, m_bc, _block);
+	try
+	{
+		State ret(m_stateDB);
+		PopulationStatistics s = ret.populateFromChain(bc(), _block);
+		if (o_stats)
+			swap(s, *o_stats);
+		return ret;
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_block(bc().block(_block));
+		onBadBlock(ex);
+		return State();
+	}
 }
 
 eth::State Client::state(unsigned _txi) const
@@ -756,3 +853,67 @@ void Client::flushTransactions()
 {
 	doWork();
 }
+
+SyncStatus Client::syncStatus() const
+{
+	auto h = m_host.lock();
+	return h ? h->status() : SyncStatus();
+}
+
+bool Client::submitSealed(bytes const& _header)
+{
+	DEV_WRITE_GUARDED(x_working)
+		if (!m_working.sealBlock(_header))
+			return false;
+
+	bytes newBlock;
+	DEV_READ_GUARDED(x_working)
+	{
+		DEV_WRITE_GUARDED(x_postMine)
+			m_postMine = m_working;
+		newBlock = m_working.blockData();
+	}
+
+	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postMine that contains all trie changes.
+	return m_bq.import(&newBlock, true) == ImportResult::Success;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+std::tuple<h256, h256, h256> EthashClient::getEthashWork()
+{
+	// lock the work so a later submission isn't invalidated by processing a transaction elsewhere.
+	// this will be reset as soon as a new block arrives, allowing more transactions to be processed.
+	bool oldShould = shouldServeWork();
+	m_lastGetWork = chrono::system_clock::now();
+
+	if (!m_mineOnBadChain && isChainBad())
+		return std::tuple<h256, h256, h256>();
+
+	// if this request has made us bother to serve work, prep it now.
+	if (!oldShould && shouldServeWork())
+		onPostStateChanged();
+	else
+		// otherwise, set this to true so that it gets prepped next time.
+		m_remoteWorking = true;
+	Ethash::BlockHeader bh = Ethash::BlockHeader(m_miningInfo);
+	return std::tuple<h256, h256, h256>(bh.hashWithout(), bh.seedHash(), bh.boundary());
+}
+
+bool EthashClient::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
+{
+	Ethash::manuallySubmitWork(m_sealEngine.get(), _mixHash, _nonce);
+	return true;
+}
+
