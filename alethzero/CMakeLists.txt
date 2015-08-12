@@ -38,7 +38,9 @@ qt5_wrap_ui(ui_GetPassword.h GetPassword.ui)
 qt5_wrap_ui(ui_GasPricing.h GasPricing.ui)
 
 # Extensions
-qt5_wrap_ui(ui_AllAccounts.h AllAccounts.ui)
+if (ETH_FATDB)
+	qt5_wrap_ui(ui_AllAccounts.h AllAccounts.ui)
+endif ()
 qt5_wrap_ui(ui_LogPanel.h LogPanel.ui)
 qt5_wrap_ui(ui_BrainWallet.h BrainWallet.ui)
 qt5_wrap_ui(ui_OtherAccounts.h OtherAccounts.ui)
