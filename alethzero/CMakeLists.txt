@@ -46,11 +46,6 @@ qt5_wrap_ui(ui_ExportState.h ExportState.ui)
 qt5_wrap_ui(ui_GetPassword.h GetPassword.ui)
 qt5_wrap_ui(ui_GasPricing.h GasPricing.ui)
 
-# Extensions
-if (FATDB)
-	qt5_wrap_ui(ui_AllAccounts.h AllAccounts.ui)
-endif ()
-
 file(GLOB HEADERS "*.h")
 
 if (APPLE)
