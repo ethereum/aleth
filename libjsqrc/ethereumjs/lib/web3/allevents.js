@@ -25,7 +25,7 @@ var SolidityEvent = require('./event');
 var formatters = require('./formatters');
 var utils = require('../utils/utils');
 var Filter = require('./filter');
-var watches = require('./watches');
+var watches = require('./methods/watches');
 
 var AllSolidityEvents = function (json, address) {
     this._json = json;
@@ -66,6 +66,13 @@ AllSolidityEvents.prototype.decode = function (data) {
 };
 
 AllSolidityEvents.prototype.execute = function (options, callback) {
+
+    if (utils.isFunction(arguments[arguments.length - 1])) {
+        callback = arguments[arguments.length - 1];
+        if(arguments.length === 1)
+            options = null;
+    }
+
     var o = this.encode(options);
     var formatter = this.decode.bind(this);
     return new Filter(o, watches.eth(), formatter, callback);

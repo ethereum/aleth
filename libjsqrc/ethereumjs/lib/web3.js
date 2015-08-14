@@ -25,11 +25,11 @@
  */
 
 var version = require('./version.json');
-var net = require('./web3/net');
-var eth = require('./web3/eth');
-var db = require('./web3/db');
-var shh = require('./web3/shh');
-var watches = require('./web3/watches');
+var net = require('./web3/methods/net');
+var eth = require('./web3/methods/eth');
+var db = require('./web3/methods/db');
+var shh = require('./web3/methods/shh');
+var watches = require('./web3/methods/watches');
 var Filter = require('./web3/filter');
 var utils = require('./utils/utils');
 var formatters = require('./web3/formatters');
@@ -111,7 +111,9 @@ web3.reset = function () {
 };
 web3.toHex = utils.toHex;
 web3.toAscii = utils.toAscii;
+web3.toUtf8 = utils.toUtf8;
 web3.fromAscii = utils.fromAscii;
+web3.fromUtf8 = utils.fromUtf8;
 web3.toDecimal = utils.toDecimal;
 web3.fromDecimal = utils.fromDecimal;
 web3.toBigNumber = utils.toBigNumber;

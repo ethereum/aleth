@@ -23,6 +23,7 @@
 
 var utils = require('../utils/utils');
 var config = require('../utils/config');
+var Iban = require('./iban');
 
 /**
  * Should the format output to a big number
@@ -58,6 +59,34 @@ var inputBlockNumberFormatter = function (blockNumber) {
 /**
  * Formats the input of a transaction and converts all values to HEX
  *
+ * @method inputCallFormatter
+ * @param {Object} transaction options
+ * @returns object
+*/
+var inputCallFormatter = function (options){
+
+    options.from = options.from || config.defaultAccount;
+
+    if (options.from) {
+        options.from = inputAddressFormatter(options.from);
+    }
+
+    if (options.to) { // it might be contract creation
+        options.to = inputAddressFormatter(options.to);
+    }
+
+    ['gasPrice', 'gas', 'value', 'nonce'].filter(function (key) {
+        return options[key] !== undefined;
+    }).forEach(function(key){
+        options[key] = utils.fromDecimal(options[key]);
+    });
+
+    return options; 
+};
+
+/**
+ * Formats the input of a transaction and converts all values to HEX
+ *
  * @method inputTransactionFormatter
  * @param {Object} transaction options
  * @returns object
@@ -65,11 +94,10 @@ var inputBlockNumberFormatter = function (blockNumber) {
 var inputTransactionFormatter = function (options){
 
     options.from = options.from || config.defaultAccount;
+    options.from = inputAddressFormatter(options.from);
 
-    // make code -> data
-    if (options.code) {
-        options.data = options.code;
-        delete options.code;
+    if (options.to) { // it might be contract creation
+        options.to = inputAddressFormatter(options.to);
     }
 
     ['gasPrice', 'gas', 'value', 'nonce'].filter(function (key) {
@@ -193,7 +221,7 @@ var inputPostFormatter = function(post) {
 
     // format the following options
     post.topics = post.topics.map(function(topic){
-        return utils.fromAscii(topic);
+        return utils.fromUtf8(topic);
     });
 
     return post; 
@@ -213,7 +241,7 @@ var outputPostFormatter = function(post){
     post.ttl = utils.toDecimal(post.ttl);
     post.workProved = utils.toDecimal(post.workProved);
     post.payloadRaw = post.payload;
-    post.payload = utils.toAscii(post.payload);
+    post.payload = utils.toUtf8(post.payload);
 
     if (utils.isJson(post.payload)) {
         post.payload = JSON.parse(post.payload);
@@ -224,16 +252,30 @@ var outputPostFormatter = function(post){
         post.topics = [];
     }
     post.topics = post.topics.map(function(topic){
-        return utils.toAscii(topic);
+        return utils.toUtf8(topic);
     });
 
     return post;
 };
 
+var inputAddressFormatter = function (address) {
+    var iban = new Iban(address);
+    if (iban.isValid() && iban.isDirect()) {
+        return '0x' + iban.address();
+    } else if (utils.isStrictAddress(address)) {
+        return address;
+    } else if (utils.isAddress(address)) {
+        return '0x' + address;
+    }
+    throw 'invalid address';
+};
+
 module.exports = {
     inputDefaultBlockNumberFormatter: inputDefaultBlockNumberFormatter,
     inputBlockNumberFormatter: inputBlockNumberFormatter,
+    inputCallFormatter: inputCallFormatter,
     inputTransactionFormatter: inputTransactionFormatter,
+    inputAddressFormatter: inputAddressFormatter,
     inputPostFormatter: inputPostFormatter,
     outputBigNumberFormatter: outputBigNumberFormatter,
     outputTransactionFormatter: outputTransactionFormatter,

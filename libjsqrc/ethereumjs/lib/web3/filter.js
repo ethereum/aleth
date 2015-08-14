@@ -44,7 +44,7 @@ var toTopic = function(value){
     if(value.indexOf('0x') === 0)
         return value;
     else
-        return utils.fromAscii(value);
+        return utils.fromUtf8(value);
 };
 
 /// This method should be called on options object, to verify deprecated properties && lazy load dynamic ones
@@ -163,6 +163,7 @@ var Filter = function (options, methods, formatter, callback) {
         }
     });
 
+    return this;
 };
 
 Filter.prototype.watch = function (callback) {
