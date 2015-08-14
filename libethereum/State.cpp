@@ -87,7 +87,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 
 	ldb::Options o;
 #ifdef __APPLE__
-	o.max_open_files = 192;
+	o.max_open_files = 128;
 #else
 	o.max_open_files = 256;
 #endif

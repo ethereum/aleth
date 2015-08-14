@@ -205,7 +205,7 @@ unsigned BlockChain::openDatabase(std::string const& _path, WithExisting _we)
 	ldb::Options o;
 	o.create_if_missing = true;
 #ifdef __APPLE__
-	o.max_open_files = 32;
+	o.max_open_files = 16;
 #else
 	o.max_open_files = 256;
 #endif
