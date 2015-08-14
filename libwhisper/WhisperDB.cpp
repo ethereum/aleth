@@ -38,7 +38,11 @@ WhisperDB::WhisperDB(string const& _type)
 	path += "/" + _type;
 	leveldb::Options op;
 	op.create_if_missing = true;
+#ifdef __APPLE__
+	op.max_open_files = 24;
+#else
 	op.max_open_files = 256;
+#endif
 	leveldb::DB* p = nullptr;
 	leveldb::Status status = leveldb::DB::Open(op, path, &p);
 	m_db.reset(p);

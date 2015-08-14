@@ -86,7 +86,11 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
 
 	ldb::Options o;
+#ifdef __APPLE__
+	o.max_open_files = 128;
+#else
 	o.max_open_files = 256;
+#endif
 	o.create_if_missing = true;
 	ldb::DB* db = nullptr;
 	ldb::Status status = ldb::DB::Open(o, path + "/state", &db);

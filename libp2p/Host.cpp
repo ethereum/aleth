@@ -790,7 +790,9 @@ bytes Host::saveNetwork() const
 		{
 			network.appendList(11);
 			p.endpoint.streamRLP(network, NodeIPEndpoint::StreamInline);
-			network << p.id << p.required
+			// force required to false for saved peers until
+			// proper API is in place to remove 'required' peers,
+			network << p.id << false /* p.required */
 				<< chrono::duration_cast<chrono::seconds>(p.m_lastConnected.time_since_epoch()).count()
 				<< chrono::duration_cast<chrono::seconds>(p.m_lastAttempted.time_since_epoch()).count()
 				<< p.m_failedAttempts << (unsigned)p.m_lastDisconnect << p.m_score << p.m_rating;

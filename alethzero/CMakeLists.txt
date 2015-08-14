@@ -46,9 +46,6 @@ qt5_wrap_ui(ui_ExportState.h ExportState.ui)
 qt5_wrap_ui(ui_GetPassword.h GetPassword.ui)
 qt5_wrap_ui(ui_GasPricing.h GasPricing.ui)
 
-# Extensions
-qt5_wrap_ui(ui_AllAccounts.h AllAccounts.ui)
-
 file(GLOB HEADERS "*.h")
 
 if (APPLE)
