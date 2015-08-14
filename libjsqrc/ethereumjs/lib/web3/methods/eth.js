@@ -49,10 +49,10 @@
 
 "use strict";
 
-var formatters = require('./formatters');
-var utils = require('../utils/utils');
-var Method = require('./method');
-var Property = require('./property');
+var formatters = require('../formatters');
+var utils = require('../../utils/utils');
+var Method = require('../method');
+var Property = require('../property');
 
 var blockCall = function (args) {
     return (utils.isString(args[0]) && args[0].indexOf('0x') === 0) ? "eth_getBlockByHash" : "eth_getBlockByNumber";
@@ -80,7 +80,7 @@ var getBalance = new Method({
     name: 'getBalance',
     call: 'eth_getBalance',
     params: 2,
-    inputFormatter: [utils.toAddress, formatters.inputDefaultBlockNumberFormatter],
+    inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter],
     outputFormatter: formatters.outputBigNumberFormatter
 });
 
@@ -95,7 +95,7 @@ var getCode = new Method({
     name: 'getCode',
     call: 'eth_getCode',
     params: 2,
-    inputFormatter: [utils.toAddress, formatters.inputDefaultBlockNumberFormatter]
+    inputFormatter: [formatters.inputAddressFormatter, formatters.inputDefaultBlockNumberFormatter]
 });
 
 var getBlock = new Method({
@@ -185,14 +185,14 @@ var call = new Method({
     name: 'call',
     call: 'eth_call',
     params: 2,
-    inputFormatter: [formatters.inputTransactionFormatter, formatters.inputDefaultBlockNumberFormatter]
+    inputFormatter: [formatters.inputCallFormatter, formatters.inputDefaultBlockNumberFormatter]
 });
 
 var estimateGas = new Method({
     name: 'estimateGas',
     call: 'eth_estimateGas',
     params: 1,
-    inputFormatter: [formatters.inputTransactionFormatter],
+    inputFormatter: [formatters.inputCallFormatter],
     outputFormatter: utils.toDecimal
 });
 

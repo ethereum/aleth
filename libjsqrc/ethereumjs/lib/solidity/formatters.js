@@ -36,9 +36,8 @@ var SolidityParam = require('./param');
  * @returns {SolidityParam}
  */
 var formatInputInt = function (value) {
-    var padding = c.ETH_PADDING * 2;
     BigNumber.config(c.ETH_BIGNUMBER_ROUNDING_MODE);
-    var result = utils.padLeft(utils.toTwosComplement(value).round().toString(16), padding);
+    var result = utils.padLeft(utils.toTwosComplement(value).round().toString(16), 64);
     return new SolidityParam(result);
 };
 
@@ -50,7 +49,9 @@ var formatInputInt = function (value) {
  * @returns {SolidityParam}
  */
 var formatInputBytes = function (value) {
-    var result = utils.padRight(utils.toHex(value).substr(2), 64);
+    var result = utils.toHex(value).substr(2);
+    var l = Math.floor((result.length + 63) / 64);
+    result = utils.padRight(result, l * 64);
     return new SolidityParam(result);
 };
 
@@ -62,11 +63,11 @@ var formatInputBytes = function (value) {
  * @returns {SolidityParam}
  */
 var formatInputDynamicBytes = function (value) {
-    value = utils.toHex(value).substr(2);
-    var l = Math.floor((value.length + 63) / 64);
-    var result = utils.padRight(value, l * 64);
-    var length = Math.floor(value.length / 2);
-    return new SolidityParam(formatInputInt(length).value + result, 32);
+    var result = utils.toHex(value).substr(2);
+    var length = result.length / 2;
+    var l = Math.floor((result.length + 63) / 64);
+    result = utils.padRight(result, l * 64);
+    return new SolidityParam(formatInputInt(length).value + result);
 };
 
 /**
@@ -77,10 +78,11 @@ var formatInputDynamicBytes = function (value) {
  * @returns {SolidityParam}
  */
 var formatInputString = function (value) {
-    var result = utils.fromAscii(value).substr(2);
+    var result = utils.fromUtf8(value).substr(2);
+    var length = result.length / 2;
     var l = Math.floor((result.length + 63) / 64);
     result = utils.padRight(result, l * 64);
-    return new SolidityParam(formatInputInt(value.length).value + result, 32);
+    return new SolidityParam(formatInputInt(length).value + result);
 };
 
 /**
@@ -213,7 +215,7 @@ var formatOutputDynamicBytes = function (param) {
  */
 var formatOutputString = function (param) {
     var length = (new BigNumber(param.dynamicPart().slice(0, 64), 16)).toNumber() * 2;
-    return utils.toAscii(param.dynamicPart().substr(64, length));
+    return utils.toUtf8(param.dynamicPart().substr(64, length));
 };
 
 /**

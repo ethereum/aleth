@@ -14,7 +14,7 @@
     You should have received a copy of the GNU Lesser General Public License
     along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** 
+/**
  * @file utils.js
  * @author Marek Kotewicz <marek@ethdev.com>
  * @date 2015
@@ -22,18 +22,20 @@
 
 /**
  * Utils
- * 
+ *
  * @module utils
  */
 
 /**
  * Utility functions
- * 
+ *
  * @class [utils] utils
  * @constructor
  */
 
+
 var BigNumber = require('bignumber.js');
+var utf8 = require('utf8');
 
 var unitMap = {
     'wei':          '1',
@@ -88,8 +90,30 @@ var padRight = function (string, chars, sign) {
     return string + (new Array(chars - string.length + 1).join(sign ? sign : "0"));
 };
 
-/** 
- * Should be called to get sting from it's hex representation
+/**
+ * Should be called to get utf8 from it's hex representation
+ *
+ * @method toUtf8
+ * @param {String} string in hex
+ * @returns {String} ascii string representation of hex value
+ */
+var toUtf8 = function(hex) {
+// Find termination
+    var str = "";
+    var i = 0, l = hex.length;
+    if (hex.substring(0, 2) === '0x') {
+        i = 2;
+    }
+    for (; i < l; i+=2) {
+        var code = parseInt(hex.substr(i, 2), 16);
+        str += String.fromCharCode(code);
+    }
+
+    return utf8.decode(str);
+};
+
+/**
+ * Should be called to get ascii from it's hex representation
  *
  * @method toAscii
  * @param {String} string in hex
@@ -109,37 +133,42 @@ var toAscii = function(hex) {
 
     return str;
 };
-    
+
 /**
- * Shold be called to get hex representation (prefixed by 0x) of ascii string 
+ * Shold be called to get hex representation (prefixed by 0x) of utf8 string
  *
- * @method toHexNative
+ * @method fromUtf8
  * @param {String} string
+ * @param {Number} optional padding
  * @returns {String} hex representation of input string
  */
-var toHexNative = function(str) {
+var fromUtf8 = function(str) {
+    str = utf8.encode(str);
     var hex = "";
     for(var i = 0; i < str.length; i++) {
         var n = str.charCodeAt(i).toString(16);
         hex += n.length < 2 ? '0' + n : n;
     }
 
-    return hex;
+    return "0x" + hex;
 };
 
 /**
- * Shold be called to get hex representation (prefixed by 0x) of ascii string 
+ * Shold be called to get hex representation (prefixed by 0x) of ascii string
  *
  * @method fromAscii
  * @param {String} string
  * @param {Number} optional padding
  * @returns {String} hex representation of input string
  */
-var fromAscii = function(str, pad) {
-    pad = pad === undefined ? 0 : pad;
-    var hex = toHexNative(str);
-    while (hex.length < pad*2)
-        hex += "00";
+var fromAscii = function(str) {
+    var hex = "";
+    for(var i = 0; i < str.length; i++) {
+        var code = str.charCodeAt(i);
+        var n = code.toString(16);
+        hex += n.length < 2 ? '0' + n : n;
+    }
+
     return "0x" + hex;
 };
 
@@ -161,13 +190,13 @@ var transformToFullName = function (json) {
 
 /**
  * Should be called to get display name of contract function
- * 
+ *
  * @method extractDisplayName
  * @param {String} name of function/event
  * @returns {String} display name for function/event eg. multiply(uint256) -> multiply
  */
 var extractDisplayName = function (name) {
-    var length = name.indexOf('('); 
+    var length = name.indexOf('(');
     return length !== -1 ? name.substr(0, length) : name;
 };
 
@@ -222,16 +251,16 @@ var toHex = function (val) {
         return fromDecimal(val);
 
     if (isObject(val))
-        return fromAscii(JSON.stringify(val));
+        return fromUtf8(JSON.stringify(val));
 
     // if its a negative number, pass it through fromDecimal
     if (isString(val)) {
         if (val.indexOf('-0x') === 0)
             return fromDecimal(val);
-        else if (!isFinite(val))
-            return fromAscii(val);
         else if(val.indexOf('0x') === 0)
             return val;
+        else if (!isFinite(val))
+            return fromAscii(val);
     }
 
     return fromDecimal(val);
@@ -265,7 +294,7 @@ var getValueOfUnit = function (unit) {
  * - --         microether     szabo        micro
  * - --         milliether     finney       milli
  * - ether      --             --
- * - kether                    einstein     grand 
+ * - kether                    einstein     grand
  * - mether
  * - gether
  * - tether
@@ -278,7 +307,7 @@ var getValueOfUnit = function (unit) {
 var fromWei = function(number, unit) {
     var returnValue = toBigNumber(number).dividedBy(getValueOfUnit(unit));
 
-    return isBigNumber(number) ? returnValue : returnValue.toString(10); 
+    return isBigNumber(number) ? returnValue : returnValue.toString(10);
 };
 
 /**
@@ -287,12 +316,12 @@ var fromWei = function(number, unit) {
  * Possible units are:
  *   SI Short   SI Full        Effigy       Other
  * - kwei       femtoether     ada
- * - mwei       picoether      babbage       
+ * - mwei       picoether      babbage
  * - gwei       nanoether      shannon      nano
  * - --         microether     szabo        micro
  * - --         milliether     finney       milli
  * - ether      --             --
- * - kether                    einstein     grand 
+ * - kether                    einstein     grand
  * - mether
  * - gether
  * - tether
@@ -305,7 +334,7 @@ var fromWei = function(number, unit) {
 var toWei = function(number, unit) {
     var returnValue = toBigNumber(number).times(getValueOfUnit(unit));
 
-    return isBigNumber(number) ? returnValue : returnValue.toString(10); 
+    return isBigNumber(number) ? returnValue : returnValue.toString(10);
 };
 
 /**
@@ -324,7 +353,7 @@ var toBigNumber = function(number) {
     if (isString(number) && (number.indexOf('0x') === 0 || number.indexOf('-0x') === 0)) {
         return new BigNumber(number.replace('0x',''), 16);
     }
-   
+
     return new BigNumber(number.toString(10), 10);
 };
 
@@ -376,7 +405,7 @@ var toAddress = function (address) {
     if (isStrictAddress(address)) {
         return address;
     }
-    
+
     if (/^[0-9a-f]{40}$/.test(address)) {
         return '0x' + address;
     }
@@ -390,7 +419,7 @@ var toAddress = function (address) {
  *
  * @method isBigNumber
  * @param {Object}
- * @return {Boolean} 
+ * @return {Boolean}
  */
 var isBigNumber = function (object) {
     return object instanceof BigNumber ||
@@ -399,7 +428,7 @@ var isBigNumber = function (object) {
 
 /**
  * Returns true if object is string, otherwise false
- * 
+ *
  * @method isString
  * @param {Object}
  * @return {Boolean}
@@ -450,12 +479,12 @@ var isBoolean = function (object) {
  * @return {Boolean}
  */
 var isArray = function (object) {
-    return object instanceof Array; 
+    return object instanceof Array;
 };
 
 /**
  * Returns true if given string is valid json object
- * 
+ *
  * @method isJson
  * @param {String}
  * @return {Boolean}
@@ -468,25 +497,15 @@ var isJson = function (str) {
     }
 };
 
-/**
- * This method should be called to check if string is valid ethereum IBAN number
- * Supports direct and indirect IBANs
- *
- * @method isIBAN
- * @param {String}
- * @return {Boolean}
- */
-var isIBAN = function (iban) {
-    return /^XE[0-9]{2}(ETH[0-9A-Z]{13}|[0-9A-Z]{30})$/.test(iban);
-};
-
 module.exports = {
     padLeft: padLeft,
     padRight: padRight,
     toHex: toHex,
     toDecimal: toDecimal,
     fromDecimal: fromDecimal,
+    toUtf8: toUtf8,
     toAscii: toAscii,
+    fromUtf8: fromUtf8,
     fromAscii: fromAscii,
     transformToFullName: transformToFullName,
     extractDisplayName: extractDisplayName,
@@ -504,7 +523,5 @@ module.exports = {
     isObject: isObject,
     isBoolean: isBoolean,
     isArray: isArray,
-    isJson: isJson,
-    isIBAN: isIBAN
+    isJson: isJson
 };
-

@@ -20,6 +20,7 @@
  * @date 2015
  */
 
+
 var utils = require('./utils');
 var sha3 = require('crypto-js/sha3');
 
@@ -29,7 +30,7 @@ module.exports = function (str, isNew) {
         console.warn('new usage: \'web3.sha3("hello")\'');
         console.warn('see https://github.com/ethereum/web3.js/pull/205');
         console.warn('if you need to hash hex value, you can do \'sha3("0xfff", true)\'');
-        str = utils.toAscii(str);
+        str = utils.toUtf8(str);
     }
 
     return sha3(str, {

@@ -14,35 +14,43 @@
     You should have received a copy of the GNU Lesser General Public License
     along with ethereum.js.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file eth.js
+/** @file db.js
  * @authors:
  *   Marek Kotewicz <marek@ethdev.com>
  * @date 2015
  */
 
-var utils = require('../utils/utils');
-var Property = require('./property');
+var Method = require('../method');
 
-/// @returns an array of objects describing web3.eth api methods
+var putString = new Method({
+    name: 'putString',
+    call: 'db_putString',
+    params: 3
+});
+
+
+var getString = new Method({
+    name: 'getString',
+    call: 'db_getString',
+    params: 2
+});
+
+var putHex = new Method({
+    name: 'putHex',
+    call: 'db_putHex',
+    params: 3
+});
+
+var getHex = new Method({
+    name: 'getHex',
+    call: 'db_getHex',
+    params: 2
+});
+
 var methods = [
+    putString, getString, putHex, getHex
 ];
-
-/// @returns an array of objects describing web3.eth api properties
-var properties = [
-    new Property({
-        name: 'listening',
-        getter: 'net_listening'
-    }),
-    new Property({
-        name: 'peerCount',
-        getter: 'net_peerCount',
-        outputFormatter: utils.toDecimal
-    })
-];
-
 
 module.exports = {
-    methods: methods,
-    properties: properties
+    methods: methods
 };
-
