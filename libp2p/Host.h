@@ -133,6 +133,9 @@ class Host: public Worker
 	
 	friend class Session;
 	friend class HostCapabilityFace;
+	
+	/// Classes using deprecated API:
+	friend class EthereumHost;
 
 public:
 	/// Start server, listening for connections on the given port.
@@ -243,7 +246,7 @@ private:
 	
 	unsigned peerSlots(PeerSlotType _type) { return _type == Egress ? m_idealPeerCount : m_idealPeerCount * m_stretchPeers; }
 	
-	bool havePeerSession(NodeId const& _id) { return !!peerSession(_id); }
+	bool havePeerSession(NodeId const& _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].use_count() : false; }
 
 	/// Determines and sets m_tcpPublic to publicly advertised address.
 	void determinePublic();
@@ -255,6 +258,9 @@ private:
 	
 	/// Ping the peers to update the latency information and disconnect peers which have timed out.
 	void keepAlivePeers();
+
+	/// Maintain ideal peer connectivity.
+	void maintainPeers();
 
 	/// Disconnect peers which didn't respond to keepAlivePeers ping prior to c_keepAliveTimeOut.
 	void disconnectLatePeers();
