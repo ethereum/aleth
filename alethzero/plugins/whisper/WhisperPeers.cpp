@@ -31,8 +31,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(WhisperPeers);
-
 WhisperPeers::WhisperPeers(MainFace* _m):
 	Plugin(_m, "WhisperPeers"),
 	m_ui(new Ui::WhisperPeers)

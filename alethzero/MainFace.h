@@ -43,9 +43,6 @@ namespace shh { class WhisperHost; }
 namespace az
 {
 
-#define DEV_AZ_NOTE_PLUGIN(ClassName) \
-	static bool s_notePlugin = [](){ MainFace::notePlugin([](MainFace* m){ return new ClassName(m); }); return true; }()
-
 class Plugin;
 class MainFace;
 class Main;

@@ -34,8 +34,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(AllAccounts);
-
 AllAccounts::AllAccounts(MainFace* _m):
 	Plugin(_m, "AllAccounts"),
 	m_ui(new Ui::AllAccounts)

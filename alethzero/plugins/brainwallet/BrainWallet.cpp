@@ -34,8 +34,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(BrainWallet);
-
 BrainWallet::BrainWallet(MainFace* _m):
 	Plugin(_m, "BrainWallet")
 {
