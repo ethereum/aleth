@@ -28,8 +28,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(OurAccounts);
-
 OurAccounts::OurAccounts(MainFace* _m):
 	AccountNamerPlugin(_m, "OurAccounts")
 {

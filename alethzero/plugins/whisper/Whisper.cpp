@@ -32,7 +32,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(Whisper);
 
 static Public stringToPublic(QString const& _a)
 {

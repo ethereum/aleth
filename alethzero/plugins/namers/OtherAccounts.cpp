@@ -30,8 +30,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(OtherAccounts);
-
 OtherAccounts::OtherAccounts(MainFace* _m):
 	AccountNamerPlugin(_m, "OtherAccounts")
 {

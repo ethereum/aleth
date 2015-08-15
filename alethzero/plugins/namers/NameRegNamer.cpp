@@ -28,8 +28,6 @@ using namespace dev;
 using namespace az;
 using namespace eth;
 
-DEV_AZ_NOTE_PLUGIN(NameRegNamer);
-
 NameRegNamer::NameRegNamer(MainFace* _m):
 	AccountNamerPlugin(_m, "NameRegNamer")
 {

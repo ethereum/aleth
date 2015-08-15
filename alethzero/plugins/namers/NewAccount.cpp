@@ -39,8 +39,6 @@ bool beginsWith(Address _a, bytes const& _b)
 	return true;
 }
 
-DEV_AZ_NOTE_PLUGIN(NewAccount);
-
 NewAccount::NewAccount(MainFace* _m):
 	Plugin(_m, "NewAccount")
 {
