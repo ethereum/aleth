@@ -195,7 +195,7 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 								 Arith256& _arith, Memory& _memory, Ext& _ext, GasMeter& _gasMeter, Stack& _globalStack)
 {
 	m_builder.SetInsertPoint(_basicBlock.llvm());
-	LocalStack stack{_globalStack};
+	LocalStack stack{_runtimeManager, _globalStack};
 
 	for (auto it = _basicBlock.begin(); it != _basicBlock.end(); ++it)
 	{
@@ -789,9 +789,6 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 	_gasMeter.commitCostBlock();
 
 	stack.finalize(m_builder, *_basicBlock.llvm()); // TODO: Use references
-
-	m_builder.SetInsertPoint(_basicBlock.llvm()->getFirstNonPHI()); // TODO: Move to LocalStack::finalize
-	_runtimeManager.checkStackLimit(stack.minSize(), stack.maxSize(), stack.size());
 }
 
 

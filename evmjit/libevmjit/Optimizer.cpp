@@ -20,6 +20,7 @@ namespace jit
 
 bool optimize(llvm::Module& _module)
 {
+	// TODO: Add pass for longjmp elimination
 	auto pm = llvm::legacy::PassManager{};
 	pm.add(llvm::createFunctionInliningPass(2, 2));
 	pm.add(llvm::createCFGSimplificationPass());

@@ -24,12 +24,15 @@ BasicBlock::BasicBlock(instr_idx _firstInstrIdx, code_iterator _begin, code_iter
 	m_firstInstrIdx{_firstInstrIdx},
 	m_begin(_begin),
 	m_end(_end),
-	m_llvmBB(llvm::BasicBlock::Create(_mainFunc->getContext(), {"Instr.", std::to_string(_firstInstrIdx)}, _mainFunc))
+	m_llvmBB(llvm::BasicBlock::Create(_mainFunc->getContext(), {".", std::to_string(_firstInstrIdx)}, _mainFunc))
 {}
 
-LocalStack::LocalStack(Stack& _globalStack):
+LocalStack::LocalStack(RuntimeManager& _runtimeManager, Stack& _globalStack):
+	m_runtimeManager(_runtimeManager),
 	m_global(_globalStack)
-{}
+{
+	m_sp = _runtimeManager.prepareStack();
+}
 
 void LocalStack::push(llvm::Value* _value)
 {
@@ -109,6 +112,10 @@ void LocalStack::set(size_t _index, llvm::Value* _word)
 
 void LocalStack::finalize(llvm::IRBuilder<>& _builder, llvm::BasicBlock& _bb)
 {
+	m_sp->setArgOperand(2, _builder.getInt64(minSize()));
+	m_sp->setArgOperand(3, _builder.getInt64(maxSize()));
+	m_sp->setArgOperand(4, _builder.getInt64(size()));
+
 	auto blockTerminator = _bb.getTerminator();
 	if (!blockTerminator || blockTerminator->getOpcode() != llvm::Instruction::Ret)
 	{
