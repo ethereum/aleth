@@ -50,7 +50,7 @@ public:
 	static llvm::StructType* getRuntimeType();
 	static llvm::StructType* getRuntimeDataType();
 
-	void checkStackLimit(ssize_t _min, ssize_t _max, ssize_t _diff);
+	llvm::CallInst* prepareStack(); // FIXME: Move to LocalStack class.
 
 private:
 	llvm::Value* getPtr(RuntimeData::Index _index);
@@ -65,6 +65,7 @@ private:
 
 	std::array<llvm::Value*, RuntimeData::numElements> m_dataElts;
 
+	llvm::Value* m_stackBase = nullptr;
 	llvm::Value* m_stackSize = nullptr;
 	llvm::Function* m_checkStackLimit = nullptr;
 

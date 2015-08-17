@@ -2,6 +2,7 @@
 
 #include "preprocessor/llvm_includes_start.h"
 #include <llvm/IR/IntrinsicInst.h>
+#include <llvm/IR/Module.h>
 #include "preprocessor/llvm_includes_end.h"
 
 #include "Stack.h"
@@ -100,7 +101,12 @@ RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeB
 	m_envPtr = m_builder.CreateLoad(m_builder.CreateStructGEP(getRuntimeType(), rtPtr, 1), "env");
 	assert(m_envPtr->getType() == Type::EnvPtr);
 
-	m_stackSize = m_builder.CreateAlloca(Type::Size, nullptr, "stackSize");
+	auto mallocFunc = llvm::Function::Create(llvm::FunctionType::get(Type::WordPtr, {Type::Size}, false), llvm::Function::ExternalLinkage, "malloc", getModule());
+	mallocFunc->setDoesNotThrow();
+	mallocFunc->setDoesNotAlias(0);
+
+	m_stackBase = m_builder.CreateCall(mallocFunc, m_builder.getInt64(32 * 1024), "stack.base"); // TODO: Extract max stack size constant. // TODO: Use Type::SizeT type
+	m_stackSize = m_builder.CreateAlloca(Type::Size, nullptr, "stack.size");
 	m_builder.CreateStore(m_builder.getInt64(0), m_stackSize);
 
 	auto data = m_builder.CreateLoad(m_dataPtr, "data");
@@ -110,18 +116,20 @@ RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeB
 	m_gasPtr = m_builder.CreateAlloca(Type::Gas, nullptr, "gas.ptr");
 	m_builder.CreateStore(m_dataElts[RuntimeData::Index::Gas], m_gasPtr);
 
-	llvm::Type* checkStackLimitArgs[] = {Type::Size->getPointerTo(), Type::Size, Type::Size, Type::Size, Type::BytePtr};
-	m_checkStackLimit = llvm::Function::Create(llvm::FunctionType::get(Type::Void, checkStackLimitArgs, false), llvm::Function::PrivateLinkage, "evm.stack.require", getModule());
+	llvm::Type* checkStackLimitArgs[] = {Type::WordPtr, Type::Size->getPointerTo(), Type::Size, Type::Size, Type::Size, Type::BytePtr};
+	m_checkStackLimit = llvm::Function::Create(llvm::FunctionType::get(Type::WordPtr, checkStackLimitArgs, false), llvm::Function::PrivateLinkage, "stack.prepare", getModule());
 	m_checkStackLimit->setDoesNotThrow();
-	m_checkStackLimit->setDoesNotCapture(1);
+	//m_checkStackLimit->setDoesNotCapture(1); // FIXME: Set correct attrs
 
 	auto checkBB = llvm::BasicBlock::Create(_builder.getContext(), "Check", m_checkStackLimit);
 	auto updateBB = llvm::BasicBlock::Create(_builder.getContext(), "Update", m_checkStackLimit);
 	auto outOfStackBB = llvm::BasicBlock::Create(_builder.getContext(), "OutOfStack", m_checkStackLimit);
 
-	auto currSizePtr = &m_checkStackLimit->getArgumentList().front();
-	currSizePtr->setName("currSize");
-	auto min = currSizePtr->getNextNode();
+	auto base = &m_checkStackLimit->getArgumentList().front();
+	base->setName("base");
+	auto sizePtr = base->getNextNode();
+	sizePtr->setName("size.ptr");
+	auto min = sizePtr->getNextNode();
 	min->setName("min");
 	auto max = min->getNextNode();
 	max->setName("max");
@@ -132,27 +140,29 @@ RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeB
 
 	InsertPointGuard guard{m_builder};
 	m_builder.SetInsertPoint(checkBB);
-	auto currSize = m_builder.CreateLoad(currSizePtr, "cur");
-	auto minSize = m_builder.CreateAdd(currSize, min, "minSize", false, true);
-	auto maxSize = m_builder.CreateAdd(currSize, max, "maxSize", true, true);
-	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "min.ok");
-	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(1024), "max.ok");
+	auto size = m_builder.CreateLoad(sizePtr, "size");
+	auto minSize = m_builder.CreateAdd(size, min, "size.min", false, true);
+	auto maxSize = m_builder.CreateAdd(size, max, "size.max", true, true);
+	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "ok.min");
+	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(1024), "ok.max"); // FIXME: Extract constants
 	auto ok = m_builder.CreateAnd(minOk, maxOk, "ok");
 	m_builder.CreateCondBr(ok, updateBB, outOfStackBB, Type::expectTrue);
 
 	m_builder.SetInsertPoint(updateBB);
-	auto newSize = m_builder.CreateNSWAdd(currSize, diff);
-	m_builder.CreateStore(newSize, currSizePtr);
-	m_builder.CreateRetVoid();
+	auto newSize = m_builder.CreateNSWAdd(size, diff, "size.next");
+	m_builder.CreateStore(newSize, sizePtr);
+	auto sp = m_builder.CreateGEP(base, size, "sp");
+	m_builder.CreateRet(sp);
 
 	m_builder.SetInsertPoint(outOfStackBB);
 	abort(jmpBuf);
 	m_builder.CreateUnreachable();
 }
 
-void RuntimeManager::checkStackLimit(ssize_t _min, ssize_t _max, ssize_t _diff)
+llvm::CallInst* RuntimeManager::prepareStack()
 {
-	createCall(m_checkStackLimit, {m_stackSize, m_builder.getInt64(_min), m_builder.getInt64(_max), m_builder.getInt64(_diff), getJmpBuf()});
+	auto undef = llvm::UndefValue::get(Type::Size);
+	return m_builder.CreateCall(m_checkStackLimit, {m_stackBase, m_stackSize, undef, undef, undef, getJmpBuf()}, {"sp", m_builder.GetInsertBlock()->getName()});
 }
 
 llvm::Value* RuntimeManager::getRuntimePtr()
@@ -220,6 +230,16 @@ void RuntimeManager::exit(ReturnCode _returnCode)
 {
 	if (m_stack)
 		m_stack->free();
+
+	// TODO: Keep one declaration of free func
+	auto freeFunc = getModule()->getFunction("free");
+	if (!freeFunc)
+	{
+		freeFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, Type::BytePtr, false), llvm::Function::ExternalLinkage, "free", getModule());
+		freeFunc->setDoesNotThrow();
+		freeFunc->setDoesNotCapture(1);
+	}
+	m_builder.CreateCall(freeFunc, {m_stackBase});
 
 	auto extGasPtr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), RuntimeData::Index::Gas, "msg.gas.ptr");
 	m_builder.CreateStore(getGas(), extGasPtr);

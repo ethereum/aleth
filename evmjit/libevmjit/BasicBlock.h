@@ -4,6 +4,7 @@
 
 #include "Common.h"
 #include "Stack.h"
+#include "RuntimeManager.h"
 
 namespace dev
 {
@@ -17,7 +18,7 @@ using instr_idx = uint64_t;
 class LocalStack
 {
 public:
-	explicit LocalStack(Stack& _globalStack);
+	explicit LocalStack(RuntimeManager& _runtimeMAnager, Stack& _globalStack);
 	LocalStack(LocalStack const&) = delete;
 	void operator=(LocalStack const&) = delete;
 
@@ -54,6 +55,9 @@ private:
 
 	/// Local stack items that has not been pushed to global stack. First item is just above global stack.
 	std::vector<llvm::Value*> m_local;
+
+	RuntimeManager& m_runtimeManager;
+	llvm::CallInst* m_sp;
 
 	Stack& m_global;			///< Reference to global stack.
 
