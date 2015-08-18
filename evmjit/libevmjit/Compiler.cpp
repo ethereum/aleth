@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "preprocessor/llvm_includes_start.h"
+#include <llvm/ADT/STLExtras.h>
 #include <llvm/IR/CFG.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/IntrinsicInst.h>
@@ -128,7 +129,7 @@ void Compiler::resolveJumps()
 
 std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_iterator _end, std::string const& _id)
 {
-	auto module = std::unique_ptr<llvm::Module>(new llvm::Module(_id, m_builder.getContext()));
+	auto module = llvm::make_unique<llvm::Module>(_id, m_builder.getContext()); // TODO: Provide native DataLayout
 
 	// Create main function
 	auto mainFuncType = llvm::FunctionType::get(Type::MainReturn, Type::RuntimePtr, false);

@@ -138,7 +138,7 @@ std::unique_ptr<llvm::Module> Cache::getObject(std::string const& id)
 	{
 		DLOG(cache) << id << ": found\n";
 		auto&& context = llvm::getGlobalContext();
-		auto module = std::unique_ptr<llvm::Module>(new llvm::Module(id, context));
+		auto module = llvm::make_unique<llvm::Module>(id, context);
 		auto mainFuncType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), {}, false);
 		auto mainFunc = llvm::Function::Create(mainFuncType, llvm::Function::ExternalLinkage, id, module.get());
 		auto bb = llvm::BasicBlock::Create(context, {}, mainFunc);
