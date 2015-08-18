@@ -105,7 +105,7 @@ RuntimeManager::RuntimeManager(IRBuilder& _builder, code_iterator _codeBegin, co
 	mallocFunc->setDoesNotThrow();
 	mallocFunc->setDoesNotAlias(0);
 
-	m_stackBase = m_builder.CreateCall(mallocFunc, m_builder.getInt64(32 * 1024), "stack.base"); // TODO: Extract max stack size constant. // TODO: Use Type::SizeT type
+	m_stackBase = m_builder.CreateCall(mallocFunc, m_builder.getInt64(Type::Word->getPrimitiveSizeInBits() / 8 * stackSizeLimit), "stack.base"); // TODO: Use Type::SizeT type
 	m_stackSize = m_builder.CreateAlloca(Type::Size, nullptr, "stack.size");
 	m_builder.CreateStore(m_builder.getInt64(0), m_stackSize);
 
