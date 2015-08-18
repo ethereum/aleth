@@ -92,4 +92,15 @@ BOOST_AUTO_TEST_CASE(test_unpaddedLeft)
 	BOOST_CHECK(bytes() == unpadLeft(c));
 }
 
+BOOST_AUTO_TEST_CASE(test_fromRaw)
+{
+	//non ascii characters means empty string
+	h256 a("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	BOOST_CHECK("" == fromRaw(a));
+	h256 b("");
+	BOOST_CHECK("" == fromRaw(b));
+	h256 c("0x4173636969436861726163746572730000000000000000000000000000000000");
+	BOOST_CHECK("AsciiCharacters" == fromRaw(c));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
