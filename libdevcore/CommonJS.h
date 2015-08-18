@@ -106,9 +106,21 @@ template <unsigned N> boost::multiprecision::number<boost::multiprecision::cpp_i
 
 inline u256 jsToU256(std::string const& _s) { return jsToInt<32>(_s); }
 
+/// Convert a string representation of a number to an int
+/// String can be a normal decimal number, or a hex prefixed by 0x or 0X, or an octal if prefixed by 0
+/// Returns 0 in case of failure
 inline int jsToInt(std::string const& _s)
 {
-	return std::stoi(_s, nullptr, 0);
+	int ret;
+	try
+	{
+		ret = std::stoi(_s, nullptr, 0);
+	}
+	catch(...)
+	{
+		ret = 0;
+	}
+	return ret;
 }
 
 inline std::string jsToDecimal(std::string const& _s)
