@@ -5,11 +5,12 @@
 # this must be set to point to the same directory as $ETH_DEPENDENCY_INSTALL_DIR in /extdep directory
 string(TOLOWER ${CMAKE_SYSTEM_NAME} _system_name)
 if (CMAKE_CL_64)
-	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extdep/install/${_system_name}/x64")
+	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum/extdep/install/${_system_name}/x64")
 else ()
-	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extdep/install/${_system_name}/Win32")
+	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum/extdep/install/${_system_name}/Win32")
 endif()
 set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR})
+message(STATUS "CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
 
 # setup directory for cmake generated files and include it globally 
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR

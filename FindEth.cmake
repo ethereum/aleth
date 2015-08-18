@@ -7,7 +7,11 @@
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
-set(CORE_LIBS web3jsonrpc;webthree;whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;secp256k1;scrypt;jsqrc)
+if (WIN32)
+	set(CORE_LIBS web3jsonrpc;webthree;whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;scrypt;jsqrc)
+else()
+	set(CORE_LIBS web3jsonrpc;webthree;whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;secp256k1;scrypt;jsqrc)
+endif()
 set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1)
 
 set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
@@ -17,7 +21,7 @@ foreach (l ${ALL_LIBS})
 	string(TOUPPER ${l} L)
 	find_library(ETH_${L}_LIBRARY 
 		NAMES ${l}
-		PATH_SUFFIXES "lib${l}" "${l}"
+		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 	)
 endforeach()
 
