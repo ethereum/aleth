@@ -14,50 +14,38 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file AllAccounts.h
+/** @file OurAccounts.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
 
 #pragma once
 
-#include <QMutex>
-#include <QString>
-#include <QPair>
-#include <QList>
 #include "MainFace.h"
-
-namespace Ui
-{
-class LogPanel;
-}
 
 namespace dev
 {
 namespace az
 {
 
-class LogPanel: public QObject, public Plugin
+class OurAccounts: public QObject, public AccountNamerPlugin
 {
 	Q_OBJECT
 
 public:
-	LogPanel(MainFace* _m);
-	~LogPanel();
+	OurAccounts(MainFace* _m);
+	~OurAccounts();
+
+protected:
+	std::string toName(Address const& _a) const override;
+	Address toAddress(std::string const& _n) const override;
+	Addresses knownAddresses() const override;
 
 private slots:
-	void on_verbosity_valueChanged();
+	void updateNames();
 
 private:
-	void timerEvent(QTimerEvent*) override;
-	void readSettings(QSettings const&) override;
-	void writeSettings(QSettings&) override;
-
-	Ui::LogPanel* m_ui;
-
-	QMutex m_logLock;
-	QString m_logHistory;
-	bool m_logChanged = true;
+	std::unordered_map<std::string, Address> m_names;
 };
 
 }

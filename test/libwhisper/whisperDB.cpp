@@ -41,7 +41,9 @@ BOOST_FIXTURE_TEST_SUITE(whisperDB, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(basic)
 {
-	VerbosityHolder setTemporaryLevel(10);
+	if (g_logVerbosity != -1)
+		VerbosityHolder setTemporaryLevel(10);
+
 	cnote << "Testing Whisper DB...";
 
 	string s;
@@ -86,7 +88,9 @@ BOOST_AUTO_TEST_CASE(basic)
 
 BOOST_AUTO_TEST_CASE(persistence)
 {
-	VerbosityHolder setTemporaryLevel(10);
+	if (g_logVerbosity != -1)
+		VerbosityHolder setTemporaryLevel(10);
+
 	cnote << "Testing persistence of Whisper DB...";
 
 	string s;
@@ -135,7 +139,9 @@ BOOST_AUTO_TEST_CASE(messages)
 		return;
 
 	cnote << "Testing load/save Whisper messages...";
-	VerbosityHolder setTemporaryLevel(2);
+	if (g_logVerbosity != -1)
+		VerbosityHolder setTemporaryLevel(2);
+
 	unsigned const TestSize = 3;
 	map<h256, Envelope> m1;
 	map<h256, Envelope> preexisting;
@@ -143,7 +149,7 @@ BOOST_AUTO_TEST_CASE(messages)
 
 	{
 		p2p::Host h("Test");
-		auto wh = h.registerCapability(new WhisperHost(true));
+		auto wh = h.registerCapability(make_shared<WhisperHost>(true));
 		preexisting = wh->all();
 		cnote << preexisting.size() << "preexisting messages in DB";
 		wh->installWatch(BuildTopic("test"));
@@ -156,7 +162,7 @@ BOOST_AUTO_TEST_CASE(messages)
 
 	{
 		p2p::Host h("Test");
-		auto wh = h.registerCapability(new WhisperHost(true));
+		auto wh = h.registerCapability(make_shared<WhisperHost>(true));
 		map<h256, Envelope> m2 = wh->all();
 		wh->installWatch(BuildTopic("test"));
 		BOOST_REQUIRE_EQUAL(m1.size(), m2.size());
@@ -193,7 +199,9 @@ BOOST_AUTO_TEST_CASE(corruptedData)
 		return;
 
 	cnote << "Testing corrupted data...";
-	VerbosityHolder setTemporaryLevel(2);
+	if (g_logVerbosity != -1)
+		VerbosityHolder setTemporaryLevel(2);
+
 	map<h256, Envelope> m;
 	h256 x = h256::random();
 
@@ -204,7 +212,7 @@ BOOST_AUTO_TEST_CASE(corruptedData)
 
 	{
 		p2p::Host h("Test");
-		auto wh = h.registerCapability(new WhisperHost(true));
+		auto wh = h.registerCapability(make_shared<WhisperHost>(true));
 		m = wh->all();
 		BOOST_REQUIRE(m.end() == m.find(x));
 	}
@@ -222,13 +230,15 @@ BOOST_AUTO_TEST_CASE(filters)
 		return;
 
 	cnote << "Testing filters saving...";
-	VerbosityHolder setTemporaryLevel(2);
+	if (g_logVerbosity != -1)
+		VerbosityHolder setTemporaryLevel(2);
+
 	h256 persistID(0xC0FFEE);
 
 	{
 		WhisperFiltersDB db;
 		p2p::Host h("Test");
-		auto wh = h.registerCapability(new WhisperHost());
+		auto wh = h.registerCapability(make_shared<WhisperHost>());
 		wh->installWatch(BuildTopic("t1"));
 		wh->installWatch(BuildTopic("t2"));
 		db.saveTopicsToDB(*wh, persistID);
@@ -243,7 +253,7 @@ BOOST_AUTO_TEST_CASE(filters)
 
 	Host host1("Test", NetworkPreferences("127.0.0.1", port1, false));
 	host1.setIdealPeerCount(1);
-	auto whost1 = host1.registerCapability(new WhisperHost());
+	auto whost1 = host1.registerCapability(make_shared<WhisperHost>());
 	host1.start();
 	WhisperFiltersDB db;
 	auto watches = db.restoreTopicsFromDB(whost1.get(), persistID);
@@ -277,7 +287,7 @@ BOOST_AUTO_TEST_CASE(filters)
 
 	Host host2("Test", NetworkPreferences("127.0.0.1", 30309, false));
 	host2.setIdealPeerCount(1);
-	auto whost2 = host2.registerCapability(new WhisperHost());
+	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
 
 	for (unsigned i = 0; i < 3000 && !host1.haveNetwork(); i += step)

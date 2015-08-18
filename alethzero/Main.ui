@@ -135,13 +135,13 @@
      <height>24</height>
     </rect>
    </property>
-   <widget class="QMenu" name="menu_File">
+   <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>&amp;File</string>
     </property>
     <addaction name="quit"/>
    </widget>
-   <widget class="QMenu" name="menu_Network">
+   <widget class="QMenu" name="menuNetwork">
     <property name="title">
      <string>&amp;Network</string>
     </property>
@@ -153,7 +153,7 @@
     <addaction name="connect"/>
     <addaction name="hermitMode"/>
    </widget>
-   <widget class="QMenu" name="menu_Tools">
+   <widget class="QMenu" name="menuTools">
     <property name="title">
      <string>&amp;Tools</string>
     </property>
@@ -162,9 +162,9 @@
     <addaction name="prepNextDAG"/>
     <addaction name="separator"/>
     <addaction name="newTransaction"/>
-    <addaction name="newAccount"/>
     <addaction name="importKey"/>
     <addaction name="importKeyFile"/>
+    <addaction name="importPresale"/>
     <addaction name="claimPresale"/>
     <addaction name="exportKey"/>
     <addaction name="reencryptAll"/>
@@ -173,15 +173,14 @@
     <addaction name="separator"/>
     <addaction name="loadJS"/>
     <addaction name="separator"/>
-    <addaction name="exportState"/>
    </widget>
-   <widget class="QMenu" name="menu_Help">
+   <widget class="QMenu" name="menuHelp">
     <property name="title">
      <string>&amp;Help</string>
     </property>
     <addaction name="about"/>
    </widget>
-   <widget class="QMenu" name="menu_Debug">
+   <widget class="QMenu" name="menuSpecial">
     <property name="title">
      <string>&amp;Special</string>
     </property>
@@ -189,7 +188,6 @@
     <addaction name="paranoia"/>
     <addaction name="clearPending"/>
     <addaction name="killBlockchain"/>
-    <addaction name="inject"/>
     <addaction name="injectBlock"/>
     <addaction name="forceMining"/>
     <addaction name="separator"/>
@@ -202,7 +200,7 @@
     <addaction name="confirm"/>
     <addaction name="rewindChain"/>
    </widget>
-   <widget class="QMenu" name="menu_View">
+   <widget class="QMenu" name="menuView">
     <property name="title">
      <string>&amp;View</string>
     </property>
@@ -210,37 +208,31 @@
     <addaction name="separator"/>
     <addaction name="preview"/>
    </widget>
-   <widget class="QMenu" name="menuWhispe">
-    <property name="title">
-     <string>&amp;Whisper</string>
-    </property>
-    <addaction name="newIdentity"/>
-   </widget>
    <widget class="QMenu" name="menuDebug">
     <property name="title">
      <string>&amp;Debug</string>
     </property>
+    <addaction name="debugPending"/>
     <addaction name="debugCurrent"/>
     <addaction name="debugDumpState"/>
     <addaction name="debugDumpStatePre"/>
     <addaction name="dumpBlockState"/>
    </widget>
-   <widget class="QMenu" name="menu_Config">
+   <widget class="QMenu" name="menuConfig">
     <property name="title">
      <string>&amp;Config</string>
     </property>
     <addaction name="gasPrices"/>
     <addaction name="sentinel"/>
    </widget>
-   <addaction name="menu_File"/>
-   <addaction name="menu_View"/>
-   <addaction name="menu_Network"/>
-   <addaction name="menu_Tools"/>
-   <addaction name="menuWhispe"/>
+   <addaction name="menuFile"/>
+   <addaction name="menuView"/>
+   <addaction name="menuNetwork"/>
+   <addaction name="menuTools"/>
    <addaction name="menuDebug"/>
-   <addaction name="menu_Config"/>
-   <addaction name="menu_Help"/>
-   <addaction name="menu_Debug"/>
+   <addaction name="menuConfig"/>
+   <addaction name="menuHelp"/>
+   <addaction name="menuSpecial"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="dockWidget_3">
@@ -641,7 +633,7 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="MiningView" name="miningView" native="true"/>
+      <widget class="dev::az::MiningView" name="miningView" native="true"/>
      </item>
     </layout>
    </widget>
@@ -940,7 +932,7 @@ font-size: 14pt</string>
       <number>0</number>
      </property>
      <item>
-      <widget class="SyncView" name="downloadView" native="true"/>
+      <widget class="dev::az::SyncView" name="downloadView" native="true"/>
      </item>
     </layout>
    </widget>
@@ -971,224 +963,6 @@ font-size: 14pt</string>
      </property>
      <item>
       <widget class="QListWidget" name="nodes">
-       <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidget_14">
-   <property name="features">
-    <set>QDockWidget::DockWidgetFeatureMask</set>
-   </property>
-   <property name="windowTitle">
-    <string>Whisper</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>1</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_14">
-    <layout class="QGridLayout" name="gridLayout_4">
-     <item row="4" column="0" rowspan="2">
-      <widget class="QLabel" name="label_8">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Data</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="2" colspan="2">
-      <widget class="QLabel" name="label5_6">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Work to Prove</string>
-       </property>
-      </widget>
-     </item>
-     <item row="5" column="1" colspan="4">
-      <widget class="QPlainTextEdit" name="shhData">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
-       </property>
-       <property name="lineWidth">
-        <number>0</number>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="1" colspan="4">
-      <widget class="QPlainTextEdit" name="shhTopic">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="frameShape">
-        <enum>QFrame::NoFrame</enum>
-       </property>
-       <property name="lineWidth">
-        <number>0</number>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1" colspan="4">
-      <widget class="QComboBox" name="shhFrom">
-       <property name="editable">
-        <bool>false</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="3" column="0">
-      <widget class="QLabel" name="label_9">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>Topic</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QLabel" name="label5_3">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>To</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1" colspan="4">
-      <widget class="QComboBox" name="shhTo">
-       <property name="editable">
-        <bool>true</bool>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="1">
-      <widget class="QSpinBox" name="shhTtl">
-       <property name="suffix">
-        <string> seconds</string>
-       </property>
-       <property name="minimum">
-        <number>5</number>
-       </property>
-       <property name="maximum">
-        <number>259200</number>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="0">
-      <widget class="QLabel" name="label5_5">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>TTL</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="0">
-      <widget class="QLabel" name="label5_4">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="text">
-        <string>From</string>
-       </property>
-      </widget>
-     </item>
-     <item row="2" column="4">
-      <widget class="QSpinBox" name="shhWork">
-       <property name="suffix">
-        <string> ms</string>
-       </property>
-       <property name="minimum">
-        <number>1</number>
-       </property>
-       <property name="maximum">
-        <number>1000</number>
-       </property>
-       <property name="value">
-        <number>50</number>
-       </property>
-      </widget>
-     </item>
-     <item row="6" column="4">
-      <widget class="QPushButton" name="post">
-       <property name="text">
-        <string>Post</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </widget>
-  </widget>
-  <widget class="QDockWidget" name="dockWidget_15">
-   <property name="features">
-    <set>QDockWidget::DockWidgetFeatureMask</set>
-   </property>
-   <property name="windowTitle">
-    <string>Active Whispers</string>
-   </property>
-   <attribute name="dockWidgetArea">
-    <number>2</number>
-   </attribute>
-   <widget class="QWidget" name="dockWidgetContents_15">
-    <layout class="QHBoxLayout" name="horizontalLayout_11">
-     <property name="spacing">
-      <number>0</number>
-     </property>
-     <property name="leftMargin">
-      <number>0</number>
-     </property>
-     <property name="topMargin">
-      <number>0</number>
-     </property>
-     <property name="rightMargin">
-      <number>0</number>
-     </property>
-     <property name="bottomMargin">
-      <number>0</number>
-     </property>
-     <item>
-      <widget class="QListWidget" name="whispers">
        <property name="frameShape">
         <enum>QFrame::NoFrame</enum>
        </property>
@@ -1321,11 +1095,6 @@ font-size: 14pt</string>
   <action name="loadJS">
    <property name="text">
     <string>&amp;Load Javascript...</string>
-   </property>
-  </action>
-  <action name="exportState">
-   <property name="text">
-    <string>&amp;Export State...</string>
    </property>
   </action>
   <action name="debugStepBack">
@@ -1613,17 +1382,35 @@ font-size: 14pt</string>
     <string>Dump &amp;Block State as JSON...</string>
    </property>
   </action>
+  <action name="bulkTransactions">
+   <property name="text">
+    <string>&amp;Bulk Inject Transactions...</string>
+   </property>
+  </action>
+  <action name="debugPending">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Debug &amp;Pending Transaction</string>
+   </property>
+  </action>
+  <action name="importPresale">
+   <property name="text">
+    <string>Import Ether &amp;Presale Wallet...</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <customwidgets>
   <customwidget>
-   <class>MiningView</class>
+   <class>dev::az::MiningView</class>
    <extends>QWidget</extends>
    <header>MiningView.h</header>
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>SyncView</class>
+   <class>dev::az::SyncView</class>
    <extends>QWidget</extends>
    <header>DownloadView.h</header>
    <container>1</container>
@@ -1636,13 +1423,6 @@ font-size: 14pt</string>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>shhTo</tabstop>
-  <tabstop>shhFrom</tabstop>
-  <tabstop>shhTtl</tabstop>
-  <tabstop>shhTopic</tabstop>
-  <tabstop>shhWork</tabstop>
-  <tabstop>shhData</tabstop>
-  <tabstop>post</tabstop>
   <tabstop>tabWidget</tabstop>
   <tabstop>urlEdit</tabstop>
   <tabstop>listenIP</tabstop>
@@ -1652,7 +1432,6 @@ font-size: 14pt</string>
   <tabstop>blockChainFilter</tabstop>
   <tabstop>nameReg</tabstop>
   <tabstop>nodes</tabstop>
-  <tabstop>whispers</tabstop>
   <tabstop>jsInput</tabstop>
  </tabstops>
  <resources/>

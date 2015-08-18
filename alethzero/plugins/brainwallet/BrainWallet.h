@@ -14,44 +14,31 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ExportState.h
- * @author Arkadiy Paronyan <arkadiy@ethdev.com>
+/** @file BrainWallet.h
+ * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
 
 #pragma once
 
-#include <memory>
-#include <QDialog>
-#include <libethcore/Common.h>
+#include "MainFace.h"
 
-namespace Ui { class ExportState; }
-namespace dev { namespace eth { class Client; } }
+namespace dev
+{
+namespace az
+{
 
-class Main;
-
-class ExportStateDialog: public QDialog
+class BrainWallet: public QObject, public Plugin
 {
 	Q_OBJECT
 
 public:
-	explicit ExportStateDialog(Main* _parent = 0);
-	virtual ~ExportStateDialog();
+	BrainWallet(MainFace* _m);
+	~BrainWallet();
 
 private slots:
-	void on_block_editTextChanged();
-	void on_block_currentIndexChanged(int _index);
-	void on_saveButton_clicked();
-
-private:
-	dev::eth::Client* ethereum() const;
-	void fillBlocks();
-	void fillContracts();
-	void generateJSON();
-
-private:
-	std::unique_ptr<Ui::ExportState> ui;
-	Main* m_main;
-	int m_recentBlocks = 0;
-	dev::eth::BlockNumber m_block = dev::eth::LatestBlock;
+	void create();
 };
+
+}
+}

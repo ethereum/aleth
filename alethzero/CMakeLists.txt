@@ -14,6 +14,15 @@ endif ()
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 aux_source_directory(. SRC_LIST)
+file(GLOB_RECURSE SRC_LIST "./plugins/*.cpp")
+file(GLOB_RECURSE HEADERS "./plugins/*.h")
+aux_source_directory(. SRC_LIST)
+
+file(GLOB_RECURSE PLUGIN_UI RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/plugins/*.ui")
+foreach(ITEM ${PLUGIN_UI})
+    get_filename_component(UI_NAME ${ITEM} NAME_WE)
+    qt5_wrap_ui(ui_${UI_NAME}.h ./${ITEM})
+endforeach()
 
 include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
 include_directories(BEFORE ..)
@@ -22,7 +31,7 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 find_package (Qt5WebEngine)
 find_package (Qt5WebEngineWidgets)
-if (APPLE)
+if (APPLE AND (NOT "${Qt5Core_VERSION_STRING}" VERSION_LESS "5.5"))
 # TODO: remove indirect dependencies once macdeployqt is fixed
 	find_package (Qt5WebEngineCore)
 	find_package (Qt5DBus)
@@ -33,13 +42,11 @@ qt5_wrap_ui(ui_Main.h Main.ui)
 qt5_wrap_ui(ui_Connect.h Connect.ui)
 qt5_wrap_ui(ui_Debugger.h Debugger.ui)
 qt5_wrap_ui(ui_Transact.h Transact.ui)
-qt5_wrap_ui(ui_ExportState.h ExportState.ui)
 qt5_wrap_ui(ui_GetPassword.h GetPassword.ui)
 qt5_wrap_ui(ui_GasPricing.h GasPricing.ui)
 
 # Extensions
 qt5_wrap_ui(ui_AllAccounts.h AllAccounts.ui)
-qt5_wrap_ui(ui_LogPanel.h LogPanel.ui)
 
 file(GLOB HEADERS "*.h")
 
@@ -52,7 +59,7 @@ endif ()
 # eth_add_executable is defined in cmake/EthExecutableHelper.cmake
 eth_add_executable(${EXECUTABLE} 
 	ICON alethzero
-	UI_RESOURCES alethzero.icns Main.ui Connect.ui Debugger.ui Transact.ui ExportState.ui GetPassword.ui GasPricing.ui AllAccounts.ui LogPanel.ui
+    UI_RESOURCES ${PLUGIN_UI} alethzero.icns Main.ui Connect.ui Debugger.ui Transact.ui GetPassword.ui GasPricing.ui
 	WIN_RESOURCES alethzero.rc
 )
 
@@ -62,8 +69,8 @@ target_link_libraries(${EXECUTABLE} Qt5::Core)
 target_link_libraries(${EXECUTABLE} Qt5::Widgets)
 target_link_libraries(${EXECUTABLE} Qt5::WebEngine)
 target_link_libraries(${EXECUTABLE} Qt5::WebEngineWidgets)
-if (APPLE)
-	target_link_libraries(${EXECUTABLE} Qt5::WebEngineCore)
+if (APPLE AND (NOT "${Qt5Core_VERSION_STRING}" VERSION_LESS "5.5"))
+    target_link_libraries(${EXECUTABLE} Qt5::WebEngineCore)
 	target_link_libraries(${EXECUTABLE} Qt5::DBus)
 	target_link_libraries(${EXECUTABLE} Qt5::PrintSupport)
 endif()

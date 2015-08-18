@@ -25,7 +25,8 @@
 #include <libethcore/Common.h>
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace eth;
+using namespace az;
 
 NatSpecFace::~NatSpecFace()
 {
@@ -35,42 +36,47 @@ Context::~Context()
 {
 }
 
-void setValueUnits(QComboBox* _units, QSpinBox* _value, u256 _v)
+void dev::az::setValueUnits(QComboBox* _units, QSpinBox* _value, u256 _v)
 {
 	initUnits(_units);
-	_units->setCurrentIndex(0);
-	while (_v > 50000 && _units->currentIndex() < (int)(units().size() - 2))
+	if (_v > 0)
 	{
-		_v /= 1000;
-		_units->setCurrentIndex(_units->currentIndex() + 1);
+		_units->setCurrentIndex(0);
+		while (_v > 50000 && _units->currentIndex() < (int)(units().size() - 2))
+		{
+			_v /= 1000;
+			_units->setCurrentIndex(_units->currentIndex() + 1);
+		}
 	}
+	else
+		_units->setCurrentIndex(6);
 	_value->setValue((unsigned)_v);
 }
 
-u256 fromValueUnits(QComboBox* _units, QSpinBox* _value)
+u256 dev::az::fromValueUnits(QComboBox* _units, QSpinBox* _value)
 {
 	return _value->value() * units()[units().size() - 1 - _units->currentIndex()].first;
 }
 
-void initUnits(QComboBox* _b)
+void dev::az::initUnits(QComboBox* _b)
 {
 	for (auto n = (unsigned)units().size(); n-- != 0; )
 		_b->addItem(QString::fromStdString(units()[n].second), n);
 }
 
-vector<KeyPair> keysAsVector(QList<KeyPair> const& keys)
+vector<KeyPair> dev::az::keysAsVector(QList<KeyPair> const& keys)
 {
 	auto list = keys.toStdList();
 	return {begin(list), end(list)};
 }
 
-bool sourceIsSolidity(string const& _source)
+bool dev::az::sourceIsSolidity(string const& _source)
 {
 	// TODO: Improve this heuristic
 	return (_source.substr(0, 8) == "contract" || _source.substr(0, 5) == "//sol");
 }
 
-bool sourceIsSerpent(string const& _source)
+bool dev::az::sourceIsSerpent(string const& _source)
 {
 	// TODO: Improve this heuristic
 	return (_source.substr(0, 5) == "//ser");

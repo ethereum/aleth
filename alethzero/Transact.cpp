@@ -40,8 +40,8 @@
 #include <libnatspec/NatspecExpressionEvaluator.h>
 #include <libethereum/Client.h>
 #include <libethereum/Utility.h>
+#include <libethcore/ICAP.h>
 #include <libethcore/KeyManager.h>
-
 #if ETH_SERPENT
 #include <libserpent/funcs.h>
 #include <libserpent/util.h>
@@ -50,12 +50,13 @@
 #include "ui_Transact.h"
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
+using namespace az;
+using namespace eth;
 
-Transact::Transact(Context* _c, QWidget* _parent):
+Transact::Transact(MainFace* _c, QWidget* _parent):
 	QDialog(_parent),
 	ui(new Ui::Transact),
-	m_context(_c)
+	m_main(_c)
 {
 	ui->setupUi(this);
 
@@ -81,9 +82,10 @@ void Transact::setEnvironment(AddressHash const& _accounts, dev::eth::Client* _e
 	for (auto const& address: m_accounts)
 	{
 		u256 b = ethereum()->balanceAt(address, PendingBlock);
-		QString s = QString("%4 %2: %1").arg(formatBalance(b).c_str()).arg(QString::fromStdString(m_context->render(address))).arg(QString::fromStdString(m_context->keyManager().accountName(address)));
+		QString s = QString("%2: %1").arg(formatBalance(b).c_str()).arg(QString::fromStdString(m_main->render(address)));
 		ui->from->addItem(s);
 	}
+	updateDestination();
 	if (old > -1 && old < ui->from->count())
 		ui->from->setCurrentIndex(old);
 	else if (ui->from->count())
@@ -92,7 +94,7 @@ void Transact::setEnvironment(AddressHash const& _accounts, dev::eth::Client* _e
 
 void Transact::resetGasPrice()
 {
-	setValueUnits(ui->gasPriceUnits, ui->gasPrice, m_context->gasPrice());
+	setValueUnits(ui->gasPriceUnits, ui->gasPrice, m_main->gasPrice());
 }
 
 bool Transact::isCreation() const
@@ -102,7 +104,12 @@ bool Transact::isCreation() const
 
 u256 Transact::fee() const
 {
-	return ui->gas->value() * gasPrice();
+	return gas() * gasPrice();
+}
+
+u256 Transact::gas() const
+{
+	return ui->gas->value() == -1 ? m_upperBound : ui->gas->value();
 }
 
 u256 Transact::value() const
@@ -119,11 +126,6 @@ u256 Transact::gasPrice() const
 	return ui->gasPrice->value() * units()[units().size() - 1 - ui->gasPriceUnits->currentIndex()].first;
 }
 
-Address Transact::to() const
-{
-	return m_context->fromString(ui->destination->currentText().toStdString()).first;
-}
-
 u256 Transact::total() const
 {
 	return value() + fee();
@@ -131,16 +133,15 @@ u256 Transact::total() const
 
 void Transact::updateDestination()
 {
-	cwatch << "updateDestination()";
-	QString s;
-	for (auto i: ethereum()->addresses())
-		if ((s = QString::fromStdString(m_context->pretty(i))).size())
-			// A namereg address
-			if (ui->destination->findText(s, Qt::MatchExactly | Qt::MatchCaseSensitive) == -1)
-				ui->destination->addItem(s);
-	for (int i = 0; i < ui->destination->count(); ++i)
-		if (ui->destination->itemText(i) != "(Create Contract)" && !to())
-			ui->destination->removeItem(i--);
+	// TODO: should be a Qt model.
+	ui->destination->clear();
+	ui->destination->addItem("(Create Contract)");
+	QMultiMap<QString, QString> in;
+	for (Address const& a: m_main->allKnownAddresses())
+		in.insert(QString::fromStdString(m_main->toName(a) + " (" + ICAP(a).encoded() + ")"), QString::fromStdString(a.hex()));
+	for (auto i = in.begin(); i != in.end(); ++i)
+		ui->destination->addItem(i.key(), i.value());
+
 }
 
 void Transact::updateFee()
@@ -166,11 +167,14 @@ void Transact::on_destination_currentTextChanged(QString)
 {
 	if (ui->destination->currentText().size() && ui->destination->currentText() != "(Create Contract)")
 	{
-		auto p = m_context->fromString(ui->destination->currentText().toStdString());
+		auto p = toAccount();
 		if (p.first)
-			ui->calculatedName->setText(QString::fromStdString(m_context->render(p.first)));
+			ui->calculatedName->setText(QString::fromStdString(m_main->render(p.first)));
 		else
 			ui->calculatedName->setText("Unknown Address");
+
+//		ui->calculatedName->setText(m_main->toName(a) + " (" + ICAP(a).encoded() + ")");
+
 		if (!p.second.empty())
 		{
 			m_data = p.second;
@@ -199,14 +203,14 @@ void Transact::on_copyUnsigned_clicked()
 	if (isCreation())
 		// If execution is a contract creation, add Natspec to
 		// a local Natspec LEVELDB
-		t = Transaction(value(), gasPrice(), ui->gas->value(), m_data, nonce);
+		t = Transaction(value(), gasPrice(), gas(), m_data, nonce);
 	else
 		// TODO: cache like m_data.
-		t = Transaction(value(), gasPrice(), ui->gas->value(), to(), m_data, nonce);
+		t = Transaction(value(), gasPrice(), gas(), toAccount().first, m_data, nonce);
 	qApp->clipboard()->setText(QString::fromStdString(toHex(t.rlp())));
 }
 
-static std::string toString(TransactionException _te)
+/*static std::string toString(TransactionException _te)
 {
 	switch (_te)
 	{
@@ -223,7 +227,7 @@ static std::string toString(TransactionException _te)
 	case TransactionException::StackUnderflow: return "VM Error: Stack underflow";
 	default:; return std::string();
 	}
-}
+}*/
 
 #if ETH_SOLIDITY
 static string getFunctionHashes(dev::solidity::CompilerStack const& _compiler, string const& _contractName)
@@ -323,6 +327,142 @@ string Transact::natspecNotice(Address _to, bytes const& _data)
 		return "Destination not a contract.";
 }
 
+pair<Address, bytes> Transact::toAccount()
+{
+	pair<Address, bytes> p;
+	if (!isCreation())
+	{
+		if (!ui->destination->currentData().isNull() && ui->destination->currentText() == ui->destination->itemText(ui->destination->currentIndex()))
+			p.first = Address(ui->destination->currentData().toString().trimmed().toStdString());
+		else
+			p = m_main->fromString(ui->destination->currentText().trimmed().toStdString());
+	}
+	return p;
+}
+
+void Transact::timerEvent(QTimerEvent*)
+{
+	Address from = fromAccount();
+	Address to = toAccount().first;
+
+	if (m_upperBound != m_lowerBound)
+	{
+		qint64 mid = (m_lowerBound + m_upperBound) / 2;
+		ExecutionResult er;
+		if (isCreation())
+			er = ethereum()->create(from, value(), m_data, mid, gasPrice(), PendingBlock, FudgeFactor::Lenient);
+		else
+			er = ethereum()->call(from, value(), to, m_data, mid, gasPrice(), PendingBlock, FudgeFactor::Lenient);
+		if (er.excepted == TransactionException::OutOfGas || er.excepted == TransactionException::OutOfGasBase || er.excepted == TransactionException::OutOfGasIntrinsic || er.codeDeposit == CodeDeposit::Failed)
+			m_lowerBound = m_lowerBound == mid ? m_upperBound : mid;
+		else
+		{
+			m_lastGood = er;
+			m_upperBound = m_upperBound == mid ? m_lowerBound : mid;
+		}
+
+		updateBounds();
+	}
+	else
+		finaliseBounds();
+}
+
+void Transact::updateBounds()
+{
+	ui->minGas->setValue(m_lowerBound);
+	ui->maxGas->setValue(m_upperBound);
+	double oran = m_startUpperBound - m_startLowerBound;
+	double nran = m_upperBound - m_lowerBound;
+	int x = int(log2(oran / nran) * 100.0 / log2(oran * 2));
+	ui->progressGas->setValue(x);
+	ui->progressGas->setVisible(true);
+	ui->gas->setSpecialValueText(QString("Auto (%1 gas)").arg(m_upperBound));
+}
+
+void Transact::finaliseBounds()
+{
+	killTimer(m_gasCalcTimer);
+
+	quint64 baseGas = (quint64)Transaction::gasRequired(m_data, 0);
+	ui->progressGas->setVisible(false);
+
+	quint64 executionGas = m_upperBound - baseGas;
+	QString htmlInfo = QString("<div class=\"info\"><span class=\"icon\">INFO</span> Gas required: %1 total = %2 base, %3 exec [%4 refunded later]</div>").arg(m_upperBound).arg(baseGas).arg(executionGas).arg((qint64)m_lastGood.gasRefunded);
+
+	auto bail = [&](QString he) {
+		ui->send->setEnabled(false);
+		ui->code->setHtml(he + htmlInfo + m_dataInfo);
+	};
+
+	auto s = fromAccount();
+	auto b = ethereum()->balanceAt(s, PendingBlock);
+
+	if (b < value() + baseGas * gasPrice())
+	{
+		// Not enough - bail.
+		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> Account doesn't contain enough for paying even the basic amount of gas required.</div>");
+		return;
+	}
+	if (m_upperBound > m_ethereum->gasLimitRemaining())
+	{
+		// Not enough - bail.
+		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> Gas remaining in block isn't enough to allow the gas required.</div>");
+		return;
+	}
+	if (m_lastGood.excepted != TransactionException::None)
+	{
+		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> " + QString::fromStdString(toString(m_lastGood.excepted)) + "</div>");
+		return;
+	}
+	if (m_lastGood.codeDeposit == CodeDeposit::Failed)
+	{
+		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> Code deposit failed due to insufficient gas; " + QString::fromStdString(toString(m_lastGood.gasForDeposit)) + " GAS &lt; " + QString::fromStdString(toString(m_lastGood.depositSize)) + " bytes * " + QString::fromStdString(toString(c_createDataGas)) + "GAS/byte</div>");
+		return;
+	}
+
+	updateFee();
+	ui->code->setHtml(htmlInfo + m_dataInfo);
+	ui->send->setEnabled(true);
+}
+
+GasRequirements Transact::determineGasRequirements()
+{
+	// Determine the minimum amount of gas we need to play...
+	qint64 baseGas = (qint64)Transaction::gasRequired(m_data, 0);
+
+	Address from = fromAccount();
+	Address to = toAccount().first;
+	ExecutionResult lastGood;
+
+	m_startLowerBound = baseGas;
+	m_startUpperBound = (qint64)ethereum()->gasLimitRemaining();
+	for (unsigned i = 0; i < 30; ++i)
+	{
+		qint64 mid = m_startUpperBound;
+		ExecutionResult er;
+		if (isCreation())
+			er = ethereum()->create(from, value(), m_data, mid, gasPrice(), PendingBlock, FudgeFactor::Lenient);
+		else
+			er = ethereum()->call(from, value(), to, m_data, mid, gasPrice(), PendingBlock, FudgeFactor::Lenient);
+		if (er.excepted == TransactionException::OutOfGas || er.excepted == TransactionException::OutOfGasBase || er.excepted == TransactionException::OutOfGasIntrinsic || er.codeDeposit == CodeDeposit::Failed)
+		{
+			m_startLowerBound = mid;
+			m_startUpperBound *= 2;
+		}
+		else
+		{
+			// Begin async binary chop for gas calculation..
+			m_lastGood = lastGood;
+			m_lowerBound = m_startLowerBound;
+			m_upperBound = m_startUpperBound;
+			killTimer(m_gasCalcTimer);
+			m_gasCalcTimer = startTimer(0);
+			return GasRequirements{m_upperBound, baseGas, m_upperBound - baseGas, (qint64)lastGood.gasRefunded, lastGood};
+		}
+	}
+	return GasRequirements();
+}
+
 void Transact::rejigData()
 {
 	if (!ethereum())
@@ -334,15 +474,12 @@ void Transact::rejigData()
 	if (!s)
 		return;
 
-	auto b = ethereum()->balanceAt(s, PendingBlock);
-
-	m_allGood = true;
 	QString htmlInfo;
 
 	auto bail = [&](QString he) {
-		m_allGood = false;
-//		ui->send->setEnabled(false);
-		ui->code->setHtml(he + htmlInfo);
+		ui->send->setEnabled(false);
+		m_dataInfo = he + htmlInfo;
+		ui->code->setHtml(m_dataInfo);
 	};
 
 	// Determine m_info.
@@ -370,61 +507,15 @@ void Transact::rejigData()
 
 	htmlInfo += "<h4>Hex</h4>" + QString(ETH_HTML_DIV(ETH_HTML_MONO)) + QString::fromStdString(toHex(m_data)) + "</div>";
 
-	// Determine the minimum amount of gas we need to play...
-	qint64 baseGas = (qint64)Transaction::gasRequired(m_data, 0);
-	qint64 gasNeeded = 0;
-
-	if (b < value() + baseGas * gasPrice())
-	{
-		// Not enough - bail.
-		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> Account doesn't contain enough for paying even the basic amount of gas required.</div>");
-		return;
-	}
-	else
-		gasNeeded = (qint64)min<bigint>(ethereum()->gasLimitRemaining(), ((b - value()) / max<u256>(gasPrice(), 1)));
-
-	// Dry-run execution to determine gas requirement and any execution errors
-	Address to;
-	ExecutionResult er;
-	if (isCreation())
-		er = ethereum()->create(s, value(), m_data, gasNeeded, gasPrice());
-	else
-	{
-		// TODO: cache like m_data.
-		to = m_context->fromString(ui->destination->currentText().toStdString()).first;
-		er = ethereum()->call(s, value(), to, m_data, gasNeeded, gasPrice());
-	}
-	gasNeeded = (qint64)(er.gasUsed + er.gasRefunded + c_callStipend);
-	htmlInfo = QString("<div class=\"info\"><span class=\"icon\">INFO</span> Gas required: %1 total = %2 base, %3 exec [%4 refunded later]</div>").arg(gasNeeded).arg(baseGas).arg(gasNeeded - baseGas).arg((qint64)er.gasRefunded) + htmlInfo;
-
-	if (er.excepted != TransactionException::None)
-	{
-		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> " + QString::fromStdString(toString(er.excepted)) + "</div>");
-		return;
-	}
-	if (er.codeDeposit == CodeDeposit::Failed)
-	{
-		bail("<div class=\"error\"><span class=\"icon\">ERROR</span> Code deposit failed due to insufficient gas; " + QString::fromStdString(toString(er.gasForDeposit)) + " GAS &lt; " + QString::fromStdString(toString(er.depositSize)) + " bytes * " + QString::fromStdString(toString(c_createDataGas)) + "GAS/byte</div>");
-		return;
-	}
-
 	// Add Natspec information
 	if (!isCreation())
-		htmlInfo = "<div class=\"info\"><span class=\"icon\">INFO</span> " + QString::fromStdString(natspecNotice(to, m_data)).toHtmlEscaped() + "</div>" + htmlInfo;
+		htmlInfo = "<div class=\"info\"><span class=\"icon\">INFO</span> " + QString::fromStdString(natspecNotice(toAccount().first, m_data)).toHtmlEscaped() + "</div>" + htmlInfo;
 
-	// Update gas
-	if (ui->gas->value() == ui->gas->minimum())
-	{
-		ui->gas->setMinimum(gasNeeded);
-		ui->gas->setValue(gasNeeded);
-	}
-	else
-		ui->gas->setMinimum(gasNeeded);
+	determineGasRequirements();
 
-	updateFee();
-
-	ui->code->setHtml(htmlInfo);
-//	ui->send->setEnabled(m_allGood);
+	m_dataInfo = htmlInfo;
+	ui->code->setHtml(m_dataInfo);
+	ui->send->setEnabled(true);
 }
 
 Secret Transact::findSecret(u256 _totalReq) const
@@ -445,7 +536,7 @@ Secret Transact::findSecret(u256 _totalReq) const
 		if (b > bestBalance)
 			bestBalance = b, best = i;
 	}
-	return m_context->retrieveSecret(best);
+	return m_main->retrieveSecret(best);
 }
 
 Address Transact::fromAccount()
@@ -478,7 +569,7 @@ void Transact::on_send_clicked()
 		return;
 	}
 
-	Secret s = m_context->retrieveSecret(a);
+	Secret s = m_main->retrieveSecret(a);
 	if (!s)
 		return;
 
@@ -486,7 +577,7 @@ void Transact::on_send_clicked()
 	{
 		// If execution is a contract creation, add Natspec to
 		// a local Natspec LEVELDB
-		ethereum()->submitTransaction(s, value(), m_data, ui->gas->value(), gasPrice(), nonce);
+		ethereum()->submitTransaction(s, value(), m_data, gas(), gasPrice(), nonce);
 #if ETH_SOLIDITY
 		string src = ui->data->toPlainText().toStdString();
 		if (sourceIsSolidity(src))
@@ -505,7 +596,7 @@ void Transact::on_send_clicked()
 	}
 	else
 		// TODO: cache like m_data.
-		ethereum()->submitTransaction(s, value(), m_context->fromString(ui->destination->currentText().toStdString()).first, m_data, ui->gas->value(), gasPrice(), nonce);
+		ethereum()->submitTransaction(s, value(), toAccount().first, m_data, gas(), gasPrice(), nonce);
 	close();
 }
 
@@ -524,10 +615,10 @@ void Transact::on_debug_clicked()
 	{
 		Block postState(ethereum()->postState());
 		Transaction t = isCreation() ?
-			Transaction(value(), gasPrice(), ui->gas->value(), m_data, postState.transactionsFrom(from)) :
-			Transaction(value(), gasPrice(), ui->gas->value(), m_context->fromString(ui->destination->currentText().toStdString()).first, m_data, postState.transactionsFrom(from));
+			Transaction(value(), gasPrice(), gas(), m_data, postState.transactionsFrom(from)) :
+			Transaction(value(), gasPrice(), gas(), toAccount().first, m_data, postState.transactionsFrom(from));
 		t.forceSender(from);
-		Debugger dw(m_context, this);
+		Debugger dw(m_main, this);
 		Executive e(postState, ethereum()->blockChain(), 0);
 		dw.populate(e, t);
 		dw.exec();

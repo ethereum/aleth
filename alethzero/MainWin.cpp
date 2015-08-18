@@ -73,9 +73,6 @@
 #include "DappLoader.h"
 #include "DappHost.h"
 #include "WebPage.h"
-#include "ExportState.h"
-#include "AllAccounts.h"
-#include "LogPanel.h"
 #include "ui_Main.h"
 #include "ui_GetPassword.h"
 #include "ui_GasPricing.h"
@@ -86,32 +83,7 @@ using namespace p2p;
 using namespace eth;
 namespace js = json_spirit;
 
-string Main::fromRaw(h256 _n, unsigned* _inc)
-{
-	if (_n)
-	{
-		string s((char const*)_n.data(), 32);
-		auto l = s.find_first_of('\0');
-		if (!l)
-			return string();
-		if (l != string::npos)
-		{
-			auto p = s.find_first_not_of('\0', l);
-			if (!(p == string::npos || (_inc && p == 31)))
-				return string();
-			if (_inc)
-				*_inc = (byte)s[31];
-			s.resize(l);
-		}
-		for (auto i: s)
-			if (i < 32)
-				return string();
-		return s;
-	}
-	return string();
-}
-
-QString contentsOfQResource(string const& res)
+QString dev::az::contentsOfQResource(string const& res)
 {
 	QFile file(QString::fromStdString(res));
 	if (!file.open(QFile::ReadOnly))
@@ -121,8 +93,8 @@ QString contentsOfQResource(string const& res)
 }
 
 //Address c_config = Address("661005d2720d855f1d9976f88bb10c1a3398c77f");
-Address c_newConfig = Address("c6d9d2cd449a754c494264e1809c50e34d64562b");
-//Address c_nameReg = Address("ddd1cea741d548f90d86fb87a3ae6492e18c03a1");
+//Address c_newConfig = Address("c6d9d2cd449a754c494264e1809c50e34d64562b");
+Address c_nameReg = Address("96d76ae3397b52d9f61215270df65d72358709e3");
 
 Main::Main(QWidget* _parent):
 	MainFace(_parent),
@@ -183,13 +155,11 @@ Main::Main(QWidget* _parent):
 			QMessageBox::warning(nullptr, "Try again", "You entered two different passwords - please enter the same password twice.", QMessageBox::Ok);
 		}
 		m_keyManager.create(password.toStdString());
-		m_keyManager.import(Secret::random(), "Default identity");
+		m_keyManager.import(ICAP::createDirect(), "Default identity");
 	}
 
-#if ETH_DEBUG
-	m_servers.append("127.0.0.1:30300");
-#endif
-	m_servers.append(QString::fromStdString(Host::pocHost() + ":30303"));
+	for (auto const& i: Host::pocHosts())
+		m_servers.append(QString::fromStdString("enode://" + i.first.hex() + "@" + i.second));
 
 	if (!dev::contents(dbPath + "/genesis.json").empty())
 		CanonBlockChain<Ethash>::setGenesis(contentsString(dbPath + "/genesis.json"));
@@ -204,14 +174,14 @@ Main::Main(QWidget* _parent):
 
 	ui->configDock->close();
 
-	statusBar()->addPermanentWidget(ui->cacheUsage);
+//	statusBar()->addPermanentWidget(ui->cacheUsage);
+	ui->cacheUsage->hide();
 	statusBar()->addPermanentWidget(ui->balance);
 	statusBar()->addPermanentWidget(ui->peerCount);
 	statusBar()->addPermanentWidget(ui->mineStatus);
 	statusBar()->addPermanentWidget(ui->syncStatus);
 	statusBar()->addPermanentWidget(ui->chainStatus);
 	statusBar()->addPermanentWidget(ui->blockCount);
-
 
 	QSettings s("ethereum", "alethzero");
 	m_networkConfig = s.value("peers").toByteArray();
@@ -224,8 +194,6 @@ Main::Main(QWidget* _parent):
 	auto w3ss = new OurWebThreeStubServer(*m_httpConnector, this);
 	m_server.reset(w3ss);
 	auto sessionKey = w3ss->newSession(SessionPermissions{{Privilege::Admin}});
-	connect(&*m_server, SIGNAL(onNewId(QString)), SLOT(addNewId(QString)));
-	m_server->setIdentities(keysAsVector(owned()));
 	m_server->StartListening();
 
 	WebPage* webPage = new WebPage(this);
@@ -255,7 +223,7 @@ Main::Main(QWidget* _parent):
 
 	ethereum()->setDefault(LatestBlock);
 
-	m_vmSelectionGroup = new QActionGroup{ui->menu_Debug};
+	m_vmSelectionGroup = new QActionGroup{ui->menuDebug};
 	m_vmSelectionGroup->addAction(ui->vmInterpreter);
 	m_vmSelectionGroup->addAction(ui->vmJIT);
 	m_vmSelectionGroup->addAction(ui->vmSmart);
@@ -270,7 +238,7 @@ Main::Main(QWidget* _parent):
 	ui->vmSmart->setEnabled(false);
 #endif
 
-	readSettings();
+	readSettings(true, false);
 
 	m_transact = new Transact(this, this);
 	m_transact->setWindowFlags(Qt::Dialog);
@@ -290,10 +258,10 @@ Main::Main(QWidget* _parent):
 		}
 	}
 
-#if ETH_FATDB
-	loadPlugin<dev::az::AllAccounts>();
-#endif
-	loadPlugin<dev::az::LogPanel>();
+	for (auto const& i: *s_linkedPlugins)
+		initPlugin(i(this));
+
+	readSettings(false, true);
 }
 
 Main::~Main()
@@ -305,11 +273,90 @@ Main::~Main()
 	// need to be rethought into something more like:
 	// forEach([&](shared_ptr<Plugin> const& p){ finalisePlugin(p.get()); });
 	writeSettings();
+
+	m_destructing = true;
+	killPlugins();
+}
+
+string Main::fromRaw(h256 const& _n, unsigned* _inc)
+{
+	if (_n)
+	{
+		string s((char const*)_n.data(), 32);
+		auto l = s.find_first_of('\0');
+		if (!l)
+			return string();
+		if (l != string::npos)
+		{
+			auto p = s.find_first_not_of('\0', l);
+			if (!(p == string::npos || (_inc && p == 31)))
+				return string();
+			if (_inc)
+				*_inc = (byte)s[31];
+			s.resize(l);
+		}
+		for (auto i: s)
+			if (i < 32)
+				return string();
+		return s;
+	}
+	return string();
+}
+
+void Main::install(AccountNamer* _adopt)
+{
+	m_namers.insert(_adopt);
+	_adopt->m_main = this;
+	refreshAll();
+}
+
+void Main::uninstall(AccountNamer* _kill)
+{
+	m_namers.erase(_kill);
+	if (!m_destructing)
+		refreshAll();
+}
+
+void Main::noteKnownAddressesChanged(AccountNamer*)
+{
+	emit knownAddressesChanged();
+	refreshAll();
+}
+
+void Main::noteAddressNamesChanged(AccountNamer*)
+{
+	emit addressNamesChanged();
+	refreshAll();
+}
+
+Address Main::toAddress(string const& _n) const
+{
+	for (AccountNamer* n: m_namers)
+		if (n->toAddress(_n))
+			return n->toAddress(_n);
+	return Address();
+}
+
+string Main::toName(Address const& _a) const
+{
+	for (AccountNamer* n: m_namers)
+		if (!n->toName(_a).empty())
+			return n->toName(_a);
+	return string();
+}
+
+Addresses Main::allKnownAddresses() const
+{
+	Addresses ret;
+	for (AccountNamer* i: m_namers)
+		ret += i->knownAddresses();
+	sort(ret.begin(), ret.end());
+	return ret;
 }
 
 bool Main::confirm() const
 {
-	return ui->natSpec->isChecked();
+	return true; //ui->natSpec->isChecked();
 }
 
 void Main::on_gasPrices_triggered()
@@ -335,29 +382,6 @@ void Main::on_sentinel_triggered()
 	QString sentinel = QInputDialog::getText(nullptr, "Enter sentinel address", "Enter the sentinel address for bad block reporting (e.g. http://badblockserver.com:8080). Enter nothing to disable.", QLineEdit::Normal, QString::fromStdString(ethereum()->sentinel()), &ok);
 	if (ok)
 		ethereum()->setSentinel(sentinel.toStdString());
-}
-
-void Main::on_newIdentity_triggered()
-{
-	KeyPair kp = KeyPair::create();
-	m_myIdentities.append(kp);
-	m_server->setIdentities(keysAsVector(owned()));
-	refreshWhisper();
-}
-
-void Main::refreshWhisper()
-{
-	ui->shhFrom->clear();
-	for (auto i: m_server->ids())
-		ui->shhFrom->addItem(QString::fromStdString(toHex(i.first.ref())));
-}
-
-void Main::addNewId(QString _ids)
-{
-	KeyPair kp(jsToSecret(_ids.toStdString()));
-	m_myIdentities.push_back(kp);
-	m_server->setIdentities(keysAsVector(owned()));
-	refreshWhisper();
 }
 
 NetworkPreferences Main::netPrefs() const
@@ -390,7 +414,7 @@ NetworkPreferences Main::netPrefs() const
 		ret = NetworkPreferences(listenIP, ui->port->value(), ui->upnp->isChecked());
 
 	ret.discovery = m_privateChain.isEmpty() && !ui->hermitMode->isChecked();
-	ret.pin = m_privateChain.isEmpty() || ui->hermitMode->isChecked();
+	ret.pin = !ret.discovery;
 
 	return ret;
 }
@@ -436,8 +460,8 @@ void Main::installWatches()
 	cdebug << "newBlock watch ID: " << newBlockId;
 	cdebug << "newPending watch ID: " << newPendingId;
 
-	installWatch(LogFilter().address(c_newConfig), [=](LocalisedLogEntries const&) { installNameRegWatch(); });
-	installWatch(LogFilter().address(c_newConfig), [=](LocalisedLogEntries const&) { installCurrenciesWatch(); });
+//	installWatch(LogFilter().address(c_newConfig), [=](LocalisedLogEntries const&) { installNameRegWatch(); });
+//	installWatch(LogFilter().address(c_newConfig), [=](LocalisedLogEntries const&) { installCurrenciesWatch(); });
 }
 
 Address Main::getNameReg() const
@@ -448,12 +472,13 @@ Address Main::getNameReg() const
 
 Address Main::getCurrencies() const
 {
-	return abiOut<Address>(ethereum()->call(c_newConfig, abiIn("lookup(uint256)", (u256)3)).output);
+//	return abiOut<Address>(ethereum()->call(c_newConfig, abiIn("lookup(uint256)", (u256)3)).output);
+	return Address();
 }
 
 bool Main::doConfirm()
 {
-	return ui->confirm->isChecked();
+	return true; //ui->confirm->isChecked();
 }
 
 void Main::installNameRegWatch()
@@ -615,17 +640,6 @@ void Main::addConsoleMessage(QString const& _js, QString const& _s)
 	ui->jsConsole->setHtml(r);
 }
 
-static Public stringToPublic(QString const& _a)
-{
-	string sn = _a.toStdString();
-	if (_a.size() == sizeof(Public) * 2)
-		return Public(fromHex(_a.toStdString()));
-	else if (_a.size() == sizeof(Public) * 2 + 2 && _a.startsWith("0x"))
-		return Public(fromHex(_a.mid(2).toStdString()));
-	else
-		return Public();
-}
-
 std::string Main::pretty(dev::Address const& _a) const
 {
 	auto g_newNameReg = getNameReg();
@@ -633,6 +647,13 @@ std::string Main::pretty(dev::Address const& _a) const
 	if (g_newNameReg)
 	{
 		string n = toString(abiOut<string32>(ethereum()->call(g_newNameReg, abiIn("name(address)", _a)).output));
+		if (!n.empty())
+			return n;
+	}
+
+	for (auto i: m_namers)
+	{
+		auto n = i->toName(_a);
 		if (!n.empty())
 			return n;
 	}
@@ -646,9 +667,10 @@ std::string Main::render(dev::Address const& _a) const
 	if (p.size() == 9 && p.find_first_not_of("QWERYUOPASDFGHJKLZXCVBNM1234567890") == string::npos)
 		p = ICAP(p, "XREG").encoded();
 	else
-		DEV_IGNORE_EXCEPTIONS(n = ICAP(_a).encoded());
-	if (n.empty())
-		n = _a.abridged();
+		DEV_IGNORE_EXCEPTIONS(n = ICAP(_a).encoded().substr(0, 8));
+	if (!n.empty())
+		n += " ";
+	n += _a.abridged();
 	return p.empty() ? n : (p + " " + n);
 }
 
@@ -658,8 +680,6 @@ pair<Address, bytes> Main::fromString(std::string const& _n) const
 		return make_pair(Address(), bytes());
 
 	std::string n = _n;
-	if (n.find("0x") == 0)
-		n.erase(0, 2);
 
 	auto g_newNameReg = getNameReg();
 	if (g_newNameReg)
@@ -668,6 +688,21 @@ pair<Address, bytes> Main::fromString(std::string const& _n) const
 		if (a)
 			return make_pair(a, bytes());
 	}
+
+	for (auto i: m_namers)
+		if (auto a = i->toAddress(_n))
+			return make_pair(a, bytes());
+
+	try {
+		return ICAP::decoded(n).address([&](Address const& a, bytes const& b) -> bytes
+		{
+			return ethereum()->call(a, b).output;
+		}, g_newNameReg);
+	}
+	catch (...) {}
+
+	if (n.find("0x") == 0)
+		n.erase(0, 2);
 	if (n.size() == 40)
 	{
 		try
@@ -686,14 +721,6 @@ pair<Address, bytes> Main::fromString(std::string const& _n) const
 			return make_pair(Address(), bytes());
 		}
 	}
-	else
-		try {
-			return ICAP::decoded(n).address([&](Address const& a, bytes const& b) -> bytes
-			{
-				return ethereum()->call(a, b).output;
-			}, g_newNameReg);
-		}
-		catch (...) {}
 	return make_pair(Address(), bytes());
 }
 
@@ -727,7 +754,7 @@ QString Main::lookup(QString const& _a) const
 
 void Main::on_about_triggered()
 {
-	QMessageBox::about(this, "About AlethZero PoC-" + QString(dev::Version).section('.', 1, 1), QString("AlethZero/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM) "\n" DEV_QUOTED(ETH_COMMIT_HASH) + (ETH_CLEAN_REPO ? "\nCLEAN" : "\n+ LOCAL CHANGES") + "\n\nBerlin ÐΞV team, 2014.\nOriginally by Gav Wood. Based on a design by Vitalik Buterin.\n\nThanks to the various contributors including: Tim Hughes, caktux, Eric Lombrozo, Marko Simovic.");
+	QMessageBox::about(this, "About AlethZero PoC-" + QString(dev::Version).section('.', 1, 1), QString("AlethZero/v") + dev::Version + "/" DEV_QUOTED(ETH_BUILD_TYPE) "/" DEV_QUOTED(ETH_BUILD_PLATFORM) "\n" DEV_QUOTED(ETH_COMMIT_HASH) + (ETH_CLEAN_REPO ? "\nCLEAN" : "\n+ LOCAL CHANGES") + "\n\nBy Gav Wood and the Berlin ÐΞV team, 2014, 2015.\nSee the README for contributors and credits.");
 }
 
 void Main::on_paranoia_triggered()
@@ -744,17 +771,6 @@ void Main::writeSettings()
 {
 	QSettings s("ethereum", "alethzero");
 	s.remove("address");
-	{
-		QByteArray b;
-		b.resize(sizeof(Secret) * m_myIdentities.size());
-		auto p = b.data();
-		for (auto i: m_myIdentities)
-		{
-			memcpy(p, &(i.secret()), sizeof(Secret));
-			p += sizeof(Secret);
-		}
-		s.setValue("identities", b);
-	}
 
 	forEach([&](std::shared_ptr<Plugin> p)
 	{
@@ -799,6 +815,8 @@ void Main::setPrivateChain(QString const& _private, bool _forceConfigure)
 	ui->usePrivate->setChecked(!m_privateChain.isEmpty());
 
 	CanonBlockChain<Ethash>::forceGenesisExtraData(m_privateChain.isEmpty() ? bytes() : sha3(m_privateChain.toStdString()).asBytes());
+	CanonBlockChain<Ethash>::forceGenesisDifficulty(m_privateChain.isEmpty() ? u256() : c_minimumDifficulty);
+	CanonBlockChain<Ethash>::forceGenesisGasLimit(m_privateChain.isEmpty() ? u256() : u256(1) << 32);
 
 	// rejig blockchain now.
 	writeSettings();
@@ -832,35 +850,22 @@ Secret Main::retrieveSecret(Address const& _address) const
 	}
 }
 
-void Main::readSettings(bool _skipGeometry)
+void Main::readSettings(bool _skipGeometry, bool _onlyGeometry)
 {
 	QSettings s("ethereum", "alethzero");
 
 	if (!_skipGeometry)
 		restoreGeometry(s.value("geometry").toByteArray());
 	restoreState(s.value("windowState").toByteArray());
-
-	{
-		m_myIdentities.clear();
-		QByteArray b = s.value("identities").toByteArray();
-		if (!b.isEmpty())
-		{
-			Secret k;
-			for (unsigned i = 0; i < b.size() / sizeof(Secret); ++i)
-			{
-				memcpy(k.writable().data(), b.data() + i * sizeof(Secret), sizeof(Secret));
-				if (!count(m_myIdentities.begin(), m_myIdentities.end(), KeyPair(k)))
-					m_myIdentities.append(KeyPair(k));
-			}
-		}
-	}
+	if (_onlyGeometry)
+		return;
 
 	forEach([&](std::shared_ptr<Plugin> p)
 	{
 		p->readSettings(s);
 	});
-	static_cast<TrivialGasPricer*>(ethereum()->gasPricer().get())->setAsk(u256(s.value("askPrice", QString::fromStdString(toString(c_defaultGasPrice))).toString().toStdString()));
-	static_cast<TrivialGasPricer*>(ethereum()->gasPricer().get())->setBid(u256(s.value("bidPrice", QString::fromStdString(toString(c_defaultGasPrice))).toString().toStdString()));
+	static_cast<TrivialGasPricer*>(ethereum()->gasPricer().get())->setAsk(u256(s.value("askPrice", QString::fromStdString(toString(DefaultGasPrice))).toString().toStdString()));
+	static_cast<TrivialGasPricer*>(ethereum()->gasPricer().get())->setBid(u256(s.value("bidPrice", QString::fromStdString(toString(DefaultGasPrice))).toString().toStdString()));
 
 	ui->upnp->setChecked(s.value("upnp", true).toBool());
 	ui->forcePublicIP->setText(s.value("forceAddress", "").toString());
@@ -1015,6 +1020,28 @@ void Main::on_claimPresale_triggered()
 	}
 }
 
+void Main::on_importPresale_triggered()
+{
+	QString s = QFileDialog::getOpenFileName(this, "Claim Account Contents", QDir::homePath(), "JSON Files (*.json);;All Files (*)");
+	try
+	{
+		string pass;
+		KeyPair k = m_keyManager.presaleSecret(dev::contentsString(s.toStdString()), [&](bool){ return (pass = QInputDialog::getText(this, "Enter Password", "Enter the wallet's passphrase", QLineEdit::Password).toStdString()); });
+		cnote << k.address();
+		if (!m_keyManager.hasAccount(k.address()))
+			keyManager().import(k.secret(), "Presale wallet (" + s.toStdString() + ")", pass, "Same password as for the presale wallet");
+		else
+			QMessageBox::warning(this, "Already Have Key", "Could not import the secret key: we already own this account.");
+	}
+	catch (dev::eth::PasswordUnknown&) {}
+	catch (...)
+	{
+		cerr << "Unhandled exception!" << endl <<
+			boost::current_exception_diagnostic_information();
+		QMessageBox::warning(this, "Key File Invalid", "Could not find secret key definition. This is probably not an Ethereum key file.");
+	}
+}
+
 void Main::on_exportKey_triggered()
 {
 	if (ui->ourAccounts->currentRow() >= 0)
@@ -1024,12 +1051,6 @@ void Main::on_exportKey_triggered()
 		Secret s = retrieveSecret(h);
 		QMessageBox::information(this, "Export Account Key", "Secret key to account " + QString::fromStdString(render(h) + " is:\n" + s.makeInsecure().hex()));
 	}
-}
-
-void Main::on_exportState_triggered()
-{
-	ExportStateDialog dialog(this);
-	dialog.exec();
 }
 
 void Main::on_usePrivate_triggered()
@@ -1177,7 +1198,13 @@ void Main::refreshBalances()
 	for (auto const& address: m_keyManager.accounts())
 	{
 		u256 b = ethereum()->balanceAt(address);
-		QListWidgetItem* li = new QListWidgetItem(QString("%4 %2: %1 [%3]").arg(formatBalance(b).c_str()).arg(QString::fromStdString(render(address))).arg((unsigned)ethereum()->countAt(address)).arg(QString::fromStdString(m_keyManager.accountName(address))), ui->ourAccounts);
+		QListWidgetItem* li = new QListWidgetItem(
+			QString("<%1> %2: %3 [%4]")
+				.arg(m_keyManager.haveKey(address) ? "KEY" : "BRAIN")
+				.arg(QString::fromStdString(render(address)))
+				.arg(formatBalance(b).c_str())
+				.arg((unsigned)ethereum()->countAt(address))
+			, ui->ourAccounts);
 		li->setData(Qt::UserRole, QByteArray((char const*)address.data(), Address::size));
 		li->setFlags(Qt::ItemIsUserCheckable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
 		li->setCheckState(m_beneficiary == address ? Qt::Checked : Qt::Unchecked);
@@ -1266,7 +1293,6 @@ void Main::refreshPending()
 void Main::refreshBlockCount()
 {
 	auto d = ethereum()->blockChain().details();
-	BlockQueueStatus b = ethereum()->blockQueueStatus();
 	SyncStatus sync = ethereum()->syncStatus();
 	QString syncStatus = QString("PV%1 %2").arg(sync.protocolVersion).arg(EthereumHost::stateName(sync.state));
 	if (sync.state == SyncState::Hashes)
@@ -1274,8 +1300,11 @@ void Main::refreshBlockCount()
 	if (sync.state == SyncState::Blocks || sync.state == SyncState::NewBlocks)
 		syncStatus += QString(": %1/%2").arg(sync.blocksReceived).arg(sync.blocksTotal);
 	ui->syncStatus->setText(syncStatus);
-	ui->chainStatus->setText(QString("%3 importing %4 ready %5 verifying %6 unverified %7 future %8 unknown %9 bad  %1 #%2")
-		.arg(m_privateChain.size() ? "[" + m_privateChain + "] " : c_network == eth::Network::Olympic ? "Olympic" : "Frontier").arg(d.number).arg(b.importing).arg(b.verified).arg(b.verifying).arg(b.unverified).arg(b.future).arg(b.unknown).arg(b.bad));
+//	BlockQueueStatus b = ethereum()->blockQueueStatus();
+//	ui->chainStatus->setText(QString("%3 importing %4 ready %5 verifying %6 unverified %7 future %8 unknown %9 bad  %1 #%2")
+//		.arg(m_privateChain.size() ? "[" + m_privateChain + "] " : c_network == eth::Network::Olympic ? "Olympic" : "Frontier").arg(d.number).arg(b.importing).arg(b.verified).arg(b.verifying).arg(b.unverified).arg(b.future).arg(b.unknown).arg(b.bad));
+	ui->chainStatus->setText(QString("%1 #%2")
+		.arg(m_privateChain.size() ? "[" + m_privateChain + "] " : c_network == eth::Network::Olympic ? "Olympic" : "Frontier").arg(d.number));
 }
 
 void Main::on_turboMining_triggered()
@@ -1450,7 +1479,6 @@ void Main::timerEvent(QTimerEvent*)
 	{
 		interval = 0;
 		refreshNetwork();
-		refreshWhispers();
 		refreshCache();
 		refreshBlockCount();
 		poll();
@@ -1539,6 +1567,7 @@ void Main::on_transactionQueue_currentItemChanged()
 	int i = ui->transactionQueue->currentRow();
 	if (i >= 0 && i < (int)ethereum()->pending().size())
 	{
+		ui->debugPending->setEnabled(true);
 		Transaction tx(ethereum()->pending()[i]);
 		TransactionReceipt receipt(ethereum()->postState().receipt(i));
 		auto ss = tx.safeSender();
@@ -1578,28 +1607,11 @@ void Main::on_transactionQueue_currentItemChanged()
 //		s << "Pre: " << fs.rootHash() << "<br/>";
 //		s << "Post: <b>" << ts.rootHash() << "</b>";
 	}
+	else
+		ui->debugPending->setEnabled(false);
 
 	ui->pendingInfo->setHtml(QString::fromStdString(s.str()));
 	ui->pendingInfo->moveCursor(QTextCursor::Start);
-}
-
-void Main::on_inject_triggered()
-{
-	QString s = QInputDialog::getText(this, "Inject Transaction", "Enter transaction dump in hex");
-	try
-	{
-		bytes b = fromHex(s.toStdString(), WhenError::Throw);
-		ethereum()->injectTransaction(b);
-	}
-	catch (BadHexCharacter& _e)
-	{
-		cwarn << "invalid hex character, transaction rejected";
-		cwarn << boost::diagnostic_information(_e);
-	}
-	catch (...)
-	{
-		cwarn << "transaction rejected";
-	}
 }
 
 void Main::on_injectBlock_triggered()
@@ -1794,6 +1806,22 @@ void Main::on_debugCurrent_triggered()
 	}
 }
 
+void Main::on_debugPending_triggered()
+{
+	int txi = ui->transactionQueue->currentRow();
+	if (txi == -1)
+		return;
+
+	Block b = ethereum()->postState();
+	bytes t = b.pending()[txi].rlp();
+	State s(ethereum()->state(txi));
+	BlockInfo bi(b.info());
+	Executive e(s, ethereum()->blockChain(), EnvInfo(bi));
+	Debugger dw(this, this);
+	dw.populate(e, Transaction(t, CheckTransaction::Everything));
+	dw.exec();
+}
+
 std::string minHex(h256 const& _h)
 {
 	unsigned i = 0;
@@ -1871,7 +1899,7 @@ void Main::on_ourAccounts_doubleClicked()
 {
 	auto hba = ui->ourAccounts->currentItem()->data(Qt::UserRole).toByteArray();
 	auto h = Address((byte const*)hba.data(), Address::ConstructFromPointer);
-	qApp->clipboard()->setText(QString::fromStdString(toHex(h.asArray())));
+	qApp->clipboard()->setText(QString::fromStdString(ICAP(h).encoded()) + " (" + QString::fromStdString(h.hex()) + ")");
 }
 
 /*void Main::on_log_doubleClicked()
@@ -1879,60 +1907,6 @@ void Main::on_ourAccounts_doubleClicked()
 	ui->log->setPlainText("");
 	m_logHistory.clear();
 }*/
-
-static shh::Topics topicFromText(QString _s)
-{
-	shh::BuildTopic ret;
-	while (_s.size())
-	{
-		QRegExp r("(@|\\$)?\"([^\"]*)\"(\\s.*)?");
-		QRegExp d("(@|\\$)?([0-9]+)(\\s*(ether)|(finney)|(szabo))?(\\s.*)?");
-		QRegExp h("(@|\\$)?(0x)?(([a-fA-F0-9])+)(\\s.*)?");
-		bytes part;
-		if (r.exactMatch(_s))
-		{
-			for (auto i: r.cap(2))
-				part.push_back((byte)i.toLatin1());
-			if (r.cap(1) != "$")
-				for (int i = r.cap(2).size(); i < 32; ++i)
-					part.push_back(0);
-			else
-				part.push_back(0);
-			_s = r.cap(3);
-		}
-		else if (d.exactMatch(_s))
-		{
-			u256 v(d.cap(2).toStdString());
-			if (d.cap(6) == "szabo")
-				v *= szabo;
-			else if (d.cap(5) == "finney")
-				v *= finney;
-			else if (d.cap(4) == "ether")
-				v *= ether;
-			bytes bs = dev::toCompactBigEndian(v);
-			if (d.cap(1) != "$")
-				for (auto i = bs.size(); i < 32; ++i)
-					part.push_back(0);
-			for (auto b: bs)
-				part.push_back(b);
-			_s = d.cap(7);
-		}
-		else if (h.exactMatch(_s))
-		{
-			bytes bs = fromHex((((h.cap(3).size() & 1) ? "0" : "") + h.cap(3)).toStdString());
-			if (h.cap(1) != "$")
-				for (auto i = bs.size(); i < 32; ++i)
-					part.push_back(0);
-			for (auto b: bs)
-				part.push_back(b);
-			_s = h.cap(5);
-		}
-		else
-			_s = _s.mid(1);
-		ret.shift(part);
-	}
-	return ret;
-}
 
 void Main::on_clearPending_triggered()
 {
@@ -2028,84 +2002,8 @@ void Main::on_mine_triggered()
 
 void Main::keysChanged()
 {
+	emit keyManagerChanged();
 	onBalancesChange();
-}
-
-bool beginsWith(Address _a, bytes const& _b)
-{
-	for (unsigned i = 0; i < min<unsigned>(20, _b.size()); ++i)
-		if (_a[i] != _b[i])
-			return false;
-	return true;
-}
-
-void Main::on_newAccount_triggered()
-{
-	bool ok = true;
-	enum { NoVanity = 0, DirectICAP, FirstTwo, FirstTwoNextTwo, FirstThree, FirstFour, StringMatch };
-	QStringList items = {"No vanity (instant)", "Direct ICAP address", "Two pairs first (a few seconds)", "Two pairs first and second (a few minutes)", "Three pairs first (a few minutes)", "Four pairs first (several hours)", "Specific hex string"};
-	unsigned v = items.QList<QString>::indexOf(QInputDialog::getItem(this, "Vanity Key?", "Would you a vanity key? This could take several hours.", items, 1, false, &ok));
-	if (!ok)
-		return;
-
-	bytes bs;
-	if (v == StringMatch)
-	{
-		QString s = QInputDialog::getText(this, "Vanity Beginning?", "Enter some hex digits that it should begin with.\nNOTE: The more you enter, the longer generation will take.", QLineEdit::Normal, QString(), &ok);
-		if (!ok)
-			return;
-		bs = fromHex(s.toStdString());
-	}
-
-	KeyPair p;
-	bool keepGoing = true;
-	unsigned done = 0;
-	function<void()> f = [&]() {
-		KeyPair lp;
-		while (keepGoing)
-		{
-			done++;
-			if (done % 1000 == 0)
-				cnote << "Tried" << done << "keys";
-			lp = KeyPair::create();
-			auto a = lp.address();
-			if (v == NoVanity ||
-				(v == DirectICAP && !a[0]) ||
-				(v == FirstTwo && a[0] == a[1]) ||
-				(v == FirstTwoNextTwo && a[0] == a[1] && a[2] == a[3]) ||
-				(v == FirstThree && a[0] == a[1] && a[1] == a[2]) ||
-				(v == FirstFour && a[0] == a[1] && a[1] == a[2] && a[2] == a[3]) ||
-				(v == StringMatch && beginsWith(lp.address(), bs))
-			)
-				break;
-		}
-		if (keepGoing)
-			p = lp;
-		keepGoing = false;
-	};
-	vector<std::thread*> ts;
-	for (unsigned t = 0; t < std::thread::hardware_concurrency() - 1; ++t)
-		ts.push_back(new std::thread(f));
-	f();
-	for (std::thread* t: ts)
-	{
-		t->join();
-		delete t;
-	}
-
-	QString s = QInputDialog::getText(this, "Create Account", "Enter this account's name");
-	if (QMessageBox::question(this, "Create Account", "Would you like to use additional security for this key? This lets you protect it with a different password to other keys, but also means you must re-enter the key's password every time you wish to use the account.", QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
-	{
-		bool ok = false;
-		std::string hint;
-		std::string password = getPassword("Create Account", "Enter the password you would like to use for this key. Don't forget it!", &hint, &ok);
-		if (!ok)
-			return;
-		m_keyManager.import(p.secret(), s.toStdString(), password, hint);
-	}
-	else
-		m_keyManager.import(p.secret(), s.toStdString());
-	keysChanged();
 }
 
 void Main::on_killAccount_triggered()
@@ -2219,19 +2117,6 @@ std::string Main::prettyU256(dev::u256 const& _n) const
 	return s.str();
 }
 
-void Main::on_post_clicked()
-{
-	return;
-	shh::Message m;
-	m.setTo(stringToPublic(ui->shhTo->currentText()));
-	m.setPayload(parseData(ui->shhData->toPlainText().toStdString()));
-	Public f = stringToPublic(ui->shhFrom->currentText());
-	Secret from;
-	if (m_server->ids().count(f))
-		from = m_server->ids().at(f);
-	whisper()->inject(m.seal(from, topicFromText(ui->shhTopic->toPlainText()), ui->shhTtl->value(), ui->shhWork->value()));
-}
-
 int Main::authenticate(QString _title, QString _text)
 {
 	QMessageBox userInput(this);
@@ -2242,36 +2127,6 @@ int Main::authenticate(QString _title, QString _text)
 	userInput.button(QMessageBox::Cancel)->setText("Reject");
 	userInput.setDefaultButton(QMessageBox::Cancel);
 	return userInput.exec();
-}
-
-void Main::refreshWhispers()
-{
-	return;
-	ui->whispers->clear();
-	for (auto const& w: whisper()->all())
-	{
-		shh::Envelope const& e = w.second;
-		shh::Message m;
-		for (pair<Public, Secret> const& i: m_server->ids())
-			if (!!(m = e.open(shh::Topics(), i.second)))
-				break;
-		if (!m)
-			m = e.open(shh::Topics());
-
-		QString msg;
-		if (m.from())
-			// Good message.
-			msg = QString("{%1 -> %2} %3").arg(m.from() ? m.from().abridged().c_str() : "???").arg(m.to() ? m.to().abridged().c_str() : "*").arg(toHex(m.payload()).c_str());
-		else if (m)
-			// Maybe message.
-			msg = QString("{%1 -> %2} %3 (?)").arg(m.from() ? m.from().abridged().c_str() : "???").arg(m.to() ? m.to().abridged().c_str() : "*").arg(toHex(m.payload()).c_str());
-
-		time_t ex = e.expiry();
-		QString t(ctime(&ex));
-		t.chop(1);
-		QString item = QString("[%1 - %2s] *%3 %5 %4").arg(t).arg(e.ttl()).arg(e.workProved()).arg(toString(e.topic()).c_str()).arg(msg);
-		ui->whispers->addItem(item);
-	}
 }
 
 void Main::dappLoaded(Dapp& _dapp)

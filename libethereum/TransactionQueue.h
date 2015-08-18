@@ -42,13 +42,6 @@ struct TransactionQueueChannel: public LogChannel { static const char* name(); s
 struct TransactionQueueTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 7; };
 #define ctxq dev::LogOutputStream<dev::eth::TransactionQueueTraceChannel, true>()
 
-/// Import transaction policy
-enum class IfDropped
-{
-	Ignore, ///< Don't import transaction that was previously dropped.
-	Retry 	///< Import transaction even if it was dropped before.
-};
-
 /**
  * @brief A queue of Transactions, each stored as RLP.
  * Maintains a transaction queue sorted by nonce diff and gas price.
@@ -140,7 +133,14 @@ private:
 		UnverifiedTransaction() {}
 		UnverifiedTransaction(bytesConstRef const& _t, h512 const& _nodeId): transaction(_t.toBytes()), nodeId(_nodeId) {}
 		UnverifiedTransaction(UnverifiedTransaction&& _t): transaction(std::move(_t.transaction)) {}
-		UnverifiedTransaction& operator=(UnverifiedTransaction&& _other) { transaction = std::move(_other.transaction); nodeId = std::move(_other.nodeId); return *this; }
+		UnverifiedTransaction& operator=(UnverifiedTransaction&& _other)
+		{
+			assert(&_other != this);
+
+			transaction = std::move(_other.transaction);
+			nodeId = std::move(_other.nodeId);
+			return *this;
+		}
 
 		UnverifiedTransaction(UnverifiedTransaction const&) = delete;
 		UnverifiedTransaction& operator=(UnverifiedTransaction const&) = delete;

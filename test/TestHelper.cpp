@@ -121,10 +121,21 @@ bytes ImportTest::executeTest()
 {
 	ExecutionResult res;
 	eth::State tmpState = m_statePre;
+	try
+	{
+		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, m_transaction);
+		res = execOut.first;
+		m_logs = execOut.second.log();
+	}
+	catch (Exception const& _e)
+	{
+		cnote << "Exception: " << diagnostic_information(_e);
+	}
+	catch (std::exception const& _e)
+	{
+		cnote << "state execution exception: " << _e.what();
+	}
 
-	std::pair<ExecutionResult, TransactionReceipt> execOut = m_statePre.execute(m_envInfo, m_transaction);
-	res = execOut.first;
-	m_logs = execOut.second.log();
 	m_statePre.commit();
 	m_statePost = m_statePre;
 	m_statePre = tmpState;
@@ -191,7 +202,7 @@ void ImportTest::importState(json_spirit::mObject& _o, State& _state)
 			BOOST_THROW_EXCEPTION(MissingFields() << errinfo_comment("Import State: Missing state fields!"));
 }
 
-void ImportTest::importTransaction(json_spirit::mObject& _o)
+void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr)
 {
 	if (_o.count("secretKey") > 0)
 	{
@@ -202,18 +213,18 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		assert(_o.count("value") > 0);
 		assert(_o.count("data") > 0);
 
-		if (bigint(_o["nonce"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
-		if (bigint(_o["gasPrice"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("gasPrice").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasPrice' is equal or greater than 2**256") );
-		if (bigint(_o["gasLimit"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("gasLimit").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'gasLimit' is equal or greater than 2**256") );
-		if (bigint(_o["value"].get_str()) >= c_max256plus1)
+		if (bigint(_o.at("value").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'value' is equal or greater than 2**256") );
 
-		m_transaction = _o["to"].get_str().empty() ?
-			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str())) :
-			Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]), Secret(_o["secretKey"].get_str()));
+		o_tr = _o.at("to").get_str().empty() ?
+			Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str())) :
+			Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")), Secret(_o.at("secretKey").get_str()));
 	}
 	else
 	{
@@ -221,14 +232,14 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 		RLP transactionRLP(transactionRLPStream.out());
 		try
 		{
-			m_transaction = Transaction(transactionRLP.data(), CheckTransaction::Everything);
+			o_tr = Transaction(transactionRLP.data(), CheckTransaction::Everything);
 		}
 		catch (InvalidSignature)
 		{
 			// create unsigned transaction
-			m_transaction = _o["to"].get_str().empty() ?
-				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), importData(_o), toInt(_o["nonce"])) :
-				Transaction(toInt(_o["value"]), toInt(_o["gasPrice"]), toInt(_o["gasLimit"]), Address(_o["to"].get_str()), importData(_o), toInt(_o["nonce"]));
+			o_tr = _o.at("to").get_str().empty() ?
+				Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), importData(_o), toInt(_o.at("nonce"))) :
+				Transaction(toInt(_o.at("value")), toInt(_o.at("gasPrice")), toInt(_o.at("gasLimit")), Address(_o.at("to").get_str()), importData(_o), toInt(_o.at("nonce")));
 		}
 		catch (Exception& _e)
 		{
@@ -237,12 +248,21 @@ void ImportTest::importTransaction(json_spirit::mObject& _o)
 	}
 }
 
-void ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
+void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
+{	
+	importTransaction(o_tr, m_transaction);
+}
+
+int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
-				{TBOOST_CHECK_MESSAGE(a,b);}\
+			{								\
+				TBOOST_CHECK_MESSAGE(a, b);	\
+				if (!a)						\
+					return 1;				\
+			}								\
 			else							\
 				{TBOOST_WARN_MESSAGE(a,b);}	\
 		}
@@ -293,12 +313,13 @@ void ImportTest::compareStates(State const& _stateExpect, State const& _statePos
 						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
+	return 0;
 }
 
-void ImportTest::exportTest(bytes const& _output)
+int ImportTest::exportTest(bytes const& _output)
 {
+	int err = 0;
 	// export output
-
 	m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
 
 	// compare expected output with post output
@@ -306,7 +327,12 @@ void ImportTest::exportTest(bytes const& _output)
 	{
 		std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
 		if (Options::get().checkState)
-			{TBOOST_CHECK_MESSAGE((m_testObject["out"].get_str() == m_testObject["expectOut"].get_str()), warning);}
+		{
+			bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
+			TBOOST_CHECK_MESSAGE(statement, warning);
+			if (!statement)
+				err = 1;
+		}
 		else
 			TBOOST_WARN_MESSAGE((m_testObject["out"].get_str() == m_testObject["expectOut"].get_str()), warning);
 
@@ -334,6 +360,7 @@ void ImportTest::exportTest(bytes const& _output)
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
 	m_testObject["env"] = makeAllFieldsHex(m_testObject["env"].get_obj());
 	m_testObject["transaction"] = makeAllFieldsHex(m_testObject["transaction"].get_obj());
+	return err;
 }
 
 json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
@@ -421,13 +448,13 @@ bytes importByteArray(std::string const& _str)
 	return fromHex(_str.substr(0, 2) == "0x" ? _str.substr(2) : _str, WhenError::Throw);
 }
 
-bytes importData(json_spirit::mObject& _o)
+bytes importData(json_spirit::mObject const& _o)
 {
 	bytes data;
-	if (_o["data"].type() == json_spirit::str_type)
-		data = importByteArray(_o["data"].get_str());
+	if (_o.at("data").type() == json_spirit::str_type)
+		data = importByteArray(_o.at("data").get_str());
 	else
-		for (auto const& j: _o["data"].get_array())
+		for (auto const& j: _o.at("data").get_array())
 			data.push_back(toByte(j));
 	return data;
 }
@@ -550,7 +577,10 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 
 	auto& filename = Options::get().singleTestFile;
 	auto& testname = Options::get().singleTestName;
-	VerbosityHolder sentinel(12);
+
+	if (g_logVerbosity != -1)
+		VerbosityHolder sentinel(12);
+
 	try
 	{
 		cnote << "Testing user defined test: " << filename;
@@ -615,7 +645,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 
 	try
 	{
-		std::cout << "TEST " << _name << ":\n";
+		cnote << "TEST " << _name << ":";
 		json_spirit::mValue v;
 		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
 		TBOOST_REQUIRE_MESSAGE((s.length() > 0), "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
@@ -633,46 +663,46 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	}
 }
 
-RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject& _tObj)
+RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj)
 {
 	//Construct Rlp of the given transaction
 	RLPStream rlpStream;
 	rlpStream.appendList(_tObj.size());
 
 	if (_tObj.count("nonce"))
-		rlpStream << bigint(_tObj["nonce"].get_str());
+		rlpStream << bigint(_tObj.at("nonce").get_str());
 
 	if (_tObj.count("gasPrice"))
-		rlpStream << bigint(_tObj["gasPrice"].get_str());
+		rlpStream << bigint(_tObj.at("gasPrice").get_str());
 
 	if (_tObj.count("gasLimit"))
-		rlpStream << bigint(_tObj["gasLimit"].get_str());
+		rlpStream << bigint(_tObj.at("gasLimit").get_str());
 
 	if (_tObj.count("to"))
 	{
-		if (_tObj["to"].get_str().empty())
+		if (_tObj.at("to").get_str().empty())
 			rlpStream << "";
 		else
-			rlpStream << importByteArray(_tObj["to"].get_str());
+			rlpStream << importByteArray(_tObj.at("to").get_str());
 	}
 
 	if (_tObj.count("value"))
-		rlpStream << bigint(_tObj["value"].get_str());
+		rlpStream << bigint(_tObj.at("value").get_str());
 
 	if (_tObj.count("data"))
 		rlpStream << importData(_tObj);
 
 	if (_tObj.count("v"))
-		rlpStream << bigint(_tObj["v"].get_str());
+		rlpStream << bigint(_tObj.at("v").get_str());
 
 	if (_tObj.count("r"))
-		rlpStream << bigint(_tObj["r"].get_str());
+		rlpStream << bigint(_tObj.at("r").get_str());
 
 	if (_tObj.count("s"))
-		rlpStream <<  bigint(_tObj["s"].get_str());
+		rlpStream <<  bigint(_tObj.at("s").get_str());
 
 	if (_tObj.count("extrafield"))
-		rlpStream << bigint(_tObj["extrafield"].get_str());
+		rlpStream << bigint(_tObj.at("extrafield").get_str());
 
 	return rlpStream;
 }
@@ -757,7 +787,26 @@ Options::Options()
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;
+		else if (arg == "--verbosity" && i + 1 < argc)
+		{
+			static std::ostringstream strCout; //static string to redirect logs to
+			std::string indentLevel = std::string{argv[i + 1]};
+			if (indentLevel == "0")
+			{
+				logVerbosity = Verbosity::None;
+				std::cout.rdbuf(strCout.rdbuf());
+				std::cerr.rdbuf(strCout.rdbuf());
+			}
+			else if (indentLevel == "1")
+				logVerbosity = Verbosity::NiceReport;
+			else
+				logVerbosity = Verbosity::Full;
+		}
 	}
+
+	//Default option
+	if (logVerbosity == Verbosity::NiceReport)
+		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
 Options const& Options::get()

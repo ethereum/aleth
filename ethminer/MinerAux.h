@@ -37,6 +37,7 @@
 #include <libdevcore/StructuredLogger.h>
 #include <libethcore/Exceptions.h>
 #include <libdevcore/SHA3.h>
+#include <libdevcore/CommonJS.h>
 #include <libethcore/EthashAux.h>
 #include <libethcore/EthashGPUMiner.h>
 #include <libethcore/EthashCPUMiner.h>
@@ -52,7 +53,7 @@
 #include "BuildInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
 #include "PhoneHome.h"
-#include "Farm.h"
+#include "FarmClient.h"
 #endif
 using namespace std;
 using namespace dev;
@@ -482,7 +483,8 @@ private:
 #if ETH_JSONRPC || !ETH_TRUE
 		jsonrpc::HttpClient client(_remote);
 
-		Farm rpc(client);
+		h256 id = h256::random();
+		::FarmClient rpc(client);
 		GenericFarm<EthashProofOfWork> f;
 		f.setSealers(sealers);
 		if (_m == MinerType::CPU)
@@ -504,10 +506,24 @@ private:
 				});
 				for (unsigned i = 0; !completed; ++i)
 				{
+					auto mp = f.miningProgress();
+					f.resetMiningProgress();
 					if (current)
-						minelog << "Mining on PoWhash" << current.headerHash << ": " << f.miningProgress();
+						minelog << "Mining on PoWhash" << current.headerHash << ": " << mp;
 					else
 						minelog << "Getting work package...";
+
+					auto rate = mp.rate();
+					try
+					{
+						rpc.eth_submitHashrate(toJS((u256)rate), "0x" + id.hex());
+					}
+					catch (jsonrpc::JsonRpcException const& _e)
+					{
+						cwarn << "Failed to submit hashrate.";
+						cwarn << boost::diagnostic_information(_e);
+					}
+
 					Json::Value v = rpc.eth_getWork();
 					h256 hh(v[0].asString());
 					h256 newSeedHash(v[1].asString());

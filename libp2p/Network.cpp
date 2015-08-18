@@ -169,10 +169,10 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 {
 	asserts(_listenPort != 0);
 
-	UPnP* upnp = nullptr;
+	unique_ptr<UPnP> upnp;
 	try
 	{
-		upnp = new UPnP;
+		upnp.reset(new UPnP);
 	}
 	// let m_upnp continue as null - we handle it properly.
 	catch (...) {}
@@ -200,9 +200,6 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 		}
 		else
 			clog(NetWarn) << "Couldn't punch through NAT (or no NAT in place).";
-
-		if (upnp)
-			delete upnp;
 	}
 
 	return upnpEP;
@@ -216,7 +213,7 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
 	int givenPort;
 	try
 	{
-		givenPort = stoi(split[1]);
+		givenPort = stoi(split.at(1));
 	}
 	catch (...)
 	{

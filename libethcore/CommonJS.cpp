@@ -26,14 +26,6 @@
 namespace dev
 {
 
-Address toAddress(std::string const& _sn)
-{
-	if (_sn.size() == 40)
-		return Address(fromHex(_sn));
-	else
-		return Address();
-}
-
 std::string prettyU256(u256 _n, bool _abridged)
 {
 	unsigned inc = 0;

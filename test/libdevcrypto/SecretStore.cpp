@@ -37,8 +37,6 @@ using namespace dev::test;
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
 
-BOOST_GLOBAL_FIXTURE( MoveNonceToTempDir )
-
 BOOST_AUTO_TEST_SUITE(KeyStore)
 
 BOOST_AUTO_TEST_CASE(basic_tests)
@@ -121,6 +119,31 @@ BOOST_AUTO_TEST_CASE(import_secret)
 			SecretStore store(storeDir.path());
 			BOOST_CHECK_EQUAL(store.keys().size(), 0);
 			uuid = store.importSecret(bytesSec(fromHex(priv)), password);
+			BOOST_CHECK(!!uuid);
+			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+			BOOST_CHECK_EQUAL(store.keys().size(), 1);
+		}
+		{
+			SecretStore store(storeDir.path());
+			BOOST_CHECK_EQUAL(store.keys().size(), 1);
+			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
+		}
+	}
+}
+
+BOOST_AUTO_TEST_CASE(import_secret_bytesConstRef)
+{
+	for (string const& password: {"foobar", ""})
+	{
+		TransientDirectory storeDir;
+		string priv = "0202020202020202020202020202020202020202020202020202020202020202";
+
+		h128 uuid;
+		{
+			SecretStore store(storeDir.path());
+			BOOST_CHECK_EQUAL(store.keys().size(), 0);
+			bytes privateBytes = fromHex(priv);
+			uuid = store.importSecret(&privateBytes, password);
 			BOOST_CHECK(!!uuid);
 			BOOST_CHECK_EQUAL(priv, toHex(store.secret(uuid, [&](){ return password; }).makeInsecure()));
 			BOOST_CHECK_EQUAL(store.keys().size(), 1);

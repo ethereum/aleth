@@ -14,20 +14,22 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file AllAccounts.h
+/** @file WhisperPeers.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
 
 #pragma once
 
-#include <QListWidget>
-#include <QPlainTextEdit>
+#include <QMutex>
+#include <QString>
+#include <QPair>
+#include <QList>
 #include "MainFace.h"
 
 namespace Ui
 {
-class AllAccounts;
+class WhisperPeers;
 }
 
 namespace dev
@@ -35,25 +37,18 @@ namespace dev
 namespace az
 {
 
-class AllAccounts: public QObject, public Plugin
+class WhisperPeers: public QObject, public Plugin
 {
 	Q_OBJECT
 
 public:
-	AllAccounts(MainFace* _m);
-	~AllAccounts();
-
-private slots:
-	void on_accounts_currentItemChanged();
-	void on_accounts_doubleClicked();
-
-	void onAllChange();
-	void refresh();
+	WhisperPeers(MainFace* _m);
 
 private:
-	void installWatches();
+	void timerEvent(QTimerEvent*) override;
+	void refreshWhispers();
 
-	Ui::AllAccounts* m_ui;
+	Ui::WhisperPeers* m_ui;
 };
 
 }

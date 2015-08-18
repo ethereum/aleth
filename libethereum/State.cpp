@@ -136,6 +136,9 @@ void State::paranoia(std::string const& _when, bool _enforceRefs) const
 
 State& State::operator=(State const& _s)
 {
+	if (&_s == this)
+		return *this;
+
 	m_db = _s.m_db;
 	m_state.open(&m_db, _s.m_state.root(), Verification::Skip);
 	m_cache = _s.m_cache;
@@ -240,9 +243,9 @@ unordered_map<Address, u256> State::addresses() const
 void State::setRoot(h256 const& _r)
 {
 	m_cache.clear();
-	m_touched.clear();
+//	m_touched.clear();
 	m_state.setRoot(_r);
-	paranoia("begin resetCurrent", true);
+	paranoia("begin setRoot", true);
 }
 
 bool State::addressInUse(Address const& _id) const
@@ -485,7 +488,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	else
 	{
 		commit();
-	
+
 #if ETH_PARANOIA && !ETH_FATDB
 		ctrace << "Executed; now" << rootHash();
 		ctrace << old.diff(*this);

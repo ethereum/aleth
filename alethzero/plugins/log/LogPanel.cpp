@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file LogPanel.h
+/** @file LogPanel.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
@@ -37,6 +37,8 @@ static QString filterOutTerminal(QString _s)
 {
 	return _s.replace(QRegExp("\x1b\\[(\\d;)?\\d+m"), "");
 }
+
+DEV_AZ_NOTE_PLUGIN(LogPanel);
 
 LogPanel::LogPanel(MainFace* _m):
 	Plugin(_m, "LogPanel"),

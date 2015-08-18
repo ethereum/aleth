@@ -21,7 +21,7 @@
  */
 
 #include "ClientBase.h"
-
+#include <algorithm>
 #include <libdevcore/StructuredLogger.h>
 #include "BlockChain.h"
 #include "Executive.h"
@@ -94,7 +94,7 @@ ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes cons
 		Transaction t(_value, _gasPrice, _gas, _data, n);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
-			temp.mutableState().addBalance(_from, (u256)(t.gasRequired() * t.gasPrice() + t.value()));
+			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 		ret = temp.execute(bc().lastHashes(), t, Permanence::Reverted);
 	}
 	catch (...)
@@ -492,11 +492,10 @@ int ClientBase::compareBlockHashes(h256 _h1, h256 _h2) const
 	BlockNumber n1 = numberFromHash(_h1);
 	BlockNumber n2 = numberFromHash(_h2);
 
-	if (n1 > n2) {
+	if (n1 > n2)
 		return 1;
-	} else if (n1 == n2) {
+	else if (n1 == n2)
 		return 0;
-	}
 	return -1;
 }
 
@@ -523,4 +522,20 @@ bool ClientBase::isKnownTransaction(h256 const& _transactionHash) const
 bool ClientBase::isKnownTransaction(h256 const& _blockHash, unsigned _i) const
 {
 	return isKnown(_blockHash) && bc().transactions().size() > _i;
+}
+
+void ClientBase::submitExternalHashrate(u256 const& _rate, h256 const& _id)
+{
+	m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
+}
+
+u256 ClientBase::externalHashrate() const
+{
+	u256 ret = 0;
+	for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
+		if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
+			i = m_externalRates.erase(i);
+		else
+			ret += i++->second.first;
+	return ret;
 }

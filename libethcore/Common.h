@@ -57,6 +57,11 @@ Network resetNetwork(Network _n);
 /// User-friendly string representation of the amount _b in wei.
 std::string formatBalance(bigint const& _b);
 
+DEV_SIMPLE_EXCEPTION(InvalidAddress);
+
+/// Convert the given string into an address.
+Address toAddress(std::string const& _s);
+
 /// Get information concerning the currency denominations.
 std::vector<std::pair<u256, std::string>> const& units();
 
@@ -219,6 +224,13 @@ struct WorkingProgress
 	uint64_t hashes = 0;		///< Total number of hashes computed.
 	uint64_t ms = 0;			///< Total number of milliseconds of mining thus far.
 	uint64_t rate() const { return ms == 0 ? 0 : hashes * 1000 / ms; }
+};
+
+/// Import transaction policy
+enum class IfDropped
+{
+	Ignore, ///< Don't import transaction that was previously dropped.
+	Retry 	///< Import transaction even if it was dropped before.
 };
 
 }
