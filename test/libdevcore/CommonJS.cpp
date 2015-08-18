@@ -103,4 +103,13 @@ BOOST_AUTO_TEST_CASE(test_fromRaw)
 	BOOST_CHECK("AsciiCharacters" == fromRaw(c));
 }
 
+BOOST_AUTO_TEST_CASE(test_jsToFixed)
+{
+	h256 a("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+	BOOST_CHECK(a == jsToFixed<32>("0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
+	h256 b("0x000000000000000000000000000000000000000000000000000000740c54b42f");
+	BOOST_CHECK(b == jsToFixed<32>("498423084079"));
+	BOOST_CHECK(h256() == jsToFixed<32>("NotAHexadecimalOrDecimal"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
