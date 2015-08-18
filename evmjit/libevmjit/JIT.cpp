@@ -114,7 +114,7 @@ JITImpl::JITImpl()
 	llvm::InitializeNativeTarget();
 	llvm::InitializeNativeTargetAsmPrinter();
 
-	auto module = std::unique_ptr<llvm::Module>(new llvm::Module({}, llvm::getGlobalContext()));
+	auto module = llvm::make_unique<llvm::Module>(llvm::StringRef{}, llvm::getGlobalContext());
 
 	// FIXME: LLVM 3.7: test on Windows
 	auto triple = llvm::Triple(llvm::sys::getProcessTriple());
