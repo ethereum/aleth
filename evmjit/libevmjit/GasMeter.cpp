@@ -148,7 +148,7 @@ int64_t getStepCost(Instruction inst)
 
 }
 
-GasMeter::GasMeter(llvm::IRBuilder<>& _builder, RuntimeManager& _runtimeManager) :
+GasMeter::GasMeter(IRBuilder& _builder, RuntimeManager& _runtimeManager) :
 	CompilerHelper(_builder),
 	m_runtimeManager(_runtimeManager)
 {

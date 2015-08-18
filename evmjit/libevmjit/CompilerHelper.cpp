@@ -13,7 +13,7 @@ namespace eth
 namespace jit
 {
 
-CompilerHelper::CompilerHelper(llvm::IRBuilder<>& _builder) :
+CompilerHelper::CompilerHelper(IRBuilder& _builder) :
 	m_builder(_builder)
 {}
 

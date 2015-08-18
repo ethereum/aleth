@@ -39,7 +39,7 @@ private:
 	Options const& m_options;
 
 	/// Helper class for generating IR
-	llvm::IRBuilder<> m_builder;
+	IRBuilder m_builder;
 
 	/// Stop basic block - terminates execution with STOP code (0)
 	llvm::BasicBlock* m_stopBB = nullptr;

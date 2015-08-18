@@ -113,7 +113,7 @@ void LocalStack::set(size_t _index, llvm::Value* _word)
 }
 
 
-void LocalStack::finalize(llvm::IRBuilder<>& _builder, llvm::BasicBlock& _bb)
+void LocalStack::finalize(IRBuilder& _builder, llvm::BasicBlock& _bb)
 {
 	m_sp->setArgOperand(2, _builder.getInt64(minSize()));
 	m_sp->setArgOperand(3, _builder.getInt64(maxSize()));

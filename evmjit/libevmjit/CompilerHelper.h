@@ -13,14 +13,16 @@ namespace jit
 {
 class RuntimeManager;
 
+using IRBuilder = llvm::IRBuilder<>;
+
 /// Base class for compiler helpers like Memory, GasMeter, etc.
 class CompilerHelper
 {
 public:
-	llvm::IRBuilder<>& getBuilder() { return m_builder; } // FIXME: Fix builder access in LocalStack
+	IRBuilder& getBuilder() { return m_builder; } // FIXME: Fix builder access in LocalStack
 
 protected:
-	CompilerHelper(llvm::IRBuilder<>& _builder);
+	CompilerHelper(IRBuilder& _builder);
 
 	CompilerHelper(const CompilerHelper&) = delete;
 	CompilerHelper& operator=(CompilerHelper) = delete;
@@ -32,7 +34,7 @@ protected:
 	llvm::Function* getMainFunction();
 
 	/// Reference to parent compiler IR builder
-	llvm::IRBuilder<>& m_builder;
+	IRBuilder& m_builder;
 
 	llvm::CallInst* createCall(llvm::Function* _func, std::initializer_list<llvm::Value*> const& _args);
 
