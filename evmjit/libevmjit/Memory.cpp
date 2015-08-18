@@ -18,7 +18,7 @@ namespace jit
 
 Memory::Memory(RuntimeManager& _runtimeManager, GasMeter& _gasMeter):
 	RuntimeHelper(_runtimeManager),  // TODO: RuntimeHelper not needed
-	m_memory{getBuilder(), _runtimeManager.getMem()},
+	m_memory{m_builder, _runtimeManager.getMem()},
 	m_gasMeter(_gasMeter)
 {}
 
