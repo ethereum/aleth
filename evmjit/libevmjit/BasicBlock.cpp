@@ -27,8 +27,8 @@ BasicBlock::BasicBlock(instr_idx _firstInstrIdx, code_iterator _begin, code_iter
 	m_llvmBB(llvm::BasicBlock::Create(_mainFunc->getContext(), {".", std::to_string(_firstInstrIdx)}, _mainFunc))
 {}
 
-LocalStack::LocalStack(RuntimeManager& _runtimeManager, Stack& _globalStack):
-	m_global(_globalStack)
+LocalStack::LocalStack(IRBuilder& _builder, RuntimeManager& _runtimeManager):
+	CompilerHelper(_builder)
 {
 	m_sp = _runtimeManager.prepareStack();
 }
@@ -89,10 +89,9 @@ llvm::Value* LocalStack::get(size_t _index)
 	if (!item)
 	{
 		// Fetch an item from global stack
-		auto& builder = m_global.getBuilder();
 		ssize_t globalIdx = -idx - 1;
-		auto slot = builder.CreateConstGEP1_64(m_sp, globalIdx);
-		item = builder.CreateLoad(slot);
+		auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
+		item = m_builder.CreateLoad(slot);
 		m_minSize = std::min(m_minSize, globalIdx); 	// remember required stack size
 	}
 
@@ -113,20 +112,18 @@ void LocalStack::set(size_t _index, llvm::Value* _word)
 }
 
 
-void LocalStack::finalize(IRBuilder& _builder, llvm::BasicBlock& _bb)
+void LocalStack::finalize()
 {
-	m_sp->setArgOperand(2, _builder.getInt64(minSize()));
-	m_sp->setArgOperand(3, _builder.getInt64(maxSize()));
-	m_sp->setArgOperand(4, _builder.getInt64(size()));
+	m_sp->setArgOperand(2, m_builder.getInt64(minSize()));
+	m_sp->setArgOperand(3, m_builder.getInt64(maxSize()));
+	m_sp->setArgOperand(4, m_builder.getInt64(size()));
 
-	auto blockTerminator = _bb.getTerminator();
+	auto blockTerminator = m_builder.GetInsertBlock()->getTerminator();
 	if (!blockTerminator || blockTerminator->getOpcode() != llvm::Instruction::Ret) // TODO: Always exit through exit block
 	{
 		// Not needed in case of ret instruction. Ret invalidates the stack.
 		if (blockTerminator)
-			_builder.SetInsertPoint(blockTerminator);
-		else
-			_builder.SetInsertPoint(&_bb);
+			m_builder.SetInsertPoint(blockTerminator); // Insert before terminator
 
 		auto inputIt = m_input.rbegin();
 		auto localIt = m_local.begin();
@@ -142,8 +139,8 @@ void LocalStack::finalize(IRBuilder& _builder, llvm::BasicBlock& _bb)
 			else
 				item = *localIt++;	// store new items
 
-			auto slot = _builder.CreateConstGEP1_64(m_sp, globalIdx);
-			_builder.CreateStore(item, slot); // FIXME: Set alignment
+			auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
+			m_builder.CreateStore(item, slot); // FIXME: Set alignment
 		}
 	}
 }

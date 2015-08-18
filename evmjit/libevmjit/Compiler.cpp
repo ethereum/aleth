@@ -177,7 +177,7 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	m_builder.CreateCondBr(normalFlow, firstBB, m_abortBB, Type::expectTrue);
 
 	for (auto& block: blocks)
-		compileBasicBlock(block, runtimeManager, arith, memory, ext, gasMeter, stack);
+		compileBasicBlock(block, runtimeManager, arith, memory, ext, gasMeter);
 
 	// Code for special blocks:
 	m_builder.SetInsertPoint(m_stopBB);
@@ -193,10 +193,10 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 
 
 void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runtimeManager,
-								 Arith256& _arith, Memory& _memory, Ext& _ext, GasMeter& _gasMeter, Stack& _globalStack)
+								 Arith256& _arith, Memory& _memory, Ext& _ext, GasMeter& _gasMeter)
 {
 	m_builder.SetInsertPoint(_basicBlock.llvm());
-	LocalStack stack{_runtimeManager, _globalStack};
+	LocalStack stack{m_builder, _runtimeManager};
 
 	for (auto it = _basicBlock.begin(); it != _basicBlock.end(); ++it)
 	{
@@ -789,7 +789,7 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 
 	_gasMeter.commitCostBlock();
 
-	stack.finalize(m_builder, *_basicBlock.llvm()); // TODO: Use references
+	stack.finalize();
 }
 
 
