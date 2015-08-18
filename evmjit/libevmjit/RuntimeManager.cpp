@@ -115,54 +115,6 @@ RuntimeManager::RuntimeManager(IRBuilder& _builder, code_iterator _codeBegin, co
 
 	m_gasPtr = m_builder.CreateAlloca(Type::Gas, nullptr, "gas.ptr");
 	m_builder.CreateStore(m_dataElts[RuntimeData::Index::Gas], m_gasPtr);
-
-	llvm::Type* checkStackLimitArgs[] = {Type::WordPtr, Type::Size->getPointerTo(), Type::Size, Type::Size, Type::Size, Type::BytePtr};
-	m_checkStackLimit = llvm::Function::Create(llvm::FunctionType::get(Type::WordPtr, checkStackLimitArgs, false), llvm::Function::PrivateLinkage, "stack.prepare", getModule());
-	m_checkStackLimit->setDoesNotThrow();
-	//m_checkStackLimit->setDoesNotCapture(1); // FIXME: Set correct attrs
-
-	auto checkBB = llvm::BasicBlock::Create(_builder.getContext(), "Check", m_checkStackLimit);
-	auto updateBB = llvm::BasicBlock::Create(_builder.getContext(), "Update", m_checkStackLimit);
-	auto outOfStackBB = llvm::BasicBlock::Create(_builder.getContext(), "OutOfStack", m_checkStackLimit);
-
-	auto base = &m_checkStackLimit->getArgumentList().front();
-	base->setName("base");
-	auto sizePtr = base->getNextNode();
-	sizePtr->setName("size.ptr");
-	auto min = sizePtr->getNextNode();
-	min->setName("min");
-	auto max = min->getNextNode();
-	max->setName("max");
-	auto diff = max->getNextNode();
-	diff->setName("diff");
-	auto jmpBuf = diff->getNextNode();
-	jmpBuf->setName("jmpBuf");
-
-	InsertPointGuard guard{m_builder};
-	m_builder.SetInsertPoint(checkBB);
-	auto size = m_builder.CreateLoad(sizePtr, "size");
-	auto minSize = m_builder.CreateAdd(size, min, "size.min", false, true);
-	auto maxSize = m_builder.CreateAdd(size, max, "size.max", true, true);
-	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "ok.min");
-	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(1024), "ok.max"); // FIXME: Extract constants
-	auto ok = m_builder.CreateAnd(minOk, maxOk, "ok");
-	m_builder.CreateCondBr(ok, updateBB, outOfStackBB, Type::expectTrue);
-
-	m_builder.SetInsertPoint(updateBB);
-	auto newSize = m_builder.CreateNSWAdd(size, diff, "size.next");
-	m_builder.CreateStore(newSize, sizePtr);
-	auto sp = m_builder.CreateGEP(base, size, "sp");
-	m_builder.CreateRet(sp);
-
-	m_builder.SetInsertPoint(outOfStackBB);
-	abort(jmpBuf);
-	m_builder.CreateUnreachable();
-}
-
-llvm::CallInst* RuntimeManager::prepareStack()
-{
-	auto undef = llvm::UndefValue::get(Type::Size);
-	return m_builder.CreateCall(m_checkStackLimit, {m_stackBase, m_stackSize, undef, undef, undef, getJmpBuf()}, {"sp", m_builder.GetInsertBlock()->getName()});
 }
 
 llvm::Value* RuntimeManager::getRuntimePtr()
@@ -228,9 +180,6 @@ void RuntimeManager::registerSuicide(llvm::Value* _balanceAddress)
 
 void RuntimeManager::exit(ReturnCode _returnCode)
 {
-	if (m_stack)
-		m_stack->free();
-
 	// TODO: Keep one declaration of free func
 	auto freeFunc = getModule()->getFunction("free");
 	if (!freeFunc)

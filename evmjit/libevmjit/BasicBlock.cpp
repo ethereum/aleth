@@ -4,8 +4,10 @@
 
 #include "preprocessor/llvm_includes_start.h"
 #include <llvm/IR/CFG.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instructions.h>
+#include <llvm/IR/IntrinsicInst.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/Support/raw_os_ostream.h>
 #include "preprocessor/llvm_includes_end.h"
@@ -30,7 +32,11 @@ BasicBlock::BasicBlock(instr_idx _firstInstrIdx, code_iterator _begin, code_iter
 LocalStack::LocalStack(IRBuilder& _builder, RuntimeManager& _runtimeManager):
 	CompilerHelper(_builder)
 {
-	m_sp = _runtimeManager.prepareStack();
+	// Call stack.prepare. min, max, size args will be filled up in finalize().
+	auto undef = llvm::UndefValue::get(Type::Size);
+	m_sp = m_builder.CreateCall(getStackPrepareFunc(),
+			{_runtimeManager.getStackBase(), _runtimeManager.getStackSize(), undef, undef, undef, _runtimeManager.getJmpBuf()},
+			{"sp", m_builder.GetInsertBlock()->getName()});
 }
 
 void LocalStack::push(llvm::Value* _value)
@@ -143,6 +149,59 @@ void LocalStack::finalize()
 			m_builder.CreateStore(item, slot); // FIXME: Set alignment
 		}
 	}
+}
+
+
+llvm::Function* LocalStack::getStackPrepareFunc()
+{
+	static const auto c_funcName = "stack.prepare";
+	if (auto func = getModule()->getFunction(c_funcName))
+		return func;
+
+	llvm::Type* argsTys[] = {Type::WordPtr, Type::Size->getPointerTo(), Type::Size, Type::Size, Type::Size, Type::BytePtr};
+	auto func = llvm::Function::Create(llvm::FunctionType::get(Type::WordPtr, argsTys, false), llvm::Function::PrivateLinkage, c_funcName, getModule());
+	func->setDoesNotThrow();
+	//m_checkStackLimit->setDoesNotCapture(1); // FIXME: Set correct attrs
+
+	auto checkBB = llvm::BasicBlock::Create(func->getContext(), "Check", func);
+	auto updateBB = llvm::BasicBlock::Create(func->getContext(), "Update", func);
+	auto outOfStackBB = llvm::BasicBlock::Create(func->getContext(), "OutOfStack", func);
+
+	auto base = &func->getArgumentList().front();
+	base->setName("base");
+	auto sizePtr = base->getNextNode();
+	sizePtr->setName("size.ptr");
+	auto min = sizePtr->getNextNode();
+	min->setName("min");
+	auto max = min->getNextNode();
+	max->setName("max");
+	auto diff = max->getNextNode();
+	diff->setName("diff");
+	auto jmpBuf = diff->getNextNode();
+	jmpBuf->setName("jmpBuf");
+
+	InsertPointGuard guard{m_builder};
+	m_builder.SetInsertPoint(checkBB);
+	auto size = m_builder.CreateLoad(sizePtr, "size");
+	auto minSize = m_builder.CreateAdd(size, min, "size.min", false, true);
+	auto maxSize = m_builder.CreateAdd(size, max, "size.max", true, true);
+	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "ok.min");
+	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(1024), "ok.max"); // FIXME: Extract constants
+	auto ok = m_builder.CreateAnd(minOk, maxOk, "ok");
+	m_builder.CreateCondBr(ok, updateBB, outOfStackBB, Type::expectTrue);
+
+	m_builder.SetInsertPoint(updateBB);
+	auto newSize = m_builder.CreateNSWAdd(size, diff, "size.next");
+	m_builder.CreateStore(newSize, sizePtr);
+	auto sp = m_builder.CreateGEP(base, size, "sp");
+	m_builder.CreateRet(sp);
+
+	m_builder.SetInsertPoint(outOfStackBB);
+	auto longjmp = llvm::Intrinsic::getDeclaration(getModule(), llvm::Intrinsic::eh_sjlj_longjmp);
+	m_builder.CreateCall(longjmp, {jmpBuf});
+	m_builder.CreateUnreachable();
+
+	return func;
 }
 
 

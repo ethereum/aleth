@@ -47,6 +47,8 @@ private:
 	/// Sets _index'th value from top (counting from 0)
 	void set(size_t _index, llvm::Value* _value);
 
+	llvm::Function* getStackPrepareFunc();
+
 	/// Items fetched from global stack. First element matches the top of the global stack.
 	/// Can contain nulls if some items has been skipped.
 	std::vector<llvm::Value*> m_input;
