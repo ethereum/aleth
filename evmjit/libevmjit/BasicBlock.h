@@ -3,8 +3,7 @@
 #include <vector>
 
 #include "Common.h"
-#include "Stack.h"
-#include "RuntimeManager.h"
+#include "CompilerHelper.h"
 
 namespace dev
 {
@@ -14,6 +13,8 @@ namespace jit
 {
 using namespace evmjit;
 using instr_idx = uint64_t;
+
+class RuntimeManager;
 
 class LocalStack: public CompilerHelper
 {

@@ -13,7 +13,6 @@ namespace eth
 namespace jit
 {
 using namespace evmjit;
-class Stack;
 
 class RuntimeManager: public CompilerHelper
 {

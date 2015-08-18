@@ -12,6 +12,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include "preprocessor/llvm_includes_end.h"
 
+#include "RuntimeManager.h"
 #include "Type.h"
 #include "Utils.h"
 

@@ -5,7 +5,7 @@
 #include <llvm/IR/Module.h>
 #include "preprocessor/llvm_includes_end.h"
 
-#include "Stack.h"
+#include "Array.h"
 #include "Utils.h"
 
 namespace dev

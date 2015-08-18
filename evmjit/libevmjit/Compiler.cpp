@@ -15,7 +15,6 @@
 #include "Instruction.h"
 #include "Type.h"
 #include "Memory.h"
-#include "Stack.h"
 #include "Ext.h"
 #include "GasMeter.h"
 #include "Utils.h"
