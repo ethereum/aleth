@@ -75,8 +75,8 @@ bytes paddedRight(bytes _b, unsigned _l);
 bytes unpadded(bytes _s);
 /// Remove all 0 byte on the head of @a _s.
 bytes unpadLeft(bytes _s);
-/// Convert h256 into user-readable string (by directly using std::string constructor).
-std::string fromRaw(h256 _n, unsigned* _inc = nullptr);
+/// Convert h256 into user-readable string (by directly using std::string constructor). If it can't be interpreted as an ASCII string, empty string is returned.
+std::string fromRaw(h256 _n);
 
 template <unsigned N> FixedHash<N> jsToFixed(std::string const& _s)
 {
