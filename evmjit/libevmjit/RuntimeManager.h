@@ -44,13 +44,13 @@ public:
 
 	void abort(llvm::Value* _jmpBuf);
 
-	void setStack(Stack& _stack) { m_stack = &_stack; }
+	llvm::Value* getStackBase() const { return m_stackBase; }
+	llvm::Value* getStackSize() const { return m_stackSize; }
+
 	void setJmpBuf(llvm::Value* _jmpBuf) { m_jmpBuf = _jmpBuf; }
 
 	static llvm::StructType* getRuntimeType();
 	static llvm::StructType* getRuntimeDataType();
-
-	llvm::CallInst* prepareStack(); // FIXME: Move to LocalStack class.
 
 private:
 	llvm::Value* getPtr(RuntimeData::Index _index);
@@ -67,12 +67,9 @@ private:
 
 	llvm::Value* m_stackBase = nullptr;
 	llvm::Value* m_stackSize = nullptr;
-	llvm::Function* m_checkStackLimit = nullptr;
 
 	code_iterator m_codeBegin = {};
 	code_iterator m_codeEnd = {};
-
-	Stack* m_stack = nullptr;
 };
 
 }
