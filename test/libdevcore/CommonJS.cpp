@@ -27,7 +27,7 @@
 BOOST_AUTO_TEST_SUITE(CommonJSTests)
 
 using namespace dev;
-using namespace std;;
+using namespace std;
 
 BOOST_AUTO_TEST_CASE(test_toJS)
 {
@@ -59,7 +59,37 @@ BOOST_AUTO_TEST_CASE(test_padded)
 	bytes b = {};
 	BOOST_CHECK(bytes({0x00, 0x00, 0x00, 0x00}) == padded(b, 4));
 	bytes c = {0xff, 0xaa, 0xbb, 0xcc};
-	BOOST_CHECK(bytes({0xff, 0xaa, 0xbb, 0xcc}) == padded(c, 1));
+	BOOST_CHECK(bytes({0xcc}) == padded(c, 1));
+}
+
+BOOST_AUTO_TEST_CASE(test_paddedRight)
+{
+	bytes a = {0xff, 0xaa};
+	BOOST_CHECK(bytes({0xff, 0xaa, 0x00, 0x00}) == paddedRight(a, 4));
+	bytes b = {};
+	BOOST_CHECK(bytes({0x00, 0x00, 0x00, 0x00}) == paddedRight(b, 4));
+	bytes c = {0xff, 0xaa, 0xbb, 0xcc};
+	BOOST_CHECK(bytes({0xff}) == paddedRight(c, 1));
+}
+
+BOOST_AUTO_TEST_CASE(test_unpadded)
+{
+	bytes a = {0xff, 0xaa, 0x00, 0x00, 0x00};
+	BOOST_CHECK(bytes({0xff, 0xaa}) == unpadded(a));
+	bytes b = {0x00, 0x00};
+	BOOST_CHECK(bytes() == unpadded(b));
+	bytes c = {};
+	BOOST_CHECK(bytes() == unpadded(c));
+}
+
+BOOST_AUTO_TEST_CASE(test_unpaddedLeft)
+{
+	bytes a = {0x00, 0x00, 0x00, 0xff, 0xaa};
+	BOOST_CHECK(bytes({0xff, 0xaa}) == unpadLeft(a));
+	bytes b = {0x00, 0x00};
+	BOOST_CHECK(bytes() == unpadLeft(b));
+	bytes c = {};
+	BOOST_CHECK(bytes() == unpadLeft(c));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
