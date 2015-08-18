@@ -97,7 +97,7 @@ llvm::Value* LocalStack::get(size_t _index)
 		// Fetch an item from global stack
 		ssize_t globalIdx = -idx - 1;
 		auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
-		item = m_builder.CreateLoad(slot);
+		item = m_builder.CreateAlignedLoad(slot, 16); // TODO: Handle malloc alignment. Also for 32-bit systems.
 		m_minSize = std::min(m_minSize, globalIdx); 	// remember required stack size
 	}
 
@@ -146,7 +146,7 @@ void LocalStack::finalize()
 				item = *localIt++;	// store new items
 
 			auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
-			m_builder.CreateStore(item, slot); // FIXME: Set alignment
+			m_builder.CreateAlignedStore(item, slot, 16); // TODO: Handle malloc alignment. Also for 32-bit systems.
 		}
 	}
 }
@@ -161,7 +161,9 @@ llvm::Function* LocalStack::getStackPrepareFunc()
 	llvm::Type* argsTys[] = {Type::WordPtr, Type::Size->getPointerTo(), Type::Size, Type::Size, Type::Size, Type::BytePtr};
 	auto func = llvm::Function::Create(llvm::FunctionType::get(Type::WordPtr, argsTys, false), llvm::Function::PrivateLinkage, c_funcName, getModule());
 	func->setDoesNotThrow();
-	//m_checkStackLimit->setDoesNotCapture(1); // FIXME: Set correct attrs
+	func->setDoesNotAccessMemory(1);
+	func->setDoesNotAlias(2);
+	func->setDoesNotCapture(2);
 
 	auto checkBB = llvm::BasicBlock::Create(func->getContext(), "Check", func);
 	auto updateBB = llvm::BasicBlock::Create(func->getContext(), "Update", func);
@@ -182,7 +184,8 @@ llvm::Function* LocalStack::getStackPrepareFunc()
 
 	InsertPointGuard guard{m_builder};
 	m_builder.SetInsertPoint(checkBB);
-	auto size = m_builder.CreateLoad(sizePtr, "size");
+	auto sizeAlignment = getModule()->getDataLayout().getABITypeAlignment(Type::Size);
+	auto size = m_builder.CreateAlignedLoad(sizePtr, sizeAlignment, "size");
 	auto minSize = m_builder.CreateAdd(size, min, "size.min", false, true);
 	auto maxSize = m_builder.CreateAdd(size, max, "size.max", true, true);
 	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "ok.min");
@@ -192,7 +195,7 @@ llvm::Function* LocalStack::getStackPrepareFunc()
 
 	m_builder.SetInsertPoint(updateBB);
 	auto newSize = m_builder.CreateNSWAdd(size, diff, "size.next");
-	m_builder.CreateStore(newSize, sizePtr);
+	m_builder.CreateAlignedStore(newSize, sizePtr, sizeAlignment);
 	auto sp = m_builder.CreateGEP(base, size, "sp");
 	m_builder.CreateRet(sp);
 

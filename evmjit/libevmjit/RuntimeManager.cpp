@@ -184,7 +184,7 @@ void RuntimeManager::exit(ReturnCode _returnCode)
 	auto freeFunc = getModule()->getFunction("free");
 	if (!freeFunc)
 	{
-		freeFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, Type::BytePtr, false), llvm::Function::ExternalLinkage, "free", getModule());
+		freeFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, Type::WordPtr, false), llvm::Function::ExternalLinkage, "free", getModule());
 		freeFunc->setDoesNotThrow();
 		freeFunc->setDoesNotCapture(1);
 	}
