@@ -145,7 +145,7 @@ llvm::Value* RuntimeManager::getEnvPtr()
 
 llvm::Value* RuntimeManager::getPtr(RuntimeData::Index _index)
 {
-	auto ptr = getBuilder().CreateStructGEP(getRuntimeDataType(), getDataPtr(), _index);
+	auto ptr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), _index);
 	assert(getRuntimeDataType()->getElementType(_index)->getPointerTo() == ptr->getType());
 	return ptr;
 }
@@ -159,17 +159,17 @@ void RuntimeManager::set(RuntimeData::Index _index, llvm::Value* _value)
 {
 	auto ptr = getPtr(_index);
 	assert(ptr->getType() == _value->getType()->getPointerTo());
-	getBuilder().CreateStore(_value, ptr);
+	m_builder.CreateStore(_value, ptr);
 }
 
 void RuntimeManager::registerReturnData(llvm::Value* _offset, llvm::Value* _size)
 {
 	auto memPtr = m_builder.CreateBitCast(getMem(), Type::BytePtr->getPointerTo());
-	auto mem = getBuilder().CreateLoad(memPtr, "memory");
-	auto returnDataPtr = getBuilder().CreateGEP(mem, _offset);
+	auto mem = m_builder.CreateLoad(memPtr, "memory");
+	auto returnDataPtr = m_builder.CreateGEP(mem, _offset);
 	set(RuntimeData::ReturnData, returnDataPtr);
 
-	auto size64 = getBuilder().CreateTrunc(_size, Type::Size);
+	auto size64 = m_builder.CreateTrunc(_size, Type::Size);
 	set(RuntimeData::ReturnDataSize, size64);
 }
 
@@ -240,12 +240,12 @@ llvm::Value* RuntimeManager::getCallDataSize()
 {
 	auto value = get(RuntimeData::CallDataSize);
 	assert(value->getType() == Type::Size);
-	return getBuilder().CreateZExt(value, Type::Word);
+	return m_builder.CreateZExt(value, Type::Word);
 }
 
 llvm::Value* RuntimeManager::getGas()
 {
-	return getBuilder().CreateLoad(getGasPtr(), "gas");
+	return m_builder.CreateLoad(getGasPtr(), "gas");
 }
 
 llvm::Value* RuntimeManager::getGasPtr()
@@ -263,7 +263,7 @@ llvm::Value* RuntimeManager::getMem()
 void RuntimeManager::setGas(llvm::Value* _gas)
 {
 	assert(_gas->getType() == Type::Gas);
-	getBuilder().CreateStore(_gas, getGasPtr());
+	m_builder.CreateStore(_gas, getGasPtr());
 }
 
 }

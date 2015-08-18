@@ -18,9 +18,6 @@ using IRBuilder = llvm::IRBuilder<>;
 /// Base class for compiler helpers like Memory, GasMeter, etc.
 class CompilerHelper
 {
-public:
-	IRBuilder& getBuilder() { return m_builder; } // FIXME: Fix builder access in LocalStack
-
 protected:
 	CompilerHelper(IRBuilder& _builder);
 
@@ -36,7 +33,7 @@ protected:
 	/// Reference to parent compiler IR builder
 	IRBuilder& m_builder;
 
-	llvm::CallInst* createCall(llvm::Function* _func, std::initializer_list<llvm::Value*> const& _args);
+	llvm::CallInst* createCall(llvm::Function* _func, std::initializer_list<llvm::Value*> const& _args); // TODO: Remove. LLVM now does it the same way.
 
 	friend class RuntimeHelper;
 };
