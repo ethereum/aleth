@@ -16,6 +16,9 @@ class RuntimeManager;
 /// Base class for compiler helpers like Memory, GasMeter, etc.
 class CompilerHelper
 {
+public:
+	llvm::IRBuilder<>& getBuilder() { return m_builder; } // FIXME: Fix builder access in LocalStack
+
 protected:
 	CompilerHelper(llvm::IRBuilder<>& _builder);
 
@@ -30,7 +33,6 @@ protected:
 
 	/// Reference to parent compiler IR builder
 	llvm::IRBuilder<>& m_builder;
-	llvm::IRBuilder<>& getBuilder() { return m_builder; }
 
 	llvm::CallInst* createCall(llvm::Function* _func, std::initializer_list<llvm::Value*> const& _args);
 

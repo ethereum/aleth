@@ -28,7 +28,6 @@ BasicBlock::BasicBlock(instr_idx _firstInstrIdx, code_iterator _begin, code_iter
 {}
 
 LocalStack::LocalStack(RuntimeManager& _runtimeManager, Stack& _globalStack):
-	m_runtimeManager(_runtimeManager),
 	m_global(_globalStack)
 {
 	m_sp = _runtimeManager.prepareStack();
@@ -89,8 +88,12 @@ llvm::Value* LocalStack::get(size_t _index)
 
 	if (!item)
 	{
-		item = m_global.get(idx); 											// Reach an item from global stack
-		m_minSize = std::min(m_minSize, -static_cast<ssize_t>(idx) - 1); 	// and remember required stack size
+		// Fetch an item from global stack
+		auto& builder = m_global.getBuilder();
+		ssize_t globalIdx = -idx - 1;
+		auto slot = builder.CreateConstGEP1_64(m_sp, globalIdx);
+		item = builder.CreateLoad(slot);
+		m_minSize = std::min(m_minSize, globalIdx); 	// remember required stack size
 	}
 
 	return item;
@@ -117,7 +120,7 @@ void LocalStack::finalize(llvm::IRBuilder<>& _builder, llvm::BasicBlock& _bb)
 	m_sp->setArgOperand(4, _builder.getInt64(size()));
 
 	auto blockTerminator = _bb.getTerminator();
-	if (!blockTerminator || blockTerminator->getOpcode() != llvm::Instruction::Ret)
+	if (!blockTerminator || blockTerminator->getOpcode() != llvm::Instruction::Ret) // TODO: Always exit through exit block
 	{
 		// Not needed in case of ret instruction. Ret invalidates the stack.
 		if (blockTerminator)
@@ -125,27 +128,23 @@ void LocalStack::finalize(llvm::IRBuilder<>& _builder, llvm::BasicBlock& _bb)
 		else
 			_builder.SetInsertPoint(&_bb);
 
-		// Update items fetched from global stack ignoring the poped ones
-		assert(m_globalPops <= m_input.size()); // pop() always does get()
-		for (auto i = m_globalPops; i < m_input.size(); ++i)
+		auto inputIt = m_input.rbegin();
+		auto localIt = m_local.begin();
+		for (ssize_t globalIdx = -m_input.size(); globalIdx < size(); ++globalIdx)
 		{
-			if (m_input[i])
-				m_global.set(i, m_input[i]);
-		}
-
-		// Add new items
-		auto pops = m_globalPops;			// Copy pops counter to keep original value
-		for (auto& item: m_local)
-		{
-			if (pops) 						// Override poped global items
-				m_global.set(--pops, item);	// using pops counter as the index
+			llvm::Value* item = nullptr;
+			if (globalIdx < -m_globalPops)
+			{
+				item = *inputIt++;	// update input items (might contain original value)
+				if (!item)			// some items are skipped
+					continue;
+			}
 			else
-				m_global.push(item);
-		}
+				item = *localIt++;	// store new items
 
-		// Pop not overriden items
-		if (pops)
-			m_global.pop(pops);
+			auto slot = _builder.CreateConstGEP1_64(m_sp, globalIdx);
+			_builder.CreateStore(item, slot); // FIXME: Set alignment
+		}
 	}
 }
 

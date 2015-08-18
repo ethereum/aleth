@@ -18,7 +18,7 @@ using instr_idx = uint64_t;
 class LocalStack
 {
 public:
-	explicit LocalStack(RuntimeManager& _runtimeMAnager, Stack& _globalStack);
+	explicit LocalStack(RuntimeManager& _runtimeManager, Stack& _globalStack);
 	LocalStack(LocalStack const&) = delete;
 	void operator=(LocalStack const&) = delete;
 
@@ -35,7 +35,7 @@ public:
 	/// @param _index Index of value to be swaped. Must be > 0.
 	void swap(size_t _index);
 
-	ssize_t size() const { return static_cast<ssize_t>(m_local.size()) - static_cast<ssize_t>(m_globalPops); }
+	ssize_t size() const { return static_cast<ssize_t>(m_local.size()) - m_globalPops; }
 	ssize_t minSize() const { return m_minSize; }
 	ssize_t maxSize() const { return m_maxSize; }
 
@@ -56,12 +56,11 @@ private:
 	/// Local stack items that has not been pushed to global stack. First item is just above global stack.
 	std::vector<llvm::Value*> m_local;
 
-	RuntimeManager& m_runtimeManager;
-	llvm::CallInst* m_sp;
+	llvm::CallInst* m_sp = nullptr;
 
 	Stack& m_global;			///< Reference to global stack.
 
-	size_t m_globalPops = 0; 	///< Number of items poped from global stack. In other words: global - local stack overlap.
+	ssize_t m_globalPops = 0; 	///< Number of items poped from global stack. In other words: global - local stack overlap.
 	ssize_t m_minSize = 0;		///< Minimum reached local stack size. Can be negative.
 	ssize_t m_maxSize = 0;		///< Maximum reached local stack size.
 };
