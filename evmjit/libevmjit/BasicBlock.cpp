@@ -190,7 +190,7 @@ llvm::Function* LocalStack::getStackPrepareFunc()
 	auto minSize = m_builder.CreateAdd(size, min, "size.min", false, true);
 	auto maxSize = m_builder.CreateAdd(size, max, "size.max", true, true);
 	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "ok.min");
-	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(1024), "ok.max"); // FIXME: Extract constants
+	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(RuntimeManager::stackSizeLimit), "ok.max");
 	auto ok = m_builder.CreateAnd(minOk, maxOk, "ok");
 	m_builder.CreateCondBr(ok, updateBB, outOfStackBB, Type::expectTrue);
 
