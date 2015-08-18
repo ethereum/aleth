@@ -40,7 +40,7 @@ public:
 	ssize_t maxSize() const { return m_maxSize; }
 
 	/// Finalize local stack: check the requirements and update of the global stack.
-	void finalize(llvm::IRBuilder<>& _builder, llvm::BasicBlock& _bb);
+	void finalize(IRBuilder& _builder, llvm::BasicBlock& _bb);
 
 private:
 	/// Gets _index'th value from top (counting from 0)

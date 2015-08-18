@@ -18,7 +18,7 @@ class Stack;
 class RuntimeManager: public CompilerHelper
 {
 public:
-	RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeBegin, code_iterator _codeEnd);
+	RuntimeManager(IRBuilder& _builder, code_iterator _codeBegin, code_iterator _codeEnd);
 
 	llvm::Value* getRuntimePtr();
 	llvm::Value* getDataPtr();

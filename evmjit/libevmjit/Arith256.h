@@ -12,7 +12,7 @@ namespace jit
 class Arith256 : public CompilerHelper
 {
 public:
-	Arith256(llvm::IRBuilder<>& _builder);
+	Arith256(IRBuilder& _builder);
 
 	llvm::Value* exp(llvm::Value* _arg1, llvm::Value* _arg2);
 

@@ -14,7 +14,7 @@ namespace eth
 namespace jit
 {
 
-Stack::Stack(llvm::IRBuilder<>& _builder):
+Stack::Stack(IRBuilder& _builder):
 	CompilerHelper(_builder),
 	m_stack(_builder, "stack")
 {}

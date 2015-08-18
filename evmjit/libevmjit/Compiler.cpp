@@ -106,7 +106,7 @@ void Compiler::resolveJumps()
 		auto term = it->getTerminator();
 
 		if (!term) // Block may have no terminator if the next instruction is a jump destination.
-			llvm::IRBuilder<>{it}.CreateBr(nextBlock);
+			IRBuilder{it}.CreateBr(nextBlock);
 		else if (auto jump = llvm::dyn_cast<llvm::BranchInst>(term))
 			if (jump->getSuccessor(0) == m_jumpTableBB)
 			{
