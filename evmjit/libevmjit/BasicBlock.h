@@ -15,12 +15,10 @@ namespace jit
 using namespace evmjit;
 using instr_idx = uint64_t;
 
-class LocalStack
+class LocalStack: public CompilerHelper
 {
 public:
-	explicit LocalStack(RuntimeManager& _runtimeManager, Stack& _globalStack);
-	LocalStack(LocalStack const&) = delete;
-	void operator=(LocalStack const&) = delete;
+	explicit LocalStack(IRBuilder& _builder, RuntimeManager& _runtimeManager);
 
 	/// Pushes value on stack
 	void push(llvm::Value* _value);
@@ -40,7 +38,7 @@ public:
 	ssize_t maxSize() const { return m_maxSize; }
 
 	/// Finalize local stack: check the requirements and update of the global stack.
-	void finalize(IRBuilder& _builder, llvm::BasicBlock& _bb);
+	void finalize();
 
 private:
 	/// Gets _index'th value from top (counting from 0)
@@ -56,9 +54,7 @@ private:
 	/// Local stack items that has not been pushed to global stack. First item is just above global stack.
 	std::vector<llvm::Value*> m_local;
 
-	llvm::CallInst* m_sp = nullptr;
-
-	Stack& m_global;			///< Reference to global stack.
+	llvm::CallInst* m_sp = nullptr; ///< Call to stack.prepare function which returns stack pointer for current basic block.
 
 	ssize_t m_globalPops = 0; 	///< Number of items poped from global stack. In other words: global - local stack overlap.
 	ssize_t m_minSize = 0;		///< Minimum reached local stack size. Can be negative.
