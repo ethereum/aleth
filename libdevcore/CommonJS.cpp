@@ -74,7 +74,7 @@ bytes unpadLeft(bytes _b)
 	return _b;
 }
 
-string fromRaw(h256 _n, unsigned* _inc)
+string fromRaw(h256 _n)
 {
 	if (_n)
 	{
@@ -83,14 +83,7 @@ string fromRaw(h256 _n, unsigned* _inc)
 		if (!l)
 			return "";
 		if (l != string::npos)
-		{
-			auto p = s.find_first_not_of('\0', l);
-			if (!(p == string::npos || (_inc && p == 31)))
-				return "";
-			if (_inc)
-				*_inc = (byte)s[31];
 			s.resize(l);
-		}
 		for (auto i: s)
 			if (i < 32)
 				return "";
