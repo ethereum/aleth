@@ -18,38 +18,45 @@ else()
 	project(webthree)
 endif()
 
-set(CMAKE_AUTOMOC ON)
-
+# Figure out environment.
 set(BUILD_DIR_NAME "build" CACHE STRING "The name of the build directory in cpp-ethereum")
 set(CPPETHEREUM_BUILD "${CMAKE_CURRENT_SOURCE_DIR}/../cpp-ethereum/${BUILD_DIR_NAME}")
-
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CPPETHEREUM_BUILD})
+message("CPPETHEREUM_BUILD: ${CPPETHEREUM_BUILD}")
+set(ETH_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../cpp-ethereum-cmake")
 
-list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../cpp-ethereum/cmake)
-set(JSONRPC 1)
-add_definitions(-DETH_TRUE)
+list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
+
+set(GUI 1)		# TODO: remove once packages are all changed to optional
+set(JSONRPC 1)	# TODO: remove once packages are all changed to optional
+
 include(EthDependencies)
 include(EthExecutableHelper)
 include(EthCompilerSettings)
 
-set(P ${CPPETHEREUM_BUILD}/)
-set(LIBS whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;secp256k1;scrypt;jsqrc)
-set(CMAKE_LIBRARY_PATH ${P}secp256k1;${P}evmjit;${P}libsolidity;${CMAKE_LIBRARY_PATH})
-
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../cpp-ethereum)
-include_directories(${CPPETHEREUM_BUILD})
+set(CMAKE_THREAD_LIBS_INIT pthread)
 
-find_library(SOLIDITY_LIBRARY NAMES solidity)
-if (SOLIDITY_LIBRARY)
-	add_definitions(-DETH_SOLIDITY)
+set(CMAKE_LIBRARY_PATH ${CPPETHEREUM_BUILD};${CMAKE_LIBRARY_PATH})
+set(LIBS whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;secp256k1;scrypt;jsqrc)
+find_library(solidity_LIBRARY NAMES solidity)
+if (solidity_LIBRARY)
+	set(SOLIDITY 1)
 endif()
-
-find_library(EVMJIT_LIBRARY NAMES evmjit)
-if (EVMJIT_LIBRARY)
-	add_definitions(-DETH_EVMJIT)
+find_library(serpent_LIBRARY NAMES serpent)
+if (serpent_LIBRARY)
+	set(SERPENT 1)
+endif()
+find_library(evmjit_LIBRARY NAMES evmjit)
+if (evmjit_LIBRARY)
+	set(EVMJIT 1)
+endif()
+find_library(jsconsole_LIBRARY NAMES jsconsole)
+if (jsconsole_LIBRARY)
+	set(JSCONSOLE 1)
+	set(LIBS "${LIBS};jsengine")
 endif()
 foreach (l ${LIBS})
-	set(CMAKE_LIBRARY_PATH ${P}lib${l};${CMAKE_LIBRARY_PATH})
 	find_library(${l}_LIBRARY NAMES ${l})
 endforeach()
 

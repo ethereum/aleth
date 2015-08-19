@@ -16,18 +16,16 @@ file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
+target_link_libraries(${EXECUTABLE} webthree)
+target_link_libraries(${EXECUTABLE} ${devcore_LIBRARY})
 target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${MHD_LIBRARIES})
-
-target_link_libraries(${EXECUTABLE} webthree)
-
-if (SOLIDITY)
-	target_link_libraries(${EXECUTABLE} solidity)
-endif ()
-if (SERPENT)
-	target_link_libraries(${EXECUTABLE} serpent)
-endif ()
+target_link_libraries(${EXECUTABLE} ${Boost_FILESYSTEM_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_SYSTEM_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_THREAD_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_RANDOM_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${LEVELDB_LIBRARIES})	#TODO: use the correct database library according to cpp-ethereum
 
 if (ETH_JSON_RPC_STUB)
 	add_custom_target(jsonrpcstub) 
