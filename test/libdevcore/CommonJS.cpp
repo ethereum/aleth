@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_padded)
 	bytes b = {};
 	BOOST_CHECK(bytes({0x00, 0x00, 0x00, 0x00}) == padded(b, 4));
 	bytes c = {0xff, 0xaa, 0xbb, 0xcc};
-	BOOST_CHECK(bytes({0xcc}) == padded(c, 1));
+	BOOST_CHECK(bytes{0xcc} == padded(c, 1));
 }
 
 BOOST_AUTO_TEST_CASE(test_paddedRight)
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(test_paddedRight)
 	bytes b = {};
 	BOOST_CHECK(bytes({0x00, 0x00, 0x00, 0x00}) == paddedRight(b, 4));
 	bytes c = {0xff, 0xaa, 0xbb, 0xcc};
-	BOOST_CHECK(bytes({0xff}) == paddedRight(c, 1));
+	BOOST_CHECK(bytes{0xff} == paddedRight(c, 1));
 }
 
 BOOST_AUTO_TEST_CASE(test_unpadded)
