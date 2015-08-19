@@ -97,12 +97,12 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 
 void Compiler::resolveJumps()
 {
-	// Iterate through all EVM instructions blocks (skip first 4 - special blocks).
-	for (auto it = std::next(m_mainFunc->begin(), 4); it != m_mainFunc->end(); ++it)
+	// Iterate through all EVM instructions blocks (skip first 4 and last one - special blocks).
+	for (auto it = std::next(m_mainFunc->begin(), 3), end = std::prev(m_mainFunc->end(), 2); it != end; ++it)
 	{
 		auto jumpTable = llvm::cast<llvm::SwitchInst>(m_jumpTableBB->getTerminator());
 		auto jumpTableInput = llvm::cast<llvm::PHINode>(m_jumpTableBB->begin());
-		auto nextBlock = it->getNextNode() != m_mainFunc->end() ? it->getNextNode() : m_stopBB;
+		auto nextBlock = it->getNextNode(); // If the last code block, that will be "stop" block.
 		auto term = it->getTerminator();
 
 		if (!term) // Block may have no terminator if the next instruction is a jump destination.
@@ -138,7 +138,6 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	// Create entry basic block
 	auto entryBlock = llvm::BasicBlock::Create(m_builder.getContext(), "Entry", m_mainFunc);
 
-	m_stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc); // TODO: Remove stop block
 	auto abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc); // TODO: Remove abort block
 	m_jumpTableBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "JumpTable", m_mainFunc);
 	m_builder.SetInsertPoint(m_jumpTableBB);
@@ -146,11 +145,14 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	auto& jumpTable = *m_builder.CreateSwitch(target, abortBB);
 
 	m_builder.SetInsertPoint(entryBlock);
-	RuntimeManager runtimeManager(m_builder, _begin, _end); // Construct RuntimeManager before creating basic blocks with EVM code.
 
 	auto blocks = createBasicBlocks(_begin, _end, jumpTable);
 
+ 	// Special "Stop" block. Guarantees that there exists a next block after the code blocks (also when there are no code blocks).
+	auto stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc);
+
 	// Init runtime structures.
+	RuntimeManager runtimeManager(m_builder, _begin, _end);
 	GasMeter gasMeter(m_builder, runtimeManager);
 	Memory memory(runtimeManager, gasMeter);
 	Ext ext(runtimeManager, memory);
@@ -169,15 +171,13 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	auto r = m_builder.CreateCall(setjmp, jmpBuf);
 	auto normalFlow = m_builder.CreateICmpEQ(r, m_builder.getInt32(0));
 	runtimeManager.setJmpBuf(jmpBuf);
-
-	auto firstBB = blocks.empty() ? m_stopBB : blocks.front().llvm();
-	m_builder.CreateCondBr(normalFlow, firstBB, abortBB, Type::expectTrue);
+	m_builder.CreateCondBr(normalFlow, m_jumpTableBB->getNextNode(), abortBB, Type::expectTrue); // TODO: Place first code block just after the "Entry" block.
 
 	for (auto& block: blocks)
 		compileBasicBlock(block, runtimeManager, arith, memory, ext, gasMeter);
 
 	// Code for special blocks:
-	m_builder.SetInsertPoint(m_stopBB);
+	m_builder.SetInsertPoint(stopBB);
 	runtimeManager.exit(ReturnCode::Stop);
 
 	m_builder.SetInsertPoint(abortBB);
@@ -185,6 +185,7 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 
 	resolveJumps();
 
+	//module->dump();
 	return module;
 }
 
