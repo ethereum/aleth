@@ -7,11 +7,11 @@
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
-if (WIN32)
-	set(CORE_LIBS web3jsonrpc;webthree;whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;scrypt;jsqrc)
-else()
-	set(CORE_LIBS web3jsonrpc;webthree;whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;secp256k1;scrypt;jsqrc)
+set(CORE_LIBS web3jsonrpc;webthree;whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;natspec;devcore;ethash-cl;ethash;scrypt;jsqrc)
+if (NOT WIN32)
+	list(APPEND CORE_LIBS "secp256k1")
 endif()
+
 set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1)
 
 set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
