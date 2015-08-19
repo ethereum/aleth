@@ -47,6 +47,7 @@ public:
 	llvm::Value* getStackSize() const { return m_stackSize; }
 
 	void setJmpBuf(llvm::Value* _jmpBuf) { m_jmpBuf = _jmpBuf; }
+	void setExitBB(llvm::BasicBlock* _bb) { m_exitBB = _bb; }
 
 	static llvm::StructType* getRuntimeType();
 	static llvm::StructType* getRuntimeDataType();
@@ -68,6 +69,8 @@ private:
 
 	llvm::Value* m_stackBase = nullptr;
 	llvm::Value* m_stackSize = nullptr;
+
+	llvm::BasicBlock* m_exitBB = nullptr;
 
 	code_iterator m_codeBegin = {};
 	code_iterator m_codeEnd = {};
