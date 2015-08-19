@@ -15,9 +15,15 @@ set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR})
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
 set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
 include_directories(${ETH_GENERATED_DIR})
+include_directories(${CPPETHEREUM_BUILD})
+
+add_definitions(-DETH_TRUE)
 
 # custom cmake scripts
-set(ETH_SCRIPTS_DIR ${CMAKE_SOURCE_DIR}/cmake/scripts)
+set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
+set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
+message("CMake Helper Path: ${ETH_CMAKE_DIR}")
+message("CMake Script Path: ${ETH_SCRIPTS_DIR}")
 
 # Qt5 requires opengl
 # TODO use proper version of windows SDK (32 vs 64)
