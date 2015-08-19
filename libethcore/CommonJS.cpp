@@ -49,7 +49,7 @@ std::string prettyU256(u256 _n, bool _abridged)
 		else
 			s << _n << "(0x" << n << ")";
 	}
-	else if ((raw = fromRaw((h256)_n)).size())
+	else if (!(raw = fromRaw((h256)_n)).empty())
 		return "\"" + raw + "\"";
 	else
 		s << "" << (h256)_n;
