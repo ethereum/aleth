@@ -111,15 +111,8 @@ inline u256 jsToU256(std::string const& _s) { return jsToInt<32>(_s); }
 /// Returns 0 in case of failure
 inline int jsToInt(std::string const& _s)
 {
-	int ret;
-	try
-	{
-		ret = std::stoi(_s, nullptr, 0);
-	}
-	catch(...)
-	{
-		ret = 0;
-	}
+	int ret = 0;
+	DEV_IGNORE_EXCEPTIONS(ret = std::stoi(_s, nullptr, 0));
 	return ret;
 }
 
