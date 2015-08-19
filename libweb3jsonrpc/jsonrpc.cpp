@@ -36,7 +36,7 @@
 #include <set>
 #include "../JsonSpiritHeaders.h"
 #include "<test/TestHelper.h>"
-#include "webthreestubclient.h"
+#include "WebThreeStubClient.h"
 
 BOOST_AUTO_TEST_SUITE(jsonrpc)
 
