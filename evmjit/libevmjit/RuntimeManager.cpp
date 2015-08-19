@@ -115,6 +115,22 @@ RuntimeManager::RuntimeManager(IRBuilder& _builder, code_iterator _codeBegin, co
 
 	m_gasPtr = m_builder.CreateAlloca(Type::Gas, nullptr, "gas.ptr");
 	m_builder.CreateStore(m_dataElts[RuntimeData::Index::Gas], m_gasPtr);
+
+	m_exitBB = llvm::BasicBlock::Create(m_builder.getContext(), "Exit", getMainFunction());
+	InsertPointGuard guard{m_builder};
+	m_builder.SetInsertPoint(m_exitBB);
+	auto retPhi = m_builder.CreatePHI(Type::MainReturn, 16, "ret");
+	auto freeFunc = getModule()->getFunction("free");
+	if (!freeFunc)
+	{
+		freeFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, Type::WordPtr, false), llvm::Function::ExternalLinkage, "free", getModule());
+		freeFunc->setDoesNotThrow();
+		freeFunc->setDoesNotCapture(1);
+	}
+	m_builder.CreateCall(freeFunc, {m_stackBase});
+	auto extGasPtr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), RuntimeData::Index::Gas, "msg.gas.ptr");
+	m_builder.CreateStore(getGas(), extGasPtr);
+	m_builder.CreateRet(retPhi);
 }
 
 llvm::Value* RuntimeManager::getRuntimePtr()
@@ -180,19 +196,9 @@ void RuntimeManager::registerSuicide(llvm::Value* _balanceAddress)
 
 void RuntimeManager::exit(ReturnCode _returnCode)
 {
-	// TODO: Keep one declaration of free func
-	auto freeFunc = getModule()->getFunction("free");
-	if (!freeFunc)
-	{
-		freeFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, Type::WordPtr, false), llvm::Function::ExternalLinkage, "free", getModule());
-		freeFunc->setDoesNotThrow();
-		freeFunc->setDoesNotCapture(1);
-	}
-	m_builder.CreateCall(freeFunc, {m_stackBase});
-
-	auto extGasPtr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), RuntimeData::Index::Gas, "msg.gas.ptr");
-	m_builder.CreateStore(getGas(), extGasPtr);
-	m_builder.CreateRet(Constant::get(_returnCode));
+	m_builder.CreateBr(m_exitBB);
+	auto retPhi = llvm::cast<llvm::PHINode>(&m_exitBB->front());
+	retPhi->addIncoming(Constant::get(_returnCode), m_builder.GetInsertBlock());
 }
 
 void RuntimeManager::abort(llvm::Value* _jmpBuf)

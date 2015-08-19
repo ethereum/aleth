@@ -136,21 +136,21 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	m_mainFunc->getArgumentList().front().setName("rt");
 
 	// Create entry basic block
-	auto entryBlock = llvm::BasicBlock::Create(m_builder.getContext(), {}, m_mainFunc);
+	auto entryBlock = llvm::BasicBlock::Create(m_builder.getContext(), "Entry", m_mainFunc);
 
-	m_stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc);
-	m_abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc);
+	m_stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc); // TODO: Remove stop block
+	auto abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc); // TODO: Remove abort block
 	m_jumpTableBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "JumpTable", m_mainFunc);
 	m_builder.SetInsertPoint(m_jumpTableBB);
 	auto target = m_builder.CreatePHI(Type::Word, 16, "target");
-	auto& jumpTable = *m_builder.CreateSwitch(target, m_abortBB);
+	auto& jumpTable = *m_builder.CreateSwitch(target, abortBB);
 
 	m_builder.SetInsertPoint(entryBlock);
+	RuntimeManager runtimeManager(m_builder, _begin, _end); // Construct RuntimeManager before creating basic blocks with EVM code.
 
 	auto blocks = createBasicBlocks(_begin, _end, jumpTable);
 
 	// Init runtime structures.
-	RuntimeManager runtimeManager(m_builder, _begin, _end);
 	GasMeter gasMeter(m_builder, runtimeManager);
 	Memory memory(runtimeManager, gasMeter);
 	Ext ext(runtimeManager, memory);
@@ -171,7 +171,7 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	runtimeManager.setJmpBuf(jmpBuf);
 
 	auto firstBB = blocks.empty() ? m_stopBB : blocks.front().llvm();
-	m_builder.CreateCondBr(normalFlow, firstBB, m_abortBB, Type::expectTrue);
+	m_builder.CreateCondBr(normalFlow, firstBB, abortBB, Type::expectTrue);
 
 	for (auto& block: blocks)
 		compileBasicBlock(block, runtimeManager, arith, memory, ext, gasMeter);
@@ -180,7 +180,7 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	m_builder.SetInsertPoint(m_stopBB);
 	runtimeManager.exit(ReturnCode::Stop);
 
-	m_builder.SetInsertPoint(m_abortBB);
+	m_builder.SetInsertPoint(abortBB);
 	runtimeManager.exit(ReturnCode::OutOfGas);
 
 	resolveJumps();
@@ -745,14 +745,13 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 		case Instruction::SUICIDE:
 		{
 			_runtimeManager.registerSuicide(stack.pop());
-			_runtimeManager.exit(ReturnCode::Suicide);
+			_runtimeManager.exit(ReturnCode::Suicide); // TODO: Suicide is rare. Call Env::suicide directly and stop.
 			break;
 		}
 
-
 		case Instruction::STOP:
 		{
-			m_builder.CreateBr(m_stopBB);
+			_runtimeManager.exit(ReturnCode::Stop);
 			break;
 		}
 
@@ -779,7 +778,7 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 		}
 
 		default: // Invalid instruction - abort
-			m_builder.CreateBr(m_abortBB);
+			_runtimeManager.exit(ReturnCode::OutOfGas);
 			it = _basicBlock.end() - 1; // finish block compilation
 		}
 	}
