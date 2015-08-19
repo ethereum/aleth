@@ -40,9 +40,6 @@ private:
 	/// Helper class for generating IR
 	IRBuilder m_builder;
 
-	/// Stop basic block - terminates execution with STOP code (0)
-	llvm::BasicBlock* m_stopBB = nullptr;
-
 	/// Block with a jump table.
 	llvm::BasicBlock* m_jumpTableBB = nullptr;
 
