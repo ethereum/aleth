@@ -30,7 +30,7 @@ if (SERPENT)
 endif ()
 
 if (ETH_JSON_RPC_STUB)
-	add_custom_target(jsonrpcstub) 
+	add_custom_target(jsonrpcstub)
 	add_custom_command(TARGET jsonrpcstub
 		POST_BUILD
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
