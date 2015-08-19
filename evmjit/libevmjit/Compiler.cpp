@@ -98,7 +98,7 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 void Compiler::resolveJumps()
 {
 	// Iterate through all EVM instructions blocks (skip first 4 and last one - special blocks).
-	for (auto it = std::next(m_mainFunc->begin(), 3), end = std::prev(m_mainFunc->end(), 2); it != end; ++it)
+	for (auto it = std::next(m_mainFunc->begin(), 2), end = std::prev(m_mainFunc->end(), 3); it != end; ++it)
 	{
 		auto jumpTable = llvm::cast<llvm::SwitchInst>(m_jumpTableBB->getTerminator());
 		auto jumpTableInput = llvm::cast<llvm::PHINode>(m_jumpTableBB->begin());
@@ -136,20 +136,22 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	m_mainFunc->getArgumentList().front().setName("rt");
 
 	// Create entry basic block
-	auto entryBlock = llvm::BasicBlock::Create(m_builder.getContext(), "Entry", m_mainFunc);
+	auto entryBB = llvm::BasicBlock::Create(m_builder.getContext(), "Entry", m_mainFunc);
 
-	auto abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc); // TODO: Remove abort block
 	m_jumpTableBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "JumpTable", m_mainFunc);
 	m_builder.SetInsertPoint(m_jumpTableBB);
 	auto target = m_builder.CreatePHI(Type::Word, 16, "target");
-	auto& jumpTable = *m_builder.CreateSwitch(target, abortBB);
+	auto& jumpTable = *m_builder.CreateSwitch(target, nullptr);
 
-	m_builder.SetInsertPoint(entryBlock);
+	m_builder.SetInsertPoint(entryBB);
 
 	auto blocks = createBasicBlocks(_begin, _end, jumpTable);
 
  	// Special "Stop" block. Guarantees that there exists a next block after the code blocks (also when there are no code blocks).
 	auto stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc);
+
+	auto abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc);
+
 
 	// Init runtime structures.
 	RuntimeManager runtimeManager(m_builder, _begin, _end);
@@ -182,6 +184,9 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 
 	m_builder.SetInsertPoint(abortBB);
 	runtimeManager.exit(ReturnCode::OutOfGas);
+
+	m_builder.SetInsertPoint(m_jumpTableBB);
+	jumpTable.setDefaultDest(abortBB);
 
 	resolveJumps();
 
