@@ -30,9 +30,10 @@ if (SERPENT)
 endif ()
 
 if (ETH_JSON_RPC_STUB)
-	add_custom_target(jsonrpcstub)
-	add_custom_command(TARGET jsonrpcstub
+	add_custom_command(
 		POST_BUILD
+		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/spec.json"
+		OUTPUT "${CMAKE_SOURCE_DIR}/test/libweb3jsonrpc/WebThreeStubclient.h"
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/spec.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 			-DETH_SERVER_DIR="${CMAKE_CURRENT_SOURCE_DIR}" -DETH_CLIENT_DIR="${CMAKE_SOURCE_DIR}/test/libweb3jsonrpc"
@@ -40,7 +41,6 @@ if (ETH_JSON_RPC_STUB)
 			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
 			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
 	)
-	add_dependencies(${EXECUTABLE} jsonrpcstub)
 endif ()
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )

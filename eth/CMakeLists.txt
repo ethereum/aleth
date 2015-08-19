@@ -35,9 +35,10 @@ if (JSONRPC)
 endif()
 
 if (ETH_JSON_RPC_STUB)
-	add_custom_target(ethfarmstub)
-	add_custom_command(TARGET ethfarmstub
+	add_custom_command(
 		POST_BUILD
+		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/farm.json"
+		OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/Farm.h"
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/farm.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
@@ -45,11 +46,11 @@ if (ETH_JSON_RPC_STUB)
 			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
 			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
 	)
-	add_dependencies(${EXECUTABLE} ethfarmstub)
 
-	add_custom_target(ethphonestub)
-	add_custom_command(TARGET ethphonestub
+	add_custom_command(
 		POST_BUILD
+		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/phonehome.json"
+		OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/PhoneHome.h"
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/phonehome.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
@@ -57,7 +58,6 @@ if (ETH_JSON_RPC_STUB)
 			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
 			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
 	)
-	add_dependencies(${EXECUTABLE} ethphonestub)
 endif ()
 
 target_link_libraries(${EXECUTABLE} webthree)
