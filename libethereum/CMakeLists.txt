@@ -34,6 +34,20 @@ if (JSONRPC)
 	endif()
 endif()
 
+if (ETH_JSON_RPC_STUB)
+	add_custom_target(sentinelstub)
+	add_custom_command(TARGET sentinelstub
+		POST_BUILD
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/Sentinel.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+			-DETH_CLIENT_NAME=Sentinel
+			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
+			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
+	)
+	add_dependencies(${EXECUTABLE} sentinelstub)
+endif ()
+
 if (CMAKE_COMPILER_IS_MINGW)
 	target_link_libraries(${EXECUTABLE} ssp shlwapi)
 endif()
