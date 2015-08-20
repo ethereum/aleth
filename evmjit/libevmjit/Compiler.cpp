@@ -38,7 +38,7 @@ Compiler::Compiler(Options const& _options):
 	Type::init(m_builder.getContext());
 }
 
-std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, code_iterator _codeEnd, llvm::SwitchInst& _jumpTable)
+std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, code_iterator _codeEnd)
 {
 	/// Helper function that skips push data and finds next iterator (can be the end)
 	auto skipPushDataAndGetNext = [](code_iterator _curr, code_iterator _end)
@@ -86,8 +86,6 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 		{
 			auto beginIdx = begin - _codeBegin;
 			blocks.emplace_back(beginIdx, begin, next, m_mainFunc);
-			if (Instruction(*begin) == Instruction::JUMPDEST)
-				_jumpTable.addCase(Constant::get(beginIdx), blocks.back().llvm());
 			begin = next;
 		}
 	}
@@ -97,8 +95,8 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 
 void Compiler::resolveJumps()
 {
-	// Iterate through all EVM instructions blocks (skip first 4 and last one - special blocks).
-	for (auto it = std::next(m_mainFunc->begin(), 2), end = std::prev(m_mainFunc->end(), 3); it != end; ++it)
+	// Iterate through all EVM instructions blocks (skip first one and last 4 - special blocks).
+	for (auto it = std::next(m_mainFunc->begin()), end = std::prev(m_mainFunc->end(), 4); it != end; ++it)
 	{
 		auto jumpTable = llvm::cast<llvm::SwitchInst>(m_jumpTableBB->getTerminator());
 		auto jumpTableInput = llvm::cast<llvm::PHINode>(m_jumpTableBB->begin());
@@ -138,19 +136,21 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	// Create entry basic block
 	auto entryBB = llvm::BasicBlock::Create(m_builder.getContext(), "Entry", m_mainFunc);
 
-	m_jumpTableBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "JumpTable", m_mainFunc);
-	m_builder.SetInsertPoint(m_jumpTableBB);
-	auto target = m_builder.CreatePHI(Type::Word, 16, "target");
-	auto& jumpTable = *m_builder.CreateSwitch(target, nullptr);
-
-	m_builder.SetInsertPoint(entryBB);
-
-	auto blocks = createBasicBlocks(_begin, _end, jumpTable);
+	auto blocks = createBasicBlocks(_begin, _end);
 
  	// Special "Stop" block. Guarantees that there exists a next block after the code blocks (also when there are no code blocks).
 	auto stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc);
 
+	m_jumpTableBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "JumpTable", m_mainFunc);
+
 	auto abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc);
+
+
+	m_builder.SetInsertPoint(m_jumpTableBB); // Must be before basic blocks compilation
+	auto target = m_builder.CreatePHI(Type::Word, 16, "target");
+	m_builder.CreateSwitch(target, abortBB);
+
+	m_builder.SetInsertPoint(entryBB);
 
 
 	// Init runtime structures.
@@ -173,7 +173,7 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	auto r = m_builder.CreateCall(setjmp, jmpBuf);
 	auto normalFlow = m_builder.CreateICmpEQ(r, m_builder.getInt32(0));
 	runtimeManager.setJmpBuf(jmpBuf);
-	m_builder.CreateCondBr(normalFlow, m_jumpTableBB->getNextNode(), abortBB, Type::expectTrue); // TODO: Place first code block just after the "Entry" block.
+	m_builder.CreateCondBr(normalFlow, entryBB->getNextNode(), abortBB, Type::expectTrue);
 
 	for (auto& block: blocks)
 		compileBasicBlock(block, runtimeManager, arith, memory, ext, gasMeter);
@@ -185,12 +185,8 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 	m_builder.SetInsertPoint(abortBB);
 	runtimeManager.exit(ReturnCode::OutOfGas);
 
-	m_builder.SetInsertPoint(m_jumpTableBB);
-	jumpTable.setDefaultDest(abortBB);
-
 	resolveJumps();
 
-	//module->dump();
 	return module;
 }
 
@@ -581,7 +577,10 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 
 		case Instruction::JUMPDEST:
 		{
-			// Nothing to do
+			// Add the basic block to the jump table.
+			assert(it == _basicBlock.begin() && "JUMPDEST must be the first instruction of a basic block");
+			auto jumpTable = llvm::cast<llvm::SwitchInst>(m_jumpTableBB->getTerminator());
+			jumpTable->addCase(Constant::get(_basicBlock.firstInstrIdx()), _basicBlock.llvm());
 			break;
 		}
 
