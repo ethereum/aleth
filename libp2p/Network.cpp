@@ -212,8 +212,13 @@ bi::tcp::endpoint Network::resolveHost(string const& _addr)
 	vector<string> split;
 	boost::split(split, _addr, boost::is_any_of(":"));
 	unsigned port = dev::p2p::c_defaultIPPort;
-	if (split.size() > 1)
-		port = static_cast<unsigned>(stoi(split.at(1)));
+
+	try
+	{
+		if (split.size() > 1)
+			port = static_cast<unsigned>(stoi(split.at(1)));
+	}
+	catch(...) {}
 
 	boost::system::error_code ec;
 	bi::address address = bi::address::from_string(split[0], ec);
