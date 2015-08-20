@@ -157,4 +157,10 @@ macro(eth_install_executable EXECUTABLE)
 
 endmacro()
 
+macro (eth_name KEY VALUE)
+	if (NOT (APPLE OR WIN32))
+		string(TOLOWER ${VALUE} VALUE)
+	endif()
+	set(${KEY} ${VALUE})
+endmacro()
 

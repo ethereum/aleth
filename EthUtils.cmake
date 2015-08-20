@@ -63,7 +63,7 @@ macro(eth_add_test NAME)
 endmacro()
 
 # Creates C resources file from files
-function(eth_add_resources RESOURCE_FILE OUT_FILE)
+function(eth_add_resources RESOURCE_FILE OUT_FILE ETH_RES_DIR)
 	include("${RESOURCE_FILE}")
 	set(OUTPUT  "${ETH_RESOURCE_LOCATION}/${ETH_RESOURCE_NAME}.hpp")
 	set(${OUT_FILE} "${OUTPUT}"  PARENT_SCOPE)
@@ -75,7 +75,7 @@ function(eth_add_resources RESOURCE_FILE OUT_FILE)
 	endforeach(resource)
 
 	add_custom_command(OUTPUT ${OUTPUT}
-		COMMAND ${CMAKE_COMMAND} -DETH_RES_FILE="${RESOURCE_FILE}" -P "${ETH_SCRIPTS_DIR}/resources.cmake"
+		COMMAND ${CMAKE_COMMAND} -DETH_RES_FILE="${RESOURCE_FILE}" -DETH_RES_DIR="${ETH_RES_DIR}"  -P "${ETH_SCRIPTS_DIR}/resources.cmake"
 		DEPENDS ${filenames}
 	)
 endfunction()
