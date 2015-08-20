@@ -85,7 +85,7 @@ template <class Channel> bool isChannelVisible() { return isChannelVisible(&type
 /// Not thread-safe, use with caution!
 struct VerbosityHolder
 {
-	VerbosityHolder(int _temporaryValue): oldLogVerbosity(g_logVerbosity) { g_logVerbosity = _temporaryValue; }
+	VerbosityHolder(int _temporaryValue, bool _force = false): oldLogVerbosity(g_logVerbosity) { if (g_logVerbosity >= 0 || _force) g_logVerbosity = _temporaryValue; }
 	~VerbosityHolder() { g_logVerbosity = oldLogVerbosity; }
 	int oldLogVerbosity;
 };
