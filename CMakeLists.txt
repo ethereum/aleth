@@ -292,6 +292,24 @@ macro(eth_format_option O)
 	endif()
 endmacro()
 
+macro(jsonrcpstub_client_create SPEC CLIENTNAME)
+	if (ETH_JSON_RPC_STUB)
+		add_custom_target(${CLIENTNAME}${SPEC}stub)
+		add_custom_command(
+		TARGET ${CLIENTNAME}${SPEC}stub
+		POST_BUILD
+		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${SPEC}"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/${SPEC}" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+			-DETH_CLIENT_NAME=${CLIENTNAME}
+			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
+			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
+			)
+		add_dependencies(${EXECUTABLE} ${CLIENTNAME}${SPEC}stub)
+	endif ()
+endmacro()
+
 # Normalise build options
 eth_format_option(PARANOID)
 eth_format_option(VMTRACE)

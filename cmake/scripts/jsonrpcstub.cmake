@@ -13,11 +13,22 @@
 # cmake -DETH_SPEC_PATH=spec.json -DETH_SERVER_DIR=libweb3jsonrpc -DETH_CLIENT_DIR=test
 # -DETH_SERVER_NAME=AbstractWebThreeStubServer -DETH_CLIENT_NAME=WebThreeStubClient -DETH_JSON_RPC_STUB=/usr/local/bin/jsonrpcstub
 
-# setup names
-set(SERVER_TMPFILE "${ETH_SERVER_DIR}/${ETH_SERVER_NAME}.h.tmp")
-set(SERVER_OUTFILE "${ETH_SERVER_DIR}/${ETH_SERVER_NAME}.h")
-set(CLIENT_TMPFILE "${ETH_CLIENT_DIR}/${ETH_CLIENT_NAME}.h.tmp")
-set(CLIENT_OUTFILE "${ETH_CLIENT_DIR}/${ETH_CLIENT_NAME}.h")
+# setup names, and allow different filename from classname for namespaced classes.
+# For an example call look at libethereum/CMakeLists.txt for eth::dev::Sentinel
+if (ETH_SERVER_FILENAME)
+	set(SERVER_TMPFILE "${ETH_SERVER_DIR}/${ETH_SERVER_FILENAME}.h.tmp")
+	set(SERVER_OUTFILE "${ETH_SERVER_DIR}/${ETH_SERVER_FILENAME}.h")
+else ()
+	set(SERVER_TMPFILE "${ETH_SERVER_DIR}/${ETH_SERVER_NAME}.h.tmp")
+	set(SERVER_OUTFILE "${ETH_SERVER_DIR}/${ETH_SERVER_NAME}.h")
+endif()
+if (ETH_CLIENT_FILENAME)
+	set(CLIENT_TMPFILE "${ETH_CLIENT_DIR}/${ETH_CLIENT_FILENAME}.h.tmp")
+	set(CLIENT_OUTFILE "${ETH_CLIENT_DIR}/${ETH_CLIENT_FILENAME}.h")
+else ()
+	set(CLIENT_TMPFILE "${ETH_CLIENT_DIR}/${ETH_CLIENT_NAME}.h.tmp")
+	set(CLIENT_OUTFILE "${ETH_CLIENT_DIR}/${ETH_CLIENT_NAME}.h")
+endif ()
 
 # create tmp files
 if (NOT ETH_SERVER_DIR)

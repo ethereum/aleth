@@ -28,31 +28,8 @@ if (JSONRPC)
 	endif()
 endif()
 
-if (ETH_JSON_RPC_STUB)
-	add_custom_command(
-		POST_BUILD
-		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/farm.json"
-		OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/FarmClient.h"
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/farm.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-			-DETH_CLIENT_NAME=FarmClient
-			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
-			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
-	)
-
-	add_custom_command(
-		POST_BUILD
-		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/phonehome.json"
-		OUTPUT "${CMAKE_CURRENT_SOURCE_DIR}/PhoneHome.h"
-		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/phonehome.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
-			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
-			-DETH_CLIENT_NAME=PhoneHome
-			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
-			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
-	)
-endif ()
+jsonrcpstub_client_create(farm.json FarmClient)
+jsonrcpstub_client_create(minerphonehome.json PhoneHome)
 
 target_link_libraries(${EXECUTABLE} ethcore)
 target_link_libraries(${EXECUTABLE} ethash)

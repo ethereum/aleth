@@ -10,6 +10,7 @@ include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
 include_directories(${DB_INCLUDE_DIRS})
 include_directories(${Boost_INCLUDE_DIRS})
 
+
 set(EXECUTABLE web3jsonrpc)
 
 file(GLOB HEADERS "*.h")
@@ -30,10 +31,11 @@ if (SERPENT)
 endif ()
 
 if (ETH_JSON_RPC_STUB)
+	add_custom_target(web3stub)
 	add_custom_command(
+		TARGET web3stub
 		POST_BUILD
 		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/spec.json"
-		OUTPUT "${CMAKE_SOURCE_DIR}/test/libweb3jsonrpc/WebThreeStubclient.h"
 		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/spec.json" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
 			-DETH_SERVER_DIR="${CMAKE_CURRENT_SOURCE_DIR}" -DETH_CLIENT_DIR="${CMAKE_SOURCE_DIR}/test/libweb3jsonrpc"
@@ -41,6 +43,7 @@ if (ETH_JSON_RPC_STUB)
 			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
 			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
 	)
+	add_dependencies(${EXECUTABLE} web3stub)
 endif ()
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
