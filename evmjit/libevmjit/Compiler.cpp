@@ -51,26 +51,34 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 		return _curr + offset;
 	};
 
-	// Skip all STOPs in the end
-	for (; _codeEnd != _codeBegin; --_codeEnd)
-		if (*(_codeEnd - 1) != static_cast<byte>(Instruction::STOP))
-			break;
-
 	std::vector<BasicBlock> blocks;
 
+	bool isDead = false;
 	auto begin = _codeBegin; // begin of current block
 	for (auto curr = begin, next = begin; curr != _codeEnd; curr = next)
 	{
 		next = skipPushDataAndGetNext(curr, _codeEnd);
 
+		if (isDead)
+		{
+			if (Instruction(*curr) == Instruction::JUMPDEST)
+			{
+				isDead = false;
+				begin = curr;
+			}
+			else
+				continue;
+		}
+
 		bool isEnd = false;
 		switch (Instruction(*curr))
 		{
 		case Instruction::JUMP:
-		case Instruction::JUMPI:
 		case Instruction::RETURN:
-		case Instruction::STOP: // FIXME: Afer stops we should skip all code until JUMPDEST, exception: JUMPI
+		case Instruction::STOP:
 		case Instruction::SUICIDE:
+			isDead = true;
+		case Instruction::JUMPI:
 			isEnd = true;
 			break;
 
