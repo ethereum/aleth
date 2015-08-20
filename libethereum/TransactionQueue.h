@@ -36,8 +36,6 @@ namespace dev
 namespace eth
 {
 
-class BlockChain;
-
 struct TransactionQueueChannel: public LogChannel { static const char* name(); static const int verbosity = 4; };
 struct TransactionQueueTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 7; };
 #define ctxq dev::LogOutputStream<dev::eth::TransactionQueueTraceChannel, true>()
