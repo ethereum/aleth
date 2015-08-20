@@ -3,9 +3,11 @@
 #include "preprocessor/llvm_includes_start.h"
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Function.h>
+#include <llvm/IR/Module.h>
 #include <llvm/IR/LegacyPassManager.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
+#include <llvm/Transforms/Utils/BasicBlockUtils.h>
 #include "preprocessor/llvm_includes_end.h"
 
 #include "Arith256.h"
@@ -18,11 +20,60 @@ namespace eth
 namespace jit
 {
 
+namespace
+{
+
+class LongJmpEliminationPass: public llvm::FunctionPass
+{
+	static char ID;
+
+public:
+	LongJmpEliminationPass():
+		llvm::FunctionPass(ID)
+	{}
+
+	virtual bool runOnFunction(llvm::Function& _func) override;
+};
+
+char LongJmpEliminationPass::ID = 0;
+
+bool LongJmpEliminationPass::runOnFunction(llvm::Function& _func)
+{
+	if (&_func != _func.getParent()->begin())
+		return false;
+
+	auto& mainFunc = _func;
+	auto& ctx = _func.getContext();
+	auto abortCode = llvm::ConstantInt::get(llvm::Type::getInt32Ty(ctx), -1);
+
+	auto& exitBB = mainFunc.back();
+	assert(exitBB.getName() == "Exit");
+	auto retPhi = llvm::cast<llvm::PHINode>(&exitBB.front());
+
+	auto modified = false;
+	for (auto bbIt = mainFunc.begin(); bbIt != mainFunc.end(); ++bbIt)
+	{
+		if (auto term = llvm::dyn_cast<llvm::UnreachableInst>(bbIt->getTerminator()))
+		{
+			auto longjmp = term->getPrevNode();
+			assert(llvm::isa<llvm::CallInst>(longjmp));
+			retPhi->addIncoming(abortCode, bbIt);
+			llvm::ReplaceInstWithInst(term, llvm::BranchInst::Create(&exitBB));
+			longjmp->eraseFromParent();
+			modified = true;
+		}
+	}
+
+	return modified;
+}
+
+}
+
 bool optimize(llvm::Module& _module)
 {
-	// TODO: Add pass for longjmp elimination
 	auto pm = llvm::legacy::PassManager{};
 	pm.add(llvm::createFunctionInliningPass(2, 2));
+	pm.add(new LongJmpEliminationPass{}); 				// TODO: Takes a lot of time with little effect
 	pm.add(llvm::createCFGSimplificationPass());
 	pm.add(llvm::createInstructionCombiningPass());
 	pm.add(llvm::createAggressiveDCEPass());
