@@ -106,9 +106,9 @@ bool LowerEVMPass::runOnBasicBlock(llvm::BasicBlock& _bb)
 	auto modified = false;
 	auto module = _bb.getParent()->getParent();
 	auto i512Ty = llvm::IntegerType::get(_bb.getContext(), 512);
-	for (auto it = _bb.begin(); it != _bb.end(); )
+	for (auto it = _bb.begin(); it != _bb.end(); ++it)
 	{
-		auto& inst = *it++;
+		auto& inst = *it;
 		llvm::Function* func = nullptr;
 		if (inst.getType() == Type::Word)
 		{
@@ -147,9 +147,8 @@ bool LowerEVMPass::runOnBasicBlock(llvm::BasicBlock& _bb)
 
 		if (func)
 		{
-			auto call = llvm::CallInst::Create(func, {inst.getOperand(0), inst.getOperand(1)}, "", &inst);
-			inst.replaceAllUsesWith(call);
-			inst.eraseFromParent();
+			auto call = llvm::CallInst::Create(func, {inst.getOperand(0), inst.getOperand(1)});
+			llvm::ReplaceInstWithInst(_bb.getInstList(), it, call);
 			modified = true;
 		}
 	}
