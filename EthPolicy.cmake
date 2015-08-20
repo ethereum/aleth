@@ -10,14 +10,19 @@ macro (eth_policy)
 	# CMake 2.8.12 and lower allowed the use of targets and files with double
 	# colons in target_link_libraries,
 	cmake_policy(SET CMP0028 OLD)
-		
-	# fix MACOSX_RPATH
-	cmake_policy(SET CMP0042 OLD)
 
-	# ignore COMPILE_DEFINITIONS_<Config> properties
-	cmake_policy(SET CMP0043 OLD)
+	if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 
-	# allow VERSION argument in project()
-	cmake_policy(SET CMP0048 NEW)
+		# fix MACOSX_RPATH
+		cmake_policy(SET CMP0042 OLD)
+
+		# ignore COMPILE_DEFINITIONS_<Config> properties
+		cmake_policy(SET CMP0043 OLD)
+
+		# allow VERSION argument in project()
+		cmake_policy(SET CMP0048 NEW)
+
+	endif()
+
 endmacro()
 
