@@ -12,7 +12,7 @@ endif()
 set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR})
 message(STATUS "CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
 
-# setup directory for cmake generated files and include it globally 
+# setup directory for cmake generated files and include it globally
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
 set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
 include_directories(${ETH_GENERATED_DIR})
@@ -82,7 +82,7 @@ if (JSONRPC)
 	message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
 	add_definitions(-DETH_JSONRPC)
 
- 	find_package(MHD) 
+	find_package(MHD)
 	message(" - microhttpd header: ${MHD_INCLUDE_DIRS}")
 	message(" - microhttpd lib   : ${MHD_LIBRARIES}")
 	message(" - microhttpd dll   : ${MHD_DLLS}")
@@ -142,11 +142,6 @@ message(" - jsonrpcstub location    : ${ETH_JSON_RPC_STUB}")
 # do not compile GUI
 if (GUI)
 
-# we need json rpc to build alethzero
-	if (NOT JSON_RPC_CPP_FOUND)
-		message (FATAL_ERROR "JSONRPC is required for GUI client")
-	endif()
-
 # find all of the Qt packages
 # remember to use 'Qt' instead of 'QT', cause unix is case sensitive
 # TODO make headless client optional
@@ -182,16 +177,16 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 # TODO hanlde other msvc versions or it will fail find them
 	set(Boost_COMPILER -vc120)
 # use static boost libraries *.lib
-	set(Boost_USE_STATIC_LIBS ON) 
+	set(Boost_USE_STATIC_LIBS ON)
 
 elseif (APPLE)
 
 # use static boost libraries *.a
-	set(Boost_USE_STATIC_LIBS ON) 
+	set(Boost_USE_STATIC_LIBS ON)
 
 elseif (UNIX)
 # use dynamic boost libraries .dll
-	set(Boost_USE_STATIC_LIBS OFF) 
+	set(Boost_USE_STATIC_LIBS OFF)
 
 endif()
 
@@ -205,108 +200,15 @@ if (APPLE)
 	include_directories(/usr/local/include)
 endif()
 
-
-function(eth_use_QtCore TARGET REQUIRED)
-    find_package(Qt5Core ${ETH_QT_VERSION} ${REQUIRED})
-    if (NOT Qt5Core_FOUND)
-        return()
-    endif()
-
-    set(Qt5Core_VERSION_MAJOR ${Qt5Core_VERSION_MAJOR} PARENT_SCOPE)
-    set_target_properties(${EXECUTABLE} PROPERTIES AUTOMOC ON)
-    if (APPLE)
-        set (MACDEPLOYQT_APP ${Qt5Core_DIR}/../../../bin/macdeployqt)
-        message(" - macdeployqt path: ${MACDEPLOYQT_APP}")
-    endif()
-    # we need to find path to windeployqt on windows
-    if (WIN32)
-        set (WINDEPLOYQT_APP ${Qt5Core_DIR}/../../../bin/windeployqt)
-        message(" - windeployqt path: ${WINDEPLOYQT_APP}")
-    endif()
-
-    if (APPLE)
-        find_program(ETH_APP_DMG appdmg)
-        message(" - appdmg location : ${ETH_APP_DMG}")
-    endif()
-
-
-    if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.6") AND NOT APPLE)
-        # Supress warnings for qt headers for clang+ccache
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
-    endif ()
-    target_link_libraries(${TARGET} Qt5::Core)
-    if (APPLE AND (NOT "${Qt5Core_VERSION_STRING}" VERSION_LESS "5.5"))
-        target_link_libraries(${EXECUTABLE} Qt5::DBus)
-    endif()
-endfunction()
-
-
-function(eth_use_QtWidgets TARGET REQUIRED)
-    eth_use_QtCore(${TARGET} ${REQUIRED})
-    find_package(Qt5Widgets ${ETH_QT_VERSION} ${REQUIRED})
-    if (NOT Qt5Widgets_FOUND)
-        return()
-    endif()
-    set(Qt5Core_VERSION_MAJOR ${Qt5Widgets_VERSION_MAJOR} PARENT_SCOPE)
-    set_target_properties(${EXECUTABLE} PROPERTIES AUTOUIC ON)
-    target_link_libraries(${TARGET} Qt5::Widgets)
-    if (APPLE AND (NOT "${Qt5Core_VERSION_STRING}" VERSION_LESS "5.5"))
-        target_link_libraries(${EXECUTABLE} Qt5::PrintSupport)
-    endif()
-endfunction()
-
-function(eth_use_QtWebEngine TARGET  REQUIRED)
-    eth_use_QtCore(${TARGET} ${REQUIRED})
-    find_package(Qt5WebEngine ${ETH_QT_VERSION} ${REQUIRED})
-    if (NOT Qt5WebEngine_FOUND)
-        return()
-    endif()
-    target_link_libraries(${TARGET} Qt5::WebEngine)
-    if (APPLE AND (NOT "${Qt5Core_VERSION_STRING}" VERSION_LESS "5.5"))
-        target_link_libraries(${EXECUTABLE} Qt5::WebEngineCore)
-    endif()
-endfunction()
-
-function(eth_use_QtWebEngineWidgets TARGET  REQUIRED)
-    eth_use_QtWidgets(${TARGET} ${REQUIRED})
-    find_package(Qt5WebEngineWidgets ${ETH_QT_VERSION} ${REQUIRED})
-    if (NOT Qt5WebEngineWidgets_FOUND)
-        return()
-    endif()
-    target_link_libraries(${TARGET} Qt5::WebEngineWidgets)
-endfunction()
-
-
-function(eth_use_WebThreeJsonRpc TARGET REQUIRED)
-    include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
-    include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-    target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${CURL_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${MHD_LIBRARIES})
-    if (DEFINED WIN32 AND NOT DEFINED CMAKE_COMPILER_IS_MINGW)
-        eth_copy_dlls(${EXECUTABLE} CURL_DLLS)
-    endif()
-    eth_install_executable(${EXECUTABLE} DLLS MHD_DLLS)
-endfunction()
-
-function(eth_use_ethCore TARGET)
-    find_package(Eth)
-    include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-    include_directories(${CPPETHEREUM_BUILD})
-    target_link_libraries(${EXECUTABLE} ${Boost_THREAD_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${Boost_RANDOM_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${Boost_FILESYSTEM_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${Boost_SYSTEM_LIBRARIES})
-    target_link_libraries(${EXECUTABLE} ${LEVELDB_LIBRARIES})	#TODO: use the correct database library according to cpp-ethereum
-    target_link_libraries(${EXECUTABLE} ${CRYPTOPP_LIBRARIES})
-    target_link_libraries(${TARGET} ${ETH_CORE_LIBRARIES})
-    if (UNIX)
-        target_link_libraries(${EXECUTABLE} pthread)
-    endif()
-    eth_install_executable(${EXECUTABLE} DLLS EVMJIT_DLLS OpenCL_DLLS)
-endfunction()
-
-function(eth_use_Solidity TARGET REQURIED)
-    target_link_libraries(${TARGET} ${ETH_SOLIDITY_LIBRARIES})
+function(eth_use TARGET REQUIRED)
+	foreach(MODULE ${ARGN})
+		string(REPLACE "::" ";" MODULE_PARTS ${MODULE})
+		list(GET MODULE_PARTS 0 MODULE_MAIN)
+		list(LENGTH MODULE_PARTS MODULE_LENGTH)
+		if (MODULE_LENGTH GREATER 1)
+			list(GET MODULE_PARTS 1 MODULE_SUB)
+		endif()
+		include(Use${MODULE_MAIN})
+		eth_apply(${TARGET} ${REQUIRED} ${MODULE_SUB})
+	endforeach()
 endfunction()
