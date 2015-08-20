@@ -35,11 +35,6 @@ llvm::Function* CompilerHelper::getMainFunction()
 	return nullptr;
 }
 
-llvm::CallInst* CompilerHelper::createCall(llvm::Function* _func, std::initializer_list<llvm::Value*> const& _args)
-{
-	return m_builder.CreateCall(_func, {_args.begin(), _args.size()});
-}
-
 
 RuntimeHelper::RuntimeHelper(RuntimeManager& _runtimeManager):
 	CompilerHelper(_runtimeManager.m_builder),

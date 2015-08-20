@@ -204,7 +204,7 @@ void RuntimeManager::exit(ReturnCode _returnCode)
 void RuntimeManager::abort(llvm::Value* _jmpBuf)
 {
 	auto longjmp = llvm::Intrinsic::getDeclaration(getModule(), llvm::Intrinsic::eh_sjlj_longjmp);
-	createCall(longjmp, {_jmpBuf});
+	m_builder.CreateCall(longjmp, {_jmpBuf});
 }
 
 llvm::Value* RuntimeManager::get(Instruction _inst)

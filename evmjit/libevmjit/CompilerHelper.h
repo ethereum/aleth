@@ -33,8 +33,6 @@ protected:
 	/// Reference to parent compiler IR builder
 	IRBuilder& m_builder;
 
-	llvm::CallInst* createCall(llvm::Function* _func, std::initializer_list<llvm::Value*> const& _args); // TODO: Remove. LLVM now does it the same way.
-
 	friend class RuntimeHelper;
 };
 

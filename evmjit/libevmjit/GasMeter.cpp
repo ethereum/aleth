@@ -189,7 +189,7 @@ void GasMeter::count(Instruction _inst)
 	if (!m_checkCall)
 	{
 		// Create gas check call with mocked block cost at begining of current cost-block
-		m_checkCall = createCall(m_gasCheckFunc, {m_runtimeManager.getGasPtr(), llvm::UndefValue::get(Type::Gas), m_runtimeManager.getJmpBuf()});
+		m_checkCall = m_builder.CreateCall(m_gasCheckFunc, {m_runtimeManager.getGasPtr(), llvm::UndefValue::get(Type::Gas), m_runtimeManager.getJmpBuf()});
 	}
 
 	m_blockCost += getStepCost(_inst);
@@ -206,7 +206,7 @@ void GasMeter::count(llvm::Value* _cost, llvm::Value* _jmpBuf, llvm::Value* _gas
 	}
 
 	assert(_cost->getType() == Type::Gas);
-	createCall(m_gasCheckFunc, {_gasPtr ? _gasPtr : m_runtimeManager.getGasPtr(), _cost, _jmpBuf ? _jmpBuf : m_runtimeManager.getJmpBuf()});
+	m_builder.CreateCall(m_gasCheckFunc, {_gasPtr ? _gasPtr : m_runtimeManager.getGasPtr(), _cost, _jmpBuf ? _jmpBuf : m_runtimeManager.getJmpBuf()});
 }
 
 void GasMeter::countExp(llvm::Value* _exponent)

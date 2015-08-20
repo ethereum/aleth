@@ -30,7 +30,7 @@ void Arith256::debug(llvm::Value* _value, char _c)
 		llvm::Type* argTypes[] = {Type::Word, m_builder.getInt8Ty()};
 		m_debug = llvm::Function::Create(llvm::FunctionType::get(Type::Void, argTypes, false), llvm::Function::ExternalLinkage, "debug", getModule());
 	}
-	createCall(m_debug, {m_builder.CreateZExtOrTrunc(_value, Type::Word), m_builder.getInt8(_c)});
+	m_builder.CreateCall(m_debug, {m_builder.CreateZExtOrTrunc(_value, Type::Word), m_builder.getInt8(_c)});
 }
 
 llvm::Function* Arith256::getMulFunc(llvm::Module& _module)
@@ -440,14 +440,14 @@ llvm::Function* Arith256::getExpFunc()
 
 		m_builder.SetInsertPoint(updateBB);
 		auto mul256Func = getMulFunc(*getModule());
-		auto r0 = createCall(mul256Func, {r, b});
+		auto r0 = m_builder.CreateCall(mul256Func, {r, b});
 		m_builder.CreateBr(continueBB);
 
 		m_builder.SetInsertPoint(continueBB);
 		auto r1 = m_builder.CreatePHI(Type::Word, 2, "r1");
 		r1->addIncoming(r, bodyBB);
 		r1->addIncoming(r0, updateBB);
-		auto b1 = createCall(mul256Func, {b, b});
+		auto b1 = m_builder.CreateCall(mul256Func, {b, b});
 		auto e1 = m_builder.CreateLShr(e, Constant::get(1), "e1");
 		m_builder.CreateBr(headerBB);
 
@@ -491,7 +491,7 @@ llvm::Value* Arith256::exp(llvm::Value* _arg1, llvm::Value* _arg2)
 		}
 	}
 
-	return createCall(getExpFunc(), {_arg1, _arg2});
+	return m_builder.CreateCall(getExpFunc(), {_arg1, _arg2});
 }
 
 }
