@@ -44,7 +44,7 @@ private:
 	llvm::BasicBlock* m_jumpTableBB = nullptr;
 
 	/// Main program function
-	llvm::Function* m_mainFunc = nullptr; // TODO: Remove
+	llvm::Function* m_mainFunc = nullptr;
 };
 
 }

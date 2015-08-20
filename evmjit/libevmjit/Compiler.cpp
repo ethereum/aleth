@@ -69,7 +69,7 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 		case Instruction::JUMP:
 		case Instruction::JUMPI:
 		case Instruction::RETURN:
-		case Instruction::STOP:
+		case Instruction::STOP: // FIXME: Afer stops we should skip all code until JUMPDEST, exception: JUMPI
 		case Instruction::SUICIDE:
 			isEnd = true;
 			break;
@@ -109,6 +109,7 @@ void Compiler::resolveJumps()
 			if (jump->getSuccessor(0) == m_jumpTableBB)
 			{
 				auto destIdx = llvm::cast<llvm::ValueAsMetadata>(jump->getMetadata(c_destIdxLabel)->getOperand(0))->getValue();
+				// TODO: LLVM's SimplifyCFG is not able to optimize that
 				if (auto constant = llvm::dyn_cast<llvm::ConstantInt>(destIdx))
 				{
 					// If destination index is a constant do direct jump to the destination block.

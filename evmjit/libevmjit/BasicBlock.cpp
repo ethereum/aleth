@@ -125,30 +125,25 @@ void LocalStack::finalize()
 	m_sp->setArgOperand(3, m_builder.getInt64(maxSize()));
 	m_sp->setArgOperand(4, m_builder.getInt64(size()));
 
-	auto blockTerminator = m_builder.GetInsertBlock()->getTerminator();
-	if (!blockTerminator || blockTerminator->getOpcode() != llvm::Instruction::Ret) // TODO: Always exit through exit block
+	if (auto term = m_builder.GetInsertBlock()->getTerminator())
+		m_builder.SetInsertPoint(term); // Insert before terminator
+
+	auto inputIt = m_input.rbegin();
+	auto localIt = m_local.begin();
+	for (ssize_t globalIdx = -m_input.size(); globalIdx < size(); ++globalIdx)
 	{
-		// Not needed in case of ret instruction. Ret invalidates the stack.
-		if (blockTerminator)
-			m_builder.SetInsertPoint(blockTerminator); // Insert before terminator
-
-		auto inputIt = m_input.rbegin();
-		auto localIt = m_local.begin();
-		for (ssize_t globalIdx = -m_input.size(); globalIdx < size(); ++globalIdx)
+		llvm::Value* item = nullptr;
+		if (globalIdx < -m_globalPops)
 		{
-			llvm::Value* item = nullptr;
-			if (globalIdx < -m_globalPops)
-			{
-				item = *inputIt++;	// update input items (might contain original value)
-				if (!item)			// some items are skipped
-					continue;
-			}
-			else
-				item = *localIt++;	// store new items
-
-			auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
-			m_builder.CreateAlignedStore(item, slot, 16); // TODO: Handle malloc alignment. Also for 32-bit systems.
+			item = *inputIt++;	// update input items (might contain original value)
+			if (!item)			// some items are skipped
+				continue;
 		}
+		else
+			item = *localIt++;	// store new items
+
+		auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
+		m_builder.CreateAlignedStore(item, slot, 16); // TODO: Handle malloc alignment. Also for 32-bit systems.
 	}
 }
 

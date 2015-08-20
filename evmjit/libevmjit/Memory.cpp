@@ -185,7 +185,7 @@ llvm::Value* Memory::getData()
 
 llvm::Value* Memory::getSize()
 {
-	return m_builder.CreateZExt(m_memory.size(), Type::Word, "msize"); // TODO: Allow placing i64 on stack
+	return m_builder.CreateZExt(m_memory.size(), Type::Word, "msize");
 }
 
 llvm::Value* Memory::getBytePtr(llvm::Value* _index)
