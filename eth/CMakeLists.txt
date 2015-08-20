@@ -34,8 +34,8 @@ if (JSONRPC)
 	endif()
 endif()
 
-jsonrcpstub_client_create(farm.json Farm)
-jsonrcpstub_client_create(phonehome.json PhoneHome)
+jsonrcpstub_client_create(farm.json Farm Farm)
+jsonrcpstub_client_create(phonehome.json PhoneHome PhoneHome)
 
 target_link_libraries(${EXECUTABLE} webthree)
 target_link_libraries(${EXECUTABLE} ethash)
