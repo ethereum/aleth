@@ -71,7 +71,6 @@ bool LongJmpEliminationPass::runOnFunction(llvm::Function& _func)
 
 bool optimize(llvm::Module& _module)
 {
-	// TODO: Add pass for longjmp elimination
 	auto pm = llvm::legacy::PassManager{};
 	pm.add(llvm::createFunctionInliningPass(2, 2));
 	pm.add(new LongJmpEliminationPass{}); 				// TODO: Takes a lot of time with little effect
