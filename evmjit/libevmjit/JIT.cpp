@@ -159,7 +159,7 @@ ExecFunc JITImpl::compile(byte const* _code, uint64_t _codeSize, h256 const& _co
 	{
 		// TODO: Listener support must be redesigned. These should be a feature of JITImpl
 		//listener->stateChanged(ExecState::Compilation);
-		assert(_code || !_codeSize); //TODO: Is it good idea to execute empty code?
+		assert(_code || !_codeSize);
 		module = Compiler{{}}.compile(_code, _code + _codeSize, name);
 
 		if (g_optimize)
