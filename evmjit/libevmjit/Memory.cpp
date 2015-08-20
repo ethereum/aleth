@@ -159,20 +159,20 @@ llvm::Function* Memory::getStoreByteFunc()
 llvm::Value* Memory::loadWord(llvm::Value* _addr)
 {
 	require(_addr, Constant::get(Type::Word->getPrimitiveSizeInBits() / 8));
-	return createCall(getLoadWordFunc(), {getRuntimeManager().getMem(), _addr});
+	return m_builder.CreateCall(getLoadWordFunc(), {getRuntimeManager().getMem(), _addr});
 }
 
 void Memory::storeWord(llvm::Value* _addr, llvm::Value* _word)
 {
 	require(_addr, Constant::get(Type::Word->getPrimitiveSizeInBits() / 8));
-	createCall(getStoreWordFunc(), {getRuntimeManager().getMem(), _addr, _word});
+	m_builder.CreateCall(getStoreWordFunc(), {getRuntimeManager().getMem(), _addr, _word});
 }
 
 void Memory::storeByte(llvm::Value* _addr, llvm::Value* _word)
 {
 	require(_addr, Constant::get(Type::Byte->getPrimitiveSizeInBits() / 8));
 	auto byte = m_builder.CreateTrunc(_word, Type::Byte, "byte");
-	createCall(getStoreByteFunc(), {getRuntimeManager().getMem(), _addr, byte});
+	m_builder.CreateCall(getStoreByteFunc(), {getRuntimeManager().getMem(), _addr, byte});
 }
 
 llvm::Value* Memory::getData()
@@ -200,7 +200,7 @@ void Memory::require(llvm::Value* _offset, llvm::Value* _size)
 		if (!constant->getValue())
 			return;
 	}
-	createCall(getRequireFunc(), {getRuntimeManager().getMem(), _offset, _size, getRuntimeManager().getJmpBuf(), getRuntimeManager().getGasPtr()});
+	m_builder.CreateCall(getRequireFunc(), {getRuntimeManager().getMem(), _offset, _size, getRuntimeManager().getJmpBuf(), getRuntimeManager().getGasPtr()});
 }
 
 void Memory::copyBytes(llvm::Value* _srcPtr, llvm::Value* _srcSize, llvm::Value* _srcIdx,
