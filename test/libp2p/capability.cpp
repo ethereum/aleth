@@ -102,9 +102,7 @@ BOOST_AUTO_TEST_CASE(capability)
 	if (test::Options::get().nonetwork)
 		return;
 
-	if (g_logVerbosity != -1)
-		VerbosityHolder verbosityHolder(10);
-
+	VerbosityHolder verbosityHolder(10);
 	cnote << "Testing Capability...";
 
 	const char* const localhost = "127.0.0.1";

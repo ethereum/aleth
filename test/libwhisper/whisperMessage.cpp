@@ -82,8 +82,7 @@ BOOST_AUTO_TEST_SUITE(whisperMessage)
 
 BOOST_AUTO_TEST_CASE(seal)
 {
-	if (g_logVerbosity != -1)
-		VerbosityHolder setTemporaryLevel(10);
+	VerbosityHolder setTemporaryLevel(10);
 
 	cnote << "Testing Envelope encryption...";
 
@@ -93,8 +92,7 @@ BOOST_AUTO_TEST_CASE(seal)
 
 BOOST_AUTO_TEST_CASE(work)
 {
-	if (g_logVerbosity != -1)
-		VerbosityHolder setTemporaryLevel(10);
+	VerbosityHolder setTemporaryLevel(10);
 	cnote << "Testing proof of work...";
 
 	Secret zero;

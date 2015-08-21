@@ -47,8 +47,7 @@ BOOST_AUTO_TEST_CASE(topic)
 		return;
 
 	cnote << "Testing Whisper...";
-	if (g_logVerbosity != -1)
-		VerbosityHolder setTemporaryLevel(0);
+	VerbosityHolder setTemporaryLevel(0);
 
 	uint16_t port1 = 30311;
 	Host host1("Test", NetworkPreferences("127.0.0.1", port1, false));
@@ -231,6 +230,7 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 	cnote << "Testing Whisper async forwarding...";
 	VerbosityHolder setTemporaryLevel(2);
+
 	unsigned const TestValue = 8456;
 	unsigned result = 0;
 	bool done = false;
@@ -394,9 +394,7 @@ BOOST_AUTO_TEST_CASE(selfAddressed)
 	if (test::Options::get().nonetwork)
 		return;
 
-	if (g_logVerbosity != -1)
-		VerbosityHolder setTemporaryLevel(10);
-
+	VerbosityHolder setTemporaryLevel(10);
 	cnote << "Testing self-addressed messaging with bloom filter matching...";
 
 	char const* text = "deterministic pseudorandom test";
