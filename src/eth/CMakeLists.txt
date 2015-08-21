@@ -8,11 +8,16 @@ set(EXECUTABLE eth)
 file(GLOB HEADERS "*.h")
 
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+add_definitions(-DETH_JSONRPC)
 
+find_package (json_rpc_cpp 0.4 REQUIRED)
 target_link_libraries(${EXECUTABLE} webthree)
 target_link_libraries(${EXECUTABLE} web3jsonrpc)
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
 
+
+# eth_use(${EXECUTABLE} REQUIRED EthCore WebThreeJsonRpc)
 eth_use(${EXECUTABLE} REQUIRED EthCore)
 
 if (DEFINED WIN32 AND NOT DEFINED CMAKE_COMPILER_IS_MINGW)
