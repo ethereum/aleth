@@ -3,31 +3,18 @@ set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
 
-include_directories(BEFORE ..)
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-
-if (JSCONSOLE)
-	include_directories(${V8_INCLUDE_DIRS})
-endif()
-
 set(EXECUTABLE eth)
 
 file(GLOB HEADERS "*.h")
 
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
+target_link_libraries(${EXECUTABLE} webthree)
 target_link_libraries(${EXECUTABLE} web3jsonrpc)
-if (JSCONSOLE)
-	add_definitions(-DETH_JSCONSOLE)
-	target_link_libraries(${EXECUTABLE} ${jsconsole_LIBRARY})
-	message("linking jsconsole: ${jsconsole_LIBRARY}")
-	target_link_libraries(${EXECUTABLE} ${jsengine_LIBRARY})
-	target_link_libraries(${EXECUTABLE} ${V8_LIBRARIES})
-endif()
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${Boost_REGEX_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${CURL_LIBRARIES})
+
+eth_use(${EXECUTABLE} REQUIRED EthCore)
+
 if (DEFINED WIN32 AND NOT DEFINED CMAKE_COMPILER_IS_MINGW)
 	eth_copy_dlls("${EXECUTABLE}" CURL_DLLS)
 endif()
