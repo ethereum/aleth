@@ -104,6 +104,9 @@ public:
 	/// Clear everything.
 	void clear();
 
+	/// Stop all activity, leaves the class in limbo, waiting for destruction
+	void stop();
+
 	/// Return first block with an unknown parent.
 	h256 firstUnknown() const { ReadGuard l(m_lock); return m_unknownSet.size() ? *m_unknownSet.begin() : h256(); }
 

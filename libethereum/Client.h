@@ -366,7 +366,7 @@ public:
 		init(_host, _dbPath, _forceAction, _networkId);
 	}
 
-	virtual ~SpecialisedClient() { stopWorking(); }
+	virtual ~SpecialisedClient() { m_bq.stop(); stopWorking(); }
 
 	/// Get the object representing the current canonical blockchain.
 	CanonBlockChain<Sealer> const& blockChain() const { return m_bc; }
