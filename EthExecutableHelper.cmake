@@ -168,56 +168,56 @@ endmacro()
 
 macro(eth_package EXECUTABLE)
 
-    set (extra_macro_args ${ARGN})
-    set (options)
-    set (one_value_args OSX_ICON WIN_ICON NAME DESCRIPTION)
-    set (multi_value_args DLLS)
-    cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
+	set (extra_macro_args ${ARGN})
+	set (options)
+	set (one_value_args OSX_ICON WIN_ICON NAME DESCRIPTION)
+	set (multi_value_args DLLS)
+	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
 
-if (APPLE)
-    add_custom_target(appdmg
-        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-        COMMAND ${CMAKE_COMMAND}
-        -DAPP_DMG_EXE=${ETH_APP_DMG}
-        -DAPP_DMG_FILE=appdmg.json.in
-        -DAPP_DMG_ICON="${OSX_ICON}"
-        -DAPP_DMG_BACKGROUND="install-folder-bg.png"
-        -DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
-        -DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:${EXECUTABLE}>"
-        -P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
-    )
-endif ()
+	if (APPLE)
+		add_custom_target(appdmg
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			COMMAND ${CMAKE_COMMAND}
+			-DAPP_DMG_EXE=${ETH_APP_DMG}
+			-DAPP_DMG_FILE=appdmg.json.in
+			-DAPP_DMG_ICON="${OSX_ICON}"
+			-DAPP_DMG_BACKGROUND="install-folder-bg.png"
+			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
+			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:${EXECUTABLE}>"
+			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
+		)
+	endif ()
 
-if (WIN32)
-    # packaging stuff
-    include(InstallRequiredSystemLibraries)
-    set(CPACK_PACKAGE_NAME "${NAME}")
-    set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${DESCRIPTION}")
-    set(CPACK_PACKAGE_VENDOR "ethereum.org")
-    set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
-    set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-    set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-    set(CPACK_GENERATOR "NSIS")
+	if (WIN32)
+		# packaging stuff
+		include(InstallRequiredSystemLibraries)
+		set(CPACK_PACKAGE_NAME "${NAME}")
+		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${DESCRIPTION}")
+		set(CPACK_PACKAGE_VENDOR "ethereum.org")
+		set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
+		set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+		set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+		set(CPACK_GENERATOR "NSIS")
 
-    # nsis specific stuff
-    if (CMAKE_CL_64)
-        set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
-        set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION} (Win64)")
-    else ()
-        set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES")
-        set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
-    endif()
+		# nsis specific stuff
+		if (CMAKE_CL_64)
+			set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES64")
+			set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION} (Win64)")
+		else ()
+			set(CPACK_NSIS_INSTALL_ROOT "$PROGRAMFILES")
+			set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
+		endif()
 
-    set(CPACK_NSIS_DISPLAY_NAME "${NAME}")
-    set(CPACK_NSIS_HELP_LINK "https://github.com/ethereum/cpp-ethereum")
-    set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ethereum/cpp-ethereum")
-    set(CPACK_NSIS_CONTACT "ethereum.org")
-    set(CPACK_NSIS_MODIFY_PATH ON)
-    set(CPACK_NSIS_MUI_ICON "${WIN_ICON}")
-    set(CPACK_NSIS_MUI_UNIICON "${WIN_ICON}")
+		set(CPACK_NSIS_DISPLAY_NAME "${NAME}")
+		set(CPACK_NSIS_HELP_LINK "https://github.com/ethereum/cpp-ethereum")
+		set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ethereum/cpp-ethereum")
+		set(CPACK_NSIS_CONTACT "ethereum.org")
+		set(CPACK_NSIS_MODIFY_PATH ON)
+		set(CPACK_NSIS_MUI_ICON "${WIN_ICON}")
+		set(CPACK_NSIS_MUI_UNIICON "${WIN_ICON}")
 
-    include(CPack)
-endif (WIN32)
+		include(CPack)
+	endif (WIN32)
 
 endmacro()
 
