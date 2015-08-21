@@ -63,6 +63,7 @@ if (${SUBMODULE} STREQUAL "WebEngine")
 endif()
 
 if (${SUBMODULE} STREQUAL "WebEngineWidgets")
+	eth_use(${TARGET} ${REQUIRED} Qt::WebEngine)
 	eth_use(${TARGET} ${REQUIRED} Qt::Widgets)
 	find_package(Qt5WebEngineWidgets ${ETH_QT_VERSION} ${REQUIRED})
 	if (NOT Qt5WebEngineWidgets_FOUND)
