@@ -159,11 +159,12 @@ endmacro()
 
 macro (eth_name KEY VALUE)
 	if (NOT (APPLE OR WIN32))
-		string(TOLOWER ${VALUE} VALUE)
+		string(TOLOWER ${VALUE} LVALUE )
+		set(${KEY} ${LVALUE})
+	else()
+		set(${KEY} ${VALUE})
 	endif()
-	set(${KEY} ${VALUE})
 endmacro()
-
 
 macro(eth_package EXECUTABLE)
 
