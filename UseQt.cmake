@@ -8,13 +8,15 @@ if (${SUBMODULE} STREQUAL "Core")
 
 	set(Qt5Core_VERSION_MAJOR ${Qt5Core_VERSION_MAJOR} PARENT_SCOPE)
 	set_target_properties(${EXECUTABLE} PROPERTIES AUTOMOC ON)
+
 	if (APPLE)
-		set (MACDEPLOYQT_APP ${Qt5Core_DIR}/../../../bin/macdeployqt)
+		find_program(MACDEPLOYQT_APP macdeployqt)
 		message(" - macdeployqt path: ${MACDEPLOYQT_APP}")
 	endif()
+
 	# we need to find path to windeployqt on windows
 	if (WIN32)
-		set (WINDEPLOYQT_APP ${Qt5Core_DIR}/../../../bin/windeployqt)
+		find_program(WINDEPLOYQT_APP windeployqt)
 		message(" - windeployqt path: ${WINDEPLOYQT_APP}")
 	endif()
 
@@ -63,6 +65,7 @@ if (${SUBMODULE} STREQUAL "WebEngine")
 endif()
 
 if (${SUBMODULE} STREQUAL "WebEngineWidgets")
+	eth_use(${TARGET} ${REQUIRED} Qt::WebEngine)
 	eth_use(${TARGET} ${REQUIRED} Qt::Widgets)
 	find_package(Qt5WebEngineWidgets ${ETH_QT_VERSION} ${REQUIRED})
 	if (NOT Qt5WebEngineWidgets_FOUND)
