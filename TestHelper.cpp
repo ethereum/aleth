@@ -578,8 +578,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	auto& filename = Options::get().singleTestFile;
 	auto& testname = Options::get().singleTestName;
 
-	if (g_logVerbosity != -1)
-		VerbosityHolder sentinel(12);
+	VerbosityHolder sentinel(12);
 
 	try
 	{
