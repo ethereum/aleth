@@ -795,6 +795,11 @@ RLPStream createFullBlockFromHeader(BlockHeader const& _bi, bytes const& _txs, b
 
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
+BOOST_AUTO_TEST_CASE(bcRandom)
+{
+	dev::test::executeTests("bl201507071825GO", "/BlockchainTests/RandomTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
 	if (!test::Options::get().fillTests)
