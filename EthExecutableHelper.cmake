@@ -46,17 +46,19 @@ endmacro()
 macro(eth_copy_dll EXECUTABLE DLL)
 	# dlls must be unsubstitud list variable (without ${}) in format
 	# optimized;path_to_dll.dll;debug;path_to_dlld.dll 
-	list(GET ${DLL} 1 DLL_RELEASE)
-	list(GET ${DLL} 3 DLL_DEBUG)
-	add_custom_command(TARGET ${EXECUTABLE}
-		POST_BUILD 
-		COMMAND ${CMAKE_COMMAND} ARGS 
-		-DDLL_RELEASE="${DLL_RELEASE}" 
-		-DDLL_DEBUG="${DLL_DEBUG}" 
-		-DCONF="$<CONFIGURATION>"
-		-DDESTINATION="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}" 
-		-P "${ETH_SCRIPTS_DIR}/copydlls.cmake"
-	)
+	if(WIN32)
+		list(GET ${DLL} 1 DLL_RELEASE)
+		list(GET ${DLL} 3 DLL_DEBUG)
+		add_custom_command(TARGET ${EXECUTABLE}
+			POST_BUILD 
+			COMMAND ${CMAKE_COMMAND} ARGS 
+			-DDLL_RELEASE="${DLL_RELEASE}" 
+			-DDLL_DEBUG="${DLL_DEBUG}" 
+			-DCONF="$<CONFIGURATION>"
+			-DDESTINATION="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}" 
+			-P "${ETH_SCRIPTS_DIR}/copydlls.cmake"
+		)
+	endif()
 endmacro()
 
 macro(eth_copy_dlls EXECUTABLE)
