@@ -74,6 +74,7 @@ private:
 
 	code_iterator m_codeBegin = {};
 	code_iterator m_codeEnd = {};
+	llvm::Value* m_codePtr = nullptr;
 };
 
 }

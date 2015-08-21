@@ -234,7 +234,9 @@ llvm::Value* RuntimeManager::getCode()
 {
 	// OPT Check what is faster
 	//return get(RuntimeData::Code);
-	return m_builder.CreateGlobalStringPtr({reinterpret_cast<char const*>(m_codeBegin), static_cast<size_t>(m_codeEnd - m_codeBegin)}, "code");
+	if (!m_codePtr)
+		m_codePtr = m_builder.CreateGlobalStringPtr({reinterpret_cast<char const*>(m_codeBegin), static_cast<size_t>(m_codeEnd - m_codeBegin)}, "code");
+	return m_codePtr;
 }
 
 llvm::Value* RuntimeManager::getCodeSize()
