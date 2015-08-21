@@ -57,7 +57,10 @@ public:
 	TestBlock& operator = (TestBlock const& _original);
 	TestBlock(json_spirit::mObject& _blockObj, json_spirit::mObject& _stateObj);
 	void addTransaction(TestTransaction const& _tr);
+	void addUncle(TestBlock const& _uncle);
 	void mine(TestBlockChain const& bc);
+
+	//TestFunction!!!
 	void overwriteBlockHeader(mObject const& _blObj, const BlockHeader& _parent);
 
 	bytes const& getBytes() const { return m_bytes; }
@@ -77,6 +80,7 @@ private:
 
 private:
 	BlockHeader m_blockHeader;
+	vector<BlockHeader> m_uncles;
 	State m_state;
 	TransactionQueue m_transactionQueue;
 	bytes m_bytes;

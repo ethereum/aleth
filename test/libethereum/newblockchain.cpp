@@ -57,6 +57,11 @@ void TestBlock::addTransaction(TestTransaction const& _tr)
 		cnote << "Test block failed importing transaction\n";
 }
 
+void TestBlock::addUncle(TestBlock const& _uncle)
+{
+	m_uncles.push_back(_uncle.getBlockHeader());
+}
+
 void TestBlock::mine(TestBlockChain const& bc)
 {
 	TestBlock const& genesisBlock = bc.getTestGenesis();
@@ -88,6 +93,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 	recalcBlockHeaderBytes();
 }
 
+//TestFunction
 void TestBlock::overwriteBlockHeader(mObject const& _blObj, const BlockHeader& _parent)
 {
 	BlockHeader& header = m_blockHeader;
@@ -221,11 +227,9 @@ bytes TestBlock::createBlockRLPFromFields(mObject& _tObj, h256 const& _stateRoot
 	return rlpStream.out();
 }
 
+//Form bytestream of a block with [header transactions uncles]
 void TestBlock::recalcBlockHeaderBytes()
 {
-	RLPStream blHeaderStream;
-	m_blockHeader.streamRLP(blHeaderStream, WithProof);
-
 	Transactions txList;
 	for (auto const& txi: m_transactionQueue.topTransactions(std::numeric_limits<unsigned>::max()))
 		txList.push_back(txi);
@@ -238,10 +242,27 @@ void TestBlock::recalcBlockHeaderBytes()
 		txStream.appendRaw(txrlp.out());
 	}
 
+	RLPStream uncleStream;
+	uncleStream.appendList(m_uncles.size());
+	for (unsigned i = 0; i < m_uncles.size(); ++i)
+	{
+		RLPStream uncleRlp;
+		m_uncles[i].streamRLP(uncleRlp);
+		uncleStream.appendRaw(uncleRlp.out());
+	}
+
+	if (m_uncles.size()) // update unclehash in case of invalid uncles
+	{
+		m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
+		updatePoW(m_blockHeader);
+	}
+	RLPStream blHeaderStream;
+	m_blockHeader.streamRLP(blHeaderStream, WithProof);
+
 	RLPStream ret(3);
 	ret.appendRaw(blHeaderStream.out()); //block header
 	ret.appendRaw(txStream.out());		 //transactions
-	ret.appendRaw(RLPEmptyList);		 //uncles
+	ret.appendRaw(uncleStream.out());	 //uncles
 
 	m_blockHeader.verifyInternals(&ret.out());
 	m_bytes = ret.out();
@@ -313,18 +334,26 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 		{
 			TBOOST_REQUIRE(o.count("blocks"));
 
-			TestBlockChain blockchain(genesisBlock);
+			mArray blArray;
 			size_t importBlockNumber = 0;
+			vector<TestBlock> importedBlocks;
 			for (auto const& bl: o["blocks"].get_array())
 			{
+				TestBlockChain blockchain(genesisBlock);
+
 				mObject blObj = bl.get_obj();
 				if (blObj.count("blocknumber") > 0)
 					importBlockNumber = max((int)toInt(blObj["blocknumber"]), 1);
 				else
 					importBlockNumber++;
 
+				//Restore blockchain up to block.number
+				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
+					blockchain.addBlock(importedBlocks.at(i));
+
 				TestBlock block;
 
+				//Import Transactions
 				TBOOST_REQUIRE(blObj.count("transactions"));
 				for (auto const& txObj: blObj["transactions"].get_array())
 				{
@@ -332,7 +361,43 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 					block.addTransaction(transaction);
 				}
 
-				//IMPORT UNCLES
+				//Import Uncles
+				vector<TestBlock> uncles;
+				for (auto const& uHObj: _blObj.at("uncleHeaders").get_array())
+				{
+					mObject emptyState;
+					TestBlock uncle(uHObj.get_obj(), emptyState);
+					uncles.push_back(uncle);
+
+					changeUncleHeader()
+
+					block.addUncle(uncle);
+				}
+				/*vector<BlockHeader> vBiUncles;
+				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
+
+				BlockQueue uncleBlockQueue;
+				uncleBlockQueue.setChain(bc);
+				uncleList uncleBlockQueueList;
+				cnote << "import uncle in blockQueue";
+				for (size_t i = 0; i < vBiUncles.size(); i++)
+				{
+					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
+					try
+					{
+						uncleBlockQueue.import(&uncle.out(), false);
+						uncleBlockQueueList.push_back(uncle.out());
+						// wait until block is verified
+						this_thread::sleep_for(chrono::seconds(1));
+					}
+					catch(...)
+					{
+						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
+					}
+				}*/
+
+				bc.sync(uncleBlockQueue, state.db(), 4);
+
 
 				block.mine(blockchain);
 				TestBlock alterBlock(block);
@@ -346,60 +411,29 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 				//if (blObj.count("blockHeader") && blObj["blockHeader"].get_obj().count("bruncle"))
 				//	current_BlockHeader.populateFromParent(vBiBlocks[vBiBlocks.size() -1]);
 
-				/*RLPStream uncleStream;
-				uncleStream.appendList(vBiUncles.size());
-				for (unsigned i = 0; i < vBiUncles.size(); ++i)
-				{
-					RLPStream uncleRlp;
-					vBiUncles[i].streamRLP(uncleRlp);
-					uncleStream.appendRaw(uncleRlp.out());
-				}
-
-				if (vBiUncles.size())
-				{
-					// update unclehash in case of invalid uncles
-					current_BlockHeader.setSha3Uncles(sha3(uncleStream.out()));
-					updatePoW(current_BlockHeader);
-				}*/
-
 				// write block header
 				//mObject oBlockHeader;
 				//writeBlockHeaderToJson(oBlockHeader, current_BlockHeader);
 				//blObj["blockHeader"] = oBlockHeader;
-				//vBiBlocks.push_back(current_BlockHeader);
 
 				//blObj["rlp"] = toHex(blockRLP.out(), 2, HexPrefix::Add);
 				compareBlocks(block, alterBlock);
+				try
+				{
+					blockchain.addBlock(alterBlock);
+					trueBc.addBlock(alterBlock);
 
-
-					blockchain.addBlock(block);
-
-
-/*
-					//there we get new blockchain status in state which could have more difficulty than we have in trueState
-					//attempt to import new block to the true blockchain
-					trueBc.sync(uncleBlockQueue, trueState.db(), 4);
-					trueBc.attemptImport(blockRLP.out(), trueState.db());
-
-					if (block.blockData() == trueBc.block())
-						trueState = block.state();
-
-					blockSet newBlock;
-					newBlock.first = blockRLP.out();
-					newBlock.second = uncleBlockQueueList;
-					if (importBlockNumber < blockSets.size())
+					if (importBlockNumber < importedBlocks.size())
 					{
-						//make new correct history of imported blocks
-						blockSets[importBlockNumber] = newBlock;
-						for (size_t i = importBlockNumber + 1; i < blockSets.size(); i++)
-							blockSets.pop_back();
+						importedBlocks[importBlockNumber] = alterBlock;
+						for (size_t i = importBlockNumber + 1; i < importedBlocks.size(); i++)
+							importedBlocks.pop_back();
 					}
 					else
-						blockSets.push_back(newBlock);
+						importedBlocks.push_back(alterBlock);
 				}
-				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (...)
-				{
+				{	// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 					cnote << "block is invalid!\n";
 					blObj.erase(blObj.find("blockHeader"));
 					blObj.erase(blObj.find("uncleHeaders"));
@@ -407,7 +441,6 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 				}
 				blArray.push_back(blObj);
 				this_thread::sleep_for(chrono::seconds(1));
-*/
 			}//each blocks
 		}//fillin
 	}//for tests
