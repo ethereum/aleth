@@ -30,7 +30,7 @@
 #include <libdevcrypto/Common.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "abstractwebthreestubserver.h"
+#include "AbstractWebThreeStubServer.h"
 #pragma GCC diagnostic pop
 
 
