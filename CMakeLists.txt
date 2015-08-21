@@ -59,7 +59,6 @@ set(D_VMTRACE OFF)
 set(D_PARANOID OFF)
 set(D_PROFILING OFF)
 set(D_ROCKSDB OFF)
-set(D_NOBOOST OFF)
 set(D_OLYMPIC OFF)
 set(D_MINER ON)
 set(D_ETHKEY ON)
@@ -174,10 +173,6 @@ function(configureProject)
 		add_definitions(-DETH_CURL)
 	endif()
 
-	if (NOBOOST)
-		add_definitions(-DNOBOOST)
-	endif()
-
 	if (OLYMPIC)
 		add_definitions(-DETH_OLYMPIC)
 	else()
@@ -275,6 +270,25 @@ macro(eth_format_option O)
 	endif()
 endmacro()
 
+macro(jsonrcpstub_client_create SPEC CLIENTNAME CLIENTFILENAME)
+	if (ETH_JSON_RPC_STUB)
+		add_custom_target(${SPEC}stub)
+		add_custom_command(
+		TARGET ${SPEC}stub
+		POST_BUILD
+		DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/${SPEC}"
+		WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+		COMMAND ${CMAKE_COMMAND} -DETH_SPEC_PATH="${CMAKE_CURRENT_SOURCE_DIR}/${SPEC}" -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+			-DETH_CLIENT_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+			-DETH_CLIENT_NAME=${CLIENTNAME}
+			-DETH_CLIENT_FILENAME=${CLIENTFILENAME}
+			-DETH_JSON_RPC_STUB="${ETH_JSON_RPC_STUB}"
+			-P "${ETH_SCRIPTS_DIR}/jsonrpcstub.cmake"
+			)
+		add_dependencies(${EXECUTABLE} ${SPEC}stub)
+	endif ()
+endmacro()
+
 # Normalise build options
 eth_format_option(PARANOID)
 eth_format_option(VMTRACE)
@@ -287,7 +301,6 @@ eth_format_option(PROFILING)
 eth_format_option(ROCKSDB)
 eth_format_option(GUI)
 eth_format_option(TESTS)
-eth_format_option(NOBOOST)
 eth_format_option(ROCKSDB)
 eth_format_option(TOOLS)
 eth_format_option(ETHKEY)
@@ -329,7 +342,6 @@ message("--                  Hardware identification support          ${CPUID_FO
 message("--                  HTTP Request support                     ${CURL_FOUND}")
 message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
 message("-- PROFILING        Profiling support                        ${PROFILING}")
-message("-- NOBOOST          No BOOST macros in test functions        ${NOBOOST}")
 message("-- FATDB            Full database exploring                  ${FATDB}")
 message("-- JSONRPC          JSON-RPC support                         ${JSONRPC}")
 message("-- USENPM           Javascript source building               ${USENPM}")

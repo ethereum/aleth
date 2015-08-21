@@ -75,8 +75,8 @@ bytes paddedRight(bytes _b, unsigned _l);
 bytes unpadded(bytes _s);
 /// Remove all 0 byte on the head of @a _s.
 bytes unpadLeft(bytes _s);
-/// Convert h256 into user-readable string (by directly using std::string constructor).
-std::string fromRaw(h256 _n, unsigned* _inc = nullptr);
+/// Convert h256 into user-readable string (by directly using std::string constructor). If it can't be interpreted as an ASCII string, empty string is returned.
+std::string fromRaw(h256 _n);
 
 template <unsigned N> FixedHash<N> jsToFixed(std::string const& _s)
 {
@@ -89,11 +89,6 @@ template <unsigned N> FixedHash<N> jsToFixed(std::string const& _s)
 	else
 		// Binary
 		return FixedHash<N>();	// FAIL
-}
-
-inline std::string jsToFixed(double _s)
-{
-	return toJS(u256(_s * (double)(u256(1) << 128)));
 }
 
 template <unsigned N> boost::multiprecision::number<boost::multiprecision::cpp_int_backend<N * 8, N * 8, boost::multiprecision::unsigned_magnitude, boost::multiprecision::unchecked, void>> jsToInt(std::string const& _s)
@@ -111,9 +106,14 @@ template <unsigned N> boost::multiprecision::number<boost::multiprecision::cpp_i
 
 inline u256 jsToU256(std::string const& _s) { return jsToInt<32>(_s); }
 
+/// Convert a string representation of a number to an int
+/// String can be a normal decimal number, or a hex prefixed by 0x or 0X, or an octal if prefixed by 0
+/// Returns 0 in case of failure
 inline int jsToInt(std::string const& _s)
 {
-	return std::stoi(_s, nullptr, 0);
+	int ret = 0;
+	DEV_IGNORE_EXCEPTIONS(ret = std::stoi(_s, nullptr, 0));
+	return ret;
 }
 
 inline std::string jsToDecimal(std::string const& _s)

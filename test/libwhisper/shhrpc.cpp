@@ -29,7 +29,7 @@
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <test/TestHelper.h>
-#include <test/libweb3jsonrpc/webthreestubclient.h>
+#include <test/libweb3jsonrpc/WebThreeStubClient.h>
 #include <libethcore/KeyManager.h>
 #include <libp2p/Common.h>
 #include <libwhisper/WhisperHost.h>
@@ -60,7 +60,7 @@ struct Setup
 			setup = true;
 			NetworkPreferences nprefs(std::string(), c_web3port, false);
 			web3 = new WebThreeDirect(c_version, "", WithExisting::Trust, {"shh"}, nprefs);
-			web3->setIdealPeerCount(1);
+			web3->setIdealPeerCount(9);
 			auto server = new jsonrpc::HttpServer(8080);
 			vector<KeyPair> v;
 			KeyManager keyMan;
@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(serverBasic)
 	BOOST_REQUIRE('0' == s[0] && 'x' == s[1]);
 
 	s = jsonrpcServer->net_peerCount();
-	BOOST_REQUIRE_EQUAL(s, "0x0");
+	BOOST_REQUIRE(!s.empty());
 
 	KeyPair src = KeyPair::create();
 	KeyPair dst = KeyPair::create();
@@ -350,8 +350,15 @@ BOOST_AUTO_TEST_CASE(server)
 	string sess2("session number two");
 	jsonrpcServer->addSession(sess2, permissions);
 	
-	b = jsonrpcServer->admin_web3_setVerbosity(5, sess1);
+	int newVerbosity = 10;
+	int oldVerbosity = g_logVerbosity;
+	b = jsonrpcServer->admin_web3_setVerbosity(newVerbosity, sess1);
 	BOOST_REQUIRE(b);
+	BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
+
+	b = jsonrpcServer->admin_web3_setVerbosity(oldVerbosity, sess1);
+	BOOST_REQUIRE(b);
+	BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
 
 	b = jsonrpcServer->admin_net_start(sess1);
 	BOOST_REQUIRE(b);
@@ -376,9 +383,10 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(j["id"].asString(), web3->id().hex());
 	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), c_web3port);
 
+	string const ip = "127.0.0.1:30339";
 	uint16_t port2 = 30339;
 	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", port2, false));
-	host2.setIdealPeerCount(1);
+	host2.setIdealPeerCount(9);
 	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
 
@@ -397,7 +405,7 @@ BOOST_AUTO_TEST_CASE(server)
 	string node("enode://");
 	node += host2.id().hex();
 	node += "@";
-	node += "127.0.0.1:30339";
+	node += ip;
 	b = jsonrpcServer->admin_net_connect(node, sess2);
 
 	for (unsigned i = 0; i < 3000 && !host2.peerCount(); i += step)

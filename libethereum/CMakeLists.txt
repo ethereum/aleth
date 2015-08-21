@@ -34,6 +34,8 @@ if (JSONRPC)
 	endif()
 endif()
 
+jsonrcpstub_client_create(Sentinel.json dev::eth::Sentinel Sentinel)
+
 if (CMAKE_COMPILER_IS_MINGW)
 	target_link_libraries(${EXECUTABLE} ssp shlwapi)
 endif()
