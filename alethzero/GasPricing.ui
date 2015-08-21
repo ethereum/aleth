@@ -30,7 +30,7 @@
    <item row="4" column="0" colspan="2">
     <widget class="QLabel" name="label5_3">
      <property name="text">
-      <string>&amp;Bid: The minimum grice of gas that is accepting into a block which we mine.</string>
+      <string>&amp;Bid: The minimum price of gas that is accepting into a block which we mine.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
@@ -86,7 +86,7 @@
    <item row="0" column="0" colspan="2">
     <widget class="QLabel" name="label5_2">
      <property name="text">
-      <string>&amp;Ask: The minimum grice of gas that is accepting into a block which we mine.</string>
+      <string>&amp;Ask: The minimum price of gas that is accepting into a block which we mine.</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
