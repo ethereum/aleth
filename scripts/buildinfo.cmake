@@ -43,6 +43,6 @@ set(OUTFILE "${ETH_DST_DIR}/BuildInfo.h")
 
 configure_file("${INFILE}" "${TMPFILE}")
 
-include("${ETH_SOURCE_DIR}/cmake/EthUtils.cmake")
+include("${ETH_CMAKE_DIR}/EthUtils.cmake")
 replace_if_different("${TMPFILE}" "${OUTFILE}" CREATE)
 
