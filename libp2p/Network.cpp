@@ -208,19 +208,17 @@ bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses
 bi::tcp::endpoint Network::resolveHost(string const& _addr)
 {
 	static boost::asio::io_service s_resolverIoService;
+
 	vector<string> split;
 	boost::split(split, _addr, boost::is_any_of(":"));
-	int givenPort;
+	unsigned port = dev::p2p::c_defaultIPPort;
+
 	try
 	{
-		givenPort = stoi(split.at(1));
+		if (split.size() > 1)
+			port = static_cast<unsigned>(stoi(split.at(1)));
 	}
-	catch (...)
-	{
-		clog(NetWarn) << "Error resolving host address..." << LogTag::Url << _addr << ". Could not find a port after ':'";
-		return bi::tcp::endpoint();
-	}
-	unsigned port = split.size() > 1 ? givenPort : dev::p2p::c_defaultIPPort;
+	catch(...) {}
 
 	boost::system::error_code ec;
 	bi::address address = bi::address::from_string(split[0], ec);
