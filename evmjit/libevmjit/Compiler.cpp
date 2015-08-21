@@ -103,33 +103,42 @@ std::vector<BasicBlock> Compiler::createBasicBlocks(code_iterator _codeBegin, co
 
 void Compiler::resolveJumps()
 {
+	auto jumpTable = llvm::cast<llvm::SwitchInst>(m_jumpTableBB->getTerminator());
+	auto jumpTableInput = llvm::cast<llvm::PHINode>(m_jumpTableBB->begin());
+
 	// Iterate through all EVM instructions blocks (skip first one and last 4 - special blocks).
 	for (auto it = std::next(m_mainFunc->begin()), end = std::prev(m_mainFunc->end(), 4); it != end; ++it)
 	{
-		auto jumpTable = llvm::cast<llvm::SwitchInst>(m_jumpTableBB->getTerminator());
-		auto jumpTableInput = llvm::cast<llvm::PHINode>(m_jumpTableBB->begin());
 		auto nextBlock = it->getNextNode(); // If the last code block, that will be "stop" block.
 		auto term = it->getTerminator();
+		llvm::BranchInst* jump = nullptr;
 
 		if (!term) // Block may have no terminator if the next instruction is a jump destination.
 			IRBuilder{it}.CreateBr(nextBlock);
-		else if (auto jump = llvm::dyn_cast<llvm::BranchInst>(term))
-			if (jump->getSuccessor(0) == m_jumpTableBB)
+		else if ((jump = llvm::dyn_cast<llvm::BranchInst>(term)) && jump->getSuccessor(0) == m_jumpTableBB)
+		{
+			auto destIdx = llvm::cast<llvm::ValueAsMetadata>(jump->getMetadata(c_destIdxLabel)->getOperand(0))->getValue();
+			if (auto constant = llvm::dyn_cast<llvm::ConstantInt>(destIdx))
 			{
-				auto destIdx = llvm::cast<llvm::ValueAsMetadata>(jump->getMetadata(c_destIdxLabel)->getOperand(0))->getValue();
-				// TODO: LLVM's SimplifyCFG is not able to optimize that
-				if (auto constant = llvm::dyn_cast<llvm::ConstantInt>(destIdx))
-				{
-					// If destination index is a constant do direct jump to the destination block.
-					auto bb = jumpTable->findCaseValue(constant).getCaseSuccessor();
-					jump->setSuccessor(0, bb);
-				}
-				else
-					jumpTableInput->addIncoming(destIdx, it); // Fill up PHI node
-
-				if (jump->isConditional())
-					jump->setSuccessor(1, nextBlock); // Set next block for conditional jumps
+				// If destination index is a constant do direct jump to the destination block.
+				auto bb = jumpTable->findCaseValue(constant).getCaseSuccessor();
+				jump->setSuccessor(0, bb);
 			}
+			else
+				jumpTableInput->addIncoming(destIdx, it); // Fill up PHI node
+
+			if (jump->isConditional())
+				jump->setSuccessor(1, nextBlock); // Set next block for conditional jumps
+		}
+	}
+
+	auto simplifiedInput = jumpTableInput->getNumIncomingValues() == 0 ?
+			llvm::UndefValue::get(jumpTableInput->getType()) :
+			jumpTableInput->hasConstantValue();
+	if (simplifiedInput)
+	{
+		jumpTableInput->replaceAllUsesWith(simplifiedInput);
+		jumpTableInput->eraseFromParent();
 	}
 }
 
