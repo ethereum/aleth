@@ -28,7 +28,6 @@ namespace dev
 
 std::string prettyU256(u256 _n, bool _abridged)
 {
-	unsigned inc = 0;
 	std::string raw;
 	std::ostringstream s;
 	if (!(_n >> 64))
@@ -50,8 +49,8 @@ std::string prettyU256(u256 _n, bool _abridged)
 		else
 			s << _n << "(0x" << n << ")";
 	}
-	else if ((raw = fromRaw((h256)_n, &inc)).size())
-		return "\"" + raw + "\"" + (inc ? " + " + std::to_string(inc) : "");
+	else if (!(raw = fromRaw((h256)_n)).empty())
+		return "\"" + raw + "\"";
 	else
 		s << "" << (h256)_n;
 	return s.str();
