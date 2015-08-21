@@ -61,10 +61,16 @@ BlockQueue::BlockQueue():
 
 BlockQueue::~BlockQueue()
 {
+	stop();
+}
+
+void BlockQueue::stop()
+{
 	m_deleting = true;
 	m_moreToVerify.notify_all();
 	for (auto& i: m_verifiers)
 		i.join();
+	m_verifiers.clear();
 }
 
 void BlockQueue::clear()
