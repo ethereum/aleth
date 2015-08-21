@@ -28,6 +28,9 @@ if (JSONRPC)
 	endif()
 endif()
 
+jsonrcpstub_client_create(minerfarm.json FarmClient FarmClient)
+jsonrcpstub_client_create(minerphonehome.json PhoneHome PhoneHome)
+
 target_link_libraries(${EXECUTABLE} ethcore)
 target_link_libraries(${EXECUTABLE} ethash)
 target_link_libraries(${EXECUTABLE} devcrypto)
