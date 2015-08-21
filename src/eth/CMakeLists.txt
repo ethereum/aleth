@@ -17,8 +17,6 @@ file(GLOB HEADERS "*.h")
 
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-add_dependencies(${EXECUTABLE} BuildInfo.h)
-
 target_link_libraries(${EXECUTABLE} web3jsonrpc)
 if (JSCONSOLE)
 	add_definitions(-DETH_JSCONSOLE)

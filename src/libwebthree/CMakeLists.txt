@@ -15,8 +15,6 @@ file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-add_dependencies(${EXECUTABLE} BuildInfo.h)
-
 target_link_libraries(${EXECUTABLE} ${ethereum_LIBRARY})
 if (SERPENT)
 	target_link_libraries(${EXECUTABLE} ${serpent_LIBRARY})
