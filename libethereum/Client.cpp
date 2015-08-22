@@ -75,10 +75,10 @@ void Client::exitHandler(int)
 
 static const Addresses c_canaries =
 {
-	Address("4bb7e8ae99b645c2b7860b8f3a2328aae28bd80a"),		// gav
-	Address("1baf27b88c48dd02b744999cf3522766929d2b2a"),		// vitalik
-	Address("a8edb1ac2c86d3d9d78f96cd18001f60df29e52c"),		// jeff
-	Address("ace7813896a84d3f5f80223916a5353ab16e46e6")			// christoph
+	Address("539dd9aaf45c3feb03f9c004f4098bd3268fef6b"),		// gav
+	Address("c8158da0b567a8cc898991c2c2a073af67dc03a9"),		// vitalik
+	Address("959c33de5961820567930eccce51ea715c496f85"),		// jeff
+	Address("7a19a893f91d5b6e2cdf941b6acbba2cbcf431ee")			// christoph
 };
 
 Client::Client(std::shared_ptr<GasPricer> _gp):
