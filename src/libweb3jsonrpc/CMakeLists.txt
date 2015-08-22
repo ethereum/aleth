@@ -3,12 +3,7 @@ set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
 
-include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
-include_directories(BEFORE ..)
-include_directories(${MHD_INCLUDE_DIRS})
-include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-include_directories(${DB_INCLUDE_DIRS})
-include_directories(${Boost_INCLUDE_DIRS})
+
 
 set(EXECUTABLE web3jsonrpc)
 
@@ -16,16 +11,11 @@ file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-target_link_libraries(${EXECUTABLE} webthree)
-target_link_libraries(${EXECUTABLE} ${devcore_LIBRARY})
 target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${MHD_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${Boost_FILESYSTEM_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${Boost_SYSTEM_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${Boost_THREAD_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${Boost_RANDOM_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${LEVELDB_LIBRARIES})	#TODO: use the correct database library according to cpp-ethereum
+
+eth_use(${EXECUTABLE} REQUIRED EthCore)
 
 if (ETH_JSON_RPC_STUB)
 	add_custom_target(jsonrpcstub) 

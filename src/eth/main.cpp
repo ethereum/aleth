@@ -1058,9 +1058,6 @@ int main(int argc, char** argv)
 	else
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
-	if (useConsole && jsonRPCURL == -1)
-		jsonRPCURL = SensibleHttpPort;
-
 #if ETH_JSONRPC || !ETH_TRUE
 	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
 	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
