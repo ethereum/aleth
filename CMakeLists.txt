@@ -1,31 +1,34 @@
 # cmake global
 cmake_minimum_required(VERSION 2.8.12)
 
-set(PROJECT_VERSION "0.9.41")
-if (${CMAKE_VERSION} VERSION_GREATER 3.0)
-	cmake_policy(SET CMP0042 OLD) 	# fix MACOSX_RPATH
-	cmake_policy(SET CMP0048 NEW) 	# allow VERSION argument in project()
-	project(ethereum VERSION ${PROJECT_VERSION})
-else()
-	project(ethereum)
-endif()
+# Figure out environment.
+set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The the path to the cmake directory")
+list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
+
+# set cmake_policies
+include(EthPolicy)
+eth_policy()
+
+# project name and version should be set after cmake_policy CMP0048
+set(PROJECT_VERSION "0.9.42")
+project(ethereum VERSION ${PROJECT_VERSION})
 
 set(CMAKE_AUTOMOC ON)
 
 # link_directories interprate relative paths with respect to CMAKE_CURRENT_SOURCE_DIR
-cmake_policy(SET CMP0015 NEW)
+#cmake_policy(SET CMP0015 NEW)
 
 # let cmake autolink dependencies on windows
 # it's specified globally, cause qt libraries requires that on windows and they are also found globally
-cmake_policy(SET CMP0020 NEW)
+#cmake_policy(SET CMP0020 NEW)
 
 # 3.1 and above
-if ((${CMAKE_MAJOR_VERSION} GREATER 2) AND (${CMAKE_MINOR_VERSION} GREATER 0))
+#if ((${CMAKE_MAJOR_VERSION} GREATER 2) AND (${CMAKE_MINOR_VERSION} GREATER 0))
 	# implicitly dereference variables (deprecated in 3.1)
-	cmake_policy(SET CMP0054 NEW)
-endif()
+#	cmake_policy(SET CMP0054 NEW)
+#endif()
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+#list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 ######################################################################################################
 
@@ -162,14 +165,6 @@ function(configureProject)
 		add_definitions(-DETH_EVMJIT)
 	endif()
 
-	if (FATDB)
-		add_definitions(-DETH_FATDB)
-	endif()
-
-	if (GUI)
-		add_definitions(-DETH_GUI)
-	endif()
-
 	if (CPUID_FOUND)
 		add_definitions(-DETH_CPUID)
 	endif()
@@ -229,7 +224,7 @@ function(createBuildInfo)
 	add_custom_target(BuildInfo.h ALL
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}" -DETH_DST_DIR="${CMAKE_BINARY_DIR}"
-			-DETH_BUILD_TYPE="${_cmake_build_type}" -DETH_BUILD_PLATFORM="${ETH_BUILD_PLATFORM}"
+			-DETH_BUILD_TYPE="${_cmake_build_type}" -DETH_BUILD_PLATFORM="${ETH_BUILD_PLATFORM}" -DETH_CMAKE_DIR="${ETH_CMAKE_DIR}"
 			-DPROJECT_VERSION="${PROJECT_VERSION}" -DETH_FATDB="${FATDB}"
 			-P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)
@@ -486,12 +481,6 @@ if (TOOLS)
 
 endif()
 
-if (GUI)
-
-	add_subdirectory(libnatspec)
-	add_subdirectory(libjsqrc)
-	
-	add_subdirectory(alethzero)
-	add_subdirectory(mix)
-
-endif()
+#TODO: remove
+add_subdirectory(alethzero)
+add_subdirectory(mix)
