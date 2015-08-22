@@ -421,7 +421,6 @@ void Executive::finalize()
 
 	if (m_t)
 	{
-		//	cnote << "Refunding" << formatBalance(m_endGas * m_ext->gasPrice) << "to origin (=" << m_endGas << "*" << formatBalance(m_ext->gasPrice) << ")";
 		m_s.addBalance(m_t.sender(), m_gas * m_t.gasPrice());
 
 		u256 feesEarned = (m_t.gas() - m_gas) * m_t.gasPrice();
@@ -436,6 +435,8 @@ void Executive::finalize()
 	// Logs..
 	if (m_ext)
 		m_logs = m_ext->sub.logs;
+
+//	cwarn << "m_gas" << m_gas << "m_refunded" << m_refunded << "gasUsed()" << gasUsed();
 
 	if (m_res) // Collect results
 	{

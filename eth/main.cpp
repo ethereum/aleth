@@ -343,8 +343,9 @@ int main(int argc, char** argv)
 	u256 askPrice = DefaultGasPrice;
 	u256 bidPrice = DefaultGasPrice;
 
-	// javascript console
+	/// Javascript console stuff
 	bool useConsole = false;
+	strings preexecute;
 
 	/// Wallet password stuff
 	string masterPassword;
@@ -671,6 +672,10 @@ int main(int argc, char** argv)
 #if ETH_JSCONSOLE || !ETH_TRUE
 		else if (arg == "-i" || arg == "--interactive" || arg == "--console" || arg == "console")
 			useConsole = true;
+		else if ((arg == "--eval" || arg == "--exec") && i + 1 < argc)
+			preexecute.push_back(argv[++i]);
+		else if (arg == "--script" && i + 1 < argc)
+			preexecute.push_back(contentsString(argv[++i]));
 #endif
 		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
 			g_logVerbosity = atoi(argv[++i]);
@@ -1100,19 +1105,22 @@ int main(int argc, char** argv)
 		unsigned n = c->blockChain().details().number;
 		if (mining)
 			c->startMining();
-		if (useConsole)
+		if (useConsole || preexecute)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
 			JSLocalConsole console;
 			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
 			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
+			for (auto p: preexecute)
+				console.eval(p);
 			while (!Client::shouldExit())
 			{
-				console.readExpression();
+				if (useConsole)
+					console.readAndEval();
 				stopMiningAfterXBlocks(c, n, mining);
 			}
-			rpcServer->StopListening();
+		rpcServer->StopListening();
 #endif
 		}
 		else
