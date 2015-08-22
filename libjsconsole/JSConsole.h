@@ -41,7 +41,7 @@ public:
 	JSConsole(): m_engine(Engine()), m_printer(Printer(m_engine)) {}
 	~JSConsole() {}
 
-	void readExpression() const
+	void readAndEval() const
 	{
 		std::string cmd = "";
 		g_logPost = [](std::string const& a, char const*)

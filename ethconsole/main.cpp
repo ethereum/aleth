@@ -53,7 +53,7 @@ int main(int argc, char** argv)
 		console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
 
 	while (true)
-		console.readExpression();
+		console.readAndEval();
 
 	return 0;
 }
