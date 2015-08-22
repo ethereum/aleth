@@ -94,6 +94,7 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi)
 		res["miner"] = toJS(_bi.beneficiary());
 		res["stateRoot"] = toJS(_bi.stateRoot());
 		res["transactionsRoot"] = toJS(_bi.transactionsRoot());
+		res["receiptsRoot"] = toJS(_bi.receiptsRoot());
 		res["difficulty"] = toJS(_bi.difficulty());
 		res["number"] = toJS(_bi.number());
 		res["gasUsed"] = toJS(_bi.gasUsed());
