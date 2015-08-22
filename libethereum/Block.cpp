@@ -517,16 +517,43 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 					BOOST_THROW_EXCEPTION(UnknownParent());
 				uncleParent = BlockInfo(_bc.block(uncle.parentHash()));
 
-				if ((bigint)uncleParent.number() < (bigint)m_currentBlock.number() - 7)
+				// m_currentBlock.number() - uncle.number()		m_cB.n - uP.n()
+				// 1											2
+				// 2
+				// 3
+				// 4
+				// 5
+				// 6											7
+				//												(8 Invalid)
+				bigint depth = (bigint)m_currentBlock.number() - (bigint)uncle.number();
+				if (depth > 6)
 				{
 					UncleTooOld ex;
 					ex << errinfo_uncleNumber(uncle.number());
 					ex << errinfo_currentNumber(m_currentBlock.number());
 					BOOST_THROW_EXCEPTION(ex);
 				}
-				else if (uncle.number() == m_currentBlock.number())
+				else if (depth < 1)
 				{
 					UncleIsBrother ex;
+					ex << errinfo_uncleNumber(uncle.number());
+					ex << errinfo_currentNumber(m_currentBlock.number());
+					BOOST_THROW_EXCEPTION(ex);
+				}
+				// cB
+				// cB.p^1	    1 depth, valud uncle
+				// cB.p^2	---/  2
+				// cB.p^3	-----/  3
+				// cB.p^4	-------/  4
+				// cB.p^5	---------/  5
+				// cB.p^6	-----------/  6
+				// cB.p^7	-------------/
+				// cB.p^8
+				auto expectedUncleParent = _bc.details(m_currentBlock.parentHash()).parent;
+				for (unsigned i = 1; i < depth; expectedUncleParent = _bc.details(expectedUncleParent).parent, ++i) {}
+				if (expectedUncleParent != uncleParent.hash())
+				{
+					UncleParentNotInChain ex;
 					ex << errinfo_uncleNumber(uncle.number());
 					ex << errinfo_currentNumber(m_currentBlock.number());
 					BOOST_THROW_EXCEPTION(ex);
