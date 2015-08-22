@@ -1109,7 +1109,7 @@ int main(int argc, char** argv)
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
 			while (!Client::shouldExit())
 			{
-				console.readExpression();
+				console.readAndEval();
 				stopMiningAfterXBlocks(c, n, mining);
 			}
 			rpcServer->StopListening();
