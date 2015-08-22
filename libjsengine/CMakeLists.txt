@@ -11,7 +11,7 @@ set(EXECUTABLE jsengine)
 file(GLOB HEADERS "*.h")
 
 include(EthUtils)
-eth_add_resources("${CMAKE_CURRENT_SOURCE_DIR}/JSResources.cmake" "JSRES")
+eth_add_resources("${CMAKE_CURRENT_SOURCE_DIR}/JSResources.cmake" "JSRES" "${CMAKE_SOURCE_DIR}")
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS} ${JSRES})
 
 add_dependencies(${EXECUTABLE} BuildInfo.h)
