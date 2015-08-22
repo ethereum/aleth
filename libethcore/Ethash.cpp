@@ -62,8 +62,8 @@ h256 const& Ethash::BlockHeaderRaw::seedHash() const
 
 void Ethash::BlockHeaderRaw::populateFromHeader(RLP const& _header, Strictness _s)
 {
-	m_mixHash = _header[BlockInfo::BasicFields].toHash<h256>();
-	m_nonce = _header[BlockInfo::BasicFields + 1].toHash<h64>();
+	m_mixHash = _header[BlockInfo::BasicFields].toHash<h256>(RLP::VeryStrict);
+	m_nonce = _header[BlockInfo::BasicFields + 1].toHash<h64>(RLP::VeryStrict);
 
 	// check it hashes according to proof of work or that it's the genesis block.
 	if (_s == CheckEverything && m_parentHash && !verify())
