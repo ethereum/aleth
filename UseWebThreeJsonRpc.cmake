@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQUIRED)
 	eth_use(${TARGET} ${REQUIRED} EthCore)
-	set(W3_DIR         "${CMAKE_CURRENT_LIST_DIR}/../webthree"         CACHE PATH "The path to the webthree directory")
+	set(W3_DIR         "${PROJECT_SOURCE_DIR}/../webthree"         CACHE PATH "The path to the webthree directory")
 	set(W3_BUILD_DIR   "${W3_DIR}/${BUILD_DIR_NAME}")
 	set(CMAKE_LIBRARY_PATH ${W3_BUILD_DIR}/src;${CMAKE_LIBRARY_PATH})
 	include_directories(${W3_DIR})

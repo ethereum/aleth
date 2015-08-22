@@ -1,5 +1,5 @@
 function(eth_apply TARGET REQUIRED)
-	set(ETH_DIR             "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum"         CACHE PATH "The path to the cpp-ethereum directory")
+	set(ETH_DIR             "${PROJECT_SOURCE_DIR}/../cpp-ethereum"         CACHE PATH "The path to the cpp-ethereum directory")
 	set(ETH_BUILD_DIR_NAME  "build"                                             CACHE STRING "The name of the build directory in cpp-ethereum")
 	set(ETH_BUILD_DIR       "${ETH_DIR}/${ETH_BUILD_DIR_NAME}")
 	set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})
