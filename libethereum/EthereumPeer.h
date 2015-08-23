@@ -159,6 +159,7 @@ private:
 	h256Hash m_knownBlocks;					///< Blocks that the peer already knows about (that don't need to be sent to them).
 	Mutex x_knownTransactions;
 	h256Hash m_knownTransactions;			///< Transactions that the peer already knows of.
+	unsigned m_uknownBlocksReceived;		///< Number of unknown/future NewBlocks received from this peer
 };
 
 }
