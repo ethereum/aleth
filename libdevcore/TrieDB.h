@@ -29,6 +29,7 @@
 #include "SHA3.h"
 #include "MemoryDB.h"
 #include "TrieCommon.h"
+#include "BuildInfo.h"
 
 namespace dev
 {

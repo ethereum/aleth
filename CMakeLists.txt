@@ -204,11 +204,16 @@ function(createBuildInfo)
 	message("createBuildInfo()")
 
 	# Generate header file containing useful build information
+	if (FATDB)
+		set(FATDB10 1)
+	else()
+		set(FATDB10 0)
+	endif()
 	add_custom_target(BuildInfo.h ALL
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SOURCE_DIR="${CMAKE_SOURCE_DIR}" -DETH_DST_DIR="${CMAKE_BINARY_DIR}"
 			-DETH_BUILD_TYPE="${_cmake_build_type}" -DETH_BUILD_PLATFORM="${ETH_BUILD_PLATFORM}" -DETH_CMAKE_DIR="${ETH_CMAKE_DIR}"
-			-DPROJECT_VERSION="${PROJECT_VERSION}" -DETH_FATDB="${FATDB}"
+			-DPROJECT_VERSION="${PROJECT_VERSION}" -DETH_FATDB="${FATDB10}"
 			-P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)
 	include_directories(${CMAKE_CURRENT_BINARY_DIR})
