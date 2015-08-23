@@ -37,6 +37,9 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
+const unsigned c_maxIncomingNewHashes = 1024;
+const unsigned c_maxIncomingHashes = 8192;
+
 string toString(Asking _a)
 {
 	switch (_a)
@@ -304,6 +307,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 		setIdle();
+		if (itemCount > c_maxIncomingHashes)
+		{
+			disable("Too many hashes");
+			break;
+		}
 		h256s hashes(itemCount);
 		for (unsigned i = 0; i < itemCount; ++i)
 			hashes[i] = _r[i].toHash<h256>();
@@ -364,7 +372,14 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	case NewBlockHashesPacket:
 	{
 		unsigned itemCount = _r.itemCount();
+
 		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+
+		if (itemCount > c_maxIncomingNewHashes)
+		{
+			disable("Too many new hashes");
+			break;
+		}
 
 		h256s hashes(itemCount);
 		for (unsigned i = 0; i < itemCount; ++i)
