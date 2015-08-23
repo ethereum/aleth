@@ -418,6 +418,8 @@ public:
 		{
 			h = BlockHeader(_block, (_ir & ImportRequirements::ValidSeal) ? Strictness::CheckEverything : Strictness::QuickNonce);
 			h.verifyInternals(_block);
+			if (!!(_ir & ImportRequirements::PostGenesis) && (!h.parentHash() || h.number() == 0))
+					BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
 			if (!!(_ir & ImportRequirements::Parent))
 			{
 				bytes parentHeader(headerData(h.parentHash()));
