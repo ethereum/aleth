@@ -31,6 +31,7 @@
 #include "Exceptions.h"
 #include "Params.h"
 #include "BlockInfo.h"
+#include "BuildInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
