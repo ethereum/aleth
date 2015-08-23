@@ -57,7 +57,6 @@ public:
 			std::string const& _transaction = "{}",
 			std::string const& _method = ""
 			):
-		m_engine(Engine()),
 		m_abi(_abi),
 		m_transaction(_transaction),
 		m_method(_method)
@@ -72,8 +71,12 @@ public:
 	/// @returns evaluated natspec expression if it was valid, otherwise original expression
 	std::string evalExpression(std::string const& _expression)
 	{
-		auto value = m_engine.eval(_expression);
-		return m_printer.prettyPrint(value).cstr();
+		std::string call = "";
+		if (!m_abi.empty() && !m_transaction.empty() && !m_method.empty())
+			call = ", {abi:" + m_abi + ", transaction:" + m_transaction + ", method: '" + m_method + "' }";
+
+		auto value = m_engine.eval("natspec.evaluateExpressionSafe(\"" + _expression + "\"" + call + ")");
+		return m_printer.print(value).c_str();
 	}
 	
 private:
