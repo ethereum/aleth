@@ -60,8 +60,7 @@ public:
 	void addUncle(TestBlock const& _uncle);
 	void mine(TestBlockChain const& bc);
 
-	//TestFunction!!!
-	void overwriteBlockHeader(mObject const& _blObj, const BlockHeader& _parent);
+	void setBlockHeader(Ethash::BlockHeader const& _header);
 
 	bytes const& getBytes() const { return m_bytes; }
 	State const& getState() const { return m_state; }
@@ -69,6 +68,7 @@ public:
 	TransactionQueue const& getTransactionQueue() const { return m_transactionQueue; }
 	TransactionQueue & getTransactionQueue() { return m_transactionQueue; }
 	vector<TestTransaction> const& getTestTransactions() const { return m_testTransactions; }
+	vector<TestBlock> const& getUncles() const { return m_uncles; }
 	Address const& getBeneficiary() const { return m_blockHeader.beneficiary(); }
 
 private:
@@ -80,7 +80,7 @@ private:
 
 private:
 	BlockHeader m_blockHeader;
-	vector<BlockHeader> m_uncles;
+	vector<TestBlock> m_uncles;
 	State m_state;
 	TransactionQueue m_transactionQueue;
 	bytes m_bytes;
@@ -94,12 +94,14 @@ private:
 	typedef FullBlockChain<Ethash> FullBlockChainEthash;
 public:
 	TestBlockChain(TestBlock const& _genesisBlock);
-	void addBlock(TestBlock& _block);
+	void addBlock(TestBlock const& _block);
+	TestBlock const& getTopBlock() { return m_lastBlock; }
 	FullBlockChain<Ethash> const& getInterface() const { return *m_blockChain.get();}
 	TestBlock const& getTestGenesis() const { return m_genesisBlock; }
 private:
 	std::unique_ptr<FullBlockChainEthash> m_blockChain;
 	TestBlock m_genesisBlock;
+	TestBlock m_lastBlock;
 	TransientDirectory m_tempDirBlockchain;
 };
 

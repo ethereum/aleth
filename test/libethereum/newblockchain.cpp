@@ -59,7 +59,7 @@ void TestBlock::addTransaction(TestTransaction const& _tr)
 
 void TestBlock::addUncle(TestBlock const& _uncle)
 {
-	m_uncles.push_back(_uncle.getBlockHeader());
+	m_uncles.push_back(_uncle);
 }
 
 void TestBlock::mine(TestBlockChain const& bc)
@@ -89,63 +89,15 @@ void TestBlock::mine(TestBlockChain const& bc)
 	}
 
 	m_blockHeader = BlockHeader(block.blockData());
-	//copyStateFrom(block.state());  ???
+	copyStateFrom(block.state());
 	recalcBlockHeaderBytes();
 }
 
-//TestFunction
-void TestBlock::overwriteBlockHeader(mObject const& _blObj, const BlockHeader& _parent)
+void TestBlock::setBlockHeader(Ethash::BlockHeader const& _header)
 {
-	BlockHeader& header = m_blockHeader;
-	auto ho = _blObj.at("blockHeader").get_obj();
-	if (ho.size() != 14)
-	{
-		BlockHeader tmp = constructHeader(
-			ho.count("parentHash") ? h256(ho["parentHash"].get_str()) : header.parentHash(),
-			ho.count("uncleHash") ? h256(ho["uncleHash"].get_str()) : header.sha3Uncles(),
-			ho.count("coinbase") ? Address(ho["coinbase"].get_str()) : header.beneficiary(),
-			ho.count("stateRoot") ? h256(ho["stateRoot"].get_str()): header.stateRoot(),
-			ho.count("transactionsTrie") ? h256(ho["transactionsTrie"].get_str()) : header.transactionsRoot(),
-			ho.count("receiptTrie") ? h256(ho["receiptTrie"].get_str()) : header.receiptsRoot(),
-			ho.count("bloom") ? LogBloom(ho["bloom"].get_str()) : header.logBloom(),
-			ho.count("difficulty") ? toInt(ho["difficulty"]) : header.difficulty(),
-			ho.count("number") ? toInt(ho["number"]) : header.number(),
-			ho.count("gasLimit") ? toInt(ho["gasLimit"]) : header.gasLimit(),
-			ho.count("gasUsed") ? toInt(ho["gasUsed"]) : header.gasUsed(),
-			ho.count("timestamp") ? toInt(ho["timestamp"]) : header.timestamp(),
-			ho.count("extraData") ? importByteArray(ho["extraData"].get_str()) : header.extraData());
-
-		if (ho.count("RelTimestamp"))
-		{
-			tmp.setTimestamp(toInt(ho["RelTimestamp"]) +_parent.timestamp());
-			tmp.setDifficulty(tmp.calculateDifficulty(_parent));
-			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
-		}
-
-		// find new valid nonce
-		if (static_cast<BlockInfo>(tmp) != static_cast<BlockInfo>(header) && tmp.difficulty())
-			dev::eth::mine(tmp);
-
-
-		if (ho.count("mixHash"))
-			updateEthashSeal(tmp, h256(ho["mixHash"].get_str()), tmp.nonce());
-		if (ho.count("nonce"))
-			updateEthashSeal(tmp, tmp.mixHash(), Nonce(ho["nonce"].get_str()));
-
-		tmp.noteDirty();
-		header = tmp;
-	}
-	else
-	{
-		// take the blockheader as is
-		const bytes c_blockRLP = createBlockRLPFromFields(ho);
-		const RLP c_bRLP(c_blockRLP);
-		header.populateFromHeader(c_bRLP, IgnoreSeal);
-	}
-
+	m_blockHeader = _header;
 	recalcBlockHeaderBytes();
 }
-
 ///Test Block Private
 
 TestBlock::BlockHeader TestBlock::constructBlock(mObject& _o, h256 const& _stateRoot)
@@ -247,14 +199,15 @@ void TestBlock::recalcBlockHeaderBytes()
 	for (unsigned i = 0; i < m_uncles.size(); ++i)
 	{
 		RLPStream uncleRlp;
-		m_uncles[i].streamRLP(uncleRlp);
+		m_uncles[i].getBlockHeader().streamRLP(uncleRlp);
 		uncleStream.appendRaw(uncleRlp.out());
 	}
 
 	if (m_uncles.size()) // update unclehash in case of invalid uncles
 	{
 		m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
-		updatePoW(m_blockHeader);
+		dev::eth::mine(m_blockHeader);
+		m_blockHeader.noteDirty();
 	}
 	RLPStream blHeaderStream;
 	m_blockHeader.streamRLP(blHeaderStream, WithProof);
@@ -297,14 +250,25 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
 	m_blockChain = std::unique_ptr<FullBlockChainEthash>(
 				new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.path(), WithExisting::Kill));
 	m_genesisBlock = _genesisBlock;
+	m_lastBlock = m_genesisBlock;
 }
 
-void TestBlockChain::addBlock(TestBlock& _block)
-{
+void TestBlockChain::addBlock(TestBlock const& _block)
+{	
 	m_blockChain.get()->import(_block.getBytes(), m_genesisBlock.getState().db());
+
+	//Imported and best
+	if (_block.getBytes() == m_blockChain.get()->block())
+		m_lastBlock = _block;
 }
 
+//Functions that working with test json
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);
+mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
+mObject& writeBlockHeaderToJson2(mObject& _o, Ethash::BlockHeader const& _bi);
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Ethash::BlockHeader const& _parentHeader);
+void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, std::vector<TestBlock> const& _uncles, std::vector<TestBlock> const& _importedBlocks);
+
 void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 {
 	string testname;
@@ -326,12 +290,10 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 		TestBlock genesisBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj()); //pTestBlock (new TestBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj()));
 		TestBlockChain trueBc(genesisBlock);
 
-		//writeBlockHeaderToJson(o["genesisBlockHeader"].get_obj(), biGenesisBlock)
-		//o["pre"] = fillJsonWithState(trueState); //convert all fields to hex
-		//o["genesisRLP"] = toHex(rlpGenesisBlock.out(), 2, HexPrefix::Add);
-
 		if (_fillin)
 		{
+			writeBlockHeaderToJson2(o["genesisBlockHeader"].get_obj(), genesisBlock.getBlockHeader());
+			o["genesisRLP"] = toHex(genesisBlock.getBytes(), 2, HexPrefix::Add);
 			TBOOST_REQUIRE(o.count("blocks"));
 
 			mArray blArray;
@@ -347,7 +309,8 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 				else
 					importBlockNumber++;
 
-				//Restore blockchain up to block.number
+				//Restore blockchain up to block.number to start import from it
+				// importBlockNumber > importedBlocks.size ???? Check!!!!
 				for (size_t i = 1; i < importBlockNumber; i++) //0 block is genesis
 					blockchain.addBlock(importedBlocks.at(i));
 
@@ -362,66 +325,34 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 				}
 
 				//Import Uncles
-				vector<TestBlock> uncles;
-				for (auto const& uHObj: _blObj.at("uncleHeaders").get_array())
+				vector<TestBlock> uncles; //really need this? ==block.getuncles()
+				for (auto const& uHObj: blObj.at("uncleHeaders").get_array())
 				{
 					mObject emptyState;
-					TestBlock uncle(uHObj.get_obj(), emptyState);
+					mObject uncleHeaderObj = uHObj.get_obj();
+					TestBlock uncle(uncleHeaderObj, emptyState);
+					overwriteUncleHeaderForTest(uncleHeaderObj, uncle, uncles, importedBlocks);
 					uncles.push_back(uncle);
-
-					changeUncleHeader()
-
 					block.addUncle(uncle);
 				}
-				/*vector<BlockHeader> vBiUncles;
-				blObj["uncleHeaders"] = importUncles(blObj, vBiUncles, vBiBlocks, blockSets);
-
-				BlockQueue uncleBlockQueue;
-				uncleBlockQueue.setChain(bc);
-				uncleList uncleBlockQueueList;
-				cnote << "import uncle in blockQueue";
-				for (size_t i = 0; i < vBiUncles.size(); i++)
-				{
-					RLPStream uncle = createFullBlockFromHeader(vBiUncles.at(i));
-					try
-					{
-						uncleBlockQueue.import(&uncle.out(), false);
-						uncleBlockQueueList.push_back(uncle.out());
-						// wait until block is verified
-						this_thread::sleep_for(chrono::seconds(1));
-					}
-					catch(...)
-					{
-						cnote << "error in importing uncle! This produces an invalid block (May be by purpose for testing).";
-					}
-				}*/
-
-				bc.sync(uncleBlockQueue, state.db(), 4);
-
 
 				block.mine(blockchain);
 				TestBlock alterBlock(block);
 
-				//blObj["rlp"] = toHex(block.blockData(), 2, HexPrefix::Add);
-				//blObj["transactions"] = writeTransactionsToJson(txList);
-
 				if (blObj.count("blockHeader"))
-					alterBlock.overwriteBlockHeader(blObj, blockchain.getInterface().info());
+					overwriteBlockHeaderForTest(blObj, alterBlock, blockchain.getInterface().info());
 
-				//if (blObj.count("blockHeader") && blObj["blockHeader"].get_obj().count("bruncle"))
-				//	current_BlockHeader.populateFromParent(vBiBlocks[vBiBlocks.size() -1]);
+				blObj["transactions"] = writeTransactionsToJson(alterBlock.getTransactionQueue());
+				blObj["rlp"] = toHex(alterBlock.getBytes(), 2, HexPrefix::Add);
+				mObject hobj;
+				writeBlockHeaderToJson2(hobj, alterBlock.getBlockHeader());
+				blObj["blockHeader"] = hobj;
 
-				// write block header
-				//mObject oBlockHeader;
-				//writeBlockHeaderToJson(oBlockHeader, current_BlockHeader);
-				//blObj["blockHeader"] = oBlockHeader;
-
-				//blObj["rlp"] = toHex(blockRLP.out(), 2, HexPrefix::Add);
 				compareBlocks(block, alterBlock);
 				try
 				{
 					blockchain.addBlock(alterBlock);
-					trueBc.addBlock(alterBlock);
+					trueBc.addBlock(alterBlock);					
 
 					if (importBlockNumber < importedBlocks.size())
 					{
@@ -439,11 +370,197 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 					blObj.erase(blObj.find("uncleHeaders"));
 					blObj.erase(blObj.find("transactions"));
 				}
-				blArray.push_back(blObj);
+				blArray.push_back(blObj);  //json data
 				this_thread::sleep_for(chrono::seconds(1));
 			}//each blocks
+
+			if (o.count("expect") > 0)
+			{
+				AccountMaskMap expectStateMap;
+				State stateExpect(OverlayDB(), BaseState::Empty);
+				ImportTest::importState(o["expect"].get_obj(), stateExpect, expectStateMap);
+				if (ImportTest::compareStates(stateExpect, trueBc.getTopBlock().getState(), expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow))
+					cerr << testname << endl;
+				o.erase(o.find("expect"));
+			}
+
+			o["blocks"] = blArray;
+			o["postState"] = fillJsonWithState(trueBc.getTopBlock().getState());
+			o["lastblockhash"] = toString(trueBc.getTopBlock().getBlockHeader().hash());
+
+			//make all values hex in pre section
+			State prestate(OverlayDB(), BaseState::Empty);
+			ImportTest::importState(o["pre"].get_obj(), prestate);
+			o["pre"] = fillJsonWithState(prestate);
 		}//fillin
 	}//for tests
+}
+
+
+//TestFunction
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Ethash::BlockHeader const& _parentHeader)
+{
+	//_blObj  - json object with header data
+	//_block  - which header would be overwritten
+	//_parentHeader - parent blockheader
+
+	Ethash::BlockHeader header = _block.getBlockHeader();
+	auto ho = _blObj.at("blockHeader").get_obj();
+	if (ho.size() != 14)
+	{
+		Ethash::BlockHeader tmp = constructHeader(
+			ho.count("parentHash") ? h256(ho["parentHash"].get_str()) : header.parentHash(),
+			ho.count("uncleHash") ? h256(ho["uncleHash"].get_str()) : header.sha3Uncles(),
+			ho.count("coinbase") ? Address(ho["coinbase"].get_str()) : header.beneficiary(),
+			ho.count("stateRoot") ? h256(ho["stateRoot"].get_str()): header.stateRoot(),
+			ho.count("transactionsTrie") ? h256(ho["transactionsTrie"].get_str()) : header.transactionsRoot(),
+			ho.count("receiptTrie") ? h256(ho["receiptTrie"].get_str()) : header.receiptsRoot(),
+			ho.count("bloom") ? LogBloom(ho["bloom"].get_str()) : header.logBloom(),
+			ho.count("difficulty") ? toInt(ho["difficulty"]) : header.difficulty(),
+			ho.count("number") ? toInt(ho["number"]) : header.number(),
+			ho.count("gasLimit") ? toInt(ho["gasLimit"]) : header.gasLimit(),
+			ho.count("gasUsed") ? toInt(ho["gasUsed"]) : header.gasUsed(),
+			ho.count("timestamp") ? toInt(ho["timestamp"]) : header.timestamp(),
+			ho.count("extraData") ? importByteArray(ho["extraData"].get_str()) : header.extraData());
+
+		if (ho.count("RelTimestamp"))
+		{
+			tmp.setTimestamp(toInt(ho["RelTimestamp"]) +_parentHeader.timestamp());
+			tmp.setDifficulty(tmp.calculateDifficulty(_parentHeader));
+			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
+		}
+
+		// find new valid nonce
+		if (static_cast<BlockInfo>(tmp) != static_cast<BlockInfo>(header) && tmp.difficulty())
+			dev::eth::mine(tmp);
+
+		if (ho.count("mixHash"))
+			updateEthashSeal(tmp, h256(ho["mixHash"].get_str()), tmp.nonce());
+		if (ho.count("nonce"))
+			updateEthashSeal(tmp, tmp.mixHash(), Nonce(ho["nonce"].get_str()));
+
+		tmp.noteDirty();
+		header = tmp;
+	}
+	else
+	{
+		// take the blockheader as is
+		mObject emptyState;
+		header = TestBlock(ho, emptyState).getBlockHeader();
+	}
+
+	if (_blObj.at("blockHeader").get_obj().count("bruncle"))
+		header.populateFromParent(_parentHeader); //importedBlocks.at(importedBlocks.size() -1).getBlockHeader()
+
+	_block.setBlockHeader(header);
+}
+
+void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std::vector<TestBlock> const& uncles, std::vector<TestBlock> const& importedBlocks)
+{
+	//uncleHeaderObj - json Uncle header with additional option fields
+	//uncle			 - uncle Block to overwrite
+	//uncles		 - previously imported uncles
+	//importedBlocks - blocks already included in BlockChain
+
+	if (uncleHeaderObj.count("sameAsPreviousSibling"))
+	{
+		uncleHeaderObj.erase("sameAsPreviousSibling");
+		if (uncles.size())			
+			uncle = uncles.at(uncles.size() - 1);
+		else
+			cerr << "Could not create uncle sameAsPreviousSibling: there are no siblings!";
+		return;
+	}
+
+	if (uncleHeaderObj.count("sameAsBlock"))
+	{
+		uncleHeaderObj.erase("sameAsBlock");
+		size_t number = (size_t)toInt(uncleHeaderObj.at("sameAsBlock"));
+
+		if (number < importedBlocks.size())
+			uncle = importedBlocks.at(number);
+		else
+			cerr << "Could not create uncle sameAsBlock: there are no block imported!";
+		return;
+	}
+
+	if (uncleHeaderObj.count("sameAsPreviousBlockUncle"))
+	{
+		uncleHeaderObj.erase("sameAsPreviousBlockUncle");
+		size_t number = (size_t)toInt(uncleHeaderObj.at("sameAsPreviousBlockUncle"));
+		if (number < importedBlocks.size())
+		{
+			vector<TestBlock> prevBlockUncles = importedBlocks.at(number).getUncles();
+			if (prevBlockUncles.size())
+				uncle = prevBlockUncles[0];
+			else
+				cerr << "Could not create uncle sameAsPreviousBlockUncle: previous block has no uncles!";
+		}
+		else
+			cerr << "Could not create uncle sameAsPreviousBlockUncle: there are no block imported!";
+		return;
+	}
+
+	string overwrite = "false";
+	if (uncleHeaderObj.count("overwriteAndRedoPoW"))
+	{
+		overwrite = uncleHeaderObj.at("overwriteAndRedoPoW").get_str();
+		uncleHeaderObj.erase("overwriteAndRedoPoW");
+	}
+
+	// make uncle header valid
+	// from this point naughty part will start with blockheader
+	//Ethash::BlockHeader& uncleHeader = *const_cast<Ethash::BlockHeader*> (&uncle.getBlockHeader());
+
+	Ethash::BlockHeader uncleHeader = uncle.getBlockHeader();
+	uncleHeader.setTimestamp((u256)time(0));
+	if (importedBlocks.size() > 2)
+	{
+		if (uncleHeader.number() - 1 < importedBlocks.size())
+			uncleHeader.populateFromParent(importedBlocks.at((size_t)uncleHeader.number() - 1).getBlockHeader());
+		else
+			uncleHeader.populateFromParent(importedBlocks.at(importedBlocks.size() - 2).getBlockHeader());
+
+	}
+	else
+	{
+		uncle.setBlockHeader(uncleHeader);
+		return;
+	}
+
+	if (overwrite != "false")
+	{
+		uncleHeader = constructHeader(
+			overwrite == "parentHash" ? h256(uncleHeaderObj.at("parentHash").get_str()) : uncleHeader.parentHash(),
+			uncleHeader.sha3Uncles(),
+			uncleHeader.beneficiary(),
+			overwrite == "stateRoot" ? h256(uncleHeaderObj.at("stateRoot").get_str()) : uncleHeader.stateRoot(),
+			uncleHeader.transactionsRoot(),
+			uncleHeader.receiptsRoot(),
+			uncleHeader.logBloom(),
+			overwrite == "difficulty" ? toInt(uncleHeaderObj.at("difficulty"))
+									  :	overwrite == "timestamp" ? uncleHeader.calculateDifficulty(importedBlocks.at((size_t)uncleHeader.number() - 1).getBlockHeader())
+																 : uncleHeader.difficulty(),
+			uncleHeader.number(),
+			overwrite == "gasLimit" ? toInt(uncleHeaderObj.at("gasLimit")) : uncleHeader.gasLimit(),
+			overwrite == "gasUsed" ? toInt(uncleHeaderObj.at("gasUsed")) : uncleHeader.gasUsed(),
+			overwrite == "timestamp" ? toInt(uncleHeaderObj.at("timestamp")) : uncleHeader.timestamp(),
+			uncleHeader.extraData());
+
+		if (overwrite == "parentHashIsBlocksParent")
+			uncleHeader.populateFromParent(importedBlocks.at(importedBlocks.size() - 1).getBlockHeader());
+	}
+
+	dev::eth::mine(uncleHeader);
+	uncleHeader.noteDirty();
+
+	if (overwrite == "nonce")
+		updateEthashSeal(uncleHeader, uncleHeader.mixHash(), Nonce(uncleHeaderObj["nonce"].get_str()));
+
+	if (overwrite == "mixHash")
+		updateEthashSeal(uncleHeader, h256(uncleHeaderObj["mixHash"].get_str()), uncleHeader.nonce());
+
+	uncle.setBlockHeader(uncleHeader);
 }
 
 void compareBlocks(TestBlock const& _a, TestBlock const& _b)
@@ -461,6 +578,38 @@ void compareBlocks(TestBlock const& _a, TestBlock const& _b)
 		cnote << "uncle list mismatch\n" << RLP(_a.getBytes())[2].data() << "\n" << RLP(_b.getBytes())[2].data();
 }
 
+mArray writeTransactionsToJson(TransactionQueue const& _txsQueue)
+{
+	Transactions const& txs = _txsQueue.topTransactions(std::numeric_limits<unsigned>::max());
+	mArray txArray;
+	for (auto const& txi: txs)
+	{
+		mObject txObject = fillJsonWithTransaction(txi);
+		txArray.push_back(txObject);
+	}
+	return txArray;
+}
+
+mObject& writeBlockHeaderToJson2(mObject& _o, Ethash::BlockHeader const& _bi)
+{
+	_o["parentHash"] = toString(_bi.parentHash());
+	_o["uncleHash"] = toString(_bi.sha3Uncles());
+	_o["coinbase"] = toString(_bi.beneficiary());
+	_o["stateRoot"] = toString(_bi.stateRoot());
+	_o["transactionsTrie"] = toString(_bi.transactionsRoot());
+	_o["receiptTrie"] = toString(_bi.receiptsRoot());
+	_o["bloom"] = toString(_bi.logBloom());
+	_o["difficulty"] = toCompactHex(_bi.difficulty(), HexPrefix::Add, 1);
+	_o["number"] = toCompactHex(_bi.number(), HexPrefix::Add, 1);
+	_o["gasLimit"] = toCompactHex(_bi.gasLimit(), HexPrefix::Add, 1);
+	_o["gasUsed"] = toCompactHex(_bi.gasUsed(), HexPrefix::Add, 1);
+	_o["timestamp"] = toCompactHex(_bi.timestamp(), HexPrefix::Add, 1);
+	_o["extraData"] = toHex(_bi.extraData(), 2, HexPrefix::Add);
+	_o["mixHash"] = toString(_bi.mixHash());
+	_o["nonce"] = toString(_bi.nonce());
+	_o["hash"] = toString(_bi.hash());
+	return _o;
+}
 }}//namespaces
 
 
@@ -468,7 +617,7 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bc2)
 {
-	dev::test::executeTests("bcTotalDifficultyTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests2);
+	dev::test::executeTests("bcValidBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
