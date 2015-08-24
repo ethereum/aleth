@@ -19,39 +19,19 @@
  * @date 2015
  */
 
-#include <libdevcore/Log.h>
-#include <libdevcore/Exceptions.h>
 #include "NatspecExpressionEvaluator.h"
+#include "NatspecResources.hpp"
 
-using namespace std;
-using namespace dev;
-
-static QString contentsOfQResource(string const& _res)
+NatspecResourcesLoader::NatspecResourcesLoader(): m_resources(new dev::eth::NatspecResources())
 {
-	QFile file(QString::fromStdString(_res));
-	if (!file.open(QFile::ReadOnly))
-		BOOST_THROW_EXCEPTION(FileError());
-	QTextStream in(&file);
-	return in.readAll();
 }
 
-NatspecExpressionEvaluator::NatspecExpressionEvaluator(QString const& _abi, QString const& _transaction, QString const& _method)
-: m_abi(_abi), m_transaction(_transaction), m_method(_method)
+NatspecResourcesLoader::~NatspecResourcesLoader()
 {
-	Q_INIT_RESOURCE(natspec);
-	QJSValue result = m_engine.evaluate(contentsOfQResource(":/natspec/natspec.js"));
-	if (result.isError())
-		BOOST_THROW_EXCEPTION(FileError());
-	
-	m_engine.evaluate("var natspec = require('natspec')");
+	delete m_resources;
 }
 
-QString NatspecExpressionEvaluator::evalExpression(QString const& _expression)
+std::string NatspecResourcesLoader::loadNatspec() const
 {
-	QString call = "";
-	if (!m_abi.isEmpty() && !m_transaction.isEmpty() && !m_method.isEmpty())
-		call = ", {abi:" + m_abi + ", transaction:" + m_transaction + ", method: '" + m_method + "' }";
-	
-	QJSValue result = m_engine.evaluate("natspec.evaluateExpressionSafe(\"" + _expression + "\"" + call + ")");
-	return result.toString();
+	return m_resources->loadResourceAsString("natspec") + "\n";
 }

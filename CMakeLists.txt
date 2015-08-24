@@ -420,6 +420,7 @@ endif ()
 
 add_subdirectory(libscrypt)
 add_subdirectory(libdevcrypto)
+add_subdirectory(libnatspec)
 
 if (GENERAL)
 	add_subdirectory(libp2p)
