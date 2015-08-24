@@ -38,7 +38,6 @@ using namespace dev::eth;
 using namespace p2p;
 
 const unsigned c_maxIncomingNewHashes = 1024;
-const unsigned c_maxIncomingHashes = 8192;
 
 string toString(Asking _a)
 {
@@ -149,6 +148,7 @@ void EthereumPeer::requestHashes(u256 _number, unsigned _count)
 	RLPStream s;
 	prep(s, GetBlockHashesByNumberPacket, 2) << m_syncHashNumber << _count;
 	clog(NetMessageDetail) << "Requesting block hashes for numbers " << m_syncHashNumber << "-" << m_syncHashNumber + _count - 1;
+	m_lastAskedHashes = _count;
 	sealAndSend(s);
 }
 
@@ -165,6 +165,7 @@ void EthereumPeer::requestHashes(h256 const& _lastHash)
 	clog(NetMessageDetail) << "Requesting block hashes staring from " << _lastHash;
 	m_syncHash = _lastHash;
 	m_syncHashNumber = 0;
+	m_lastAskedHashes = c_maxHashesAsk;
 	sealAndSend(s);
 }
 
@@ -307,7 +308,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 		setIdle();
-		if (itemCount > c_maxIncomingHashes)
+		if (itemCount > m_lastAskedHashes)
 		{
 			disable("Too many hashes");
 			break;
