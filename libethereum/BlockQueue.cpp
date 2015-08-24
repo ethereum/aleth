@@ -234,14 +234,14 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 
 	// Check it's not in the future
 	(void)_isOurs;
-	if (bi.timestamp() > (u256)time(0)/* && !_isOurs*/)
+	if (bi.timestamp() > (u256)getNowUTC()/* && !_isOurs*/)
 	{
 		m_future.insert(make_pair((unsigned)bi.timestamp(), make_pair(h, _block.toBytes())));
 		char buf[24];
 		time_t bit = (unsigned)bi.timestamp();
 		if (strftime(buf, 24, "%X", localtime(&bit)) == 0)
 			buf[0] = '\0'; // empty if case strftime fails
-		clog(BlockQueueTraceChannel) << "OK - queued for future [" << bi.timestamp() << "vs" << time(0) << "] - will wait until" << buf;
+		clog(BlockQueueTraceChannel) << "OK - queued for future [" << bi.timestamp() << "vs" << getNowUTC() << "] - will wait until" << buf;
 		m_unknownSize += _block.size();
 		m_unknownCount++;
 		m_difficulty += bi.difficulty();
@@ -389,7 +389,7 @@ void BlockQueue::tick()
 
 		cblockq << "Checking past-future blocks...";
 
-		unsigned t = time(0);
+		unsigned t = getNowUTC();
 		if (t <= m_future.begin()->first)
 			return;
 
