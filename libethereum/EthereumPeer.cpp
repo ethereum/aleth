@@ -37,6 +37,8 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
+const unsigned c_maxIncomingNewHashes = 1024;
+
 string toString(Asking _a)
 {
 	switch (_a)
@@ -146,6 +148,7 @@ void EthereumPeer::requestHashes(u256 _number, unsigned _count)
 	RLPStream s;
 	prep(s, GetBlockHashesByNumberPacket, 2) << m_syncHashNumber << _count;
 	clog(NetMessageDetail) << "Requesting block hashes for numbers " << m_syncHashNumber << "-" << m_syncHashNumber + _count - 1;
+	m_lastAskedHashes = _count;
 	sealAndSend(s);
 }
 
@@ -162,6 +165,7 @@ void EthereumPeer::requestHashes(h256 const& _lastHash)
 	clog(NetMessageDetail) << "Requesting block hashes staring from " << _lastHash;
 	m_syncHash = _lastHash;
 	m_syncHashNumber = 0;
+	m_lastAskedHashes = c_maxHashesAsk;
 	sealAndSend(s);
 }
 
@@ -304,6 +308,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 		setIdle();
+		if (itemCount > m_lastAskedHashes)
+		{
+			disable("Too many hashes");
+			break;
+		}
 		h256s hashes(itemCount);
 		for (unsigned i = 0; i < itemCount; ++i)
 			hashes[i] = _r[i].toHash<h256>();
@@ -364,7 +373,14 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	case NewBlockHashesPacket:
 	{
 		unsigned itemCount = _r.itemCount();
+
 		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+
+		if (itemCount > c_maxIncomingNewHashes)
+		{
+			disable("Too many new hashes");
+			break;
+		}
 
 		h256s hashes(itemCount);
 		for (unsigned i = 0; i < itemCount; ++i)

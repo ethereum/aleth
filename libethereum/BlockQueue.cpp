@@ -212,7 +212,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	{
 		// TODO: quick verification of seal - will require BlockQueue to be templated on Sealer
 		// VERIFY: populates from the block and checks the block is internally coherent.
-		bi = m_bc->verifyBlock(_block, m_onBad, ImportRequirements::None).info;
+		bi = m_bc->verifyBlock(_block, m_onBad, ImportRequirements::PostGenesis).info;
 	}
 	catch (Exception const& _e)
 	{

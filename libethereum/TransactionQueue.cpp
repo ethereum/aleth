@@ -31,6 +31,8 @@ using namespace dev::eth;
 const char* TransactionQueueChannel::name() { return EthCyan "┉┅▶"; }
 const char* TransactionQueueTraceChannel::name() { return EthCyan " ┅▶"; }
 
+const size_t c_maxVerificationQueueSize = 8192;
+
 TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
 	m_current(PriorityCompare { *this }),
 	m_limit(_limit),
@@ -370,13 +372,23 @@ void TransactionQueue::clear()
 
 void TransactionQueue::enqueue(RLP const& _data, h512 const& _nodeId)
 {
+	bool queued = false;
 	{
 		Guard l(x_queue);
 		unsigned itemCount = _data.itemCount();
 		for (unsigned i = 0; i < itemCount; ++i)
+		{
+			if (m_unverified.size() >= c_maxVerificationQueueSize)
+			{
+				clog(TransactionQueueChannel) << "Transaction verification queue is full. Dropping" << itemCount - i << "transactions";
+				break;
+			}
 			m_unverified.emplace_back(UnverifiedTransaction(_data[i].data(), _nodeId));
+			queued = true;
+		}
 	}
-	m_queueReady.notify_all();
+	if (queued)
+		m_queueReady.notify_all();
 }
 
 void TransactionQueue::verifierBody()
