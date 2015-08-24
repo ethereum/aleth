@@ -40,6 +40,7 @@ using namespace p2p;
 
 unsigned const c_chainReorgSize = 30000; /// Added to estimated hashes to account for potential chain reorganiation
 unsigned const c_hashSubchainSize = 8192; /// PV61 subchain size
+unsigned const c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 {
@@ -298,6 +299,13 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		case ImportResult::FutureTimeUnknown:
 		case ImportResult::UnknownParent:
 		{
+			_peer->m_unknownNewBlocks++;
+			if (_peer->m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
+			{
+				_peer->disable("Too many uknown new blocks");
+				if (m_state == SyncState::Idle)
+					host().bq().clear();
+			}
 			logNewBlock(h);
 			u256 totalDifficulty = _r[1].toInt<u256>();
 			if (totalDifficulty > _peer->m_totalDifficulty)
