@@ -299,7 +299,8 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		case ImportResult::FutureTimeUnknown:
 		case ImportResult::UnknownParent:
 		{
-			if (++_peer->m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
+			_peer->m_unknownNewBlocks++;
+			if (_peer->m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
 			{
 				_peer->disable("Too many uknown new blocks");
 				if (m_state == SyncState::Idle)

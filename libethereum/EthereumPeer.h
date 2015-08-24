@@ -160,6 +160,7 @@ private:
 	Mutex x_knownTransactions;
 	h256Hash m_knownTransactions;			///< Transactions that the peer already knows of.
 	unsigned m_unknownNewBlocks;			///< Number of unknown NewBlocks received from this peer
+	unsigned m_lastAskedHashes;				///< Number of hashes asked
 };
 
 }
