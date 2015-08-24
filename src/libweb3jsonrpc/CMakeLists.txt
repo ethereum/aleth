@@ -3,19 +3,13 @@ set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
 
-include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
-
 set(EXECUTABLE web3jsonrpc)
 
 file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-target_link_libraries(${EXECUTABLE} ${JSONCPP_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${MHD_LIBRARIES})
-
-eth_use(${EXECUTABLE} REQUIRED EthCore)
+eth_use(${EXECUTABLE} REQUIRED EthCore ServerJsonRpc)
 
 if (ETH_JSON_RPC_STUB)
 	add_custom_target(jsonrpcstub) 
