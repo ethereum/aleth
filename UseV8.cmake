@@ -1,0 +1,15 @@
+function(eth_apply TARGET REQUIRED)
+	find_package (v8)
+	if (NOT V8_FOUND)
+		if (NOT ("${REQUIRED}" STREQUAL "OPTIONAL"))
+			message(FATAL_ERROR "v8 library not found")
+		endif()
+		return()
+	endif()
+
+	message(" - v8 header: ${V8_INCLUDE_DIRS}")
+	message(" - v8 lib   : ${V8_LIBRARIES}")
+
+	include_directories(BEFORE SYSTEM ${V8_INCLUDE_DIRS})
+	target_link_libraries(${TARGET} ${V8_LIBRARIES})
+endfunction()
