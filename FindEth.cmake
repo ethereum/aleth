@@ -1,7 +1,7 @@
 # Find ethereum
 #
 # Find the ethereum includes and library
-# 
+#
 # This module defines
 #  ETH_CORE_LIBRARIES, the libraries needed to use ethereum.
 #  ETH_FOUND, If false, do not try to use ethereum.
@@ -12,6 +12,10 @@ if (NOT WIN32)
 	list(APPEND CORE_LIBS "secp256k1")
 endif()
 
+if (JSCONSOLE)
+	list(APPEND CORE_LIBS jsengine jsconsole)
+endif()
+
 set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1)
 
 set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
@@ -19,7 +23,7 @@ set(ETH_CORE_LIBRARIES ${ETH_LIBRARY})
 
 foreach (l ${ALL_LIBS})
 	string(TOUPPER ${l} L)
-	find_library(ETH_${L}_LIBRARY 
+	find_library(ETH_${L}_LIBRARY
 		NAMES ${l}
 		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 	)
