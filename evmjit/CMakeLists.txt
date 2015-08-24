@@ -1,17 +1,9 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0.0)
 
-if (${CMAKE_VERSION} VERSION_GREATER 3.0)
-	cmake_policy(SET CMP0042 OLD) 	# fix MACOSX_RPATH
-	cmake_policy(SET CMP0048 NEW) 	# allow VERSION argument in project()
-	project(EVMJIT VERSION 0.9.0.1 LANGUAGES CXX)
-else()
-	project(EVMJIT)
-	set(EVMJIT_VERSION "0.9.0.1")
-	set(EVMJIT_VERSION_MAJOR 0)
-	set(EVMJIT_VERSION_MINOR 9)
-	set(EVMJIT_VERSION_PATCH 0)
-	set(EVMJIT_VERSION_TWEAK 1)
-endif()
+cmake_policy(SET CMP0042 OLD) 	# fix MACOSX_RPATH
+cmake_policy(SET CMP0048 NEW) 	# allow VERSION argument in project()
+
+project(EVMJIT VERSION 0.9.0.1 LANGUAGES CXX)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_AUTOMOC OFF)
