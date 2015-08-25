@@ -451,11 +451,8 @@ endif ()
 
 # TODO: sort out tests so they're not dependent on webthree/web3jsonrpc and reenable
 #if (TESTS)
-#	add_subdirectory(libtestutils)
-#	add_subdirectory(test)
-#	if (JSONRPC)
-#		add_subdirectory(ethrpctest)
-#	endif ()
+	add_subdirectory(libtestutils)
+	add_subdirectory(test)
 #endif ()
 
 if (TOOLS)
