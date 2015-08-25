@@ -2,7 +2,6 @@ function(eth_apply TARGET REQUIRED)
 	eth_use(${TARGET} ${REQUIRED} EthCore ServerJsonRpc)
 
 	if (DEFINED ethereum_SOURCE_DIR)
-		message(STATUS "Build under cpp-ethereum")
 		set(ETH_WEBTHREE_LIBRARY webthree)
 		set(ETH_WEB3JSONRPC_LIBRARY web3jsonrpc)
 		set(W3_DIR "${ethereum_SOURCE_DIR}/webthree")

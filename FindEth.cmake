@@ -21,7 +21,6 @@ set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1;testutils)
 set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
 
 if (DEFINED ethereum_VERSION)
-	message(STATUS "Build under cpp-ethereum")
 	set(ETH_CORE_LIBRARIES ${CORE_LIBS})
 else()
 	set(ETH_CORE_LIBRARIES ${ETH_LIBRARY})
