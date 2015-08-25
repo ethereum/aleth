@@ -1,5 +1,13 @@
 function(eth_apply TARGET REQUIRED)
 	eth_use(${TARGET} ${REQUIRED} EthCore ServerJsonRpc)
+
+	if (DEFINED ethereum_VERSION)
+		message(STATUS "Build under cpp-ethereum")
+		set(ETH_WEBTHREE_LIBRARY webthree)
+		set(ETH_WEB3JSONRPC_LIBRARY web3jsonrpc)
+		return()
+	endif()
+
 	set(W3_DIR         "${PROJECT_SOURCE_DIR}/../webthree" 		CACHE PATH "The path to the webthree directory")
 	set(W3_BUILD_DIR_NAME  "build"                            	CACHE STRING "The name of the build directory in web3")
 	set(W3_BUILD_DIR   "${W3_DIR}/${W3_BUILD_DIR_NAME}")
