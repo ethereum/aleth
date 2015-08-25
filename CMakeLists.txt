@@ -468,8 +468,12 @@ endif()
 
 # Optional sub-projects
 if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/solidity")
-	set(ETH_DIR ${CMAKE_SOURCE_DIR})
 	add_subdirectory(solidity)
+endif()
+
+
+if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/webthree")
+	add_subdirectory(webthree)
 endif()
 
 #TODO: remove
