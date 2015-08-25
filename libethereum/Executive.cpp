@@ -19,9 +19,7 @@
 #include "Executive.h"
 
 #include <boost/timer.hpp>
-#if ETH_JSONRPC || !ETH_TRUE
 #include <json/json.h>
-#endif
 #include <libdevcore/CommonIO.h>
 #include <libevm/VMFactory.h>
 #include <libevm/VM.h>
