@@ -32,9 +32,9 @@ if (JSCONSOLE)
 endif()
 
 if (JSONRPC)
-add_subdirectory(libweb3jsonrpc)
+#add_subdirectory(libweb3jsonrpc)
 endif ()
-add_subdirectory(libwhisper)
+#add_subdirectory(libwhisper)
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
 
@@ -83,13 +83,13 @@ endif()
 target_link_libraries(testeth testutils)
 
 if (GUI AND NOT JUSTTESTS)
-	target_link_libraries(testeth webthree)
-	target_link_libraries(testeth natspec)
+	#target_link_libraries(testeth webthree)
+	#target_link_libraries(testeth natspec)
 endif()
 
 if (JSONRPC)
-	target_link_libraries(testeth web3jsonrpc)
-	target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARIES})
+	#target_link_libraries(testeth web3jsonrpc)
+	#target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARIES})
 endif()
 
 enable_testing()
