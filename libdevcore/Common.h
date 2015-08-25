@@ -41,8 +41,6 @@
 #include <functional>
 #include <string>
 #include <chrono>
-#include <boost/current_function.hpp>
-#include <boost/functional/hash.hpp>
 #pragma warning(push)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
