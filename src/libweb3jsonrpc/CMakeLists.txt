@@ -7,6 +7,8 @@ set(EXECUTABLE web3jsonrpc)
 
 file(GLOB HEADERS "*.h")
 
+include_directories(..)
+
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED EthCore ServerJsonRpc)
