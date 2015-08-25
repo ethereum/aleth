@@ -805,6 +805,11 @@ BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
 	dev::test::executeTests("bcTotalDifficultyTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
+BOOST_AUTO_TEST_CASE(bcForkUncleTest)
+{
+	dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
 	dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
