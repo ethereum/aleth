@@ -77,7 +77,7 @@ void EthashCPUMiner::pause()
 void EthashCPUMiner::workLoop()
 {
 	auto tid = std::this_thread::get_id();
-	static std::mt19937_64 s_eng((getNowUTC() + std::hash<decltype(tid)>()(tid)));
+	static std::mt19937_64 s_eng((utcTime() + std::hash<decltype(tid)>()(tid)));
 
 	uint64_t tryNonce = s_eng();
 	ethash_return_value ethashReturn;
