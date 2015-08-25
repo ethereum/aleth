@@ -23,9 +23,7 @@
 
 #include "StructuredLogger.h"
 #include <boost/asio/ip/tcp.hpp>
-#if ETH_JSONRPC
 #include <json/json.h>
-#endif
 #include <libdevcore/CommonIO.h>
 #include "Guards.h"
 
@@ -46,22 +44,16 @@ void StructuredLogger::initialize(bool _enabled, std::string const& _timeFormat,
 
 void StructuredLogger::outputJson(Json::Value const& _value, std::string const& _name) const
 {
-#if ETH_JSONRPC
 	Json::Value event;
 	static Mutex s_lock;
 	Json::FastWriter fastWriter;
 	Guard l(s_lock);
 	event[_name] = _value;
 	(m_out.is_open() ? m_out : cout) << fastWriter.write(event) << endl;
-#else
-	(void)_value;
-	(void)_name;
-#endif
 }
 
 void StructuredLogger::starting(string const& _clientImpl, const char* _ethVersion)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		Json::Value event;
@@ -72,15 +64,10 @@ void StructuredLogger::starting(string const& _clientImpl, const char* _ethVersi
 
 		get().outputJson(event, "starting");
 	}
-#else
-	(void)_clientImpl;
-	(void)_ethVersion;
-#endif
 }
 
 void StructuredLogger::stopping(string const& _clientImpl, const char* _ethVersion)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		Json::Value event;
@@ -91,10 +78,6 @@ void StructuredLogger::stopping(string const& _clientImpl, const char* _ethVersi
 
 		get().outputJson(event, "stopping");
 	}
-#else
-	(void)_clientImpl;
-	(void)_ethVersion;
-#endif
 }
 
 void StructuredLogger::p2pConnected(
@@ -104,7 +87,6 @@ void StructuredLogger::p2pConnected(
 	string const& _remoteVersion,
 	unsigned int _numConnections)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		std::stringstream addrStream;
@@ -118,18 +100,10 @@ void StructuredLogger::p2pConnected(
 
 		get().outputJson(event, "p2p.connected");
 	}
-#else
-	(void)_id;
-	(void)_addr;
-	(void)_ts;
-	(void)_remoteVersion;
-	(void)_numConnections;
-#endif
 }
 
 void StructuredLogger::p2pDisconnected(string const& _id, bi::tcp::endpoint const& _addr, unsigned int _numConnections)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		std::stringstream addrStream;
@@ -142,11 +116,6 @@ void StructuredLogger::p2pDisconnected(string const& _id, bi::tcp::endpoint cons
 
 		get().outputJson(event, "p2p.disconnected");
 	}
-#else
-	(void)_id;
-	(void)_addr;
-	(void)_numConnections;
-#endif
 }
 
 void StructuredLogger::minedNewBlock(
@@ -155,7 +124,6 @@ void StructuredLogger::minedNewBlock(
 	string const& _chainHeadHash,
 	string const& _prevHash)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		Json::Value event;
@@ -167,12 +135,6 @@ void StructuredLogger::minedNewBlock(
 
 		get().outputJson(event, "eth.miner.new_block");
 	}
-#else
-	(void)_hash;
-	(void)_blockNumber;
-	(void)_chainHeadHash;
-	(void)_prevHash;
-#endif
 }
 
 void StructuredLogger::chainReceivedNewBlock(
@@ -182,7 +144,6 @@ void StructuredLogger::chainReceivedNewBlock(
 	string const& _remoteID,
 	string const& _prevHash)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		Json::Value event;
@@ -195,13 +156,6 @@ void StructuredLogger::chainReceivedNewBlock(
 
 		get().outputJson(event, "eth.chain.received.new_block");
 	}
-#else
-	(void)_hash;
-	(void)_blockNumber;
-	(void)_chainHeadHash;
-	(void)_remoteID;
-	(void)_prevHash;
-#endif
 }
 
 void StructuredLogger::chainNewHead(
@@ -210,7 +164,6 @@ void StructuredLogger::chainNewHead(
 	string const& _chainHeadHash,
 	string const& _prevHash)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		Json::Value event;
@@ -222,17 +175,10 @@ void StructuredLogger::chainNewHead(
 
 		get().outputJson(event, "eth.miner.new_block");
 	}
-#else
-	(void)_hash;
-	(void)_blockNumber;
-	(void)_chainHeadHash;
-	(void)_prevHash;
-#endif
 }
 
 void StructuredLogger::transactionReceived(string const& _hash, string const& _remoteId)
 {
-#if ETH_JSONRPC
 	if (get().m_enabled)
 	{
 		Json::Value event;
@@ -242,10 +188,6 @@ void StructuredLogger::transactionReceived(string const& _hash, string const& _r
 
 		get().outputJson(event, "eth.tx.received");
 	}
-#else
-	(void)_hash;
-	(void)_remoteId;
-#endif
 }
 
 }
