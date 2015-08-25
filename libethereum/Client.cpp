@@ -25,17 +25,13 @@
 #include <memory>
 #include <thread>
 #include <boost/filesystem.hpp>
-#if ETH_JSONRPC || !ETH_TRUE
 #include <jsonrpccpp/client.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
-#endif
 #include <libdevcore/Log.h>
 #include <libdevcore/StructuredLogger.h>
 #include <libp2p/Host.h>
 #include <libethcore/Ethash.h>
-#if ETH_JSONRPC || !ETH_TRUE
 #include "Sentinel.h"
-#endif
 #include "Defaults.h"
 #include "Executive.h"
 #include "EthereumHost.h"
@@ -168,7 +164,6 @@ void Client::onBadBlock(Exception& _ex) const
 
 	badBlock(*block, _ex.what());
 
-#if ETH_JSONRPC || !ETH_TRUE
 	Json::Value report;
 
 	report["client"] = "cpp";
@@ -274,7 +269,6 @@ void Client::onBadBlock(Exception& _ex) const
 			cwarn << "Error reporting to sentinel. Sure the address" << m_sentinel << "is correct?";
 		}
 	}
-#endif
 }
 
 bool Client::isChainBad() const
