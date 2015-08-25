@@ -466,6 +466,12 @@ if (TOOLS)
 
 endif()
 
+# Optional sub-projects
+if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/solidity")
+	set(ETH_DIR ${CMAKE_SOURCE_DIR})
+	add_subdirectory(solidity)
+endif()
+
 #TODO: remove
 add_subdirectory(alethzero)
 add_subdirectory(mix)

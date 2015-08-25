@@ -1,4 +1,4 @@
-[submodule "evmjit"]
-	path = evmjit
-	url = https://github.com/ethereum/evmjit
+[submodule "solidity"]
+	path = solidity
+	url = https://github.com/ethereum/solidity
 	branch = develop
