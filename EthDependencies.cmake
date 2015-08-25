@@ -80,7 +80,6 @@ if (JSONRPC)
 	find_package (json_rpc_cpp 0.4 REQUIRED)
 	message (" - json-rpc-cpp header: ${JSON_RPC_CPP_INCLUDE_DIRS}")
 	message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
-	add_definitions(-DETH_JSONRPC)
 
 	find_package(MHD)
 	message(" - microhttpd header: ${MHD_INCLUDE_DIRS}")
