@@ -30,7 +30,6 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
-#include <boost/optional.hpp>
 
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
@@ -46,7 +45,6 @@
 #include <libethash-cl/ethash_cl_miner.h>
 #endif
 #if ETH_JSONRPC || !ETH_TRUE
-#include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
