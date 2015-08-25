@@ -411,7 +411,7 @@ public:
 			boost::random::uniform_int_distribution<unsigned> pickWord(0, WordList.size() - 1);
 			string seed;
 			for (int i = 0; i < 13; ++i)
-				seed += (seed.size() ? " " : "") + WordList[pickWord(d)];
+				seed += (seed.size() ? " " : "") + std::string{WordList[pickWord(d)]};
 			cout << "Your brain key phrase: <<" << seed << ">>" << endl;
 			if (m_name != "--")
 			{

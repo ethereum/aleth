@@ -24,7 +24,7 @@
 namespace dev
 {
 
-strings const WordList =
+std::vector<char const*> const WordList =
 {
 	"be",
 	"and",
