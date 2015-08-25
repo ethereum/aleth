@@ -452,6 +452,16 @@ if (TOOLS)
 
 endif()
 
+# Optional sub-projects
+if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/solidity")
+	add_subdirectory(solidity)
+endif()
+
+
+if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/webthree")
+	add_subdirectory(webthree)
+endif()
+
 #TODO: remove
 add_subdirectory(alethzero)
 add_subdirectory(mix)
