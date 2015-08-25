@@ -293,10 +293,8 @@ enum class WithExisting: int
 };
 
 /// Get the current time in seconds since the epoch in UTC
-inline time_t getNowUTC()
-{
-    return mktime(gmtime((const time_t*)time(0)));
-}
+uint64_t utcTime();
+
 
 }
 
