@@ -7,6 +7,8 @@ set(EXECUTABLE eth)
 
 file(GLOB HEADERS "*.h")
 
+include_directories(..)
+
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 add_definitions(-DETH_JSONRPC)
 
