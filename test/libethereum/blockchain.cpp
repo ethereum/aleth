@@ -560,7 +560,7 @@ mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vect
 		BlockHeader uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
 		// make uncle header valid
-		uncleBlockFromFields.setTimestamp((u256)utcTime());
+		uncleBlockFromFields.setTimestamp(utcTime());
 		if (_vBiBlocks.size() > 2)
 		{
 			if (uncleBlockFromFields.number() - 1 < _vBiBlocks.size())

@@ -234,7 +234,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 
 	// Check it's not in the future
 	(void)_isOurs;
-	if (bi.timestamp() > (u256)utcTime()/* && !_isOurs*/)
+	if (bi.timestamp() > utcTime()/* && !_isOurs*/)
 	{
 		m_future.insert(make_pair((unsigned)bi.timestamp(), make_pair(h, _block.toBytes())));
 		char buf[24];
@@ -389,7 +389,7 @@ void BlockQueue::tick()
 
 		cblockq << "Checking past-future blocks...";
 
-		unsigned t = utcTime();
+		uint64_t t = utcTime();
 		if (t <= m_future.begin()->first)
 			return;
 
