@@ -16,7 +16,7 @@ if (JSCONSOLE)
 	list(APPEND CORE_LIBS jsengine jsconsole)
 endif()
 
-set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1)
+set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1;testutils)
 
 set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
 set(ETH_CORE_LIBRARIES ${ETH_LIBRARY})
