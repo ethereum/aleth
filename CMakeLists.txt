@@ -1,5 +1,5 @@
 # cmake global
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.0.0)
 
 # Figure out environment.
 set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The the path to the cmake directory")
@@ -10,8 +10,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-set(PROJECT_VERSION "0.9.42")
-project(ethereum VERSION ${PROJECT_VERSION})
+project(ethereum VERSION "0.9.42")
 
 set(CMAKE_AUTOMOC ON)
 
