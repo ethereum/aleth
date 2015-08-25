@@ -50,7 +50,7 @@ std::string dev::test::getTestPath()
 
 int dev::test::randomNumber()
 {
-	static std::mt19937 randomGenerator(getNowUTC());
+	static std::mt19937 randomGenerator(utcTime());
 	randomGenerator.seed(std::random_device()());
 	return std::uniform_int_distribution<int>(1)(randomGenerator);
 }

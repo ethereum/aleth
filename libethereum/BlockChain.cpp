@@ -527,9 +527,9 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 
 	// Check it's not crazy
-	if (_block.info.timestamp() > (u256)getNowUTC())
+	if (_block.info.timestamp() > (u256)utcTime())
 	{
-		clog(BlockChainChat) << _block.info.hash() << ": Future time " << _block.info.timestamp() << " (now at " << getNowUTC() << ")";
+		clog(BlockChainChat) << _block.info.hash() << ": Future time " << _block.info.timestamp() << " (now at " << utcTime() << ")";
 		// Block has a timestamp in the future. This is no good.
 		BOOST_THROW_EXCEPTION(FutureTime());
 	}

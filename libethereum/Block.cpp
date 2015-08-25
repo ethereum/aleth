@@ -104,7 +104,7 @@ void Block::resetCurrent()
 	m_transactionSet.clear();
 	m_currentBlock = BlockInfo();
 	m_currentBlock.setCoinbaseAddress(m_beneficiary);
-	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)getNowUTC()));
+	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)utcTime()));
 	m_currentBlock.populateFromParent(m_previousBlock);
 
 	// TODO: check.
