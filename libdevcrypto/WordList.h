@@ -26,6 +26,6 @@
 namespace dev
 {
 
-extern strings const WordList;
+extern std::vector<char const*> const WordList;
 
 }
