@@ -461,6 +461,9 @@ if (EXISTS "${CMAKE_SOURCE_DIR}/webthree/CMakeLists.txt")
 	add_subdirectory(webthree)
 endif()
 
+if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/alethzero")
+	add_subdirectory(alethzero)
+endif()
+
 #TODO: remove
-add_subdirectory(alethzero)
 add_subdirectory(mix)
