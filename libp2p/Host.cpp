@@ -354,7 +354,7 @@ void Host::determinePublic()
 	bool listenIsPublic = lset && isPublicAddress(laddr);
 	bool publicIsHost = !lset && pset && ifAddresses.count(paddr);
 	
-	bi::tcp::endpoint ep(bi::address(), m_netPrefs.listenPort);
+	bi::tcp::endpoint ep(bi::address(), m_listenPort);
 	if (m_netPrefs.traverseNAT && listenIsPublic)
 	{
 		clog(NetNote) << "Listen address set to Public address:" << laddr << ". UPnP disabled.";
@@ -368,7 +368,7 @@ void Host::determinePublic()
 	else if (m_netPrefs.traverseNAT)
 	{
 		bi::address natIFAddr;
-		ep = Network::traverseNAT(lset && ifAddresses.count(laddr) ? std::set<bi::address>({laddr}) : ifAddresses, m_netPrefs.listenPort, natIFAddr);
+		ep = Network::traverseNAT(lset && ifAddresses.count(laddr) ? std::set<bi::address>({laddr}) : ifAddresses, m_listenPort, natIFAddr);
 		
 		if (lset && natIFAddr != laddr)
 			// if listen address is set, Host will use it, even if upnp returns different
@@ -694,16 +694,12 @@ void Host::startedWorking()
 		h.second->onStarting();
 	
 	// try to open acceptor (todo: ipv6)
-	m_listenPort = Network::tcp4Listen(m_tcp4Acceptor, m_netPrefs);
-
-	// determine public IP, but only if we're able to listen for connections
-	// todo: GUI when listen is unavailable in UI
-	if (m_listenPort)
+	int port = Network::tcp4Listen(m_tcp4Acceptor, m_netPrefs);
+	if (port > 0)
 	{
+		m_listenPort = port;
 		determinePublic();
-
-		if (m_listenPort > 0)
-			runAcceptor();
+		runAcceptor();
 	}
 	else
 		clog(NetP2PNote) << "p2p.start.notice id:" << id() << "TCP Listen port is invalid or unavailable.";
