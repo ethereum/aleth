@@ -337,11 +337,11 @@ BOOST_AUTO_TEST_CASE(server)
 	
 	int newVerbosity = 10;
 	int oldVerbosity = g_logVerbosity;
-	b = jsonrpcServer->admin_web3_setVerbosity(newVerbosity, sess1);
+	b = jsonrpcServer->admin_setVerbosity(newVerbosity, sess1);
 	BOOST_REQUIRE(b);
 	BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
 
-	b = jsonrpcServer->admin_web3_setVerbosity(oldVerbosity, sess1);
+	b = jsonrpcServer->admin_setVerbosity(oldVerbosity, sess1);
 	BOOST_REQUIRE(b);
 	BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
 
