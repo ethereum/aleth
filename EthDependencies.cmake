@@ -76,16 +76,14 @@ message(" - Jsoncpp lib   : ${JSONCPP_LIBRARIES}")
 
 # TODO get rid of -DETH_JSONRPC
 # TODO add EXACT once we commit ourselves to cmake 3.x
-if (JSONRPC)
-	find_package (json_rpc_cpp 0.4 REQUIRED)
-	message (" - json-rpc-cpp header: ${JSON_RPC_CPP_INCLUDE_DIRS}")
-	message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
+find_package (json_rpc_cpp 0.4)
+message (" - json-rpc-cpp header: ${JSON_RPC_CPP_INCLUDE_DIRS}")
+message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
 
-	find_package(MHD)
-	message(" - microhttpd header: ${MHD_INCLUDE_DIRS}")
-	message(" - microhttpd lib   : ${MHD_LIBRARIES}")
-	message(" - microhttpd dll   : ${MHD_DLLS}")
-endif() #JSONRPC
+find_package(MHD)
+message(" - microhttpd header: ${MHD_INCLUDE_DIRS}")
+message(" - microhttpd lib   : ${MHD_LIBRARIES}")
+message(" - microhttpd dll   : ${MHD_DLLS}")
 
 # TODO readline package does not yet check for correct version number
 # TODO make readline package dependent on cmake options
