@@ -31,9 +31,6 @@ if (JSCONSOLE)
 	add_subdirectory(libjsengine)
 endif()
 
-if (JSONRPC)
-#add_subdirectory(libweb3jsonrpc)
-endif ()
 #add_subdirectory(libwhisper)
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
