@@ -8,7 +8,7 @@
 #  TODO: ETH_INCLUDE_DIRS
 
 set(CORE_LIBS whisper;ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;devcore;ethash-cl;ethash;scrypt;natspec)
-if (NOT WIN32)
+if (NOT MSVC)
 	list(APPEND CORE_LIBS "secp256k1")
 endif()
 
@@ -28,7 +28,9 @@ else()
 		string(TOUPPER ${l} L)
 		find_library(ETH_${L}_LIBRARY
 			NAMES ${l}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
+			PATHS ${CMAKE_LIBRARY_PATH}
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"	
+			NO_DEFAULT_PATH
 		)
 	endforeach()
 
