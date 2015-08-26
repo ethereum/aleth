@@ -248,6 +248,7 @@ private:
 	unsigned m_ms;
 };
 
+
 class Timer
 {
 public:
