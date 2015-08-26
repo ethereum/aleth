@@ -14,3 +14,7 @@
 	path = mix
 	url = https://github.com/ethereum/mix
 	branch = develop
+[submodule "cmake"]
+	path = cmake
+	url = https://github.com/ethereum/cpp-ethereum-cmake
+	branch = develop

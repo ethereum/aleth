@@ -2,7 +2,12 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 # Figure out environment.
-set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The path to the cmake directory")
+if (EXISTS "${CMAKE_SOURCE_DIR}/cmake/LICENSE")
+	# Check if cpp-ethereum-cmake submodule is available (by checking a random file in cmake dir)
+	set(ETH_CMAKE_DIR "${CMAKE_SOURCE_DIR}/cmake" CACHE PATH "The path to the cmake directory")
+else()
+	set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The path to the cmake directory")
+endif()
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
 # set cmake_policies
@@ -453,6 +458,7 @@ if (TOOLS)
 endif()
 
 # Optional sub-projects
+
 if (EXISTS "${CMAKE_SOURCE_DIR}/solidity/CMakeLists.txt")
 	add_subdirectory(solidity)
 endif()
