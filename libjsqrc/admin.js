@@ -6,8 +6,8 @@ var getSessionKey = function () { return web3.admin.sessionKey; };
 web3._extend({
     property: 'admin',
     methods: [new web3._extend.Method({
-        name: 'web3.setVerbosity',
-        call: 'admin_web3_setVerbosity',
+        name: 'setVerbosity',
+        call: 'admin_setVerbosity',
         inputFormatter: [null, getSessionKey],
         params: 2
     }), new web3._extend.Method({
@@ -36,8 +36,8 @@ web3._extend({
         inputFormatter: [getSessionKey],
         params: 1
     }), new web3._extend.Method({
-        name: 'eth.exit',
-        call: 'admin_eth_exit',
+        name: 'exit',
+        call: 'admin_exit',
         inputFormatter: [getSessionKey],
         params: 1
     }), new web3._extend.Method({
