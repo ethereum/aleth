@@ -10,3 +10,7 @@
 	path = alethzero
 	url = https://github.com/ethereum/alethzero
 	branch = develop
+[submodule "mix"]
+	path = mix
+	url = https://github.com/ethereum/mix
+	branch = develop
