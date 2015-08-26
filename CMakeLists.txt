@@ -25,5 +25,10 @@ include(EthExecutableHelper)
 # Include utils
 include(EthUtils)
 
-add_subdirectory(src)
+add_subdirectory(libwebthree)
+add_subdirectory(libweb3jsonrpc)
+add_subdirectory(libwhisper)
+add_subdirectory(eth)
+
+# test stuff
 add_subdirectory(test)
