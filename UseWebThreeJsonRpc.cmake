@@ -20,7 +20,7 @@ function(eth_apply TARGET REQUIRED)
 		find_library(ETH_WEB3JSONRPC_LIBRARY NAMES web3jsonrpc PATH_SUFFIXES "libweb3jsonrpc" "web3jsonrpc" "libweb3jsonrpc/Release" )
 	endif()
 
-	include_directories(${W3_DIR})
+	include_directories("${W3_DIR}/src")
 	target_link_libraries(${TARGET} ${ETH_WEBTHREE_LIBRARY})
 	target_link_libraries(${TARGET} ${ETH_WEB3JSONRPC_LIBRARY})
 endfunction()
