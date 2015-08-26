@@ -24,8 +24,10 @@ function(eth_apply TARGET REQUIRED)
 	target_link_libraries(${TARGET} ${LEVELDB_LIBRARIES})	#TODO: use the correct database library according to cpp-ethereum
 	target_link_libraries(${TARGET} ${CRYPTOPP_LIBRARIES})
 	target_link_libraries(${TARGET} ${ETH_CORE_LIBRARIES})
+	target_link_libraries(${TARGET} ${JSONCPP_LIBRARIES})
+	target_link_libraries(${TARGET} ${JSON_RPC_CPP_LIBRARIES})
 	if (UNIX)
-		target_link_libraries(${EXECUTABLE} pthread)
+		target_link_libraries(${TARGET} pthread)
 	endif()
 
 	eth_copy_dlls(${TARGET} EVMJIT_DLLS OpenCL_DLLS)
