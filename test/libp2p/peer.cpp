@@ -45,12 +45,18 @@ BOOST_AUTO_TEST_CASE(host)
 
 	VerbosityHolder setTemporaryLevel(10);
 
-	NetworkPreferences host1prefs("127.0.0.1", 30321, false);
-	NetworkPreferences host2prefs("127.0.0.1", 30322, false);
-	Host host1("Test", host1prefs);
-	Host host2("Test", host2prefs);
+	Host host1("Test", NetworkPreferences("127.0.0.1", 0, false));
 	host1.start();
+	auto host1port = host1.listenPort();
+	BOOST_REQUIRE(host1port);
+
+	Host host2("Test", NetworkPreferences("127.0.0.1", 0, false));
 	host2.start();
+	auto host2port = host2.listenPort();
+	BOOST_REQUIRE(host2port);
+	
+	BOOST_REQUIRE_NE(host1port, host2port);
+	
 	auto node2 = host2.id();
 	int const step = 10;
 
@@ -63,7 +69,7 @@ BOOST_AUTO_TEST_CASE(host)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
 	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
-	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2prefs.listenPort, host2prefs.listenPort));
+	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
 	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
