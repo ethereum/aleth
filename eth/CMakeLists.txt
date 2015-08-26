@@ -17,10 +17,6 @@ target_link_libraries(${EXECUTABLE} webthree)
 target_link_libraries(${EXECUTABLE} web3jsonrpc)
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${V8_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${CURL_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${OpenCL_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LIBRARIES})
 
 eth_use(${EXECUTABLE} REQUIRED EthCore)
 
