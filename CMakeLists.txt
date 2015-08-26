@@ -26,4 +26,4 @@ include(EthExecutableHelper)
 include(EthUtils)
 
 add_subdirectory(src)
-
+add_subdirectory(test)
