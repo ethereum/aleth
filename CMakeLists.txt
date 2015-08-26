@@ -461,7 +461,7 @@ if (EXISTS "${CMAKE_SOURCE_DIR}/webthree/CMakeLists.txt")
 	add_subdirectory(webthree)
 endif()
 
-if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/alethzero")
+if (EXISTS "${CMAKE_SOURCE_DIR}/alethzero/CMakeLists.txt")
 	add_subdirectory(alethzero)
 endif()
 
