@@ -30,6 +30,8 @@ if (ETH_JSON_RPC_STUB)
 	add_dependencies(${EXECUTABLE} jsonrpcstub)
 endif ()
 
+target_link_libraries(${EXECUTABLE} whisper)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
