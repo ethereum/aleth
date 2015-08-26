@@ -409,7 +409,6 @@ add_subdirectory(libnatspec)
 
 if (GENERAL)
 	add_subdirectory(libp2p)
-	add_subdirectory(libwhisper)
 endif ()
 
 if (GENERAL OR MINER)
