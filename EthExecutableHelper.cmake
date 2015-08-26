@@ -46,11 +46,11 @@ endmacro()
 macro(eth_copy_dll EXECUTABLE DLL)
 	# dlls must be unsubstitud list variable (without ${}) in format
 	# optimized;path_to_dll.dll;debug;path_to_dlld.dll 
-	if(WIN32)
+	if(DEFINED MSVC)
 		list(GET ${DLL} 1 DLL_RELEASE)
 		list(GET ${DLL} 3 DLL_DEBUG)
 		add_custom_command(TARGET ${EXECUTABLE}
-			POST_BUILD 
+			PRE_BUILD 
 			COMMAND ${CMAKE_COMMAND} ARGS 
 			-DDLL_RELEASE="${DLL_RELEASE}" 
 			-DDLL_DEBUG="${DLL_DEBUG}" 
@@ -114,7 +114,7 @@ macro(eth_install_executable EXECUTABLE)
 			verify_app(\"${APP_BUNDLE_PATH}\")
 			" COMPONENT RUNTIME )
 
-	elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+	elseif (DEFINED MSVC)
 
 		get_target_property(TARGET_LIBS ${EXECUTABLE} INTERFACE_LINK_LIBRARIES)
 		string(REGEX MATCH "Qt5::Core" HAVE_QT ${TARGET_LIBS})
@@ -190,7 +190,7 @@ macro(eth_package EXECUTABLE)
 		)
 	endif ()
 
-	if (WIN32)
+	if (DEFINED MSVC)
 		# packaging stuff
 		include(InstallRequiredSystemLibraries)
 		set(CPACK_PACKAGE_NAME "${NAME}")

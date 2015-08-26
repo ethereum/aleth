@@ -28,7 +28,7 @@ set(MHD_LIBRARIES ${MHD_LIBRARY})
 # same naming convention as in QT (appending debug library with d)
 # boost is using the same "hack" as us with "optimized" and "debug"
 # official MHD project actually uses _d suffix
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (DEFINED MSVC)
 
 	find_library(
 		MHD_LIBRARY_DEBUG
