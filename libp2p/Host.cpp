@@ -236,10 +236,13 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		else
 		{
 			// peer doesn't exist, try to get port info from node table
-			if (Node n = m_nodeTable->node(_id))
-				p = make_shared<Peer>(n);
-			else
+			if (m_nodeTable)
+				if (Node n = m_nodeTable->node(_id))
+					p = make_shared<Peer>(n);
+
+			if (!p)
 				p = make_shared<Peer>(Node(_id, UnspecifiedNodeIPEndpoint));
+
 			m_peers[_id] = p;
 		}
 	}
