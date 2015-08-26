@@ -17,20 +17,15 @@ target_link_libraries(${EXECUTABLE} webthree)
 target_link_libraries(${EXECUTABLE} web3jsonrpc)
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${V8_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${CURL_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${OpenCL_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${MINIUPNPC_LIBRARIES})
 
-
-# eth_use(${EXECUTABLE} REQUIRED EthCore WebThreeJsonRpc)
 eth_use(${EXECUTABLE} REQUIRED EthCore)
 
-if (DEFINED WIN32 AND NOT DEFINED CMAKE_COMPILER_IS_MINGW)
-	eth_copy_dlls("${EXECUTABLE}" CURL_DLLS)
-endif()
 if (READLINE_FOUND)
 	target_link_libraries(${EXECUTABLE} ${READLINE_LIBRARIES})
-endif()
-
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-	eth_copy_dlls("${EXECUTABLE}" MHD_DLLS EVMJIT_DLLS OpenCL_DLLS)
 endif()
 
 if (APPLE)
