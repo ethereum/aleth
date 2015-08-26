@@ -465,5 +465,6 @@ if (EXISTS "${CMAKE_SOURCE_DIR}/alethzero/CMakeLists.txt")
 	add_subdirectory(alethzero)
 endif()
 
-#TODO: remove
-add_subdirectory(mix)
+if (EXISTS "${CMAKE_SOURCE_DIR}/mix/CMakeLists.txt")
+	add_subdirectory(mix)
+endif()
