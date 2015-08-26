@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 # Figure out environment.
-set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The the path to the cmake directory")
+set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
 # set cmake_policies
@@ -36,7 +36,6 @@ set(D_FATDB ON)
 set(D_ETHASHCL ON)
 set(D_EVMJIT ON)
 set(D_JSCONSOLE ON)
-set(D_JSONRPC ON)
 set(D_VMTRACE OFF)
 set(D_PARANOID OFF)
 set(D_PROFILING OFF)
@@ -95,7 +94,6 @@ elseif (BUNDLE STREQUAL "wallet")
 	set(D_MINER OFF)
 	set(D_ETHASHCL OFF)
 	set(D_FATDB OFF)
-	set(D_JSONRPC OFF)
 	set(D_JSCONSOLE OFF)
 	set(D_EVMJIT OFF)
 elseif (BUNDLE STREQUAL "miner")
@@ -108,7 +106,6 @@ elseif (BUNDLE STREQUAL "miner")
 	set(D_MINER ON)
 	set(D_ETHASHCL ON)
 	set(D_FATDB OFF)
-	set(D_JSONRPC OFF)
 	set(D_JSCONSOLE OFF)
 	set(D_EVMJIT OFF)
 elseif (BUNDLE STREQUAL "release")      # release builds
@@ -121,7 +118,6 @@ elseif (BUNDLE STREQUAL "release")      # release builds
 	set(D_ETHASHCL ON)
 	set(D_EVMJIT ON)
 	set(D_JSCONSOLE ON)
-	set(D_JSONRPC ON)
 	set(D_CMAKE_BUILD_TYPE "Release")
 endif ()
 
@@ -281,7 +277,6 @@ eth_format_option(PARANOID)
 eth_format_option(VMTRACE)
 eth_format_option(EVMJIT)
 eth_format_option(FATDB)
-eth_format_option(JSONRPC)
 eth_format_option(MINER)
 eth_format_option(USENPM)
 eth_format_option(PROFILING)
@@ -295,14 +290,6 @@ eth_format_option(ETHASHCL)
 eth_format_option(JSCONSOLE)
 eth_format_option(OLYMPIC)
 eth_format_option(SERPENT)
-
-if (JSCONSOLE)
-	set(JSONRPC ON)
-endif()
-
-if (GUI)
-	set(JSONRPC ON)
-endif()
 
 # Default CMAKE_BUILD_TYPE accordingly.
 set(CMAKE_BUILD_TYPE CACHE STRING ${D_CMAKE_BUILD_TYPE})
@@ -330,7 +317,6 @@ message("--                  HTTP Request support                     ${CURL_FOU
 message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
 message("-- PROFILING        Profiling support                        ${PROFILING}")
 message("-- FATDB            Full database exploring                  ${FATDB}")
-message("-- JSONRPC          JSON-RPC support                         ${JSONRPC}")
 message("-- USENPM           Javascript source building               ${USENPM}")
 message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
 message("-- OLYMPIC          Default to the Olympic network           ${OLYMPIC}")
@@ -464,6 +450,25 @@ if (TOOLS)
 #		add_subdirectory(exp)
 #	endif ()
 
+endif()
+
+# Optional sub-projects
+if (EXISTS "${CMAKE_SOURCE_DIR}/solidity/CMakeLists.txt")
+	add_subdirectory(solidity)
+endif()
+
+if (EXISTS "${CMAKE_SOURCE_DIR}/webthree/CMakeLists.txt")
+	add_subdirectory(webthree)
+endif()
+
+# Optionally if the user has dot/grapviz, generate the dependency graph
+find_program(GRAPHVIZDOT dot)
+if (GRAPHVIZDOT)
+	message(STATUS "Graphviz detected. Drawing a module dependency graph at ${CMAKE_SOURCE_DIR}/dependency_graph.svg")
+	execute_process(
+		COMMAND dot -Tsvg dependency_graph.dot -o dependency_graph.svg
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	)
 endif()
 
 #TODO: remove
