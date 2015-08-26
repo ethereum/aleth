@@ -446,7 +446,14 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
 		drop(TCPError);
 		return false;
 	}
-	// If this fails then there's an unhandled asio error
-	assert(_expected == _length);
+	else if (_length != _expected)
+	{
+		// with static m_data-sized buffer this shouldn't happen unless there's a regression
+		// sec recommends checking anyways (instead of assert)
+		clog(NetWarn) << "Error reading - TCP read buffer length differs from expected frame size.";
+		disconnect(UserReason);
+		return false;
+	}
+
 	return true;
 }
