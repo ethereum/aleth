@@ -55,7 +55,7 @@ struct Setup
 		dev::p2p::NodeIPEndpoint::test_allowLocal = true;
 
 		static bool setup = false;
-		if (!setup && !test::Options::get().nonetwork)
+		if (!setup)
 		{
 			setup = true;
 			NetworkPreferences nprefs(std::string(), c_web3port, false);
@@ -105,9 +105,6 @@ BOOST_FIXTURE_TEST_SUITE(shhrpc, Setup)
 
 BOOST_AUTO_TEST_CASE(basic)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing web3 basic functionality...";
 
 	web3->startNetwork();
@@ -155,9 +152,6 @@ BOOST_AUTO_TEST_CASE(basic)
 
 BOOST_AUTO_TEST_CASE(send)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing web3 send...";
 
 	bool sent = false;
@@ -226,9 +220,6 @@ BOOST_AUTO_TEST_CASE(send)
 
 BOOST_AUTO_TEST_CASE(receive)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing web3 receive...";
 
 	bool sent = false;
@@ -296,9 +287,6 @@ BOOST_AUTO_TEST_CASE(receive)
 
 BOOST_AUTO_TEST_CASE(serverBasic)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing basic jsonrpc server...";
 
 	string s = jsonrpcServer->web3_clientVersion();
@@ -334,9 +322,6 @@ BOOST_AUTO_TEST_CASE(serverBasic)
 
 BOOST_AUTO_TEST_CASE(server)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing server functionality...";
 
 	bool b;

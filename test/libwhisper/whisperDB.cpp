@@ -131,9 +131,6 @@ BOOST_AUTO_TEST_CASE(persistence)
 
 BOOST_AUTO_TEST_CASE(messages)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing load/save Whisper messages...";
 	VerbosityHolder setTemporaryLevel(2);
 
@@ -190,9 +187,6 @@ BOOST_AUTO_TEST_CASE(messages)
 
 BOOST_AUTO_TEST_CASE(corruptedData)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing corrupted data...";
 	VerbosityHolder setTemporaryLevel(2);
 
@@ -220,9 +214,6 @@ BOOST_AUTO_TEST_CASE(corruptedData)
 
 BOOST_AUTO_TEST_CASE(filters)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing filters saving...";
 	VerbosityHolder setTemporaryLevel(2);
 

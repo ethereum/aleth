@@ -3,6 +3,7 @@ set(CMAKE_AUTOMOC OFF)
 aux_source_directory(. SRC_LIST)
 
 include_directories(..)
+include_directories(../..)
 
 set(EXECUTABLE web3testutils)
 

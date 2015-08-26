@@ -43,9 +43,6 @@ BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
 
 BOOST_AUTO_TEST_CASE(topic)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing Whisper...";
 	VerbosityHolder setTemporaryLevel(0);
 
@@ -120,9 +117,6 @@ BOOST_AUTO_TEST_CASE(topic)
 
 BOOST_AUTO_TEST_CASE(forwarding)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing Whisper forwarding...";
 	VerbosityHolder setTemporaryLevel(0);
 
@@ -225,9 +219,6 @@ BOOST_AUTO_TEST_CASE(forwarding)
 
 BOOST_AUTO_TEST_CASE(asyncforwarding)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing Whisper async forwarding...";
 	VerbosityHolder setTemporaryLevel(2);
 
@@ -313,9 +304,6 @@ BOOST_AUTO_TEST_CASE(asyncforwarding)
 
 BOOST_AUTO_TEST_CASE(topicAdvertising)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	cnote << "Testing Topic Advertising...";
 	VerbosityHolder setTemporaryLevel(2);
 
@@ -391,9 +379,6 @@ BOOST_AUTO_TEST_CASE(topicAdvertising)
 
 BOOST_AUTO_TEST_CASE(selfAddressed)
 {
-	if (test::Options::get().nonetwork)
-		return;
-
 	VerbosityHolder setTemporaryLevel(10);
 	cnote << "Testing self-addressed messaging with bloom filter matching...";
 
