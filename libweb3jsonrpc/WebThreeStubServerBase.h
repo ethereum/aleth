@@ -30,7 +30,7 @@
 #include <libdevcrypto/Common.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "abstractwebthreestubserver.h"
+#include "AbstractWebThreeStubServer.h"
 #pragma GCC diagnostic pop
 
 
@@ -161,14 +161,14 @@ public:
 	virtual Json::Value shh_getFilterChanges(std::string const& _filterId);
 	virtual Json::Value shh_getMessages(std::string const& _filterId);
 
-	virtual bool admin_web3_setVerbosity(int _v, std::string const& _session);
+	virtual bool admin_setVerbosity(int _v, std::string const& _session);
 	virtual bool admin_net_start(std::string const& _session);
 	virtual bool admin_net_stop(std::string const& _session);
 	virtual bool admin_net_connect(std::string const& _node, std::string const& _session);
 	virtual Json::Value admin_net_peers(std::string const& _session);
 	virtual Json::Value admin_net_nodeInfo(std::string const& _session);
 
-	virtual bool admin_eth_exit(std::string const& _session);
+	virtual bool admin_exit(std::string const& _session);
 	virtual bool admin_eth_setMining(bool _on, std::string const& _session);
 	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) { (void)_session; return Json::Value(); }
 	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }

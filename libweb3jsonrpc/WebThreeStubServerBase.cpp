@@ -501,7 +501,7 @@ string WebThreeStubServerBase::eth_compileSerpent(string const& _source)
 
 #define ADMIN requires(_session, Privilege::Admin)
 
-bool WebThreeStubServerBase::admin_web3_setVerbosity(int _v, string const& _session)
+bool WebThreeStubServerBase::admin_setVerbosity(int _v, string const& _session)
 {
 	ADMIN;
 	g_logVerbosity = _v;
@@ -552,7 +552,7 @@ Json::Value WebThreeStubServerBase::admin_net_nodeInfo(const string& _session)
 	return ret;
 }
 
-bool WebThreeStubServerBase::admin_eth_exit(string const& _session)
+bool WebThreeStubServerBase::admin_exit(string const& _session)
 {
 	ADMIN;
 	Client::exitHandler(SIGTERM);
