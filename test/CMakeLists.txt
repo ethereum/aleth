@@ -31,8 +31,6 @@ if (JSCONSOLE)
 	add_subdirectory(libjsengine)
 endif()
 
-#add_subdirectory(libwhisper)
-
 set(SRC_LIST ${SRC_LIST} ${SRC})
 
 include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})

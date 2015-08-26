@@ -21,10 +21,6 @@
 
 #pragma once
 
-#include <thread>
-#include <list>
-#include <atomic>
-#include <boost/timer.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/Worker.h>
