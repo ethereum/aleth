@@ -453,12 +453,11 @@ if (TOOLS)
 endif()
 
 # Optional sub-projects
-if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/solidity")
+if (EXISTS "${CMAKE_SOURCE_DIR}/solidity/CMakeLists.txt")
 	add_subdirectory(solidity)
 endif()
 
-
-if (IS_DIRECTORY "${CMAKE_SOURCE_DIR}/webthree")
+if (EXISTS "${CMAKE_SOURCE_DIR}/webthree/CMakeLists.txt")
 	add_subdirectory(webthree)
 endif()
 
