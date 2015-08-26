@@ -27,6 +27,7 @@ include(EthUtils)
 
 add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
+add_subdirectory(libwhisper)
 add_subdirectory(eth)
 
 # test stuff
