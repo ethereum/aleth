@@ -219,7 +219,7 @@ macro(eth_package EXECUTABLE)
 		set(CPACK_NSIS_MUI_UNIICON "${WIN_ICON}")
 
 		include(CPack)
-	endif (WIN32)
+	endif ()
 
 endmacro()
 
