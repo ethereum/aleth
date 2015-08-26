@@ -470,6 +470,8 @@ private:
 		exit(0);
 	}
 
+	// dummy struct for special exception.
+	struct NoWork {};
 	void doFarm(MinerType _m, string const& _remote, unsigned _recheckPeriod)
 	{
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
@@ -525,6 +527,8 @@ private:
 					}
 
 					Json::Value v = rpc.eth_getWork();
+					if (v[0].asString().empty())
+						throw NoWork();
 					h256 hh(v[0].asString());
 					h256 newSeedHash(v[1].asString());
 					if (current.seedHash != newSeedHash)
@@ -571,6 +575,11 @@ private:
 					cerr << "JSON-RPC problem. Probably couldn't connect. Retrying in " << i << "... \r";
 				cerr << endl;
 			}
+			catch (NoWork&)
+			{
+				this_thread::sleep_for(chrono::milliseconds(100));
+			}
+
 #endif
 		exit(0);
 	}
