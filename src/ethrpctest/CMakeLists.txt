@@ -11,7 +11,9 @@ file(GLOB HEADERS "*.h")
 
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED WebThreeJsonRpc)
+eth_use(${EXECUTABLE} REQUIRED EthCore ServerJsonRpc)
+target_link_libraries(${EXECUTABLE} webthree)
+target_link_libraries(${EXECUTABLE} web3jsonrpc)
 
 target_link_libraries(${EXECUTABLE} ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(${EXECUTABLE} ${ETH_TESTUTILS_LIBRARY})
