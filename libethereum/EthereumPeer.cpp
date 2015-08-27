@@ -38,6 +38,7 @@ using namespace dev::eth;
 using namespace p2p;
 
 const unsigned c_maxIncomingNewHashes = 1024;
+const unsigned c_maxHashesToSend = 65536;
 
 string toString(Asking _a)
 {
@@ -264,7 +265,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		h256 later = _r[0].toHash<h256>();
 		unsigned limit = _r[1].toInt<unsigned>();
 		clog(NetMessageSummary) << "GetBlockHashes (" << limit << "entries," << later << ")";
-		unsigned c = min<unsigned>(host()->chain().number(later), limit);
+		unsigned c = min<unsigned>(host()->chain().number(later), min(limit, c_maxHashesToSend));
 		RLPStream s;
 		prep(s, BlockHashesPacket, c);
 		h256 p = host()->chain().details(later).parent;
@@ -283,7 +284,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		RLPStream s;
 		if (number <= host()->chain().number())
 		{
-			unsigned c = min<unsigned>(host()->chain().number() - number + 1, limit);
+			unsigned c = min<unsigned>(host()->chain().number() - number + 1, min(limit, c_maxHashesToSend));
 			prep(s, BlockHashesPacket, c);
 			for (unsigned n = number; n < number + c; n++)
 			{
