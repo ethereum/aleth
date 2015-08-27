@@ -12,7 +12,7 @@ set(WEB3_INCLUDE_DIRS ${WEB3_INCLUDE_DIR})
 
 # if the project is a subset of cpp-ethereum
 # use same pattern for variables as Boost uses
-if (DEFINED ethereum_VERSION)
+if (DEFINED webthree_VERSION)
 
 	foreach (l ${LIBS})
 		string(TOUPPER ${l} L)
