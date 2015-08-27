@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 	for (auto const& h: hosts)
 		host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
-	for (unsigned i = 0; i < c_peers * 1000 && host2.peerCount() < c_peers; i += c_step)
+	for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
 		this_thread::sleep_for(chrono::milliseconds(c_step));
 
 	BOOST_CHECK_EQUAL(host.peerCount(), c_peers);
