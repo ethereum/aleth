@@ -77,7 +77,7 @@ public:
 	bytes const& data() const { return m_data; }
 
 	bool matchesBloomFilter(TopicBloomFilterHash const& f) const;
-	bool isExpired() const { return m_expiry <= (unsigned)time(0); }
+	bool isExpired() const { return m_expiry <= utcTime(); }
 
 private:
 	Envelope(unsigned _exp, unsigned _ttl, AbridgedTopics const& _topic): m_expiry(_exp), m_ttl(_ttl), m_topic(_topic) {}
