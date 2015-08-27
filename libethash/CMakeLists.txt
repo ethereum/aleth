@@ -31,7 +31,7 @@ endif()
 
 if (CRYPTOPP_FOUND)
 	add_definitions(-DWITH_CRYPTOPP)
-	include_directories( ${CRYPTOPP_INCLUDE_DIRS} )
+	include_directories(SYSTEM ${CRYPTOPP_INCLUDE_DIRS} )
 	list(APPEND FILES sha3_cryptopp.cpp sha3_cryptopp.h)
 else()
 	list(APPEND FILES sha3.c sha3.h)
