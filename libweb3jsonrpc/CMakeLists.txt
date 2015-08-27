@@ -1,4 +1,3 @@
-cmake_policy(SET CMP0015 NEW)
 set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
@@ -7,11 +6,9 @@ set(EXECUTABLE web3jsonrpc)
 
 file(GLOB HEADERS "*.h")
 
-include_directories(..)
-
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED EthCore ServerJsonRpc)
+eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
 
 if (ETH_JSON_RPC_STUB)
 	add_custom_target(jsonrpcstub) 
@@ -29,8 +26,6 @@ if (ETH_JSON_RPC_STUB)
 	)
 	add_dependencies(${EXECUTABLE} jsonrpcstub)
 endif ()
-
-target_link_libraries(${EXECUTABLE} whisper)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
