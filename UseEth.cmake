@@ -36,8 +36,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		endif()
 
 		if (NOT DEFINED MSVC)
-			find_package(Threads REQUIRED)
-			target_link_libraries(${TARGET} ${CMAKE_THREAD_LIBS_INIT})
+			target_link_libraries(${TARGET} pthread)
 		endif()
 	endif()
 

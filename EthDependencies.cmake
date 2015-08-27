@@ -198,7 +198,6 @@ function(eth_use TARGET REQUIRED)
 			list(GET MODULE_PARTS 1 MODULE_SUB)
 		endif()
 		# TODO: check if file exists if not, throws FATAL_ERROR with detailed description
-		#message(STATUS "including ${MODULE_MAIN} required by ${TARGET}")
 		include(Use${MODULE_MAIN})
 		eth_apply(${TARGET} ${REQUIRED} ${MODULE_SUB})
 	endforeach()

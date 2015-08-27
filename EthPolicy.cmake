@@ -23,7 +23,9 @@ macro (eth_policy)
 		cmake_policy(SET CMP0048 NEW)
 
 		# do not interpret if() arguments as variables!
-		cmake_policy(SET CMP0054 NEW)
+		if (${CMAKE_VERSION} VERSION_GREATER 3.1)
+			cmake_policy(SET CMP0054 NEW)
+		endif()
 
 	endif()
 

@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQUIRED)
 	if (NOT V8_FOUND)
-		if (${REQUIRED} STREQUAL "REQUIRED")
+		if (NOT ${REQUIRED} STREQUAL "OPTIONAL")
 			message(FATAL_ERROR "v8 library not found")
 		endif()
 		return()
