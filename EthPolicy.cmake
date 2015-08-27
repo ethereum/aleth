@@ -22,6 +22,9 @@ macro (eth_policy)
 		# allow VERSION argument in project()
 		cmake_policy(SET CMP0048 NEW)
 
+		# do not interpret if() arguments as variables!
+		cmake_policy(SET CMP0054 NEW)
+
 	endif()
 
 endmacro()

@@ -1,0 +1,8 @@
+function(eth_apply TARGET REQUIRED)	
+	if (CRYPTOPP_FOUND)
+		target_include_directories(${TARGET} SYSTEM PUBLIC ${CRYPTOPP_INCLUDE_DIRS})
+		target_link_libraries(${TARGET} ${CRYPTOPP_LIBRARIES})
+	elseif (${REQUIRED} STREQUAL "REQUIRED")
+		message(FATAL_ERROR "Cryptopp library not found")
+	endif()
+endfunction()
