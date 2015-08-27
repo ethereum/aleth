@@ -116,53 +116,54 @@ std::set<bi::address> Network::getInterfaceAddresses()
 
 int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& _netPrefs)
 {
-	int retport = -1;
-	if (_netPrefs.listenIPAddress.empty())
-		for (unsigned i = 0; i < 2; ++i)
-		{
-			// try to connect w/listenPort, else attempt net-allocated port
-			bi::tcp::endpoint endpoint(bi::tcp::v4(), i ? 0 : _netPrefs.listenPort);
-			try
-			{
-				_acceptor.open(endpoint.protocol());
-				_acceptor.set_option(ba::socket_base::reuse_address(true));
-				_acceptor.bind(endpoint);
-				_acceptor.listen();
-				retport = _acceptor.local_endpoint().port();
-				break;
-			}
-			catch (...)
-			{
-				if (i)
-				{
-					// both attempts failed
-					cwarn << "Couldn't start accepting connections on host. Something very wrong with network?\n" << boost::current_exception_diagnostic_information();
-				}
-				
-				// first attempt failed
-				_acceptor.close();
-				continue;
-			}
-		}
-	else
+	// Due to the complexities of NAT and network environments (multiple NICs, tunnels, etc)
+	// and security concerns automation is the enemy of network configuration.
+	// If a preference cannot be accommodate the network must fail to start.
+	//
+	// Preferred IP: Attempt if set, else, try 0.0.0.0 (all interfaces)
+	// Preferred Port: Attempt if set, else, try c_defaultListenPort or 0 (random)
+	// TODO: throw instead of returning -1 and rename NetworkPreferences to NetworkConfig
+	
+	bi::address listenIP;
+	try
 	{
-		bi::tcp::endpoint endpoint(bi::address::from_string(_netPrefs.listenIPAddress), _netPrefs.listenPort);
+		listenIP = _netPrefs.listenIPAddress.empty() ? bi::address_v4() : bi::address::from_string(_netPrefs.listenIPAddress);
+	}
+	catch (...)
+	{
+		cwarn << "Couldn't start accepting connections on host. Failed to accept socket on " << listenIP << ":" << _netPrefs.listenPort << ".\n" << boost::current_exception_diagnostic_information();
+		return -1;
+	}
+	bool requirePort = (bool)_netPrefs.listenPort;
+
+	for (unsigned i = 0; i < 2; ++i)
+	{
+		bi::tcp::endpoint endpoint(listenIP, requirePort ? _netPrefs.listenPort : (i ? 0 : c_defaultListenPort));
 		try
 		{
 			_acceptor.open(endpoint.protocol());
 			_acceptor.set_option(ba::socket_base::reuse_address(true));
 			_acceptor.bind(endpoint);
 			_acceptor.listen();
-			retport = _acceptor.local_endpoint().port();
-			assert(retport == _netPrefs.listenPort);
+			return _acceptor.local_endpoint().port();
 		}
 		catch (...)
 		{
-			clog(NetWarn) << "Couldn't start accepting connections on host. Failed to accept socket.\n" << boost::current_exception_diagnostic_information();
+			// bail if this is first attempt && port was specificed, or second attempt failed (random port)
+			if (i || requirePort)
+			{
+				// both attempts failed
+				cwarn << "Couldn't start accepting connections on host. Failed to accept socket on " << listenIP << ":" << _netPrefs.listenPort << ".\n" << boost::current_exception_diagnostic_information();
+				_acceptor.close();
+				return -1;
+			}
+			
+			_acceptor.close();
+			continue;
 		}
-		return retport;
 	}
-	return retport;
+
+	return -1;
 }
 
 bi::tcp::endpoint Network::traverseNAT(std::set<bi::address> const& _ifAddresses, unsigned short _listenPort, bi::address& o_upnpInterfaceAddr)
