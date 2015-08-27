@@ -580,7 +580,7 @@ void NodeTable::doCheckEvictions()
 	m_timers.schedule(c_evictionCheckInterval.count(), [this](boost::system::error_code const& _ec)
 	{
 		if (_ec)
-			clog(NodeTableMessageDetail) << "Discovery timer was probably cancelled: " << _ec.value() << _ec.message();
+			clog(NodeTableMessageDetail) << "Check Evictions timer was probably cancelled: " << _ec.value() << _ec.message();
 
 		if (_ec.value() == boost::asio::error::operation_aborted || m_timers.isStopped())
 			return;
