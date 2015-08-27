@@ -1,15 +1,12 @@
 function(eth_apply TARGET REQUIRED)
-	find_package (v8)
 	if (NOT V8_FOUND)
-		if (NOT ("${REQUIRED}" STREQUAL "OPTIONAL"))
+		if (${REQUIRED} STREQUAL "REQUIRED")
 			message(FATAL_ERROR "v8 library not found")
 		endif()
 		return()
 	endif()
 
-	message(" - v8 header: ${V8_INCLUDE_DIRS}")
-	message(" - v8 lib   : ${V8_LIBRARIES}")
-
-	include_directories(BEFORE SYSTEM ${V8_INCLUDE_DIRS})
+	# don't know why, but v8 don't want to compile with SYSTEM flag
+	target_include_directories(${TARGET} BEFORE PUBLIC ${V8_INCLUDE_DIRS})
 	target_link_libraries(${TARGET} ${V8_LIBRARIES})
 endfunction()

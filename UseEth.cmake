@@ -117,6 +117,17 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${Eth_LLL_LIBRARIES})
 	endif()
 
+	if (${SUBMODULE} STREQUAL "ethereum")
+		eth_use(${TARGET} ${REQUIRED} Eth::evm Eth::lll Eth::p2p Eth::devcrypto Eth::ethcore JsonRpc::Server JsonRpc::Client)
+		target_link_libraries(${TARGET} ${Boost_REGEX_LIBRARIES})
+		target_link_libraries(${TARGET} ${Eth_ETHEREUM_LIBRARIES})
+	endif()
+
+	if (${SUBMODULE} STREQUAL "jsengine")
+		eth_use(${TARGET} ${REQUIRED} V8)
+		target_link_libraries(${TARGET} ${Eth_JSENGINE_LIBRARIES})
+	endif()
+
 	#find_package(Eth)
 	#include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 	#include_directories(${ETH_DIR})

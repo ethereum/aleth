@@ -1,0 +1,8 @@
+function(eth_apply TARGET REQUIRED)	
+	if (READLINE_FOUND)
+		target_include_directories(${TARGET} SYSTEM PUBLIC ${READLINE_INCLUDE_DIRS})
+		target_link_libraries(${TARGET} ${READLINE_LIBRARIES})
+	elseif (${REQUIRED} STREQUAL "REQUIRED")
+		message(FATAL_ERROR "Readline library not found")
+	endif()
+endfunction()
