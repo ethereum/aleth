@@ -1,8 +1,6 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (DEFINED webthree_SOURCE_DIR)
-		set(ETH_WEBTHREE_LIBRARY webthree)
-		set(ETH_WEB3JSONRPC_LIBRARY web3jsonrpc)
 		set(W3_DIR "${ethereum_SOURCE_DIR}/webthree")
 	else()
 		set(W3_DIR         "${PROJECT_SOURCE_DIR}/../webthree" 		CACHE PATH "The path to the webthree directory")
@@ -12,7 +10,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	find_package(Web3)
-	target_include_directories(${TARGET} PUBLIC ${ETH_DIR})
+	target_include_directories(${TARGET} PUBLIC ${W3_DIR})
 
 	if (${SUBMODULE} STREQUAL "whisper")
 		eth_use(${TARGET} ${REQUIRED} Eth::devcore Eth::p2p Eth::devcrypto)
