@@ -1,9 +1,9 @@
-# Find ethereum
+# Find Eth
 #
 # Find the ethereum includes and library
 #
 # This module defines
-#  ETH_CORE_LIBRARIES, the libraries needed to use ethereum.
+#  ETH_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
@@ -27,18 +27,13 @@ else()
 		find_library(Eth_${L}_LIBRARIES
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"	
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
+			# libevmjit is nested...
+			"evmjit/libevmjit-cpp"
 			NO_DEFAULT_PATH
 		)
 	endforeach()
 
 	# TODO: iterate over "lib${l}/Debug libraries if DEFINED MSVC
-
 endif()
 
-# TODO: review it and decide if it is required
-# handle the QUIETLY and REQUIRED arguments and set ETH_FOUND to TRUE
-# if all listed variables are TRUE, hide their existence from configuration view
-#include(FindPackageHandleStandardArgs)
-#find_package_handle_standard_args(ethereum DEFAULT_MSG)
-#mark_as_advanced (ETH_CORE_LIBRARIES)

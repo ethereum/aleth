@@ -11,6 +11,11 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})
 	endif()
 
+	find_package(Eth)
+	target_include_directories(${TARGET} PUBLIC ${ETH_DIR})
+	# look for Buildinfo.h in build dir
+	target_include_directories(${TARGET} PUBLIC ${ETH_BUILD_DIR})
+
 	# Base is where all dependencies for devcore are
 	if (${SUBMODULE} STREQUAL "base")
 		target_include_directories(${TARGET} SYSTEM BEFORE PUBLIC ${JSONCPP_INCLUDE_DIRS})	
@@ -132,6 +137,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	if (${SUBMODULE} STREQUAL "jsconsole")
 		eth_use(${EXECUTABLE} ${REQUIRED} Eth::jsengine Eth::devcore JsonRpc::Server JsonRpc::Client)
 		eth_use(${EXECUTABLE} OPTIONAL Readline)
+		target_link_libraries(${TARGET} ${Eth_JSCONSOLE_LIBRARIES})
 	endif()
 
 	if (${SUBMODULE} STREQUAL "natspec")
