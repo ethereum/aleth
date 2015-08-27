@@ -57,9 +57,4 @@ TimerHelper::~TimerHelper()
 		clog(TimerChannel) << m_id << chrono::duration_cast<chrono::milliseconds>(e).count() << "ms";
 }
 
-uint64_t utcTime()
-{
-    return mktime(gmtime((const time_t*)time(0)));
-}
-
 }
