@@ -86,10 +86,6 @@ find_package (Readline 6.3.8)
 message(STATUS "readline header: ${READLINE_INCLUDE_DIRS}")
 message(STATUS "readline lib   : ${READLINE_LIBRARIES}")
 
-if (READLINE_FOUND)
-	add_definitions(-DETH_READLINE)
-endif ()
-
 # TODO miniupnpc package does not yet check for correct version number
 # TODO make miniupnpc package dependent on cmake options
 # TODO get rid of -DMINIUPNPC
@@ -97,17 +93,11 @@ find_package (Miniupnpc 1.8.2013)
 message(STATUS "miniupnpc header: ${MINIUPNPC_INCLUDE_DIRS}")
 message(STATUS "miniupnpc lib   : ${MINIUPNPC_LIBRARIES}")
 
-if (MINIUPNPC_FOUND)
-	add_definitions(-DETH_MINIUPNPC)
-endif()
-
 # TODO gmp package does not yet check for correct version number
 # TODO it is also not required in msvc build
 find_package (Gmp 6.0.0)
-if (GMP_FOUND)
-	message(" - gmp header: ${GMP_INCLUDE_DIRS}")
-	message(" - gmp lib   : ${GMP_LIBRARIES}")
-endif()
+message(" - gmp header: ${GMP_INCLUDE_DIRS}")
+message(" - gmp lib   : ${GMP_LIBRARIES}")
 
 # curl is only requried for tests
 # TODO specify min curl version, on windows we are currently using 7.29
