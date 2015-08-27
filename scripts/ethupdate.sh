@@ -13,6 +13,7 @@ do
     cd $project >/dev/null 2>/dev/null
     if [[ $? -ne 0 ]]; then
 	echo "Skipping ${project} because directory does not exit";
+	cd $ROOT_DIR
 	continue
     fi
     BRANCH="$(git symbolic-ref HEAD 2>/dev/null)" ||
@@ -20,6 +21,7 @@ do
     BRANCH=${BRANCH##refs/heads/}
     if [[ $BRANCH != "develop" ]]; then
 	echo "Not updating ${project} because it's not in the develop branch"
+	cd $ROOT_DIR
 	continue
     fi
 
