@@ -210,7 +210,7 @@ void WhisperHost::cleanup()
 {
 	// remove old messages.
 	// should be called every now and again.
-	uint64_t now = utcTime();
+	unsigned now = (unsigned)time(0);
 	WriteGuard l(x_messages);
 	for (auto it = m_expiryQueue.begin(); it != m_expiryQueue.end() && it->first <= now; it = m_expiryQueue.erase(it))
 		m_messages.erase(it->second);
@@ -243,7 +243,7 @@ void WhisperHost::saveMessagesToBD()
 	{
 		WhisperMessagesDB db;
 		ReadGuard g(x_messages);
-		uint64_t now = utcTime();
+		unsigned now = (unsigned)time(0);
 		for (auto const& m: m_messages)
 			if (m.second.expiry() > now)
 				if (isWatched(m.second))
