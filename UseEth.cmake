@@ -18,6 +18,12 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	# Base is where all dependencies for devcore are
 	if (${SUBMODULE} STREQUAL "base")
+
+		# if it's ethereum source dir, alwasy build BuildInfo.h before
+		if (DEFINED ethereum_SOURCE_DIR)
+			add_dependencies(${TARGET} BuildInfo.h)
+		endif()
+
 		target_include_directories(${TARGET} SYSTEM BEFORE PUBLIC ${JSONCPP_INCLUDE_DIRS})	
 		target_include_directories(${TARGET} BEFORE PUBLIC ..)	
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})	
