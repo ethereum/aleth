@@ -29,7 +29,8 @@ else()
 			PATHS ${CMAKE_LIBRARY_PATH}
 			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
 			# libevmjit is nested...
-			"evmjit/libevmjit-cpp"
+			"evmjit/libevmjit" "evmjit/libevmjit/Release"
+			"evmjit/libevmjit-cpp" "evmjit/libevmjit-cpp/Release"
 			NO_DEFAULT_PATH
 		)
 	endforeach()

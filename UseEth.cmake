@@ -109,6 +109,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "evmjit")
 		# TODO: not sure if should use evmjit or evmjit-cpp
+		target_link_libraries(${TARGET} ${Eth_EVMJIT_LIBRARIES})
 		target_link_libraries(${TARGET} ${Eth_EVMJIT-CPP_LIBRARIES})
 	endif()
 
