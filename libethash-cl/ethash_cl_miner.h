@@ -8,6 +8,11 @@
 #pragma clang diagnostic ignored "-Wunused-parameter"
 #include "cl.hpp"
 #pragma clang diagnostic pop
+#elif defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstack-protector"
+#include "cl.hpp"
+#pragma GCC diagnostic pop
 #else
 #include "cl.hpp"
 #endif
