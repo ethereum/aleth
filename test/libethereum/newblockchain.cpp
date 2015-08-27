@@ -437,7 +437,6 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 					aUncleList.push_back(uncleHeaderObj);
 				}
 				blObj["uncleHeaders"] = aUncleList;
-
 				blObj["transactions"] = writeTransactionsToJson(alterBlock.getTransactionQueue());
 
 				compareBlocks(block, alterBlock);
@@ -482,15 +481,12 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 		{
 			TestBlockChain blockchain(genesisBlock);
 			for (auto const& bl: o["blocks"].get_array())
-			{
-				bool importedAndBest = true;
+			{				
 				mObject blObj = bl.get_obj();
 				TestBlock blockFromRlp(blObj["rlp"].get_str());
 				try
 				{
 					trueBc.addBlock(blockFromRlp);
-					if (trueBc.getTopBlock().getBytes() != blockFromRlp.getBytes())
-						importedAndBest  = false;
 				}
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (Exception const& _e)
@@ -515,49 +511,52 @@ void doBlockchainTests2(json_spirit::mValue& _v, bool _fillin)
 				//block from RLP successfully imported. now compare this rlp to test sections
 				BOOST_REQUIRE(blObj.count("blockHeader"));
 
-				//Check the fields restored from RLP to original fields
-				if (importedAndBest)
-				{
-					//Check Provided Header against block in RLP
-					TestBlock blockFromFields;
-					blockFromFields.setBlockHeader(blObj["blockHeader"].get_obj());
+				//Check Provided Header against block in RLP
+				TestBlock blockFromFields;
+				blockFromFields.setBlockHeader(blObj["blockHeader"].get_obj());
 
-					//ImportTransactions
-					BOOST_REQUIRE(blObj.count("transactions"));
-					for (auto const& txObj: blObj["transactions"].get_array())
+				//ImportTransactions
+				BOOST_REQUIRE(blObj.count("transactions"));
+				for (auto const& txObj: blObj["transactions"].get_array())
+				{
+					try
 					{
-						try
-						{
-							TestTransaction transaction(txObj.get_obj());
-							blockFromFields.addTransaction(transaction);
-						}
-						catch (Exception const& _e)
-						{
-							TBOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
-						}
-						catch (exception const& _e)
-						{
-							cnote << _e.what();
-						}
+						TestTransaction transaction(txObj.get_obj());
+						blockFromFields.addTransaction(transaction);
+					}
+					catch (Exception const& _e)
+					{
+						TBOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
+					}
+					catch (exception const& _e)
+					{
+						cnote << _e.what();
+					}
+				}
+
+				// ImportUncles
+				if (blObj["uncleHeaders"].type() != json_spirit::null_type)
+					for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
+					{
+						mObject uBlH = uBlHeaderObj.get_obj();
+						BOOST_REQUIRE((uBlH.size() == 16));
+
+						TestBlock uncle;
+						uncle.setBlockHeader(blObj["blockHeader"].get_obj());
+						blockFromFields.addUncle(uncle);
 					}
 
-					// ImportUncles
-					if (blObj["uncleHeaders"].type() != json_spirit::null_type)
-						for (auto const& uBlHeaderObj: blObj["uncleHeaders"].get_array())
-						{
-							mObject uBlH = uBlHeaderObj.get_obj();
-							BOOST_REQUIRE((uBlH.size() == 16));
-
-							TestBlock uncle;
-							uncle.setBlockHeader(blObj["blockHeader"].get_obj());
-							blockFromFields.addUncle(uncle);
-						}
-
-					checkBlocks(blockFromFields, blockFromRlp, testname);
-
-					blockFromFields.setBlockHeader(blockFromFields.getBlockHeader(), false); //recalculateBytes
+				checkBlocks(blockFromFields, blockFromRlp, testname);
+				blockFromFields.setBlockHeader(blockFromFields.getBlockHeader(), false); //recalculateBytes
+				try
+				{
 					blockchain.addBlock(blockFromFields);
-				}//importedAndBest
+				}
+				catch (Exception const& _e)
+				{
+					cerr << "Error importing block from filds to blockchain: " << diagnostic_information(_e);
+					break;
+				}
 			}//allBlocks
 
 			BOOST_REQUIRE((o.count("lastblockhash") > 0));
@@ -868,12 +867,11 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 
 }}//namespaces
 
-
 BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bc2)
 {
-	dev::test::executeTests("bcValidBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests2);
+	dev::test::executeTests("bcTotalDifficultyTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
