@@ -579,7 +579,7 @@ void NodeTable::doCheckEvictions()
 {
 	m_timers.schedule(c_evictionCheckInterval.count(), [this](boost::system::error_code const& _ec)
 	{
-		if (_ec)
+		if (_ec || m_timers.isStopped())
 			return;
 		
 		bool evictionsRemain = false;
@@ -607,7 +607,7 @@ void NodeTable::doDiscovery()
 {
 	m_timers.schedule(c_bucketRefresh.count(), [this](boost::system::error_code const& ec)
 	{
-		if (ec)
+		if (ec || m_timers.isStopped())
 			return;
 		
 		clog(NodeTableEvent) << "performing random discovery";
