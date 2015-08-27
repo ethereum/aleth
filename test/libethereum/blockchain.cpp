@@ -39,17 +39,15 @@ namespace dev {  namespace test {
 typedef std::vector<bytes> uncleList;
 typedef std::pair<bytes, uncleList> blockSet;
 
-using BlockHeader = Ethash::BlockHeader;
-
-BlockHeader constructBlock(mObject& _o, h256 const& _stateRoot = h256{});
 bytes createBlockRLPFromFields(mObject& _tObj, h256 const&  _stateRoot = h256{});
+using BlockHeader = Ethash::BlockHeader;
+BlockHeader constructBlock(mObject& _o, h256 const& _stateRoot = h256{});
 RLPStream createFullBlockFromHeader(BlockHeader const& _bi, bytes const& _txs = RLPEmptyList, bytes const& _uncles = RLPEmptyList);
-
 mArray writeTransactionsToJson(Transactions const& _txs);
 mObject writeBlockHeaderToJson(mObject& _o, BlockHeader const& _bi);
+mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet);
 void overwriteBlockHeader(BlockHeader& _current_BlockHeader, mObject& _blObj, const BlockHeader& _parent);
 void updatePoW(BlockHeader& _bi);
-mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vector<BlockHeader> const& _vBiBlocks, std::vector<blockSet> _blockSet);
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
@@ -591,6 +589,7 @@ mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vect
 			if (overwrite == "parentHashIsBlocksParent")
 				uncleBlockFromFields.populateFromParent(_vBiBlocks[_vBiBlocks.size() - 1]);
 		}
+
 
 		updatePoW(uncleBlockFromFields);
 

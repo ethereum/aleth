@@ -24,6 +24,7 @@
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/progress.hpp>
 
 #include "JsonSpiritHeaders.h"
 #include <libethcore/Ethash.h>
@@ -227,6 +228,26 @@ private:
 	Options();
 	Options(Options const&) = delete;
 };
+
+
+class TestOutputHelper
+{
+public:
+	static void initTest(json_spirit::mValue& _v);
+	static bool passTest(json_spirit::mObject& _o, std::string& _testName);
+	static void completeTests(bool _fill = false);
+	static void releaseStream();
+	static void captureStream();
+private:
+	static size_t m_currTest;
+	static size_t m_maxTests;
+
+	static std::streambuf* m_previousBuffer;
+	static std::ostringstream m_tempBuffer;
+	static bool m_wasCaptured;
+};
+
+
 
 /// Allows observing test execution process.
 /// This class also provides methods for registering and notifying the listener

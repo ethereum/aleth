@@ -40,6 +40,7 @@ class TestTransaction
 {
 public:
 	TestTransaction(json_spirit::mObject const& _o);
+	TestTransaction(Transaction const& _tr) : m_transaction(_tr) {}
 	Transaction const& getTransaction() const { return m_transaction; }
 private:
 	json_spirit::mObject m_jsonTransaction;
@@ -53,14 +54,17 @@ private:
 
 public:
 	TestBlock() {};
-	TestBlock(TestBlock const& _original);
+	TestBlock(TestBlock const& _original);	
+	TestBlock(std::string const& _blockRlp);
 	TestBlock& operator = (TestBlock const& _original);
 	TestBlock(json_spirit::mObject& _blockObj, json_spirit::mObject& _stateObj);
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
+	void setUncles(vector<TestBlock> const& _uncles);
 	void mine(TestBlockChain const& bc);
 
-	void setBlockHeader(Ethash::BlockHeader const& _header);
+	void setBlockHeader(Ethash::BlockHeader const& _header, bool _recalculate = true);
+	void setBlockHeader(json_spirit::mObject& _blockHeader);
 
 	bytes const& getBytes() const { return m_bytes; }
 	State const& getState() const { return m_state; }
@@ -73,8 +77,8 @@ public:
 
 private:
 	BlockHeader constructBlock(mObject& _o, h256 const& _stateRoot);
-	bytes createBlockRLPFromFields(mObject& _tObj, h256 const& _stateRoot = h256{});
-	void recalcBlockHeaderBytes();
+	bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
+	void recalcBlockHeaderBytes(bool _recalculate = true);
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
 
@@ -83,6 +87,7 @@ private:
 	vector<TestBlock> m_uncles;
 	State m_state;
 	TransactionQueue m_transactionQueue;
+	BlockQueue m_uncleQueue;
 	bytes m_bytes;
 	TransientDirectory m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
@@ -95,6 +100,7 @@ private:
 public:
 	TestBlockChain(TestBlock const& _genesisBlock);
 	void addBlock(TestBlock const& _block);
+	vector<TestBlock> syncUncles(vector<TestBlock> const& uncles);
 	TestBlock const& getTopBlock() { return m_lastBlock; }
 	FullBlockChain<Ethash> const& getInterface() const { return *m_blockChain.get();}
 	TestBlock const& getTestGenesis() const { return m_genesisBlock; }
