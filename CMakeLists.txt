@@ -414,7 +414,6 @@ add_subdirectory(libnatspec)
 
 if (GENERAL)
 	add_subdirectory(libp2p)
-	add_subdirectory(libwhisper)
 endif ()
 
 if (GENERAL OR MINER)
@@ -473,4 +472,14 @@ endif()
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/mix/CMakeLists.txt")
 	add_subdirectory(mix)
+endif()
+
+# Optionally if the user has dot/grapviz, generate the dependency graph
+find_program(GRAPHVIZDOT dot)
+if (GRAPHVIZDOT)
+	message(STATUS "Graphviz detected. Drawing a module dependency graph at ${CMAKE_SOURCE_DIR}/dependency_graph.svg")
+	execute_process(
+		COMMAND dot -Tsvg dependency_graph.dot -o dependency_graph.svg
+		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+	)
 endif()

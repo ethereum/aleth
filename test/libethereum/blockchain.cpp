@@ -560,7 +560,7 @@ mArray importUncles(mObject const& _blObj, vector<BlockHeader>& _vBiUncles, vect
 		BlockHeader uncleBlockFromFields = constructBlock(uncleHeaderObj);
 
 		// make uncle header valid
-		uncleBlockFromFields.setTimestamp((u256)time(0));
+		uncleBlockFromFields.setTimestamp(utcTime());
 		if (_vBiBlocks.size() > 2)
 		{
 			if (uncleBlockFromFields.number() - 1 < _vBiBlocks.size())
@@ -797,7 +797,8 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
-	dev::test::executeTests("bcForkBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	if (!test::Options::get().fillTests)
+		dev::test::executeTests("bcForkBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
@@ -805,9 +806,16 @@ BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
 	dev::test::executeTests("bcTotalDifficultyTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
+BOOST_AUTO_TEST_CASE(bcForkUncleTest)
+{
+	if (!test::Options::get().fillTests)
+		dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
-	dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	if (!test::Options::get().fillTests)
+		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcRPC_API_Test)

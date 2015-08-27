@@ -114,8 +114,8 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 unsigned BlockChainSync::estimatedHashes() const
 {
 	BlockInfo block = host().chain().info();
-	time_t lastBlockTime = (block.hash() == host().chain().genesisHash()) ? 1428192000 : (time_t)block.timestamp();
-	time_t now = time(0);
+	uint64_t lastBlockTime = (block.hash() == host().chain().genesisHash()) ? 1428192000 : (uint64_t)block.timestamp();
+	uint64_t now = utcTime();
 	unsigned blockCount = c_chainReorgSize;
 	if (lastBlockTime > now)
 		clog(NetWarn) << "Clock skew? Latest block is in the future";

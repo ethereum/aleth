@@ -19,7 +19,6 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 target_link_libraries(${EXECUTABLE} evm)
 target_link_libraries(${EXECUTABLE} lll)
-target_link_libraries(${EXECUTABLE} whisper)
 target_link_libraries(${EXECUTABLE} p2p)
 target_link_libraries(${EXECUTABLE} devcrypto)
 target_link_libraries(${EXECUTABLE} ethcore)

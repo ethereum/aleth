@@ -292,6 +292,9 @@ enum class WithExisting: int
 	Kill
 };
 
+/// Get the current time in seconds since the epoch in UTC
+uint64_t utcTime();
+
 }
 
 namespace std
