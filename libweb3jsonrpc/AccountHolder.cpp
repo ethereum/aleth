@@ -34,7 +34,7 @@ using namespace dev;
 using namespace dev::eth;
 
 vector<TransactionSkeleton> g_emptyQueue;
-static std::mt19937 g_randomNumberGenerator(utcTime());
+static std::mt19937 g_randomNumberGenerator(time(0));
 static Mutex x_rngMutex;
 
 vector<Address> AccountHolder::allAccounts() const
