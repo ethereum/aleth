@@ -186,13 +186,13 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
 
-void ImportTest::importState(json_spirit::mObject& _o, State& _state, AccountMaskMap& o_mask)
+void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
 {		
 	std::string jsondata = json_spirit::write_string((json_spirit::mValue)_o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, &o_mask));
 }
 
-void ImportTest::importState(json_spirit::mObject& _o, State& _state)
+void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 {
 	AccountMaskMap mask;
 	importState(_o, _state, mask);
@@ -206,12 +206,12 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 {
 	if (_o.count("secretKey") > 0)
 	{
-		assert(_o.count("nonce") > 0);
-		assert(_o.count("gasPrice") > 0);
-		assert(_o.count("gasLimit") > 0);
-		assert(_o.count("to") > 0);
-		assert(_o.count("value") > 0);
-		assert(_o.count("data") > 0);
+		BOOST_REQUIRE(_o.count("nonce") > 0);
+		BOOST_REQUIRE(_o.count("gasPrice") > 0);
+		BOOST_REQUIRE(_o.count("gasLimit") > 0);
+		BOOST_REQUIRE(_o.count("to") > 0);
+		BOOST_REQUIRE(_o.count("value") > 0);
+		BOOST_REQUIRE(_o.count("data") > 0);
 
 		if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
@@ -228,6 +228,16 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 	}
 	else
 	{
+		BOOST_REQUIRE(_o.count("nonce"));
+		BOOST_REQUIRE(_o.count("gasPrice"));
+		BOOST_REQUIRE(_o.count("gasLimit"));
+		BOOST_REQUIRE(_o.count("to"));
+		BOOST_REQUIRE(_o.count("value"));
+		BOOST_REQUIRE(_o.count("data"));
+		BOOST_REQUIRE(_o.count("v"));
+		BOOST_REQUIRE(_o.count("r"));
+		BOOST_REQUIRE(_o.count("s"));
+
 		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
 		RLP transactionRLP(transactionRLPStream.out());
 		try
@@ -578,7 +588,8 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	auto& filename = Options::get().singleTestFile;
 	auto& testname = Options::get().singleTestName;
 
-	VerbosityHolder sentinel(12);
+	if (g_logVerbosity != -1)
+		VerbosityHolder sentinel(12);
 
 	try
 	{
@@ -888,6 +899,44 @@ void Listener::notifyTestFinished()
 {
 	if (g_listener)
 		g_listener->testFinished();
+}
+
+size_t TestOutputHelper::m_currTest = 0;
+size_t TestOutputHelper::m_maxTests = 0;
+string TestOutputHelper::m_currentTestName = "n/a";
+
+using namespace boost;
+void TestOutputHelper::initTest(json_spirit::mValue& _v)
+{
+	std::string testCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cerr << "Test Case \"" + testCaseName + "\": " << std::endl;
+	m_maxTests = _v.get_obj().size();
+	m_currTest = 0;	
+}
+
+bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName)
+{
+	m_currTest++;	
+	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
+	if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
+	{
+		int percent = int(m_currTest*100/m_maxTests);
+		std::cerr << percent << "%";
+		if (percent != 100)
+			std::cerr << "...";
+		std::cerr << std::endl;
+	}
+
+	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
+	{
+		_o.clear();
+		return false;
+	}
+
+	cnote << _testName;
+	_testName = "(" + _testName + ") ";
+	m_currentTestName = _testName;
+	return true;
 }
 
 } } // namespaces
