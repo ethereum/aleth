@@ -10,7 +10,7 @@ set(l solidity)
 
 # if the project is a subset of main cpp-ethereum project
 # use same pattern for variables as Boost uses
-if (DEFINED ethereum_VERSION)
+if ((DEFINED solidity_VERSION) OR (DEFINED ethereum_VERSION))
 
 	string(TOUPPER ${l} L)
 	set ("SOLIDITY_LIBRARIES" ${l})
