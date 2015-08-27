@@ -3,7 +3,6 @@ set(CMAKE_AUTOMOC OFF)
 
 aux_source_directory(. SRC_LIST)
 
-include_directories(BEFORE ${V8_INCLUDE_DIRS})
 include_directories(BEFORE ..)
 
 set(EXECUTABLE jsengine)
@@ -24,7 +23,7 @@ if (APPLE)
 	set_property(TARGET ${EXECUTABLE} PROPERTY XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libstdc++")
 endif()
 
-target_link_libraries(${EXECUTABLE} ${V8_LIBRARIES})
+eth_use(${EXECUTABLE} REQUIRED V8)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
