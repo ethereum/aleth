@@ -8,9 +8,9 @@
 
 set(l solidity)
 
-# if the project is a subset of main cpp-solidity project
+# if the project is a subset of main cpp-ethereum project
 # use same pattern for variables as Boost uses
-if (DEFINED solidity_VERSION)
+if (DEFINED ethereum_VERSION)
 
 	string(TOUPPER ${l} L)
 	set ("SOLIDITY_LIBRARIES" ${l})
@@ -21,10 +21,9 @@ else()
 	find_library(SOLIDITY_LIBRARIES
 		NAMES ${l}
 		PATHS ${CMAKE_LIBRARY_PATH}
-		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
+		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 		NO_DEFAULT_PATH
 	)
 
 	# TODO: look in over "lib${l}/Debug libraries if DEFINED MSVC
 endif()
-

@@ -10,11 +10,11 @@ set(LIBS whisper;webthree;web3jsonrpc)
 
 set(WEB3_INCLUDE_DIRS ${WEB3_INCLUDE_DIR})
 
-# if the project is a subset of webthree 
+# if the project is a subset of cpp-ethereum
 # use same pattern for variables as Boost uses
-if (DEFINED webthree_VERSION)
+if (DEFINED ethereum_VERSION)
 
-	foreach (l ${LIBS}) 
+	foreach (l ${LIBS})
 		string(TOUPPER ${l} L)
 		set ("Web3_${L}_LIBRARIES" ${l})
 	endforeach()
@@ -26,11 +26,10 @@ else()
 		find_library(Web3_${L}_LIBRARIES
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 			NO_DEFAULT_PATH
 		)
 	endforeach()
 
 	# TODO: iterate over "lib${l}/Debug libraries if DEFINED MSVC
 endif()
-
