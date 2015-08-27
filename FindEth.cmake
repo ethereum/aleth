@@ -7,26 +7,24 @@
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
-set(CORE_LIBS ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;devcore;ethash-cl;ethash;scrypt;natspec)
-if (NOT MSVC)
-	list(APPEND CORE_LIBS "secp256k1")
-endif()
-
-if (JSCONSOLE)
-	list(APPEND CORE_LIBS jsengine jsconsole)
-endif()
-
-set(ALL_LIBS ${CORE_LIBS};evmjit;solidity;secp256k1;testutils)
+set(LIBS ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;devcore;ethash-cl;ethash;scrypt;natspec;jsengine;jsconsole;evmjit;evmjit-cpp;solidity;secp256k1;testutils)
 
 set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
 
+# if the project is a subset of main cpp-ethereum project
+# use same pattern for variables as Boost uses
 if (DEFINED ethereum_VERSION)
-	set(ETH_CORE_LIBRARIES ${CORE_LIBS})
-else()
-	set(ETH_CORE_LIBRARIES ${ETH_LIBRARY})
-	foreach (l ${ALL_LIBS})
+
+	foreach (l ${LIBS}) 
 		string(TOUPPER ${l} L)
-		find_library(ETH_${L}_LIBRARY
+		set ("Eth_${L}_LIBRARIES" ${l})
+	endforeach()
+
+else()
+
+	foreach (l ${LIBS})
+		string(TOUPPER ${l} L)
+		find_library(Eth_${L}_LIBRARIES
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
 			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"	
@@ -34,15 +32,13 @@ else()
 		)
 	endforeach()
 
-	foreach (l ${CORE_LIBS})
-		string(TOUPPER ${l} L)
-		list(APPEND ETH_CORE_LIBRARIES ${ETH_${L}_LIBRARY})
-	endforeach()
+	# TODO: iterate over "lib${l}/Debug libraries if DEFINED MSVC
+
 endif()
 
+# TODO: review it and decide if it is required
 # handle the QUIETLY and REQUIRED arguments and set ETH_FOUND to TRUE
 # if all listed variables are TRUE, hide their existence from configuration view
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(ethereum DEFAULT_MSG
-	ETH_CORE_LIBRARIES)
-mark_as_advanced (ETH_CORE_LIBRARIES)
+#include(FindPackageHandleStandardArgs)
+#find_package_handle_standard_args(ethereum DEFAULT_MSG)
+#mark_as_advanced (ETH_CORE_LIBRARIES)
