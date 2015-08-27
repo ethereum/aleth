@@ -89,7 +89,7 @@ void WhisperMessagesDB::loadAllMessages(std::map<h256, Envelope>& o_dst)
 	op.verify_checksums = true;
 	vector<string> wasted;
 	unique_ptr<leveldb::Iterator> it(m_db->NewIterator(op));
-	unsigned const now = (unsigned)time(0);
+	unsigned const now = utcTime();
 
 	for (it->SeekToFirst(); it->Valid(); it->Next())
 	{
