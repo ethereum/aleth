@@ -14,4 +14,4 @@ target_link_libraries(testweb3 webthree)
 target_link_libraries(testweb3 web3jsonrpc)
 target_link_libraries(testweb3 ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 
-eth_use(testweb3 REQUIRED EthCore)
+#eth_use(testweb3 REQUIRED EthCore)

@@ -1,9 +1,7 @@
-cmake_policy(SET CMP0015 NEW)
 set(CMAKE_AUTOMOC OFF)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
-include_directories(BEFORE ..)
 aux_source_directory(. SRC_LIST)
 
 set(EXECUTABLE webthree)
@@ -12,10 +10,7 @@ file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED EthCore)
-eth_use(${EXECUTABLE} OPTIONAL Solidity)
-
-target_link_libraries(${EXECUTABLE} whisper)
+eth_use(${EXECUTABLE} REQUIRED Web3::whisper Eth::devcore Eth::p2p Eth::devcrypto Eth::ethereum)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )

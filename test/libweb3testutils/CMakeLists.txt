@@ -11,9 +11,7 @@ file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED EthCore ServerJsonRpc)
-target_link_libraries(${EXECUTABLE} webthree)
-target_link_libraries(${EXECUTABLE} web3jsonrpc)
+eth_use(${EXECUTABLE} REQUIRED Web3::web3jsonrpc)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )

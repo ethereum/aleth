@@ -7,22 +7,10 @@ set(EXECUTABLE eth)
 
 file(GLOB HEADERS "*.h")
 
-include_directories(..)
-
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-add_definitions(-DETH_JSONRPC)
 
-find_package (json_rpc_cpp 0.4 REQUIRED)
-target_link_libraries(${EXECUTABLE} webthree)
-target_link_libraries(${EXECUTABLE} web3jsonrpc)
-target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
-target_link_libraries(${EXECUTABLE} ${JSON_RPC_CPP_SERVER_LIBRARIES})
-
-eth_use(${EXECUTABLE} REQUIRED EthCore)
-
-if (READLINE_FOUND)
-	target_link_libraries(${EXECUTABLE} ${READLINE_LIBRARIES})
-endif()
+eth_use(${EXECUTABLE} REQUIRED Web3::web3jsonrpc JsonRpc::Client Eth::jsconsole)
+eth_use(${EXECUTABLE} OPTIONAL Readline)
 
 if (APPLE)
 	install(TARGETS ${EXECUTABLE} DESTINATION bin)
