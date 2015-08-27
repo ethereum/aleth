@@ -471,6 +471,7 @@ if (EXISTS "${CMAKE_SOURCE_DIR}/alethzero/CMakeLists.txt")
 endif()
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/mix/CMakeLists.txt")
+	set(ETH_DIR ${CMAKE_SOURCE_DIR}) # mix needs also ETH_DIR set do handle resources
 	add_subdirectory(mix)
 endif()
 
