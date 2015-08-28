@@ -6,3 +6,15 @@
 	path = webthree
 	url = https://github.com/ethereum/webthree
 	branch = develop
+[submodule "alethzero"]
+	path = alethzero
+	url = https://github.com/ethereum/alethzero
+	branch = develop
+[submodule "mix"]
+	path = mix
+	url = https://github.com/ethereum/mix
+	branch = develop
+[submodule "cmake"]
+	path = cmake
+	url = https://github.com/ethereum/cpp-ethereum-cmake
+	branch = develop

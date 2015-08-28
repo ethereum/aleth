@@ -2,7 +2,12 @@
 cmake_minimum_required(VERSION 3.0.0)
 
 # Figure out environment.
-set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The path to the cmake directory")
+if (EXISTS "${CMAKE_SOURCE_DIR}/cmake/LICENSE")
+	# Check if cpp-ethereum-cmake submodule is available (by checking a random file in cmake dir)
+	set(ETH_CMAKE_DIR "${CMAKE_SOURCE_DIR}/cmake" CACHE PATH "The path to the cmake directory")
+else()
+	set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/../cpp-ethereum-cmake"   CACHE PATH "The path to the cmake directory")
+endif()
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
 # set cmake_policies
@@ -452,12 +457,22 @@ if (TOOLS)
 endif()
 
 # Optional sub-projects
+
 if (EXISTS "${CMAKE_SOURCE_DIR}/solidity/CMakeLists.txt")
 	add_subdirectory(solidity)
 endif()
 
 if (EXISTS "${CMAKE_SOURCE_DIR}/webthree/CMakeLists.txt")
 	add_subdirectory(webthree)
+endif()
+
+if (EXISTS "${CMAKE_SOURCE_DIR}/alethzero/CMakeLists.txt")
+	add_subdirectory(alethzero)
+endif()
+
+if (EXISTS "${CMAKE_SOURCE_DIR}/mix/CMakeLists.txt")
+	set(ETH_DIR ${CMAKE_SOURCE_DIR}) # mix needs also ETH_DIR set do handle resources
+	add_subdirectory(mix)
 endif()
 
 # Optionally if the user has dot/grapviz, generate the dependency graph
@@ -469,7 +484,3 @@ if (GRAPHVIZDOT)
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 	)
 endif()
-
-#TODO: remove
-add_subdirectory(alethzero)
-add_subdirectory(mix)
