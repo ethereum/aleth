@@ -8,10 +8,10 @@ PROJECTS=(cpp-ethereum webthree solidity alethzero mix)
 ROOT_DIR=$(pwd)
 
 function print_help {
-	echo "Usage: ethupdate.sh [options]"
-	echo "    --branch NAME Will update to the specified branch."
-	echo "    --origin NAME Will send the updates back to origin NAME if specified."
-	echo "    --upstream NAME The name of the remote to pull from."
+	echo "Usage: ethbuild.sh branchname [extra-options]"
+	echo "    If --clean-build is given then build directories will be cleared"
+	echo "    If --build-type BUILDTYPE is given then this is gonna be the value of -DCMAKE_BUILD_TYPE"
+	echo "    If --cores NUMBER is give then this is the value to the cores argument of make. e.g.: make -j4"
 }
 
 # Check arguments
