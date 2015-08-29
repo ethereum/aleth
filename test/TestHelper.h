@@ -116,8 +116,8 @@ public:
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
-	static void importState(json_spirit::mObject& _o, eth::State& _state);
-	static void importState(json_spirit::mObject& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
+	static void importState(json_spirit::mObject const& _o, eth::State& _state);
+	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
@@ -229,25 +229,17 @@ private:
 	Options(Options const&) = delete;
 };
 
-
 class TestOutputHelper
 {
 public:
 	static void initTest(json_spirit::mValue& _v);
-	static bool passTest(json_spirit::mObject& _o, std::string& _testName);
-	static void completeTests(bool _fill = false);
-	static void releaseStream();
-	static void captureStream();
+	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
+	static std::string const& testName() { return m_currentTestName; };
 private:
 	static size_t m_currTest;
 	static size_t m_maxTests;
-
-	static std::streambuf* m_previousBuffer;
-	static std::ostringstream m_tempBuffer;
-	static bool m_wasCaptured;
+	static std::string m_currentTestName;
 };
-
-
 
 /// Allows observing test execution process.
 /// This class also provides methods for registering and notifying the listener
