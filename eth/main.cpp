@@ -44,6 +44,7 @@
 #include <libwebthree/WebThree.h>
 #if ETH_JSCONSOLE || !ETH_TRUE
 #include <libjsconsole/JSLocalConsole.h>
+#include <libjsconsole/JSRemoteConsole.h>
 #endif
 #if ETH_READLINE || !ETH_TRUE
 #include <readline/readline.h>
@@ -78,6 +79,7 @@ void help()
 		<< "Operating mode (default is non-interactive node):" << endl
 #if ETH_JSCONSOLE || !ETH_TRUE
 		<< "    console  Enter interactive console mode (default: non-interactive)." << endl
+		<< "    attach  Ether interactive console mode of already-running eth."
 		<< "    import <file>  Import file as a concatenated series of blocks." << endl
 		<< "    export <file>  Export file as a concatenated series of blocks." << endl
 #endif
@@ -160,6 +162,10 @@ void help()
 		<< "    --structured-logging  Enable structured logging (default: output to stdout)." << endl
 		<< "    --structured-logging-format <format>  Set the structured logging time format." << endl
 		<< "    --structured-logging-url <URL>  Set the structured logging destination (currently only file:// supported)." << endl
+		<< endl
+		<< "Attach mode:" << endl
+		<< "    --session-key <hex>  Use the given session key when attaching to the remote eth instance." << endl
+		<< "    --url <url>  Attach to the remote eth instance with the given URL." << endl
 		<< endl
 		<< "Import/export modes:" << endl
 		<< "    --from <n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
@@ -244,7 +250,8 @@ enum class OperationMode
 {
 	Node,
 	Import,
-	Export
+	Export,
+	Attach
 };
 
 enum class Format
@@ -280,6 +287,12 @@ int main(int argc, char** argv)
 	string dbPath;
 //	unsigned prime = 0;
 //	bool yesIReallyKnowWhatImDoing = false;
+
+	/// When attaching.
+	string remoteURL = contentsString(getDataDir("web3") + "/session.url");
+	if (remoteURL.empty())
+		remoteURL = "http://localhost:8545";
+	string remoteSessionKey = contentsString(getDataDir("web3") + "/session.key");
 
 	/// File name for import/export.
 	string filename;
@@ -378,6 +391,10 @@ int main(int argc, char** argv)
 	{
 		string arg = argv[i];
 		if (m.interpretOption(i, argc, argv)) {}
+		else if (arg == "--url" && i + 1 < argc)
+			remoteURL = argv[++i];
+		else if (arg == "--session-key" && i + 1 < argc)
+			remoteSessionKey = argv[++i];
 		else if (arg == "--listen-ip" && i + 1 < argc)
 			listenIP = argv[++i];
 		else if ((arg == "-l" || arg == "--listen" || arg == "--listen-port") && i + 1 < argc)
@@ -447,6 +464,8 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
+		else if (arg == "attach")
+			mode = OperationMode::Attach;
 		else if (arg == "--to" && i + 1 < argc)
 			exportTo = argv[++i];
 		else if (arg == "--from" && i + 1 < argc)
@@ -784,6 +803,16 @@ int main(int argc, char** argv)
 			cerr << "Invalid argument: " << arg << endl;
 			exit(-1);
 		}
+	}
+
+	if (mode == OperationMode::Attach)
+	{
+		JSRemoteConsole console(remoteURL);
+		if (!remoteSessionKey.empty())
+			console.eval("web3.admin.setSessionKey('" + remoteSessionKey + "')");
+		while (true)
+			console.readAndEval();
+		return 0;
 	}
 
 	// Set up all the chain config stuff.
