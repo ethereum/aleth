@@ -36,6 +36,14 @@ class TestTransaction;
 class TestBlock;
 class TestBlockChain;
 
+enum class RecalcBlockHeader
+{
+	Update,				//find new valid nonce and hash
+	Verify,				//check that block content is matching header
+	UpdateAndVerify,
+	SkipVerify
+};
+
 class TestTransaction
 {
 public:
@@ -57,14 +65,14 @@ public:
 	TestBlock(TestBlock const& _original);	
 	TestBlock(std::string const& _blockRlp);
 	TestBlock& operator = (TestBlock const& _original);
-	TestBlock(json_spirit::mObject& _blockObj, json_spirit::mObject& _stateObj);
+	TestBlock(json_spirit::mObject const& _blockObj, json_spirit::mObject const& _stateObj, RecalcBlockHeader _verify = RecalcBlockHeader::Verify);
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
 	void mine(TestBlockChain const& bc);
 
-	void setBlockHeader(Ethash::BlockHeader const& _header, bool _recalculate = true);
-	void setBlockHeader(json_spirit::mObject& _blockHeader);
+	void setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate);
+	void setState(State const& _state);
 
 	bytes const& getBytes() const { return m_bytes; }
 	State const& getState() const { return m_state; }
@@ -76,9 +84,9 @@ public:
 	Address const& getBeneficiary() const { return m_blockHeader.beneficiary(); }
 
 private:
-	BlockHeader constructBlock(mObject& _o, h256 const& _stateRoot);
+	BlockHeader constructBlock(mObject const& _o, h256 const& _stateRoot);
 	bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
-	void recalcBlockHeaderBytes(bool _recalculate = true);
+	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
 
