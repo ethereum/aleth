@@ -108,6 +108,8 @@ AddressHash SimpleAccountHolder::realAccounts() const
 
 h256 SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
+	if (m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
+		return h256();
 	if (isRealAccount(_t.from))
 		return m_client()->submitTransaction(_t, m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); })).first;
 	else if (isProxyAccount(_t.from))

@@ -342,6 +342,7 @@ int main(int argc, char** argv)
 //	double blockFees = 15.0;
 	u256 askPrice = DefaultGasPrice;
 	u256 bidPrice = DefaultGasPrice;
+	bool alwaysConfirm = true;
 
 	// javascript console
 	bool useConsole = false;
@@ -654,6 +655,8 @@ int main(int argc, char** argv)
 			pinning = disableDiscovery = true;
 		else if (arg == "--sociable")
 			noPinning = enableDiscovery = true;
+		else if (arg == "--unsafe-transactions")
+			alwaysConfirm = false;
 		else if (arg == "--import-presale" && i + 1 < argc)
 			presaleImports.push_back(argv[++i]);
 		else if (arg == "-f" || arg == "--force-mining")
@@ -842,6 +845,22 @@ int main(int argc, char** argv)
 		g_silence = true;
 		cout << endl;
 		string ret = dev::getPassword(prompt);
+		g_silence = s;
+		return ret;
+	};
+	auto getResponse = [&](string const& prompt, unordered_set<string> const& acceptable) {
+		bool s = g_silence;
+		g_silence = true;
+		cout << endl;
+		string ret;
+		while (true)
+		{
+			cout << prompt;
+			getline(cin, ret);
+			if (acceptable.count(ret))
+				break;
+			cout << "Invalid response: " << ret << endl;
+		}
 		g_silence = s;
 		return ret;
 	};
@@ -1061,10 +1080,32 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC || !ETH_TRUE
 	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
 	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
+
+	AddressHash allowedDestinations;
+
+	auto authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
+		if (!alwaysConfirm || allowedDestinations.count(_t.to))
+			return true;
+
+		string r = getResponse(_t.userReadable(isProxy,
+			[&](TransactionSkeleton const& _t) -> pair<bool, string>
+			{
+				h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
+				if (contractCodeHash == EmptySHA3)
+					return std::make_pair(false, std::string());
+				// TODO: actually figure out the natspec. we'll need the natspec database here though.
+				return std::make_pair(true, std::string());
+			}, [&](Address const& _a) { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
+		) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
+		if (r == "always")
+			allowedDestinations.insert(_t.to);
+		return r == "yes" || r == "always";
+	};
+
 	if (jsonRPCURL > -1)
 	{
 		jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::HttpServer(jsonRPCURL, "", "", SensibleHttpThreads));
-		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
+		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
 		jsonrpcServer->StartListening();
 		if (jsonAdmin.empty())
 			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Privilege::Admin}});
