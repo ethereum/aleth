@@ -48,3 +48,17 @@ Address Interface::submitTransaction(Secret const& _secret, u256 const& _endowme
 	ts.nonce = _nonce;
 	return submitTransaction(ts, _secret).second;
 }
+
+BlockInfo Interface::blockInfo(BlockNumber _block) const
+{
+	if (_block == PendingBlock)
+		return pendingInfo();
+	return blockInfo(hashFromNumber(_block));
+}
+
+BlockDetails Interface::blockDetails(BlockNumber _block) const
+{
+	if (_block == PendingBlock)
+		return pendingDetails();
+	return blockDetails(hashFromNumber(_block));
+}

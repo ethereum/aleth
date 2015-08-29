@@ -137,6 +137,8 @@ public:
 	virtual unsigned number() const override;
 	virtual Transactions pending() const override;
 	virtual h256s pendingHashes() const override;
+	virtual BlockInfo pendingInfo() const override;
+	virtual BlockDetails pendingDetails() const override;
 
 	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
 	virtual ImportResult injectBlock(bytes const& _block) override;

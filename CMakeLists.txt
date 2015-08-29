@@ -470,6 +470,3 @@ if (GRAPHVIZDOT)
 	)
 endif()
 
-#TODO: remove
-add_subdirectory(alethzero)
-add_subdirectory(mix)
