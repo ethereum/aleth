@@ -10,7 +10,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(ethereum VERSION "0.9.42")
+project(ethereum VERSION "0.9.91")
 
 set(CMAKE_AUTOMOC ON)
 
