@@ -88,7 +88,7 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi)
 	Json::Value res;
 	if (_bi)
 	{
-		res["hash"] = toJS(_bi.hash());
+		DEV_IGNORE_EXCEPTIONS(res["hash"] = toJS(_bi.hash()));
 		res["parentHash"] = toJS(_bi.parentHash());
 		res["sha3Uncles"] = toJS(_bi.sha3Uncles());
 		res["miner"] = toJS(_bi.beneficiary());
