@@ -141,8 +141,13 @@ int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& 
 		bi::tcp::endpoint endpoint(listenIP, requirePort ? _netPrefs.listenPort : (i ? 0 : c_defaultListenPort));
 		try
 		{
+#ifdef _WIN32
+			bool reuse = false;
+#else
+			bool reuse = true;
+#endif
 			_acceptor.open(endpoint.protocol());
-			_acceptor.set_option(ba::socket_base::reuse_address(true));
+			_acceptor.set_option(ba::socket_base::reuse_address(reuse));
 			_acceptor.bind(endpoint);
 			_acceptor.listen();
 			return _acceptor.local_endpoint().port();
