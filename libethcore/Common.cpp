@@ -153,5 +153,49 @@ void badBlock(bytesConstRef _block, string const& _err)
 	badBlockInfo(bi, _err);
 }
 
+string TransactionSkeleton::userReadable(bool _toProxy, function<pair<bool, string>(TransactionSkeleton const&)> const& _getNatSpec, function<string(Address const&)> const& _formatAddress) const
+{
+	if (creation)
+	{
+		// show notice concerning the creation code. TODO: this needs entering into natspec.
+		return string("ÐApp is attemping to create a contract; ") + (_toProxy ? "(this transaction is not executed directly, but forwarded to another ÐApp) " : "") + "to be endowed with " + formatBalance(value) + ", with additional network fees of up to " + formatBalance(gas * gasPrice) + ".\n\nMaximum total cost is " + formatBalance(value + gas * gasPrice) + ".";
+	}
+
+	bool isContract;
+	std::string natSpec;
+	tie(isContract, natSpec) = _getNatSpec(*this);
+	if (!isContract)
+	{
+		// recipient has no code - nothing special about this transaction, show basic value transfer info
+		return "ÐApp is attempting to send " + formatBalance(value) + " to a recipient " + _formatAddress(to) + (_toProxy ? " (this transaction is not executed directly, but forwarded to another ÐApp)" : "") + ", with additional network fees of up to " + formatBalance(gas * gasPrice) + ".\n\nMaximum total cost is " + formatBalance(value + gas * gasPrice) + ".";
+	}
+
+	if (natSpec.empty())
+		return "ÐApp is attempting to call into an unknown contract at address " +
+				_formatAddress(to) + ".\n\n" +
+				(_toProxy ? "This transaction is not executed directly, but forwarded to another ÐApp.\n\n" : "")  +
+				"Call involves sending " +
+				formatBalance(value) + " to the recipient, with additional network fees of up to " +
+				formatBalance(gas * gasPrice) +
+				"However, this also does other stuff which we don't understand, and does so in your name.\n\n" +
+				"WARNING: This is probably going to cost you at least " +
+				formatBalance(value + gas * gasPrice) +
+				", however this doesn't include any side-effects, which could be of far greater importance.\n\n" +
+				"REJECT UNLESS YOU REALLY KNOW WHAT YOU ARE DOING!";
+
+	return "ÐApp attempting to conduct contract interaction with " +
+	_formatAddress(to) +
+	": <b>" + natSpec + "</b>.\n\n" +
+	(_toProxy ? "This transaction is not executed directly, but forwarded to another ÐApp.\n\n" : "") +
+	(value > 0 ?
+		"In addition, ÐApp is attempting to send " +
+		formatBalance(value) + " to said recipient, with additional network fees of up to " +
+		formatBalance(gas * gasPrice) + " = " +
+		formatBalance(value + gas * gasPrice) + "."
+	:
+		"Additional network fees are at most" +
+		formatBalance(gas * gasPrice) + ".");
+}
+
 }
 }

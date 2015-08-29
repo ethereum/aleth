@@ -158,8 +158,11 @@ public:
 	virtual Transactions transactions(h256 _blockHash) const = 0;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const = 0;
 
-	BlockInfo blockInfo(BlockNumber _block) const { return blockInfo(hashFromNumber(_block)); }
-	BlockDetails blockDetails(BlockNumber _block) const { return blockDetails(hashFromNumber(_block)); }
+	virtual BlockInfo pendingInfo() const { return BlockInfo(); }
+	virtual BlockDetails pendingDetails() const { return BlockDetails(); }
+
+	BlockInfo blockInfo(BlockNumber _block) const;
+	BlockDetails blockDetails(BlockNumber _block) const;
 	Transaction transaction(BlockNumber _block, unsigned _i) const { auto p = transactions(_block); return _i < p.size() ? p[_i] : Transaction(); }
 	unsigned transactionCount(BlockNumber _block) const { if (_block == PendingBlock) { auto p = pending(); return p.size(); } return transactionCount(hashFromNumber(_block)); }
 	Transactions transactions(BlockNumber _block) const { if (_block == PendingBlock) return pending(); return transactions(hashFromNumber(_block)); }
