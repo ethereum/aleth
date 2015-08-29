@@ -92,7 +92,7 @@ void help()
 #if ETH_JSONRPC || !ETH_TRUE
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
-		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header"
+		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
 		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
 #endif
 		<< "    -K,--kill  Kill the blockchain first." << endl
