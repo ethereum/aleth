@@ -100,7 +100,7 @@ bool Message::populate(bytes const& _data)
 Envelope Message::seal(Secret const& _from, Topics const& _fullTopics, unsigned _ttl, unsigned _workToProve) const
 {
 	AbridgedTopics topics = abridge(_fullTopics);
-	Envelope ret(time(0) + _ttl, _ttl, topics);
+	Envelope ret(utcTime() + _ttl, _ttl, topics);
 
 	bytes input(1 + m_payload.size());
 	input[0] = 0;
