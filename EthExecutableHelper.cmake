@@ -177,12 +177,13 @@ macro(eth_package EXECUTABLE)
 	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
 
 	if (APPLE)
+		message(STATUS "appdmg: ${ETH_APP_DMG}")
 		add_custom_target(appdmg
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			COMMAND ${CMAKE_COMMAND}
 			-DAPP_DMG_EXE=${ETH_APP_DMG}
 			-DAPP_DMG_FILE=appdmg.json.in
-			-DAPP_DMG_ICON="${OSX_ICON}"
+			-DAPP_DMG_ICON="${ETH_INSTALL_EXECUTABLE_OSX_ICON}"
 			-DAPP_DMG_BACKGROUND="install-folder-bg.png"
 			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
 			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:${EXECUTABLE}>"
@@ -194,7 +195,7 @@ macro(eth_package EXECUTABLE)
 		# packaging stuff
 		include(InstallRequiredSystemLibraries)
 		set(CPACK_PACKAGE_NAME "${NAME}")
-		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${DESCRIPTION}")
+		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${ETH_INSTALL_EXECUTABLE_DESCRIPTION}")
 		set(CPACK_PACKAGE_VENDOR "ethereum.org")
 		set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 		set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
@@ -215,8 +216,8 @@ macro(eth_package EXECUTABLE)
 		set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ethereum/cpp-ethereum")
 		set(CPACK_NSIS_CONTACT "ethereum.org")
 		set(CPACK_NSIS_MODIFY_PATH ON)
-		set(CPACK_NSIS_MUI_ICON "${WIN_ICON}")
-		set(CPACK_NSIS_MUI_UNIICON "${WIN_ICON}")
+		set(CPACK_NSIS_MUI_ICON "${ETH_INSTALL_EXECUTABLE_WIN_ICON}")
+		set(CPACK_NSIS_MUI_UNIICON "${ETH_INSTALL_EXECUTABLE_WIN_ICON}")
 
 		include(CPack)
 	endif ()
