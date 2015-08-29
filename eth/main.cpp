@@ -52,7 +52,7 @@
 #if ETH_JSONRPC || !ETH_TRUE
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
-#include <jsonrpccpp/server/connectors/httpserver.h>
+#include <libweb3jsonrpc/SafeHttpServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
 #include "BuildInfo.h"
@@ -92,6 +92,7 @@ void help()
 #if ETH_JSONRPC || !ETH_TRUE
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
+		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
 		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
 #endif
 		<< "    -K,--kill  Kill the blockchain first." << endl
@@ -294,6 +295,7 @@ int main(int argc, char** argv)
 	bool interactive = false;
 #if ETH_JSONRPC || !ETH_TRUE
 	int jsonRPCURL = -1;
+	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
 	string genesisJSON;
@@ -669,6 +671,8 @@ int main(int argc, char** argv)
 			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
 		else if (arg == "--json-rpc-port" && i + 1 < argc)
 			jsonRPCURL = atoi(argv[++i]);
+		else if (arg == "--rpccorsdomain" && i + 1 < argc)
+			rpcCorsDomain = argv[++i];
 		else if (arg == "--json-admin" && i + 1 < argc)
 			jsonAdmin = argv[++i];
 #endif
@@ -1105,7 +1109,9 @@ int main(int argc, char** argv)
 
 	if (jsonRPCURL > -1)
 	{
-		jsonrpcConnector = unique_ptr<jsonrpc::AbstractServerConnector>(new jsonrpc::HttpServer(jsonRPCURL, "", "", SensibleHttpThreads));
+		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
+		safeConnector->setAllowedOrigin(rpcCorsDomain);
+		jsonrpcConnector.reset(safeConnector);
 		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
 		jsonrpcServer->StartListening();
 		if (jsonAdmin.empty())
