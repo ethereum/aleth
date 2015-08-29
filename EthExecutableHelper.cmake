@@ -177,7 +177,6 @@ macro(eth_package EXECUTABLE)
 	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
 
 	if (APPLE)
-		message(STATUS "appdmg: ${ETH_APP_DMG}")
 		add_custom_target(appdmg
 			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 			COMMAND ${CMAKE_COMMAND}
