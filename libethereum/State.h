@@ -36,6 +36,7 @@
 #include "TransactionReceipt.h"
 #include "AccountDiff.h"
 #include "GasPricer.h"
+#include "ConfigInfo.h"
 
 namespace dev
 {
@@ -85,6 +86,12 @@ enum class Permanence
 	Committed
 };
 
+#if ETH_FATDB
+template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
+#else
+template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
+#endif
+
 /**
  * @brief Model of an Ethereum state, essentially a facade for the trie.
  * Allows you to query the state of accounts, and has built-in caching for various aspects of the
@@ -114,6 +121,9 @@ public:
 
 	/// Copy state object.
 	State& operator=(State const& _s);
+
+	/// Stream into a JSON representation.
+	void streamJSON(std::ostream& _f) const;
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
 	static OverlayDB openDB(std::string const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);

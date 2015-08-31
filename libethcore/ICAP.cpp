@@ -138,12 +138,12 @@ pair<Address, bytes> ICAP::lookup(std::function<bytes(Address, bytes)> const& _c
 {
 	auto resolve = [&](string const& s)
 	{
-		vector<string> ss;
+/*		vector<string> ss;
 		boost::algorithm::split(ss, s, boost::is_any_of("/"));
 		Address r = _reg;
 		for (unsigned i = 0; i < ss.size() - 1; ++i)
-			r = abiOut<Address>(_call(r, abiIn("subRegistrar(bytes32)", toString32(ss[i]))));
-		return abiOut<Address>(_call(r, abiIn("addr(bytes32)", toString32(ss.back()))));
+			r = abiOut<Address>(_call(r, abiIn("subRegistrar(bytes32)", ss[i])));*/
+		return abiOut<Address>(_call(_reg, abiIn("addr(bytes32)", s)));
 	};
 	if (m_asset == "XET")
 	{
@@ -151,15 +151,15 @@ pair<Address, bytes> ICAP::lookup(std::function<bytes(Address, bytes)> const& _c
 		bytes d = abiIn("deposit(uint64)", fromBase36<8>(m_client));
 		return make_pair(a, d);
 	}
-	else if (m_asset == "ETH")
+/*	else if (m_asset == "ETH")
 	{
-		if (m_institution == "XREG")
-			return make_pair(resolve(m_client), bytes());
-		else if (m_institution[0] != 'X')
+		if (m_institution[0] != 'X')
 			return make_pair(resolve(m_institution + "/" + m_client), bytes());
+		else if (m_institution == "XREG")
+			return make_pair(resolve(m_client), bytes());
 		else
 			BOOST_THROW_EXCEPTION(InterfaceNotSupported("ICAP::lookup(), bad institution"));
-	}
+	}*/
 	BOOST_THROW_EXCEPTION(InterfaceNotSupported("ICAP::lookup(), bad asset"));
 }
 

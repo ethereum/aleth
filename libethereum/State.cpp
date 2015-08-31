@@ -39,7 +39,7 @@
 #include "CachedAddressState.h"
 #include "CanonBlockChain.h"
 #include "TransactionQueue.h"
-#include "BuildInfo.h"
+#include "ConfigInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -586,4 +586,38 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 		}
 	}
 	return _out;
+}
+
+static std::string minHex(h256 const& _h)
+{
+	unsigned i = 0;
+	for (; i < 31 && !_h[i]; ++i) {}
+	return toHex(_h.ref().cropped(i));
+}
+
+void State::streamJSON(ostream& _f) const
+{
+	_f << "{" << endl;
+#if ETH_FATDB
+	int fi = 0;
+	for (pair<Address, u256> const& i: addresses())
+	{
+		_f << (fi++ ? "," : "") << "\"" << i.first.hex() << "\": { ";
+		_f << "\"balance\": \"" << toString(i.second) << "\", ";
+		if (codeHash(i.first) != EmptySHA3)
+		{
+			_f << "\"codeHash\": \"" << codeHash(i.first).hex() << "\", ";
+			_f << "\"storage\": {";
+			int fj = 0;
+			for (pair<u256, u256> const& j: storage(i.first))
+				_f << (fj++ ? "," : "") << "\"" << minHex(j.first) << "\":\"" << minHex(j.second) << "\"";
+			_f << "}, ";
+		}
+		_f << "\"nonce\": \"" << toString(transactionsFrom(i.first)) << "\"";
+		_f << "}" << endl;	// end account
+		if (!(fi % 100))
+			_f << flush;
+	}
+#endif
+	_f << "}";
 }
