@@ -24,7 +24,8 @@ else()
 
 	foreach (l ${LIBS})
 		string(TOUPPER ${l} L)
-		find_library(Eth_${L}_LIBRARIES
+
+		find_library(Eth_${L}_LIBRARY
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
 			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
@@ -33,8 +34,24 @@ else()
 			"evmjit/libevmjit-cpp" "evmjit/libevmjit-cpp/Release"
 			NO_DEFAULT_PATH
 		)
+
+		set(Eth_${L}_LIBRARIES ${Eth_${L}_LIBRARY})
+
+		if (DEFINED MSVC)
+			find_library(Eth_${L}_LIBRARY_DEBUG
+				NAMES ${l}
+				PATHS ${CMAKE_LIBRARY_PATH}
+				PATH_SUFFIXES "lib${l}/Debug" 
+				# libevmjit is nested...
+				"evmjit/libevmjit/Debug"
+				"evmjit/libevmjit-cpp/Debug"
+				NO_DEFAULT_PATH
+			)
+
+			set(Eth_${L}_LIBRARIES optimized ${Eth_${L}_LIBRARY} debug ${Eth_${L}_LIBRARY_DEBUG})
+
+		endif()
 	endforeach()
 
-	# TODO: iterate over "lib${l}/Debug libraries if DEFINED MSVC
 endif()
 
