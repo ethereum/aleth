@@ -8,7 +8,7 @@
 	branch = develop
 [submodule "cmake"]
 	path = cmake
-	url = https://github.com/ethereum/cpp-ethereum-cmake
+	url = https://github.com/debris/cpp-ethereum-cmake
 	branch = develop
 [submodule "alethzero"]
 	path = alethzero
