@@ -22,3 +22,7 @@
 	path = ethereum
 	url = https://github.com/debris/ethereum
 	branch = develop
+[submodule "mix"]
+	path = mix
+	url = https://github.com/ethereum/mix
+	branch = develop
