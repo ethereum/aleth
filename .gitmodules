@@ -4,7 +4,7 @@
 	branch = develop
 [submodule "webthree"]
 	path = webthree
-	url = https://github.com/ethereum/webthree
+	url = https://github.com/debris/webthree
 	branch = develop
 [submodule "cmake"]
 	path = cmake
