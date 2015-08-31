@@ -37,9 +37,15 @@ else()
 	set(ETH_CLEAN_REPO 1)
 endif()
 
-set(INFILE "${ETH_SOURCE_DIR}/BuildInfo.h.in")
-set(TMPFILE "${ETH_DST_DIR}/BuildInfo.h.tmp")
-set(OUTFILE "${ETH_DST_DIR}/BuildInfo.h")
+if (NOT ETH_HEADERFILE)
+	set(INFILE "${ETH_SOURCE_DIR}/BuildInfo.h.in")
+	set(TMPFILE "${ETH_DST_DIR}/BuildInfo.h.tmp")
+	set(OUTFILE "${ETH_DST_DIR}/BuildInfo.h")
+else()
+	set(INFILE "${ETH_SOURCE_DIR}/${ETH_HEADERFILE}.h.in")
+	set(TMPFILE "${ETH_DST_DIR}/${ETH_HEADERFILE}.h.tmp")
+	set(OUTFILE "${ETH_DST_DIR}/${ETH_HEADERFILE}.h")
+endif()
 
 configure_file("${INFILE}" "${TMPFILE}")
 
