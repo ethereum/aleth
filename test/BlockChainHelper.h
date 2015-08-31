@@ -19,16 +19,20 @@
  * @date 2015
  */
 
+#pragma once
+#ifndef BLOCKCHAIN_HELPER_HEADER_H
+#define BLOCKCHAIN_HELPER_HEADER_H
+#include "JsonSpiritHeaders.h"
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <libdevcore/TransientDirectory.h>
-
-#include <test/TestHelper.h>
+#include <libethcore/Ethash.h>
 
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
+
 
 namespace dev {  namespace test {
 
@@ -65,7 +69,7 @@ public:
 	TestBlock(TestBlock const& _original);	
 	TestBlock(std::string const& _blockRlp);
 	TestBlock& operator = (TestBlock const& _original);
-	TestBlock(json_spirit::mObject const& _blockObj, json_spirit::mObject const& _stateObj, RecalcBlockHeader _verify = RecalcBlockHeader::Verify);
+	TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify);
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
@@ -120,3 +124,4 @@ private:
 };
 
 }}
+#endif

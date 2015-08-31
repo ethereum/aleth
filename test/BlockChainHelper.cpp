@@ -28,8 +28,8 @@
 //#include <libethereum/TransactionQueue.h>
 //#include <libdevcore/TransientDirectory.h>
 
-#include <test/TestHelper.h>
 #include <test/BlockChainHelper.h>
+#include <test/TestHelper.h>
 
 using namespace std;
 using namespace json_spirit;
@@ -38,7 +38,7 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-TestTransaction::TestTransaction(json_spirit::mObject const& _o): m_jsonTransaction(_o)
+TestTransaction::TestTransaction(mObject const& _o): m_jsonTransaction(_o)
 {
 	ImportTest::importTransaction(_o, m_transaction); //check that json structure is valid
 }
@@ -54,7 +54,7 @@ TestBlock& TestBlock::operator = (TestBlock const& _original)
 	return *this;
 }
 
-TestBlock::TestBlock(json_spirit::mObject const& _blockObj, json_spirit::mObject const& _stateObj, RecalcBlockHeader _verify)
+TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify)
 {
 	m_state = State(OverlayDB(State::openDB(m_tempDirState.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
 	ImportTest::importState(_stateObj, m_state);
@@ -86,7 +86,10 @@ TestBlock::TestBlock(std::string const& _blockRlp)
 		BlockHeader uBl;
 		uBl.populateFromHeader(uRLP);
 		TestBlock uncle;
-		uncle.setBlockHeader(uBl, RecalcBlockHeader::Verify);
+		//uncle goes without transactions and uncles but
+		//it's hash could contain hashsum of transactions/uncles
+		//thus it won't need verification
+		uncle.setBlockHeader(uBl, RecalcBlockHeader::SkipVerify);
 		m_uncles.push_back(uncle);
 	}
 
@@ -293,6 +296,8 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 	{
 		if (m_uncles.size()) // update unclehash in case of invalid uncles
 			m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
+
+		//transactions hash??
 
 		dev::eth::mine(m_blockHeader);
 		m_blockHeader.noteDirty();
