@@ -30,6 +30,7 @@ else()
 	if (DEFINED MSVC)
 		find_library(SOLIDITY_LIBRARY_DEBUG
 			NAMES ${l}
+			PATHS ${CMAKE_LIBRARY_PATH}
 			PATH_SUFFIXES "lib${l}/Debug" 
 			NO_DEFAULT_PATH
 		)

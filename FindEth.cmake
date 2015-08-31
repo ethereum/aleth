@@ -40,6 +40,7 @@ else()
 		if (DEFINED MSVC)
 			find_library(Eth_${L}_LIBRARY_DEBUG
 				NAMES ${l}
+				PATHS ${CMAKE_LIBRARY_PATH}
 				PATH_SUFFIXES "lib${l}/Debug" 
 				# libevmjit is nested...
 				"evmjit/libevmjit/Debug"
