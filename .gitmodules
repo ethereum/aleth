@@ -10,3 +10,7 @@
 	path = cmake
 	url = https://github.com/ethereum/cpp-ethereum-cmake
 	branch = develop
+[submodule "alethzero"]
+	path = alethzero
+	url = https://github.com/ethereum/alethzero
+	branch = develop
