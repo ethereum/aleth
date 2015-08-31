@@ -403,7 +403,6 @@ endif ()
 if (JSCONSOLE)
 	add_subdirectory(libjsengine)
 	add_subdirectory(libjsconsole)
-	add_subdirectory(ethconsole)
 endif ()
 
 if (NOT WIN32)
