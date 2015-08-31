@@ -23,11 +23,6 @@
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <libdevcore/TransientDirectory.h>
-//#include <libethereum/BlockChain.h>
-//#include <libethcore/BasicAuthority.h>
-//#include <libethereum/TransactionQueue.h>
-//#include <libdevcore/TransientDirectory.h>
-
 #include <test/BlockChainHelper.h>
 #include <test/TestHelper.h>
 

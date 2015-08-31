@@ -61,7 +61,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BOOST_REQUIRE(o.count("pre"));
 
-		TestBlock genesisBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj());
+		TestBlock genesisBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj(), RecalcBlockHeader::Verify);
 		if (_fillin)
 			genesisBlock.setBlockHeader(genesisBlock.getBlockHeader(), RecalcBlockHeader::UpdateAndVerify); //update PoW
 		TestBlockChain trueBc(genesisBlock);
@@ -249,7 +249,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 						BOOST_REQUIRE((uBlH.size() == 16));
 
 						mObject emptyState;
-						TestBlock uncle(uBlH, emptyState);
+						TestBlock uncle(uBlH, emptyState, RecalcBlockHeader::Verify);
 						blockFromFields.addUncle(uncle);
 					}
 
