@@ -105,19 +105,21 @@ BOOST_AUTO_TEST_CASE(capability)
 	VerbosityHolder verbosityHolder(10);
 	cnote << "Testing Capability...";
 
+	int const step = 10;
 	const char* const localhost = "127.0.0.1";
 	NetworkPreferences prefs1(localhost, 30301, false);
 	NetworkPreferences prefs2(localhost, 30302, false);
-
 	Host host1("Test", prefs1);
-	auto thc1 = host1.registerCapability(make_shared<TestHostCapability>());
-	host1.start();	
-
 	Host host2("Test", prefs2);
+	auto thc1 = host1.registerCapability(make_shared<TestHostCapability>());
 	auto thc2 = host2.registerCapability(make_shared<TestHostCapability>());
+	host1.start();	
 	host2.start();
-
-	int const step = 10;
+	auto port1 = host1.listenPort();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port1);
+	BOOST_REQUIRE(port2);	
+	BOOST_REQUIRE_NE(port1, port2);
 
 	for (int i = 0; i < 3000 && (!host1.isStarted() || !host2.isStarted()); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
