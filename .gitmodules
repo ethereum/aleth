@@ -18,3 +18,7 @@
 	path = dev
 	url = https://github.com/debris/dev
 	branch = develop
+[submodule "ethereum"]
+	path = ethereum
+	url = https://github.com/debris/ethereum
+	branch = develop
