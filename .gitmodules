@@ -14,3 +14,7 @@
 	path = alethzero
 	url = https://github.com/ethereum/alethzero
 	branch = develop
+[submodule "dev"]
+	path = dev
+	url = https://github.com/debris/dev
+	branch = develop
