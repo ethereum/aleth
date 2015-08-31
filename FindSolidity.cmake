@@ -18,12 +18,25 @@ if ((DEFINED solidity_VERSION) OR (DEFINED ethereum_VERSION))
 else()
 
 	string(TOUPPER ${l} L)
-	find_library(SOLIDITY_LIBRARIES
+	find_library(SOLIDITY_LIBRARY
 		NAMES ${l}
 		PATHS ${CMAKE_LIBRARY_PATH}
 		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 		NO_DEFAULT_PATH
 	)
 
-	# TODO: look in over "lib${l}/Debug libraries if DEFINED MSVC
+	set(SOLIDITY_LIBRARIES ${SOLIDITY_LIBRARY})
+
+	if (DEFINED MSVC)
+		find_library(SOLIDITY_LIBRARY_DEBUG
+			NAMES ${l}
+			PATHS ${CMAKE_LIBRARY_PATH}
+			PATH_SUFFIXES "lib${l}/Debug" 
+			NO_DEFAULT_PATH
+		)
+
+		set(SOLIDITY_LIBRARIES optimized ${SOLIDITY_LIBRARY} debug ${SOLIDITY_LIBRARY_DEBUG})
+
+	endif()
+
 endif()

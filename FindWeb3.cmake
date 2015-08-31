@@ -23,13 +23,28 @@ else()
 
 	foreach (l ${LIBS})
 		string(TOUPPER ${l} L)
-		find_library(Web3_${L}_LIBRARIES
+
+		find_library(Web3_${L}_LIBRARY
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
 			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 			NO_DEFAULT_PATH
 		)
+
+		set(Web3_${L}_LIBRARIES ${Web3_${L}_LIBRARY})
+
+		if (DEFINED MSVC)
+			find_library(Web3_${L}_LIBRARY_DEBUG
+				NAMES ${l}
+				PATHS ${CMAKE_LIBRARY_PATH}
+				PATH_SUFFIXES "lib${l}/Debug" 
+				NO_DEFAULT_PATH
+			)
+
+			set(Web3_${L}_LIBRARIES optimized ${Web3_${L}_LIBRARY} debug ${Web3_${L}_LIBRARY_DEBUG})
+
+		endif()
+	
 	endforeach()
 
-	# TODO: iterate over "lib${l}/Debug libraries if DEFINED MSVC
 endif()
