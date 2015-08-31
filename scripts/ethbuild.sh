@@ -6,35 +6,33 @@
 
 PROJECTS=(cpp-ethereum webthree solidity alethzero mix)
 ROOT_DIR=$(pwd)
-
-function print_help {
-	echo "Usage: ethbuild.sh branchname [extra-options]"
-	echo "    If --clean-build is given then build directories will be cleared"
-	echo "    If --build-type BUILDTYPE is given then this is gonna be the value of -DCMAKE_BUILD_TYPE"
-	echo "    If --cores NUMBER is give then this is the value to the cores argument of make. e.g.: make -j4"
-}
-
-# Check arguments
-if  [[ $# -lt 1 ]]; then
-	echo "Wrong number of arguments!"
-	print_help
-	exit 1
-fi
-
-REQUESTED_BRANCH=$1
+REQUESTED_BRANCH=develop
 CLEAN_BUILD=0
 BUILD_TYPE=RelWithDebInfo
 REQUESTED_ARG=""
 EXTRA_BUILD_ARGS=""
 MAKE_CORES=1
 
-for arg in ${@:2}
+function print_help {
+	echo "Usage: ethbuild.sh [extra-options]"
+	echo "Arguments:"
+	echo "    --help                  Print this help message."
+	echo "    --branch NAME           The branch requested to build. Default is ${REQUESTED_BRANCH}."
+	echo "    --clean-build           If given the build directories will be cleared."
+	echo "    --build-type BUILDTYPE  If given then this is gonna be the value of -DCMAKE_BUILD_TYPE. Default is ${BUILD_TYPE} "
+	echo "   --cores NUMBER           the value to the cores argument of make. e.g.: make -j4. Default is ${MAKE_CORES}."
+}
+
+for arg in ${@:1}
 do
 	if [[ ${REQUESTED_ARG} != "" ]]; then
 	case $REQUESTED_ARG in
 		"build-type")
 			BUILD_TYPE=$arg
-		;;
+			;;
+		"branch")
+			REQUESTED_BRANCH=$arg
+			;;
 		"make-cores")
 			re='^[0-9]+$'
 			if ! [[ $arg =~ $re ]] ; then
@@ -52,6 +50,11 @@ do
 	continue
 	fi
 
+	if [[ $arg == "--help" ]]; then
+		print_help
+		exit 1
+	fi
+
 	if [[ $arg == "--clean-build" ]]; then
 		CLEAN_BUILD=1
 		continue
@@ -62,13 +65,18 @@ do
 		continue
 	fi
 
+	if [[ $arg == "--branch" ]]; then
+		REQUESTED_ARG="build-type"
+		continue
+	fi
+
 	if [[ $arg == "--cores" ]]; then
 		REQUESTED_ARG="make-cores"
 		continue
 	fi
 
 	# all other arguments will just be given as they are to cmake
-	EXTRA_BUILD_ARGS+=$arg
+	EXTRA_BUILD_ARGS+="$arg "
 	REQUESTED_ARG=""
 done
 

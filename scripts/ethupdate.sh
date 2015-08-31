@@ -14,9 +14,11 @@ REQUESTED_ARG=""
 
 function print_help {
 	echo "Usage: ethupdate.sh [options]"
-	echo "    --branch NAME Will update to the specified branch."
-	echo "    --origin NAME Will send the updates back to origin NAME if specified."
-	echo "    --upstream NAME The name of the remote to pull from."
+	echo "Arguments:"
+	echo "    --help                    Will print this help message."
+	echo "    --branch NAME             Will update to the specified branch. Default is ${REQUESTED_BRANCH}."
+	echo "    --origin NAME             Will send the updates back to origin NAME if specified."
+	echo "    --upstream NAME           The name of the remote to pull from. Default is ${UPSTREAM}."
 }
 
 for arg in ${@:1}
@@ -39,6 +41,11 @@ do
 		esac
 		REQUESTED_ARG=""
 		continue
+	fi
+
+	if [[ $arg == "--help" ]]; then
+		print_help
+		exit 1
 	fi
 
 	if [[ $arg == "--branch" ]]; then
