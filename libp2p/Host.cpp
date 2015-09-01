@@ -499,6 +499,9 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 				p = make_shared<Peer>(node);
 				m_peers[_n] = p;
 			}
+		// required for discovery
+		if (m_nodeTable)
+			m_nodeTable->addNode(*p, NodeTable::NodeRelation::Known);
 	}
 	else if (m_nodeTable)
 	{
