@@ -5,6 +5,7 @@ list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
 
 set(DEV_DIR "${CMAKE_CURRENT_LIST_DIR}/dev" CACHE PATH "The path to the dev libraries directory")
+set(ETH_DIR "${CMAKE_CURRENT_LIST_DIR}/ethereum" CACHE PATH "The path to the eth libraries directory")
 
 # set cmake_policies
 include(EthPolicy)
@@ -19,6 +20,8 @@ include(EthExecutableHelper)
 
 include(EthDependencies)
 
+include(EthUtils)
+
 add_subdirectory(cmake/utils/libscrypt)
 
 if (NOT DEFINED MSVC)
@@ -26,4 +29,5 @@ if (NOT DEFINED MSVC)
 endif()
 
 add_subdirectory(dev)
+add_subdirectory(ethereum)
 
