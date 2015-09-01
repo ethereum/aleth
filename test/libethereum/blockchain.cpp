@@ -76,27 +76,30 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			size_t importBlockNumber = 0;
 			vector<TestBlock> importedBlocks;
 			importedBlocks.push_back(genesisBlock);
-
+			TestBlockChain blockchain(genesisBlock);
 			for (auto const& bl: o["blocks"].get_array())
 			{
-				TestBlockChain blockchain(importedBlocks.at(0));
 				mObject blObj = bl.get_obj();
 				if (blObj.count("blocknumber") > 0)
 					importBlockNumber = max((int)toInt(blObj["blocknumber"]), 1);
 				else
 					importBlockNumber++;
 
-				//Restore blockchain up to block.number to start import from it
-				for (size_t i = 1; i < importedBlocks.size(); i++) //0 block is genesis
-					if (i < importBlockNumber)
-						blockchain.addBlock(importedBlocks.at(i));
-					else
-						break;
+				if ((string)boost::unit_test::framework::current_test_case().p_name != "bcWalletTest")
+				{
+					blockchain.reset(importedBlocks.at(0));
+					//Restore blockchain up to block.number to start import from it
+					for (size_t i = 1; i < importedBlocks.size(); i++) //0 block is genesis
+						if (i < importBlockNumber)
+							blockchain.addBlock(importedBlocks.at(i));
+						else
+							break;
 
-				//Drop old blocks
-				size_t originalSize = importedBlocks.size();
-				for (size_t i = importBlockNumber; i < originalSize; i++)
-					importedBlocks.pop_back();
+					//Drop old blocks
+					size_t originalSize = importedBlocks.size();
+					for (size_t i = importBlockNumber; i < originalSize; i++)
+						importedBlocks.pop_back();
+				}
 
 				TestBlock block;
 
@@ -144,7 +147,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					blockchain.addBlock(alterBlock);
 					trueBc.addBlock(alterBlock);
-					importedBlocks.push_back(alterBlock);
+					if ((string)boost::unit_test::framework::current_test_case().p_name != "bcWalletTest")
+						importedBlocks.push_back(alterBlock);
 				}
 				catch (Exception const& _e)
 				{
@@ -652,7 +656,7 @@ BOOST_AUTO_TEST_CASE(bcBlockGasLimitTest)
 
 BOOST_AUTO_TEST_CASE(bcWalletTest)
 {
-	if (test::Options::get().wallet)
+	//if (test::Options::get().wallet)
 		dev::test::executeTests("bcWalletTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 

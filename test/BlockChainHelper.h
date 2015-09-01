@@ -110,7 +110,8 @@ class TestBlockChain
 private:
 	typedef FullBlockChain<Ethash> FullBlockChainEthash;
 public:
-	TestBlockChain(TestBlock const& _genesisBlock);
+	TestBlockChain(TestBlock const& _genesisBlock);	
+	void reset(TestBlock const& _genesisBlock);
 	void addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& uncles);
 	TestBlock const& getTopBlock() { return m_lastBlock; }
