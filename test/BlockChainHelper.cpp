@@ -161,7 +161,6 @@ void TestBlock::mine(TestBlockChain const& bc)
 
 	try
 	{
-		copyStateFrom(m_state);
 		m_blockHeader = BlockHeader(block.blockData());
 		copyStateFrom(block.state());
 		recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify); //Update cause transactions might changed
@@ -339,6 +338,14 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
 {
 	m_blockChain = std::unique_ptr<FullBlockChainEthash>(
 				new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.path(), WithExisting::Kill));
+	m_genesisBlock = _genesisBlock;
+	m_lastBlock = m_genesisBlock;
+}
+
+void TestBlockChain::reset(TestBlock const& _genesisBlock)
+{
+	m_tempDirBlockchain = TransientDirectory();
+	m_blockChain.reset(new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.path(), WithExisting::Kill));
 	m_genesisBlock = _genesisBlock;
 	m_lastBlock = m_genesisBlock;
 }
