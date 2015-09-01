@@ -2,11 +2,12 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	find_package(Dev)
 
+	target_include_directories(${TARGET} BEFORE PUBLIC ${Dev_INCLUDE_DIRS})
+
 	# Base is where all dependencies for devcore are
 	if (${SUBMODULE} STREQUAL "base")
-		
 		target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BUILD_DIR})
-		target_include_directories(${TARGET} BEFORE PUBLIC ${Dev_INCLUDE_DIRS})
+
 		# if it's ethereum source dir, alwasy build BuildInfo.h before
 		if (DEFINED dev_VERSION)
 			add_dependencies(${TARGET} BuildInfo.h)
@@ -44,6 +45,12 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		endif()
 
 		target_link_libraries(${TARGET} ${Dev_DEVCRYPTO_LIBRARIES})
+	endif()
+
+	if (${SUBMODULE} STREQUAL "p2p")
+		eth_use(${TARGET} ${REQUIRED} Dev::devcore Dev::devcrypto)
+		eth_use(${TARGET} OPTIONAL Miniupnpc)
+		target_link_libraries(${TARGET} ${Eth_P2P_LIBRARIES})
 	endif()
 
 endfunction()

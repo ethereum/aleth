@@ -9,11 +9,11 @@
 
 set(LIBS ethereum;evm;ethcore;lll;p2p;evmasm;devcrypto;evmcore;devcore;ethash-cl;ethash;scrypt;natspec;jsengine;jsconsole;evmjit;evmjit-cpp;solidity;secp256k1;testutils)
 
-set(ETH_INCLUDE_DIRS ${ETH_INCLUDE_DIR})
+set(Eth_INCLUDE_DIRS "${ETH_DIR}")
 
 # if the project is a subset of main cpp-ethereum project
 # use same pattern for variables as Boost uses
-if (DEFINED ethereum_VERSION)
+if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED ethereum_VERSION))
 
 	foreach (l ${LIBS}) 
 		string(TOUPPER ${l} L)

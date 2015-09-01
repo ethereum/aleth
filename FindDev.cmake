@@ -12,7 +12,7 @@ set(Dev_INCLUDE_DIRS "${DEV_DIR}")
 
 # if the project is a subset of main cpp-ethereum project
 # use same pattern for variables as Boost uses
-if (DEFINED dev_VERSION)
+if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED dev_VERSION))
 
 	foreach (l ${LIBS}) 
 		string(TOUPPER ${l} L)

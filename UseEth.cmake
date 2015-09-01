@@ -1,20 +1,19 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 	# TODO take into account REQUIRED
 
-	if (DEFINED ethereum_SOURCE_DIR)
-		set(ETH_DIR ${ethereum_SOURCE_DIR})
-		set(ETH_BUILD_DIR ${ethereum_BINARY_DIR})
-	else ()
-		set(ETH_DIR             "${PROJECT_SOURCE_DIR}/../cpp-ethereum"			CACHE PATH "The path to the cpp-ethereum directory")
-		set(ETH_BUILD_DIR_NAME  "build"                                     	CACHE STRING "The name of the build directory in cpp-ethereum")
-		set(ETH_BUILD_DIR       "${ETH_DIR}/${ETH_BUILD_DIR_NAME}")
-		set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})
-	endif()
+	#if (DEFINED ethereum_SOURCE_DIR)
+		#set(ETH_DIR ${ethereum_SOURCE_DIR})
+		#set(ETH_BUILD_DIR ${ethereum_BINARY_DIR})
+	#else ()
+	set(ETH_DIR             "${CMAKE_CURRENT_LIST_DIR}/../ethereum"			CACHE PATH "The path to the cpp-ethereum directory")
+		#set(ETH_BUILD_DIR_NAME  "build"                                     	CACHE STRING "The name of the build directory in cpp-ethereum")
+		#set(ETH_BUILD_DIR       "${ETH_DIR}/${ETH_BUILD_DIR_NAME}")
+		#set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})
+	#endif()
 
 	find_package(Eth)
-	target_include_directories(${TARGET} PUBLIC ${ETH_DIR})
-	# look for Buildinfo.h in build dir
-	target_include_directories(${TARGET} PUBLIC ${ETH_BUILD_DIR})
+
+	target_include_directories(${TARGET} BEFORE PUBLIC ${Eth_INCLUDE_DIRS})
 
 	if (${SUBMODULE} STREQUAL "ethash")
 		# even if ethash is required, Cryptopp is optional
@@ -37,20 +36,14 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "ethcore")
-		eth_use(${TARGET} ${REQUIRED} Eth::devcrypto)
+		eth_use(${TARGET} ${REQUIRED} Dev::devcrypto Eth::ethash)
 		# even if ethcore is required, ethash-cl and cpuid are optional
 		eth_use(${TARGET} OPTIONAL Eth::ethash-cl Cpuid)
 		target_link_libraries(${TARGET} ${Eth_ETHCORE_LIBRARIES})
 	endif()
 
-	if (${SUBMODULE} STREQUAL "p2p")
-		eth_use(${TARGET} ${REQUIRED} Eth::devcore Eth::devcrypto)
-		eth_use(${TARGET} OPTIONAL Miniupnpc)
-		target_link_libraries(${TARGET} ${Eth_P2P_LIBRARIES})
-	endif()
-
 	if (${SUBMODULE} STREQUAL "evmcore")
-		eth_use(${TARGET} ${REQUIRED} Eth::devcore)
+		eth_use(${TARGET} ${REQUIRED} Dev::devcore)
 		target_link_libraries(${TARGET} ${Eth_EVMCORE_LIBRARIES})
 	endif()
 
@@ -64,7 +57,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "evm")
-		eth_use(${TARGET} ${REQUIRED} Eth::ethcore Eth::devcrypto Eth::evmcore Eth::devcore)
+		eth_use(${TARGET} ${REQUIRED} Eth::ethcore Dev::devcrypto Eth::evmcore Dev::devcore)
 		eth_use(${TARGET} OPTIONAL Eth::evmjit)
 		target_link_libraries(${TARGET} ${Eth_EVM_LIBRARIES})
 	endif()
@@ -80,7 +73,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "ethereum")
-		eth_use(${TARGET} ${REQUIRED} Eth::evm Eth::lll Eth::p2p Eth::devcrypto Eth::ethcore JsonRpc::Server JsonRpc::Client)
+		eth_use(${TARGET} ${REQUIRED} Eth::evm Eth::lll Dev::p2p Dev::devcrypto Eth::ethcore JsonRpc::Server JsonRpc::Client)
 		target_link_libraries(${TARGET} ${Boost_REGEX_LIBRARIES})
 		target_link_libraries(${TARGET} ${Eth_ETHEREUM_LIBRARIES})
 	endif()
@@ -91,7 +84,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "jsconsole")
-		eth_use(${EXECUTABLE} ${REQUIRED} Eth::jsengine Eth::devcore JsonRpc::Server JsonRpc::Client)
+		eth_use(${EXECUTABLE} ${REQUIRED} Eth::jsengine Dev::devcore JsonRpc::Server JsonRpc::Client)
 		eth_use(${EXECUTABLE} OPTIONAL Readline)
 		target_link_libraries(${TARGET} ${Eth_JSCONSOLE_LIBRARIES})
 	endif()
