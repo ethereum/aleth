@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.0.0)
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
-
+set(UTILS_DIR "${CMAKE_CURRENT_LIST_DIR}/utils" CACHE PATH "The path to the utils libraries directory")
 set(DEV_DIR "${CMAKE_CURRENT_LIST_DIR}/dev" CACHE PATH "The path to the dev libraries directory")
 set(ETH_DIR "${CMAKE_CURRENT_LIST_DIR}/ethereum" CACHE PATH "The path to the eth libraries directory")
 set(WEB3_DIR "${CMAKE_CURRENT_LIST_DIR}/webthree" CACHE PATH "The path to the webthree libraries directory")
@@ -24,11 +24,7 @@ include(EthDependencies)
 
 include(EthUtils)
 
-add_subdirectory(cmake/utils/libscrypt)
-
-if (NOT DEFINED MSVC)
-	add_subdirectory(cmake/utils/secp256k1)
-endif()
+add_subdirectory(utils)
 
 add_subdirectory(dev)
 add_subdirectory(ethereum)
