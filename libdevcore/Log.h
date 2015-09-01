@@ -253,14 +253,18 @@ public:
 	template <class T> LogOutputStream& operator<<(T const& _t) { if (Id::verbosity <= g_logVerbosity) { if (_AutoSpacing && m_sstr.str().size() && m_sstr.str().back() != ' ') m_sstr << " "; append(_t); } return *this; }
 };
 
+/// A "hacky" way to make sure the next statement get executed only once without the good old
+/// do { } while(0) macro. We need such a thing due to the dangling else problem and the need
+/// for the logging macros to end with the stream object and not a closing brace '}'
+#define DEV_STATEMENT_ONCE() for (bool i_eth_once_ = true; i_eth_once_; i_eth_once_ = false)
 // Kill all logs when when NLOG is defined.
 #if NLOG
 #define clog(X) nlog(X)
 #define cslog(X) nslog(X)
 #else
 #if NDEBUG
-#define clog(X) if (X::debug) {} else dev::LogOutputStream<X, true>()
-#define cslog(X) if (X::debug) {} else dev::LogOutputStream<X, false>()
+#define clog(X) DEV_STATEMENT_ONCE() if (X::debug) {} else dev::LogOutputStream<X, true>()
+#define cslog(X) DEV_STATEMENT_ONCE() if (X::debug) {} else dev::LogOutputStream<X, false>()
 #else
 #define clog(X) dev::LogOutputStream<X, true>()
 #define cslog(X) dev::LogOutputStream<X, false>()
@@ -274,8 +278,8 @@ public:
 #define cwarn clog(dev::WarnChannel)
 
 // Null stream-like objects.
-#define ndebug if (true) {} else dev::NullOutputStream()
-#define nlog(X) if (true) {} else dev::NullOutputStream()
-#define nslog(X) if (true) {} else dev::NullOutputStream()
+#define ndebug DEV_STATEMENT_ONCE() if (true) {} else dev::NullOutputStream()
+#define nlog(X) DEV_STATEMENT_ONCE() if (true) {} else dev::NullOutputStream()
+#define nslog(X) DEV_STATEMENT_ONCE() if (true) {} else dev::NullOutputStream()
 
 }
