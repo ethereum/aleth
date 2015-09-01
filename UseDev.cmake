@@ -16,6 +16,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		endif()
 
         target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BUILD_DIR})
+        target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BINARY_DIR})
 		target_include_directories(${TARGET} BEFORE PUBLIC ${DEV_BUILD_DIR})
 	endif()
 
