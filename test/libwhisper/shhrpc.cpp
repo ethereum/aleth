@@ -114,12 +114,14 @@ BOOST_AUTO_TEST_CASE(basic)
 
 	BOOST_REQUIRE(web3->haveNetwork());
 
-	uint16_t const port2 = 30334;
-	NetworkPreferences prefs2("127.0.0.1", port2, false);
+	NetworkPreferences prefs2("127.0.0.1", 0, false);
 	string const version2 = "shhrpc-host2";
 	Host host2(version2, prefs2);
-	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port2);
+	BOOST_REQUIRE_NE(port2, c_web3port);
+	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 
 	for (unsigned i = 0; i < 3000 && !host2.haveNetwork(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
@@ -159,13 +161,15 @@ BOOST_AUTO_TEST_CASE(send)
 	unsigned result = 0;
 	unsigned const messageCount = 10;
 	unsigned const step = 10;
-	uint16_t port2 = 30337;
 
-	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", port2, false));
+	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
 	host2.setIdealPeerCount(1);
 	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
 	web3->startNetwork();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port2);
+	BOOST_REQUIRE_NE(port2, c_web3port);
 
 	std::thread listener([&]()
 	{
@@ -227,12 +231,14 @@ BOOST_AUTO_TEST_CASE(receive)
 	unsigned result = 0;
 	unsigned const messageCount = 6;
 	unsigned const step = 10;
-	uint16_t port2 = 30338;
-	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", port2, false));
+	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
 	host2.setIdealPeerCount(1);
 	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
 	web3->startNetwork();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port2);
+	BOOST_REQUIRE_NE(port2, c_web3port);
 
 	std::thread listener([&]()
 	{
@@ -265,7 +271,8 @@ BOOST_AUTO_TEST_CASE(receive)
 	BOOST_REQUIRE(host2.haveNetwork());
 	BOOST_REQUIRE(web3->haveNetwork());
 
-	host2.addNode(web3->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), c_web3port, c_web3port));
+	auto port1 = c_web3port;
+	host2.addNode(web3->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), port1, port1));
 
 	for (unsigned i = 0; i < 3000 && (!web3->peerCount() || !host2.peerCount()); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
@@ -366,14 +373,15 @@ BOOST_AUTO_TEST_CASE(server)
 
 	j = jsonrpcServer->admin_net_nodeInfo(sess2);
 	BOOST_REQUIRE_EQUAL(j["id"].asString(), web3->id().hex());
-	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), c_web3port);
+	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), web3->nodeInfo().port);
 
-	string const ip = "127.0.0.1:30339";
-	uint16_t port2 = 30339;
-	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", port2, false));
+	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
 	host2.setIdealPeerCount(9);
 	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port2);
+	BOOST_REQUIRE_NE(port2, c_web3port);
 
 	b = jsonrpcServer->admin_net_start(sess2);
 	BOOST_REQUIRE(b);
@@ -389,8 +397,8 @@ BOOST_AUTO_TEST_CASE(server)
 
 	string node("enode://");
 	node += host2.id().hex();
-	node += "@";
-	node += ip;
+	node += "@127.0.0.1:";
+	node += toString(port2);
 	b = jsonrpcServer->admin_net_connect(node, sess2);
 
 	for (unsigned i = 0; i < 3000 && !host2.peerCount(); i += step)
