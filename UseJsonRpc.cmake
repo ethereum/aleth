@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)	
 
-	target_include_directories(${TARGET} SYSTEM BEFORE PUBLIC ${JSONCPP_INCLUDE_DIR})	
+	target_include_directories(${TARGET} SYSTEM BEFORE PUBLIC ${JSONCPP_INCLUDE_DIRS})
 	target_link_libraries(${TARGET} ${JSONCPP_LIBRARIES})
 
 	if (${SUBMODULE} STREQUAL "Server")

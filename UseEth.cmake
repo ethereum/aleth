@@ -16,61 +16,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	# look for Buildinfo.h in build dir
 	target_include_directories(${TARGET} PUBLIC ${ETH_BUILD_DIR})
 
-	# Base is where all dependencies for devcore are
-	if (${SUBMODULE} STREQUAL "base")
-
-		# if it's ethereum source dir, alwasy build BuildInfo.h before
-		if (DEFINED ethereum_SOURCE_DIR)
-			add_dependencies(${TARGET} BuildInfo.h)
-		endif()
-
-		target_include_directories(${TARGET} SYSTEM BEFORE PUBLIC ${JSONCPP_INCLUDE_DIRS})	
-		target_include_directories(${TARGET} BEFORE PUBLIC ..)	
-		target_include_directories(${TARGET} SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})	
-		target_include_directories(${TARGET} SYSTEM PUBLIC ${DB_INCLUDE_DIRS})	
-
-		target_link_libraries(${TARGET} ${Boost_THREAD_LIBRARIES})
-		target_link_libraries(${TARGET} ${Boost_RANDOM_LIBRARIES})
-		target_link_libraries(${TARGET} ${Boost_FILESYSTEM_LIBRARIES})
-		target_link_libraries(${TARGET} ${Boost_SYSTEM_LIBRARIES})
-		target_link_libraries(${TARGET} ${JSONCPP_LIBRARIES})
-		target_link_libraries(${TARGET} ${DB_LIBRARIES})
-
-		if (DEFINED MSVC)
-			target_link_libraries(${TARGET} ${Boost_CHRONO_LIBRARIES})
-			target_link_libraries(${TARGET} ${Boost_DATE_TIME_LIBRARIES})
-		endif()
-
-		if (NOT DEFINED MSVC)
-			target_link_libraries(${TARGET} pthread)
-		endif()
-	endif()
-
-	if (${SUBMODULE} STREQUAL "devcore")
-		eth_use(${TARGET} ${REQUIRED} Eth::base)
-		target_link_libraries(${TARGET} ${Eth_DEVCORE_LIBRARIES})
-	endif()
-
-	if (${SUBMODULE} STREQUAL "scrypt")
-		target_link_libraries(${TARGET} ${Eth_SCRYPT_LIBRARIES})
-	endif()
-
-	if (${SUBMODULE} STREQUAL "secp256k1")
-		target_include_directories(${TARGET} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
-		target_link_libraries(${TARGET} ${GMP_LIBRARIES})
-		target_link_libraries(${TARGET} ${Eth_SECP256K1_LIBRARIES})
-		target_compile_definitions(${TARGET} PUBLIC ETH_HAVE_SECP256K1)
-	endif()
-
-	if (${SUBMODULE} STREQUAL "devcrypto")
-		eth_use(${TARGET} ${REQUIRED} Eth::devcore Eth::scrypt Cryptopp)
-		if (NOT DEFINED MSVC)
-			eth_use(${TARGET} ${REQUIRED} Eth::secp256k1)
-		endif()
-
-		target_link_libraries(${TARGET} ${Eth_DEVCRYPTO_LIBRARIES})
-	endif()
-
 	if (${SUBMODULE} STREQUAL "ethash")
 		# even if ethash is required, Cryptopp is optional
 		eth_use(${TARGET} OPTIONAL Cryptopp)

@@ -1,0 +1,8 @@
+function(eth_apply TARGET REQUIRED)	
+	if (GMP_FOUND)
+		target_include_directories(${TARGET} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
+		target_link_libraries(${TARGET} ${GMP_LIBRARIES})
+	elseif (NOT ${REQUIRED} STREQUAL "OPTIONAL")
+		message(FATAL_ERROR "Gmp library not found")
+	endif()
+endfunction()
