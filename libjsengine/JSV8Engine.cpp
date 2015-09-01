@@ -25,8 +25,7 @@
 #include <fstream>
 #include "JSV8Engine.h"
 #include "JSV8Printer.h"
-#include "libjsengine/JSEngineResources.hpp"
-#include "BuildInfo.h"
+#include "JSEngineResources.hpp"
 
 #define TO_STRING_HELPER(s) #s
 #define TO_STRING(s) TO_STRING_HELPER(s)

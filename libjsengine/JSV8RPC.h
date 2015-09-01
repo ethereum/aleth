@@ -22,7 +22,7 @@
 
 #pragma once
 
-#include <libjsengine/JSV8Engine.h>
+#include "JSV8Engine.h"
 
 /// Do not use libstd headers here, it will break on MacOS.
 

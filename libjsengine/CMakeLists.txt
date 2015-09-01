@@ -1,20 +1,13 @@
-cmake_policy(SET CMP0015 NEW)
-set(CMAKE_AUTOMOC OFF)
-
 aux_source_directory(. SRC_LIST)
-
-include_directories(BEFORE ..)
 
 set(EXECUTABLE jsengine)
 
 file(GLOB HEADERS "*.h")
 
-include(EthUtils)
 eth_add_resources("${CMAKE_CURRENT_SOURCE_DIR}/JSResources.cmake" "JSRES" "${CMAKE_SOURCE_DIR}")
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS} ${JSRES})
 
-add_dependencies(${EXECUTABLE} BuildInfo.h)
-
+#include_directories(${CMAKE_CURRENT_BINARY_DIR})
 # macos brew version of v8 needs to be compiled with libstdc++
 # it also needs to be dynamic library
 # xcode needs libstdc++ to be explicitly set as it's attribute

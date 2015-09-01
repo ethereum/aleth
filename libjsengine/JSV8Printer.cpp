@@ -22,7 +22,7 @@
 
 #include <string>
 #include "JSV8Printer.h"
-#include "libjsengine/JSEngineResources.hpp"
+#include "JSEngineResources.hpp"
 
 using namespace std;
 using namespace dev;
