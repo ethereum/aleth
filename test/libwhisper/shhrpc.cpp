@@ -44,7 +44,6 @@ namespace js = json_spirit;
 WebThreeDirect* web3;
 unique_ptr<WebThreeStubServer> jsonrpcServer;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
-static uint16_t const c_web3port = 30333;
 static string const c_version("shhrpc-web3");
 static unsigned const c_ttl = 777000;
 
@@ -53,12 +52,11 @@ struct Setup
 	Setup()
 	{
 		dev::p2p::NodeIPEndpoint::test_allowLocal = true;
-
 		static bool setup = false;
 		if (!setup)
 		{
 			setup = true;
-			NetworkPreferences nprefs(std::string(), c_web3port, false);
+			NetworkPreferences nprefs("127.0.0.1", 0, false);
 			web3 = new WebThreeDirect(c_version, "", WithExisting::Trust, {"shh"}, nprefs);
 			web3->setIdealPeerCount(9);
 			auto server = new jsonrpc::HttpServer(8080);
@@ -120,7 +118,7 @@ BOOST_AUTO_TEST_CASE(basic)
 	host2.start();
 	auto port2 = host2.listenPort();
 	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port2, c_web3port);
+	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 
 	for (unsigned i = 0; i < 3000 && !host2.haveNetwork(); i += step)
@@ -169,7 +167,7 @@ BOOST_AUTO_TEST_CASE(send)
 	web3->startNetwork();
 	auto port2 = host2.listenPort();
 	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port2, c_web3port);
+	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
 	std::thread listener([&]()
 	{
@@ -238,7 +236,7 @@ BOOST_AUTO_TEST_CASE(receive)
 	web3->startNetwork();
 	auto port2 = host2.listenPort();
 	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port2, c_web3port);
+	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
 	std::thread listener([&]()
 	{
@@ -271,7 +269,7 @@ BOOST_AUTO_TEST_CASE(receive)
 	BOOST_REQUIRE(host2.haveNetwork());
 	BOOST_REQUIRE(web3->haveNetwork());
 
-	auto port1 = c_web3port;
+	auto port1 = web3->nodeInfo().port;
 	host2.addNode(web3->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), port1, port1));
 
 	for (unsigned i = 0; i < 3000 && (!web3->peerCount() || !host2.peerCount()); i += step)
@@ -381,7 +379,7 @@ BOOST_AUTO_TEST_CASE(server)
 	host2.start();
 	auto port2 = host2.listenPort();
 	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port2, c_web3port);
+	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
 	b = jsonrpcServer->admin_net_start(sess2);
 	BOOST_REQUIRE(b);
