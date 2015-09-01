@@ -40,8 +40,8 @@ class $NAME: public QObject, public Plugin
 	Q_OBJECT
 
 public:
-	AllAccounts(MainFace* _m);
-	~AllAccounts();
+	$NAME(MainFace* _m);
+	~$NAME();
 
 private:
 	void onAllChange() override {}

@@ -29,7 +29,6 @@
 #include "SHA3.h"
 #include "MemoryDB.h"
 #include "TrieCommon.h"
-#include "BuildInfo.h"
 
 namespace dev
 {
@@ -478,12 +477,6 @@ public:
 };
 
 template <class KeyType, class DB> using TrieDB = SpecificTrieDB<GenericTrieDB<DB>, KeyType>;
-
-#if ETH_FATDB
-template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<FatGenericTrieDB<DB>, KeyType>;
-#else
-template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
-#endif
 
 }
 
