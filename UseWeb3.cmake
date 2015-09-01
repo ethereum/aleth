@@ -1,24 +1,20 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 
-    #if (DEFINED webthree_SOURCE_DIR)
-		#set(W3_DIR "${ethereum_SOURCE_DIR}/webthree")
-	#else()
-	set(WEB3_DIR         "${CMAKE_CURRENT_LIST_DIR}/../webthree" 		CACHE PATH "The path to the webthree directory")
-		#set(W3_BUILD_DIR_NAME  "build"                            	CACHE STRING "The name of the build directory in web3")
-		#set(W3_BUILD_DIR   "${W3_DIR}/${W3_BUILD_DIR_NAME}")
-		#set(CMAKE_LIBRARY_PATH ${W3_BUILD_DIR};${CMAKE_LIBRARY_PATH})
-	#endif()
-
+	set(WEB3_DIR "${ETH_CMAKE_DIR}/../webthree" CACHE PATH "The path to the webthree directory")
+	set(WEB3_BUILD_DIR_NAME "build" CACHE STRING "The name of the build directory in web3")
+	set(WEB3_BUILD_DIR "${WEB3_DIR}/${WEB3_BUILD_DIR_NAME}")
+	set(CMAKE_LIBRARY_PATH ${WEB3_BUILD_DIR};${CMAKE_LIBRARY_PATH})
+	
 	find_package(Web3)
 	target_include_directories(${TARGET} BEFORE PUBLIC ${Web3_INCLUDE_DIRS})
 
 	if (${SUBMODULE} STREQUAL "whisper")
-		eth_use(${TARGET} ${REQUIRED} Eth::devcore Eth::p2p Eth::devcrypto)
+		eth_use(${TARGET} ${REQUIRED} Dev::devcore Dev::p2p Dev::devcrypto)
 		target_link_libraries(${TARGET} ${Web3_WHISPER_LIBRARIES})
 	endif()
 
 	if (${SUBMODULE} STREQUAL "webthree")
-		eth_use(${TARGET} ${REQUIRED} Web3::whisper Eth::devcore Eth::p2p Eth::devcrypto Eth::ethereum)
+		eth_use(${TARGET} ${REQUIRED} Web3::whisper Eth::ethereum)
 		target_link_libraries(${TARGET} ${Web3_WEBTHREE_LIBRARIES})
 	endif()
 
@@ -29,13 +25,13 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "jsengine")
 		eth_use(${TARGET} ${REQUIRED} V8)
-		target_link_libraries(${TARGET} ${Eth_JSENGINE_LIBRARIES})
+		target_link_libraries(${TARGET} ${Web3_JSENGINE_LIBRARIES})
 	endif()
 
 	if (${SUBMODULE} STREQUAL "jsconsole")
-		eth_use(${EXECUTABLE} ${REQUIRED} Eth::jsengine Dev::devcore JsonRpc::Server JsonRpc::Client)
+		eth_use(${EXECUTABLE} ${REQUIRED} Web3::jsengine Dev::devcore JsonRpc::Server JsonRpc::Client)
 		eth_use(${EXECUTABLE} OPTIONAL Readline)
-		target_link_libraries(${TARGET} ${Eth_JSCONSOLE_LIBRARIES})
+		target_link_libraries(${TARGET} ${Web3_JSCONSOLE_LIBRARIES})
 	endif()
 
 endfunction()
