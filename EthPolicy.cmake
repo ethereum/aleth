@@ -22,10 +22,12 @@ macro (eth_policy)
 		# allow VERSION argument in project()
 		cmake_policy(SET CMP0048 NEW)
 
+	endif()
+
+	if (${CMAKE_VERSION} VERSION_GREATER 3.1)
+		
 		# do not interpret if() arguments as variables!
-		if (${CMAKE_VERSION} VERSION_GREATER 3.1)
-			cmake_policy(SET CMP0054 NEW)
-		endif()
+		cmake_policy(SET CMP0054 NEW)
 
 	endif()
 

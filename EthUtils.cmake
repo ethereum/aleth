@@ -66,6 +66,8 @@ endmacro()
 function(eth_add_resources RESOURCE_FILE OUT_FILE ETH_RES_DIR)
 	include("${RESOURCE_FILE}")
 	set(OUTPUT  "${ETH_RESOURCE_LOCATION}/${ETH_RESOURCE_NAME}.hpp")
+	#message(FATAL_ERROR "res:! ${ETH_RESOURCE_LOCATION}")
+	include_directories("${ETH_RESOURCE_LOCATION}")
 	set(${OUT_FILE} "${OUTPUT}"  PARENT_SCOPE)
 
 	set(filenames "${RESOURCE_FILE}")

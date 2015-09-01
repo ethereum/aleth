@@ -6,13 +6,13 @@
 #  Web3_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  TODO: Web3_INCLUDE_DIRS
 
-set(LIBS whisper;webthree;web3jsonrpc)
+set(LIBS whisper;webthree;web3jsonrpc;jsengine;jsconsole)
 
-set(WEB3_INCLUDE_DIRS ${WEB3_INCLUDE_DIR})
+set(Web3_INCLUDE_DIRS ${WEB3_DIR})
 
 # if the project is a subset of cpp-ethereum
 # use same pattern for variables as Boost uses
-if ((DEFINED webthree_VERSION) OR (DEFINED ethereum_VERSION))
+if ((DEFINED webthree_VERSION) OR (DEFINED cpp-ethereum_VERSION))
 
 	foreach (l ${LIBS})
 		string(TOUPPER ${l} L)

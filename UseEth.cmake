@@ -78,17 +78,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${Eth_ETHEREUM_LIBRARIES})
 	endif()
 
-	if (${SUBMODULE} STREQUAL "jsengine")
-		eth_use(${TARGET} ${REQUIRED} V8)
-		target_link_libraries(${TARGET} ${Eth_JSENGINE_LIBRARIES})
-	endif()
-
-	if (${SUBMODULE} STREQUAL "jsconsole")
-		eth_use(${EXECUTABLE} ${REQUIRED} Eth::jsengine Dev::devcore JsonRpc::Server JsonRpc::Client)
-		eth_use(${EXECUTABLE} OPTIONAL Readline)
-		target_link_libraries(${TARGET} ${Eth_JSCONSOLE_LIBRARIES})
-	endif()
-
 	if (${SUBMODULE} STREQUAL "natspec")
 		target_link_libraries(${TARGET} ${Eth_NATSPEC_LIBRARIES})
 	endif()
