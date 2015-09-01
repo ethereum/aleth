@@ -6,7 +6,7 @@
 #  Dev_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  Dev_INCLUDE_DIRS
 
-set(LIBS devcore;devcrypto;libp2p)
+set(LIBS devcore;devcrypto;p2p)
 
 set(Dev_INCLUDE_DIRS "${DEV_DIR}")
 

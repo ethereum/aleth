@@ -1,15 +1,10 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 	# TODO take into account REQUIRED
 
-	#if (DEFINED ethereum_SOURCE_DIR)
-		#set(ETH_DIR ${ethereum_SOURCE_DIR})
-		#set(ETH_BUILD_DIR ${ethereum_BINARY_DIR})
-	#else ()
-	set(ETH_DIR             "${CMAKE_CURRENT_LIST_DIR}/../ethereum"			CACHE PATH "The path to the cpp-ethereum directory")
-		#set(ETH_BUILD_DIR_NAME  "build"                                     	CACHE STRING "The name of the build directory in cpp-ethereum")
-		#set(ETH_BUILD_DIR       "${ETH_DIR}/${ETH_BUILD_DIR_NAME}")
-		#set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})
-	#endif()
+	set(ETH_DIR "${ETH_CMAKE_DIR}/../ethereum" CACHE PATH "The path to the ethereum directory")
+	set(ETH_BUILD_DIR_NAME  "build" CACHE STRING "Ethereum build directory name")
+	set(ETH_BUILD_DIR "${ETH_DIR}/${ETH_BUILD_DIR_NAME}")
+	set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})
 
 	find_package(Eth)
 

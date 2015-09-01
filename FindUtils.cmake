@@ -8,7 +8,7 @@
 
 set(LIBS secp256k1;scrypt)
 
-set(Utils_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/utils")
+set(Utils_INCLUDE_DIRS "${UTILS_DIR}")
 
 # if the project is a subset of main cpp-ethereum project
 # use same pattern for variables as Boost uses
