@@ -34,6 +34,7 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
+struct BlockStateUndefined : virtual Exception {};
 class TestTransaction;
 class TestBlock;
 class TestBlockChain;
@@ -75,9 +76,10 @@ public:
 
 	void setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate);
 	void setState(State const& _state);
+	void clearState();
 
 	bytes const& getBytes() const { return m_bytes; }
-	State const& getState() const { return m_state; }
+	State const& getState() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
 	BlockHeader const& getBlockHeader() const { return m_blockHeader;}
 	TransactionQueue const& getTransactionQueue() const { return m_transactionQueue; }
 	TransactionQueue & getTransactionQueue() { return m_transactionQueue; }
@@ -94,11 +96,11 @@ private:
 
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
-	State m_state;
+	std::unique_ptr<State> m_state;
 	TransactionQueue m_transactionQueue;
 	BlockQueue m_uncleQueue;
 	bytes m_bytes;
-	TransientDirectory m_tempDirState;
+	std::unique_ptr<TransientDirectory> m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
 };
 
@@ -118,7 +120,7 @@ private:
 	std::unique_ptr<FullBlockChainEthash> m_blockChain;
 	TestBlock m_genesisBlock;
 	TestBlock m_lastBlock;
-	TransientDirectory m_tempDirBlockchain;
+	std::unique_ptr<TransientDirectory> m_tempDirBlockchain;
 };
 
 }}

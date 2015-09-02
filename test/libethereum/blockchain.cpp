@@ -87,7 +87,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				else
 					importBlockNumber++;
 
-				if ((string)boost::unit_test::framework::current_test_case().p_name != "bcWalletTest")
+				if (o.count("noBlockChainHistory") == 0)
 				{
 					blockchain.reset(importedBlocks.at(0));
 					//Restore blockchain up to block.number to start import from it
@@ -124,6 +124,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				vector<TestBlock> validUncles = blockchain.syncUncles(block.getUncles());
 				block.setUncles(validUncles);
+				cnote << "Mining block at test " << testname;
 				block.mine(blockchain);
 
 				TestBlock alterBlock(block);
@@ -148,8 +149,11 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					blockchain.addBlock(alterBlock);
 					trueBc.addBlock(alterBlock);
-					if ((string)boost::unit_test::framework::current_test_case().p_name != "bcWalletTest")
+					if (o.count("noBlockChainHistory") == 0)
+					{
 						importedBlocks.push_back(alterBlock);
+						importedBlocks.at(importedBlocks.size()-1).clearState(); //close the state as it wont be needed. too many open states would lead to exception.
+					}
 				}
 				catch (Exception const& _e)
 				{
@@ -205,19 +209,19 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (Exception const& _e)
 				{
-					cnote << "state sync or block import did throw an exception: " << diagnostic_information(_e);
+					cnote << testname + "state sync or block import did throw an exception: " << diagnostic_information(_e);
 					checkJsonSectionForInvalidBlock(blObj);
 					continue;
 				}
 				catch (std::exception const& _e)
 				{
-					cnote << "state sync or block import did throw an exception: " << _e.what();
+					cnote << testname + "state sync or block import did throw an exception: " << _e.what();
 					checkJsonSectionForInvalidBlock(blObj);
 					continue;
 				}
 				catch (...)
 				{
-					cnote << "state sync or block import did throw an exception\n";
+					cnote << testname + "state sync or block import did throw an exception\n";
 					checkJsonSectionForInvalidBlock(blObj);
 					continue;
 				}
@@ -354,7 +358,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 		}
 		else
 		{
-			cerr << "Could not populate blockHeader from block: there are no block with number!" << TestOutputHelper::testName() << endl;
+			cerr << TestOutputHelper::testName() + "Could not populate blockHeader from block: there are no block with number!" << TestOutputHelper::testName() << endl;
 		}
 	}
 
@@ -374,7 +378,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 		if (uncles.size())
 			uncle = uncles.at(uncles.size() - 1);
 		else
-			cerr << "Could not create uncle sameAsPreviousSibling: there are no siblings!";
+			cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousSibling: there are no siblings!";
 		return;
 	}
 
@@ -386,7 +390,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 		if (number < importedBlocks.size())
 			uncle = importedBlocks.at(number);
 		else
-			cerr << "Could not create uncle sameAsBlock: there are no block with number " << number;
+			cerr << TestOutputHelper::testName() + "Could not create uncle sameAsBlock: there are no block with number " << number;
 		return;
 	}
 
@@ -400,10 +404,10 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			if (prevBlockUncles.size())
 				uncle = prevBlockUncles[0];  //exact uncle??
 			else
-				cerr << "Could not create uncle sameAsPreviousBlockUncle: previous block has no uncles!" << TestOutputHelper::testName() << endl;
+				cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousBlockUncle: previous block has no uncles!" << TestOutputHelper::testName() << endl;
 		}
 		else
-			cerr << "Could not create uncle sameAsPreviousBlockUncle: there are no block imported!" << TestOutputHelper::testName() << endl;
+			cerr << TestOutputHelper::testName() + "Could not create uncle sameAsPreviousBlockUncle: there are no block imported!" << TestOutputHelper::testName() << endl;
 		return;
 	}
 
@@ -433,7 +437,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 								 );
 		}
 		else
-			cerr << "Could not create uncle populateFromBlock: there are no block with number " << number << TestOutputHelper::testName() << endl;
+			cerr << TestOutputHelper::testName() + "Could not create uncle populateFromBlock: there are no block with number " << number << TestOutputHelper::testName() << endl;
 	}
 	else
 	{
@@ -535,7 +539,7 @@ void checkJsonSectionForInvalidBlock(mObject& _blObj)
 void eraseJsonSectionForInvalidBlock(mObject& _blObj)
 {
 	// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
-	cnote << "block is invalid!\n";
+	cnote << TestOutputHelper::testName() + "block is invalid!\n";
 	_blObj.erase(_blObj.find("blockHeader"));
 	_blObj.erase(_blObj.find("uncleHeaders"));
 	_blObj.erase(_blObj.find("transactions"));
