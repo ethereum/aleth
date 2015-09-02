@@ -33,7 +33,7 @@
                 "storage": {}
             },
             "aaaf5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000100",
+                "balance" : "10000000000",
                 "nonce" : "0",
                 "code" : "0x60003551",
                 "storage": {}

@@ -20,8 +20,6 @@
  */
 
 #pragma once
-#ifndef BLOCKCHAIN_HELPER_HEADER_H
-#define BLOCKCHAIN_HELPER_HEADER_H
 #include "JsonSpiritHeaders.h"
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
@@ -56,7 +54,7 @@ public:
 	Transaction const& getTransaction() const { return m_transaction; }
 private:
 	json_spirit::mObject m_jsonTransaction;
-	Transaction  m_transaction;
+	Transaction m_transaction;
 };
 
 class TestBlock
@@ -73,7 +71,7 @@ public:
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
-	void mine(TestBlockChain const& bc);
+	void mine(TestBlockChain const& _bc);
 
 	void setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate);
 	void setState(State const& _state);
@@ -94,7 +92,6 @@ private:
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
 
-private:
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
 	State m_state;
@@ -113,7 +110,7 @@ public:
 	TestBlockChain(TestBlock const& _genesisBlock);	
 	void reset(TestBlock const& _genesisBlock);
 	void addBlock(TestBlock const& _block);
-	vector<TestBlock> syncUncles(vector<TestBlock> const& uncles);
+	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& getTopBlock() { return m_lastBlock; }
 	FullBlockChain<Ethash> const& getInterface() const { return *m_blockChain.get();}
 	TestBlock const& getTestGenesis() const { return m_genesisBlock; }
@@ -125,4 +122,3 @@ private:
 };
 
 }}
-#endif
