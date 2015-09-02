@@ -171,11 +171,11 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	assert(_o.count("currentGasLimit") > 0);
-	assert(_o.count("currentDifficulty") > 0);	
-	assert(_o.count("currentNumber") > 0);
-	assert(_o.count("currentTimestamp") > 0);
-	assert(_o.count("currentCoinbase") > 0);
+	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
+	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
+	BOOST_REQUIRE(_o.count("currentNumber") > 0);
+	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
+	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
 	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
 	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
@@ -491,12 +491,11 @@ LogEntries importLog(json_spirit::mArray& _a)
 	LogEntries logEntries;
 	for (auto const& l: _a)
 	{
-		json_spirit::mObject o = l.get_obj();
-		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-		assert(o.count("address") > 0);
-		assert(o.count("topics") > 0);
-		assert(o.count("data") > 0);
-		assert(o.count("bloom") > 0);
+		json_spirit::mObject o = l.get_obj();		
+		BOOST_REQUIRE(o.count("address") > 0);
+		BOOST_REQUIRE(o.count("topics") > 0);
+		BOOST_REQUIRE(o.count("data") > 0);
+		BOOST_REQUIRE(o.count("bloom") > 0);
 		LogEntry log;
 		log.address = Address(o["address"].get_str());
 		for (auto const& t: o["topics"].get_array())
@@ -909,7 +908,7 @@ using namespace boost;
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
 {
 	std::string testCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cerr << "Test Case \"" + testCaseName + "\": " << std::endl;
+	std::cout << "Test Case \"" + testCaseName + "\": " << std::endl;
 	m_maxTests = _v.get_obj().size();
 	m_currTest = 0;	
 }
@@ -921,10 +920,10 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 	if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
 	{
 		int percent = int(m_currTest*100/m_maxTests);
-		std::cerr << percent << "%";
+		std::cout << percent << "%";
 		if (percent != 100)
-			std::cerr << "...";
-		std::cerr << std::endl;
+			std::cout << "...";
+		std::cout << std::endl;
 	}
 
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
