@@ -15,21 +15,22 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 /** @file blockchain.cpp
- * @author Dimitry Khokhlov <dimitry@ethdev.com>
+ * @author Christoph Jentzsch <cj@ethdev.com>, Dimitry Khokhlov <dimitry@ethdev.com>
  * @date 2015
  * BlockChain test functions.
  */
+
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+
+#include <libdevcore/FileSystem.h>
+#include <libethcore/Params.h>
 
 #include <test/TestHelper.h>
 #include <test/BlockChainHelper.h>
 #include <test/JsonSpiritHeaders.h>
 #include "test/fuzzTesting/fuzzHelper.h"
-
-#include <libdevcore/FileSystem.h>
-#include <libethcore/Params.h>
 
 using namespace std;
 using namespace json_spirit;
@@ -42,8 +43,9 @@ namespace dev {  namespace test {
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);
 mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
 mObject writeBlockHeaderToJson(Ethash::BlockHeader const& _bi);
-void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::vector<TestBlock> const& importedBlocks);
-void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, std::vector<TestBlock> const& _uncles, std::vector<TestBlock> const& _importedBlocks);
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vector<TestBlock> const& importedBlocks);
+void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
+void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
 
@@ -139,9 +141,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					aUncleList.push_back(uncleHeaderObj);
 				}
 				blObj["uncleHeaders"] = aUncleList;
-				blObj["transactions"] = writeTransactionsToJson(alterBlock.getTransactionQueue());
+				blObj["transactions"] = writeTransactionsToJson(alterBlock.getTransactionQueue());				
 
-				bool wasException = false;
 				compareBlocks(block, alterBlock);
 				try
 				{
@@ -153,25 +154,16 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				catch (Exception const& _e)
 				{
 					cnote << testname + "block import throw an exception: " << diagnostic_information(_e);
-					wasException = true;
+					eraseJsonSectionForInvalidBlock(blObj);
 				}
 				catch (std::exception const& _e)
 				{
 					cnote << testname + "block import throw an exception: " << _e.what();
-					wasException = true;
+					eraseJsonSectionForInvalidBlock(blObj);
 				}
 				catch (...)
 				{
-					wasException = true;
-				}
-
-				if (wasException)
-				{
-					// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
-					cnote << "block is invalid!\n";
-					blObj.erase(blObj.find("blockHeader"));
-					blObj.erase(blObj.find("uncleHeaders"));
-					blObj.erase(blObj.find("transactions"));
+					eraseJsonSectionForInvalidBlock(blObj);
 				}
 
 				blArray.push_back(blObj);  //json data
@@ -266,7 +258,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				}
 				catch (Exception const& _e)
 				{
-					cerr << "Error importing block from filds to blockchain: " << diagnostic_information(_e);
+					cerr << testname + "Error importing block from fields to blockchain: " << diagnostic_information(_e);
 					break;
 				}
 			}//allBlocks
@@ -540,6 +532,15 @@ void checkJsonSectionForInvalidBlock(mObject& _blObj)
 	BOOST_CHECK(_blObj.count("uncleHeaders") == 0);
 }
 
+void eraseJsonSectionForInvalidBlock(mObject& _blObj)
+{
+	// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
+	cnote << "block is invalid!\n";
+	_blObj.erase(_blObj.find("blockHeader"));
+	_blObj.erase(_blObj.find("uncleHeaders"));
+	_blObj.erase(_blObj.find("transactions"));
+}
+
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname)
 {
 	Ethash::BlockHeader const& blockHeaderFromFields = _blockFromFields.getBlockHeader();
@@ -600,7 +601,14 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
-	dev::test::executeTests("bcForkBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	if (!dev::test::Options::get().fillTests)
+		dev::test::executeTests("bcForkBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcForkUncleTest)
+{
+	if (!dev::test::Options::get().fillTests)
+		dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
@@ -610,7 +618,8 @@ BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
 
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
-	dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	if (!dev::test::Options::get().fillTests)
+		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcRPC_API_Test)

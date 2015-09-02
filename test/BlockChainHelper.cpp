@@ -76,7 +76,7 @@ TestBlock::TestBlock(std::string const& _blockRlp)
 		m_testTransactions.push_back(testTx);
 	}
 
-	for	(auto const& uRLP: root[2])
+	for (auto const& uRLP: root[2])
 	{
 		BlockHeader uBl;
 		uBl.populateFromHeader(uRLP);
@@ -86,9 +86,7 @@ TestBlock::TestBlock(std::string const& _blockRlp)
 		//thus it won't need verification
 		uncle.setBlockHeader(uBl, RecalcBlockHeader::SkipVerify);
 		m_uncles.push_back(uncle);
-	}
-
-	//copyStateFrom(_original.getState());
+	}	
 }
 
 void TestBlock::setState(State const& _state)
@@ -102,11 +100,11 @@ void TestBlock::addTransaction(TestTransaction const& _tr)
 	{
 		m_testTransactions.push_back(_tr);
 		if (m_transactionQueue.import(_tr.getTransaction().rlp()) != ImportResult::Success)
-			cnote << "Test block failed importing transaction\n";
+			cnote << TestOutputHelper::testName() + "Test block failed importing transaction\n";
 	}
 	catch (Exception const& _e)
 	{
-		BOOST_ERROR("Failed transaction constructor with Exception: " << diagnostic_information(_e));
+		BOOST_ERROR(TestOutputHelper::testName() + "Failed transaction constructor with Exception: " << diagnostic_information(_e));
 	}
 	catch (exception const& _e)
 	{
@@ -132,7 +130,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 
 	FullBlockChain<Ethash> const& blockchain = bc.getInterface();
 
-	Block block = (blockchain.genesisBlock(genesisDB));
+	Block block = blockchain.genesisBlock(genesisDB);
 	block.setBeneficiary(genesisBlock.getBeneficiary());
 	try
 	{
@@ -150,25 +148,18 @@ void TestBlock::mine(TestBlockChain const& bc)
 	}
 	catch (Exception const& _e)
 	{
-		cnote << "block sync or mining did throw an exception: " << diagnostic_information(_e);
+		cnote << TestOutputHelper::testName() + "block sync or mining did throw an exception: " << diagnostic_information(_e);
 		return;
 	}
 	catch (std::exception const& _e)
 	{
-		cnote << "block sync or mining did throw an exception: " << _e.what();
+		cnote << TestOutputHelper::testName() + "block sync or mining did throw an exception: " << _e.what();
 		return;
 	}
 
-	try
-	{
-		m_blockHeader = BlockHeader(block.blockData());
-		copyStateFrom(block.state());
-		recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify); //Update cause transactions might changed
-	}
-	catch (Exception const& _e)
-	{
-		BOOST_ERROR("Failed recalculating mined block bytes from block content: " << diagnostic_information(_e));
-	}
+	m_blockHeader = BlockHeader(block.blockData());
+	copyStateFrom(block.state());
+	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify); //Update cause transactions might changed
 }
 
 void TestBlock::setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate)
@@ -194,15 +185,15 @@ TestBlock::BlockHeader TestBlock::constructBlock(mObject const& _o, h256 const& 
 	}
 	catch (Exception const& _e)
 	{
-		cnote << "block population did throw an exception: " << diagnostic_information(_e);
+		cnote << TestOutputHelper::testName() + "block population did throw an exception: " << diagnostic_information(_e);
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR("Failed block population with Exception: " << _e.what());
+		BOOST_ERROR(TestOutputHelper::testName() + "Failed block population with Exception: " << _e.what());
 	}
 	catch(...)
 	{
-		BOOST_ERROR("block population did throw an unknown exception\n");
+		BOOST_ERROR(TestOutputHelper::testName() + "block population did throw an unknown exception\n");
 	}
 	return ret;
 }
@@ -306,7 +297,20 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 	ret.appendRaw(uncleStream.out());	 //uncles
 
 	if (_recalculate == RecalcBlockHeader::Verify || _recalculate == RecalcBlockHeader::UpdateAndVerify)
-		m_blockHeader.verifyInternals(&ret.out());
+	{
+		try
+		{
+			m_blockHeader.verifyInternals(&ret.out());
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR(TestOutputHelper::testName() +"BlockHeader Verification failed: " << diagnostic_information(_e));
+		}
+		catch(...)
+		{
+			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed");
+		}
+	}
 	m_bytes = ret.out();
 }
 
