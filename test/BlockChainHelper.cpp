@@ -51,11 +51,12 @@ TestBlock& TestBlock::operator = (TestBlock const& _original)
 
 TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify)
 {
-	m_state = State(OverlayDB(State::openDB(m_tempDirState.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
-	ImportTest::importState(_stateObj, m_state);
-	m_state.commit();
+	m_tempDirState = std::unique_ptr<TransientDirectory>(new TransientDirectory());
+	m_state = std::unique_ptr<State>(new State(OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
+	ImportTest::importState(_stateObj, *m_state.get());
+	m_state.get()->commit();
 
-	m_blockHeader = constructBlock(_blockObj, _stateObj.size() ? m_state.rootHash() : h256{});
+	m_blockHeader = constructBlock(_blockObj, _stateObj.size() ? m_state.get()->rootHash() : h256{});
 	recalcBlockHeaderBytes(_verify);
 }
 
@@ -317,15 +318,30 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 void TestBlock::copyStateFrom(State const& _state)
 {
 	//WEIRD WAY TO COPY STATE AS COPY CONSTRUCTOR FOR STATE NOT IMPLEMENTED CORRECTLY (they would share the same DB)
-	m_tempDirState = TransientDirectory();
-	m_state = State(OverlayDB(State::openDB(m_tempDirState.path(), h256{}, WithExisting::Kill)), BaseState::Empty);
+	m_tempDirState.reset(new TransientDirectory());
+	m_state.reset(new State(OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
 	json_spirit::mObject obj = fillJsonWithState(_state);
-	ImportTest::importState(obj, m_state);
+	ImportTest::importState(obj, *m_state.get());
+}
+
+void TestBlock::clearState()
+{
+	m_state.reset(0);
+	m_tempDirState.reset(0);
+	for (size_t i = 0; i < m_uncles.size(); i++)
+		m_uncles.at(i).clearState();
 }
 
 void TestBlock::populateFrom(TestBlock const& _original)
 {
-	copyStateFrom(_original.getState());
+	try
+	{
+		copyStateFrom(_original.getState()); //copy state if it is defined in _original
+	}
+	catch (BlockStateUndefined const& _ex)
+	{
+		cnote << _ex.what() << "copying block with null state";
+	}
 	m_testTransactions = _original.getTestTransactions();
 	m_transactionQueue.clear();
 	TransactionQueue const& trQueue = _original.getTransactionQueue();
@@ -340,16 +356,17 @@ void TestBlock::populateFrom(TestBlock const& _original)
 ///
 TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
 {
+	m_tempDirBlockchain = std::unique_ptr<TransientDirectory>(new TransientDirectory());
 	m_blockChain = std::unique_ptr<FullBlockChainEthash>(
-				new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.path(), WithExisting::Kill));
+				new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	m_genesisBlock = _genesisBlock;
 	m_lastBlock = m_genesisBlock;
 }
 
 void TestBlockChain::reset(TestBlock const& _genesisBlock)
 {
-	m_tempDirBlockchain = TransientDirectory();
-	m_blockChain.reset(new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.path(), WithExisting::Kill));
+	m_tempDirBlockchain.reset(new TransientDirectory());
+	m_blockChain.reset(new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	m_genesisBlock = _genesisBlock;
 	m_lastBlock = m_genesisBlock;
 }

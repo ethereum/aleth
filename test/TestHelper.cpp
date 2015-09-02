@@ -644,11 +644,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR("Failed filling test with Exception: " << _e.what());
+			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << _e.what());
 		}
 	}
 
@@ -664,11 +664,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	}
 	catch (Exception const& _e)
 	{
-		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << diagnostic_information(_e));
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR("Failed test with Exception: " << _e.what());
+		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << _e.what());
 	}
 }
 
