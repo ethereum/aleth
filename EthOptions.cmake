@@ -1,0 +1,75 @@
+
+macro(configure_project)
+
+	# features
+	eth_default_option(VMTRACE OFF)
+	eth_default_option(PROFILING OFF)
+	eth_default_option(FATDB ON)
+	eth_default_option(ROCKSDB OFF)
+	eth_default_option(OLYMPIC OFF)
+	eth_default_option(PARANOID OFF)
+
+	# components
+	eth_default_option(GUI ON)
+	eth_default_option(TESTS ON)
+	eth_default_option(TOOLS ON)
+	eth_default_option(ETHASHCL ON)
+	eth_default_option(EVMJIT OFF)
+	eth_default_option(SOLIDITY ON)
+
+	# propagates CMake configuration options to the compiler
+	if (OLYMPIC)
+		add_definitions(-DETH_OLYMPIC)
+	else()
+		add_definitions(-DETH_FRONTIER)
+	endif()
+
+	add_definitions(-DETH_TRUE)
+
+	if (PARANOID)
+		add_definitions(-DETH_PARANOIA)
+	endif ()
+
+	if (VMTRACE)
+		add_definitions(-DETH_VMTRACE)
+	endif ()
+
+	# Clear invalid option
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+		if (PARANOID)
+			message("Paranoia requires debug - disabling for release build.")
+			set(PARANOID OFF)
+		endif ()
+		if (VMTRACE)
+			message("VM Tracing requires debug - disabling for release build.")
+			set (VMTRACE OFF)
+		endif ()
+	endif ()
+endmacro()
+
+function(print_config)
+	message("------------------------------------------------------------------------")
+	message("--                  CMake Version                            ${CMAKE_VERSION}")
+	message("-- CMAKE_BUILD_TYPE Build type                               ${CMAKE_BUILD_TYPE}")
+	message("-- TARGET_PLATFORM  Target platform                          ${TARGET_PLATFORM}")
+	message("-- BUNDLE           Build bundle                             ${BUNDLE}")
+	message("--------------------------------------------------------------- features")
+	message("--                  Hardware identification support          ${CPUID_FOUND}")
+	message("--                  HTTP Request support                     ${CURL_FOUND}")
+	message("-- VMTRACE          VM execution tracing                     ${VMTRACE}")
+	message("-- PROFILING        Profiling support                        ${PROFILING}")
+	message("-- FATDB            Full database exploring                  ${FATDB}")
+	message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
+	message("-- OLYMPIC          Default to the Olympic network           ${OLYMPIC}")
+	message("-- PARANOID         -                                        ${PARANOID}")
+	message("------------------------------------------------------------- components")
+	message("-- GUI              Build GUI components                     ${GUI}")
+	message("-- TESTS            Build tests                              ${TESTS}")
+	message("-- TOOLS            Build tools                              ${TOOLS}")
+	message("-- ETHASHCL         Build OpenCL components                  ${ETHASHCL}")
+	message("-- EVMJIT           Build LLVM-based JIT EVM                 ${EVMJIT}")
+	message("-- SOLIDITY         Build Solidity                           ${SOLIDITY}")
+	message("------------------------------------------------------------------------")
+	message("")
+endfunction()
+

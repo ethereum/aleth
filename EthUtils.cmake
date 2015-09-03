@@ -81,3 +81,16 @@ function(eth_add_resources RESOURCE_FILE OUT_FILE ETH_RES_DIR)
 		DEPENDS ${filenames}
 	)
 endfunction()
+
+macro(eth_default_option O DEF)
+	if (DEFINED ${O})
+		if (${${O}})
+			set(${O} ON)
+		else ()
+			set(${O} OFF)
+		endif()
+	else ()
+		set(${O} ${DEF})
+	endif()
+endmacro()
+
