@@ -80,7 +80,7 @@ macro(eth_install_executable EXECUTABLE)
 	set (extra_macro_args ${ARGN})
 	set (options)
 	set (one_value_args QMLDIR)
-	set (multi_value_args DLLS)
+	set (multi_value_args)
 	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
 	
 	if (ETH_INSTALL_EXECUTABLE_QMLDIR)
@@ -130,11 +130,6 @@ macro(eth_install_executable EXECUTABLE)
 			)
 		endif()
 
-		#copy additional dlls
-		foreach(dll ${ETH_INSTALL_EXECUTABLE_DLLS})
-			eth_copy_dll(${EXECUTABLE} ${dll})
-		endforeach(dll)
-
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Debug"
 			DESTINATION .
 			CONFIGURATIONS Debug
@@ -173,7 +168,7 @@ macro(eth_package EXECUTABLE)
 	set (extra_macro_args ${ARGN})
 	set (options)
 	set (one_value_args OSX_ICON WIN_ICON NAME DESCRIPTION)
-	set (multi_value_args DLLS)
+	set (multi_value_args)
 	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
 
 	if (APPLE)
