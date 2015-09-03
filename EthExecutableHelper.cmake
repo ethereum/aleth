@@ -32,7 +32,7 @@ macro(eth_add_executable EXECUTABLE)
 		set(MACOSX_BUNDLE_COPYRIGHT "${PROJECT_COPYRIGHT_YEAR} ${PROJECT_VENDOR}")
 		set(MACOSX_BUNDLE_GUI_IDENTIFIER "${PROJECT_DOMAIN_SECOND}.${PROJECT_DOMAIN_FIRST}")
 		set(MACOSX_BUNDLE_BUNDLE_NAME ${EXECUTABLE})
-		set(MACOSX_BUNDLE_ICON_FILE ${ETH_ADD_EXECUTABLE_ICON})
+		set(MACOSX_BUNDLE_ICON_FILE "${ETH_ADD_EXECUTABLE_ICON}.icns")
 		set_target_properties(${EXECUTABLE} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/EthereumMacOSXBundleInfo.plist.in")
 		set_source_files_properties(${EXECUTABLE} PROPERTIES MACOSX_PACKAGE_LOCATION MacOS)
 		set_source_files_properties(${MACOSX_BUNDLE_ICON_FILE}.icns PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
@@ -171,18 +171,18 @@ macro(eth_package EXECUTABLE)
 	set (multi_value_args)
 	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
 
-	if (APPLE)
-		add_custom_target(appdmg
-			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-			COMMAND ${CMAKE_COMMAND}
-			-DAPP_DMG_EXE=${ETH_APP_DMG}
-			-DAPP_DMG_FILE=appdmg.json.in
-			-DAPP_DMG_ICON="${ETH_INSTALL_EXECUTABLE_OSX_ICON}"
-			-DAPP_DMG_BACKGROUND="install-folder-bg.png"
-			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
-			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:${EXECUTABLE}>"
-			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
-		)
+	if (DEFINED APPLE)
+		#add_custom_target(appdmg
+			#WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			#COMMAND ${CMAKE_COMMAND}
+			#-DAPP_DMG_EXE=${ETH_APP_DMG}
+			#-DAPP_DMG_FILE="appdmg.json.in"
+			#-DAPP_DMG_ICON="${ETH_INSTALL_EXECUTABLE_OSX_ICON}"
+			#-DAPP_DMG_BACKGROUND="install-folder-bg.png"
+			#-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
+			#-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:${EXECUTABLE}>"
+			#-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
+		#)
 	endif ()
 
 	if (DEFINED MSVC)
@@ -216,6 +216,23 @@ macro(eth_package EXECUTABLE)
 		include(CPack)
 	endif ()
 
+endmacro()
+
+macro(eth_appdmg)
+	if (GUI AND DEFINED APPLE)
+		add_custom_target(appdmg
+			WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+			COMMAND ${CMAKE_COMMAND}
+			-DAPP_DMG_EXE=${ETH_APP_DMG}
+			-DAPP_DMG_FILE="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/appdmg.json.in"
+			-DAPP_DMG_ICON="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/alethzero.icns"
+			-DAPP_DMG_BACKGROUND="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/install-folder-bg@2x.png"
+			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
+			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:AlethZero>"
+			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix>"
+			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
+		)
+	endif()
 endmacro()
 
 macro(jsonrcpstub_client_create SPEC CLIENTNAME CLIENTFILENAME)
