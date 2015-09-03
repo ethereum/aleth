@@ -19,8 +19,6 @@
  * @date 2015
  */
 
-DEV_AZ_NOTE_PLUGIN($NAME);
-
 #include "$NAME.h"
 #include <libdevcore/Log.h>
 #include <libethereum/Client.h>
@@ -29,6 +27,8 @@ using namespace std;
 using namespace dev;
 using namespace az;
 using namespace eth;
+
+DEV_AZ_NOTE_PLUGIN($NAME);
 
 $NAME::$NAME(MainFace* _m):
 	Plugin(_m, "$NAME"),
