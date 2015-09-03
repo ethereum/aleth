@@ -228,17 +228,19 @@ BOOST_AUTO_TEST_CASE(filters)
 		db.saveTopicsToDB(*wh, persistID);
 	}
 
-	uint16_t port1 = 30308;
 	unsigned const step = 10;
 	bool host1Ready = false;
 	bool sent = false;
 	unsigned result = 0;
 	unsigned messageCount = 0;
 
-	Host host1("Test", NetworkPreferences("127.0.0.1", port1, false));
+	Host host1("Test", NetworkPreferences("127.0.0.1", 0, false));
 	host1.setIdealPeerCount(1);
 	auto whost1 = host1.registerCapability(make_shared<WhisperHost>());
 	host1.start();
+	auto port1 = host1.listenPort();
+	BOOST_REQUIRE(port1);
+
 	WhisperFiltersDB db;
 	auto watches = db.restoreTopicsFromDB(whost1.get(), persistID);
 	auto zero = db.restoreTopicsFromDB(whost1.get(), ++persistID);
@@ -269,10 +271,13 @@ BOOST_AUTO_TEST_CASE(filters)
 		}
 	});
 
-	Host host2("Test", NetworkPreferences("127.0.0.1", 30309, false));
+	Host host2("Test", NetworkPreferences("127.0.0.1", 0, false));
 	host2.setIdealPeerCount(1);
 	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
 	host2.start();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port2);
+	BOOST_REQUIRE_NE(port1, port2);
 
 	for (unsigned i = 0; i < 3000 && !host1.haveNetwork(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
