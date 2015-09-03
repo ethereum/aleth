@@ -22,6 +22,7 @@
 #include <string>
 #include <iostream>
 
+#include <libdevcore/CommonData.h>
 #include <test/TestHelper.h>
 #include <test/fuzzTesting/fuzzHelper.h>
 #include <libevm/VMFactory.h>
@@ -43,9 +44,9 @@ std::vector<std::string> getTypes();
 void parseTestWithTypes(std::string& test);
 
 namespace dev { namespace test {
-int createRandomTest(std::vector<char*> const& args)
+int createRandomTest(int argc, char* argv[])
 {
-	std::string testSuite;
+	std::string testSuite, stt;
 	std::string testFillString;
 	json_spirit::mValue testmValue;
 	bool checktest = false;
@@ -53,31 +54,25 @@ int createRandomTest(std::vector<char*> const& args)
 	bool debug = false;
 	bool filltest = false;
 
-	for (unsigned i = 0; i < args.size(); ++i)
-	{
-		auto arg = std::string{args.at(i)};
-		dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
-		if (arg == "--fulloutput")
-			options.fulloutput = true;
-		else
-		if (arg == "-t" && i + 1 < args.size())
-		{
-			testSuite = args.at(i+1);
-			if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
+	dev::test::Options& options = const_cast<dev::test::Options&>(dev::test::Options::get());
+
+	testSuite = options.rCurrentTestSuite;
+	if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
 				&& testSuite != "VMTests" && testSuite != "RLPTests")
-				testSuite = "";
-		}
+		testSuite = "";
+
+	for (int i = 0; i < argc; ++i)
+	{
+		auto arg = std::string{argv[i]};
+
+		if (arg == "--fulloutput")
+			options.fulloutput = true;	
 		else
-		if ((arg == "-checktest" || arg == "-filltest") && i + 1 < args.size())
+		if (arg == "-checktest" || arg == "-filltest")
 		{
-			std::string s;
-			for (unsigned j = i+1; j < args.size(); ++j)
-				s += args.at(j);
-			if (asserts(s.length() > 0))
-			{
-				std::cerr << "Error! Content of argument is empty! (Usage -checktest textstream)" << std::endl;
-				return 1;
-			}
+			std::string s = options.rCheckTest;
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Error! Content of argument is empty! (Usage -checktest textstream)");
+
 			if (arg == "-filltest")
 			{
 				testFillString = s;
@@ -85,8 +80,14 @@ int createRandomTest(std::vector<char*> const& args)
 			}
 			else
 			{
+				if (s.find(".json") != std::string::npos)
+				{
+					boost::filesystem::path p(__FILE__);
+					s = asString(dev::contents(s));
+				}
 				read_string(s, testmValue);
 				checktest = true;
+				stt = s;
 			}
 		}
 		else
@@ -105,7 +106,7 @@ int createRandomTest(std::vector<char*> const& args)
 	else
 	{
 		if (checktest)
-			std::cout << "Testing: " << testSuite.substr(0, testSuite.length() - 1) << std::endl;
+			std::cout << "Testing: " << testSuite.substr(0, testSuite.length() - 1) << "... ";
 
 		if (testSuite == "BlockChainTests")
 		{

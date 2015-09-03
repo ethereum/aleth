@@ -178,7 +178,7 @@ json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
 
 //Fill Test Functions
-int createRandomTest(std::vector<char*> const& args);
+int createRandomTest(int argc, char* argv[]);
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
 void doStateTests(json_spirit::mValue& v, bool _fillin);
 void doVMTests(json_spirit::mValue& v, bool _fillin);
@@ -199,6 +199,8 @@ public:
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	std::string rCheckTest;   ///< Test Input (for random tests)
+	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
 	bool checkState = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
@@ -220,11 +222,11 @@ public:
 	/// @}
 
 	/// Get reference to options
-	/// The first time used, options are parsed
-	static Options const& get();
+	/// The first time used, options are parsed with argc, argv
+	static Options const& get(int argc = 0, char** argv = 0);
 
 private:
-	Options();
+	Options(int argc = 0, char** argv = 0);
 	Options(Options const&) = delete;
 };
 
