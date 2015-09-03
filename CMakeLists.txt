@@ -24,6 +24,10 @@ include(EthDependencies)
 
 include(EthUtils)
 
+include(EthOptions)
+configure_project()
+print_config()
+
 add_subdirectory(utils)
 
 add_subdirectory(dev)
@@ -33,4 +37,3 @@ add_subdirectory(webthree)
 add_subdirectory(solidity)
 add_subdirectory(alethzero)
 add_subdirectory(mix)
-
