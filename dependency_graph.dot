@@ -28,7 +28,7 @@ digraph G {
 		 label = "solidity";
 		graph[style=filled,color=lightgrey];
 	}
-
+	
 	evm->ethereum;
 	lll->ethereum;
 	devcrypto->ethcore;
@@ -46,5 +46,23 @@ digraph G {
 		evmjitcpp;
 		graph[style=filled,color=lightgrey];
 	}
+
+	web3jsonrpc->alethzero;
+	natspec->alethzero;
+	solidity->alethzero;
+
+	subgraph cluster_alethzero {
+		alethzero;
+		graph[style=filled,color=lightgrey];
+	}
+
+	web3jsonrpc->mix;
+	solidity->mix;
+
+	subgraph cluster_mix {
+		mix;
+		graph[style=filled,color=lightgrey];
+	}
+
 
 }
