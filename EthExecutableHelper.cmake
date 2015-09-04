@@ -163,38 +163,28 @@ macro (eth_name KEY VALUE)
 	endif()
 endmacro()
 
-macro(eth_package EXECUTABLE)
-
-	set (extra_macro_args ${ARGN})
-	set (options)
-	set (one_value_args OSX_ICON WIN_ICON NAME DESCRIPTION)
-	set (multi_value_args)
-	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
-
-	if (DEFINED APPLE)
-		#add_custom_target(appdmg
-			#WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-			#COMMAND ${CMAKE_COMMAND}
-			#-DAPP_DMG_EXE=${ETH_APP_DMG}
-			#-DAPP_DMG_FILE="appdmg.json.in"
-			#-DAPP_DMG_ICON="${ETH_INSTALL_EXECUTABLE_OSX_ICON}"
-			#-DAPP_DMG_BACKGROUND="install-folder-bg.png"
-			#-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
-			#-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:${EXECUTABLE}>"
-			#-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
-		#)
-	endif ()
+macro(eth_nsis)
 
 	if (DEFINED MSVC)
 		# packaging stuff
 		include(InstallRequiredSystemLibraries)
-		set(CPACK_PACKAGE_NAME "${NAME}")
-		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "${ETH_INSTALL_EXECUTABLE_DESCRIPTION}")
+        set(CPACK_PACKAGE_NAME "Ethereum")
+		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Ethereum Toolset")
 		set(CPACK_PACKAGE_VENDOR "ethereum.org")
 		set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 		set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 		set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
 		set(CPACK_GENERATOR "NSIS")
+
+		set(CPACK_COMPONENT_ALETHZERO_GROUP "Applications")
+		set(CPACK_COMPONENT_MIX_GROUP "Applications")
+		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
+		set(CPACK_COMPONENT_ETH_GROUP "CLI")
+		set(CPACK_COMPONENT_ETHMINER_GROUP "CLI")
+		set(CPACK_COMPONENT_RLP_GROUP "CLI")
+		set(CPACK_COMPONENT_ABI_GROUP "CLI")
+
+		set(CPACK_COMPONENTS_ALL alethzero mix solc eth ethminer rlp abi)
 
 		# nsis specific stuff
 		if (CMAKE_CL_64)
@@ -205,13 +195,13 @@ macro(eth_package EXECUTABLE)
 			set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
 		endif()
 
-		set(CPACK_NSIS_DISPLAY_NAME "${NAME}")
+		set(CPACK_NSIS_DISPLAY_NAME "Ethereum")
 		set(CPACK_NSIS_HELP_LINK "https://github.com/ethereum/cpp-ethereum")
 		set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ethereum/cpp-ethereum")
 		set(CPACK_NSIS_CONTACT "ethereum.org")
 		set(CPACK_NSIS_MODIFY_PATH ON)
-		set(CPACK_NSIS_MUI_ICON "${ETH_INSTALL_EXECUTABLE_WIN_ICON}")
-		set(CPACK_NSIS_MUI_UNIICON "${ETH_INSTALL_EXECUTABLE_WIN_ICON}")
+		set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/res/win/alethzero.ico")
+		set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/res/win/alethzero.ico")
 
 		include(CPack)
 	endif ()
