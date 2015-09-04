@@ -184,7 +184,7 @@ macro(eth_nsis)
 		set(CPACK_COMPONENT_RLP_GROUP "CLI")
 		set(CPACK_COMPONENT_ABI_GROUP "CLI")
 
-		set(CPACK_COMPONENTS_ALL alethzero mix solc eth ethminer rlp abi)
+		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer rlp abi)
 
 		# nsis specific stuff
 		if (CMAKE_CL_64)
