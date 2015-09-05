@@ -199,9 +199,11 @@ public:
 	// [MINING API]:
 
 	/// Set the coinbase address.
-	virtual void setBeneficiary(Address _us) = 0;
+	virtual void setBeneficiary(Address const& _us) = 0;
 	/// Get the coinbase address.
-	virtual Address address() const = 0;
+	virtual Address beneficiary() const = 0;
+
+	Address account() const { return beneficiary(); }	// TODO: REMOVE!!!
 
 	/// Start mining.
 	/// NOT thread-safe - call it & stopMining only from a single thread

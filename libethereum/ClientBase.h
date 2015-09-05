@@ -153,7 +153,7 @@ public:
 	virtual u256 gasBidPrice() const override { return DefaultGasPrice; }
 
 	/// Get the coinbase address
-	virtual Address address() const override;
+	virtual Address beneficiary() const override;
 
 	virtual bool isKnown(h256 const& _hash) const override;
 	virtual bool isKnown(BlockNumber _block) const override;

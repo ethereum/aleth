@@ -129,7 +129,8 @@ public:
 
 	// Mining stuff:
 
-	virtual void setBeneficiary(Address _us) override { WriteGuard l(x_preMine); m_preMine.setBeneficiary(_us); }
+	virtual Address beneficiary() const override { ReadGuard l(x_preMine); return m_preMine.beneficiary(); }
+	virtual void setBeneficiary(Address const& _us) override { WriteGuard l(x_preMine); m_preMine.setBeneficiary(_us); }
 
 	/// Check block validity prior to mining.
 	bool miningParanoia() const { return m_paranoia; }
