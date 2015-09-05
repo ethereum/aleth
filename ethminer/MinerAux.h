@@ -214,9 +214,9 @@ public:
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
 		else if (arg == "-C" || arg == "--cpu")
-			m_minerType = MinerType::CPU;
+			m_minerType = "cpu";
 		else if (arg == "-G" || arg == "--opencl")
-			m_minerType = MinerType::GPU;
+			m_minerType = "opencl";
 		else if (arg == "--current-block" && i + 1 < argc)
 			m_currentBlock = stol(argv[++i]);
 		else if (arg == "--no-precompute")
@@ -302,9 +302,9 @@ public:
 			exit(0);
 		}
 
-		if (m_minerType == MinerType::CPU)
+		if (m_minerType == "cpu")
 			EthashCPUMiner::setNumInstances(m_miningThreads);
-		else if (m_minerType == MinerType::GPU)
+		else if (m_minerType == "opencl")
 		{
 #if ETH_ETHASHCL || !ETH_TRUE
 			if (!EthashGPUMiner::configureGPU(
@@ -378,7 +378,7 @@ public:
 		GPU
 	};
 
-	MinerType minerType() const { return m_minerType; }
+	std::string minerType() const { return m_minerType; }
 	bool shouldPrecompute() const { return m_precompute; }
 
 private:
@@ -390,7 +390,7 @@ private:
 		exit(0);
 	}
 
-	void doBenchmark(MinerType _m, bool _phoneHome, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
+	void doBenchmark(std::string _m, bool _phoneHome, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
 	{
 		Ethash::BlockHeader genesis;
 		genesis.setDifficulty(1 << 18);
@@ -405,7 +405,12 @@ private:
 		f.setSealers(sealers);
 		f.onSolutionFound([&](EthashProofOfWork::Solution) { return false; });
 
-		string platformInfo = _m == MinerType::CPU ? "CPU" : "GPU";//EthashProofOfWork::CPUMiner::platformInfo() : _m == MinerType::GPU ? EthashProofOfWork::GPUMiner::platformInfo() : "";
+		string platformInfo =
+			_m == "cpu" ? EthashCPUMiner::platformInfo() :
+#if ETH_ETHASHCL
+			_m == "opencl" ? EthashGPUMiner::platformInfo() :
+#endif
+			"";
 		cout << "Benchmarking on platform: " << platformInfo << endl;
 
 		cout << "Preparing DAG..." << endl;
@@ -413,10 +418,7 @@ private:
 
 		genesis.setDifficulty(u256(1) << 63);
 		f.setWork(genesis);
-		if (_m == MinerType::CPU)
-			f.start("cpu");
-		else if (_m == MinerType::GPU)
-			f.start("opencl");
+		f.start(_m);
 
 		map<uint64_t, WorkingProgress> results;
 		uint64_t mean = 0;
@@ -470,7 +472,7 @@ private:
 
 	// dummy struct for special exception.
 	struct NoWork {};
-	void doFarm(MinerType _m, string const& _remote, unsigned _recheckPeriod)
+	void doFarm(std::string _m, string const& _remote, unsigned _recheckPeriod)
 	{
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
 		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
@@ -487,10 +489,7 @@ private:
 		::FarmClient rpc(client);
 		GenericFarm<EthashProofOfWork> f;
 		f.setSealers(sealers);
-		if (_m == MinerType::CPU)
-			f.start("cpu");
-		else if (_m == MinerType::GPU)
-			f.start("opencl");
+		f.start(_m);
 
 		EthashProofOfWork::WorkPackage current;
 		EthashAux::FullType dag;
@@ -586,7 +585,7 @@ private:
 	OperationMode mode;
 
 	/// Mining options
-	MinerType m_minerType = MinerType::CPU;
+	std::string m_minerType = "cpu";
 	unsigned m_openclPlatform = 0;
 	unsigned m_openclDevice = 0;
 	unsigned m_miningThreads = UINT_MAX;
