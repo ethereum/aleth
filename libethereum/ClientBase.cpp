@@ -474,7 +474,7 @@ u256 ClientBase::gasLimitRemaining() const
 	return postMine().gasLimitRemaining();
 }
 
-Address ClientBase::address() const
+Address ClientBase::beneficiary() const
 {
 	return preMine().beneficiary();
 }
