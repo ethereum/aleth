@@ -21,11 +21,13 @@
 
 #pragma once
 
-#include "MainFace.h"
+#include "Plugin.h"
 
 namespace dev
 {
-namespace az
+namespace aleth
+{
+namespace zero
 {
 
 class $NAME: public QObject, public Plugin
@@ -33,7 +35,7 @@ class $NAME: public QObject, public Plugin
 	Q_OBJECT
 
 public:
-	$NAME(MainFace* _m);
+	$NAME(ZeroFace* _z);
 	~$NAME();
 
 private:
@@ -42,5 +44,6 @@ private:
 	void writeSettings(QSettings&) override {}
 };
 
+}
 }
 }

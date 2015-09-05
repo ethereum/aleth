@@ -49,6 +49,7 @@ public:
 	bool setOption(std::string const& _name, bytes const& _value) { Guard l(x_options); try { if (onOptionChanging(_name, _value)) { m_options[_name] = _value; return true; } } catch (...) {} return false; }
 
 	virtual strings sealers() const { return { "default" }; }
+	virtual std::string sealer() const { return "default"; }
 	virtual void setSealer(std::string const&) {}
 	virtual void generateSeal(BlockInfo const& _bi) = 0;
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;

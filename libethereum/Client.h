@@ -127,23 +127,23 @@ public:
 	/// Freeze worker thread and sync some of the block queue.
 	std::tuple<ImportRoute, bool, unsigned> syncQueue(unsigned _max = 1);
 
-	// Mining stuff:
+	// Sealing stuff:
+	// Note: "mining"/"miner" is deprecated. Use "sealing"/"sealer".
 
 	virtual Address beneficiary() const override { ReadGuard l(x_preMine); return m_preMine.beneficiary(); }
 	virtual void setBeneficiary(Address const& _us) override { WriteGuard l(x_preMine); m_preMine.setBeneficiary(_us); }
 
-	/// Check block validity prior to mining.
-	bool miningParanoia() const { return m_paranoia; }
-	/// Change whether we check block validity prior to mining.
-	void setParanoia(bool _p) { m_paranoia = _p; }
-	/// Should we force mining to happen, even without transactions?
-	bool forceMining() const { return m_forceMining; }
-	/// Enable/disable forcing of mining to happen, even without transactions.
-	void setForceMining(bool _enable);
-	/// Are we allowed to GPU mine?
-	bool turboMining() const { return m_turboMining; }
-	/// Enable/disable GPU mining.
-	void setTurboMining(bool _enable = true);
+	/// Type of sealers available for this seal engine.
+	strings sealers() const { return m_sealEngine->sealers(); }
+	/// Current sealer in use.
+	std::string sealer() const { return m_sealEngine->sealer(); }
+	/// Change sealer.
+	void setSealer(std::string const& _id) { m_sealEngine->setSealer(_id); if (isMining()) startMining(); }
+	/// Review option for the sealer.
+	bytes sealOption(std::string const& _name) const { return m_sealEngine->option(_name); }
+	/// Set option for the sealer.
+	bool setSealOption(std::string const& _name, bytes const& _value) { auto ret = m_sealEngine->setOption(_name, _value); if (isMining()) startMining(); return ret; }
+
 	/// Enable/disable precomputing of the DAG for next epoch
 	void setShouldPrecomputeDAG(bool _precompute);
 
@@ -169,12 +169,11 @@ public:
 	bool isMining() const override;
 	/// Are we mining now?
 	bool wouldMine() const override { return m_wouldMine; }
+
 	/// The hashrate...
 	u256 hashrate() const override;
 	/// Check the progress of the mining.
 	WorkingProgress miningProgress() const override;
-	/// Get and clear the mining history.
-	std::list<MineInfo> miningHistory();
 
 	// Debug stuff:
 
@@ -325,10 +324,7 @@ protected:
 	Handler<> m_bqReady;
 
 	bool m_wouldMine = false;				///< True if we /should/ be mining.
-	bool m_turboMining = false;				///< Don't squander all of our time mining actually just sleeping.
-	bool m_forceMining = false;				///< Mine even when there are no transactions pending?
 	bool m_mineOnBadChain = false;			///< Mine even when the canary says it's a bad chain.
-	bool m_paranoia = false;				///< Should we be paranoid about our state?
 	static bool s_shouldExit;				///< Exit requested?
 
 	mutable std::chrono::system_clock::time_point m_lastGarbageCollection;
