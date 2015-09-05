@@ -40,6 +40,7 @@ public:
 	EthashSealEngine();
 
 	strings sealers() const override;
+	std::string sealer() const override { return m_sealer; }
 	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
 	void cancelGeneration() override { m_farm.stop(); }
 	void generateSeal(BlockInfo const& _bi) override;
