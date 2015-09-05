@@ -340,7 +340,6 @@ int main(int argc, char** argv)
 
 	/// Mining params
 	unsigned mining = 0;
-	bool forceMining = false;
 	bool mineOnWrongChain = false;
 	Address signingKey;
 	Address sessionKey;
@@ -682,7 +681,7 @@ int main(int argc, char** argv)
 		else if (arg == "--import-presale" && i + 1 < argc)
 			presaleImports.push_back(argv[++i]);
 		else if (arg == "-f" || arg == "--force-mining")
-			forceMining = true;
+			cout << "WARNING: Deprecated option " << arg << "; ignoring." << endl;
 		else if (arg == "--old-interactive")
 			interactive = true;
 #if ETH_JSONRPC || !ETH_TRUE
@@ -1086,10 +1085,9 @@ int main(int argc, char** argv)
 	if (c)
 	{
 		c->setGasPricer(gasPricer);
-		c->setForceMining(forceMining);
 		// TODO: expose sealant interface.
 		c->setShouldPrecomputeDAG(m.shouldPrecompute());
-		c->setTurboMining(m.minerType() == MinerCLI::MinerType::GPU);
+		c->setSealer(m.minerType());
 		c->setBeneficiary(beneficiary);
 		c->setNetworkId(networkId);
 	}
