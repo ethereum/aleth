@@ -874,7 +874,7 @@ int main(int argc, char** argv)
 	#endif
 		};
 
-	auto getPassword = [&](string const& prompt){
+	auto getPassword = [&](string const& prompt) {
 		bool s = g_silence;
 		g_silence = true;
 		cout << endl;

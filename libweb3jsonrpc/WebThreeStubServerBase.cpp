@@ -95,7 +95,7 @@ string WebThreeStubServerBase::eth_protocolVersion()
 
 string WebThreeStubServerBase::eth_coinbase()
 {
-	return toJS(client()->address());
+	return toJS(client()->beneficiary());
 }
 
 string WebThreeStubServerBase::eth_hashrate()
