@@ -353,12 +353,11 @@ public:
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),
-		WithExisting _forceAction = WithExisting::Trust,
-		u256 _networkId = 0
+		WithExisting _forceAction = WithExisting::Trust
 	):
 		SpecialisedClient(_gpForAdoption, _dbPath, _forceAction)
 	{
-		init(_host, _dbPath, _forceAction, _networkId);
+		init(_host, _dbPath, _forceAction, (int)c_network);
 	}
 
 	virtual ~SpecialisedClient() { m_bq.stop(); stopWorking(); }
@@ -396,12 +395,11 @@ public:
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),
-		WithExisting _forceAction = WithExisting::Trust,
-		u256 _networkId = 0
+		WithExisting _forceAction = WithExisting::Trust
 	):
 		SpecialisedClient<Ethash>(_gpForAdoption, _dbPath, _forceAction)
 	{
-		init(_host, _dbPath, _forceAction, _networkId);
+		init(_host, _dbPath, _forceAction, (int)c_network);
 	}
 
 	/// Update to the latest transactions and get hash of the current block to be mined minus the
