@@ -120,7 +120,7 @@ std::string formatBalance(bigint const& _b)
 	}
 	ret << setprecision(5);
 	for (auto const& i: units())
-		if (i.first != 1 && b >= i.first * 1)
+		if (i.first != 1 && b >= i.first)
 		{
 			ret << (double(b / (i.first / 1000)) / 1000.0) << " " << i.second;
 			return ret.str();
