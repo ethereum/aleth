@@ -1,8 +1,36 @@
 [submodule "solidity"]
 	path = solidity
-	url = https://github.com/ethereum/solidity
+	url = https://github.com/debris/solidity
 	branch = develop
 [submodule "webthree"]
 	path = webthree
-	url = https://github.com/ethereum/webthree
+	url = https://github.com/debris/webthree
+	branch = develop
+[submodule "cmake"]
+	path = cmake
+	url = https://github.com/debris/cpp-ethereum-cmake
+	branch = develop
+[submodule "alethzero"]
+	path = alethzero
+	url = https://github.com/debris/alethzero
+	branch = develop
+[submodule "dev"]
+	path = dev
+	url = https://github.com/debris/dev
+	branch = develop
+[submodule "ethereum"]
+	path = ethereum
+	url = https://github.com/debris/ethereum
+	branch = develop
+[submodule "mix"]
+	path = mix
+	url = https://github.com/debris/mix
+	branch = develop
+[submodule "js/web3.js"]
+	path = js/web3.js
+	url = https://github.com/ethereum/web3.js
+	branch = develop
+[submodule "utils"]
+	path = utils
+	url = https://github.com/debris/utils
 	branch = develop
