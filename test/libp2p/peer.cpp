@@ -101,15 +101,19 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 	unsigned const c_step = 10;
 	unsigned const c_nodes = 6;
 	unsigned const c_peers = c_nodes - 1;
+	std::set<short unsigned> ports;
 
 	for (unsigned i = 0; i < c_nodes; ++i)
 	{
-		Host* h = new Host("Test", NetworkPreferences("127.0.0.1", 30325 + i, false));
-		h->setIdealPeerCount(10);
-		// starting host is required so listenport is available
-		h->start();
+		Host* h = new Host("Test", NetworkPreferences("127.0.0.1", 0, false));
+		h->setIdealPeerCount(10);		
+		h->start(); // starting host is required so listenport is available
 		while (!h->haveNetwork())
 			this_thread::sleep_for(chrono::milliseconds(c_step));
+
+		BOOST_REQUIRE(h->listenPort());
+		bool inserted = ports.insert(h->listenPort()).second;
+		BOOST_REQUIRE(inserted);
 		hosts.push_back(h);
 	}
 	
@@ -163,16 +167,20 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	unsigned const step = 10;
 	const char* const localhost = "127.0.0.1";
-	NetworkPreferences prefs1(localhost, 30323, false);
-	NetworkPreferences prefs2(localhost, 30324, false);
+	NetworkPreferences prefs1(localhost, 0, false);
+	NetworkPreferences prefs2(localhost, 0, false);
 	Host host1("Test", prefs1);
-	host1.start();
-
 	Host host2("Test", prefs2);
+	host1.start();
 	host2.start();
-
 	auto node2 = host2.id();
-	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), prefs2.listenPort, prefs2.listenPort));
+	auto port1 = host1.listenPort();
+	auto port2 = host2.listenPort();
+	BOOST_REQUIRE(port1);
+	BOOST_REQUIRE(port2);
+	BOOST_REQUIRE_NE(port1, port2);
+
+	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
 	for (unsigned i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
