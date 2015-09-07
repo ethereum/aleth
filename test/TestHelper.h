@@ -25,7 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 
-#include "JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libethcore/Ethash.h>
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>
