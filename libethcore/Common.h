@@ -71,16 +71,6 @@ using LogBloom = h2048;
 /// Many log blooms.
 using LogBlooms = std::vector<LogBloom>;
 
-template <size_t n> inline u256 exp10()
-{
-	return exp10<n - 1>() * u256(10);
-}
-
-template <> inline u256 exp10<0>()
-{
-	return u256(1);
-}
-
 // The various denominations; here for ease of use where needed within code.
 static const u256 ether = exp10<18>();
 static const u256 finney = exp10<15>();
