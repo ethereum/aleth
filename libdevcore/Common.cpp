@@ -78,7 +78,7 @@ string inUnits(bigint const& _b, strings const& _units)
 		b = (u256)_b;
 
 	u256 biggest = 1;
-	for (unsigned i = _units.size() + 1; !!i; --i)
+	for (unsigned i = _units.size() - 1; !!i; --i)
 		biggest *= 1000;
 
 	if (b > biggest * 1000)
@@ -88,7 +88,7 @@ string inUnits(bigint const& _b, strings const& _units)
 	}
 	ret << setprecision(3);
 
-	u256 unit = biggest / 1000;
+	u256 unit = biggest;
 	for (auto it = _units.rbegin(); it != _units.rend(); ++it)
 	{
 		auto i = *it;
