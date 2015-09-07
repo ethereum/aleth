@@ -22,7 +22,7 @@
 
 #include <fstream>
 #include <boost/test/unit_test.hpp>
-#include "../JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcrypto/SecretStore.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/TrieDB.h>

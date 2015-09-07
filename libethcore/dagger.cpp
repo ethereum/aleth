@@ -21,7 +21,7 @@
  */
 
 #include <fstream>
-#include "../JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
 #include <libethcore/EthashAux.h>
 #include <boost/test/unit_test.hpp>

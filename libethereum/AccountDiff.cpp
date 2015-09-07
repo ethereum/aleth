@@ -23,7 +23,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
-#include "../JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 
 #include <libdevcore/TransientDirectory.h>
 

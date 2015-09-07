@@ -24,7 +24,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "../JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Base64.h>
