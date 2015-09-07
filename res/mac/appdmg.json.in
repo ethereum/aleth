@@ -6,6 +6,7 @@
     "contents": [
         { "x": 484, "y": 480, "type": "link", "path": "/Applications" },
         { "x": 290, "y": 250,  "type": "file", "path": "${ETH_ALETHZERO_APP}" },
+        { "x": 160, "y": 250,  "type": "file", "path": "${ETH_ALETHONE_APP}" },
 		{ "x": 678, "y": 250, "type": "file", "path": "${ETH_MIX_APP}" }
     ]
 }
