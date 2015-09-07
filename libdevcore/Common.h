@@ -187,6 +187,16 @@ inline unsigned int toLog2(u256 _x)
 	return ret;
 }
 
+template <size_t n> inline u256 exp10()
+{
+	return exp10<n - 1>() * u256(10);
+}
+
+template <> inline u256 exp10<0>()
+{
+	return u256(1);
+}
+
 /// @returns the absolute distance between _a and _b.
 template <class N>
 inline N diff(N const& _a, N const& _b)
