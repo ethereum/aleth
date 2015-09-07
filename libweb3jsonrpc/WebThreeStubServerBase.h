@@ -89,6 +89,8 @@ class WebThreeStubServerBase: public AbstractWebThreeStubServer
 public:
 	WebThreeStubServerBase(jsonrpc::AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _sshAccounts);
 
+	std::shared_ptr<dev::eth::AccountHolder> const& ethAccounts() const { return m_ethAccounts; }
+
 	virtual std::string web3_sha3(std::string const& _param1);
 	virtual std::string web3_clientVersion() { return "C++ (ethereum-cpp)"; }
 
