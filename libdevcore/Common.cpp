@@ -19,7 +19,6 @@
  * @date 2014
  */
 
-#include <cmath>
 #include "Common.h"
 #include "Exceptions.h"
 #include "Log.h"
@@ -77,7 +76,11 @@ string inUnits(bigint const& _b, strings const& _units)
 	}
 	else
 		b = (u256)_b;
-	u256 biggest = (u256)::exp10(_units.size() * 3);
+
+	u256 biggest = 1;
+	for (unsigned i = _units.size() + 1; !!i; --i)
+		biggest *= 1000;
+
 	if (b > biggest * 1000)
 	{
 		ret << (b / biggest) << " " << _units.back();
