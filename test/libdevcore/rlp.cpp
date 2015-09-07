@@ -30,7 +30,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <algorithm>
-#include "test/JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include "test/TestHelper.h"
 
 using namespace std;

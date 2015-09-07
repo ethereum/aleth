@@ -24,7 +24,7 @@
 #include <random>
 
 #include <boost/test/unit_test.hpp>
-#include "../JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
 #include <libethereum/CanonBlockChain.h>
 #include <test/TestHelper.h>
