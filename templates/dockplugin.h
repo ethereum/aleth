@@ -21,9 +21,7 @@
 
 #pragma once
 
-#include <QListWidget>
-#include <QPlainTextEdit>
-#include "MainFace.h"
+#include "Plugin.h"
 
 namespace Ui
 {
@@ -32,7 +30,9 @@ class $NAME;
 
 namespace dev
 {
-namespace az
+namespace aleth
+{
+namespace zero
 {
 
 class $NAME: public QObject, public Plugin
@@ -40,7 +40,7 @@ class $NAME: public QObject, public Plugin
 	Q_OBJECT
 
 public:
-	$NAME(MainFace* _m);
+	$NAME(ZeroFace* _z);
 	~$NAME();
 
 private:
@@ -52,5 +52,6 @@ private:
 	Ui::$NAME* m_ui;
 };
 
+}
 }
 }

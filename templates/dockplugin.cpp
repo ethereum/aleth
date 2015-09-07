@@ -20,17 +20,17 @@
  */
 
 #include "$NAME.h"
-#include <libdevcore/Log.h>
-#include <libethereum/Client.h>
-#include "ui_$NAME.h"
+#include "AlethFace.h"
+#include "ZeroFace.h"
 using namespace std;
 using namespace dev;
-using namespace az;
 using namespace eth;
+using namespace aleth;
+using namespace zero;
 
 DEV_AZ_NOTE_PLUGIN($NAME);
 
-$NAME::$NAME(MainFace* _m):
+$NAME::$NAME(ZeroFace* _z):
 	Plugin(_m, "$NAME"),
 	m_ui(new Ui::$NAME)
 {
