@@ -32,7 +32,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/CommonIO.h>
-#include <libethcore/Exceptions.h>
+#include <libdevcore/Exceptions.h>
 #include "Common.h"
 #include "UPnP.h"
 #include "Network.h"

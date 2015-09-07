@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include <libdevcore/Common.h>
+#include "Common.h"
 #include "TrieDB.h"
 using namespace std;
 using namespace dev;

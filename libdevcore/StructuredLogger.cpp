@@ -24,7 +24,7 @@
 #include "StructuredLogger.h"
 #include <boost/asio/ip/tcp.hpp>
 #include <json/json.h>
-#include <libdevcore/CommonIO.h>
+#include "CommonIO.h"
 #include "Guards.h"
 
 namespace ba = boost::asio;

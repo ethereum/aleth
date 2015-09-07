@@ -30,7 +30,7 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/StructuredLogger.h>
-#include <libethcore/Exceptions.h>
+#include <libdevcore/Exceptions.h>
 #include <libdevcore/FileSystem.h>
 #include "Session.h"
 #include "Common.h"

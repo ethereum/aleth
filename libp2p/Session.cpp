@@ -26,7 +26,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/StructuredLogger.h>
-#include <libethcore/Exceptions.h>
+#include <libdevcore/Exceptions.h>
 #include "Host.h"
 #include "Capability.h"
 using namespace std;

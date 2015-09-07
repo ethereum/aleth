@@ -22,7 +22,7 @@
 #include <fstream>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
-#include "../test/JsonSpiritHeaders.h"
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>

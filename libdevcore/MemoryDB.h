@@ -22,11 +22,11 @@
 #pragma once
 
 #include <unordered_map>
-#include <libdevcore/Common.h>
-#include <libdevcore/Guards.h>
-#include <libdevcore/FixedHash.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/RLP.h>
+#include "Common.h"
+#include "Guards.h"
+#include "FixedHash.h"
+#include "Log.h"
+#include "RLP.h"
 #include "SHA3.h"
 
 namespace dev

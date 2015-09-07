@@ -20,9 +20,9 @@
  */
 
 #include "TrieHash.h"
-#include <libdevcore/TrieCommon.h>
-#include <libdevcore/TrieDB.h>	// @TODO replace ASAP!
-#include <libdevcore/SHA3.h>
+#include "TrieCommon.h"
+#include "TrieDB.h"	// @TODO replace ASAP!
+#include "SHA3.h"
 using namespace std;
 using namespace dev;
 

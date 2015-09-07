@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <libdevcore/Common.h>
-#include <libdevcore/RLP.h>
+#include "Common.h"
+#include "RLP.h"
 
 namespace dev
 {
