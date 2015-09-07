@@ -35,7 +35,7 @@ macro(eth_add_executable EXECUTABLE)
 		set(MACOSX_BUNDLE_ICON_FILE ${ETH_ADD_EXECUTABLE_ICON})
 		set_target_properties(${EXECUTABLE} PROPERTIES MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/EthereumMacOSXBundleInfo.plist.in")
 		set_source_files_properties(${EXECUTABLE} PROPERTIES MACOSX_PACKAGE_LOCATION MacOS)
-		set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/src/${MACOSX_BUNDLE_ICON_FILE}.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
+		set_source_files_properties("${CMAKE_CURRENT_SOURCE_DIR}/${MACOSX_BUNDLE_ICON_FILE}.icns" PROPERTIES MACOSX_PACKAGE_LOCATION Resources)
 
 	else ()
 		add_executable(${EXECUTABLE} ${ETH_ADD_EXECUTABLE_UI_RESOURCES}  ${ETH_ADD_EXECUTABLE_WIN_RESOURCES} ${SRC_LIST} ${HEADERS})
@@ -177,6 +177,7 @@ macro(eth_nsis)
 		set(CPACK_GENERATOR "NSIS")
 
 		set(CPACK_COMPONENT_ALETHZERO_GROUP "Applications")
+		set(CPACK_COMPONENT_ALETHONE_GROUP "Applications")
 		set(CPACK_COMPONENT_MIX_GROUP "Applications")
 		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
 		set(CPACK_COMPONENT_ETH_GROUP "CLI")
@@ -184,7 +185,7 @@ macro(eth_nsis)
 		set(CPACK_COMPONENT_RLP_GROUP "CLI")
 		set(CPACK_COMPONENT_ABI_GROUP "CLI")
 
-		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer rlp abi)
+		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer rlp abi)
 
 		# nsis specific stuff
 		if (CMAKE_CL_64)
@@ -219,6 +220,7 @@ macro(eth_appdmg)
 			-DAPP_DMG_BACKGROUND="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/install-folder-bg@2x.png"
 			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
 			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:AlethZero>"
+			-DETH_ALETHONE_APP="$<TARGET_FILE_DIR:AlethOne>"
 			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix>"
 			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
 		)
