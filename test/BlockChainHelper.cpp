@@ -133,17 +133,48 @@ void TestBlock::mine(TestBlockChain const& bc)
 
 	Block block = blockchain.genesisBlock(genesisDB);
 	block.setBeneficiary(genesisBlock.getBeneficiary());
+
+	//set some header data before mining from original blockheader
+	BlockInfo& blockInfo = *const_cast<BlockInfo*>(&block.info());
+
+	if (m_premineUpdate.count("parentHash") > 0)
+		blockInfo.setParentHash(m_blockHeader.parentHash());
+	if (m_premineUpdate.count("coinbase") > 0)
+		blockInfo.setCoinbaseAddress(m_blockHeader.beneficiary());
+
+	if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
+		m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
+		blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ? m_blockHeader.transactionsRoot() : blockInfo.transactionsRoot(),
+						   m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : blockInfo.receiptsRoot(),
+						   m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : blockInfo.sha3Uncles(),
+						   m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : blockInfo.stateRoot());
+
+	if (m_premineUpdate.count("bloom") > 0)
+		blockInfo.setLogBloom(m_blockHeader.logBloom());
+	if (m_premineUpdate.count("difficulty") > 0)
+		blockInfo.setDifficulty(m_blockHeader.difficulty());
+	if (m_premineUpdate.count("number") > 0)
+		blockInfo.setNumber(m_blockHeader.number());
+	if (m_premineUpdate.count("gasLimit") > 0)
+		blockInfo.setGasLimit(m_blockHeader.gasLimit());
+	if (m_premineUpdate.count("gasUsed") > 0)
+		blockInfo.setGasUsed(m_blockHeader.gasUsed());
+	if (m_premineUpdate.count("timestamp") > 0)
+		blockInfo.setTimestamp(m_blockHeader.timestamp());
+	if (m_premineUpdate.count("extraData") > 0)
+		blockInfo.setExtraData(m_blockHeader.extraData());
+
 	try
 	{
 		ZeroGasPricer gp;
 		block.sync(blockchain);
 		block.sync(blockchain, m_transactionQueue, gp);
 
-		//fill our block transactions queue with only those transaction that are in the block (valid or got in before gasLimit reached)
-		Transactions const& trs = block.pending();
-		m_transactionQueue.clear();
-		for (auto const& tr : trs)
-			m_transactionQueue.import(tr.rlp());
+		//Get only valid transactions
+		//Transactions const& trs = block.pending();
+		//m_transactionQueue.clear();
+		//for (auto const& tr : trs)
+		//	m_transactionQueue.import(tr.rlp());
 
 		dev::eth::mine(block, blockchain);
 	}
@@ -160,7 +191,10 @@ void TestBlock::mine(TestBlockChain const& bc)
 
 	m_blockHeader = BlockHeader(block.blockData());
 	copyStateFrom(block.state());
-	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify); //Update cause transactions might changed
+
+	//Update block hashes cause we would fill block with uncles and transactions that
+	//actually might have been dropped because they are invalid
+	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify);
 }
 
 void TestBlock::setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate)
@@ -280,10 +314,12 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 
 	if (_recalculate == RecalcBlockHeader::Update || _recalculate == RecalcBlockHeader::UpdateAndVerify)
 	{
-		if (m_uncles.size()) // update unclehash in case of invalid uncles
+		//update hashes correspong to block contents
+		if (m_uncles.size())
 			m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
 
-		//transactions hash??
+		//if (txList.size())
+		//	m_blockHeader.setRoots(sha3(txStream.out()), m_blockHeader.receiptsRoot(), m_blockHeader.sha3Uncles(), m_blockHeader.stateRoot());
 
 		dev::eth::mine(m_blockHeader);
 		m_blockHeader.noteDirty();
@@ -305,7 +341,7 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() +"BlockHeader Verification failed: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed: " << diagnostic_information(_e));
 		}
 		catch(...)
 		{
@@ -330,6 +366,11 @@ void TestBlock::clearState()
 	m_tempDirState.reset(0);
 	for (size_t i = 0; i < m_uncles.size(); i++)
 		m_uncles.at(i).clearState();
+}
+
+void TestBlock::setPremine(std::string const& _parameter)
+{
+	m_premineUpdate[_parameter] = true;
 }
 
 void TestBlock::populateFrom(TestBlock const& _original)

@@ -60,10 +60,8 @@ private:
 
 class TestBlock
 {
-private:
-	typedef Ethash::BlockHeader BlockHeader;
-
 public:
+	typedef Ethash::BlockHeader BlockHeader;
 	TestBlock() {};
 	TestBlock(TestBlock const& _original);	
 	TestBlock(std::string const& _blockRlp);
@@ -72,9 +70,10 @@ public:
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
+	void setPremine(std::string const& _parameter);
 	void mine(TestBlockChain const& _bc);
 
-	void setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate);
+	void setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate);
 	void setState(State const& _state);
 	void clearState();
 
@@ -87,7 +86,7 @@ public:
 	vector<TestBlock> const& getUncles() const { return m_uncles; }
 	Address const& getBeneficiary() const { return m_blockHeader.beneficiary(); }
 
-private:
+private:	
 	BlockHeader constructBlock(mObject const& _o, h256 const& _stateRoot);
 	bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
 	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
@@ -102,6 +101,7 @@ private:
 	bytes m_bytes;
 	std::unique_ptr<TransientDirectory> m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
+	std::map<std::string, bool> m_premineUpdate;
 };
 
 class TestBlockChain

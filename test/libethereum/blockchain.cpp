@@ -43,7 +43,7 @@ namespace dev {  namespace test {
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);
 mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
 mObject writeBlockHeaderToJson(Ethash::BlockHeader const& _bi);
-void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vector<TestBlock> const& importedBlocks);
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vector<TestBlock> const& importedBlocks, RecalcBlockHeader _verification);
 void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
 void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
@@ -124,13 +124,21 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				vector<TestBlock> validUncles = blockchain.syncUncles(block.getUncles());
 				block.setUncles(validUncles);
+
+				//read premining parameters
+				if (blObj.count("blockHeaderPremine"))
+				{
+					overwriteBlockHeaderForTest(blObj.at("blockHeaderPremine").get_obj(), block, importedBlocks, RecalcBlockHeader::SkipVerify);
+					blObj.erase("blockHeaderPremine");
+				}
+
 				cnote << "Mining block at test " << testname;
 				block.mine(blockchain);
 
 				TestBlock alterBlock(block);
 
 				if (blObj.count("blockHeader"))
-					overwriteBlockHeaderForTest(blObj, alterBlock, importedBlocks);
+					overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, importedBlocks, RecalcBlockHeader::Verify);
 
 				blObj["rlp"] = toHex(alterBlock.getBytes(), 2, HexPrefix::Add);
 				blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.getBlockHeader());
@@ -286,16 +294,16 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 }
 
 //TestFunction
-void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::vector<TestBlock> const& _importedBlocks)
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::vector<TestBlock> const& _importedBlocks, RecalcBlockHeader _verification)
 {
 	//_blObj  - json object with header data
 	//_block  - which header would be overwritten
 	//_parentHeader - parent blockheader
 
-	RecalcBlockHeader findNewValidNonce = RecalcBlockHeader::Verify;
+	RecalcBlockHeader findNewValidNonce = _verification;
 	Ethash::BlockHeader tmp;
 	Ethash::BlockHeader const& header = _block.getBlockHeader();
-	auto ho = _blObj.at("blockHeader").get_obj();
+	auto ho = _blObj;
 	if (ho.size() != 14)
 	{
 		tmp = constructHeader(
@@ -312,6 +320,21 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 			ho.count("gasUsed") ? toInt(ho["gasUsed"]) : header.gasUsed(),
 			ho.count("timestamp") ? toInt(ho["timestamp"]) : header.timestamp(),
 			ho.count("extraData") ? importByteArray(ho["extraData"].get_str()) : header.extraData());
+
+		//Set block to update this parameters before mining the actual block
+		_block.setPremine(ho.count("parentHash") ? "parentHash" : "");
+		_block.setPremine(ho.count("uncleHash") ? "uncleHash" : "");
+		_block.setPremine(ho.count("coinbase") ? "coinbase" : "");
+		_block.setPremine(ho.count("stateRoot") ? "stateRoot" : "");
+		_block.setPremine(ho.count("transactionsTrie") ? "transactionsTrie" : "");
+		_block.setPremine(ho.count("receiptTrie") ? "receiptTrie" : "");
+		_block.setPremine(ho.count("bloom") ? "bloom" : "");
+		_block.setPremine(ho.count("difficulty") ? "difficulty" : "");
+		_block.setPremine(ho.count("number") ? "number" : "");
+		_block.setPremine(ho.count("gasLimit") ? "gasLimit" : "");
+		_block.setPremine(ho.count("gasUsed") ? "gasUsed" : "");
+		_block.setPremine(ho.count("timestamp") ? "timestamp" : "");
+		_block.setPremine(ho.count("extraData") ? "extraData" : "");
 
 		if (ho.count("RelTimestamp"))
 		{
@@ -344,7 +367,6 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 		mObject emptyState;
 		tmp = TestBlock(ho, emptyState, RecalcBlockHeader::SkipVerify).getBlockHeader();
 	}
-
 
 	if (ho.count("populateFromBlock"))
 	{

@@ -19,10 +19,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "10"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "1"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -50,6 +50,10 @@
                 ]
             },
             {
+		"blockHeader" : {
+                    "stateRoot" : "6ff22555fde6fe93e5b412a8691287a5be5708246adfd0c599604849925fcc34",
+		    "updatePoW" : "1"
+                },
                 "transactions" : [
                     {
                         "data" : "",
@@ -63,7 +67,7 @@
                 ],
                 "uncleHeaders" : [
                     {
-			"populateFromBlock" : "0"			
+			"populateFromBlock" : "0"
                     }
                 ]
             }
