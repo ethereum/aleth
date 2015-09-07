@@ -8,6 +8,7 @@ set(EXECUTABLE ethcore)
 file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+target_link_libraries(${EXECUTABLE} ethash)
 
 eth_use(${EXECUTABLE} REQUIRED Eth::devcrypto)
 eth_use(${EXECUTABLE} OPTIONAL Eth::ethash-cl Cpuid)

@@ -418,8 +418,8 @@ if (GENERAL)
 	add_subdirectory(libp2p)
 endif ()
 
+add_subdirectory(libethash) # required by libethcore
 if (GENERAL OR MINER)
-	add_subdirectory(libethash)
 	if (ETHASHCL)
 		add_subdirectory(libethash-cl)
 	endif ()
