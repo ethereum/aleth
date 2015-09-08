@@ -109,6 +109,9 @@ public:
 	/// Override the genesis block's gasLimit field.
 	static void forceGenesisGasLimit(u256 const& _genesisGasLimit);
 
+	/// @returns true if any of the overrides are in force.
+	static bool isNonStandard() { return s_genesisExtraData.size() || s_genesisDifficulty || s_genesisGasLimit; }
+
 private:
 	/// Static genesis info and its lock.
 	static boost::shared_mutex x_genesis;
