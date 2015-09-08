@@ -1,7 +1,7 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)	
 
 	if (${SUBMODULE} STREQUAL "auto")
-		if (ROCKSDB_FOUND)
+		if (ROCKSDB AND ROCKSDB_FOUND)
 			eth_use(${TARGET} ${REQUIRED} DB::RocksDB)
 		else ()
 			eth_use(${TARGET} ${REQUIRED} DB::LevelDB)
