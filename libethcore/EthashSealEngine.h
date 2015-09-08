@@ -46,8 +46,9 @@ public:
 	void generateSeal(BlockInfo const& _bi) override;
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
 
+	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
+
 private:
-	bool m_opencl = false;
 	eth::GenericFarm<EthashProofOfWork> m_farm;
 	std::string m_sealer = "cpu";
 	Ethash::BlockHeader m_sealing;
