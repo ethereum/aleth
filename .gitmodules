@@ -6,10 +6,6 @@
 	path = webthree
 	url = https://github.com/debris/webthree
 	branch = develop
-[submodule "cmake"]
-	path = cmake
-	url = https://github.com/debris/cpp-ethereum-cmake
-	branch = develop
 [submodule "alethzero"]
 	path = alethzero
 	url = https://github.com/debris/alethzero
@@ -30,7 +26,7 @@
 	path = js/web3.js
 	url = https://github.com/ethereum/web3.js
 	branch = develop
-[submodule "utils"]
-	path = utils
-	url = https://github.com/debris/utils
+[submodule "helpers"]
+	path = helpers
+	url = https://github.com/ethereum/webthree-helpers
 	branch = develop
