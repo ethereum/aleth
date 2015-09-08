@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 
-	set(DEV_DIR "${ETH_CMAKE_DIR}/../dev" CACHE PATH "The path to dev libraries directory")
+	set(DEV_DIR "${ETH_CMAKE_DIR}/../../dev" CACHE PATH "The path to dev libraries directory")
 	set(DEV_BUILD_DIR_NAME "build" CACHE STRING "Dev build directory name")
 	set(DEV_BUILD_DIR "${DEV_DIR}/${DEV_BUILD_DIR_NAME}")
 	set(CMAKE_LIBRARY_PATH ${DEV_BUILD_DIR} ${CMAKE_LIBRARY_PATH})

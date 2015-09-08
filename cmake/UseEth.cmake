@@ -1,7 +1,7 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 	# TODO take into account REQUIRED
 
-	set(ETH_DIR "${ETH_CMAKE_DIR}/../ethereum" CACHE PATH "The path to the ethereum directory")
+	set(ETH_DIR "${ETH_CMAKE_DIR}/../../ethereum" CACHE PATH "The path to the ethereum directory")
 	set(ETH_BUILD_DIR_NAME  "build" CACHE STRING "Ethereum build directory name")
 	set(ETH_BUILD_DIR "${ETH_DIR}/${ETH_BUILD_DIR_NAME}")
 	set(CMAKE_LIBRARY_PATH 	${ETH_BUILD_DIR};${CMAKE_LIBRARY_PATH})

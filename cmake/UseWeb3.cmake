@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)
 
-	set(WEB3_DIR "${ETH_CMAKE_DIR}/../webthree" CACHE PATH "The path to the webthree directory")
+	set(WEB3_DIR "${ETH_CMAKE_DIR}/../../webthree" CACHE PATH "The path to the webthree directory")
 	set(WEB3_BUILD_DIR_NAME "build" CACHE STRING "The name of the build directory in web3")
 	set(WEB3_BUILD_DIR "${WEB3_DIR}/${WEB3_BUILD_DIR_NAME}")
 	set(CMAKE_LIBRARY_PATH ${WEB3_BUILD_DIR};${CMAKE_LIBRARY_PATH})
