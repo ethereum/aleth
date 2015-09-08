@@ -1,5 +1,3 @@
-set(CMAKE_AUTOMOC OFF)
-
 aux_source_directory(. SRC_LIST)
 
 set(EXECUTABLE web3jsonrpc)
