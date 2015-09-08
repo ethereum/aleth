@@ -420,9 +420,9 @@ private:
 		f.setWork(genesis);
 		f.start(_m);
 
-		map<uint64_t, WorkingProgress> results;
-		uint64_t mean = 0;
-		uint64_t innerMean = 0;
+		map<u256, WorkingProgress> results;
+		u256 mean = 0;
+		u256 innerMean = 0;
 		for (unsigned i = 0; i <= _trials; ++i)
 		{
 			if (!i)
@@ -459,7 +459,7 @@ private:
 			PhoneHome rpc(client);
 			try
 			{
-				unsigned ranking = rpc.report_benchmark(platformInfo, innerMean);
+				unsigned ranking = rpc.report_benchmark(platformInfo, (int)innerMean);
 				cout << "Ranked: " << ranking << " of all benchmarks." << endl;
 			}
 			catch (...)
