@@ -171,11 +171,11 @@ json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
 
 void ImportTest::importEnv(json_spirit::mObject& _o)
 {
-	assert(_o.count("currentGasLimit") > 0);
-	assert(_o.count("currentDifficulty") > 0);	
-	assert(_o.count("currentNumber") > 0);
-	assert(_o.count("currentTimestamp") > 0);
-	assert(_o.count("currentCoinbase") > 0);
+	BOOST_REQUIRE(_o.count("currentGasLimit") > 0);
+	BOOST_REQUIRE(_o.count("currentDifficulty") > 0);
+	BOOST_REQUIRE(_o.count("currentNumber") > 0);
+	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
+	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
 	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
 	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
@@ -186,13 +186,13 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
 
-void ImportTest::importState(json_spirit::mObject& _o, State& _state, AccountMaskMap& o_mask)
+void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
 {		
 	std::string jsondata = json_spirit::write_string((json_spirit::mValue)_o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, &o_mask));
 }
 
-void ImportTest::importState(json_spirit::mObject& _o, State& _state)
+void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
 {
 	AccountMaskMap mask;
 	importState(_o, _state, mask);
@@ -206,12 +206,12 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 {
 	if (_o.count("secretKey") > 0)
 	{
-		assert(_o.count("nonce") > 0);
-		assert(_o.count("gasPrice") > 0);
-		assert(_o.count("gasLimit") > 0);
-		assert(_o.count("to") > 0);
-		assert(_o.count("value") > 0);
-		assert(_o.count("data") > 0);
+		BOOST_REQUIRE(_o.count("nonce") > 0);
+		BOOST_REQUIRE(_o.count("gasPrice") > 0);
+		BOOST_REQUIRE(_o.count("gasLimit") > 0);
+		BOOST_REQUIRE(_o.count("to") > 0);
+		BOOST_REQUIRE(_o.count("value") > 0);
+		BOOST_REQUIRE(_o.count("data") > 0);
 
 		if (bigint(_o.at("nonce").get_str()) >= c_max256plus1)
 			BOOST_THROW_EXCEPTION(ValueTooLarge() << errinfo_comment("Transaction 'nonce' is equal or greater than 2**256") );
@@ -228,6 +228,16 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 	}
 	else
 	{
+		BOOST_REQUIRE(_o.count("nonce"));
+		BOOST_REQUIRE(_o.count("gasPrice"));
+		BOOST_REQUIRE(_o.count("gasLimit"));
+		BOOST_REQUIRE(_o.count("to"));
+		BOOST_REQUIRE(_o.count("value"));
+		BOOST_REQUIRE(_o.count("data"));
+		BOOST_REQUIRE(_o.count("v"));
+		BOOST_REQUIRE(_o.count("r"));
+		BOOST_REQUIRE(_o.count("s"));
+
 		RLPStream transactionRLPStream = createRLPStreamFromTransactionFields(_o);
 		RLP transactionRLP(transactionRLPStream.out());
 		try
@@ -269,7 +279,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 	for (auto const& a: _stateExpect.addresses())
 	{
-		CHECK(_statePost.addressInUse(a.first), "Compare States: " << a.first << " missing expected address!");
+		CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " missing expected address!");
 		if (_statePost.addressInUse(a.first))
 		{
 			AccountMask addressOptions(true);
@@ -281,36 +291,36 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				}
 				catch(std::out_of_range const&)
 				{
-					BOOST_ERROR("expectedStateOptions map does not match expectedState in checkExpectedState!");
+					BOOST_ERROR(TestOutputHelper::testName() + "expectedStateOptions map does not match expectedState in checkExpectedState!");
 					break;
 				}
 			}
 
 			if (addressOptions.hasBalance())
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
-						"Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
+				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
 			if (addressOptions.hasNonce())
 				CHECK((_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first)),
-						"Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
+				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
 
 			if (addressOptions.hasStorage())
 			{
 				unordered_map<u256, u256> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
+					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
 
 				//Check for unexpected storage values
 				stateStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-							"Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(stateStorage[s.first]));
+					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(stateStorage[s.first]));
 			}
 
 			if (addressOptions.hasCode())
 				CHECK((_stateExpect.code(a.first) == _statePost.code(a.first)),
-						"Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
+				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
 	return 0;
@@ -481,12 +491,11 @@ LogEntries importLog(json_spirit::mArray& _a)
 	LogEntries logEntries;
 	for (auto const& l: _a)
 	{
-		json_spirit::mObject o = l.get_obj();
-		// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
-		assert(o.count("address") > 0);
-		assert(o.count("topics") > 0);
-		assert(o.count("data") > 0);
-		assert(o.count("bloom") > 0);
+		json_spirit::mObject o = l.get_obj();		
+		BOOST_REQUIRE(o.count("address") > 0);
+		BOOST_REQUIRE(o.count("topics") > 0);
+		BOOST_REQUIRE(o.count("data") > 0);
+		BOOST_REQUIRE(o.count("bloom") > 0);
 		LogEntry log;
 		log.address = Address(o["address"].get_str());
 		for (auto const& t: o["topics"].get_array())
@@ -578,7 +587,8 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	auto& filename = Options::get().singleTestFile;
 	auto& testname = Options::get().singleTestName;
 
-	VerbosityHolder sentinel(12);
+	if (g_logVerbosity != -1)
+		VerbosityHolder sentinel(12);
 
 	try
 	{
@@ -634,11 +644,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR("Failed filling test with Exception: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << diagnostic_information(_e));
 		}
 		catch (std::exception const& _e)
 		{
-			BOOST_ERROR("Failed filling test with Exception: " << _e.what());
+			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << _e.what());
 		}
 	}
 
@@ -654,11 +664,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	}
 	catch (Exception const& _e)
 	{
-		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << diagnostic_information(_e));
 	}
 	catch (std::exception const& _e)
 	{
-		BOOST_ERROR("Failed test with Exception: " << _e.what());
+		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << _e.what());
 	}
 }
 
@@ -888,6 +898,44 @@ void Listener::notifyTestFinished()
 {
 	if (g_listener)
 		g_listener->testFinished();
+}
+
+size_t TestOutputHelper::m_currTest = 0;
+size_t TestOutputHelper::m_maxTests = 0;
+string TestOutputHelper::m_currentTestName = "n/a";
+
+using namespace boost;
+void TestOutputHelper::initTest(json_spirit::mValue& _v)
+{
+	std::string testCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + testCaseName + "\": " << std::endl;
+	m_maxTests = _v.get_obj().size();
+	m_currTest = 0;	
+}
+
+bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName)
+{
+	m_currTest++;	
+	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
+	if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
+	{
+		int percent = int(m_currTest*100/m_maxTests);
+		std::cout << percent << "%";
+		if (percent != 100)
+			std::cout << "...";
+		std::cout << std::endl;
+	}
+
+	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
+	{
+		_o.clear();
+		return false;
+	}
+
+	cnote << _testName;
+	_testName = "(" + _testName + ") ";
+	m_currentTestName = _testName;
+	return true;
 }
 
 } } // namespaces
