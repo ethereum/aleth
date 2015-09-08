@@ -19,7 +19,7 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "100"
+                "balance" : "5100"
             }
         },
         "pre" : {
@@ -64,7 +64,7 @@
                         "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5000"
+                        "value" : "7000"
                     }
                 ],
                 "uncleHeaders" : [
@@ -93,7 +93,7 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "100"
+                "balance" : "5100"
             }
         },
         "pre" : {
@@ -138,7 +138,7 @@
                         "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5000"
+                        "value" : "7000"
                     }
                 ],
                 "uncleHeaders" : [
@@ -212,7 +212,7 @@
                         "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5000"
+                        "value" : "7000"
                     }
                 ],
                 "uncleHeaders" : [
@@ -241,7 +241,7 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "100"
+                "balance" : "5100"
             }
         },
         "pre" : {
@@ -286,7 +286,7 @@
                         "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5000"
+                        "value" : "7000"
                     }
                 ],
                 "uncleHeaders" : [
@@ -369,7 +369,7 @@
                 "balance" : "10"
             },
             "8888f1f195afa192cfee860698584c030f4c9db1" : {
-                "balance" : "1500000000000000000"
+                "balance" : "5000000000000000000"			     
             }
         },
         "pre" : {
@@ -469,7 +469,7 @@
         },
         "expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0x02540be400"
+                "balance" : "9999915960"
             }
         },
         "pre" : {
@@ -602,10 +602,10 @@
                 "balance" : "10"
             },
             "000000000000000000000000000b9331677e6ebf" : {
-                "balance" : "10"
+                "balance" : "20"
             },
             "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10"
+                "balance" : "30"
             }
         },
         "pre" : {
@@ -615,13 +615,13 @@
                 "code" : "",
                 "storage": {}
             },
-            "31bb58672e8bf7684108feeacf424ab62b873824" : {
+            "e4ccfc7cc4a70f5efd0b87867f20acbf68842ef8" : {
                 "balance" : "10000000000",
                 "nonce" : "0",
                 "code" : "",
                 "storage": {}
             },
-            "fa7f04899691becd07dd3081d0a2f3ee7640af52" : {
+            "49ec3a96efcc4f9e2e741ea2af622b91f74a2bcc" : {
                 "balance" : "10000000000",
                 "nonce" : "3",
                 "code" : "",
@@ -644,12 +644,12 @@
                         "data" : "",
                         "gasLimit" : "0x5208",
                         "gasPrice" : "0x01",
-                        "nonce" : "0x00",
+                        "nonce" : "0",
                         "r" : "0x98ff921201554726367d2be8c804a7ff89ccf285ebc57dff8ae4c44b9c19ac4a",
                         "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3",
                         "to" : "000000000000000000000000000b9331677e6ebf",
                         "v" : "0x1c",
-                        "value" : "0x0a"
+                        "value" : "20"
                     },
                     {
                         "data" : "0x",
@@ -660,7 +660,7 @@
                         "s" : "0x8887321be575c8095f789dd4c743dfe42c1820f9231f98a962b210e3ac2452a3",
                         "to" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
                         "v" : "0x1c",
-                        "value" : "0x0a"
+                        "value" : "30"
                     }
                 ],
                 "uncleHeaders" : [
@@ -859,7 +859,7 @@
         },
         "expect" : {
             "8888f1f195afa192cfee860698584c030f4c9db1" : {
-                "balance" : "1500000000002500000"
+                "balance" : "5000000000002500000"
             }
         },
         "pre" : {
@@ -929,7 +929,8 @@
         "blocks" : [
             {
                 "blockHeader" : {
-                    "extraData" : "0x0102030405060708091011121314151617181920212223242526272829303132"
+                    "extraData" : "0x0102030405060708091011121314151617181920212223242526272829303132",
+		    "updatePoW" : "true"
                 },
                 "transactions" : [
                     {
@@ -968,7 +969,7 @@
         },
         "expect" : {
             "8888f1f195afa192cfee860698584c030f4c9db1" : {
-                "balance" : "0x3e733628714d0a40"
+                "balance" : "15000000000000723520"
             }
         },
         "pre" : {
@@ -1047,7 +1048,7 @@
         },
         "expect" : {
             "8888f1f195afa192cfee860698584c030f4c9db1" : {
-                "balance" : "0x3e733628714d0a40"
+                "balance" : "10000000000000723520"
             }
         },
         "pre" : {

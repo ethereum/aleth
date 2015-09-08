@@ -24,6 +24,7 @@
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/progress.hpp>
 
 #include "JsonSpiritHeaders.h"
 #include <libethcore/Ethash.h>
@@ -43,7 +44,6 @@ void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 void mine(Block& _s, BlockChain const& _bc);
 void mine(Ethash::BlockHeader& _bi);
-
 }
 
 namespace test
@@ -115,8 +115,8 @@ public:
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
-	static void importState(json_spirit::mObject& _o, eth::State& _state);
-	static void importState(json_spirit::mObject& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
+	static void importState(json_spirit::mObject const& _o, eth::State& _state);
+	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
@@ -178,7 +178,7 @@ json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
 
 //Fill Test Functions
-int createRandomTest(std::vector<char*> const& args);
+int createRandomTest(int argc, char* argv[]);
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin);
 void doStateTests(json_spirit::mValue& v, bool _fillin);
 void doVMTests(json_spirit::mValue& v, bool _fillin);
@@ -199,6 +199,8 @@ public:
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	std::string rCheckTest;   ///< Test Input (for random tests)
+	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
 	bool checkState = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
@@ -220,12 +222,24 @@ public:
 	/// @}
 
 	/// Get reference to options
-	/// The first time used, options are parsed
-	static Options const& get();
+	/// The first time used, options are parsed with argc, argv
+	static Options const& get(int argc = 0, char** argv = 0);
 
 private:
-	Options();
+	Options(int argc = 0, char** argv = 0);
 	Options(Options const&) = delete;
+};
+
+class TestOutputHelper
+{
+public:
+	static void initTest(json_spirit::mValue& _v);
+	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
+	static std::string const& testName() { return m_currentTestName; };
+private:
+	static size_t m_currTest;
+	static size_t m_maxTests;
+	static std::string m_currentTestName;
 };
 
 /// Allows observing test execution process.
