@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.12)
 # A place where should we look for *.cmake files
-set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../cmake"   CACHE PATH "The the path to the cmake directory")
+set(ETH_CMAKE_DIR   "${CMAKE_CURRENT_LIST_DIR}/../helpers/cmake"   CACHE PATH "The the path to the cmake directory")
 
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 set(JSCONSOLE 1)
