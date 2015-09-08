@@ -203,9 +203,14 @@ bool Ethash::isWorking(SealEngineFace* _engine)
 
 WorkingProgress Ethash::workingProgress(SealEngineFace* _engine)
 {
+	WorkingProgress ret;
 	if (EthashSealEngine* e = dynamic_cast<EthashSealEngine*>(_engine))
-		return e->m_farm.miningProgress();
-	return WorkingProgress();
+	{
+		ret = e->m_farm.miningProgress();
+		if (ret.ms > 5000)
+			e->m_farm.resetMiningProgress();
+	}
+	return ret;
 }
 
 SealEngineFace* Ethash::createSealEngine()

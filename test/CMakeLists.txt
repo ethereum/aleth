@@ -1,5 +1,3 @@
-cmake_policy(SET CMP0015 NEW)
-
 aux_source_directory(. SRC_LIST)
 
 macro (add_sources)
@@ -26,16 +24,6 @@ endif()
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
 
-include_directories(BEFORE ${JSONCPP_INCLUDE_DIRS})
-include_directories(BEFORE ..)
-include_directories(${Boost_INCLUDE_DIRS})
-include_directories(${CRYPTOPP_INCLUDE_DIRS})
-include_directories(${JSON_RPC_CPP_INCLUDE_DIRS})
-
-if (JSCONSOLE)
-	include_directories(${V8_INCLUDE_DIRS})
-endif()
-
 # search for test names and create ctest tests
 enable_testing()
 foreach(file ${SRC_LIST})
@@ -55,30 +43,7 @@ endforeach(file)
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 
-target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
-target_link_libraries(testeth ${CURL_LIBRARIES})
-target_link_libraries(testeth ${CRYPTOPP_LIBRARIES})
-target_link_libraries(testeth ethereum)
-target_link_libraries(testeth ethcore)
-if (NOT WIN32)
-	target_link_libraries(testeth secp256k1)
-endif ()
-
-if (JSCONSOLE)
-	target_link_libraries(testeth jsengine)
-endif()
-
-target_link_libraries(testeth testutils)
-
-if (GUI AND NOT JUSTTESTS)
-	#target_link_libraries(testeth webthree)
-	#target_link_libraries(testeth natspec)
-endif()
-
-if (JSONRPC)
-	#target_link_libraries(testeth web3jsonrpc)
-	#target_link_libraries(testeth ${JSON_RPC_CPP_CLIENT_LIBRARIES})
-endif()
+eth_use(testeth REQUIRED Eth::ethereum Eth::testutils)
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
