@@ -19,6 +19,8 @@ include(EthDependencies)
 include(buildinfo.cmake)
 create_build_info()
 
+include(EthUtils)
+
 include(EthOptions)
 configure_project()
 print_config()
