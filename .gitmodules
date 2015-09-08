@@ -16,12 +16,12 @@
 	branch = develop
 [submodule "dev"]
 	path = dev
-	url = https://github.com/debris/dev
-	branch = develop
+	url = https://github.com/ethereum/libweb3core
+	branch = master
 [submodule "ethereum"]
 	path = ethereum
-	url = https://github.com/debris/ethereum
-	branch = develop
+	url = https://github.com/ethereum/libethereum
+	branch = master
 [submodule "mix"]
 	path = mix
 	url = https://github.com/debris/mix
