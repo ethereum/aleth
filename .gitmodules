@@ -1,7 +1,7 @@
 [submodule "alethzero"]
 	path = alethzero
 	url = https://github.com/ethereum/alethzero
-	branch = split
+	branch = develop
 [submodule "dev"]
 	path = dev
 	url = https://github.com/ethereum/libweb3core
@@ -21,12 +21,12 @@
 [submodule "mix"]
 	path = mix
 	url = https://github.com/ethereum/mix
-	branch = split
+	branch = develop
 [submodule "solidity"]
 	path = solidity
 	url = https://github.com/ethereum/solidity
-	branch = split
+	branch = develop
 [submodule "webthree"]
 	path = webthree
 	url = https://github.com/ethereum/webthree
-	branch = split
+	branch = develop
