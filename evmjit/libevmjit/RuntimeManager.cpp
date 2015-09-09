@@ -2,9 +2,10 @@
 
 #include "preprocessor/llvm_includes_start.h"
 #include <llvm/IR/IntrinsicInst.h>
+#include <llvm/IR/Module.h>
 #include "preprocessor/llvm_includes_end.h"
 
-#include "Stack.h"
+#include "Array.h"
 #include "Utils.h"
 
 namespace dev
@@ -84,7 +85,7 @@ llvm::Twine getName(RuntimeData::Index _index)
 }
 }
 
-RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeBegin, code_iterator _codeEnd):
+RuntimeManager::RuntimeManager(IRBuilder& _builder, code_iterator _codeBegin, code_iterator _codeEnd):
 	CompilerHelper(_builder),
 	m_codeBegin(_codeBegin),
 	m_codeEnd(_codeEnd)
@@ -100,7 +101,12 @@ RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeB
 	m_envPtr = m_builder.CreateLoad(m_builder.CreateStructGEP(getRuntimeType(), rtPtr, 1), "env");
 	assert(m_envPtr->getType() == Type::EnvPtr);
 
-	m_stackSize = m_builder.CreateAlloca(Type::Size, nullptr, "stackSize");
+	auto mallocFunc = llvm::Function::Create(llvm::FunctionType::get(Type::WordPtr, {Type::Size}, false), llvm::Function::ExternalLinkage, "malloc", getModule());
+	mallocFunc->setDoesNotThrow();
+	mallocFunc->setDoesNotAlias(0);
+
+	m_stackBase = m_builder.CreateCall(mallocFunc, m_builder.getInt64(Type::Word->getPrimitiveSizeInBits() / 8 * stackSizeLimit), "stack.base"); // TODO: Use Type::SizeT type
+	m_stackSize = m_builder.CreateAlloca(Type::Size, nullptr, "stack.size");
 	m_builder.CreateStore(m_builder.getInt64(0), m_stackSize);
 
 	auto data = m_builder.CreateLoad(m_dataPtr, "data");
@@ -110,49 +116,21 @@ RuntimeManager::RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeB
 	m_gasPtr = m_builder.CreateAlloca(Type::Gas, nullptr, "gas.ptr");
 	m_builder.CreateStore(m_dataElts[RuntimeData::Index::Gas], m_gasPtr);
 
-	llvm::Type* checkStackLimitArgs[] = {Type::Size->getPointerTo(), Type::Size, Type::Size, Type::Size, Type::BytePtr};
-	m_checkStackLimit = llvm::Function::Create(llvm::FunctionType::get(Type::Void, checkStackLimitArgs, false), llvm::Function::PrivateLinkage, "evm.stack.require", getModule());
-	m_checkStackLimit->setDoesNotThrow();
-	m_checkStackLimit->setDoesNotCapture(1);
-
-	auto checkBB = llvm::BasicBlock::Create(_builder.getContext(), "Check", m_checkStackLimit);
-	auto updateBB = llvm::BasicBlock::Create(_builder.getContext(), "Update", m_checkStackLimit);
-	auto outOfStackBB = llvm::BasicBlock::Create(_builder.getContext(), "OutOfStack", m_checkStackLimit);
-
-	auto currSizePtr = &m_checkStackLimit->getArgumentList().front();
-	currSizePtr->setName("currSize");
-	auto min = currSizePtr->getNextNode();
-	min->setName("min");
-	auto max = min->getNextNode();
-	max->setName("max");
-	auto diff = max->getNextNode();
-	diff->setName("diff");
-	auto jmpBuf = diff->getNextNode();
-	jmpBuf->setName("jmpBuf");
-
+	m_exitBB = llvm::BasicBlock::Create(m_builder.getContext(), "Exit", getMainFunction());
 	InsertPointGuard guard{m_builder};
-	m_builder.SetInsertPoint(checkBB);
-	auto currSize = m_builder.CreateLoad(currSizePtr, "cur");
-	auto minSize = m_builder.CreateAdd(currSize, min, "minSize", false, true);
-	auto maxSize = m_builder.CreateAdd(currSize, max, "maxSize", true, true);
-	auto minOk = m_builder.CreateICmpSGE(minSize, m_builder.getInt64(0), "min.ok");
-	auto maxOk = m_builder.CreateICmpULE(maxSize, m_builder.getInt64(1024), "max.ok");
-	auto ok = m_builder.CreateAnd(minOk, maxOk, "ok");
-	m_builder.CreateCondBr(ok, updateBB, outOfStackBB, Type::expectTrue);
-
-	m_builder.SetInsertPoint(updateBB);
-	auto newSize = m_builder.CreateNSWAdd(currSize, diff);
-	m_builder.CreateStore(newSize, currSizePtr);
-	m_builder.CreateRetVoid();
-
-	m_builder.SetInsertPoint(outOfStackBB);
-	abort(jmpBuf);
-	m_builder.CreateUnreachable();
-}
-
-void RuntimeManager::checkStackLimit(ssize_t _min, ssize_t _max, ssize_t _diff)
-{
-	createCall(m_checkStackLimit, {m_stackSize, m_builder.getInt64(_min), m_builder.getInt64(_max), m_builder.getInt64(_diff), getJmpBuf()});
+	m_builder.SetInsertPoint(m_exitBB);
+	auto retPhi = m_builder.CreatePHI(Type::MainReturn, 16, "ret");
+	auto freeFunc = getModule()->getFunction("free");
+	if (!freeFunc)
+	{
+		freeFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, Type::WordPtr, false), llvm::Function::ExternalLinkage, "free", getModule());
+		freeFunc->setDoesNotThrow();
+		freeFunc->setDoesNotCapture(1);
+	}
+	m_builder.CreateCall(freeFunc, {m_stackBase});
+	auto extGasPtr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), RuntimeData::Index::Gas, "msg.gas.ptr");
+	m_builder.CreateStore(getGas(), extGasPtr);
+	m_builder.CreateRet(retPhi);
 }
 
 llvm::Value* RuntimeManager::getRuntimePtr()
@@ -183,7 +161,7 @@ llvm::Value* RuntimeManager::getEnvPtr()
 
 llvm::Value* RuntimeManager::getPtr(RuntimeData::Index _index)
 {
-	auto ptr = getBuilder().CreateStructGEP(getRuntimeDataType(), getDataPtr(), _index);
+	auto ptr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), _index);
 	assert(getRuntimeDataType()->getElementType(_index)->getPointerTo() == ptr->getType());
 	return ptr;
 }
@@ -197,17 +175,17 @@ void RuntimeManager::set(RuntimeData::Index _index, llvm::Value* _value)
 {
 	auto ptr = getPtr(_index);
 	assert(ptr->getType() == _value->getType()->getPointerTo());
-	getBuilder().CreateStore(_value, ptr);
+	m_builder.CreateStore(_value, ptr);
 }
 
 void RuntimeManager::registerReturnData(llvm::Value* _offset, llvm::Value* _size)
 {
 	auto memPtr = m_builder.CreateBitCast(getMem(), Type::BytePtr->getPointerTo());
-	auto mem = getBuilder().CreateLoad(memPtr, "memory");
-	auto returnDataPtr = getBuilder().CreateGEP(mem, _offset);
+	auto mem = m_builder.CreateLoad(memPtr, "memory");
+	auto returnDataPtr = m_builder.CreateGEP(mem, _offset);
 	set(RuntimeData::ReturnData, returnDataPtr);
 
-	auto size64 = getBuilder().CreateTrunc(_size, Type::Size);
+	auto size64 = m_builder.CreateTrunc(_size, Type::Size);
 	set(RuntimeData::ReturnDataSize, size64);
 }
 
@@ -218,18 +196,15 @@ void RuntimeManager::registerSuicide(llvm::Value* _balanceAddress)
 
 void RuntimeManager::exit(ReturnCode _returnCode)
 {
-	if (m_stack)
-		m_stack->free();
-
-	auto extGasPtr = m_builder.CreateStructGEP(getRuntimeDataType(), getDataPtr(), RuntimeData::Index::Gas, "msg.gas.ptr");
-	m_builder.CreateStore(getGas(), extGasPtr);
-	m_builder.CreateRet(Constant::get(_returnCode));
+	m_builder.CreateBr(m_exitBB);
+	auto retPhi = llvm::cast<llvm::PHINode>(&m_exitBB->front());
+	retPhi->addIncoming(Constant::get(_returnCode), m_builder.GetInsertBlock());
 }
 
 void RuntimeManager::abort(llvm::Value* _jmpBuf)
 {
 	auto longjmp = llvm::Intrinsic::getDeclaration(getModule(), llvm::Intrinsic::eh_sjlj_longjmp);
-	createCall(longjmp, {_jmpBuf});
+	m_builder.CreateCall(longjmp, {_jmpBuf});
 }
 
 llvm::Value* RuntimeManager::get(Instruction _inst)
@@ -259,7 +234,9 @@ llvm::Value* RuntimeManager::getCode()
 {
 	// OPT Check what is faster
 	//return get(RuntimeData::Code);
-	return m_builder.CreateGlobalStringPtr({reinterpret_cast<char const*>(m_codeBegin), static_cast<size_t>(m_codeEnd - m_codeBegin)}, "code");
+	if (!m_codePtr)
+		m_codePtr = m_builder.CreateGlobalStringPtr({reinterpret_cast<char const*>(m_codeBegin), static_cast<size_t>(m_codeEnd - m_codeBegin)}, "code");
+	return m_codePtr;
 }
 
 llvm::Value* RuntimeManager::getCodeSize()
@@ -271,12 +248,12 @@ llvm::Value* RuntimeManager::getCallDataSize()
 {
 	auto value = get(RuntimeData::CallDataSize);
 	assert(value->getType() == Type::Size);
-	return getBuilder().CreateZExt(value, Type::Word);
+	return m_builder.CreateZExt(value, Type::Word);
 }
 
 llvm::Value* RuntimeManager::getGas()
 {
-	return getBuilder().CreateLoad(getGasPtr(), "gas");
+	return m_builder.CreateLoad(getGasPtr(), "gas");
 }
 
 llvm::Value* RuntimeManager::getGasPtr()
@@ -294,7 +271,7 @@ llvm::Value* RuntimeManager::getMem()
 void RuntimeManager::setGas(llvm::Value* _gas)
 {
 	assert(_gas->getType() == Type::Gas);
-	getBuilder().CreateStore(_gas, getGasPtr());
+	m_builder.CreateStore(_gas, getGasPtr());
 }
 
 }

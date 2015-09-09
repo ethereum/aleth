@@ -17,7 +17,7 @@ namespace jit
 
 static const auto c_reallocStep = 1;
 
-llvm::Value* LazyFunction::call(llvm::IRBuilder<>& _builder, std::initializer_list<llvm::Value*> const& _args, llvm::Twine const& _name)
+llvm::Value* LazyFunction::call(IRBuilder& _builder, std::initializer_list<llvm::Value*> const& _args, llvm::Twine const& _name)
 {
 	if (!m_func)
 		m_func = m_creator();
@@ -216,14 +216,14 @@ llvm::Type* Array::getType()
 	return arrayTy;
 }
 
-Array::Array(llvm::IRBuilder<>& _builder, char const* _name) :
+Array::Array(IRBuilder& _builder, char const* _name) :
 	CompilerHelper(_builder)
 {
 	m_array = m_builder.CreateAlloca(getType(), nullptr, _name);
 	m_builder.CreateStore(llvm::ConstantAggregateZero::get(getType()), m_array);
 }
 
-Array::Array(llvm::IRBuilder<>& _builder, llvm::Value* _array) :
+Array::Array(IRBuilder& _builder, llvm::Value* _array) :
 	CompilerHelper(_builder),
 	m_array(_array)
 {
