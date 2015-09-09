@@ -139,9 +139,10 @@ fi
 
 for repository in "${BUILD_REPOSITORIES[@]}"
 do
+	echo -e "\nETHBUILD - INFO: Starting build of ${repository} for requested project ${REQUESTED_PROJECT}.\n";
 	cd $repository >/dev/null 2>/dev/null
 	if [[ $? -ne 0 ]]; then
-		echo "Skipping ${repository} because directory does not exit";
+		echo "ETHBUILD - INFO: Skipping ${repository} because directory does not exit";
 		# Go back to root directory
 		cd $ROOT_DIR
 		continue
@@ -154,11 +155,10 @@ do
 	fi
 
 	if [[ $NOGIT -eq 0 && $BRANCH != $REQUESTED_BRANCH ]]; then
-		echo "BUILD WARNING: ${repository} was in ${BRANCH} branch, while building on ${REQUESTED_BRANCH} was requested.";
+		echo "ETHBUILD - WARNING: ${repository} was in ${BRANCH} branch, while building on ${REQUESTED_BRANCH} was requested.";
 		git checkout $REQUESTED_BRANCH
 		if [[ $? -ne 0 ]]; then
-			echo "ERROR: Checking out branch ${REQUESTED_BRANCH} for ${repository} failed";
-			exit 1
+			echo "ETHBUILD - WARNING: Checking out branch ${REQUESTED_BRANCH} for ${repository} failed. Will try to build with current branch ...";
 		fi
 	fi
 
@@ -179,26 +179,26 @@ do
 		source "${SCRIPT_DIR}/ethwindowsenv.sh"
 		cmake .. -G "Visual Studio 12 2013 Win64"
 		if [[ $? -ne 0 ]]; then
-			echo "ERROR: cmake configure phase for repository \"$repository\" failed.";
+			echo "ETHBUILD - ERROR: cmake configure phase for repository \"$repository\" failed.";
 			exit 1
 		fi
 
 		get_repo_sln $repository
 		"${MSBUILD_EXECUTABLE}" $REPO_MSVC_SLN /p:Configuration=$BUILD_TYPE /m:${MAKE_CORES}
 		if [[ $? -ne 0 ]]; then
-			echo "ERROR: Building repository \"$repository\" failed.";
+			echo "ETHBUILD - ERROR: Building repository \"$repository\" failed.";
 			exit 1
 		fi
 	else
 		cmake .. -DCMAKE_BUILD_TYPE=$BUILD_TYPE $EXTRA_BUILD_ARGS;
 		if [[ $? -ne 0 ]]; then
-			echo "ERROR: cmake configure phase for repository \"$repository\" failed.";
+			echo "ETHBUILD - ERROR: cmake configure phase for repository \"$repository\" failed.";
 			exit 1
 		fi
 
 		make -j${MAKE_CORES}
 		if [[ $? -ne 0 ]]; then
-			echo "ERROR: Building repository \"$repository\" failed.";
+			echo "ETHBUILD - ERROR: Building repository \"$repository\" failed.";
 			exit 1
 		fi
 	fi

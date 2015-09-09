@@ -5,7 +5,7 @@
 
 PROJECTS_HELP="    --project NAME            Will only clone/update/build repos for the requested project. Valid values are: [\"all\", \"libweb3core\", \"libethereum\", \"\webthree\", \"solidity\", \"alethzero\", \"mix\"]."
 CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests webthree solidity alethzero mix)
-BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum libwhisper webthree solidity alethzero mix)
+BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero mix)
 
 function set_repositories() {
 	if [[ $1 == "" || $2 == "" ]]; then
@@ -17,7 +17,7 @@ function set_repositories() {
 	case $REQUESTED_PROJECT in
 		"all")
 			CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests webthree solidity alethzero mix)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum libwhisper webthree solidity alethzero mix)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero mix)
 			;;
 		"libweb3core")
 			CLONE_REPOSITORIES=(libweb3core webthree-helpers tests)
@@ -37,11 +37,11 @@ function set_repositories() {
 			;;
 		"alethzero")
 			CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests webthree solidity alethzero)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum libwhisper webthree solidity alethzero)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero)
 			;;
 		"mix")
 			CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests webthree solidity mix)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum libwhisper webthree solidity mix)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity mix)
 			;;
 		*)
 			echo "${REQUESTER_SCRIPT} - ERROR: Unrecognized value \"${REQUESTED_PROJECT}\" for the --project argument."
