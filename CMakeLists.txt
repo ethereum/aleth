@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.0.0)
 
-set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/helpers/cmake" CACHE PATH "The path to the cmake directory")
+set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/webthree-helpers/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
-set(UTILS_DIR "${CMAKE_CURRENT_LIST_DIR}/helpers/utils" CACHE PATH "The path to the utils libraries directory")
-set(DEV_DIR "${CMAKE_CURRENT_LIST_DIR}/dev" CACHE PATH "The path to the dev libraries directory")
-set(ETH_DIR "${CMAKE_CURRENT_LIST_DIR}/ethereum" CACHE PATH "The path to the eth libraries directory")
+set(UTILS_DIR "${CMAKE_CURRENT_LIST_DIR}/webthree-helpers/utils" CACHE PATH "The path to the utils libraries directory")
+set(DEV_DIR "${CMAKE_CURRENT_LIST_DIR}/libweb3core" CACHE PATH "The path to the dev libraries directory")
+set(ETH_DIR "${CMAKE_CURRENT_LIST_DIR}/libethereum" CACHE PATH "The path to the eth libraries directory")
 set(WEB3_DIR "${CMAKE_CURRENT_LIST_DIR}/webthree" CACHE PATH "The path to the webthree libraries directory")
 set(SOL_DIR "${CMAKE_CURRENT_LIST_DIR}/solidity" CACHE PATH "The path to the solidity libraries directory")
 
@@ -28,10 +28,10 @@ include(EthOptions)
 configure_project()
 print_config()
 
-add_subdirectory(helpers/utils)
+add_subdirectory(webthree-helpers/utils)
 
-add_subdirectory(dev)
-add_subdirectory(ethereum)
+add_subdirectory(libweb3core)
+add_subdirectory(libethereum)
 add_subdirectory(webthree)
 
 if (SOLIDITY)
