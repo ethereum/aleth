@@ -19,7 +19,7 @@ add_library(${TARGET_NAME} STATIC ${SOURCES})
 set_property(TARGET ${TARGET_NAME} PROPERTY FOLDER "libs")
 
 include_directories(../..)
-include_directories(../../../dev)
+include_directories(../../../libweb3core)
 include_directories(${Boost_INCLUDE_DIRS})
 
 target_link_libraries(${TARGET_NAME} evmjit)
