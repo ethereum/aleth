@@ -23,6 +23,7 @@ source "${SCRIPT_DIR}/ethbuildcommon.sh"
 ROOT_DIR=$(pwd)
 NO_PUSH=0
 USE_SSH=0
+SHALLOW_FETCH=""
 UPSTREAM=upstream
 ORIGIN=origin
 REQUESTED_BRANCH=develop
@@ -82,6 +83,7 @@ function print_help {
 	echo "    --upstream NAME           The name of the remote to pull from. Default is ${UPSTREAM}."
 	echo "    --no-push                 Don't push anything back to origin."
 	echo "    --use-ssh                 Use ssh to clone the repos instead of https."
+	echo "    --shallow-fetch           Perform git clone and git fetch with --depth=1."
 }
 
 for arg in ${@:1}
@@ -144,6 +146,11 @@ do
 		continue
 	fi
 
+	if [[ $arg == "--shallow-fetch" ]]; then
+		SHALLOW_FETCH=" --depth=1"
+		continue
+	fi
+
 	echo "ETHUPDATE - ERROR: Unrecognized argument \"$arg\".";
 	print_help
 	exit 1
@@ -166,7 +173,7 @@ do
 		else
 			echo "ETHUPDATE - INFO: Repository ${repository} for requested project ${REQUESTED_PROJECT} did not exist. Cloning ..."
 			get_repo_url $repository
-			git clone $REPO_URL
+			git clone $REPO_URL $SHALLOW_FETCH
 			CLONED_THE_REPO=1
 			cd $repository >/dev/null 2>/dev/null
 		fi
@@ -182,10 +189,10 @@ do
 
 	# Pull changes from what the user set as the upstream repository, unless it's just been cloned
 	if [[ $CLONED_THE_REPO -eq 0 ]]; then
-		git pull $UPSTREAM $REQUESTED_BRANCH
+		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 	else
 		# if just cloned, make a local branch tracking the origin's requested branch
-		git fetch origin
+		git fetch origin $SHALLOW_FETCH
 		if [[ $BRANCH != $REQUESTED_BRANCH ]]; then
 			git checkout --track -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
 		fi
