@@ -1,5 +1,5 @@
-set(web3 "${CMAKE_CURRENT_LIST_DIR}/../../js/web3.js/dist/web3.js")
-set(admin "${CMAKE_CURRENT_LIST_DIR}/../../js/admin.js")
+set(web3 "${CMAKE_CURRENT_LIST_DIR}/../../web3.js/dist/web3.js")
+set(admin "${CMAKE_CURRENT_LIST_DIR}/../../webthree-helpers/js/admin.js")
 set(pretty_print "${CMAKE_CURRENT_LIST_DIR}/PrettyPrint.js")
 set(common "${CMAKE_CURRENT_LIST_DIR}/Common.js")
 
