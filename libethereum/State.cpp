@@ -588,13 +588,6 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 	return _out;
 }
 
-static std::string minHex(h256 const& _h)
-{
-	unsigned i = 0;
-	for (; i < 31 && !_h[i]; ++i) {}
-	return toHex(_h.ref().cropped(i));
-}
-
 void State::streamJSON(ostream& _f) const
 {
 	_f << "{" << endl;
