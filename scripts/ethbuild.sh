@@ -36,7 +36,7 @@ function get_repo_sln() {
 	fi
 	for repo in "${REPOS_MSVC_SLN_MAP[@]}" ; do
 		KEY=${repo%%:*}
-		if [[ $KEY =~ $1 ]]; then
+		if [[ $KEY == $1 ]]; then
 			REPO_MSVC_SLN=${repo#*:}
 			break
 		fi
