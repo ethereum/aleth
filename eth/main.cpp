@@ -54,6 +54,7 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
+#include <libweb3jsonrpc/IpcServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
 #include "BuildInfo.h"
@@ -308,6 +309,7 @@ int main(int argc, char** argv)
 	bool interactive = false;
 #if ETH_JSONRPC || !ETH_TRUE
 	int jsonRPCURL = -1;
+	bool ipc = false;
 	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
@@ -693,6 +695,8 @@ int main(int argc, char** argv)
 			rpcCorsDomain = argv[++i];
 		else if (arg == "--json-admin" && i + 1 < argc)
 			jsonAdmin = argv[++i];
+		else if (arg == "--ipc")
+			ipc = true;
 #endif
 #if ETH_JSCONSOLE || !ETH_TRUE
 		else if (arg == "-i" || arg == "--interactive" || arg == "--console" || arg == "console")
@@ -1112,6 +1116,8 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC || !ETH_TRUE
 	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
 	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
+	shared_ptr<dev::WebThreeStubServer> jsonipcServer;
+	unique_ptr<jsonrpc::AbstractServerConnector> jsonipcConnector;
 
 	AddressHash allowedDestinations;
 
@@ -1148,6 +1154,13 @@ int main(int argc, char** argv)
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
+	}
+	if (ipc)
+	{
+		auto ipcConnector = new IpcServer("geth");
+		jsonipcConnector.reset(ipcConnector);
+		jsonipcServer = make_shared<dev::WebThreeStubServer>(*jsonipcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
+		jsonipcServer->StartListening();
 	}
 #endif
 
@@ -1198,6 +1211,8 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC
 	if (jsonrpcServer.get())
 		jsonrpcServer->StopListening();
+	if (jsonipcServer.get())
+		jsonipcServer->StopListening();
 #endif
 
 	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("++eth", clientName), dev::Version);
