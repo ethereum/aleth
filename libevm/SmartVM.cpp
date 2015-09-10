@@ -26,7 +26,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Guards.h>
 #include <evmjit/JIT.h>
-#include <evmjit/libevmjit-cpp/Utils.h>
+#include <evmjit/libevmjit-cpp/JitUtils.h>
 #include "VMFactory.h"
 
 namespace dev
