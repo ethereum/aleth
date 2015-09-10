@@ -34,7 +34,7 @@ h256 const EmptyTrie = sha3(rlp(""));
 OverlayDB::~OverlayDB()
 {
 	if (m_db.use_count() == 1 && m_db.get())
-		cnote << "Closing state DB";
+		cnote << "Closing overlay DB";
 }
 
 class WriteBatchNoter: public ldb::WriteBatch::Handler
@@ -154,4 +154,17 @@ void OverlayDB::kill(h256 const& _h)
 #endif
 }
 
+bool OverlayDB::deepkill(h256 const& _h)
+{
+	// kill in memoryDB
+	kill(_h);
+	purge();
+
+	//kill in overlayDB
+	ldb::Status s = m_db->Delete(m_writeOptions, ldb::Slice((char const*)_h.data(), 32));
+	if (s.ok())
+		return true;
+	else
+		return false;
+}
 }
