@@ -157,6 +157,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidDifficulty",
                 "transactions" : [
                     {
                         "data" : "",
@@ -248,6 +249,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidDifficulty",
                 "transactions" : [
                     {
                         "data" : "",
@@ -339,6 +341,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidDifficulty",
                 "transactions" : [
                     {
                         "data" : "",
@@ -430,6 +433,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidBlockNonce",
                 "transactions" : [
                     {
                         "data" : "",
@@ -521,6 +525,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidBlockNonce",
                 "transactions" : [
                     {
                         "data" : "",
@@ -612,6 +617,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidGasLimit",
                 "transactions" : [
                     {
                         "data" : "",
@@ -703,6 +709,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidGasLimit",
                 "transactions" : [
                     {
                         "data" : "",
@@ -794,6 +801,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidGasLimit",
                 "transactions" : [
                     {
                         "data" : "",
@@ -885,6 +893,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidGasLimit",
                 "transactions" : [
                     {
                         "data" : "",
@@ -976,6 +985,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidUncleParentHash",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1067,6 +1077,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidStateRoot",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1158,6 +1169,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidTimestamp",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1249,6 +1261,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidDifficulty",
                 "transactions" : [
                     {
                         "data" : "",

@@ -47,6 +47,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vecto
 void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
 void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
+void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
@@ -157,6 +158,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					blockchain.addBlock(alterBlock);
 					trueBc.addBlock(alterBlock);
+					BOOST_REQUIRE_MESSAGE(blObj.count("expectException") == 0, "block import expected exception, but no exeption was thrown!");
 					if (o.count("noBlockChainHistory") == 0)
 					{
 						importedBlocks.push_back(alterBlock);
@@ -166,15 +168,18 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				catch (Exception const& _e)
 				{
 					cnote << testname + "block import throw an exception: " << diagnostic_information(_e);
+					checkExpectedException(blObj, _e);
 					eraseJsonSectionForInvalidBlock(blObj);
 				}
 				catch (std::exception const& _e)
 				{
 					cnote << testname + "block import throw an exception: " << _e.what();
+					cout << testname + "block import thrown std exeption" << std::endl;
 					eraseJsonSectionForInvalidBlock(blObj);
 				}
 				catch (...)
 				{
+					cout << testname + "block import thrown unknown exeption" << std::endl;
 					eraseJsonSectionForInvalidBlock(blObj);
 				}
 
@@ -551,6 +556,16 @@ mObject writeBlockHeaderToJson(Ethash::BlockHeader const& _bi)
 	return o;
 }
 
+void checkExpectedException(mObject& _blObj, Exception const& _e)
+{
+	BOOST_REQUIRE_MESSAGE(_blObj.count("expectException") > 0, TestOutputHelper::testName() + "block import thrown unexpected Excpetion!");
+	string exWhat {	_e.what() };
+	string exExpect = _blObj.at("expectException").get_str();
+
+	BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + "block import expected another exeption: " + exExpect);
+	_blObj.erase(_blObj.find("expectException"));
+}
+
 void checkJsonSectionForInvalidBlock(mObject& _blObj)
 {
 	BOOST_CHECK(_blObj.count("blockHeader") == 0);
@@ -635,6 +650,11 @@ BOOST_AUTO_TEST_CASE(bcForkUncleTest)
 {
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcStateTest)
+{
+	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
