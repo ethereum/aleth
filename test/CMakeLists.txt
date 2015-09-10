@@ -44,6 +44,7 @@ file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 
 eth_use(testeth REQUIRED Eth::ethereum Eth::testutils)
+target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
