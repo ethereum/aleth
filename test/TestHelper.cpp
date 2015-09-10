@@ -725,11 +725,8 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 	return rlpStream;
 }
 
-Options::Options()
-{
-	auto argc = boost::unit_test::framework::master_test_suite().argc;
-	auto argv = boost::unit_test::framework::master_test_suite().argv;
-
+Options::Options(int argc, char** argv)
+{	
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -822,6 +819,15 @@ Options::Options()
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
+		else if (arg == "-t" && i + 1 < argc)
+			rCurrentTestSuite = std::string{argv[i + 1]};
+		else if (arg == "-checktest" || arg == "-filltest")
+		{
+			//read all line to the end
+			for (int j = i+1; j < argc; ++j)
+				rCheckTest += argv[j];
+			break;
+		}
 	}
 
 	//Default option
@@ -829,9 +835,9 @@ Options::Options()
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
-Options const& Options::get()
+Options const& Options::get(int argc, char** argv)
 {
-	static Options instance;
+	static Options instance(argc, argv);
 	return instance;
 }
 
