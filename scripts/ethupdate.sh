@@ -23,6 +23,7 @@ source "${SCRIPT_DIR}/ethbuildcommon.sh"
 ROOT_DIR=$(pwd)
 NO_PUSH=0
 USE_SSH=0
+DO_SIMPLE_PULL=0
 SHALLOW_FETCH=""
 UPSTREAM=upstream
 ORIGIN=origin
@@ -84,6 +85,7 @@ function print_help {
 	echo "    --no-push                 Don't push anything back to origin."
 	echo "    --use-ssh                 Use ssh to clone the repos instead of https."
 	echo "    --shallow-fetch           Perform git clone and git fetch with --depth=1."
+	echo "    --simple-pull             If a branch is given but can't be checked out, then give this argument to attemt a simple git pull"
 }
 
 for arg in ${@:1}
@@ -151,6 +153,11 @@ do
 		continue
 	fi
 
+	if [[ $arg == "--simple-pull" ]]; then
+		DO_SIMPLE_PULL=1
+		continue
+	fi
+
 	echo "ETHUPDATE - ERROR: Unrecognized argument \"$arg\".";
 	print_help
 	exit 1
@@ -163,6 +170,7 @@ fi
 
 for repository in "${CLONE_REPOSITORIES[@]}"
 do
+	echo "ETHUPDATE - INFO: Starting update process of ${repository} for requested project ${REQUESTED_PROJECT}";
 	CLONED_THE_REPO=0
 	cd $repository >/dev/null 2>/dev/null
 	if [[ $? -ne 0 ]]; then
@@ -182,9 +190,18 @@ do
 		BRANCH="(unnamed branch)"     # detached HEAD
 	BRANCH=${BRANCH##refs/heads/}
 	if [[ $BRANCH != $REQUESTED_BRANCH ]]; then
-		echo "ETHUPDATE - WARNING: Not updating ${repository} because it's not in the ${REQUESTED_BRANCH} branch"
+		if [[ $DO_SIMPLE_PULL -eq 1 ]]; then
+			echo "ETHUPDATE - INFO: ${repository} not in the ${REQUESTED_BRANCH} branch but performing simple pull anyway ..."
+			git pull $SHALLOW_FETCH
+			if [[ $? -ne 0 ]]; then
+				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
+			fi
+		else
+			echo "ETHUPDATE - WARNING: Not updating ${repository} because it's not in the ${REQUESTED_BRANCH} branch"
+		fi
 		cd $ROOT_DIR
 		continue
+
 	fi
 
 	# Pull changes from what the user set as the upstream repository, unless it's just been cloned
@@ -199,7 +216,15 @@ do
 	fi
 
 	if [[ $? -ne 0 ]]; then
-		echo "ETHUPDATE - ERROR: Pulling changes for repository ${repository} from ${UPSTREAM} into the ${REQUESTED_BRANCH} branch failed."
+		if [[ $DO_SIMPLE_PULL -eq 1 ]]; then
+			echo "ETHUPDATE - INFO: ${repository} failed to pull ${REQUESTED_BRANCH}. Performing a simple pull anyway ..."
+			git pull $SHALLOW_FETCH
+			if [[ $? -ne 0 ]]; then
+				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
+			fi
+		else
+			echo "ETHUPDATE - ERROR: Pulling changes for repository ${repository} from ${UPSTREAM} into the ${REQUESTED_BRANCH} branch failed."
+		fi
 		cd $ROOT_DIR
 		continue
 	fi
