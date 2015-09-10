@@ -20,8 +20,14 @@ source "${SCRIPT_DIR}/ethbuildcommon.sh"
 
 
 REPO_MSVC_SLN=""
-REPOS_MSVC_SLN_MAP=("cpp-ethereum:ethereum.sln"
-	"solidity:solidity.sln")
+REPOS_MSVC_SLN_MAP=("webthree-helpers/utils:utils.sln"
+	"libweb3core:dev.sln"
+	"libethereum:ethereum.sln"
+	"webthree:webthree.sln"
+	"solidity:solidity.sln"
+	"alethzero:alethzero.sln"
+	"mix:mix.sln"
+)
 
 function get_repo_sln() {
 	if [[ $1 == "" ]]; then
