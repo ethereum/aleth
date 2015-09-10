@@ -38,6 +38,15 @@ else()
 		)
 
 		set(SOLIDITY_LIBRARIES optimized ${SOLIDITY_LIBRARY} debug ${SOLIDITY_LIBRARY_DEBUG})
+		# it may cause configure phase to run smoothly, but link phase to fail,
+		# if libraries were not build
+		if (${SOLIDITY_LIBRARY} AND ${SOLIDITY_LIBRARY_DEBUG})
+			set(SOLIDITY_LIBRARIES optimized ${SOLIDITY_LIBRARY} debug ${SOLIDITY_LIBRARY_DEBUG})
+		elseif (${SOLIDITY_LIBRARY})
+			set(SOLIDITY_LIBRARIES ${SOLIDITY_LIBRARY})
+		elseif (${SOLIDITY_LIBRARY_DEBUG})
+			set(SOLIDITY_LIBRARIES ${SOLIDITY_LIBRARY_DEBUG})
+		endif()
 
 	endif()
 

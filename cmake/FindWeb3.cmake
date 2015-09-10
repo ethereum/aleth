@@ -41,7 +41,15 @@ else()
 				NO_DEFAULT_PATH
 			)
 
-			set(Web3_${L}_LIBRARIES optimized ${Web3_${L}_LIBRARY} debug ${Web3_${L}_LIBRARY_DEBUG})
+			# it may cause configure phase to run smoothly, but link phase to fail,
+			# if libraries were not build
+			if (${Web3_${L}_LIBRARY} AND ${Web3_${L}_LIBRARY_DEBUG})
+				set(Web3_${L}_LIBRARIES optimized ${Web3_${L}_LIBRARY} debug ${Web3_${L}_LIBRARY_DEBUG})
+			elseif (${Web3_${L}_LIBRARY})
+				set(Web3_${L}_LIBRARIES ${Web3_${L}_LIBRARY})
+			elseif (${Web3_${L}_LIBRARY_DEBUG})
+				set(Web3_${L}_LIBRARIES ${Web3_${L}_LIBRARY_DEBUG})
+			endif()
 
 		endif()
 	
