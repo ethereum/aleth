@@ -4,7 +4,7 @@
 # Some common functionality to be used by ethupdate and ethbuild
 
 PROJECTS_HELP="    --project NAME            Will only clone/update/build repos for the requested project. Valid values are: [\"all\", \"libweb3core\", \"libethereum\", \"\webthree\", \"solidity\", \"alethzero\", \"mix\"]."
-CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests webthree solidity alethzero mix)
+CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests web3.js webthree solidity alethzero mix)
 BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero mix)
 
 function set_repositories() {
@@ -16,7 +16,7 @@ function set_repositories() {
 	REQUESTED_PROJECT=$2
 	case $REQUESTED_PROJECT in
 		"all")
-			CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers tests webthree solidity alethzero mix)
+			CLONE_REPOSITORIES=(libweb3core libethereum libwhisper webthree-helpers web3.js tests webthree solidity alethzero mix)
 			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero mix)
 			;;
 		"libweb3core")
