@@ -61,7 +61,6 @@ class State;
 class Block;
 
 struct AlreadyHaveBlock: virtual Exception {};
-struct UnknownParent: virtual Exception {};
 struct FutureTime: virtual Exception {};
 struct TransientError: virtual Exception {};
 
