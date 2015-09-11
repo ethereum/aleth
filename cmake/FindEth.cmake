@@ -7,6 +7,7 @@
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS ethereum;evm;ethcore;lll;evmasm;evmcore;ethash-cl;ethash;natspec;jsengine;jsconsole;evmjit;evmjit-cpp;solidity;testutils)
 
 set(Eth_INCLUDE_DIRS "${ETH_DIR}")

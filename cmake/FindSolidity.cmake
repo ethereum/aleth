@@ -6,6 +6,7 @@
 #  SOLIDITY_LIBRARIES, the libraries needed to use solidity.
 #  SOLIDITY_INCLUDE_DIRS
 
+include(EthUtils)
 set(l solidity)
 
 set(SOLIDITY_INCLUDE_DIRS "${SOL_DIR}")

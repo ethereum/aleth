@@ -6,6 +6,7 @@
 #  Utils_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  Utils_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS secp256k1;scrypt)
 
 set(Utils_INCLUDE_DIRS "${UTILS_DIR}")
