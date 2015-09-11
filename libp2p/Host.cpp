@@ -119,6 +119,7 @@ Host::~Host()
 
 void Host::start()
 {
+	DEV_TIMED_FUNCTION_ABOVE(500);
 	startWorking();
 	while (isWorking() && !haveNetwork())
 		this_thread::sleep_for(chrono::milliseconds(10));
