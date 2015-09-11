@@ -28,7 +28,7 @@ using namespace eth;
 using namespace aleth;
 using namespace zero;
 
-DEV_AZ_NOTE_PLUGIN($NAME);
+ZERO_NOTE_PLUGIN($NAME);
 
 $NAME::$NAME(ZeroFace* _z):
 	Plugin(_m, "$NAME")
