@@ -190,10 +190,8 @@ do
 		fi
 
 		get_repo_sln $repository
-		# Until cmake config phase for Windows gets smarter we need to build both Debug and Release. Very ugly and time costly :(
-#		"${MSBUILD_EXECUTABLE}" $REPO_MSVC_SLN /p:Configuration=$BUILD_TYPE /m:${MAKE_CORES}
-		"${MSBUILD_EXECUTABLE}" $REPO_MSVC_SLN /p:Configuration=Release /m:${MAKE_CORES}
-		"${MSBUILD_EXECUTABLE}" $REPO_MSVC_SLN /p:Configuration=Debug /m:${MAKE_CORES}
+		# Build the Requested configuration
+		"${MSBUILD_EXECUTABLE}" $REPO_MSVC_SLN /p:Configuration=$BUILD_TYPE /m:${MAKE_CORES}
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBUILD - ERROR: Building repository \"$repository\" failed.";
 			exit 1
