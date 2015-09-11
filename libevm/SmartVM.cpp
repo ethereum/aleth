@@ -15,9 +15,6 @@
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// SmartVM is only available if EVM JIT is enabled
-#if ETH_EVMJIT
-
 #include "SmartVM.h"
 #include <unordered_map>
 #include <thread>
@@ -26,7 +23,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Guards.h>
 #include <evmjit/JIT.h>
-#include <evmjit/libevmjit-cpp/JitUtils.h>
+#include "JitUtils.h"
 #include "VMFactory.h"
 
 namespace dev
@@ -126,5 +123,3 @@ bytesConstRef SmartVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _
 
 }
 }
-
-#endif

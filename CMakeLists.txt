@@ -62,11 +62,9 @@ if (EVMJIT)
 		endif()
 	endif()
 
-	set(EVMJIT_CPP TRUE) # include CPP-JIT connector
 	add_subdirectory(evmjit)
 	if (DEFINED MSVC)
 		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
 		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL})
 	endif()
 endif()
-
