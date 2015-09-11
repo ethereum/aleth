@@ -54,11 +54,22 @@ const char* BlockDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
 const char* BlockTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
 const char* BlockChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
-Block::Block(OverlayDB const& _db, BaseState _bs, Address _coinbaseAddress):
+Block::Block(OverlayDB const& _db, BaseState _bs, Address const& _coinbaseAddress):
 	m_state(_db, _bs),
 	m_beneficiary(_coinbaseAddress),
 	m_blockReward(c_blockReward)
 {
+	m_previousBlock.clear();
+	m_currentBlock.clear();
+//	assert(m_state.root() == m_previousBlock.stateRoot());
+}
+
+Block::Block(OverlayDB const& _db, h256 const& _root, Address const& _coinbaseAddress):
+	m_state(_db, BaseState::PreExisting),
+	m_beneficiary(_coinbaseAddress),
+	m_blockReward(c_blockReward)
+{
+	m_state.setRoot(_root);
 	m_previousBlock.clear();
 	m_currentBlock.clear();
 //	assert(m_state.root() == m_previousBlock.stateRoot());
