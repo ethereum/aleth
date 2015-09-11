@@ -41,7 +41,15 @@ else()
 				NO_DEFAULT_PATH
 			)
 
-			set(Dev_${L}_LIBRARIES optimized ${Dev_${L}_LIBRARY} debug ${Dev_${L}_LIBRARY_DEBUG})
+			# it may cause configure phase to run smoothly, but link phase to fail,
+			# if libraries were not build
+			if (${Dev_${L}_LIBRARY} AND ${Dev_${L}_LIBRARY_DEBUG})
+				set(Dev_${L}_LIBRARIES optimized ${Dev_${L}_LIBRARY} debug ${Dev_${L}_LIBRARY_DEBUG})
+			elseif (${Dev_${L}_LIBRARY})
+				set(Dev_${L}_LIBRARIES ${Dev_${L}_LIBRARY})
+			elseif (${Dev_${L}_LIBRARY_DEBUG})
+				set(Dev_${L}_LIBRARIES ${Dev_${L}_LIBRARY_DEBUG})
+			endif()
 
 		endif()
 	endforeach()
