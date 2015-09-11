@@ -20,6 +20,10 @@
  */
 
 #include "GenesisInfo.h"
+using namespace dev;
+using namespace eth;
+
+h256 const dev::eth::c_genesisStateRootOlympic;
 
 std::string const dev::eth::c_genesisInfoOlympic =
 R"ETHEREUM(
@@ -48,6 +52,8 @@ R"ETHEREUM(
 	}
 }
 )ETHEREUM";
+
+h256 const dev::eth::c_genesisStateRootFrontier("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544");
 
 std::string const dev::eth::c_genesisInfoFrontier = std::string() +
 R"E(

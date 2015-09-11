@@ -84,7 +84,14 @@ public:
 	/// which uses it. If you have no preexisting database then set BaseState to something other
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
 	/// You can also set the beneficiary address.
-	explicit Block(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address _coinbaseAddress = Address());
+	explicit Block(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address const& _coinbaseAddress = Address());
+
+	/// Basic state object from database.
+	/// Use the default when you already have a database and you just want to make a Block object
+	/// which uses it.
+	/// Will throw InvalidRoot if the root passed is not in the database.
+	/// You can also set the beneficiary address.
+	Block(OverlayDB const& _db, h256 const& _root, Address const& _coinbaseAddress = Address());
 
 	/// Copy state object.
 	Block(Block const& _s);

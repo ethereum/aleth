@@ -22,12 +22,15 @@
 #pragma once
 
 #include <string>
+#include <libdevcore/FixedHash.h>
 
 namespace dev {
 namespace eth {
 
 extern std::string const c_genesisInfoOlympic;
 extern std::string const c_genesisInfoFrontier;
+extern h256 const c_genesisStateRootOlympic;
+extern h256 const c_genesisStateRootFrontier;
 
 }
 }
