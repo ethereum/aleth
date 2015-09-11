@@ -6,6 +6,7 @@
 #  Dev_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  Dev_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS devcore;devcrypto;p2p)
 
 set(Dev_INCLUDE_DIRS "${DEV_DIR}")
@@ -40,9 +41,7 @@ else()
 				PATH_SUFFIXES "lib${l}/Debug" 
 				NO_DEFAULT_PATH
 			)
-
-			set(Dev_${L}_LIBRARIES optimized ${Dev_${L}_LIBRARY} debug ${Dev_${L}_LIBRARY_DEBUG})
-
+			eth_check_library_link(Dev_${L})
 		endif()
 	endforeach()
 
