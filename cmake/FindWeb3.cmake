@@ -40,19 +40,8 @@ else()
 				PATH_SUFFIXES "lib${l}/Debug" 
 				NO_DEFAULT_PATH
 			)
-
-			# it may cause configure phase to run smoothly, but link phase to fail,
-			# if libraries were not build
-			if (${Web3_${L}_LIBRARY} AND ${Web3_${L}_LIBRARY_DEBUG})
-				set(Web3_${L}_LIBRARIES optimized ${Web3_${L}_LIBRARY} debug ${Web3_${L}_LIBRARY_DEBUG})
-			elseif (${Web3_${L}_LIBRARY})
-				set(Web3_${L}_LIBRARIES ${Web3_${L}_LIBRARY})
-			elseif (${Web3_${L}_LIBRARY_DEBUG})
-				set(Web3_${L}_LIBRARIES ${Web3_${L}_LIBRARY_DEBUG})
-			endif()
-
+			eth_check_library_link(Web3_${L})
 		endif()
-	
 	endforeach()
 
 endif()

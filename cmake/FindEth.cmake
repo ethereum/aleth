@@ -47,16 +47,7 @@ else()
 				"evmjit/libevmjit-cpp/Debug"
 				NO_DEFAULT_PATH
 			)
-
-			# it may cause configure phase to run smoothly, but link phase to fail,
-			# if libraries were not build
-			if (${Eth_${L}_LIBRARY} AND ${Eth_${L}_LIBRARY_DEBUG})
-				set(Eth_${L}_LIBRARIES optimized ${Eth_${L}_LIBRARY} debug ${Eth_${L}_LIBRARY_DEBUG})
-			elseif (${Eth_${L}_LIBRARY})
-				set(Eth_${L}_LIBRARIES ${Eth_${L}_LIBRARY})
-			elseif (${Eth_${L}_LIBRARY_DEBUG})
-				set(Eth_${L}_LIBRARIES ${Eth_${L}_LIBRARY_DEBUG})
-			endif()
+			eth_check_library_link(Eth_${L})
 		endif()
 	endforeach()
 

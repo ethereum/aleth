@@ -40,17 +40,7 @@ else()
 				PATH_SUFFIXES "lib${l}/Debug" 
 				NO_DEFAULT_PATH
 			)
-
-			# it may cause configure phase to run smoothly, but link phase to fail,
-			# if libraries were not build
-			if (${Dev_${L}_LIBRARY} AND ${Dev_${L}_LIBRARY_DEBUG})
-				set(Dev_${L}_LIBRARIES optimized ${Dev_${L}_LIBRARY} debug ${Dev_${L}_LIBRARY_DEBUG})
-			elseif (${Dev_${L}_LIBRARY})
-				set(Dev_${L}_LIBRARIES ${Dev_${L}_LIBRARY})
-			elseif (${Dev_${L}_LIBRARY_DEBUG})
-				set(Dev_${L}_LIBRARIES ${Dev_${L}_LIBRARY_DEBUG})
-			endif()
-
+			eth_check_library_link(Dev_${L})
 		endif()
 	endforeach()
 
