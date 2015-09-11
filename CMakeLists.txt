@@ -25,6 +25,10 @@ include(EthExecutableHelper)
 # Include utils
 include(EthUtils)
 
+include(EthOptions)
+configure_project()
+print_config()
+
 # libraries
 add_subdirectory(libwebthree)
 add_subdirectory(libweb3jsonrpc)
