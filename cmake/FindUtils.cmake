@@ -6,6 +6,7 @@
 #  Utils_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  Utils_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS secp256k1;scrypt)
 
 set(Utils_INCLUDE_DIRS "${UTILS_DIR}")
@@ -40,9 +41,7 @@ else()
 				PATH_SUFFIXES "lib${l}/Debug" 
 				NO_DEFAULT_PATH
 			)
-
-			set(Utils_${L}_LIBRARIES optimized ${Utils_${L}_LIBRARY} debug ${Utils_${L}_LIBRARY_DEBUG})
-
+			eth_check_library_link(Utils_${L})
 		endif()
 	endforeach()
 

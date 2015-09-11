@@ -7,6 +7,7 @@
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS ethereum;evm;ethcore;lll;evmasm;evmcore;ethash-cl;ethash;natspec;jsengine;jsconsole;evmjit;evmjit-cpp;solidity;testutils)
 
 set(Eth_INCLUDE_DIRS "${ETH_DIR}")
@@ -47,9 +48,7 @@ else()
 				"evmjit/libevmjit-cpp/Debug"
 				NO_DEFAULT_PATH
 			)
-
-			set(Eth_${L}_LIBRARIES optimized ${Eth_${L}_LIBRARY} debug ${Eth_${L}_LIBRARY_DEBUG})
-
+			eth_check_library_link(Eth_${L})
 		endif()
 	endforeach()
 

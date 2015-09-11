@@ -10,15 +10,15 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	target_include_directories(${TARGET} BEFORE PUBLIC ${Dev_INCLUDE_DIRS})
 
 	if (${SUBMODULE} STREQUAL "buildinfo")
-		if (DEFINED dev_VERSION)
+		if (TARGET ConfigInfo.h)
 			add_dependencies(${TARGET} BuildInfo.h)
 			add_dependencies(${TARGET} ConfigInfo.h)
+			set_target_properties(${TARGET} PROPERTIES AUTOGEN_TARGET_DEPENDS ConfigInfo.h)
 		endif()
-		set_target_properties(${TARGET} PROPERTIES AUTOGEN_TARGET_DEPENDS ConfigInfo.h)
 
-        target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BUILD_DIR})
-        target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BINARY_DIR})
-		target_include_directories(${TARGET} BEFORE PUBLIC ${DEV_BUILD_DIR})
+	target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BUILD_DIR})
+	target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BINARY_DIR})
+	target_include_directories(${TARGET} BEFORE PUBLIC ${DEV_BUILD_DIR})
 	endif()
 
 	# Base is where all dependencies for devcore are
