@@ -22,6 +22,23 @@ include(EthOptions)
 configure_project()
 print_config()
 
+if (EVMJIT)
+	if (NOT DEFINED LLVM_DIR)
+		if (DEFINED MSVC)
+			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
+		elseif (DEFINED APPLE)
+			set(LLVM_DIR "/usr/local/opt/llvm/share/llvm/cmake")
+		endif()
+	endif()
+
+	set(EVMJIT_CPP TRUE) # include CPP-JIT connector
+	add_subdirectory(evmjit)
+	if (DEFINED MSVC)
+		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
+		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
+	endif()
+endif()
+
 # core libraries
 add_subdirectory(libethash)
 add_subdirectory(libethcore)
@@ -51,22 +68,5 @@ endif()
 if (TESTS)
 	# test
 	add_subdirectory(test)
-endif()
-
-if (EVMJIT)
-	if (NOT DEFINED LLVM_DIR)
-		if (DEFINED MSVC)
-			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
-		elseif (DEFINED APPLE)
-			set(LLVM_DIR "/usr/local/opt/llvm/share/llvm/cmake")
-		endif()
-	endif()
-
-	set(EVMJIT_CPP TRUE) # include CPP-JIT connector
-	add_subdirectory(evmjit)
-	if (DEFINED MSVC)
-		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
-		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL})
-	endif()
 endif()
 
