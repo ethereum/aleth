@@ -208,6 +208,8 @@ u256 BlockInfo::calculateDifficulty(BlockInfo const& _parent) const
 	if (!m_number)
 		throw GenesisBlockCannotBeCalculated();
 	u256 o = max<u256>(c_minimumDifficulty, m_timestamp >= _parent.m_timestamp + c_durationLimit ? _parent.m_difficulty - (_parent.m_difficulty / c_difficultyBoundDivisor) : (_parent.m_difficulty + (_parent.m_difficulty / c_difficultyBoundDivisor)));
+	if (c_network == Network::Olympic)
+		return o;
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
 		o = max<u256>(c_minimumDifficulty, o + (u256(1) << (periodCount - 2)));	// latter will eventually become huge, so ensure it's a bigint.
