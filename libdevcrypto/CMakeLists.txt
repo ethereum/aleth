@@ -7,7 +7,7 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Dev::devcore Utils::scrypt Cryptopp)
 
-if (NOT DEFINED MSVC)
+if ((NOT EMSCRIPTEN) AND (NOT DEFINED MSVC))
 	eth_use(${EXECUTABLE} REQUIRED Utils::secp256k1)
 endif ()
 
