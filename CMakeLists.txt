@@ -23,13 +23,15 @@ configure_project()
 print_config()
 
 # core libraries
-add_subdirectory(libethash)
-add_subdirectory(libethcore)
-add_subdirectory(libevmcore)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libethash)
+	add_subdirectory(libethcore)
+	add_subdirectory(libevmcore)
+	add_subdirectory(liblll)
+	add_subdirectory(libevm)
+	add_subdirectory(libethereum)
+endif()
 add_subdirectory(libevmasm)
-add_subdirectory(liblll)
-add_subdirectory(libevm)
-add_subdirectory(libethereum)
 
 if (ETHASHCL)
 	add_subdirectory(libethash-cl)
@@ -37,7 +39,9 @@ endif()
 
 # other libraries
 add_subdirectory(libnatspec)
-add_subdirectory(libtestutils)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libtestutils)
+endif()
 
 # executables
 
