@@ -83,7 +83,7 @@ int dev::fromHex(char _i, WhenError _throw)
 
 bytes dev::fromHex(std::string const& _s, WhenError _throw)
 {
-	unsigned s = (_s[0] == '0' && _s[1] == 'x') ? 2 : 0;
+	unsigned s = (_s.size() >= 2 && _s[0] == '0' && _s[1] == 'x') ? 2 : 0;
 	std::vector<uint8_t> ret;
 	ret.reserve((_s.size() - s + 1) / 2);
 
