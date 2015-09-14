@@ -37,6 +37,23 @@ if (EVMJIT)
 	endif()
 endif()
 
+if (EVMJIT)
+	if (NOT DEFINED LLVM_DIR)
+		if (DEFINED MSVC)
+			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
+		elseif (DEFINED APPLE)
+			set(LLVM_DIR "/usr/local/opt/llvm/share/llvm/cmake")
+		endif()
+	endif()
+
+	set(EVMJIT_CPP TRUE) # include CPP-JIT connector
+	add_subdirectory(evmjit)
+	if (DEFINED MSVC)
+		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
+		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
+	endif()
+endif()
+
 # core libraries
 if (NOT EMSCRIPTEN)
 	add_subdirectory(libethash)
