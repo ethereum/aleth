@@ -158,11 +158,8 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 
  	// Special "Stop" block. Guarantees that there exists a next block after the code blocks (also when there are no code blocks).
 	auto stopBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Stop", m_mainFunc);
-
 	m_jumpTableBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "JumpTable", m_mainFunc);
-
 	auto abortBB = llvm::BasicBlock::Create(m_mainFunc->getContext(), "Abort", m_mainFunc);
-
 
 	m_builder.SetInsertPoint(m_jumpTableBB); // Must be before basic blocks compilation
 	auto target = m_builder.CreatePHI(Type::Word, 16, "target");
