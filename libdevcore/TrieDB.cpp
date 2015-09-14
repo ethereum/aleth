@@ -18,6 +18,7 @@
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
+#if !defined(ETH_EMSCRIPTEN)
 
 #include "Common.h"
 #include "TrieDB.h"
@@ -28,3 +29,5 @@ h256 const dev::c_shaNull = sha3(rlp(""));
 h256 const dev::EmptyTrie = sha3(rlp(""));
 
 const char* TrieDBChannel::name() { return "-T-"; }
+
+#endif // ETH_EMSCRIPTEN

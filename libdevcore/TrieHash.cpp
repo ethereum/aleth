@@ -19,6 +19,8 @@
  * @date 2014
  */
 
+#if !defined(ETH_EMSCRIPTEN)
+
 #include "TrieHash.h"
 #include "TrieCommon.h"
 #include "TrieDB.h"	// @TODO replace ASAP!
@@ -193,3 +195,5 @@ h256 orderedTrieRoot(std::vector<bytesConstRef> const& _data)
 }
 
 }
+
+#endif // ETH_EMSCRIPTEN
