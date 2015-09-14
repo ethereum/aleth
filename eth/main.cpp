@@ -349,6 +349,7 @@ int main(int argc, char** argv)
 	Address sessionKey;
 	Address beneficiary = signingKey;
 	strings presaleImports;
+	bytes extraData;
 
 	/// Structured logging params
 	bool structuredLogging = false;
@@ -566,6 +567,18 @@ int main(int argc, char** argv)
 			try
 			{
 				genesisJSON = contentsString(argv[++i]);
+			}
+			catch (...)
+			{
+				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				return -1;
+			}
+		}
+		else if (arg == "--extra-data" && i + 1 < argc)
+		{
+			try
+			{
+				extraData = fromHex(argv[++i]);
 			}
 			catch (...)
 			{
@@ -925,6 +938,8 @@ int main(int argc, char** argv)
 		&nodesState);
 	web3.ethereum()->setMineOnBadChain(mineOnWrongChain);
 	web3.ethereum()->setSentinel(sentinel);
+	if (!extraData.empty())
+		web3.ethereum()->setExtraData(extraData);
 
 	auto toNumber = [&](string const& s) -> unsigned {
 		if (s == "latest")
