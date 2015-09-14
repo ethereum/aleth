@@ -94,6 +94,8 @@ void help()
 		<< endl
 #if ETH_JSONRPC || !ETH_TRUE
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
+		<< "    --ipc  Enable IPC server (default: on)." << endl
+		<< "    --no-ipc  Disable IPC server." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
 		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
 		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
@@ -309,7 +311,7 @@ int main(int argc, char** argv)
 	bool interactive = false;
 #if ETH_JSONRPC || !ETH_TRUE
 	int jsonRPCURL = -1;
-	bool ipc = false;
+	bool ipc = true;
 	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
@@ -710,6 +712,8 @@ int main(int argc, char** argv)
 			jsonAdmin = argv[++i];
 		else if (arg == "--ipc")
 			ipc = true;
+		else if (arg == "--no-ipc")
+			ipc = false;
 #endif
 #if ETH_JSCONSOLE || !ETH_TRUE
 		else if (arg == "-i" || arg == "--interactive" || arg == "--console" || arg == "console")
