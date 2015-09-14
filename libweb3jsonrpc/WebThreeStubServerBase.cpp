@@ -291,11 +291,11 @@ Json::Value WebThreeStubServerBase::eth_inspectTransaction(std::string const& _r
 	}
 }
 
-bool WebThreeStubServerBase::eth_injectTransaction(std::string const& _rlp)
+bool WebThreeStubServerBase::eth_sendRawTransaction(std::string const& _rlp)
 {
 	try
 	{
-		return client()->injectTransaction(jsToBytes(_rlp)) == ImportResult::Success;
+		return client()->sendRawTransaction(jsToBytes(_rlp)) == ImportResult::Success;
 	}
 	catch (...)
 	{
