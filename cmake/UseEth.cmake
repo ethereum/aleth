@@ -50,6 +50,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 			target_link_libraries(${TARGET} ${Eth_EVMJIT_LIBRARIES})
 			target_link_libraries(${TARGET} ${Eth_EVMJIT-CPP_LIBRARIES})
 			target_compile_definitions(${TARGET} PUBLIC ETH_EVMJIT)
+			eth_copy_dlls(${TARGET} EVMJIT_DLLS)
 		endif()
 	endif()
 
