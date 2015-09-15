@@ -31,6 +31,7 @@ REQUESTED_BRANCH=develop
 REQUESTED_ARG=""
 REQUESTED_PROJECT=""
 REPO_URL=""
+BUILD_PR="none"
 REPOS_MAP=("webthree-helpers:https://github.com/ethereum/webthree-helpers"
 	   "tests:https://github.com/ethereum/tests"
 	   "libweb3core:https://github.com/ethereum/libweb3core"
@@ -86,6 +87,7 @@ function print_help {
 	echo "    --use-ssh                 Use ssh to clone the repos instead of https."
 	echo "    --shallow-fetch           Perform git clone and git fetch with --depth=1."
 	echo "    --simple-pull             If a branch is given but can't be checked out, then give this argument to attemt a simple git pull"
+	echo "    --build-pr HEX            Will make sure that the main repository for the project has the commit of a particular PR checked out. You can also give the value of none to disable this argument."
 }
 
 for arg in ${@:1}
@@ -103,6 +105,9 @@ do
 				;;
 			"project")
 				set_repositories "ETHUPDATE" $arg
+				;;
+			"build-pr")
+				BUILD_PR=$arg
 				;;
 			*)
 				echo "ETHUPDATE - ERROR: Unrecognized argument \"$arg\".";
@@ -138,6 +143,11 @@ do
 		continue
 	fi
 
+	if [[ $arg == "--build-pr" ]]; then
+		REQUESTED_ARG="build-pr"
+		continue
+	fi
+
 	if [[ $arg == "--no-push" ]]; then
 		NO_PUSH=1
 		continue
@@ -170,6 +180,11 @@ fi
 
 for repository in "${CLONE_REPOSITORIES[@]}"
 do
+	CHECKOUT_HEX=0
+	# note if we need to checkout a PR's commit
+	if [[ $repository == $REQUESTED_PROJECT && BUILD_PR != "none" ]]; then
+		CHECKOUT_HEX=1
+	fi
 	echo "ETHUPDATE - INFO: Starting update process of ${repository} for requested project ${REQUESTED_PROJECT}";
 	CLONED_THE_REPO=0
 	cd $repository >/dev/null 2>/dev/null
@@ -189,7 +204,15 @@ do
 	BRANCH="$(git symbolic-ref HEAD 2>/dev/null)" ||
 		BRANCH="(unnamed branch)"     # detached HEAD
 	BRANCH=${BRANCH##refs/heads/}
-	if [[ $BRANCH != $REQUESTED_BRANCH ]]; then
+	# if we need to checkout specific commit for a PR do so
+	if [[ $CHECKOUT_HEX -eq 1 ]]; then
+		echo "ETHUPDATE - INFO: Checking out commit ${CHECKOUT_HEX} for ${repository} as requested."
+		get_repo_url $repository
+		git fetch --tags --progress $REPO_URL +refs/pull/*:refs/remotes/origin/pr/*
+		git checkout $CHECKOUT_HEX
+		cd $ROOT_DIR
+		continue
+	elif [[ $BRANCH != $REQUESTED_BRANCH ]]; then
 		if [[ $DO_SIMPLE_PULL -eq 1 ]]; then
 			echo "ETHUPDATE - INFO: ${repository} not in the ${REQUESTED_BRANCH} branch but performing simple pull anyway ..."
 			git pull $SHALLOW_FETCH
