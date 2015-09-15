@@ -206,10 +206,10 @@ do
 	BRANCH=${BRANCH##refs/heads/}
 	# if we need to checkout specific commit for a PR do so
 	if [[ $CHECKOUT_HEX -eq 1 ]]; then
-		echo "ETHUPDATE - INFO: Checking out commit ${CHECKOUT_HEX} for ${repository} as requested."
+		echo "ETHUPDATE - INFO: Checking out commit ${BUILD_PR} for ${repository} as requested."
 		get_repo_url $repository
 		git fetch --tags --progress $REPO_URL +refs/pull/*:refs/remotes/origin/pr/*
-		git checkout $CHECKOUT_HEX
+		git checkout $BUILD_PR
 		cd $ROOT_DIR
 		continue
 	elif [[ $BRANCH != $REQUESTED_BRANCH ]]; then
