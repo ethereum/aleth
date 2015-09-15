@@ -12,6 +12,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include "preprocessor/llvm_includes_end.h"
 
+#include "support/Path.h"
 #include "ExecStats.h"
 #include "Utils.h"
 #include "BuildInfo.gen.h"
@@ -33,10 +34,22 @@ namespace
 	{
 		return EVMJIT_VERSION;
 	}
+
+	std::string getVersionedCacheDir()
+	{
+		llvm::SmallString<256> path{path::user_cache_directory()};
+		static const auto c_ethereumAppName = UTILS_OS_LINUX ? "ethereum" : "Ethereum";
+		llvm::sys::path::append(path, c_ethereumAppName, "evmjit", EVMJIT_VERSION);
+		return path.str();
+	}
+
 }
 
 ObjectCache* Cache::init(CacheMode _mode, JITListener* _listener)
 {
+	auto userCacheDir = getVersionedCacheDir();
+	std::cerr << "User cache dir: " << userCacheDir << "\n";
+
 	Guard g{x_cacheMutex};
 
 	g_mode = _mode;
@@ -60,7 +73,8 @@ void Cache::clear()
 {
 	Guard g{x_cacheMutex};
 
-	using namespace llvm::sys;
+	namespace path = llvm::sys::path;
+	namespace fs = llvm::sys::fs;
 	llvm::SmallString<256> cachePath;
 	path::system_temp_directory(false, cachePath);
 	path::append(cachePath, "evm_objs");
@@ -75,7 +89,8 @@ void Cache::preload(llvm::ExecutionEngine& _ee, std::unordered_map<std::string, 
 	Guard g{x_cacheMutex};
 
 	// TODO: Cache dir should be in one place
-	using namespace llvm::sys;
+	namespace path = llvm::sys::path;
+	namespace fs = llvm::sys::fs;
 	llvm::SmallString<256> cachePath;
 	path::system_temp_directory(false, cachePath);
 	path::append(cachePath, "evm_objs");

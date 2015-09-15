@@ -23,6 +23,7 @@ set(SOURCES
 	Stack.cpp			Stack.h
 	Type.cpp			Type.h
 	Utils.cpp			Utils.h
+	support/Path.cpp	support/Path.h
 )
 source_group("" FILES ${SOURCES})
 
