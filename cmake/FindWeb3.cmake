@@ -6,6 +6,7 @@
 #  Web3_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  TODO: Web3_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS whisper;webthree;web3jsonrpc;jsengine;jsconsole)
 
 set(Web3_INCLUDE_DIRS ${WEB3_DIR})
@@ -40,11 +41,8 @@ else()
 				PATH_SUFFIXES "lib${l}/Debug" 
 				NO_DEFAULT_PATH
 			)
-
-			set(Web3_${L}_LIBRARIES optimized ${Web3_${L}_LIBRARY} debug ${Web3_${L}_LIBRARY_DEBUG})
-
+			eth_check_library_link(Web3_${L})
 		endif()
-	
 	endforeach()
 
 endif()

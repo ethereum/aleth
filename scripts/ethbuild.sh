@@ -20,8 +20,14 @@ source "${SCRIPT_DIR}/ethbuildcommon.sh"
 
 
 REPO_MSVC_SLN=""
-REPOS_MSVC_SLN_MAP=("cpp-ethereum:ethereum.sln"
-	"solidity:solidity.sln")
+REPOS_MSVC_SLN_MAP=("webthree-helpers/utils:utils.sln"
+	"libweb3core:dev.sln"
+	"libethereum:ethereum.sln"
+	"webthree:webthree.sln"
+	"solidity:solidity.sln"
+	"alethzero:alethzero.sln"
+	"mix:mix.sln"
+)
 
 function get_repo_sln() {
 	if [[ $1 == "" ]]; then
@@ -30,7 +36,7 @@ function get_repo_sln() {
 	fi
 	for repo in "${REPOS_MSVC_SLN_MAP[@]}" ; do
 		KEY=${repo%%:*}
-		if [[ $KEY =~ $1 ]]; then
+		if [[ $KEY == $1 ]]; then
 			REPO_MSVC_SLN=${repo#*:}
 			break
 		fi
@@ -184,6 +190,7 @@ do
 		fi
 
 		get_repo_sln $repository
+		# Build the Requested configuration
 		"${MSBUILD_EXECUTABLE}" $REPO_MSVC_SLN /p:Configuration=$BUILD_TYPE /m:${MAKE_CORES}
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBUILD - ERROR: Building repository \"$repository\" failed.";
