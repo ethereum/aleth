@@ -295,7 +295,7 @@ bool WebThreeStubServerBase::eth_sendRawTransaction(std::string const& _rlp)
 {
 	try
 	{
-		return client()->sendRawTransaction(jsToBytes(_rlp)) == ImportResult::Success;
+		return client()->injectTransaction(jsToBytes(_rlp)) == ImportResult::Success;
 	}
 	catch (...)
 	{
