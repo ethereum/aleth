@@ -1,4 +1,6 @@
 function(eth_apply TARGET REQUIRED)	
+	find_package (Cpuid QUIET)
+	eth_show_dependency(CPUID Cpuid)
 	if (CPUID_FOUND)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${CPUID_INCLUDE_DIRS})
 		target_link_libraries(${TARGET} ${CPUID_LIBRARIES})

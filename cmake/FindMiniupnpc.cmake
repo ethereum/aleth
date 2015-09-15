@@ -6,8 +6,8 @@
 # 
 # This module defines
 #  MINIUPNPC_INCLUDE_DIRS, where to find header, etc.
-#  MINIUPNPC_LIBRARIES, the libraries needed to use gmp.
-#  MINIUPNPC_FOUND, If false, do not try to use gmp.
+#  MINIUPNPC_LIBRARIES, the libraries needed to use miniupnpc.
+#  MINIUPNPC_FOUND, If false, do not try to use miniupnpc.
 
 # only look in default directories
 find_path(
