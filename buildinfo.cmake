@@ -32,8 +32,6 @@ function(create_build_info)
 		set(_cmake_build_type "${CMAKE_CFG_INTDIR}")
 	endif()
 
-	message("createBuildInfo()")
-
 	# Generate header file containing useful build information
 	add_custom_target(BuildInfo.h ALL
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
