@@ -31,7 +31,7 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
-#include "BuildInfo.h"
+#include "ethereum/BuildInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
