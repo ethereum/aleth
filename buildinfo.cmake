@@ -48,10 +48,17 @@ function(create_build_info)
 	else()
 		set(FATDB10 0)
 	endif()
+	if (EVMJIT)
+		set(EVMJIT10 1)
+	else()
+		set(EVMJIT10 0)
+	endif()
 	add_custom_target(ConfigInfo.h ALL
 		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
 		COMMAND ${CMAKE_COMMAND} -DETH_SOURCE_DIR="${CMAKE_CURRENT_LIST_DIR}" -DETH_DST_DIR="${CMAKE_BINARY_DIR}" -DETH_CMAKE_DIR="${ETH_CMAKE_DIR}"
-			-DETH_FATDB="${FATDB10}" -DETH_HEADERFILE="ConfigInfo" -P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
+			-DETH_FATDB="${FATDB10}"
+			-DETH_EVMJIT="${EVMJIT10}"
+			-DETH_HEADERFILE="ConfigInfo" -P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)
 
 	include_directories(${CMAKE_CURRENT_BINARY_DIR})
