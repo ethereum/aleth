@@ -1,5 +1,5 @@
-
-macro(configure_project NAME)
+macro(configure_project)
+	set(NAME ${PROJECT_NAME})
 
 	# features
 	eth_default_option(VMTRACE OFF)
@@ -54,6 +54,9 @@ macro(configure_project NAME)
 		endif ()
 	endif ()
 
+	include(EthBuildInfo)
+	create_build_info(${NAME})
+	create_config_info(${ARGN})
 	print_config(${NAME})
 endmacro()
 
@@ -82,7 +85,7 @@ endif()
 if (SUPPORT_ROCKSDB)
 	message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
 endif()
-if (SUPPORT_NETWORK)
+if (SUPPORT_OLYMPIC)
 	message("-- OLYMPIC          Default to the Olympic network           ${OLYMPIC}")
 endif()
 if (SUPPORT_PARANOID)

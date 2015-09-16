@@ -39,12 +39,12 @@ add_definitions(-DETH_TRUE)
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
 
+find_program(CTEST_COMMAND ctest)
+
 #message(STATUS "CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
 #message(STATUS "CMake Helper Path: ${ETH_CMAKE_DIR}")
 #message(STATUS "CMake Script Path: ${ETH_SCRIPTS_DIR}")
-
-find_program(CTEST_COMMAND ctest)
-message(STATUS "ctest path: ${CTEST_COMMAND}")
+#message(STATUS "ctest path: ${CTEST_COMMAND}")
 
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
@@ -69,16 +69,24 @@ endif()
 
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
 
-eth_show_dependency(Boost bosst)
-
+eth_show_dependency(Boost boost)
 
 if (APPLE)
 	link_directories(/usr/local/lib)
 	include_directories(/usr/local/include)
 endif()
 
+include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
 
 function(eth_use TARGET REQUIRED)
+	if (NOT TARGET ${TARGET})
+		message(FATAL_ERROR "eth_use called for non existing target ${TARGET}")
+	endif()
+
+	if (TARGET ${PROJECT_NAME}_BuildInfo.h)
+		add_dependencies(${TARGET} ${PROJECT_NAME}_BuildInfo.h)
+	endif()
+
 	foreach(MODULE ${ARGN})
 		string(REPLACE "::" ";" MODULE_PARTS ${MODULE})
 		list(GET MODULE_PARTS 0 MODULE_MAIN)

@@ -20,6 +20,7 @@ if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED ethereum_VERSION))
 		string(TOUPPER ${l} L)
 		set ("Eth_${L}_LIBRARIES" ${l})
 	endforeach()
+	set ("Eth_BIN_DIR" ${l})
 
 else()
 
