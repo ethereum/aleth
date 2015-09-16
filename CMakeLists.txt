@@ -23,9 +23,11 @@ configure_project(PARANOID TOOLS TESTS)
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
-add_subdirectory(libp2p)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libp2p)
 
-if (TOOLS)
-	add_subdirectory(rlp)
+	if (TOOLS)
+		add_subdirectory(rlp)
+	endif()
 endif()
 
