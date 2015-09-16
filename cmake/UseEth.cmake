@@ -12,7 +12,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED ethereum_VERSION))
 		target_include_directories(${TARGET} PUBLIC "${CMAKE_BINARY_DIR}/libethereum/include/")
 	else()
-		target_include_directories(${TARGET} PUBLIC "${CMAKE_BINARY_DIR}/include/")
+		target_include_directories(${TARGET} PUBLIC "${ETH_BUILD_DIR}/include/")
 	endif()
 
 	if (${SUBMODULE} STREQUAL "ethash")
