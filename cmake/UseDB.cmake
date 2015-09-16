@@ -12,7 +12,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "RocksDB")
-
 		eth_show_dependency(ROCKSDB RocksDB)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${ROCKSDB_INCLUDE_DIRS})
 		target_link_libraries(${TARGET} ${ROCKSDB_LIBRARIES})

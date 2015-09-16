@@ -8,6 +8,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	eth_show_dependency(CURL curl)
 
 	if (${SUBMODULE} STREQUAL "Server")
+		eth_use(${TARGET} ${REQUIRED} Mhd)
 		get_property(DISPLAYED GLOBAL PROPERTY ETH_JSONRPCSTUB_DISPLAYED)
 		if (NOT DISPLAYED)
 			set_property(GLOBAL PROPERTY ETH_JSONRPCSTUB_DISPLAYED TRUE)
@@ -17,8 +18,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${JSON_RPC_CPP_SERVER_LIBRARIES})
 		target_link_libraries(${TARGET} ${MHD_LIBRARIES})
 		target_compile_definitions(${TARGET} PUBLIC ETH_JSONRPC)
-
-		eth_copy_dlls(${TARGET} MHD_DLLS)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "Client")
