@@ -16,13 +16,10 @@ include(EthExecutableHelper)
 
 include(EthDependencies)
 
-include(buildinfo.cmake)
-create_build_info()
-
 include(EthUtils)
 
 include(EthOptions)
-configure_project(libweb3core FATDB PARANOID TOOLS TESTS EVMJIT)
+configure_project(PARANOID TOOLS TESTS)
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
