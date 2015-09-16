@@ -16,7 +16,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		endif()
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${JSON_RPC_CPP_INCLUDE_DIRS})
 		target_link_libraries(${TARGET} ${JSON_RPC_CPP_SERVER_LIBRARIES})
-		target_link_libraries(${TARGET} ${MHD_LIBRARIES})
 		target_compile_definitions(${TARGET} PUBLIC ETH_JSONRPC)
 	endif()
 
