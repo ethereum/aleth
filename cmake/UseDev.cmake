@@ -9,12 +9,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	target_include_directories(${TARGET} BEFORE PUBLIC ${Dev_INCLUDE_DIRS})
 
-	#if (${SUBMODULE} STREQUAL "buildinfo")
-	#target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BUILD_DIR})
-	#target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BINARY_DIR})
-	#target_include_directories(${TARGET} BEFORE PUBLIC ${DEV_BUILD_DIR})
-	#endif()
-
 	# Base is where all dependencies for devcore are
 	if (${SUBMODULE} STREQUAL "base")
 		# if it's ethereum source dir, alwasy build BuildInfo.h before
