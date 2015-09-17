@@ -25,7 +25,7 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project(web3-umbrella GUI SOLIDITY)
+configure_project(GUI SOLIDITY)
 
 add_subdirectory(webthree-helpers/utils)
 
