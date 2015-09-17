@@ -185,6 +185,7 @@ do
 	if [[ $repository == $REQUESTED_PROJECT && BUILD_PR != "none" ]]; then
 		CHECKOUT_HEX=1
 	fi
+
 	echo "ETHUPDATE - INFO: Starting update process of ${repository} for requested project ${REQUESTED_PROJECT}";
 	CLONED_THE_REPO=0
 	cd $repository >/dev/null 2>/dev/null
@@ -204,6 +205,17 @@ do
 	BRANCH="$(git symbolic-ref HEAD 2>/dev/null)" ||
 		BRANCH="(unnamed branch)"     # detached HEAD
 	BRANCH=${BRANCH##refs/heads/}
+
+	# if the "none" value was given then checkout and pull develop
+	if [[ $BUILD_PR == "none" ]]; then
+		REQUESTED_BRANCH="develop"
+		git checkout develop
+		if [[ $? -ne 0 ]]; then
+			echo "ETHUPDATE - ERROR: Could not checkout develop for ${repository}."
+			exit 1
+		fi
+	fi
+
 	# if we need to checkout specific commit for a PR do so
 	if [[ $CHECKOUT_HEX -eq 1 ]]; then
 		echo "ETHUPDATE - INFO: Checking out commit ${BUILD_PR} for ${repository} as requested."
