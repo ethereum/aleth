@@ -11,18 +11,12 @@ if (${SUBMODULE} STREQUAL "Core")
 
 	if (APPLE)
 		find_program(MACDEPLOYQT_APP macdeployqt)
-		message(" - macdeployqt path: ${MACDEPLOYQT_APP}")
+		find_program(ETH_APP_DMG appdmg)
 	endif()
 
 	# we need to find path to windeployqt on windows
 	if (WIN32)
 		find_program(WINDEPLOYQT_APP windeployqt)
-		message(" - windeployqt path: ${WINDEPLOYQT_APP}")
-	endif()
-
-	if (APPLE)
-		find_program(ETH_APP_DMG appdmg)
-		message(" - appdmg location : ${ETH_APP_DMG}")
 	endif()
 
 	if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.6") AND NOT APPLE)
