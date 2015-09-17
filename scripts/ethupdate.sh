@@ -182,7 +182,7 @@ for repository in "${CLONE_REPOSITORIES[@]}"
 do
 	CHECKOUT_HEX=0
 	# note if we need to checkout a PR's commit
-	if [[ $repository == $REQUESTED_PROJECT && BUILD_PR != "none" ]]; then
+	if [[ $repository == $REQUESTED_PROJECT && $BUILD_PR != "none" ]]; then
 		CHECKOUT_HEX=1
 	fi
 
