@@ -344,15 +344,11 @@ string const& KeyManager::accountName(Address const& _address) const
 
 void KeyManager::changeName(Address const& _address, std::string const& _name)
 {
-	try
+	if (m_keyInfo.count(_address))
 	{
 		m_keyInfo.at(_address).accountName = _name;
+		write(m_keysFile);
 	}
-	catch (...)
-	{
-		return;
-	}
-	write(m_keysFile);
 }
 
 string const& KeyManager::passwordHint(Address const& _address) const
