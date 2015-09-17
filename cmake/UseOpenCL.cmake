@@ -1,5 +1,5 @@
 function(eth_apply TARGET REQUIRED)	
-	find_package (OpenCL 6.3.8)
+	find_package (OpenCL)
 	eth_show_dependency(OpenCL OpenCL)
 	if (OpenCL_FOUND)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${OpenCL_INCLUDE_DIRS})
