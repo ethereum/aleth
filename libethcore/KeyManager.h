@@ -96,6 +96,8 @@ public:
 	std::string const& accountName(Address const& _address) const;
 	/// @returns the password hint for the account for the given address;
 	std::string const& passwordHint(Address const& _address) const;
+	/// Should be called to change password
+	void changeName(Address const& _address, std::string const& _name);
 
 	/// @returns true if the given address has a key (UUID) associated with it. Equivalent to !!uuid(_a)
 	/// If the address has no key, it could be a brain wallet.
