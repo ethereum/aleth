@@ -1,4 +1,0 @@
-#pragma once
-
-#define ETH_FATDB @ETH_FATDB@
-#define ETH_EVMJIT @ETH_EVMJIT@

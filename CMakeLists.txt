@@ -16,14 +16,10 @@ include(EthExecutableHelper)
 
 include(EthDependencies)
 
-include(buildinfo.cmake)
-create_build_info()
-
 include(EthUtils)
 
 include(EthOptions)
-configure_project()
-print_config()
+configure_project(PARANOID TOOLS TESTS)
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
