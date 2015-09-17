@@ -10,10 +10,12 @@ function print_help {
 	echo "    --help                  Print this help message."
 	echo "    --keep-build            If given the build directories will not be cleared."
 	echo "    --cores NUMBER          The value to the cores argument of make. e.g.: make -j4. Default is ${MAKE_CORES}."
+	echo "    --version VERSION       A string to append to the binary for the version."
 }
 
 CLEAN_BUILD=1
 MAKE_CORES=4
+GIVEN_VERSION=1.0rc2 #default - mainly for testing if no version is given
 
 for arg in ${@:1}
 do
@@ -26,6 +28,9 @@ do
 				exit 1
 			fi
 			MAKE_CORES=$arg
+			;;
+		"version")
+			GIVEN_VERSION=$arg
 			;;
 		*)
 			echo "ERROR: Unrecognized argument \"$arg\".";
@@ -48,6 +53,11 @@ do
 
 	if [[ $arg == "--cores" ]]; then
 		REQUESTED_ARG="make-cores"
+		continue
+	fi
+
+	if [[ $arg == "--version" ]]; then
+		REQUESTED_ARG="version"
 		continue
 	fi
 
@@ -91,21 +101,32 @@ if [[ $OSTYPE == "cygwin" ]]; then
 	fi
 	# "${MSBUILD_EXECUTABLE}" cpp-ethereum.sln /p:Configuration=Release /t:PACKAGE /m:${MAKE_CORES}
 	cmake --build . --target package -- /m:${MAKE_CORES}
-else
-	cmake ..
 	if [[ $? -ne 0 ]]; then
-	echo "ETHBINARIES - ERROR: cmake configure phase failed.";
-	exit 1
+		echo "ETHBINARIES - ERROR: Building binaries for Windows failed.";
+		exit 1
 	fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+	cmake .. -DCMAKE_INSTALL_PREFIX=install
+	if [[ $? -ne 0 ]]; then
+		echo "ETHBINARIES - ERROR: cmake configure phase failed.";
+		exit 1
+	fi
+	make -j${MAKE_CORES} appdmg
+	if [[ $? -ne 0 ]]; then
+		echo "ETHBINARIES - ERROR: Building a DMG for Macosx failed.";
+		exit 1
+	fi
+	make -j${MAKE_CORES} install
+	if [[ $? -ne 0 ]]; then
+		echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
+		exit 1
+	fi
+	../webthree-helpers/homebrew/prepare_receipt.sh --version $GIVEN_VERSION --number ${BUILD_NUMBER}
+	if [[ $? -ne 0 ]]; then
+		echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
+		exit 1
+	fi
+else
+	echo "ETHBINARIES - WARNING: Requested to build unneeded platform. Ignoring ...";
+fi
 
-	# Build a .dmg for macosx
-	EXTRA_ARGS=""
-	if [[ "$OSTYPE" == "darwin"* ]]; then
-		EXTRA_ARGS=" appdmg"
-	fi
-	make -j${MAKE_CORES} ${EXTRA_ARGS}
-fi
-if [[ $? -ne 0 ]]; then
-	echo "ETHBINARIES - ERROR: Building failed.";
-	exit 1
-fi
