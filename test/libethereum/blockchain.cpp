@@ -311,13 +311,39 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					cerr << testname + "Error importing block from fields to blockchain: " << diagnostic_information(_e);
 					break;
 				}
+
+				//Check that imported block to the chain is equal to declared block from test
+				bytes importedblock = trueBc.getInterface().block(blockFromFields.getBlockHeader().hash());
+				TestBlock inchainBlock(toHex(importedblock));
+				checkBlocks(inchainBlock, blockFromFields, testname);
+
+				//Check that trueBc is rearanged correctrly after importing this block
+				string blockNumber;
+				string blockChainName = "default";
+				if (blObj.count("chainname") > 0)
+					blockChainName = blObj["chainname"].get_str();
+				if (blObj.count("blocknumber") > 0)
+					blockNumber = blObj["blocknumber"].get_str();
+
+				cnote << "Testing topblock number" << blockNumber << "for chain " << blockChainName << testname;
+
+				if (blObj.count("notbest") == 0)
+					checkBlocks(trueBc.getTopBlock(), blockFromFields, testname);
+				else
+				{
+					string lastTrueBlockHash = toString(trueBc.getTopBlock().getBlockHeader().hash());
+					BOOST_REQUIRE_MESSAGE(lastTrueBlockHash != toString(blockFromFields.getBlockHeader().hash()), "Imported block is not expected to be the best block in chain!");
+				}
+
 			}//allBlocks
 
+			//Check lastblock hash
 			BOOST_REQUIRE((o.count("lastblockhash") > 0));
 			string lastTrueBlockHash = toString(trueBc.getTopBlock().getBlockHeader().hash());
 			BOOST_CHECK_MESSAGE(lastTrueBlockHash == o["lastblockhash"].get_str(),
 					testname + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + o["lastblockhash"].get_str());
 
+			//Check final state (just to be sure)
 			BOOST_CHECK_MESSAGE(toString(trueBc.getTopBlock().getState().rootHash()) ==
 								toString(blockchain.getTopBlock().getState().rootHash()),
 								testname + "State root in chain from RLP blocks != State root in chain from Field blocks!");
@@ -690,7 +716,7 @@ BOOST_AUTO_TEST_CASE(bcStateTest)
 	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
-BOOST_AUTO_TEST_CASE(bcMultiChain)
+BOOST_AUTO_TEST_CASE(bcMultiChainTest)
 {
 	dev::test::executeTests("bcMultiChainTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
