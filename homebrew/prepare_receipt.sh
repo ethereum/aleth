@@ -23,10 +23,12 @@ done
 rm -rf cpp-ethereum
 mkdir cpp-ethereum
 mkdir cpp-ethereum/$VERSION
-cp homebrew.mxcl.cpp-ethereum.plist INSTALL_RECEIPT.json LICENSE README.md cpp-ethereum/$VERSION
+p="../webthree-helpers/homebrew/"
+cp ${p}homebrew.mxcl.cpp-ethereum.plist ${p}INSTALL_RECEIPT.json ${p}LICENSE ${p}README.md cpp-ethereum/$VERSION
 
 # build umbrella project and move install directory to destination
-mv install/* cpp-ethereum/$VERSION
+mkdir -p install
+cp -rf install/* cpp-ethereum/$VERSION
 
 #tar everything
 NAME="cpp-ethereum-${VERSION}.yosemite.bottle.${NUMBER}.tar.gz"
@@ -34,11 +36,11 @@ tar -zcvf $NAME cpp-ethereum
 
 # get variables
 HASH=`git rev-parse HEAD`
-SIGNATURE=`openssl sha1 ethereum.rb | cut -d " " -f 2`
+SIGNATURE=`openssl sha1 ${NAME} | cut -d " " -f 2`
 
 # prepare receipt
 sed -e s/CFG_NUMBER/${NUMBER}/g \
     -e s/CFG_SIGNATURE/${SIGNATURE}/g \
     -e s/CFG_HASH/${HASH}/g \
-    -e s/CFG_NUMBER/${NUMBER}/g < cpp-ethereum.rb.in > cpp-ethereum.rb
+    -e s/CFG_VERSION/${VERSION}/g < ${p}cpp-ethereum.rb.in > "cpp-ethereum.rb"
 
