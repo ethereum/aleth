@@ -1,5 +1,8 @@
 function(eth_apply TARGET REQURIED SUBMODULE)
 
+# homebrew install directories for few of our dependencies
+set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
+
 if (${SUBMODULE} STREQUAL "Core")
 	find_package(Qt5Core ${ETH_QT_VERSION} ${REQUIRED})
 	if (NOT Qt5Core_FOUND)

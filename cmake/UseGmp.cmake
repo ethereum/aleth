@@ -1,4 +1,6 @@
 function(eth_apply TARGET REQUIRED)	
+	find_package (Gmp 6.0.0)
+	eth_show_dependency(GMP Gmp)
 	if (GMP_FOUND)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${GMP_INCLUDE_DIRS})
 		target_link_libraries(${TARGET} ${GMP_LIBRARIES})

@@ -9,6 +9,11 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	find_package(Eth)
 
 	target_include_directories(${TARGET} BEFORE PUBLIC ${Eth_INCLUDE_DIRS})
+	if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED ethereum_VERSION))
+		target_include_directories(${TARGET} PUBLIC "${CMAKE_BINARY_DIR}/libethereum/include/")
+	else()
+		target_include_directories(${TARGET} PUBLIC "${ETH_BUILD_DIR}/include/")
+	endif()
 
 	if (${SUBMODULE} STREQUAL "ethash")
 		# even if ethash is required, Cryptopp is optional
@@ -18,7 +23,9 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "ethash-cl")
 		if (ETHASHCL)
+			find_package (OpenCL)
 			if (OpenCL_FOUND)
+				eth_show_dependency(OpenCL opencl)
 				eth_use(${TARGET} ${REQUIRED} Eth::ethash)
 				target_include_directories(${TARGET} SYSTEM PUBLIC ${OpenCL_INCLUDE_DIRS})
 				target_link_libraries(${TARGET} ${OpenCL_LIBRARIES})
@@ -84,7 +91,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "testutils")
-		eth_use(${EXECUTABLE} ${REQUIRED} Eth::ethereum)
+		eth_use(${TARGET} ${REQUIRED} Eth::ethereum)
 		target_link_libraries(${TARGET} ${Eth_TESTUTILS_LIBRARIES})
 	endif()
 
