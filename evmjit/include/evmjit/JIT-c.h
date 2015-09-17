@@ -11,7 +11,7 @@
 #define _ALLOW_KEYWORD_MACROS
 #define noexcept throw()
 #else
-#define EVMJIT_API
+#define EVMJIT_API [[gnu::visibility("default")]]
 #endif
 
 #ifdef __cplusplus
