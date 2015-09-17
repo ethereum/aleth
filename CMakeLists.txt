@@ -26,8 +26,7 @@ include(EthExecutableHelper)
 include(EthUtils)
 
 include(EthOptions)
-configure_project()
-print_config()
+configure_project(TESTS)
 
 # libraries
 add_subdirectory(libwebthree)
