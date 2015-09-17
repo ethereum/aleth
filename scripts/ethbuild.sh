@@ -55,12 +55,14 @@ REQUESTED_ARG=""
 EXTRA_BUILD_ARGS=""
 MAKE_CORES=1
 NOGIT=0
+NOCMAKECLEAN=0
 
 function print_help {
 	echo "Usage: ethbuild.sh [extra-options]"
 	echo "Arguments:"
 	echo "    --help                  Print this help message."
 	echo "    --clean-build           If given the build directories will be cleared."
+	echo "    --no-cmake-clean        If given the cmake related files of the build directory will not be cleaned."
 	echo "${PROJECTS_HELP}"
 	echo "    --no-git                If given no git branch check and no git checkout will be performed."
 	echo "    --branch NAME           The branch requested to build. Default is ${REQUESTED_BRANCH}."
@@ -105,6 +107,11 @@ do
 
 	if [[ $arg == "--clean-build" ]]; then
 		CLEAN_BUILD=1
+		continue
+	fi
+
+	if [[ $arg == "--no-cmake-clean" ]]; then
+		NOCMAKECLEAN=1
 		continue
 	fi
 
@@ -173,6 +180,8 @@ do
 		if [[ $CLEAN_BUILD -eq 1 ]]; then
 			rm -rf build
 			mkdir build
+		elif [[ $NOCMAKECLEAN -eq 0 ]]; then
+			rm -rf build/CMakeCache.txt build/CMakeFiles
 		fi
 	else
 		mkdir build
