@@ -159,7 +159,6 @@ bool OverlayDB::deepkill(h256 const& _h)
 {
 	// kill in memoryDB
 	kill(_h);
-	purge();
 
 	//kill in overlayDB
 	ldb::Status s = m_db->Delete(m_writeOptions, ldb::Slice((char const*)_h.data(), 32));
