@@ -56,7 +56,7 @@
 #include <libweb3jsonrpc/SafeHttpServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
-#include "BuildInfo.h"
+#include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
 #include "PhoneHome.h"
 #include "Farm.h"
