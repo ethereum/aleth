@@ -57,6 +57,7 @@
 { "name": "eth_inspectTransaction", "params": [""], "order": [], "returns": {}},
 { "name": "eth_sendRawTransaction", "params": [""], "order": [], "returns": true},
 { "name": "eth_notePassword", "params": [""], "order": [], "returns": true},
+{ "name": "eth_syncing", "params": [], "order": [], "returns": {}},
 
 { "name": "db_put", "params": ["", "", ""], "order": [], "returns": true},
 { "name": "db_get", "params": ["", ""], "order": [], "returns": ""},
