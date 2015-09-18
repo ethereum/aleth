@@ -206,8 +206,9 @@ do
 		BRANCH="(unnamed branch)"     # detached HEAD
 	BRANCH=${BRANCH##refs/heads/}
 
-	# if the "none" value was given then checkout and pull develop
-	if [[ $BUILD_PR == "none" ]]; then
+	# if the "none" value was given then checkout and pull develop.
+	# Web3.js is excused from here since it only has a master branch and we don't really build it
+	if [[ $BUILD_PR == "none" && $repository != "web3.js" ]]; then
 		REQUESTED_BRANCH="develop"
 		git checkout develop
 		if [[ $? -ne 0 ]]; then
