@@ -44,11 +44,10 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "evmjit")
-		# TODO: not sure if should use evmjit and/or evmjit-cpp
+		# TODO: not sure if should use evmjit
 		# TODO: take into account REQUIRED variable
 		if (EVMJIT)
 			target_link_libraries(${TARGET} ${Eth_EVMJIT_LIBRARIES})
-			target_link_libraries(${TARGET} ${Eth_EVMJIT-CPP_LIBRARIES})
 			eth_copy_dlls(${TARGET} EVMJIT_DLLS)
 		endif()
 	endif()
