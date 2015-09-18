@@ -11,7 +11,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "secp256k1")
 		if (NOT EMSCRIPTEN)
-			eth_use(${EXECUTABLE} ${REQUIRED} Gmp)
+			eth_use(${TARGET} ${REQUIRED} Gmp)
 		endif()
 		target_link_libraries(${TARGET} ${Utils_SECP256K1_LIBRARIES})
 		target_compile_definitions(${TARGET} PUBLIC ETH_HAVE_SECP256K1)
