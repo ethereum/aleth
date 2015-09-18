@@ -186,6 +186,9 @@ public:
 	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
 	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
 
+	// IPC connector
+	void enableIpc(bool _enable);
+
 	// TODO REMOVE
 	virtual bool admin_eth_setReferencePrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
 	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
@@ -208,6 +211,9 @@ protected:
 
 	std::map<dev::Public, dev::Secret> m_shhIds;
 	std::map<unsigned, dev::Public> m_shhWatches;
+
+	std::unique_ptr<jsonrpc::AbstractServerConnector> m_ipcConnector;
+	jsonrpc::IClientConnectionHandler* m_handler;
 };
 
 } //namespace dev
