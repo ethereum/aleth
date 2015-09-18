@@ -97,6 +97,8 @@ struct SyncStatus
 	bool hashesEstimated = false;
 	unsigned blocksTotal = 0;
 	unsigned blocksReceived = 0;
+	unsigned startBlockNumber;
+	unsigned currentBlockNumber;
 };
 
 }
