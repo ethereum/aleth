@@ -68,8 +68,16 @@ bytes CanonBlockChain<Ethash>::createGenesisBlock()
 		MemoryDB db;
 		SecureTrieDB<Address, MemoryDB> state(&db);
 		state.init();
-		dev::eth::commit(createGenesisState(), state);
-		stateRoot = state.root();
+		if (db.exists(knownGenesisStateRoot()))
+			stateRoot = knownGenesisStateRoot();
+		else
+		{
+			// TODO: use hash256
+			auto gs = createGenesisState();
+			//stateRoot = hash256(toBytesMap(gs));
+			dev::eth::commit(gs, state);
+			stateRoot = state.root();
+		}
 	}
 
 	js::mValue val;
@@ -112,6 +120,11 @@ AccountMap const& CanonBlockChain<Ethash>::createGenesisState()
 	if (s_ret.empty())
 		s_ret = jsonToAccountMap(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON);
 	return s_ret;
+}
+
+h256 CanonBlockChain<Ethash>::knownGenesisStateRoot()
+{
+	return s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisStateRootFrontier : c_genesisStateRootOlympic : h256();
 }
 
 void CanonBlockChain<Ethash>::setGenesis(std::string const& _json)

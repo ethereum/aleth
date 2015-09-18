@@ -36,7 +36,7 @@
 #include "TransactionReceipt.h"
 #include "AccountDiff.h"
 #include "GasPricer.h"
-#include "ConfigInfo.h"
+#include "ethereum/ConfigInfo.h"
 
 namespace dev
 {

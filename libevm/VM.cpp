@@ -182,6 +182,16 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 		m_temp.resize((size_t)newTempSize);
 }
 
+template <class S> S divWorkaround(S const& _a, S const& _b)
+{
+	return (S)(bigint(_a) / bigint(_b));
+}
+
+template <class S> S modWorkaround(S const& _a, S const& _b)
+{
+	return (S)(bigint(_a) % bigint(_b));
+}
+
 bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	m_stack.reserve((unsigned)c_stackLimit);
@@ -243,19 +253,19 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			m_stack.pop_back();
 			break;
 		case Instruction::DIV:
-			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? m_stack.back() / m_stack[m_stack.size() - 2] : 0;
+			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? divWorkaround(m_stack.back(), m_stack[m_stack.size() - 2]) : 0;
 			m_stack.pop_back();
 			break;
 		case Instruction::SDIV:
-			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? s2u(u2s(m_stack.back()) / u2s(m_stack[m_stack.size() - 2])) : 0;
+			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? s2u(divWorkaround(u2s(m_stack.back()), u2s(m_stack[m_stack.size() - 2]))) : 0;
 			m_stack.pop_back();
 			break;
 		case Instruction::MOD:
-			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? m_stack.back() % m_stack[m_stack.size() - 2] : 0;
+			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? modWorkaround(m_stack.back(), m_stack[m_stack.size() - 2]) : 0;
 			m_stack.pop_back();
 			break;
 		case Instruction::SMOD:
-			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? s2u(u2s(m_stack.back()) % u2s(m_stack[m_stack.size() - 2])) : 0;
+			m_stack[m_stack.size() - 2] = m_stack[m_stack.size() - 2] ? s2u(modWorkaround(u2s(m_stack.back()), u2s(m_stack[m_stack.size() - 2]))) : 0;
 			m_stack.pop_back();
 			break;
 		case Instruction::EXP:

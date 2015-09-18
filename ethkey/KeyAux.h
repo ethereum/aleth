@@ -34,7 +34,7 @@
 #include <libethcore/ICAP.h>
 #include <libethcore/Transaction.h>
 #include <libdevcrypto/WordList.h>
-#include "ConfigInfo.h"
+#include "ethereum/ConfigInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;

@@ -91,9 +91,12 @@ public:
 	/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
 	static bytes createGenesisBlock();
 
-	/// @returns the genesis block as its RLP-encoded byte array.
+	/// @returns the genesis block's state.
 	/// @note This is slow as it's constructed anew each call. Consider genesis() instead.
 	static AccountMap const& createGenesisState();
+
+	/// @returns the genesis block's state root; or h256() if not known.
+	static h256 knownGenesisStateRoot();
 
 	/// Alter all the genesis block's state by giving a JSON string with account details.
 	/// @warning Unless you're very careful, make sure you call this right at the start of the

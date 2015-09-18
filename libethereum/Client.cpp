@@ -90,6 +90,8 @@ Client::~Client()
 
 void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId)
 {
+	DEV_TIMED_FUNCTION_ABOVE(500);
+
 	// Cannot be opened until after blockchain is open, since BlockChain may upgrade the database.
 	// TODO: consider returning the upgrade mechanism here. will delaying the opening of the blockchain database
 	// until after the construction.
@@ -118,7 +120,7 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
-	doWork();
+	doWork(false);
 	startWorking();
 }
 
@@ -748,7 +750,7 @@ void Client::noteChanged(h256Hash const& _filters)
 		i.second.clear();
 }
 
-void Client::doWork()
+void Client::doWork(bool _doWait)
 {
 	bool t = true;
 	if (m_syncBlockQueue.compare_exchange_strong(t, false))
@@ -766,7 +768,7 @@ void Client::doWork()
 
 	tick();
 
-	if (!m_syncBlockQueue && !m_syncTransactionQueue)
+	if (!m_syncBlockQueue && !m_syncTransactionQueue && _doWait)
 	{
 		std::unique_lock<std::mutex> l(x_signalled);
 		m_signalled.wait_for(l, chrono::seconds(1));

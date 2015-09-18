@@ -7,7 +7,10 @@ set(EXECUTABLE ethereum)
 file(GLOB HEADERS "*.h")
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-eth_use(${EXECUTABLE} REQUIRED Eth::evm Eth::lll Dev::p2p Dev::devcrypto Eth::ethcore JsonRpc::Server JsonRpc::Client)
+eth_use(${EXECUTABLE} REQUIRED Eth::evm Eth::ethcore)
+if (NOT EMSCRIPTEN)
+	eth_use(${EXECUTABLE} REQUIRED Eth::lll Dev::p2p Dev::devcrypto JsonRpc::Server JsonRpc::Client)
+endif()
 target_link_libraries(${EXECUTABLE} ${Boost_REGEX_LIBRARIES})
 
 jsonrcpstub_client_create(Sentinel.json dev::eth::Sentinel Sentinel)

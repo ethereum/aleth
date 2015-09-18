@@ -39,7 +39,7 @@
 #include "CachedAddressState.h"
 #include "CanonBlockChain.h"
 #include "TransactionQueue.h"
-#include "ConfigInfo.h"
+#include "ethereum/ConfigInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -588,12 +588,14 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 	return _out;
 }
 
+#if ETH_FATDB
 static std::string minHex(h256 const& _h)
 {
 	unsigned i = 0;
 	for (; i < 31 && !_h[i]; ++i) {}
 	return toHex(_h.ref().cropped(i));
 }
+#endif
 
 void State::streamJSON(ostream& _f) const
 {
