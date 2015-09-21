@@ -64,7 +64,7 @@ int createRandomTest(std::vector<char*> const& args)
 		{
 			testSuite = args.at(i+1);
 			if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
-				&& testSuite != "VMTests" && testSuite != "RLPTests")
+				&& testSuite != "VMTests")
 				testSuite = "";
 		}
 		else
@@ -140,14 +140,6 @@ int createRandomTest(std::vector<char*> const& args)
 			}
 			else
 				fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);
-		}
-		else
-		if (testSuite == "RLPTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doRlpTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doRlpTests, (filltest) ? testFillString : c_testExampleRLPTest, filldebug);
 		}
 	}
 
