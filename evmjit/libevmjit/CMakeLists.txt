@@ -20,7 +20,6 @@ set(SOURCES
 	Memory.cpp			Memory.h
 	Optimizer.cpp		Optimizer.h
 	RuntimeManager.cpp	RuntimeManager.h
-	Stack.cpp			Stack.h
 	Type.cpp			Type.h
 	Utils.cpp			Utils.h
 )

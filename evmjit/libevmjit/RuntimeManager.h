@@ -13,12 +13,11 @@ namespace eth
 namespace jit
 {
 using namespace evmjit;
-class Stack;
 
 class RuntimeManager: public CompilerHelper
 {
 public:
-	RuntimeManager(llvm::IRBuilder<>& _builder, code_iterator _codeBegin, code_iterator _codeEnd);
+	RuntimeManager(IRBuilder& _builder, code_iterator _codeBegin, code_iterator _codeEnd);
 
 	llvm::Value* getRuntimePtr();
 	llvm::Value* getDataPtr();
@@ -44,13 +43,16 @@ public:
 
 	void abort(llvm::Value* _jmpBuf);
 
-	void setStack(Stack& _stack) { m_stack = &_stack; }
+	llvm::Value* getStackBase() const { return m_stackBase; }
+	llvm::Value* getStackSize() const { return m_stackSize; }
+
 	void setJmpBuf(llvm::Value* _jmpBuf) { m_jmpBuf = _jmpBuf; }
+	void setExitBB(llvm::BasicBlock* _bb) { m_exitBB = _bb; }
 
 	static llvm::StructType* getRuntimeType();
 	static llvm::StructType* getRuntimeDataType();
 
-	void checkStackLimit(ssize_t _min, ssize_t _max, ssize_t _diff);
+	static const size_t stackSizeLimit = 1024;
 
 private:
 	llvm::Value* getPtr(RuntimeData::Index _index);
@@ -65,13 +67,14 @@ private:
 
 	std::array<llvm::Value*, RuntimeData::numElements> m_dataElts;
 
+	llvm::Value* m_stackBase = nullptr;
 	llvm::Value* m_stackSize = nullptr;
-	llvm::Function* m_checkStackLimit = nullptr;
+
+	llvm::BasicBlock* m_exitBB = nullptr;
 
 	code_iterator m_codeBegin = {};
 	code_iterator m_codeEnd = {};
-
-	Stack* m_stack = nullptr;
+	llvm::Value* m_codePtr = nullptr;
 };
 
 }

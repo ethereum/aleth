@@ -20,7 +20,7 @@ public:
 		m_creator(_creator)
 	{}
 
-	llvm::Value* call(llvm::IRBuilder<>& _builder, std::initializer_list<llvm::Value*> const& _args, llvm::Twine const& _name = "");
+	llvm::Value* call(IRBuilder& _builder, std::initializer_list<llvm::Value*> const& _args, llvm::Twine const& _name = "");
 
 private:
 	llvm::Function* m_func = nullptr;
@@ -30,8 +30,8 @@ private:
 class Array : public CompilerHelper
 {
 public:
-	Array(llvm::IRBuilder<>& _builder, char const* _name);
-	Array(llvm::IRBuilder<>& _builder, llvm::Value* _array);
+	Array(IRBuilder& _builder, char const* _name);
+	Array(IRBuilder& _builder, llvm::Value* _array);
 
 	void push(llvm::Value* _value) { m_pushFunc.call(m_builder, {m_array, _value}); }
 	void set(llvm::Value* _index, llvm::Value* _value) { m_setFunc.call(m_builder, {m_array, _index, _value}); }
