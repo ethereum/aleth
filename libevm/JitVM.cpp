@@ -8,7 +8,7 @@
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 
-#include "Utils.h"
+#include "JitUtils.h"
 
 namespace dev
 {
