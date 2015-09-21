@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(ethereum VERSION "0.9.91")
+project(ethereum VERSION "0.9.92")
 
 include(EthCompilerSettings)
 
@@ -19,17 +19,34 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project()
-print_config()
+configure_project(CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL EVMJIT FATDB)
+
+if (EVMJIT)
+	if (NOT DEFINED LLVM_DIR)
+		if (DEFINED MSVC)
+			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
+		elseif (DEFINED APPLE)
+			set(LLVM_DIR "/usr/local/opt/llvm/share/llvm/cmake")
+		endif()
+	endif()
+
+	add_subdirectory(evmjit)
+	if (DEFINED MSVC)
+		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
+		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
+	endif()
+endif()
 
 # core libraries
-add_subdirectory(libethash)
-add_subdirectory(libethcore)
-add_subdirectory(libevmcore)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libethash)
+	add_subdirectory(libethcore)
+	add_subdirectory(libevmcore)
+	add_subdirectory(liblll)
+	add_subdirectory(libevm)
+	add_subdirectory(libethereum)
+endif()
 add_subdirectory(libevmasm)
-add_subdirectory(liblll)
-add_subdirectory(libevm)
-add_subdirectory(libethereum)
 
 if (ETHASHCL)
 	add_subdirectory(libethash-cl)
@@ -37,7 +54,9 @@ endif()
 
 # other libraries
 add_subdirectory(libnatspec)
-add_subdirectory(libtestutils)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libtestutils)
+endif()
 
 # executables
 
@@ -51,22 +70,5 @@ endif()
 if (TESTS)
 	# test
 	add_subdirectory(test)
-endif()
-
-if (EVMJIT)
-	if (NOT DEFINED LLVM_DIR)
-		if (DEFINED MSVC)
-			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
-		elseif (DEFINED APPLE)
-			set(LLVM_DIR "/usr/local/opt/llvm/share/llvm/cmake")
-		endif()
-	endif()
-
-	set(EVMJIT_CPP TRUE) # include CPP-JIT connector
-	add_subdirectory(evmjit)
-	if (DEFINED MSVC)
-		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
-		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL})
-	endif()
 endif()
 

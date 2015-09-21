@@ -342,6 +342,16 @@ string const& KeyManager::accountName(Address const& _address) const
 	}
 }
 
+void KeyManager::changeName(Address const& _address, std::string const& _name)
+{
+	auto it = m_keyInfo.find(_address);
+	if (it != m_keyInfo.end())
+	{
+		it->second.accountName = _name;
+		write(m_keysFile);
+	}
+}
+
 string const& KeyManager::passwordHint(Address const& _address) const
 {
 	try

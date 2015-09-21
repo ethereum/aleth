@@ -48,7 +48,7 @@
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
-#include "BuildInfo.h"
+#include "ethereum/BuildInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
 #include "PhoneHome.h"
 #include "FarmClient.h"

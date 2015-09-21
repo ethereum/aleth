@@ -246,7 +246,8 @@ protected:
 	void startedWorking() override;
 
 	/// Do some work. Handles blockchain maintenance and mining.
-	void doWork() override;
+	void doWork(bool _doWait);
+	void doWork() override { doWork(true); }
 
 	/// Called when Worker is exiting.
 	void doneWorking() override;
