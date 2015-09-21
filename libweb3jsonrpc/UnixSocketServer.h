@@ -34,6 +34,7 @@ class UnixDomainSocketServer: public IpcServerBase<int>
 {
 public:
 	UnixDomainSocketServer(std::string const& _appId);
+	~UnixDomainSocketServer();
 	bool StartListening() override;
 	bool StopListening() override;
 

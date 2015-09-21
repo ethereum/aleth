@@ -52,6 +52,11 @@ UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
 {
 }
 
+UnixDomainSocketServer::~UnixDomainSocketServer()
+{
+	StopListening();
+}
+
 bool UnixDomainSocketServer::StartListening()
 {
 	if (!m_running)
