@@ -23,9 +23,10 @@
 #include <libdevcore/Common.h>
 #include <libdevcrypto/Common.h>
 #include <libdevcore/SHA3.h>
+#include <libdevcore/Log.h>
 #include <libdevcrypto/AES.h>
 #include <libdevcore/FixedHash.h>
-#include <test/TestHelper.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;

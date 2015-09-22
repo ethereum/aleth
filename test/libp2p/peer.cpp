@@ -24,7 +24,7 @@
 #include <chrono>
 #include <thread>
 #include <libp2p/Host.h>
-#include <test/TestHelper.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;

@@ -23,15 +23,14 @@
 #include <fstream>
 #include <sstream>
 
-#include <boost/test/unit_test.hpp>
-
 #include <libdevcore/Log.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonIO.h>
 #include <algorithm>
 #include <json_spirit/JsonSpiritHeaders.h>
-#include "test/TestHelper.h"
+#include <test/test.h>
+#include <boost/filesystem.hpp>
 
 using namespace std;
 using namespace dev;
@@ -56,11 +55,6 @@ namespace dev
 			for (auto& i: v.get_obj())
 			{
 				js::mObject& o = i.second.get_obj();
-				if (test::Options::get().singleTest && test::Options::get().singleTestName != i.first)
-				{
-					o.clear();
-					continue;
-				}
 
 				cnote << "  " << i.first;
 				testname = "(" + i.first + ") ";
@@ -240,6 +234,31 @@ namespace dev
 	}
 }
 
+void runRlpTest(string _name, string _path)
+{
+	string testPath = dev::test::getTestPath();
+	testPath += _path;
+
+	try
+	{
+		cnote << "TEST " << _name << ":";
+		json_spirit::mValue v;
+		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		json_spirit::read_string(s, v);
+		//Listener::notifySuiteStarted(_name);
+		dev::test::doRlpTests(v, false);
+	}
+	catch (Exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
+	}
+	catch (std::exception const& _e)
+	{
+		BOOST_ERROR("Failed test with Exception: " << _e.what());
+	}
+}
+
 BOOST_AUTO_TEST_SUITE(RlpTests)
 
 BOOST_AUTO_TEST_CASE(EmptyArrayList)
@@ -266,18 +285,16 @@ BOOST_AUTO_TEST_CASE(EmptyArrayList)
 
 BOOST_AUTO_TEST_CASE(invalidRLPtest)
 {
-	dev::test::executeTests("invalidRLPTest", "/RLPTests", dev::test::getFolder(__FILE__) + "/RLPTestsFiller", dev::test::doRlpTests);
+	runRlpTest("invalidRLPTest", "/RLPTests");
 }
 
 BOOST_AUTO_TEST_CASE(rlptest)
 {
-	dev::test::executeTests("rlptest", "/RLPTests", dev::test::getFolder(__FILE__) + "/RLPTestsFiller", dev::test::doRlpTests);
+	runRlpTest("rlptest", "/RLPTests");
 }
 
 BOOST_AUTO_TEST_CASE(rlpRandom)
 {
-	test::Options::get();
-
 	string testPath = dev::test::getTestPath();
 	testPath += "/RLPTests/RandomRLPTests";
 
@@ -296,7 +313,7 @@ BOOST_AUTO_TEST_CASE(rlpRandom)
 			string s = asString(dev::contents(path.string()));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 			json_spirit::read_string(s, v);
-			test::Listener::notifySuiteStarted(path.filename().string());
+			//test::Listener::notifySuiteStarted(path.filename().string());
 			dev::test::doRlpTests(v, false);
 		}
 

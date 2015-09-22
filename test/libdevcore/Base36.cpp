@@ -21,11 +21,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Base64.h>
-#include <libethcore/ICAP.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::eth;
 
 BOOST_AUTO_TEST_SUITE(Base36Tests)
 

@@ -22,7 +22,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonIO.h>
-#include <test/TestHelper.h>
+#include <libdevcore/Log.h>
+#include <test/test.h>
 
 BOOST_AUTO_TEST_SUITE(CoreLibTests)
 

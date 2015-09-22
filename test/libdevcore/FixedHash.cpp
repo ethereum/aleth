@@ -20,7 +20,8 @@
  */
 
 #include <libdevcore/FixedHash.h>
-#include "../TestHelper.h"
+#include <libdevcore/SHA3.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;

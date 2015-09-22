@@ -22,14 +22,15 @@
 
 #include <fstream>
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcrypto/SecretStore.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/TrieDB.h>
 #include <libdevcore/TrieHash.h>
+#include <libdevcore/TransientDirectory.h>
 #include "MemTrie.h"
-#include <test/TestHelper.h>
-#include <test/TestUtils.h>
+#include <test/test.h>
 using namespace std;
 using namespace dev;
 using namespace dev::test;

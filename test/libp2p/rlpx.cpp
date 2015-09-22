@@ -23,7 +23,6 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
-#include <libethereum/Transaction.h>
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>

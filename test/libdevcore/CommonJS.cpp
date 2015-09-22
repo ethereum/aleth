@@ -22,7 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
-#include <test/TestHelper.h>
+#include <test/test.h>
 
 BOOST_AUTO_TEST_SUITE(CommonJSTests)
 

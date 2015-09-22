@@ -20,10 +20,11 @@
  */
 
 #include <libdevcore/RangeMask.h>
-#include "../TestHelper.h"
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace boost::unit_test;
 
 namespace dev
 {

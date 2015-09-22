@@ -29,7 +29,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Base64.h>
 #include <libdevcore/TrieCommon.h>
-#include <test/TestHelper.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
