@@ -91,7 +91,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "A",
 		"blocknumber" : "3",
                 "transactions" : [
@@ -202,7 +201,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "1",
                 "transactions" : [
@@ -220,7 +218,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "2",
                 "transactions" : [
@@ -238,7 +235,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "3",
                 "transactions" : [
@@ -372,7 +368,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "1",
                 "transactions" : [
@@ -390,7 +385,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "2",
                 "transactions" : [
@@ -408,7 +402,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "3",
                 "transactions" : [
@@ -541,7 +534,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "1",
                 "transactions" : [
@@ -559,7 +551,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "2",
                 "transactions" : [
@@ -577,7 +568,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "3",
                 "transactions" : [
@@ -638,7 +628,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "A",
 		"blocknumber" : "4",
                 "transactions" : [
@@ -656,7 +645,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "A",
 		"blocknumber" : "5",
                 "transactions" : [
@@ -780,7 +768,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "1",
                 "transactions" : [
@@ -798,7 +785,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "2",
                 "transactions" : [
@@ -816,7 +802,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "3",
                 "transactions" : [
@@ -877,7 +862,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "A",
 		"blocknumber" : "4",
                 "transactions" : [
@@ -895,7 +879,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "A",
 		"blocknumber" : "5",
                 "transactions" : [
@@ -1036,7 +1019,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "1",
                 "transactions" : [
@@ -1054,7 +1036,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "2",
                 "transactions" : [
@@ -1072,7 +1053,6 @@
                 ]
             },
             {
-		"notbest" : "1",
 		"chainname" : "B",
 		"blocknumber" : "3",
                 "transactions" : [

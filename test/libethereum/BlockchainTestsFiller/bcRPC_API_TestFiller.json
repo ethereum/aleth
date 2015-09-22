@@ -515,7 +515,6 @@
                 ]
             },
             {
-		"notbest" : "1",
                 "blocknumber" : "27",
                 "transactions" : [
                     {
@@ -533,7 +532,6 @@
                 ]
             },
             {
-		"notbest" : "1",
                 "blocknumber" : "28",
                 "transactions" : [
                     {

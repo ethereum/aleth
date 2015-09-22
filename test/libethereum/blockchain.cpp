@@ -327,14 +327,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				cnote << "Testing topblock number" << blockNumber << "for chain " << blockChainName << testname;
 
-				if (blObj.count("notbest") == 0)
-					checkBlocks(trueBc.getTopBlock(), blockFromFields, testname);
-				else
-				{
-					string lastTrueBlockHash = toString(trueBc.getTopBlock().getBlockHeader().hash());
-					BOOST_REQUIRE_MESSAGE(lastTrueBlockHash != toString(blockFromFields.getBlockHeader().hash()), "Imported block is not expected to be the best block in chain!");
-				}
-
 			}//allBlocks
 
 			//Check lastblock hash
