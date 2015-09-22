@@ -20,6 +20,7 @@ SCRIPT_DIR="$( cd -P "$( dirname "$FILE_SOURCE" )" && pwd )"
 # Now that we got the directory, source some common functionality
 source "${SCRIPT_DIR}/ethbuildcommon.sh"
 
+USE_ALL=0
 ROOT_DIR=$(pwd)
 NO_PUSH=0
 USE_SSH=0
@@ -88,6 +89,7 @@ function print_help {
 	echo "    --shallow-fetch           Perform git clone and git fetch with --depth=1."
 	echo "    --simple-pull             If a branch is given but can't be checked out, then give this argument to attemt a simple git pull"
 	echo "    --build-pr HEX            Will make sure that the main repository for the project has the commit of a particular PR checked out. You can also give the value of none to disable this argument."
+	echo "    --all                     Will clone all repositories instead of only the ones that depend on the requested project"
 }
 
 for arg in ${@:1}
@@ -165,6 +167,12 @@ do
 
 	if [[ $arg == "--simple-pull" ]]; then
 		DO_SIMPLE_PULL=1
+		continue
+	fi
+
+	if [[ $arg == "--all" ]]; then
+		USE_ALL=1
+		CLONE_REPOSITORIES=("${ALL_CLONE_REPOSITORIES[@]}")
 		continue
 	fi
 

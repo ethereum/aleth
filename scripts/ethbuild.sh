@@ -47,6 +47,7 @@ function get_repo_sln() {
 	fi
 }
 
+USE_ALL=0
 ROOT_DIR=$(pwd)
 REQUESTED_BRANCH=develop
 CLEAN_BUILD=0
@@ -68,6 +69,7 @@ function print_help {
 	echo "    --branch NAME           The branch requested to build. Default is ${REQUESTED_BRANCH}."
 	echo "    --build-type BUILDTYPE  If given then this is gonna be the value of -DCMAKE_BUILD_TYPE. Default is ${BUILD_TYPE} "
 	echo "    --cores NUMBER          The value to the cores argument of make. e.g.: make -j4. Default is ${MAKE_CORES}."
+	echo "    --all                   If given then build all of the repositories and not only the ones depending on the requested project"
 }
 
 for arg in ${@:1}
@@ -137,6 +139,12 @@ do
 
 	if [[ $arg == "--cores" ]]; then
 		REQUESTED_ARG="make-cores"
+		continue
+	fi
+
+	if [[ $arg == "--all" ]]; then
+		USE_ALL=1
+		BUILD_REPOSITORIES=("${ALL_BUILD_REPOSITORIES[@]}")
 		continue
 	fi
 
