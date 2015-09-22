@@ -14,7 +14,7 @@ macro(configure_project)
 	eth_default_option(TESTS ON)
 	eth_default_option(TOOLS ON)
 	eth_default_option(ETHASHCL ON)
-	eth_default_option(EVMJIT OFF)
+	eth_default_option(EVMJIT ON)
 	eth_default_option(SOLIDITY ON)
 
 	foreach(FEATURE ${ARGN})
@@ -113,4 +113,3 @@ endif()
 	message("------------------------------------------------------------------------")
 	message("")
 endmacro()
-
