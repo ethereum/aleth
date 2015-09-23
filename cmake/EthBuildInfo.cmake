@@ -1,6 +1,6 @@
 function(create_build_info NAME)
 	# Set build platform; to be written to BuildInfo.h
-	set(ETH_BUILD_PLATFORM "${TARGET_PLATFORM}")
+	set(ETH_BUILD_PLATFORM "${CMAKE_SYSTEM_NAME}")
 	if (CMAKE_COMPILER_IS_MINGW)
 		set(ETH_BUILD_PLATFORM "${ETH_BUILD_PLATFORM}/mingw")
 	elseif (CMAKE_COMPILER_IS_MSYS)
@@ -34,8 +34,8 @@ function(create_build_info NAME)
 
 	# Generate header file containing useful build information
 	add_custom_target(${NAME}_BuildInfo.h ALL
-		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-		COMMAND ${CMAKE_COMMAND} -DETH_SOURCE_DIR="${ETH_CMAKE_DIR}/templates" -DETH_DST_DIR="${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}" -DETH_CMAKE_DIR="${ETH_CMAKE_DIR}"
+		WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+		COMMAND ${CMAKE_COMMAND} -DETH_SOURCE_DIR="${PROJECT_SOURCE_DIR}" -DETH_BUILDINFO_IN="${ETH_CMAKE_DIR}/templates/BuildInfo.h.in" -DETH_DST_DIR="${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}" -DETH_CMAKE_DIR="${ETH_CMAKE_DIR}"
 			-DETH_BUILD_TYPE="${_cmake_build_type}" -DETH_BUILD_PLATFORM="${ETH_BUILD_PLATFORM}"
 			-DPROJECT_VERSION="${PROJECT_VERSION}" -DETH_FATDB="${FATDB10}" -P "${ETH_SCRIPTS_DIR}/buildinfo.cmake"
 		)

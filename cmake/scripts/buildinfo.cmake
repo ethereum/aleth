@@ -27,7 +27,7 @@ if (NOT ETH_COMMIT_HASH)
 endif()
 
 execute_process(
-	COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} diff --shortstat	
+	COMMAND git --git-dir=${ETH_SOURCE_DIR}/.git --work-tree=${ETH_SOURCE_DIR} diff HEAD --shortstat
 	OUTPUT_VARIABLE ETH_LOCAL_CHANGES OUTPUT_STRIP_TRAILING_WHITESPACE ERROR_QUIET
 )
 
@@ -37,17 +37,10 @@ else()
 	set(ETH_CLEAN_REPO 1)
 endif()
 
-if (NOT ETH_HEADERFILE)
-	set(INFILE "${ETH_SOURCE_DIR}/BuildInfo.h.in")
-	set(TMPFILE "${ETH_DST_DIR}/BuildInfo.h.tmp")
-	set(OUTFILE "${ETH_DST_DIR}/BuildInfo.h")
-else()
-	set(INFILE "${ETH_SOURCE_DIR}/${ETH_HEADERFILE}.h.in")
-	set(TMPFILE "${ETH_DST_DIR}/${ETH_HEADERFILE}.h.tmp")
-	set(OUTFILE "${ETH_DST_DIR}/${ETH_HEADERFILE}.h")
-endif()
+set(TMPFILE "${ETH_DST_DIR}/BuildInfo.h.tmp")
+set(OUTFILE "${ETH_DST_DIR}/BuildInfo.h")
 
-configure_file("${INFILE}" "${TMPFILE}")
+configure_file("${ETH_BUILDINFO_IN}" "${TMPFILE}")
 
 include("${ETH_CMAKE_DIR}/EthUtils.cmake")
 replace_if_different("${TMPFILE}" "${OUTFILE}" CREATE)
