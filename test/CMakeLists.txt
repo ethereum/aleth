@@ -20,5 +20,4 @@ add_executable(testweb3core ${SRC_LIST} ${HEADERS})
 eth_use(testweb3core REQUIRED Dev::devcrypto Dev::devcore Dev::p2p)
 
 target_link_libraries(testweb3core ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
-
-
+target_link_libraries(testweb3core ${Boost_REGEX_LIBRARIES})
