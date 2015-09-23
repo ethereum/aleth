@@ -89,7 +89,7 @@ function print_help {
 	echo "    --shallow-fetch           Perform git clone and git fetch with --depth=1."
 	echo "    --simple-pull             If a branch is given but can't be checked out, then give this argument to attemt a simple git pull"
 	echo "    --build-pr HEX            Will make sure that the main repository for the project has the commit of a particular PR checked out. You can also give the value of none to disable this argument."
-	echo "    --all                     Will clone all repositories instead of only the ones that depend on the requested project"
+	echo "    --all                     In addition to cloning the repositores needed to build this project, also clone all projects that depend on it"
 }
 
 for arg in ${@:1}
@@ -172,7 +172,6 @@ do
 
 	if [[ $arg == "--all" ]]; then
 		USE_ALL=1
-		CLONE_REPOSITORIES=("${ALL_CLONE_REPOSITORIES[@]}")
 		continue
 	fi
 
@@ -184,6 +183,10 @@ done
 if [[ ${REQUESTED_ARG} != "" ]]; then
 	echo "ETHUPDATE - ERROR: Expected value for the \"${REQUESTED_ARG}\" argument";
 	exit 1
+fi
+
+if [[ $USE_ALL -eq 1 && ($REQUESTED_PROJECT != "alethzero" || $REQUESTED_PROJECT != "mix") ]]; then
+	CLONE_REPOSITORIES=("${ALL_CLONE_REPOSITORIES[@]}")
 fi
 
 for repository in "${CLONE_REPOSITORIES[@]}"
