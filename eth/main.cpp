@@ -1156,13 +1156,14 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
-	if (jsonRPCURL > -1)
+	if (jsonRPCURL > -1 || ipc)
 	{
 		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 		safeConnector->setAllowedOrigin(rpcCorsDomain);
 		jsonrpcConnector.reset(safeConnector);
 		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
-		jsonrpcServer->StartListening();
+		if (jsonRPCURL > -1)
+			jsonrpcServer->StartListening();
 		jsonrpcServer->enableIpc(ipc);
 		if (jsonAdmin.empty())
 			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Privilege::Admin}});
