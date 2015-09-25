@@ -54,7 +54,6 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
-#include <libweb3jsonrpc/IpcServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
 #include "ethereum/ConfigInfo.h"
@@ -1135,8 +1134,6 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC || !ETH_TRUE
 	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
 	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
-	shared_ptr<dev::WebThreeStubServer> jsonipcServer;
-	unique_ptr<jsonrpc::AbstractServerConnector> jsonipcConnector;
 
 	AddressHash allowedDestinations;
 
@@ -1159,13 +1156,15 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
-	if (jsonRPCURL > -1)
+	if (jsonRPCURL > -1 || ipc)
 	{
 		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 		safeConnector->setAllowedOrigin(rpcCorsDomain);
 		jsonrpcConnector.reset(safeConnector);
 		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
-		jsonrpcServer->StartListening();
+		if (jsonRPCURL > -1)
+			jsonrpcServer->StartListening();
+		jsonrpcServer->enableIpc(ipc);
 		if (jsonAdmin.empty())
 			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 		else
@@ -1173,13 +1172,6 @@ int main(int argc, char** argv)
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
-	}
-	if (ipc)
-	{
-		auto ipcConnector = new IpcServer("geth");
-		jsonipcConnector.reset(ipcConnector);
-		jsonipcServer = make_shared<dev::WebThreeStubServer>(*jsonipcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
-		jsonipcServer->StartListening();
 	}
 #endif
 
@@ -1230,8 +1222,6 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC
 	if (jsonrpcServer.get())
 		jsonrpcServer->StopListening();
-	if (jsonipcServer.get())
-		jsonipcServer->StopListening();
 #endif
 
 	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("++eth", clientName), dev::Version);
