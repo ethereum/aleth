@@ -31,7 +31,6 @@
 #include <libtestutils/FixedClient.h>
 #include <libweb3testutils/FixedWebThreeServer.h>
 #include "CommandLineInterface.h"
-#include "BuildInfo.h"
 
 using namespace std;
 using namespace dev;

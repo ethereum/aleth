@@ -54,10 +54,9 @@
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
-#include <libweb3jsonrpc/IpcServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif
-#include "BuildInfo.h"
+#include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
 #include "PhoneHome.h"
 #include "Farm.h"
@@ -94,6 +93,8 @@ void help()
 		<< endl
 #if ETH_JSONRPC || !ETH_TRUE
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
+		<< "    --ipc  Enable IPC server (default: on)." << endl
+		<< "    --no-ipc  Disable IPC server." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
 		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
 		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
@@ -309,7 +310,7 @@ int main(int argc, char** argv)
 	bool interactive = false;
 #if ETH_JSONRPC || !ETH_TRUE
 	int jsonRPCURL = -1;
-	bool ipc = false;
+	bool ipc = true;
 	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
@@ -710,6 +711,8 @@ int main(int argc, char** argv)
 			jsonAdmin = argv[++i];
 		else if (arg == "--ipc")
 			ipc = true;
+		else if (arg == "--no-ipc")
+			ipc = false;
 #endif
 #if ETH_JSCONSOLE || !ETH_TRUE
 		else if (arg == "-i" || arg == "--interactive" || arg == "--console" || arg == "console")
@@ -1131,8 +1134,6 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC || !ETH_TRUE
 	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
 	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
-	shared_ptr<dev::WebThreeStubServer> jsonipcServer;
-	unique_ptr<jsonrpc::AbstractServerConnector> jsonipcConnector;
 
 	AddressHash allowedDestinations;
 
@@ -1155,13 +1156,15 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
-	if (jsonRPCURL > -1)
+	if (jsonRPCURL > -1 || ipc)
 	{
 		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 		safeConnector->setAllowedOrigin(rpcCorsDomain);
 		jsonrpcConnector.reset(safeConnector);
 		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
-		jsonrpcServer->StartListening();
+		if (jsonRPCURL > -1)
+			jsonrpcServer->StartListening();
+		jsonrpcServer->enableIpc(ipc);
 		if (jsonAdmin.empty())
 			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 		else
@@ -1169,13 +1172,6 @@ int main(int argc, char** argv)
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
-	}
-	if (ipc)
-	{
-		auto ipcConnector = new IpcServer("geth");
-		jsonipcConnector.reset(ipcConnector);
-		jsonipcServer = make_shared<dev::WebThreeStubServer>(*jsonipcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
-		jsonipcServer->StartListening();
 	}
 #endif
 
@@ -1226,8 +1222,6 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC
 	if (jsonrpcServer.get())
 		jsonrpcServer->StopListening();
-	if (jsonipcServer.get())
-		jsonipcServer->StopListening();
 #endif
 
 	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("++eth", clientName), dev::Version);
