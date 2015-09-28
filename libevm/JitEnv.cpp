@@ -4,7 +4,7 @@
 #include <libevmcore/Params.h>
 #include <libevm/ExtVMFace.h>
 
-#include "Utils.h"
+#include "JitUtils.h"
 
 extern "C"
 {
@@ -132,4 +132,3 @@ extern "C"
 		_env->log(std::move(topics), {_beg, (size_t)_size});
 	}
 }
-

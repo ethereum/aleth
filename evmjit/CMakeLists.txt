@@ -55,7 +55,3 @@ else()
 endif()
 
 add_subdirectory(libevmjit)
-
-if(EVMJIT_CPP)
-	add_subdirectory(libevmjit-cpp)
-endif()

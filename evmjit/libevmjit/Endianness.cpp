@@ -14,7 +14,7 @@ namespace eth
 namespace jit
 {
 
-llvm::Value* Endianness::bswapIfLE(llvm::IRBuilder<>& _builder, llvm::Value* _word)
+llvm::Value* Endianness::bswapIfLE(IRBuilder& _builder, llvm::Value* _word)
 {
 	if (llvm::sys::IsLittleEndianHost)
 	{
