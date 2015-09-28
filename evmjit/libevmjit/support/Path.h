@@ -14,7 +14,7 @@
 	#define UTILS_OS_MAC 0
 #endif
 
-#if UTILS_OS_LINUX
+#if UTILS_OS_LINUX || UTILS_OS_MAC
 	#define UTILS_OS_POSIX 1
 #else
 	#define UTILS_OS_POSIX 0
