@@ -86,6 +86,9 @@ private:
 	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 
+	virtual std::string personal_newAccount(const std::string& _password);
+	virtual bool personal_unlockAccount(const std::string& _address, const std::string& _password, int _duration);
+
 private:
 	h256 blockHash(std::string const& _blockNumberOrHash) const;
 
