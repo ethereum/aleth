@@ -189,7 +189,6 @@ public:
 	virtual std::string personal_newAccount(const std::string&) { return ""; }
 	virtual bool personal_unlockAccount(const std::string&, const std::string&, int) { return false; }
 
-
 	// IPC connector
 	void enableIpc(bool _enable);
 

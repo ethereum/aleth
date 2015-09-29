@@ -52,6 +52,11 @@ UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
 {
 }
 
+UnixDomainSocketServer::~UnixDomainSocketServer()
+{
+	StopListening();
+}
+
 bool UnixDomainSocketServer::StartListening()
 {
 	if (!m_running)
@@ -77,7 +82,9 @@ bool UnixDomainSocketServer::StartListening()
 
 bool UnixDomainSocketServer::StopListening()
 {
+	shutdown(m_socket, SHUT_RDWR);
 	close(m_socket);
+	m_socket = -1;
 	if (IpcServerBase::StopListening())
 	{
 		unlink(m_path.c_str());
