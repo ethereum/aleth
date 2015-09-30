@@ -2,7 +2,7 @@
 file(GLOB HEADERS "*.h")
 
 add_library(secp256k1 secp256k1.c include/secp256k1.h ${HEADERS})
-target_compile_definitions(secp256k1 PRIVATE -DHAVE_CONFIG_H)
+target_compile_definitions(secp256k1 INTERFACE ETH_HAVE_SECP256K1 PRIVATE HAVE_CONFIG_H)
 
 if (NOT MSVC)
 	eth_use(secp256k1 REQUIRED Gmp)
