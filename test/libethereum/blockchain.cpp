@@ -325,7 +325,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				if (blObj.count("blocknumber") > 0)
 					blockNumber = blObj["blocknumber"].get_str();
 
-				cnote << "Testing topblock number" << blockNumber << "for chain " << blockChainName << testname;
+				cnote << "Tested topblock number" << blockNumber << "for chain " << blockChainName << testname;
 
 			}//allBlocks
 
@@ -706,6 +706,11 @@ BOOST_AUTO_TEST_CASE(bcForkUncleTest)
 BOOST_AUTO_TEST_CASE(bcStateTest)
 {
 	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcForkStressTest)
+{
+	dev::test::executeTests("bcForkStressTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcMultiChainTest)
