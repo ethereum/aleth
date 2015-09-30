@@ -22,7 +22,7 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 	set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -DSHAREDLIB -fPIC -fstack-protector-strong -Wstack-protector")
 	if (EMSCRIPTEN)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 ")
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1")
 		add_definitions(-DETH_EMSCRIPTEN=1)
 	endif()
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
