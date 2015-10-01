@@ -18,6 +18,6 @@ include(EthDependencies)
 
 add_subdirectory(libscrypt)
 
-if ((NOT EMSCRIPTEN) AND (NOT DEFINED MSVC))
+if (NOT EMSCRIPTEN)
 	add_subdirectory(secp256k1)
 endif()

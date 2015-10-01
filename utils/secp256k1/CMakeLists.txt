@@ -1,10 +1,10 @@
-set(EXECUTABLE secp256k1)
-file(GLOB HEADERS "*.h") 
 
-add_library(${EXECUTABLE} ${EXECUTABLE}.c)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DHAVE_CONFIG_H -g -O2 -W -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings")
+file(GLOB HEADERS "*.h")
 
-eth_use(${EXECUTABLE} REQUIRED Gmp)
+add_library(secp256k1 secp256k1.c include/secp256k1.h ${HEADERS})
+target_compile_definitions(secp256k1 INTERFACE ETH_HAVE_SECP256K1 PRIVATE HAVE_CONFIG_H)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
+if (NOT MSVC)
+	eth_use(secp256k1 REQUIRED Gmp)
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -W -std=c89 -pedantic -Wall -Wextra -Wcast-align -Wnested-externs -Wshadow -Wstrict-prototypes -Wno-unused-function -Wno-long-long -Wno-overlength-strings")
+endif()

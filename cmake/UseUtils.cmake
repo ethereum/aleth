@@ -10,11 +10,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	target_include_directories(${TARGET} SYSTEM BEFORE PUBLIC ${Utils_INCLUDE_DIRS})
 
 	if (${SUBMODULE} STREQUAL "secp256k1")
-		if (NOT EMSCRIPTEN)
-			eth_use(${TARGET} ${REQUIRED} Gmp)
-		endif()
 		target_link_libraries(${TARGET} ${Utils_SECP256K1_LIBRARIES})
-		target_compile_definitions(${TARGET} PUBLIC ETH_HAVE_SECP256K1)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "scrypt")
