@@ -9,14 +9,14 @@ class CppEthereum < Formula
 
   bottle do
     revision CFG_NUMBER
-    root_url 'http://52.28.164.97/job/ethbinaries-build/label=macosx_slave/CFG_NUMBER/artifact/webthree-umbrella/build'
+    root_url 'https://build.ethdev.com/cpp-binaries-data/brew_receipts'
     sha1 'CFG_SIGNATURE' => :yosemite
   end
 
   devel do
     bottle do
       revision CFG_NUMBER
-      root_url 'http://52.28.164.97/job/ethbinaries-build/label=macosx_slave/CFG_NUMBER/artifact/webthree-umbrella/build'
+      root_url 'https://build.ethdev.com/cpp-binaries-data/brew_receipts'
       sha1 'CFG_SIGNATURE' => :yosemite
     end
 
