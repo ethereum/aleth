@@ -111,7 +111,7 @@ public:
 		Kill,
 		NewBrain,
 		ImportBrain,
-		InspectBrain,
+		Inspect,
 		SignTx,
 		DecodeTx,
 	};
@@ -139,7 +139,9 @@ public:
 			auto v = argv[++i];
 			m_kdfParams[n] = v;
 		}
-		else if ((arg == "-s" || arg == "--sign-tx") && i + 1 < argc)
+		else if (arg == "inspect")
+			m_mode = OperationMode::Inspect;
+		else if ((arg == "-s" || arg == "--sign-tx" || arg == "sign") && i + 1 < argc)
 		{
 			m_mode = OperationMode::SignTx;
 			m_signKey = argv[++i];
@@ -205,67 +207,65 @@ public:
 				cerr << "Invalid argument to " << arg << endl;
 				exit(-1);
 			}
-		else if (arg == "--decode-tx")
+		else if (arg == "--decode-tx" || arg == "decode")
 			m_mode = OperationMode::DecodeTx;
-		else if (arg == "--import-bare")
+		else if (arg == "--import-bare" || arg == "importbare")
 			m_mode = OperationMode::ImportBare;
-		else if (arg == "--list-bare")
+		else if (arg == "--list-bare" || arg == "listbare")
 			m_mode = OperationMode::ListBare;
-		else if (arg == "--export-bare")
+		else if (arg == "--export-bare" || arg == "exportbare")
 			m_mode = OperationMode::ExportBare;
-		else if (arg == "--inspect-bare")
+		else if (arg == "--inspect-bare" || arg == "inspectbare")
 			m_mode = OperationMode::InspectBare;
-		else if (arg == "--recode-bare")
+		else if (arg == "--recode-bare" || arg == "recodebare")
 			m_mode = OperationMode::RecodeBare;
-		else if (arg == "--kill-bare")
+		else if (arg == "--kill-bare" || arg == "killbare")
 			m_mode = OperationMode::KillBare;
-		else if (arg == "--create-wallet")
+		else if (arg == "--create-wallet" || arg == "createwallet")
 			m_mode = OperationMode::CreateWallet;
-		else if (arg == "-l" || arg == "--list")
+		else if (arg == "-l" || arg == "--list" || arg == "list")
 			m_mode = OperationMode::List;
-		else if ((arg == "-n" || arg == "--new") && i + 1 < argc)
+		else if ((arg == "-n" || arg == "--new" || arg == "new") && i + 1 < argc)
 		{
 			m_mode = OperationMode::New;
 			m_name = argv[++i];
 		}
-		else if ((arg == "-i" || arg == "--import") && i + 2 < argc)
+		else if ((arg == "-i" || arg == "--import" || arg == "import") && i + 2 < argc)
 		{
 			m_mode = OperationMode::Import;
 			m_inputs = strings(1, argv[++i]);
 			m_name = argv[++i];
 		}
-		else if (arg == "--import-presale" && i + 2 < argc)
+		else if ((arg == "--import-presale" || arg == "importpresale") && i + 2 < argc)
 		{
 			m_mode = OperationMode::ImportPresale;
 			m_inputs = strings(1, argv[++i]);
 			m_name = argv[++i];
 		}
-		else if (arg == "--new-brain" && i + 1 < argc)
+		else if ((arg == "--new-brain" || arg == "newbrain") && i + 1 < argc)
 		{
 			m_mode = OperationMode::NewBrain;
 			m_name = argv[++i];
 		}
-		else if (arg == "--import-brain" && i + 1 < argc)
+		else if ((arg == "--import-brain" || arg == "importbrain") && i + 1 < argc)
 		{
 			m_mode = OperationMode::ImportBrain;
 			m_name = argv[++i];
 		}
-		else if (arg == "--inspect-brain")
-			m_mode = OperationMode::InspectBrain;
-		else if (arg == "--import-with-address" && i + 3 < argc)
+		else if ((arg == "--import-with-address" || arg == "importwithaddress") && i + 3 < argc)
 		{
 			m_mode = OperationMode::ImportWithAddress;
 			m_inputs = strings(1, argv[++i]);
 			m_address = Address(argv[++i]);
 			m_name = argv[++i];
 		}
-		else if (arg == "--export")
+		else if (arg == "--export" || arg == "export")
 			m_mode = OperationMode::Export;
-		else if (arg == "--recode")
+		else if (arg == "--recode" || arg == "recode")
 			m_mode = OperationMode::Recode;
 		else if (arg == "--no-icap")
 			m_icap = false;
-		else if (m_mode == OperationMode::DecodeTx || m_mode == OperationMode::SignTx || m_mode == OperationMode::ImportBare || m_mode == OperationMode::InspectBare || m_mode == OperationMode::KillBare || m_mode == OperationMode::Recode || m_mode == OperationMode::Export || m_mode == OperationMode::RecodeBare || m_mode == OperationMode::ExportBare)
+		else if (m_mode == OperationMode::DecodeTx || m_mode == OperationMode::Inspect || m_mode == OperationMode::SignTx || m_mode == OperationMode::ImportBare || m_mode == OperationMode::InspectBare || m_mode == OperationMode::KillBare || m_mode == OperationMode::Recode || m_mode == OperationMode::Export || m_mode == OperationMode::RecodeBare || m_mode == OperationMode::ExportBare)
 			m_inputs.push_back(arg);
 		else
 			return false;
@@ -330,49 +330,45 @@ public:
 		}
 		case OperationMode::DecodeTx:
 		{
-			bytes b = inputData(m_inputs[0]);
-			if (b.empty())
-				cerr << "Unknown file or bad hex: '" << m_inputs[0] << "'" << endl;
-			else
+			try
+			{
+				TransactionBase t = m_inputs.empty() ? TransactionBase(m_toSign) : TransactionBase(inputData(m_inputs[0]), CheckTransaction::None);
+				cout << "Transaction " << t.sha3().hex() << endl;
+				if (t.isCreation())
+				{
+					cout << "  type: creation" << endl;
+					cout << "  code: " << toHex(t.data()) << endl;
+				}
+				else
+				{
+					cout << "  type: message" << endl;
+					cout << "  to: " << t.to().hex() << endl;
+					cout << "  data: " << (t.data().empty() ? "none" : toHex(t.data())) << endl;
+				}
 				try
 				{
-					TransactionBase t(b, CheckTransaction::None);
-					cout << "Transaction " << t.sha3().hex() << endl;
+					auto s = t.sender();
 					if (t.isCreation())
-					{
-						cout << "  type: creation" << endl;
-						cout << "  code: " << toHex(t.data()) << endl;
-					}
-					else
-					{
-						cout << "  type: message" << endl;
-						cout << "  to: " << t.to().hex() << endl;
-						cout << "  data: " << (t.data().empty() ? "none" : toHex(t.data())) << endl;
-					}
-					try
-					{
-						auto s = t.sender();
-						if (t.isCreation())
-							cout << "  creates: " << toAddress(s, t.nonce()).hex() << endl;
-						cout << "  from: " << s.hex() << endl;
-					}
-					catch (...)
-					{
-						cout << "  from: <unsigned>" << endl;
-					}
-					cout << "  value: " << formatBalance(t.value()) << " (" << t.value() << " wei)" << endl;
-					cout << "  nonce: " << t.nonce() << endl;
-					cout << "  gas: " << t.gas() << endl;
-					cout << "  gas price: " << formatBalance(t.gasPrice()) << " (" << t.gasPrice() << " wei)" << endl;
-					cout << "  signing hash: " << t.sha3(WithoutSignature).hex() << endl;
-					cout << "  v: " << (int)t.signature().v << endl;
-					cout << "  r: " << t.signature().r << endl;
-					cout << "  s: " << t.signature().s << endl;
+						cout << "  creates: " << toAddress(s, t.nonce()).hex() << endl;
+					cout << "  from: " << s.hex() << endl;
 				}
-				catch (Exception& ex)
+				catch (...)
 				{
-					cerr << "Invalid transaction: " << ex.what() << endl;
+					cout << "  from: <unsigned>" << endl;
 				}
+				cout << "  value: " << formatBalance(t.value()) << " (" << t.value() << " wei)" << endl;
+				cout << "  nonce: " << t.nonce() << endl;
+				cout << "  gas: " << t.gas() << endl;
+				cout << "  gas price: " << formatBalance(t.gasPrice()) << " (" << t.gasPrice() << " wei)" << endl;
+				cout << "  signing hash: " << t.sha3(WithoutSignature).hex() << endl;
+				cout << "  v: " << (int)t.signature().v << endl;
+				cout << "  r: " << t.signature().r << endl;
+				cout << "  s: " << t.signature().s << endl;
+			}
+			catch (Exception& ex)
+			{
+				cerr << "Invalid transaction: " << ex.what() << endl;
+			}
 			break;
 		}
 		case OperationMode::SignTx:
@@ -425,12 +421,17 @@ public:
 			}
 			break;
 		}
-		case OperationMode::InspectBrain:
+		case OperationMode::Inspect:
 		{
-			Address a = toAddress(KeyManager::brain(getPassword("Enter brain wallet key phrase: ")));
-			cout << a.abridged() << endl;
-			cout << "  ICAP: " << ICAP(a).encoded() << endl;
-			cout << "  Address: " << a.hex() << endl;
+			if (m_inputs.empty())
+				m_inputs.push_back(toAddress(KeyManager::brain(getPassword("Enter brain wallet key phrase: "))).hex());
+			for (auto i: m_inputs)
+			{
+				Address a = toAddress(i);
+				cout << a.abridged() << endl;
+				cout << "  ICAP: " << ICAP(a).encoded() << endl;
+				cout << "  Address: " << a.hex() << endl;
+			}
 			break;
 		}
 		case OperationMode::ListBare:
@@ -615,38 +616,39 @@ public:
 	{
 		_out
 			<< "Secret-store (\"bare\") operation modes:" << endl
-			<< "    --list-bare  List all secret available in secret-store." << endl
-			<< "    --new-bare  Generate and output a key without interacting with wallet and dump the JSON." << endl
-			<< "    --import-bare [ <file>|<secret-hex> , ... ] Import keys from given sources." << endl
-			<< "    --recode-bare [ <uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
-			<< "    --inspect-bare [ <uuid>|<file> , ... ]  Output information on given keys." << endl
-//			<< "    --export-bare [ <uuid> , ... ]  Export given keys." << endl
-			<< "    --kill-bare [ <uuid> , ... ]  Delete given keys." << endl
+			<< "    listbare  List all secret available in secret-store." << endl
+			<< "    newbare  Generate and output a key without interacting with wallet and dump the JSON." << endl
+			<< "    importbare [ <file>|<secret-hex> , ... ] Import keys from given sources." << endl
+			<< "    recodebare [ <uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
+			<< "    inspectbare [ <uuid>|<file> , ... ]  Output information on given keys." << endl
+//			<< "    exportbare [ <uuid> , ... ]  Export given keys." << endl
+			<< "    killbare [ <uuid> , ... ]  Delete given keys." << endl
 			<< "Secret-store configuration:" << endl
 			<< "    --secrets-path <path>  Specify Web3 secret-store path (default: " << SecretStore::defaultPath() << ")" << endl
 			<< endl
 			<< "Wallet operating modes:" << endl
-			<< "    -l,--list  List all keys available in wallet." << endl
-			<< "    -n,--new <name>  Create a new key with given name and add it in the wallet." << endl
-			<< "    -i,--import [<uuid>|<file>|<secret-hex>] <name>  Import keys from given source and place in wallet." << endl
-			<< "    --import-presale <file> <name>  Import a presale wallet into a key with the given name." << endl
-			<< "    --import-with-address [<uuid>|<file>|<secret-hex>] <address> <name>  Import keys from given source with given address and place in wallet." << endl
-			<< "    -e,--export [ <address>|<uuid> , ... ]  Export given keys." << endl
-			<< "    -r,--recode [ <address>|<uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
+			<< "    createwallet  Create an Ethereum master wallet." << endl
+			<< "    list  List all keys available in wallet." << endl
+			<< "    new <name>  Create a new key with given name and add it in the wallet." << endl
+			<< "    import [<uuid>|<file>|<secret-hex>] <name>  Import keys from given source and place in wallet." << endl
+			<< "    importpresale <file> <name>  Import a presale wallet into a key with the given name." << endl
+			<< "    importwithaddress [<uuid>|<file>|<secret-hex>] <address> <name>  Import keys from given source with given address and place in wallet." << endl
+			<< "    export [ <address>|<uuid> , ... ]  Export given keys." << endl
+			<< "    recode [ <address>|<uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
 			<< "Brain wallet operating modes:" << endl
 			<< "WARNING: Brain wallets with human-generated passphrasses are highly susceptible to attack. Don't use such a thing for" << endl
 			<< "anything important." << endl
-			<< "    --new-brain [ <name>|-- ]  Create a new 13-word brain wallet; argument is the name or if --, do not add to wallet."<< endl
-			<< "    --import-brain <name>  Import your own brain wallet." << endl
-			<< "    --inspect-brain  Check the address of a particular brain wallet." << endl
+			<< "    newbrain [ <name>|-- ]  Create a new 13-word brain wallet; argument is the name or if --, do not add to wallet."<< endl
+			<< "    importbrain <name>  Import your own brain wallet." << endl
+			<< "    inspectbrain  Check the address of a particular brain wallet." << endl
 			<< "Wallet configuration:" << endl
-			<< "    --create-wallet  Create an Ethereum master wallet." << endl
 			<< "    --wallet-path <path>  Specify Ethereum wallet path (default: " << KeyManager::defaultPath() << ")" << endl
 			<< "    -m, --master <password>  Specify wallet (master) password." << endl
 			<< endl
 			<< "Transaction operating modes:" << endl
-			<< "    -d,--decode-tx [<hex>|<file>]  Decode given transaction." << endl
-			<< "    -s,--sign-tx [ <address>|<uuid>|<file>|brain((#<HD-index>):<brain-phrase>) ] ( [ <hex>|<file> , ... ] )  (Re-)Sign given transaction." << endl
+			<< "    decode ( [ <hex>|<file> ] )  Decode given transaction." << endl
+			<< "    sign [ <address>|<uuid>|<file>|brain((#<HD-index>):<brain-phrase>) ] ( [ <hex>|<file> , ... ] )  (Re-)Sign given transaction." << endl
+			<< "Transaction specification options (to be used when no transaction hex or file is given):" << endl
 			<< "    --tx-dest <address>  Specify the destination address for the transaction to be signed." << endl
 			<< "    --tx-data <hex>  Specify the hex data for the transaction to be signed." << endl
 			<< "    --tx-nonce <n>  Specify the nonce for the transaction to be signed." << endl
