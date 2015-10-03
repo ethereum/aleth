@@ -449,12 +449,16 @@ public:
 		}
 		case OperationMode::Inspect:
 		{
+			keyManager();
 			if (m_inputs.empty())
 				m_inputs.push_back(toAddress(KeyManager::brain(getPassword("Enter brain wallet key phrase: "))).hex());
 			for (auto i: m_inputs)
 			{
-				Address a = toAddress(i);
-				cout << a.abridged() << endl;
+				Address a = userToAddress(i);
+				if (!keyManager().accountName(a).empty())
+					cout << keyManager().accountName(a) << " (" << a.abridged() << ")" << endl;
+				else
+					cout << a.abridged() << endl;
 				cout << "  ICAP: " << ICAP(a).encoded() << endl;
 				cout << "  Raw hex: " << a.hex() << endl;
 			}
@@ -521,6 +525,12 @@ public:
 					cout << "  Raw hex: " << toAddress(Secret(s)).hex() << endl;
 					cout << "  Secret: " << toHex(s.ref().cropped(0, 8)) << "..." << endl;
 				}
+				else if (Address a = toAddress(i))
+				{
+					cout << "Key " << a.abridged() << ":" << endl;
+					cout << "  ICAP: " << ICAP(a).encoded() << endl;
+					cout << "  Raw hex: " << a.hex() << endl;
+				}
 				else
 					cerr << "Couldn't inspect " << i << "; not found." << endl;
 			break;
@@ -559,8 +569,50 @@ public:
 			cout << "  Raw hex: " << k.address().hex() << endl;
 			break;
 		}
+		case OperationMode::Import:
+		{
+			if (m_inputs.size() != 1)
+			{
+				cerr << "Error: exactly one key must be given to import." << endl;
+				break;
+			}
+
+			h128 u = keyManager().store().importKey(m_inputs[0]);
+			string pw;
+			bytesSec s = keyManager().store().secret(u, [&](){ return (pw = getPassword("Enter the passphrase for the key: ")); });
+			if (s.size() != 32)
+			{
+				cerr << "Error: couldn't decode key or invalid secret size." << endl;
+				break;
+			}
+
+			bool usesMaster = true;
+			if (pw != m_masterPassword && m_lockHint.empty())
+			{
+				cout << "Enter a hint to help you remember the key's passphrase: " << flush;
+				getline(cin, m_lockHint);
+				usesMaster = false;
+			}
+			keyManager().importExisting(u, m_name, pw, m_lockHint);
+			auto a = keyManager().address(u);
+
+			cout << "Imported key " << toUUID(u) << endl;
+			cout << "  Name: " << m_name << endl;
+			if (usesMaster)
+				cout << "  Uses master passphrase." << endl;
+			else
+				cout << "  Password hint: " << m_lockHint << endl;
+			cout << "  ICAP: " << ICAP(a).encoded() << endl;
+			cout << "  Raw hex: " << a.hex() << endl;
+			break;
+		}
 		case OperationMode::ImportWithAddress:
 		{
+			if (m_inputs.size() != 1)
+			{
+				cerr << "Error: exactly one key must be given to import." << endl;
+				break;
+			}
 			keyManager();
 			string const& i = m_inputs[0];
 			h128 u;
@@ -608,15 +660,40 @@ public:
 			keyManager().import(k.secret(), m_name, pw, "Same passphrase as used for presale key");
 			break;
 		}
-		case OperationMode::Kill:
+		case OperationMode::Recode:
 			for (auto const& i: m_inputs)
-				if (Address a = toAddress(i))
+				if (Address a = userToAddress(i))
+				{
+					string pw;
+					Secret s = keyManager().secret(a, [&](){ return pw = getPassword("Enter old passphrase for key '" + i + "' (hint: " + keyManager().passwordHint(a) + "): "); });
+					if (!s)
+					{
+						cerr << "Invalid password for key " << userVisible(a) << endl;
+						continue;
+					}
+					pair<string, string> np = createPassword(keyManager(), "Enter new passphrase for key '" + i + "': ");
+					if (keyManager().recode(a, np.first, np.second, [&](){ return pw; }, kdf()))
+						cout << "Re-encoded key '" << i << "' successfully." << endl;
+					else
+						cerr << "Couldn't re-encode '" << i << "''; key corrupt or incorrect passphrase supplied." << endl;
+				}
+				else
+					cerr << "Couldn't re-encode " << i << "; not found." << endl;
+			break;
+		case OperationMode::Kill:
+		{
+			unsigned count = 0;
+			for (auto const& i: m_inputs)
+			{
+				if (Address a = userToAddress(i))
 					keyManager().kill(a);
-				else if (h128 u = fromUUID(i))
-					keyManager().kill(keyManager().address(u));
 				else
 					cerr << "Couldn't kill " << i << "; not found." << endl;
+				++count;
+			}
+			cout << count << " key(s) deleted." << endl;
 			break;
+		}
 		case OperationMode::List:
 		{
 			if (keyManager().store().keys().empty())
@@ -679,21 +756,22 @@ public:
 			<< "    importpresale <file> <name>  Import a presale wallet into a key with the given name." << endl
 			<< "    importwithaddress [<uuid>|<file>|<secret-hex>] <address> <name>  Import keys from given source with given address and place in wallet." << endl
 			<< "    export [ <address>|<uuid> , ... ]  Export given keys." << endl
+			<< "    inspect [ <address>|<name>|<uuid>|<brainwallet> ] ...  Print information on the given keys." << endl
 //			<< "    recode [ <address>|<uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
 			<< "    kill [ <address>|<uuid>, ... ]  Delete given keys." << endl
 			<< "Brain wallet operating modes:" << endl
 			<< "WARNING: Brain wallets with human-generated passphrasses are highly susceptible to attack. Don't use such a thing for" << endl
 			<< "anything important." << endl
-			<< "    newbrain [ <name>|-- ]  Create a new 13-word brain wallet; argument is the name or if --, do not add to wallet."<< endl
+			<< "    newbrain [ <name>|-- ]  Create a new 13-word brain wallet; argument is the name or if --, do not add to wallet." << endl
 			<< "    importbrain <name>  Import your own brain wallet." << endl
-			<< "    inspectbrain  Check the address of a particular brain wallet." << endl
+			<< "Brainwallets are specified as: brain((#<HD-index>):<brain-phrase>), e.g. brain:PASSWORD." << endl
 			<< "Wallet configuration:" << endl
 			<< "    --wallet-path <path>  Specify Ethereum wallet path (default: " << KeyManager::defaultPath() << ")" << endl
 			<< "    -m, --master <passphrase>  Specify wallet (master) passphrase." << endl
 			<< endl
 			<< "Transaction operating modes:" << endl
 			<< "    decode ( [ <hex>|<file> ] )  Decode given transaction." << endl
-			<< "    sign [ <address>|<uuid>|<file>|brain((#<HD-index>):<brain-phrase>) ] ( [ <hex>|<file> , ... ] )  (Re-)Sign given transaction." << endl
+			<< "    sign [ <address>|<uuid>|<file>|<brainwallet> ] ( [ <hex>|<file> , ... ] )  (Re-)Sign given transaction." << endl
 			<< "Transaction specification options (to be used when no transaction hex or file is given):" << endl
 			<< "    --tx-dest <address>  Specify the destination address for the transaction to be signed." << endl
 			<< "    --tx-data <hex>  Specify the hex data for the transaction to be signed." << endl
@@ -763,6 +841,17 @@ private:
 	}
 
 	KDF kdf() const { return m_kdf == "pbkdf2" ? KDF::PBKDF2_SHA256 : KDF::Scrypt; }
+
+	Address userToAddress(std::string const& _s)
+	{
+		if (h128 u = fromUUID(_s))
+			return keyManager().address(u);
+		DEV_IGNORE_EXCEPTIONS(return toAddress(_s));
+		for (Address const& a: keyManager().accounts())
+			if (keyManager().accountName(a) == _s)
+				return a;
+		return Address();
+	}
 
 	KeyManager& keyManager()
 	{
