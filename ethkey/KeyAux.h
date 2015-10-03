@@ -139,7 +139,7 @@ public:
 			auto v = argv[++i];
 			m_kdfParams[n] = v;
 		}
-		else if (arg == "--sign-tx" && i + 1 < argc)
+		else if ((arg == "-s" || arg == "--sign-tx") && i + 1 < argc)
 		{
 			m_mode = OperationMode::SignTx;
 			m_signKey = argv[++i];
@@ -646,7 +646,13 @@ public:
 			<< endl
 			<< "Transaction operating modes:" << endl
 			<< "    -d,--decode-tx [<hex>|<file>]  Decode given transaction." << endl
-			<< "    -s,--sign-tx [ <address>|<uuid>|<file>|brain((#<HD-index>):<brain-phrase>) ] [ <hex>|<file> , ... ]  (Re-)Sign given transaction." << endl
+			<< "    -s,--sign-tx [ <address>|<uuid>|<file>|brain((#<HD-index>):<brain-phrase>) ] ( [ <hex>|<file> , ... ] )  (Re-)Sign given transaction." << endl
+			<< "    --tx-dest <address>  Specify the destination address for the transaction to be signed." << endl
+			<< "    --tx-data <hex>  Specify the hex data for the transaction to be signed." << endl
+			<< "    --tx-nonce <n>  Specify the nonce for the transaction to be signed." << endl
+			<< "    --tx-gas <n>  Specify the gas for the transaction to be signed." << endl
+			<< "    --tx-gasprice <wei>  Specify the gas price for the transaction to be signed." << endl
+			<< "    --tx-value <wei>  Specify the value for the transaction to be signed." << endl
 			<< endl
 			<< "Encryption configuration:" << endl
 			<< "    --kdf <kdfname>  Specify KDF to use when encrypting (default: sc	rypt)" << endl
