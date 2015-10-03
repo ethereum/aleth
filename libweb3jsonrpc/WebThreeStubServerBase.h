@@ -186,6 +186,9 @@ public:
 	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
 	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
 
+	virtual std::string personal_newAccount(const std::string&) { return ""; }
+	virtual bool personal_unlockAccount(const std::string&, const std::string&, int) { return false; }
+
 	// IPC connector
 	void enableIpc(bool _enable);
 

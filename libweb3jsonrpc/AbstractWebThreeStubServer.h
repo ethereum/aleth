@@ -103,6 +103,8 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
             this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_reprocess", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::admin_eth_reprocessI);
             this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_vmTrace", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::admin_eth_vmTraceI);
             this->bindAndAddMethod(jsonrpc::Procedure("admin_eth_getReceiptByHashAndIndex", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::admin_eth_getReceiptByHashAndIndexI);
+            this->bindAndAddMethod(jsonrpc::Procedure("personal_newAccount", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::personal_newAccountI);
+            this->bindAndAddMethod(jsonrpc::Procedure("personal_unlockAccount", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_INTEGER, NULL), &AbstractWebThreeStubServer::personal_unlockAccountI);
         }
 
         inline virtual void web3_sha3I(const Json::Value &request, Json::Value &response)
@@ -486,6 +488,14 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
         {
             response = this->admin_eth_getReceiptByHashAndIndex(request[0u].asString(), request[1u].asInt(), request[2u].asString());
         }
+        inline virtual void personal_newAccountI(const Json::Value &request, Json::Value &response)
+        {
+            response = this->personal_newAccount(request[0u].asString());
+        }
+        inline virtual void personal_unlockAccountI(const Json::Value &request, Json::Value &response)
+        {
+            response = this->personal_unlockAccount(request[0u].asString(), request[1u].asString(), request[2u].asInt());
+        }
         virtual std::string web3_sha3(const std::string& param1) = 0;
         virtual std::string web3_clientVersion() = 0;
         virtual std::string net_version() = 0;
@@ -577,6 +587,8 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
         virtual Json::Value admin_eth_reprocess(const std::string& param1, const std::string& param2) = 0;
         virtual Json::Value admin_eth_vmTrace(const std::string& param1, int param2, const std::string& param3) = 0;
         virtual Json::Value admin_eth_getReceiptByHashAndIndex(const std::string& param1, int param2, const std::string& param3) = 0;
+        virtual std::string personal_newAccount(const std::string& param1) = 0;
+        virtual bool personal_unlockAccount(const std::string& param1, const std::string& param2, int param3) = 0;
 };
 
 #endif //JSONRPC_CPP_STUB_ABSTRACTWEBTHREESTUBSERVER_H_

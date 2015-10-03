@@ -352,3 +352,27 @@ void WebThreeStubServer::put(std::string const& _name, std::string const& _key, 
 	m_db->Put(m_writeOptions, ldb::Slice((char const*)k.data(), k.size()), ldb::Slice((char const*)_value.data(), _value.size()));
 }
 
+std::string WebThreeStubServer::personal_newAccount(const std::string& _password)
+{
+	KeyPair p = KeyPair::create();
+	m_keyMan.import(p.secret(), std::string(), _password, std::string());
+	return toJS(p.address());
+}
+
+bool WebThreeStubServer::personal_unlockAccount(const std::string& _address, const std::string& _password, int _duration)
+{
+	(void)_duration;
+	Address address(fromHex(_address));
+	if (!m_keyMan.hasAccount(address))
+		return false;
+	m_keyMan.notePassword(_password);
+	try
+	{
+		m_keyMan.secret(address);
+	}
+	catch (PasswordUnknown const&)
+	{
+		return false;
+	}
+	return true;
+}
