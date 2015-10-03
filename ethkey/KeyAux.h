@@ -166,6 +166,16 @@ public:
 				cerr << "Invalid argument to " << arg << endl;
 				exit(-1);
 			}
+		else if (arg == "--force-nonce" && i + 1 < argc)
+			try
+			{
+				m_forceNonce = u256(argv[++i]);
+			}
+			catch (...)
+			{
+				cerr << "Invalid argument to " << arg << endl;
+				exit(-1);
+			}
 		else if ((arg == "--tx-dest" || arg == "--tx-to" || arg == "--tx-destination") && i + 1 < argc)
 			try
 			{
@@ -396,6 +406,8 @@ public:
 				try
 				{
 					TransactionBase t = i.empty() ? TransactionBase(m_toSign) : TransactionBase(inputData(i, &isFile), CheckTransaction::None);
+					if (m_forceNonce)
+						t.setNonce(m_forceNonce);
 					t.sign(s);
 					cout << t.sha3() << ": ";
 					if (isFile)
@@ -689,6 +701,8 @@ public:
 			<< "    --tx-gas <n>  Specify the gas for the transaction to be signed." << endl
 			<< "    --tx-gasprice <wei>  Specify the gas price for the transaction to be signed." << endl
 			<< "    --tx-value <wei>  Specify the value for the transaction to be signed." << endl
+			<< "Transaction signing options:" << endl
+			<< "    --force-nonce <n>  Override the nonce for any transactions to be signed." << endl
 			<< endl
 			<< "Encryption configuration:" << endl
 			<< "    --kdf <kdfname>  Specify KDF to use when encrypting (default: sc	rypt)" << endl
@@ -803,6 +817,7 @@ private:
 	/// Signing
 	string m_signKey;
 	TransactionSkeleton m_toSign;
+	u256 m_forceNonce;
 
 	string m_kdf = "scrypt";
 	map<string, string> m_kdfParams;
