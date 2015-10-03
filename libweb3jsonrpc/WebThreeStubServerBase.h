@@ -147,7 +147,7 @@ public:
 	virtual Json::Value eth_fetchQueuedTransactions(std::string const& _accountId);
 	virtual std::string eth_signTransaction(Json::Value const& _transaction);
 	virtual Json::Value eth_inspectTransaction(std::string const& _rlp);
-	virtual bool eth_injectTransaction(std::string const& _rlp);
+	virtual bool eth_sendRawTransaction(std::string const& _rlp);
 	virtual bool eth_notePassword(std::string const&) { return false; }
 
 	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value);
