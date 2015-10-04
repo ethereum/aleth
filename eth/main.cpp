@@ -591,6 +591,8 @@ int main(int argc, char** argv)
 			gasFloor = u256(argv[++i]);
 		else if (arg == "--olympic")
 			releaseNetwork = eth::Network::Olympic;
+		else if (arg == "--morden" || arg == "--testnet")
+			releaseNetwork = eth::Network::Morden;
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
 		{
 			try
@@ -856,6 +858,8 @@ int main(int argc, char** argv)
 			cout << "Welcome to Olympic!" << endl;
 		else if (c_network == eth::Network::Frontier)
 			cout << "Beware. You're entering the " EthMaroonBold "Frontier" EthReset "!" << endl;
+		else if (c_network == eth::Network::Morden)
+			cout << "Morden welcomes you. What do you want?" << endl;
 	}
 
 	m.execute();
