@@ -1,7 +1,7 @@
 [submodule "alethzero"]
 	path = alethzero
 	url = https://github.com/ethereum/alethzero
-	branch = develop
+	branch = release
 [submodule "mix"]
 	path = mix
 	url = https://github.com/ethereum/mix
@@ -13,15 +13,15 @@
 [submodule "webthree"]
 	path = webthree
 	url = https://github.com/ethereum/webthree
-	branch = develop
+	branch = release
 [submodule "libweb3core"]
 	path = libweb3core
 	url = https://github.com/ethereum/libweb3core
-	branch = develop
+	branch = release
 [submodule "libethereum"]
 	path = libethereum
 	url = https://github.com/ethereum/libethereum
-	branch = develop
+	branch = release
 [submodule "webthree-helpers"]
 	path = webthree-helpers
 	url = https://github.com/ethereum/webthree-helpers
