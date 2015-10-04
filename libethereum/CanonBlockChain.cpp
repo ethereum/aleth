@@ -81,7 +81,7 @@ bytes CanonBlockChain<Ethash>::createGenesisBlock()
 	}
 
 	js::mValue val;
-	json_spirit::read_string(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON, val);
+	json_spirit::read_string(s_genesisStateJSON.empty() ? genesisInfo(c_network) : s_genesisStateJSON, val);
 	js::mObject genesis = val.get_obj();
 
 	h256 mixHash(genesis["mixhash"].get_str());
@@ -118,13 +118,13 @@ AccountMap const& CanonBlockChain<Ethash>::createGenesisState()
 {
 	static AccountMap s_ret;
 	if (s_ret.empty())
-		s_ret = jsonToAccountMap(s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisInfoFrontier : c_genesisInfoOlympic : s_genesisStateJSON);
+		s_ret = jsonToAccountMap(s_genesisStateJSON.empty() ? genesisInfo(c_network) : s_genesisStateJSON);
 	return s_ret;
 }
 
 h256 CanonBlockChain<Ethash>::knownGenesisStateRoot()
 {
-	return s_genesisStateJSON.empty() ? c_network == Network::Frontier ? c_genesisStateRootFrontier : c_genesisStateRootOlympic : h256();
+	return s_genesisStateJSON.empty() ? genesisStateRoot(c_network) : h256();
 }
 
 void CanonBlockChain<Ethash>::setGenesis(std::string const& _json)
