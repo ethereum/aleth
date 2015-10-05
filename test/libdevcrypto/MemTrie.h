@@ -14,47 +14,41 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file OverlayDB.h
+/** @file MemTrie.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
 #pragma once
 
-#include <memory>
-#include <libdevcore/db.h>
 #include <libdevcore/Common.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/MemoryDB.h>
+#include <libdevcore/FixedHash.h>
 
 namespace dev
 {
 
-class OverlayDB: public MemoryDB
+class MemTrieNode;
+
+/**
+ * @brief Merkle Patricia Tree "Trie": a modifed base-16 Radix tree.
+ */
+class MemTrie
 {
 public:
-	OverlayDB(ldb::DB* _db = nullptr): m_db(_db) {}
-	~OverlayDB();
+	MemTrie(): m_root(nullptr) {}
+	~MemTrie();
 
-	ldb::DB* db() const { return m_db.get(); }
+	h256 hash256() const;
+	bytes rlp() const;
 
-	void commit();
-	void rollback();
+	void debugPrint();
 
-	std::string lookup(h256 const& _h) const;
-	bool exists(h256 const& _h) const;
-	void kill(h256 const& _h);
-	bool deepkill(h256 const& _h);
-
-	bytes lookupAux(h256 const& _h) const;
+	std::string const& at(std::string const& _key) const;
+	void insert(std::string const& _key, std::string const& _value);
+	void remove(std::string const& _key);
 
 private:
-	using MemoryDB::clear;
-
-	std::shared_ptr<ldb::DB> m_db;
-
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
+	MemTrieNode* m_root;
 };
 
 }
