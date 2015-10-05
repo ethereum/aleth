@@ -61,11 +61,11 @@ llvm::Value* Ext::getArgAlloca()
 	auto& a = m_argAllocas[m_argCounter];
 	if (!a)
 	{
-		InsertPointGuard g{getBuilder()};
+		InsertPointGuard g{m_builder};
 		auto allocaIt = getMainFunction()->front().begin();
 		std::advance(allocaIt, m_argCounter); // Skip already created allocas
-		getBuilder().SetInsertPoint(allocaIt);
-		a = getBuilder().CreateAlloca(Type::Word, nullptr, {"a.", std::to_string(m_argCounter)});
+		m_builder.SetInsertPoint(allocaIt);
+		a = m_builder.CreateAlloca(Type::Word, nullptr, {"a.", std::to_string(m_argCounter)});
 	}
 	++m_argCounter;
 	return a;
@@ -74,7 +74,7 @@ llvm::Value* Ext::getArgAlloca()
 llvm::Value* Ext::byPtr(llvm::Value* _value)
 {
 	auto a = getArgAlloca();
-	getBuilder().CreateStore(_value, a);
+	m_builder.CreateStore(_value, a);
 	return a;
 }
 
@@ -85,7 +85,7 @@ llvm::CallInst* Ext::createCall(EnvFunc _funcId, std::initializer_list<llvm::Val
 		func = createFunc(_funcId, getModule());
 
 	m_argCounter = 0;
-	return getBuilder().CreateCall(func, {_args.begin(), _args.size()});
+	return m_builder.CreateCall(func, {_args.begin(), _args.size()});
 }
 
 llvm::Value* Ext::sload(llvm::Value* _index)
@@ -136,7 +136,7 @@ llvm::Value* Ext::blockHash(llvm::Value* _number)
 	auto hash = getArgAlloca();
 	createCall(EnvFunc::blockhash, {getRuntimeManager().getEnvPtr(), byPtr(_number), hash});
 	hash =  m_builder.CreateLoad(hash);
-	return Endianness::toNative(getBuilder(), hash);
+	return Endianness::toNative(m_builder, hash);
 }
 
 llvm::Value* Ext::create(llvm::Value* _endowment, llvm::Value* _initOff, llvm::Value* _initSize)

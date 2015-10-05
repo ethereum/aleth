@@ -28,10 +28,9 @@ public:
 
 private:
 
-	std::vector<BasicBlock> createBasicBlocks(code_iterator _begin, code_iterator _end, llvm::SwitchInst& _switchInst);
+	std::vector<BasicBlock> createBasicBlocks(code_iterator _begin, code_iterator _end);
 
-	void compileBasicBlock(BasicBlock& _basicBlock, class RuntimeManager& _runtimeManager, class Arith256& _arith, class Memory& _memory, class Ext& _ext, class GasMeter& _gasMeter,
-			class Stack& _globalStack);
+	void compileBasicBlock(BasicBlock& _basicBlock, class RuntimeManager& _runtimeManager, class Arith256& _arith, class Memory& _memory, class Ext& _ext, class GasMeter& _gasMeter);
 
 	void resolveJumps();
 
@@ -39,19 +38,13 @@ private:
 	Options const& m_options;
 
 	/// Helper class for generating IR
-	llvm::IRBuilder<> m_builder;
-
-	/// Stop basic block - terminates execution with STOP code (0)
-	llvm::BasicBlock* m_stopBB = nullptr;
-
-	/// Abort basic block - terminates execution with OOG-like state
-	llvm::BasicBlock* m_abortBB = nullptr;
+	IRBuilder m_builder;
 
 	/// Block with a jump table.
 	llvm::BasicBlock* m_jumpTableBB = nullptr;
 
 	/// Main program function
-	llvm::Function* m_mainFunc = nullptr; // TODO: Remove
+	llvm::Function* m_mainFunc = nullptr;
 };
 
 }

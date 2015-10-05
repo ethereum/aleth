@@ -130,6 +130,12 @@ public:
 	/// @returns the transaction-count of the sender.
 	u256 nonce() const { return m_nonce; }
 
+	/// Sets the nonce to the given value. Clears any signature.
+	void setNonce(u256 const& _n) { clearSignature(); m_nonce = _n; }
+
+	/// Clears the signature.
+	void clearSignature() { m_vrs = SignatureStruct(); }
+
 	/// @returns the signature of the transaction. Encodes the sender.
 	SignatureStruct const& signature() const { return m_vrs; }
 

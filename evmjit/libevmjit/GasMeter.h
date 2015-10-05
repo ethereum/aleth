@@ -15,7 +15,7 @@ using namespace evmjit;
 class GasMeter : public CompilerHelper // TODO: Use RuntimeHelper
 {
 public:
-	GasMeter(llvm::IRBuilder<>& _builder, RuntimeManager& _runtimeManager);
+	GasMeter(IRBuilder& _builder, RuntimeManager& _runtimeManager);
 
 	/// Count step cost of instruction
 	void count(Instruction _inst);

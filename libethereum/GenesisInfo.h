@@ -23,14 +23,13 @@
 
 #include <string>
 #include <libdevcore/FixedHash.h>
+#include <libethcore/Common.h>
 
 namespace dev {
 namespace eth {
 
-extern std::string const c_genesisInfoOlympic;
-extern std::string const c_genesisInfoFrontier;
-extern h256 const c_genesisStateRootOlympic;
-extern h256 const c_genesisStateRootFrontier;
+std::string const& genesisInfo(Network _n);
+h256 const& genesisStateRoot(Network _n);
 
 }
 }
