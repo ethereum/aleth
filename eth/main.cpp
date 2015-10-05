@@ -1057,7 +1057,7 @@ int main(int argc, char** argv)
 */
 	if (keyManager.exists())
 	{
-		if (masterPassword.empty() || !keyManager.load(masterPassword))
+		if (!keyManager.load(masterPassword))
 			while (true)
 			{
 				masterPassword = getPassword("Please enter your MASTER password: ");
@@ -1068,15 +1068,13 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		while (masterPassword.empty())
+		while (true)
 		{
 			masterPassword = getPassword("Please enter a MASTER password to protect your key store (make it strong!): ");
 			string confirm = getPassword("Please confirm the password by entering it again: ");
-			if (masterPassword != confirm)
-			{
-				cout << "Passwords were different. Try again." << endl;
-				masterPassword.clear();
-			}
+			if (masterPassword == confirm)
+				break;
+			cout << "Passwords were different. Try again." << endl;
 		}
 		keyManager.create(masterPassword);
 	}
