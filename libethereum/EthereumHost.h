@@ -139,6 +139,7 @@ private:
 	DownloadMan m_man;
 	std::unique_ptr<BlockChainSync> m_sync;
 	std::atomic<time_t> m_syncStart = { 0 };
+	std::atomic<time_t> m_lastTick = { 0 };
 };
 
 }
