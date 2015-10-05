@@ -197,6 +197,7 @@ macro(eth_nsis)
 			set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
 		endif()
 
+		set(CPACK_PACKAGE_FILE_NAME "Ethereum")
 		set(CPACK_NSIS_DISPLAY_NAME "Ethereum")
 		set(CPACK_NSIS_HELP_LINK "https://github.com/ethereum/cpp-ethereum")
 		set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ethereum/cpp-ethereum")
