@@ -19,7 +19,7 @@
         },
         "expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000"
+                "balance" : "90000000000000009999894980"
             }
         },
         "pre" : {
@@ -75,6 +75,9 @@
         },
         "expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "90000000000000000000000000"
+            },
+	    "aaaf5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "10000000000"
             }
         },
@@ -94,6 +97,13 @@
         },
         "blocks" : [
             {
+		"blockHeaderPremine" : {
+                    "gasLimit" : "246800"
+                },
+		"blockHeader" : {
+                    "gasLimit" : "146900",
+		    "updatePoW" : "1"
+                },
                 "transactions" : [
                     {
                         "data" : "",
@@ -185,7 +195,7 @@
         },
         "expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000"
+                "balance" : "90000000000000009998634920"
             }
         },
         "pre" : {
