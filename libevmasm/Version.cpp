@@ -14,41 +14,25 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file MemTrie.h
- * @author Gav Wood <i@gavwood.com>
- * @date 2014
- */
-
-#pragma once
-
-#include <libdevcore/Common.h>
-#include <libdevcore/FixedHash.h>
-
-namespace dev
-{
-
-class MemTrieNode;
-
 /**
- * @brief Merkle Patricia Tree "Trie": a modifed base-16 Radix tree.
+ * @author Christian <c@ethdev.com>
+ * @date 2015
+ * Versioning.
  */
-class MemTrie
-{
-public:
-	MemTrie(): m_root(nullptr) {}
-	~MemTrie();
 
-	h256 hash256() const;
-	bytes rlp() const;
+#include <libevmasm/Version.h>
+#include <string>
+#include <ethereum/BuildInfo.h>
+#include <libdevcore/Common.h>
 
-	void debugPrint();
+using namespace dev;
+using namespace std;
 
-	std::string const& at(std::string const& _key) const;
-	void insert(std::string const& _key, std::string const& _value);
-	void remove(std::string const& _key);
+char const* dev::eth::VersionNumberLibEvmAsm = ETH_PROJECT_VERSION;
+extern string const dev::eth::VersionStringLibEvmAsm =
+	string(dev::eth::VersionNumberLibEvmAsm) +
+	"-" +
+	string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) +
+	(ETH_CLEAN_REPO ? "" : "*") +
+	"/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
 
-private:
-	MemTrieNode* m_root;
-};
-
-}

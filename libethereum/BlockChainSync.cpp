@@ -54,7 +54,8 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 }
 
 BlockChainSync::BlockChainSync(EthereumHost& _host):
-	m_host(_host)
+	m_host(_host),
+	m_startingBlock(_host.chain().number())
 {
 	m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
 	{
@@ -335,6 +336,8 @@ SyncStatus PV60Sync::status() const
 	SyncStatus res;
 	res.state = m_state;
 	res.protocolVersion = EthereumHost::c_oldProtocolVersion;
+	res.startBlockNumber = m_startingBlock;
+	res.currentBlockNumber = host().chain().number();
 	if (m_state == SyncState::Hashes)
 	{
 		res.hashesTotal = m_estimatedHashes;
@@ -374,6 +377,7 @@ void PV60Sync::restartSync()
 {
 	resetSync();
 	host().bq().clear();
+	m_startingBlock = host().chain().number();
 	std::shared_ptr<EthereumPeer> syncer = m_syncer.lock();
 	if (syncer)
 		transition(syncer, SyncState::Idle);
@@ -1193,6 +1197,8 @@ SyncStatus PV61Sync::status() const
 	RecursiveGuard l(x_sync);
 	SyncStatus res = PV60Sync::status();
 	res.protocolVersion = 61;
+	res.startBlockNumber = m_startingBlock;
+	res.currentBlockNumber = host().chain().number();
 	if (m_state == SyncState::Hashes && isPV61Syncing())
 	{
 		res.hashesReceived = 0;

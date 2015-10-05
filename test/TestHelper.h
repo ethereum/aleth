@@ -24,8 +24,9 @@
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/progress.hpp>
 
-#include <json_spirit/JsonSpiritHeaders.h>
+#include "JsonSpiritHeaders.h"
 #include <libethcore/Ethash.h>
 #include <libethereum/State.h>
 #include <libevm/ExtVMFace.h>
@@ -43,7 +44,6 @@ void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 void mine(Block& _s, BlockChain const& _bc);
 void mine(Ethash::BlockHeader& _bi);
-
 }
 
 namespace test
@@ -115,8 +115,8 @@ public:
 
 	// imports
 	void importEnv(json_spirit::mObject& _o);
-	static void importState(json_spirit::mObject& _o, eth::State& _state);
-	static void importState(json_spirit::mObject& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
+	static void importState(json_spirit::mObject const& _o, eth::State& _state);
+	static void importState(json_spirit::mObject const& _o, eth::State& _state, eth::AccountMaskMap& o_mask);
 	static void importTransaction (json_spirit::mObject const& _o, eth::Transaction& o_tr);
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
@@ -226,6 +226,18 @@ public:
 private:
 	Options();
 	Options(Options const&) = delete;
+};
+
+class TestOutputHelper
+{
+public:
+	static void initTest(json_spirit::mValue& _v);
+	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
+	static std::string const& testName() { return m_currentTestName; };
+private:
+	static size_t m_currTest;
+	static size_t m_maxTests;
+	static std::string m_currentTestName;
 };
 
 /// Allows observing test execution process.

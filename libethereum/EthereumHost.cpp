@@ -114,7 +114,12 @@ void EthereumHost::doWork()
 		}
 	}
 
-	foreachPeer([](std::shared_ptr<EthereumPeer> _p) { _p->tick(); return true; });
+	time_t  now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
+	if (now - m_lastTick >= 1)
+	{
+		m_lastTick = now;
+		foreachPeer([](std::shared_ptr<EthereumPeer> _p) { _p->tick(); return true; });
+	}
 
 	if (m_syncStart)
 	{

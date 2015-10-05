@@ -18,10 +18,11 @@
 #include "VMFactory.h"
 #include <libdevcore/Assertions.h>
 #include "VM.h"
-#include "SmartVM.h"
+#include "ethereum/ConfigInfo.h"
 
 #if ETH_EVMJIT
-#include <evmjit/libevmjit-cpp/JitVM.h>
+#include "JitVM.h"
+#include "SmartVM.h"
 #endif
 
 namespace dev

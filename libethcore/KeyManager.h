@@ -72,6 +72,8 @@ enum class SemanticPassword
 class KeyManager
 {
 public:
+	enum class NewKeyType { DirectICAP = 0, NoVanity, FirstTwo, FirstTwoNextTwo, FirstThree, FirstFour };
+
 	KeyManager(std::string const& _keysFile = defaultPath(), std::string const& _secretsPath = SecretStore::defaultPath());
 	~KeyManager();
 
@@ -96,6 +98,8 @@ public:
 	std::string const& accountName(Address const& _address) const;
 	/// @returns the password hint for the account for the given address;
 	std::string const& passwordHint(Address const& _address) const;
+	/// Should be called to change password
+	void changeName(Address const& _address, std::string const& _name);
 
 	/// @returns true if the given address has a key (UUID) associated with it. Equivalent to !!uuid(_a)
 	/// If the address has no key, it could be a brain wallet.
@@ -139,6 +143,8 @@ public:
 	/// @returns the HD subkey for a given key.
 	static Secret subkey(Secret const& _s, unsigned _index);
 
+	/// @returns new random keypair with given vanity
+	static  KeyPair newKeyPair(NewKeyType _type);
 private:
 	std::string getPassword(h128 const& _uuid, std::function<std::string()> const& _pass = DontKnowThrow) const;
 	std::string getPassword(h256 const& _passHash, std::function<std::string()> const& _pass = DontKnowThrow) const;

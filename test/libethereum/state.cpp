@@ -31,7 +31,7 @@
 #include <libethereum/Defaults.h>
 #include <libevm/VM.h>
 #include <test/TestHelper.h>
-#include "ConfigInfo.h"
+#include "ethereum/ConfigInfo.h"
 
 using namespace std;
 using namespace json_spirit;
@@ -97,6 +97,11 @@ void doStateTests(json_spirit::mValue& v, bool _fillin)
 } }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(StateTests)
+
+BOOST_AUTO_TEST_CASE(stCallCodes)
+{
+	dev::test::executeTests("stCallCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
 
 BOOST_AUTO_TEST_CASE(stExample)
 {

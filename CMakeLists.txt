@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(ethereum VERSION "0.9.92")
+project(ethereum VERSION "1.0.0")
 
 include(EthCompilerSettings)
 
@@ -19,8 +19,7 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project()
-print_config()
+configure_project(CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL EVMJIT FATDB)
 
 if (EVMJIT)
 	if (NOT DEFINED LLVM_DIR)
@@ -31,7 +30,6 @@ if (EVMJIT)
 		endif()
 	endif()
 
-	set(EVMJIT_CPP TRUE) # include CPP-JIT connector
 	add_subdirectory(evmjit)
 	if (DEFINED MSVC)
 		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
@@ -40,13 +38,15 @@ if (EVMJIT)
 endif()
 
 # core libraries
-add_subdirectory(libethash)
-add_subdirectory(libethcore)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libethash)
+	add_subdirectory(libethcore)
+	add_subdirectory(liblll)
+	add_subdirectory(libevm)
+	add_subdirectory(libethereum)
+endif()
 add_subdirectory(libevmcore)
 add_subdirectory(libevmasm)
-add_subdirectory(liblll)
-add_subdirectory(libevm)
-add_subdirectory(libethereum)
 
 if (ETHASHCL)
 	add_subdirectory(libethash-cl)
@@ -54,7 +54,9 @@ endif()
 
 # other libraries
 add_subdirectory(libnatspec)
-add_subdirectory(libtestutils)
+if (NOT EMSCRIPTEN)
+	add_subdirectory(libtestutils)
+endif()
 
 # executables
 
