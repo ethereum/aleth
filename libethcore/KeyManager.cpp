@@ -417,3 +417,44 @@ void KeyManager::write(SecureFixedHash<16> const& _key, string const& _keysFile)
 	m_keysFileKey = _key;
 	cachePassword(defaultPassword());
 }
+
+KeyPair KeyManager::newKeyPair(KeyManager::NewKeyType _type)
+{
+	KeyPair p;
+	bool keepGoing = true;
+	unsigned done = 0;
+	function<void()> f = [&]() {
+		KeyPair lp;
+		while (keepGoing)
+		{
+			done++;
+			if (done % 1000 == 0)
+				cnote << "Tried" << done << "keys";
+			lp = KeyPair::create();
+			auto a = lp.address();
+			if (_type == NewKeyType::NoVanity ||
+				(_type == NewKeyType::DirectICAP && !a[0]) ||
+				(_type == NewKeyType::FirstTwo && a[0] == a[1]) ||
+				(_type == NewKeyType::FirstTwoNextTwo && a[0] == a[1] && a[2] == a[3]) ||
+				(_type == NewKeyType::FirstThree && a[0] == a[1] && a[1] == a[2]) ||
+				(_type == NewKeyType::FirstFour && a[0] == a[1] && a[1] == a[2] && a[2] == a[3])
+			)
+				break;
+		}
+		if (keepGoing)
+			p = lp;
+		keepGoing = false;
+	};
+
+	vector<std::thread*> ts;
+	for (unsigned t = 0; t < std::thread::hardware_concurrency() - 1; ++t)
+		ts.push_back(new std::thread(f));
+	f();
+
+	for (std::thread* t: ts)
+	{
+		t->join();
+		delete t;
+	}
+	return p;
+}
