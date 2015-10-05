@@ -759,6 +759,11 @@ Json::Value WebThreeStubServerBase::eth_getWork()
 	return ret;
 }
 
+Json::Value WebThreeStubServerBase::eth_syncing()
+{
+	return Json::Value(false);
+}
+
 bool WebThreeStubServerBase::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)
 {
 	try

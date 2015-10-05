@@ -354,7 +354,7 @@ void WebThreeStubServer::put(std::string const& _name, std::string const& _key, 
 
 std::string WebThreeStubServer::personal_newAccount(const std::string& _password)
 {
-	KeyPair p = KeyPair::create();
+	KeyPair p = KeyManager::newKeyPair(KeyManager::NewKeyType::DirectICAP);
 	m_keyMan.import(p.secret(), std::string(), _password, std::string());
 	return toJS(p.address());
 }
@@ -375,4 +375,17 @@ bool WebThreeStubServer::personal_unlockAccount(const std::string& _address, con
 		return false;
 	}
 	return true;
+}
+
+Json::Value WebThreeStubServer::eth_syncing()
+{
+	dev::eth::SyncStatus sync = m_web3.ethereum()->syncStatus();
+	if (sync.state == SyncState::Idle)
+		return Json::Value(false);
+
+	Json::Value info(Json::objectValue);
+	info["startingBlock"] = sync.startBlockNumber;
+	info["currentBlock"] = sync.startBlockNumber + sync.blocksTotal;
+	info["highestBlock"] = sync.currentBlockNumber;
+	return info;
 }
