@@ -118,7 +118,7 @@ private:
 	std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
 	Mutex x_writeQueue;						///< Mutex for the write queue.
 	std::deque<bytes> m_writeQueue;			///< The write queue.
-	std::array<byte, 16777232> m_data;			///< Buffer for ingress packet data.
+	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
 
 	unsigned m_protocolVersion = 0;			///< The protocol version of the peer.

@@ -361,6 +361,7 @@ void Session::doRead()
 		return;
 
 	auto self(shared_from_this());
+	m_data.resize(h256::size);
 	ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, h256::size), [this,self](boost::system::error_code ec, std::size_t length)
 	{
 		ThreadContext tc(info().id.abridged());
@@ -394,6 +395,7 @@ void Session::doRead()
 
 		/// read padded frame and mac
 		auto tlen = hLength + hPadding + h128::size;
+		m_data.resize(tlen);
 		ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, tlen), [this, self, hLength, hProtocolId, tlen](boost::system::error_code ec, std::size_t length)
 		{
 			ThreadContext tc(info().id.abridged());
