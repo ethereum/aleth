@@ -130,20 +130,20 @@ macro(eth_install_executable EXECUTABLE)
 			)
 		endif()
 
-		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Debug"
+		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Debug/"
 			DESTINATION .
 			CONFIGURATIONS Debug
 			COMPONENT ${EXECUTABLE}
 		)
 
-		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release"
+		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/"
 			DESTINATION .
 			CONFIGURATIONS Release
 			COMPONENT ${EXECUTABLE}
 		)
 
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/RelWithDebInfo/"
-			DESTINATION bin
+			DESTINATION .
 			CONFIGURATIONS RelWithDebInfo
 			COMPONENT ${EXECUTABLE}
 		)
@@ -185,6 +185,17 @@ macro(eth_nsis)
 		set(CPACK_COMPONENT_ETHMINER_GROUP "CLI")
 		set(CPACK_COMPONENT_RLP_GROUP "CLI")
 		set(CPACK_COMPONENT_ABI_GROUP "CLI")
+
+		set(CPACK_COMPONENT_ALETHZERO_REQUIRED TRUE)
+		set(CPACK_COMPONENT_MIX_REQUIRED TRUE)
+
+		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
+		set(CPACK_PACKAGE_EXECUTABLES 
+			"AlethZero;AlethZero"
+			"AlethOne;AlethOne"
+			"AlethFive;AlethFive"
+			"Mix;Mix"
+		)
 
 		set(CPACK_COMPONENTS_ALL AlethZero AlethOne AlethFive Mix solc eth ethminer rlp abi)
 
