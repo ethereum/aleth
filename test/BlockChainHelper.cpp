@@ -137,37 +137,38 @@ void TestBlock::mine(TestBlockChain const& bc)
 	//set some header data before mining from original blockheader
 	BlockInfo& blockInfo = *const_cast<BlockInfo*>(&block.info());
 
-	if (m_premineUpdate.count("parentHash") > 0)
-		blockInfo.setParentHash(m_blockHeader.parentHash());
-	if (m_premineUpdate.count("coinbase") > 0)
-		blockInfo.setCoinbaseAddress(m_blockHeader.beneficiary());
-
-	if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
-		m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
-		blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ? m_blockHeader.transactionsRoot() : blockInfo.transactionsRoot(),
-						   m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : blockInfo.receiptsRoot(),
-						   m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : blockInfo.sha3Uncles(),
-						   m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : blockInfo.stateRoot());
-
-	if (m_premineUpdate.count("bloom") > 0)
-		blockInfo.setLogBloom(m_blockHeader.logBloom());
-	if (m_premineUpdate.count("difficulty") > 0)
-		blockInfo.setDifficulty(m_blockHeader.difficulty());
-	if (m_premineUpdate.count("number") > 0)
-		blockInfo.setNumber(m_blockHeader.number());
-	if (m_premineUpdate.count("gasLimit") > 0)
-		blockInfo.setGasLimit(m_blockHeader.gasLimit());
-	if (m_premineUpdate.count("gasUsed") > 0)
-		blockInfo.setGasUsed(m_blockHeader.gasUsed());
-	if (m_premineUpdate.count("timestamp") > 0)
-		blockInfo.setTimestamp(m_blockHeader.timestamp());
-	if (m_premineUpdate.count("extraData") > 0)
-		blockInfo.setExtraData(m_blockHeader.extraData());
-
 	try
 	{
 		ZeroGasPricer gp;
 		block.sync(blockchain);
+
+		if (m_premineUpdate.count("parentHash") > 0)
+			blockInfo.setParentHash(m_blockHeader.parentHash());
+		if (m_premineUpdate.count("coinbase") > 0)
+			blockInfo.setCoinbaseAddress(m_blockHeader.beneficiary());
+
+		if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
+			m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
+			blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ? m_blockHeader.transactionsRoot() : blockInfo.transactionsRoot(),
+							   m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : blockInfo.receiptsRoot(),
+							   m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : blockInfo.sha3Uncles(),
+							   m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : blockInfo.stateRoot());
+
+		if (m_premineUpdate.count("bloom") > 0)
+			blockInfo.setLogBloom(m_blockHeader.logBloom());
+		if (m_premineUpdate.count("difficulty") > 0)
+			blockInfo.setDifficulty(m_blockHeader.difficulty());
+		if (m_premineUpdate.count("number") > 0)
+			blockInfo.setNumber(m_blockHeader.number());
+		if (m_premineUpdate.count("gasLimit") > 0)
+			blockInfo.setGasLimit(m_blockHeader.gasLimit());
+		if (m_premineUpdate.count("gasUsed") > 0)
+			blockInfo.setGasUsed(m_blockHeader.gasUsed());
+		if (m_premineUpdate.count("timestamp") > 0)
+			blockInfo.setTimestamp(m_blockHeader.timestamp());
+		if (m_premineUpdate.count("extraData") > 0)
+			blockInfo.setExtraData(m_blockHeader.extraData());
+
 		block.sync(blockchain, m_transactionQueue, gp);
 
 		//Get only valid transactions
@@ -321,6 +322,9 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		//if (txList.size())
 		//	m_blockHeader.setRoots(sha3(txStream.out()), m_blockHeader.receiptsRoot(), m_blockHeader.sha3Uncles(), m_blockHeader.stateRoot());
 
+		if (((BlockInfo)m_blockHeader).difficulty() == 0)
+			BOOST_ERROR("Trying to mine a block with 0 difficulty!");
+
 		dev::eth::mine(m_blockHeader);
 		m_blockHeader.noteDirty();
 	}
@@ -431,9 +435,12 @@ void TestBlockChain::addBlock(TestBlock const& _block)
 }
 
 vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
-{
-	BlockQueue uncleBlockQueue;
+{	
 	vector<TestBlock> validUncles;
+	if (uncles.size() == 0)
+		return validUncles;
+
+	BlockQueue uncleBlockQueue;
 	FullBlockChain<Ethash>& blockchain = *m_blockChain.get();
 	uncleBlockQueue.setChain(blockchain);
 
@@ -453,6 +460,51 @@ vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
 
 	blockchain.sync(uncleBlockQueue, m_genesisBlock.getState().db(), (unsigned)4);
 	return validUncles;
+}
+
+TestTransaction TestTransaction::getDefaultTransaction()
+{
+	json_spirit::mObject txObj;
+	txObj["data"] = "";
+	txObj["gasLimit"] = "50000";
+	txObj["gasPrice"] = "1";
+	txObj["nonce"] = "0";
+	txObj["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
+	txObj["to"] = "095e7baea6a6c7c4c2dfeb977efac326af552d87";
+	txObj["value"] = "100";
+
+	return TestTransaction(txObj);
+}
+
+TestBlock TestBlockChain::getDefaultGenesisBlock()
+{
+	json_spirit::mObject blockObj;
+	blockObj["bloom"] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+	blockObj["coinbase"] = "0x8888f1f195afa192cfee860698584c030f4c9db1";
+	blockObj["difficulty"] = "131072";
+	blockObj["extraData"] = "0x42";
+	blockObj["gasLimit"] = "3141592";
+	blockObj["gasUsed"] = "0";
+	blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	blockObj["nonce"] = "0x0102030405060708";
+	blockObj["number"] = "0";
+	blockObj["parentHash"] = "0x0000000000000000000000000000000000000000000000000000000000000000";
+	blockObj["receiptTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	blockObj["stateRoot"] = "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a";
+	blockObj["timestamp"] = "0x54c98c81";
+	blockObj["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
+	blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+
+	json_spirit::mObject accountObj;
+	accountObj["balance"] = "10000000000";
+	accountObj["nonce"] = "0";
+	accountObj["code"] = "";
+	accountObj["storage"] = json_spirit::mObject();
+
+	json_spirit::mObject accountMapObj;
+	accountMapObj["a94f5374fce5edbc8e2a8697c15331677e6ebf0b"] = accountObj;
+
+	return TestBlock(blockObj, accountMapObj, RecalcBlockHeader::UpdateAndVerify);
 }
 
 }}
