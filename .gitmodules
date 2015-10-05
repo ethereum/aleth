@@ -25,8 +25,8 @@
 [submodule "webthree-helpers"]
 	path = webthree-helpers
 	url = https://github.com/ethereum/webthree-helpers
-	branch = develop
+	branch = release
 [submodule "web3.js"]
 	path = web3.js
 	url = https://github.com/ethereum/web3.js
-	branch = develop
+	branch = release
