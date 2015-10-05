@@ -155,6 +155,19 @@ void OverlayDB::kill(h256 const& _h)
 #endif
 }
 
+bool OverlayDB::deepkill(h256 const& _h)
+{
+	// kill in memoryDB
+	kill(_h);
+
+	//kill in overlayDB
+	ldb::Status s = m_db->Delete(m_writeOptions, ldb::Slice((char const*)_h.data(), 32));
+	if (s.ok())
+		return true;
+	else
+		return false;
+}
+
 }
 
 #endif // ETH_EMSCRIPTEN
