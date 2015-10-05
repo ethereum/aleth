@@ -22,12 +22,16 @@ set(SOURCES
 	RuntimeManager.cpp	RuntimeManager.h
 	Type.cpp			Type.h
 	Utils.cpp			Utils.h
+	support/Path.cpp	support/Path.h
 )
 source_group("" FILES ${SOURCES})
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "MSVC")
 else()
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fvisibility=hidden")
+	if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+		set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--exclude-libs,ALL") # Do not export symbols from dependies, mostly LLVM libs
+	endif()
 endif()
 
 if(${EVMJIT_VERSION_MAJOR} EQUAL 0)
