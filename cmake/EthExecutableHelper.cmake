@@ -216,6 +216,7 @@ macro(eth_nsis)
 		set(CPACK_NSIS_MODIFY_PATH ON)
 		set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/res/win/alethzero.ico")
 		set(CPACK_NSIS_MUI_UNIICON "${CMAKE_CURRENT_SOURCE_DIR}/res/win/alethzero.ico")
+		set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL TRUE)
 
 		include(CPack)
 	endif ()
