@@ -1,12 +1,17 @@
 
-#include "stdint.h"
+#include <stdint.h>
 
 #ifdef _MSC_VER
-#define EXPORT __declspec(dllexport)
+#ifdef evmjit_EXPORTS
+	#define EVMJIT_API __declspec(dllexport)
+#else
+	#define EVMJIT_API __declspec(dllimport)
+#endif
+
 #define _ALLOW_KEYWORD_MACROS
 #define noexcept throw()
 #else
-#define EXPORT
+#define EVMJIT_API [[gnu::visibility("default")]]
 #endif
 
 #ifdef __cplusplus
@@ -55,11 +60,11 @@ typedef enum evmjit_return_code
 
 typedef struct evmjit_context evmjit_context;
 
-EXPORT evmjit_context* evmjit_create(evmjit_runtime_data* _data, void* _env);
+EVMJIT_API evmjit_context* evmjit_create(evmjit_runtime_data* _data, void* _env);
 
-EXPORT evmjit_return_code evmjit_exec(evmjit_context* _context);
+EVMJIT_API evmjit_return_code evmjit_exec(evmjit_context* _context);
 
-EXPORT void evmjit_destroy(evmjit_context* _context);
+EVMJIT_API void evmjit_destroy(evmjit_context* _context);
 
 
 inline char const* evmjit_get_output(evmjit_runtime_data* _data) { return _data->callData; }

@@ -23,9 +23,9 @@
 using namespace dev;
 using namespace eth;
 
-h256 const dev::eth::c_genesisStateRootOlympic;
+static h256 const c_genesisStateRootOlympic;
 
-std::string const dev::eth::c_genesisInfoOlympic =
+static std::string const c_genesisInfoOlympic =
 R"ETHEREUM(
 {
 	"nonce": "0x000000000000002a",
@@ -53,9 +53,30 @@ R"ETHEREUM(
 }
 )ETHEREUM";
 
-h256 const dev::eth::c_genesisStateRootFrontier("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544");
+static h256 const c_genesisStateRootMorden("74f349dc350e160421b23ef8ca00df95c0124d8ca73ea5b04a4e5bcb85bb3c81");
+static std::string const c_genesisInfoMorden =
+R"ETHEREUM(
+{
+	"nonce": "0x00006d6f7264656e",
+	"difficulty": "0x20000",
+	"mixhash": "0x00000000000000000000000000000000000000647572616c65787365646c6578",
+	"coinbase": "0x0000000000000000000000000000000000000000",
+	"timestamp": "0x00",
+	"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+	"extraData": "0x",
+	"gasLimit": "0x2FEFD8",
+	"alloc": {
+		"0000000000000000000000000000000000000001": { "wei": "1" },
+		"0000000000000000000000000000000000000002": { "wei": "1" },
+		"0000000000000000000000000000000000000003": { "wei": "1" },
+		"0000000000000000000000000000000000000004": { "wei": "1" },
+		"102e61f5d8f9bc71d0ad4a084df4e65e05ce0e1c": { "wei": "1606938044258990275541962092341162602522202993782792835301376" },
+	}
+}
+)ETHEREUM";
 
-std::string const dev::eth::c_genesisInfoFrontier = std::string() +
+static h256 const c_genesisStateRootFrontier("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544");
+static std::string const c_genesisInfoFrontier = std::string() +
 R"E(
 {
 	"nonce": "0x0000000000000042",
@@ -27016,3 +27037,26 @@ R"E(
 }
 )E";
 
+std::string const& dev::eth::genesisInfo(Network _n)
+{
+	switch (_n)
+	{
+	case Network::Olympic: return c_genesisInfoOlympic;
+	case Network::Frontier: return c_genesisInfoFrontier;
+	case Network::Morden: return c_genesisInfoMorden;
+	default:
+		throw std::invalid_argument("Invalid network value");
+	}
+}
+
+h256 const& dev::eth::genesisStateRoot(Network _n)
+{
+	switch (_n)
+	{
+	case Network::Olympic: return c_genesisStateRootOlympic;
+	case Network::Frontier: return c_genesisStateRootFrontier;
+	case Network::Morden: return c_genesisStateRootMorden;
+	default:
+		throw std::invalid_argument("Invalid network value");
+	}
+}

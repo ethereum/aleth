@@ -209,7 +209,7 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Add
 		RLP state(stateBack);
 		Account s;
 		if (state.isNull())
-			s = Account(0, Account::NormalCreation);
+			s = Account(c_accountStartNonce, Account::NormalCreation);
 		else
 			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
 		bool ok;
@@ -321,7 +321,7 @@ Address State::newContract(u256 const& _balance, bytes const& _code)
 		auto it = m_cache.find(ret);
 		if (it == m_cache.end())
 		{
-			m_cache[ret] = Account(0, _balance, EmptyTrie, h, Account::Changed);
+			m_cache[ret] = Account(c_accountStartNonce, _balance, EmptyTrie, h, Account::Changed);
 			return ret;
 		}
 	}

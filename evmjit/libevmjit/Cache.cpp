@@ -12,6 +12,7 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include "preprocessor/llvm_includes_end.h"
 
+#include "support/Path.h"
 #include "ExecStats.h"
 #include "Utils.h"
 #include "BuildInfo.gen.h"
@@ -29,14 +30,20 @@ namespace
 	std::unique_ptr<llvm::MemoryBuffer> g_lastObject;
 	JITListener* g_listener;
 
-	llvm::StringRef getLibVersionStamp()
+	std::string getVersionedCacheDir()
 	{
-		return EVMJIT_VERSION;
+		llvm::SmallString<256> path{path::user_cache_directory()};
+		static const auto c_ethereumAppName = UTILS_OS_LINUX ? "ethereum" : "Ethereum";
+		llvm::sys::path::append(path, c_ethereumAppName, "evmjit", EVMJIT_VERSION);
+		return path.str();
 	}
+
 }
 
 ObjectCache* Cache::init(CacheMode _mode, JITListener* _listener)
 {
+	DLOG(cache) << "Cache dir: " << getVersionedCacheDir() << "\n";
+
 	Guard g{x_cacheMutex};
 
 	g_mode = _mode;
@@ -60,32 +67,23 @@ void Cache::clear()
 {
 	Guard g{x_cacheMutex};
 
-	using namespace llvm::sys;
-	llvm::SmallString<256> cachePath;
-	path::system_temp_directory(false, cachePath);
-	path::append(cachePath, "evm_objs");
-
+	auto cachePath = getVersionedCacheDir();
 	std::error_code err;
-	for (auto it = fs::directory_iterator{cachePath.str(), err}; it != fs::directory_iterator{}; it.increment(err))
-		fs::remove(it->path());
+	for (auto it = llvm::sys::fs::directory_iterator{cachePath, err}; it != decltype(it){}; it.increment(err))
+		llvm::sys::fs::remove(it->path());
 }
 
 void Cache::preload(llvm::ExecutionEngine& _ee, std::unordered_map<std::string, uint64_t>& _funcCache)
 {
 	Guard g{x_cacheMutex};
 
-	// TODO: Cache dir should be in one place
-	using namespace llvm::sys;
-	llvm::SmallString<256> cachePath;
-	path::system_temp_directory(false, cachePath);
-	path::append(cachePath, "evm_objs");
-
 	// Disable listener
 	auto listener = g_listener;
 	g_listener = nullptr;
 
+	auto cachePath = getVersionedCacheDir();
 	std::error_code err;
-	for (auto it = fs::directory_iterator{cachePath.str(), err}; it != fs::directory_iterator{}; it.increment(err))
+	for (auto it = llvm::sys::fs::directory_iterator{cachePath, err}; it != decltype(it){}; it.increment(err))
 	{
 		auto name = it->path().substr(cachePath.size() + 1);
 		if (auto module = getObject(name))
@@ -116,21 +114,11 @@ std::unique_ptr<llvm::Module> Cache::getObject(std::string const& id)
 	if (!CHECK(!g_lastObject))
 		g_lastObject = nullptr;
 
-	llvm::SmallString<256> cachePath;
-	llvm::sys::path::system_temp_directory(false, cachePath);
-	llvm::sys::path::append(cachePath, "evm_objs", id);
+	llvm::SmallString<256> cachePath{getVersionedCacheDir()};
+	llvm::sys::path::append(cachePath, id);
 
-	if (auto r = llvm::MemoryBuffer::getFile(cachePath.str(), -1, false))
-	{
-		auto& buf = r.get();
-		auto expectedStamp = getLibVersionStamp();
-		auto stampSize = expectedStamp.size();
-		auto objStamp = buf->getBufferSize() >= stampSize ? llvm::StringRef{buf->getBufferEnd() - stampSize, stampSize} : llvm::StringRef{};
-		if (objStamp == expectedStamp)
-			g_lastObject = llvm::MemoryBuffer::getMemBufferCopy(r.get()->getBuffer());
-		else
-			DLOG(cache) << "Unmatched version: " << objStamp.str() << ", expected " << expectedStamp.str() << "\n";
-	}
+	if (auto r = llvm::MemoryBuffer::getFile(cachePath, -1, false))
+		g_lastObject = llvm::MemoryBuffer::getMemBufferCopy(r.get()->getBuffer());
 	else if (r.getError() != std::make_error_code(std::errc::no_such_file_or_directory))
 		DLOG(cache) << r.getError().message(); // TODO: Add warning log
 
@@ -163,19 +151,16 @@ void ObjectCache::notifyObjectCompiled(llvm::Module const* _module, llvm::Memory
 		// g_listener->stateChanged(ExecState::CacheWrite);
 
 	auto&& id = _module->getModuleIdentifier();
-	llvm::SmallString<256> cachePath;
-	llvm::sys::path::system_temp_directory(false, cachePath);
-	llvm::sys::path::append(cachePath, "evm_objs");
-
-	if (llvm::sys::fs::create_directory(cachePath.str()))
+	llvm::SmallString<256> cachePath{getVersionedCacheDir()};
+	if (llvm::sys::fs::create_directories(cachePath))
 		DLOG(cache) << "Cannot create cache dir " << cachePath.str().str() << "\n";
 
 	llvm::sys::path::append(cachePath, id);
 
 	DLOG(cache) << id << ": write\n";
 	std::error_code error;
-	llvm::raw_fd_ostream cacheFile(cachePath.c_str(), error, llvm::sys::fs::F_None);
-	cacheFile << _object.getBuffer() << getLibVersionStamp();
+	llvm::raw_fd_ostream cacheFile(cachePath, error, llvm::sys::fs::F_None);
+	cacheFile << _object.getBuffer();
 }
 
 std::unique_ptr<llvm::MemoryBuffer> ObjectCache::getObject(llvm::Module const* _module)

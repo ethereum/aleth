@@ -96,7 +96,7 @@ llvm::Value* LocalStack::get(size_t _index)
 	if (!item)
 	{
 		// Fetch an item from global stack
-		ssize_t globalIdx = -idx - 1;
+		ssize_t globalIdx = -static_cast<ssize_t>(idx) - 1;
 		auto slot = m_builder.CreateConstGEP1_64(m_sp, globalIdx);
 		item = m_builder.CreateAlignedLoad(slot, 16); // TODO: Handle malloc alignment. Also for 32-bit systems.
 		m_minSize = std::min(m_minSize, globalIdx); 	// remember required stack size
@@ -130,7 +130,7 @@ void LocalStack::finalize()
 
 	auto inputIt = m_input.rbegin();
 	auto localIt = m_local.begin();
-	for (ssize_t globalIdx = -m_input.size(); globalIdx < size(); ++globalIdx)
+	for (auto globalIdx = -static_cast<ssize_t>(m_input.size()); globalIdx < size(); ++globalIdx)
 	{
 		llvm::Value* item = nullptr;
 		if (globalIdx < -m_globalPops)

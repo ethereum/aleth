@@ -26,6 +26,7 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
+#include <libethcore/Params.h>
 
 namespace dev
 {
@@ -176,7 +177,7 @@ private:
 	bool m_isUnchanged = false;
 
 	/// Account's nonce.
-	u256 m_nonce = 0;
+	u256 m_nonce = c_accountStartNonce;
 
 	/// Account's balance.
 	u256 m_balance = 0;
