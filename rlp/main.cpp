@@ -36,8 +36,9 @@ namespace js = json_spirit;
 void help()
 {
 	cout
-		<< "Usage rlp [OPTIONS] [ <file> | -- ]" << endl
-		<< "Options:" << endl
+		<< "Usage rlp <mode> [OPTIONS] [ <file> | -- ]" << endl
+		<< "Modes:" << endl
+		<< "    create  Given a simplified JSON string, output the RLP." << endl
 		<< "    render  Render the given RLP. Options:" << endl
 		<< "      --indent <string>  Use string as the level indentation (default '  ')." << endl
 		<< "      --hex-ints  Render integers in hex." << endl
@@ -48,8 +49,7 @@ void help()
 		<< "      --force-hex  Force all data to be rendered as raw hex." << endl
 		<< "    list  List the items in the RLP list by hash and size." << endl
 		<< "    extract  Extract all items in the RLP list, named by hash." << endl
-		<< "    assemble  Given a manifest, output the RLP." << endl
-		<< "    create  Given a simplified JSON string, output the RLP." << endl
+		<< "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
 		<< ""
 		<< "General options:" << endl
 		<< "    -e,--encrypt  Encrypt the RLP data prior to output." << endl
