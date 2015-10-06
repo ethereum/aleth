@@ -45,17 +45,17 @@ endmacro()
 
 macro(eth_copy_dll EXECUTABLE DLL)
 	# dlls must be unsubstitud list variable (without ${}) in format
-	# optimized;path_to_dll.dll;debug;path_to_dlld.dll 
+	# optimized;path_to_dll.dll;debug;path_to_dlld.dll
 	if(DEFINED MSVC)
 		list(GET ${DLL} 1 DLL_RELEASE)
 		list(GET ${DLL} 3 DLL_DEBUG)
 		add_custom_command(TARGET ${EXECUTABLE}
-			PRE_BUILD 
-			COMMAND ${CMAKE_COMMAND} ARGS 
-			-DDLL_RELEASE="${DLL_RELEASE}" 
-			-DDLL_DEBUG="${DLL_DEBUG}" 
+			PRE_BUILD
+			COMMAND ${CMAKE_COMMAND} ARGS
+			-DDLL_RELEASE="${DLL_RELEASE}"
+			-DDLL_DEBUG="${DLL_DEBUG}"
 			-DCONF="$<CONFIGURATION>"
-			-DDESTINATION="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}" 
+			-DDESTINATION="${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}"
 			-P "${ETH_SCRIPTS_DIR}/copydlls.cmake"
 		)
 	endif()
@@ -67,11 +67,11 @@ macro(eth_copy_dlls EXECUTABLE)
 	endforeach(dll)
 endmacro()
 
-# 
+#
 # this function requires the following variables to be specified:
 # ETH_DEPENDENCY_INSTALL_DIR
 #
-# params: 
+# params:
 # QMLDIR
 #
 
@@ -82,7 +82,7 @@ macro(eth_install_executable EXECUTABLE)
 	set (one_value_args QMLDIR)
 	set (multi_value_args)
 	cmake_parse_arguments (ETH_INSTALL_EXECUTABLE "${options}" "${one_value_args}" "${multi_value_args}" "${extra_macro_args}")
-	
+
 	if (ETH_INSTALL_EXECUTABLE_QMLDIR)
 		if (APPLE)
 			set(eth_qml_dir "-qmldir=${ETH_INSTALL_EXECUTABLE_QMLDIR}")
@@ -99,7 +99,7 @@ macro(eth_install_executable EXECUTABLE)
 			WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			COMMAND sh ${ETH_SCRIPTS_DIR}/macdeployfix.sh ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${EXECUTABLE}.app/Contents
 		)
-			
+
 		# This tool and next will inspect linked libraries in order to determine which dependencies are required
 		if (${CMAKE_CFG_INTDIR} STREQUAL ".")
 			# TODO: This should only happen for GUI application
@@ -183,23 +183,25 @@ macro(eth_nsis)
 		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
 		set(CPACK_COMPONENT_ETH_GROUP "CLI")
 		set(CPACK_COMPONENT_ETHMINER_GROUP "CLI")
+		set(CPACK_COMPONENT_ETHKEY_GROUP "CLI")
 		set(CPACK_COMPONENT_RLP_GROUP "CLI")
 		set(CPACK_COMPONENT_ABI_GROUP "CLI")
 
+		# Make GUI components required as we creating links for them
 		set(CPACK_COMPONENT_ALETHZERO_REQUIRED TRUE)
 		set(CPACK_COMPONENT_ALETHONE_REQUIRED TRUE)
 		set(CPACK_COMPONENT_ALETHFIVE_REQUIRED TRUE)
 		set(CPACK_COMPONENT_MIX_REQUIRED TRUE)
 
 		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
-		set(CPACK_PACKAGE_EXECUTABLES 
+		set(CPACK_PACKAGE_EXECUTABLES
 			"AlethZero;AlethZero"
 			"AlethOne;AlethOne"
 			"AlethFive;AlethFive"
 			"Mix;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero AlethOne AlethFive Mix solc eth ethminer rlp abi)
+		set(CPACK_COMPONENTS_ALL AlethZero AlethOne AlethFive Mix solc eth ethminer ethkey rlp abi)
 
 		# nsis specific stuff
 		if (CMAKE_CL_64)
