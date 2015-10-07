@@ -67,6 +67,9 @@ case $1 in
 		;;
 esac
 
+# Set a special environment variable for use by evmjit tests
+# export EVMJIT="-cache=0"
+
 for repository in "${TEST_REPOSITORIES[@]}"
 do
 	get_repo_testexec $repository
