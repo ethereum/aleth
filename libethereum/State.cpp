@@ -209,7 +209,7 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Add
 		RLP state(stateBack);
 		Account s;
 		if (state.isNull())
-			s = Account(c_accountStartNonce, Account::NormalCreation);
+			s = Account(0, Account::NormalCreation);
 		else
 			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
 		bool ok;
