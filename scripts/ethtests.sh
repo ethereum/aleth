@@ -13,6 +13,8 @@ REPOS_TEST_MAP=("webthree-helpers:NONE"
 		"tests:NONE"
 		"libweb3core:libweb3core/build/test/testweb3core"
 		"libethereum:libethereum/build/test/testeth"
+		"libethereum_vmjit:libethereum/build/test/testeth --vm jit"
+		"libethereum_vmsmart:libethereum/build/test/testeth --vm smart"
 		"libwhisper:NONE"
 		"webthree:webthree/build/test/testweb3"
 		"web3.js:NONE"
@@ -40,7 +42,7 @@ function get_repo_testexec() {
 
 case $1 in
 	"libweb3core")
-		TEST_REPOSITORIES=(libweb3core libethereum webthree solidity)
+		TEST_REPOSITORIES=(libweb3core libethereum libethereum_vmjit libethereum_vmsmart webthree solidity)
 		;;
 	"alethzero")
 		echo "ETHTESTS - INFO: \"$1\" contains no tests. No worries."
@@ -51,7 +53,7 @@ case $1 in
 		exit 0
 		;;
 	"libethereum")
-		TEST_REPOSITORIES=(libethereum webthree solidity)
+		TEST_REPOSITORIES=(libethereum_vmsmart libethereum_vmjit webthree solidity)
 		;;
 	"webthree")
 		TEST_REPOSITORIES=(webthree solidity)
