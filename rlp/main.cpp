@@ -36,10 +36,10 @@ namespace js = json_spirit;
 void help()
 {
 	cout
-		<< "Usage rlp <mode> [OPTIONS] [ <file> | -- ]" << endl
+		<< "Usage rlp <mode> [OPTIONS]" << endl
 		<< "Modes:" << endl
-		<< "    create  Given a simplified JSON string, output the RLP." << endl
-		<< "    render  Render the given RLP. Options:" << endl
+		<< "    create <json>  Given a simplified JSON string, output the RLP." << endl
+		<< "    render [ <file> | -- ]  Render the given RLP. Options:" << endl
 		<< "      --indent <string>  Use string as the level indentation (default '  ')." << endl
 		<< "      --hex-ints  Render integers in hex." << endl
 		<< "      --string-ints  Render integers in the same way as strings." << endl
@@ -47,10 +47,11 @@ void help()
 		<< "      --force-string  Force all data to be rendered as C-style strings." << endl
 		<< "      --force-escape  When rendering as C-style strings, force all characters to be escaped." << endl
 		<< "      --force-hex  Force all data to be rendered as raw hex." << endl
-		<< "    list  List the items in the RLP list by hash and size." << endl
-		<< "    extract  Extract all items in the RLP list, named by hash." << endl
+		<< "    list [ <file> | -- ]  List the items in the RLP list by hash and size." << endl
+		<< "    extract [ <file> | -- ]  Extract all items in the RLP list, named by hash." << endl
 		<< "    assemble [ <manifest> | <base path> ] <file> ...  Given a manifest & files, output the RLP." << endl
-		<< ""
+		<< "      -D,--dapp  Dapp-building mode; equivalent to --encrypt --64." << endl
+		<< endl
 		<< "General options:" << endl
 		<< "    -e,--encrypt  Encrypt the RLP data prior to output." << endl
 		<< "    -L,--lenience  Try not to bomb out early if possible." << endl
@@ -203,7 +204,7 @@ int main(int argc, char** argv)
 			mode = Mode::Render;
 		else if (arg == "create")
 			mode = Mode::Create;
-		else if ((arg == "-i" || arg == "--indent") && argc > i)
+		else if ((arg == "-i" || arg == "--indent") && i + 1 < argc)
 			prefs.indent = argv[++i];
 		else if (arg == "--hex-ints")
 			prefs.hexInts = true;
@@ -227,6 +228,10 @@ int main(int argc, char** argv)
 			mode = Mode::AssembleArchive;
 		else if (arg == "-L" || arg == "--lenience")
 			lenience = true;
+		else if (arg == "-D" || arg == "--dapp")
+			encrypt = true, encoding = Encoding::Base64;
+		else if (arg == "--encrypt")
+			encrypt = true;
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else if (arg == "-q" || arg == "--quiet")
@@ -355,15 +360,28 @@ int main(int argc, char** argv)
 			{
 				js::mArray entries;
 				auto basePath = boost::filesystem::canonical(boost::filesystem::path(inputFile)).string();
-				for (auto const& i: otherInputs)
+				for (string& i: otherInputs)
 				{
 					js::mObject entry;
-					auto iPath = boost::filesystem::canonical(boost::filesystem::path(i)).string();
-					std::string path = iPath.substr(basePath.size());
-					if (path == "/index.html")
-						path = "/";
-					entry["hash"] = toHex(dev::sha3(contents(i)).ref());
-					entry["path"] = path;
+					strings parsed;
+					boost::algorithm::split(parsed, i, boost::is_any_of(","));
+					i = parsed[0];
+					for (unsigned j = 1; j < parsed.size(); ++j)
+					{
+						strings nv;
+						boost::algorithm::split(nv, parsed[j], boost::is_any_of(":"));
+						if (nv.size() == 2)
+							entry[nv[0]] = nv[1];
+						else{} // TODO: error
+					}
+					if (!entry.count("path"))
+					{
+						std::string path = boost::filesystem::canonical(boost::filesystem::path(parsed[0])).string().substr(basePath.size());
+						if (path == "/index.html")
+							path = "/";
+						entry["path"] = path;
+					}
+					entry["hash"] = toHex(dev::sha3(contents(parsed[0])).ref());
 					entries.push_back(entry);
 				}
 				js::mObject o;
