@@ -349,6 +349,7 @@ SyncStatus PV60Sync::status() const
 		res.blocksTotal = downloadMan().chainSize();
 		res.blocksReceived = downloadMan().blocksGot().size();
 	}
+	res.highestBlockNumber = m_highestBlock;
 	return res;
 }
 
@@ -960,6 +961,9 @@ void PV61Sync::requestSubchains()
 void PV61Sync::completeSubchain(std::shared_ptr<EthereumPeer> _peer, unsigned _n)
 {
 	m_completeChainMap[_n] = move(m_downloadingChainMap.at(_n));
+	unsigned lastBlock = _n + m_completeChainMap[_n].hashes.size();
+	if (m_highestBlock < lastBlock)
+		m_highestBlock = lastBlock;
 	m_downloadingChainMap.erase(_n);
 	for (auto s = m_chainSyncPeers.begin(); s != m_chainSyncPeers.end(); ++s)
 		if (s->second == _n) //TODO: optimize this
@@ -1060,6 +1064,8 @@ void PV61Sync::onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _h
 		}
 		m_knownHashes.insert(_hashes[0]);
 		m_readyChainMap.insert(make_pair(m_syncingBlockNumber, SubChain{ h256s{ _hashes[0] }, _hashes[0] }));
+		if (m_highestBlock < m_syncingBlockNumber)
+			m_highestBlock = m_syncingBlockNumber;
 		if ((m_readyChainMap.size() + m_downloadingChainMap.size() + m_completeChainMap.size()) * c_hashSubchainSize > _peer->m_expectedHashes)
 		{
 			_peer->disable("Too many hashes from lead peer");
@@ -1209,6 +1215,7 @@ SyncStatus PV61Sync::status() const
 		for (auto const& d : m_completeChainMap)
 			res.hashesReceived += d.second.hashes.size();
 	}
+	res.highestBlockNumber = m_highestBlock;
 	return res;
 }
 

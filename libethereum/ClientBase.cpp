@@ -70,6 +70,8 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 	{
 		Block temp = asOf(_blockNumber);
 		u256 n = temp.transactionsFrom(_from);
+		if (_ff == FudgeFactor::Lenient)
+			_gas = temp.gasLimitRemaining();
 		Transaction t(_value, _gasPrice, _gas, _dest, _data, n);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
