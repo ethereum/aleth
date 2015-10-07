@@ -51,13 +51,18 @@ std::vector<RLPXPacket> RLPXFrameReader::demux(RLPXFrameCoder& _coder, RLPXFrame
 			RLPXPacket& p = m_incomplete.at(_info.sequenceId).first;
 			if(p.append(buffer) && !remaining)
 				ret.push_back(std::move(p));
-			if (!remaining)
+
+			if (remaining)
+			{
+				if (!ret.empty())
+					BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
+			}
+			else
+			{
 				m_incomplete.erase(_info.sequenceId);
-			
-			if (!ret.empty() && remaining)
-				BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
-			else if (ret.empty() && !remaining)
-				BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
+				if (ret.empty())
+					BOOST_THROW_EXCEPTION(RLPXInvalidPacket());
+			}
 			
 			return ret;
 		}
