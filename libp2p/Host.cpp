@@ -260,8 +260,9 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	// "'operator<<' should be declared prior to the call site or in an associated namespace of one of its arguments"
 	stringstream capslog;
 
+	// leave only highset mutually supported capability version
 	if (caps.size() > 1)
-		caps.erase(remove_if(caps.begin(), caps.end(), [&](CapDesc const& _r){ return any_of(caps.begin(), caps.end(), [&](CapDesc const& _o){ return _r.first == _o.first && _o.second > _r.second; }); }), caps.end());
+		caps.erase(remove_if(caps.begin(), caps.end(), [&](CapDesc const& _r){ return !haveCapability(_r) || any_of(caps.begin(), caps.end(), [&](CapDesc const& _o){ return _r.first == _o.first && _o.second > _r.second && haveCapability(_o); }); }), caps.end());
 
 	for (auto cap: caps)
 		capslog << "(" << cap.first << "," << dec << cap.second << ")";
@@ -296,11 +297,10 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		// todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
 		unsigned o = (unsigned)UserPacket;
 		for (auto const& i: caps)
-			if (haveCapability(i))
-			{
-				ps->m_capabilities[i] = m_capabilities[i]->newPeerCapability(ps, o, i);
-				o += m_capabilities[i]->messageCount();
-			}
+		{
+			ps->m_capabilities[i] = m_capabilities[i]->newPeerCapability(ps, o, i);
+			o += m_capabilities[i]->messageCount();
+		}
 		ps->start();
 		m_sessions[_id] = ps;
 	}
