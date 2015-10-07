@@ -11,7 +11,7 @@ fi
 TEST_EXEC="NONE"
 REPOS_TEST_MAP=("webthree-helpers:NONE"
 		"tests:NONE"
-		"libweb3core:NONE"
+		"libweb3core:libweb3core/build/test/testweb3core"
 		"libethereum:libethereum/build/test/testeth"
 		"libwhisper:NONE"
 		"webthree:webthree/build/test/testweb3"
@@ -40,7 +40,7 @@ function get_repo_testexec() {
 
 case $1 in
 	"libweb3core")
-		TEST_REPOSITORIES=(libethereum webthree solidity)
+		TEST_REPOSITORIES=(libweb3core libethereum webthree solidity)
 		;;
 	"alethzero")
 		echo "ETHTESTS - INFO: \"$1\" contains no tests. No worries."
