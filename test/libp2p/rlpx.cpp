@@ -593,8 +593,6 @@ BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 	bytes authCipher{1};
 	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	
-	/// Test writing four 32 byte RLPStream packets such that
-	/// a single 1KB frame will incldue all four packets.
 	bytes stuff = sha3("A").asBytes();
 	RLPXFrameWriter w(0);
 	uint8_t packetType = 127;
@@ -631,9 +629,100 @@ BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 	BOOST_REQUIRE_EQUAL(sha3(packets.back().type()), sha3(packetTypeRLP));
 }
 
-BOOST_AUTO_TEST_CASE(manyProtocols)
+BOOST_AUTO_TEST_CASE(multiProtocol)
 {
+	/// Test writing four 32 byte RLPStream packets with different protocol ID.
+
+	ECDHE localEph;
+	ECDHE remoteEph;
+	Secret localNonce = Nonce::get();
+	Secret remoteNonce = Nonce::get();
+	bytes ackCipher{0};
+	bytes authCipher{1};
+	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	
+	auto dequeLen = 1024; // sufficient enough for all packets
+	bytes stuff0 = sha3("A").asBytes();
+	bytes stuff1 = sha3("B").asBytes();
+	vector<bytes> vStuff;
+	vStuff.push_back(stuff0);
+	vStuff.push_back(stuff1);
+
+	vector<bytes> packetsOut;
+	packetsOut.push_back(stuff0);
+	packetsOut.push_back(stuff0);
+	packetsOut.push_back(stuff1);
+	packetsOut.push_back(stuff1);
+
+	std::map<uint16_t, RLPXFrameWriter*> mw;
+	RLPXFrameWriter w0(0);
+	RLPXFrameWriter w1(1);
+	mw[0] = &w0;
+	mw[1] = &w1;
+
+	uint8_t const packetType = 127;
+	bytes packetTypeRLP((RLPStream() << packetType).out());
+
+	unsigned i = 0;
+	mw[0]->enque(packetType, (RLPStream() << packetsOut[i++]));
+	mw[0]->enque(packetType, (RLPStream() << packetsOut[i++]));
+	mw[1]->enque(packetType, (RLPStream() << packetsOut[i++]));
+	mw[1]->enque(packetType, (RLPStream() << packetsOut[i++]));
+
+	vector<bytes> encframes;
+	BOOST_REQUIRE_EQUAL(2, mw[0]->mux(encoder, dequeLen, encframes));
+	BOOST_REQUIRE_EQUAL(2, mw[1]->mux(encoder, dequeLen, encframes));
+	BOOST_REQUIRE_EQUAL(0, mw[0]->mux(encoder, dequeLen, encframes));
+	BOOST_REQUIRE_EQUAL(0, mw[1]->mux(encoder, dequeLen, encframes));
+	BOOST_REQUIRE_EQUAL(2, encframes.size());
+
+	auto expectedFrameSize = RLPXFrameWriter::EmptyFrameLength
+		+ packetsOut.size() * (/*packet-type*/ 1 + h256::size + /*rlp-prefix*/ 1) / 2;
+
+	expectedFrameSize += ((16 - (expectedFrameSize % 16)) % 16);
+	BOOST_REQUIRE_EQUAL(expectedFrameSize, encframes[0].size());
+
+	// read and assemble dequed encframes
+	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
+	vector<RLPXPacket> packets;
+	std::map<uint16_t, RLPXFrameReader*> mr;
+	RLPXFrameReader r0(0);
+	RLPXFrameReader r1(1);
+	mr[0] = &r0;
+	mr[1] = &r1;
+
+	for (size_t i = 0; i < encframes.size(); i++)
+	{
+		bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());
+		bytesRef header = frameWithHeader.cropped(0, h256::size);
+		bool decryptedHeader = decoder.authAndDecryptHeader(header);
+		BOOST_REQUIRE(decryptedHeader);
+		bytesRef frame = frameWithHeader.cropped(h256::size);
+		RLPXFrameInfo f(header);
+		BOOST_REQUIRE_EQUAL(f.multiFrame, false);
+		for (RLPXPacket& p: mr[f.protocolId]->demux(decoder, f, frame))
+		{
+			BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());
+			packets.push_back(move(p));
+		}
+	}
+
+	BOOST_REQUIRE_EQUAL(packets.size(), 4);
+	RLPStream rlpPayload0;
+	RLPStream rlpPayload1;
+	rlpPayload0 << stuff0;
+	rlpPayload1 << stuff1;
+	vector<RLPStream> vRlpPayloads;
+	vRlpPayloads.push_back(rlpPayload0);
+	vRlpPayloads.push_back(rlpPayload1);
+
+	for (size_t i = 0; i < packets.size(); i++)
+	{
+		auto prot = packets[i].cap();
+		BOOST_REQUIRE_EQUAL(packets[i].size(), packetTypeRLP.size() + vRlpPayloads[prot].out().size());
+		BOOST_REQUIRE_EQUAL(sha3(RLP(packets[i].data()).payload()), sha3(vStuff[prot]));
+		BOOST_REQUIRE_EQUAL(sha3(packets[i].type()), sha3(packetTypeRLP));
+	}
 }
 
 BOOST_AUTO_TEST_SUITE_END()

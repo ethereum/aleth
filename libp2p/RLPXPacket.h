@@ -51,6 +51,8 @@ public:
 	bytes const& type() const { return m_type; }
 
 	bytes const& data() const { return m_data; }
+
+	uint8_t cap() const { return m_cap; }
 	
 	size_t size() const { try { return RLP(m_type).actualSize() + RLP(m_data, RLP::LaissezFaire).actualSize(); } catch(...) { return 0; } }
 
