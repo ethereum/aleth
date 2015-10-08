@@ -311,7 +311,7 @@ bool Client::isMajorSyncing() const
 {
 	// TODO: only return true if it is actually doing a proper chain sync.
 	if (auto h = m_host.lock())
-		return h->isSyncing();
+		return h->isSyncing() || h->bq().items().first > 10;
 	return false;
 }
 

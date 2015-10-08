@@ -99,6 +99,7 @@ struct SyncStatus
 	unsigned blocksReceived = 0;
 	unsigned startBlockNumber;
 	unsigned currentBlockNumber;
+	unsigned highestBlockNumber;
 };
 
 }
