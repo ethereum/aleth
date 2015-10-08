@@ -53,7 +53,7 @@ case $1 in
 		exit 0
 		;;
 	"libethereum")
-		TEST_REPOSITORIES=(libethereum_vmsmart libethereum_vmjit webthree solidity)
+		TEST_REPOSITORIES=(libethereum libethereum_vmsmart libethereum_vmjit webthree solidity)
 		;;
 	"webthree")
 		TEST_REPOSITORIES=(webthree solidity)
@@ -70,6 +70,8 @@ esac
 # Set a special environment variable for use by evmjit tests
 # export EVMJIT="-cache=0"
 
+# remove all old test results
+rm -rf *_results.xml
 for repository in "${TEST_REPOSITORIES[@]}"
 do
 	get_repo_testexec $repository
@@ -78,8 +80,6 @@ do
 		continue;
 	fi
 	echo "ETHTESTS - INFO: Will run test file ${TEST_EXEC} for project \"$1\"."
-	# remove old test results
-	rm -rf ${repository}_results.xml
 	# run tests
 	./$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
 done
