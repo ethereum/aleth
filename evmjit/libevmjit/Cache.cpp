@@ -152,8 +152,11 @@ void ObjectCache::notifyObjectCompiled(llvm::Module const* _module, llvm::Memory
 
 	auto&& id = _module->getModuleIdentifier();
 	llvm::SmallString<256> cachePath{getVersionedCacheDir()};
-	if (llvm::sys::fs::create_directories(cachePath))
-		DLOG(cache) << "Cannot create cache dir " << cachePath.str().str() << "\n";
+	if (auto err = llvm::sys::fs::create_directories(cachePath))
+	{
+		DLOG(cache) << "Cannot create cache dir " << cachePath.str().str() << " (error: " << err.message() << "\n";
+		return;
+	}
 
 	llvm::sys::path::append(cachePath, id);
 
