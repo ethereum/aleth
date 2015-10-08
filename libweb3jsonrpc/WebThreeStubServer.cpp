@@ -380,12 +380,12 @@ bool WebThreeStubServer::personal_unlockAccount(const std::string& _address, con
 Json::Value WebThreeStubServer::eth_syncing()
 {
 	dev::eth::SyncStatus sync = m_web3.ethereum()->syncStatus();
-	if (sync.state == SyncState::Idle)
+	if (sync.state == SyncState::Idle || !m_web3.ethereum()->isMajorSyncing())
 		return Json::Value(false);
 
 	Json::Value info(Json::objectValue);
 	info["startingBlock"] = sync.startBlockNumber;
-	info["currentBlock"] = sync.startBlockNumber + sync.blocksTotal;
-	info["highestBlock"] = sync.currentBlockNumber;
+	info["highestBlock"] = sync.highestBlockNumber;
+	info["currentBlock"] = sync.currentBlockNumber;
 	return info;
 }
