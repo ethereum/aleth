@@ -53,7 +53,7 @@ R"ETHEREUM(
 }
 )ETHEREUM";
 
-static h256 const c_genesisStateRootMorden("74f349dc350e160421b23ef8ca00df95c0124d8ca73ea5b04a4e5bcb85bb3c81");
+static h256 const c_genesisStateRootMorden;
 static std::string const c_genesisInfoMorden =
 R"ETHEREUM(
 {
