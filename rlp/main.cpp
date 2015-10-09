@@ -161,8 +161,6 @@ void putOut(bytes _out, Encoding _encoding, bool _encrypt, bool _quiet)
 	{
 		crypto::Secp256k1PP encrypter;
 		encrypter.encrypt(toPublic(Secret(h)), _out);
-		if (!_quiet)
-			cerr << "Keccak of encrypted RLP: " << sha3(_out).hex() << endl;
 	}
 	if (!_quiet)
 		cerr << "Keccak of RLP: " << h.hex() << endl;
@@ -230,8 +228,6 @@ int main(int argc, char** argv)
 			lenience = true;
 		else if (arg == "-D" || arg == "--dapp")
 			encrypt = true, encoding = Encoding::Base64;
-		else if (arg == "--encrypt")
-			encrypt = true;
 		else if (arg == "-V" || arg == "--version")
 			version();
 		else if (arg == "-q" || arg == "--quiet")
@@ -244,6 +240,8 @@ int main(int argc, char** argv)
 			encoding = Encoding::Base64;
 		else if (arg == "-b" || arg == "--bin" || arg == "--base-256")
 			encoding = Encoding::Binary;
+		else if (arg == "-e" || arg == "--encrypt")
+			encrypt = true;
 		else if (inputFile.empty())
 			inputFile = arg;
 		else
@@ -389,10 +387,17 @@ int main(int argc, char** argv)
 				auto os = js::write_string(js::mValue(o), false);
 				in = asBytes(os);
 			}
-			// input is a manifest file
-			RLPStream r(otherInputs.size() + 1);
-			r.append(in);
+
+			strings addedInputs;
 			for (auto i: otherInputs)
+				if (!boost::filesystem::is_regular_file(i))
+					cerr << "Skipped " << i << std::endl;
+				else
+					addedInputs.push_back(i);
+
+			RLPStream r(addedInputs.size() + 1);
+			r.append(in);
+			for (auto i: addedInputs)
 				r.append(contents(i));
 			putOut(r.out(), encoding, encrypt, quiet);
 			break;
