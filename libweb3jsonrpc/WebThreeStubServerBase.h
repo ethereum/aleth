@@ -115,6 +115,7 @@ public:
 	virtual std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
 	virtual std::string eth_sendTransaction(Json::Value const& _json);
 	virtual std::string eth_call(Json::Value const& _json, std::string const& _blockNumber);
+	virtual std::string eth_estimateGas(Json::Value const& _json);
 	virtual bool eth_flush();
 	virtual Json::Value eth_getBlockByHash(std::string const& _blockHash, bool _includeTransactions);
 	virtual Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _includeTransactions);
