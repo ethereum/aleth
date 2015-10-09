@@ -94,7 +94,7 @@ public:
 	virtual std::string web3_sha3(std::string const& _param1);
 	virtual std::string web3_clientVersion() { return "C++ (ethereum-cpp)"; }
 
-	virtual std::string net_version() { return ""; }
+	virtual std::string net_version();
 	virtual std::string net_peerCount();
 	virtual bool net_listening();
 
