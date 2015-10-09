@@ -123,6 +123,7 @@ protected:
 	unsigned m_estimatedHashes = 0;			///< Number of estimated hashes for the last peer over PV60. Used for status reporting only.
 	h256Hash m_knownNewHashes; 				///< New hashes we know about use for logging only
 	unsigned m_startingBlock = 0;           ///< Last block number for the start of sync
+	unsigned m_highestBlock = 0;            ///< Highest block number seen
 
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];

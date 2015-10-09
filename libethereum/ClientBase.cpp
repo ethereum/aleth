@@ -53,6 +53,10 @@ pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t,
 	ts.from = toAddress(_secret);
 	if (_t.nonce == UndefinedU256)
 		ts.nonce = max<u256>(postMine().transactionsFrom(ts.from), m_tq.maxNonce(ts.from));
+	if (ts.gasPrice == UndefinedU256)
+		ts.gasPrice = gasBidPrice();
+	if (ts.gas == UndefinedU256)
+		ts.gas = min<u256>(gasLimitRemaining() / 5, balanceAt(ts.from) / ts.gasPrice);
 
 	Transaction t(ts, _secret);
 	m_tq.import(t.rlp());
@@ -70,7 +74,8 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 	{
 		Block temp = asOf(_blockNumber);
 		u256 n = temp.transactionsFrom(_from);
-		Transaction t(_value, _gasPrice, _gas, _dest, _data, n);
+		u256 gas = _gas == UndefinedU256 ? gasLimitRemaining() : _gas;
+		Transaction t(_value, _gasPrice, gas, _dest, _data, n);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
 			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
