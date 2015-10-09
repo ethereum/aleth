@@ -19,7 +19,7 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project(PARANOID TOOLS TESTS)
+configure_project(PARANOID TOOLS TESTS MINIUPNPC)
 
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
