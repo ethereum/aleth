@@ -17,7 +17,8 @@
 /** @file UPnP.cpp
  * @authors:
  *   Gav Wood <i@gavwood.com>
- * @date 2014
+ *   Lefteris Karapetsas <lefteris@refu.co>
+ * @date 2014, 2015
  */
 
 #include "UPnP.h"
@@ -52,7 +53,11 @@ UPnP::UPnP()
 	int upnperror = 0;
 	memset(m_urls.get(), 0, sizeof(struct UPNPUrls));
 	memset(m_data.get(), 0, sizeof(struct IGDdatas));
+#if MINIUPNPC_API_VERSION >= 14
+	devlist = upnpDiscover(2000, NULL/*multicast interface*/, NULL/*minissdpd socket path*/, 0/*sameport*/, 0/*ipv6*/, 2/*ttl*/, &upnperror);
+#else
 	devlist = upnpDiscover(2000, NULL/*multicast interface*/, NULL/*minissdpd socket path*/, 0/*sameport*/, 0/*ipv6*/, &upnperror);
+#endif
 	if (devlist)
 	{
 		dev = devlist;
