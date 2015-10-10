@@ -73,9 +73,10 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 	try
 	{
 		Block temp = asOf(_blockNumber);
-		u256 n = temp.transactionsFrom(_from);
+		u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
 		u256 gas = _gas == UndefinedU256 ? gasLimitRemaining() : _gas;
-		Transaction t(_value, _gasPrice, gas, _dest, _data, n);
+		u256 gasPrice = _gasPrice == UndefinedU256 ? gasBidPrice() : _gasPrice;
+		Transaction t(_value, gasPrice, gas, _dest, _data, nonce);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
 			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));

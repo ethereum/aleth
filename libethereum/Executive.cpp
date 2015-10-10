@@ -226,7 +226,7 @@ void Executive::initialize(Transaction const& _transaction)
 	bigint totalCost = m_t.value() + m_gasCost;
 	if (m_s.balance(m_t.sender()) < totalCost)
 	{
-		clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
+		clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
 		m_excepted = TransactionException::NotEnoughCash;
 		BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
 	}
