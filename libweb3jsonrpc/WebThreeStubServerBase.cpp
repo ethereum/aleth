@@ -328,7 +328,7 @@ string WebThreeStubServerBase::eth_estimateGas(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		return toJS(client()->call(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, PendingBlock, FudgeFactor::Lenient).gasUsed);
+		return toJS(client()->estimateGas(t.from, t.value, t.to, t.data, t.gas, t.gasPrice, PendingBlock).first);
 	}
 	catch (...)
 	{
