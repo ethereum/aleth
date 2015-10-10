@@ -36,7 +36,7 @@ const char* WorkInChannel::name() { return EthOrange "⚒" EthGreen "▬▶"; }
 const char* WorkOutChannel::name() { return EthOrange "⚒" EthNavy "◀▬"; }
 const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
-namespace dev { namespace eth { const u256 c_maxGasEstimate = 5000000; } }
+namespace dev { namespace eth { const u256 c_maxGasEstimate = 50000000; } }
 
 Block ClientBase::asOf(BlockNumber _h) const
 {
