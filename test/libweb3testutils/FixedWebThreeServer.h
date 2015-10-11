@@ -42,6 +42,7 @@ public:
 private:
 	dev::eth::Interface* client() override { return m_client; }
 	std::shared_ptr<dev::shh::Interface> face() override {	BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::shh::Interface")); }
+	dev::bzz::Interface* bzz() override { BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::bzz::Interface")); }
 	dev::WebThreeNetworkFace* network() override { BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::WebThreeNetworkFace")); }
 	dev::WebThreeStubDatabaseFace* db() override { return this; }
 	std::string get(std::string const& _name, std::string const& _key) override

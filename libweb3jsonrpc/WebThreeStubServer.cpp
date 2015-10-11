@@ -323,6 +323,11 @@ dev::eth::Interface* WebThreeStubServer::client()
 	return m_web3.ethereum();
 }
 
+dev::bzz::Interface* WebThreeStubServer::bzz()
+{
+	return m_web3.swarm();
+}
+
 std::shared_ptr<dev::shh::Interface> WebThreeStubServer::face()
 {
 	return m_web3.whisper();

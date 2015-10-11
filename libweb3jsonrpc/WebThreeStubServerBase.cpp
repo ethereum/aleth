@@ -37,6 +37,7 @@
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
 #include <libethereum/Client.h>
+#include <libwebthree/Swarm.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
 #include <libwhisper/Message.h>
@@ -849,6 +850,16 @@ bool WebThreeStubServerBase::db_put(string const& _name, string const& _key, str
 string WebThreeStubServerBase::db_get(string const& _name, string const& _key)
 {
 	return db()->get(_name, _key);;
+}
+
+string WebThreeStubServerBase::bzz_put(string const& _data)
+{
+	return toJS(bzz()->put(jsToBytes(_data)));
+}
+
+string WebThreeStubServerBase::bzz_get(string const& _hash)
+{
+	return toJS(bzz()->get(jsToFixed<32>(_hash)));
 }
 
 bool WebThreeStubServerBase::shh_post(Json::Value const& _json)

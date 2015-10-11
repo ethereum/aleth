@@ -48,6 +48,10 @@ namespace shh
 {
 class Interface;
 }
+namespace bzz
+{
+class Interface;
+}
 
 extern const unsigned SensibleHttpThreads;
 extern const unsigned SensibleHttpPort;
@@ -155,6 +159,9 @@ public:
 	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value);
 	virtual std::string db_get(std::string const& _name, std::string const& _key);
 
+	virtual std::string bzz_put(std::string const& _data);
+	virtual std::string bzz_get(std::string const& _hash);
+
 	virtual bool shh_post(Json::Value const& _json);
 	virtual std::string shh_newIdentity();
 	virtual bool shh_hasIdentity(std::string const& _identity);
@@ -207,8 +214,9 @@ protected:
 	void setTransactionDefaults(eth::TransactionSkeleton & _t);
 	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const { (void)_session; (void)_l; return false; }
 
-	virtual dev::eth::Interface* client() = 0;
-	virtual std::shared_ptr<dev::shh::Interface> face() = 0;
+	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
+	virtual std::shared_ptr<dev::shh::Interface> face() = 0;	// TODO: rename to shh
+	virtual dev::bzz::Interface* bzz() = 0;
 	virtual dev::WebThreeNetworkFace* network() = 0;
 	virtual dev::WebThreeStubDatabaseFace* db() = 0;
 

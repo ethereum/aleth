@@ -1,15 +1,56 @@
-#ifndef SWARM_H
-#define SWARM_H
+/*
+	This file is part of cpp-ethereum.
 
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
 
-class Swarm
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @file Swarm.h
+ * @author Gav Wood <i@gavwood.com>
+ * @date 2015
+ */
+
+#pragma once
+
+#include <unordered_map>
+#include <libdevcore/Common.h>
+#include <libdevcore/FixedHash.h>
+
+namespace dev
+{
+
+namespace bzz
+{
+
+/// Basic interface for Swarm.
+class Interface
 {
 public:
-	Swarm();
+	virtual ~Interface();
 
-signals:
-
-public slots:
+	virtual h256 put(bytes const& _data) = 0;
+	virtual bytes get(h256 const& _hash) = 0;
 };
 
-#endif // SWARM_H
+/// Placeholder for Swarm.
+class Client: public Interface
+{
+public:
+	virtual h256 put(bytes const& _data) override;
+	virtual bytes get(h256 const& _hash) override;
+
+private:
+	std::unordered_map<h256, bytes> m_cache;
+};
+
+}
+}

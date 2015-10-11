@@ -31,6 +31,7 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
+#include "Swarm.h"
 #include "ethereum/BuildInfo.h"
 using namespace std;
 using namespace dev;
@@ -65,6 +66,9 @@ WebThreeDirect::WebThreeDirect(
 
 	if (_interfaces.count("shh"))
 		m_whisper = m_net.registerCapability(make_shared<WhisperHost>());
+
+	if (_interfaces.count("bzz"))
+		m_swarm = unique_ptr<bzz::Client>(new bzz::Client());
 }
 
 WebThreeDirect::~WebThreeDirect()

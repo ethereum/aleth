@@ -99,7 +99,10 @@
 { "name": "admin_eth_getReceiptByHashAndIndex", "params": ["", 0, ""], "returns": {} },
 
 { "name": "personal_newAccount", "params": [""], "returns": "" },
-{ "name": "personal_unlockAccount", "params": ["", "", 0], "returns": true }
+{ "name": "personal_unlockAccount", "params": ["", "", 0], "returns": true },
+
+{ "name": "bzz_put", "params": [""], "returns": ""},
+{ "name": "bzz_get", "params": [""], "returns": ""}
 
 ]
 
