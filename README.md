@@ -31,7 +31,7 @@ And let's not forget: Caktux (neth, ongoing CI), Eric Lombrozo (original MinGW32
 
 ### Building
 
-See the [Wiki](https://github.com/ethereum/cpp-ethereum/wiki) for build instructions, compatibility information and build tips. 
+See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build instructions, compatibility information and build tips. 
 
 ### Testing
 
