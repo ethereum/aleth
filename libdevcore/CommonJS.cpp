@@ -28,7 +28,7 @@ using namespace std;
 namespace dev
 {
 
-bytes jsToBytes(string const& _s)
+bytes jsToBytes(string const& _s, OnFailed _f)
 {
 	if (_s.substr(0, 2) == "0x")
 		// Hex
@@ -36,8 +36,12 @@ bytes jsToBytes(string const& _s)
 	else if (_s.find_first_not_of("0123456789") == string::npos)
 		// Decimal
 		return toCompactBigEndian(bigint(_s));
-	else
+	else if (_f == OnFailed::Empty)
 		return bytes();
+	else if (_f == OnFailed::InterpretRaw)
+		return asBytes(_s);
+	else
+		throw invalid_argument("Cannot intepret '" + _s + "' as bytes; must be 0x-prefixed hex or decimal.");
 }
 
 bytes padded(bytes _b, unsigned _l)
