@@ -326,6 +326,8 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 			auto b = stack.pop();
 			auto m = stack.pop();
 			auto divByZero = m_builder.CreateICmpEQ(m, Constant::get(0));
+			a = m_builder.CreateZExt(a, i512Ty);
+			b = m_builder.CreateZExt(b, i512Ty);
 			m = m_builder.CreateZExt(m, i512Ty);
 			// TODO: Add support for i256 x i256 -> i512 in LowerEVM pass
 			llvm::Value* p = m_builder.CreateCall(Arith256::getMul512Func(*_basicBlock.llvm()->getParent()->getParent()), {a, b});

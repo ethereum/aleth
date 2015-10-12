@@ -132,38 +132,7 @@ llvm::Function* Arith256::getMul512Func(llvm::Module& _module)
 		return func;
 
 	auto i512Ty = llvm::IntegerType::get(_module.getContext(), 512);
-	auto func = llvm::Function::Create(llvm::FunctionType::get(i512Ty, {Type::Word, Type::Word}, false), llvm::Function::PrivateLinkage, funcName, &_module);
-	func->setDoesNotThrow();
-	func->setDoesNotAccessMemory();
-
-	auto x = &func->getArgumentList().front();
-	x->setName("x");
-	auto y = x->getNextNode();
-	y->setName("y");
-
-	auto bb = llvm::BasicBlock::Create(_module.getContext(), {}, func);
-	auto builder = IRBuilder{bb};
-
-	auto i128 = builder.getIntNTy(128);
-	auto i256 = Type::Word;
-	auto x_lo = builder.CreateZExt(builder.CreateTrunc(x, i128, "x.lo"), i256);
-	auto y_lo = builder.CreateZExt(builder.CreateTrunc(y, i128, "y.lo"), i256);
-	auto x_hi = builder.CreateZExt(builder.CreateTrunc(builder.CreateLShr(x, Constant::get(128)), i128, "x.hi"), i256);
-	auto y_hi = builder.CreateZExt(builder.CreateTrunc(builder.CreateLShr(y, Constant::get(128)), i128, "y.hi"), i256);
-
-	auto mul256Func = getMulFunc(_module);
-	auto t1 = builder.CreateCall(mul256Func, {x_lo, y_lo});
-	auto t2 = builder.CreateCall(mul256Func, {x_lo, y_hi});
-	auto t3 = builder.CreateCall(mul256Func, {x_hi, y_lo});
-	auto t4 = builder.CreateCall(mul256Func, {x_hi, y_hi});
-
-	auto p = builder.CreateZExt(t1, i512Ty);
-	p = builder.CreateAdd(p, builder.CreateShl(builder.CreateZExt(t2, i512Ty), builder.getIntN(512, 128)));
-	p = builder.CreateAdd(p, builder.CreateShl(builder.CreateZExt(t3, i512Ty), builder.getIntN(512, 128)));
-	p = builder.CreateAdd(p, builder.CreateShl(builder.CreateZExt(t4, i512Ty), builder.getIntN(512, 256)));
-	builder.CreateRet(p);
-
-	return func;
+	return generateLongMulFunc(funcName, i512Ty, Type::Size, _module);
 }
 
 namespace
