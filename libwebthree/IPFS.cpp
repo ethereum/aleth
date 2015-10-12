@@ -21,6 +21,7 @@
 
 #include "IPFS.h"
 #include <cstdio>
+#include <system_error>
 /*#include <boost/process.hpp>
 #include <boost/iostreams/device/back_inserter.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
