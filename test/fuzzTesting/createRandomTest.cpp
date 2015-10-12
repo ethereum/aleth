@@ -58,7 +58,7 @@ int createRandomTest(int argc, char* argv[])
 
 	testSuite = options.rCurrentTestSuite;
 	if (testSuite != "BlockChainTests" && testSuite != "TransactionTests" && testSuite != "StateTests"
-				&& testSuite != "VMTests" && testSuite != "RLPTests")
+				&& testSuite != "VMTests")
 		testSuite = "";
 
 	for (int i = 0; i < argc; ++i)
@@ -140,14 +140,6 @@ int createRandomTest(int argc, char* argv[])
 			}
 			else
 				fillRandomTest(dev::test::doVMTests, (filltest) ? testFillString : c_testExampleVMTest, filldebug);
-		}
-		else
-		if (testSuite == "RLPTests")
-		{
-			if (checktest)
-				return checkRandomTest(dev::test::doRlpTests, testmValue, debug);
-			else
-				fillRandomTest(dev::test::doRlpTests, (filltest) ? testFillString : c_testExampleRLPTest, filldebug);
 		}
 	}
 
