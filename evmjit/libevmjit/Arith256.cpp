@@ -23,14 +23,14 @@ Arith256::Arith256(IRBuilder& _builder) :
 	CompilerHelper(_builder)
 {}
 
-void Arith256::debug(llvm::Value* _value, char _c)
+void Arith256::debug(llvm::Value *_value, char _c, llvm::Module &_module, IRBuilder &_builder)
 {
-	if (!m_debug)
-	{
-		llvm::Type* argTypes[] = {Type::Word, m_builder.getInt8Ty()};
-		m_debug = llvm::Function::Create(llvm::FunctionType::get(Type::Void, argTypes, false), llvm::Function::ExternalLinkage, "debug", getModule());
-	}
-	m_builder.CreateCall(m_debug, {m_builder.CreateZExtOrTrunc(_value, Type::Word), m_builder.getInt8(_c)});
+	static const auto funcName = "debug";
+	auto func = _module.getFunction(funcName);
+	if (!func)
+		func = llvm::Function::Create(llvm::FunctionType::get(Type::Void, {Type::Word, _builder.getInt8Ty()}, false), llvm::Function::ExternalLinkage, funcName, &_module);
+
+	_builder.CreateCall(func, {_builder.CreateZExtOrTrunc(_value, Type::Word), _builder.getInt8(_c)});
 }
 
 llvm::Function* Arith256::getMulFunc(llvm::Module& _module)
@@ -502,7 +502,7 @@ extern "C"
 {
 	EVMJIT_API void debug(uint64_t a, uint64_t b, uint64_t c, uint64_t d, char z)
 	{
-		DLOG(JIT) << "DEBUG " << std::dec << z << ": " //<< d << c << b << a
+		std::cerr << "DEBUG " << std::dec << z << ": " //<< d << c << b << a
 				<< " ["	<< std::hex << std::setfill('0') << std::setw(16) << d << std::setw(16) << c << std::setw(16) << b << std::setw(16) << a << "]\n";
 	}
 }

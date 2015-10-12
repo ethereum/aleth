@@ -16,7 +16,7 @@ public:
 
 	llvm::Value* exp(llvm::Value* _arg1, llvm::Value* _arg2);
 
-	void debug(llvm::Value* _value, char _c);
+	static void debug(llvm::Value *_value, char _c, llvm::Module &_module, IRBuilder &_builder);
 
 	static llvm::Function* getMulFunc(llvm::Module& _module);
 	static llvm::Function* getMul512Func(llvm::Module& _module);
@@ -33,7 +33,6 @@ private:
 	llvm::Function* getExpFunc();
 
 	llvm::Function* m_exp = nullptr;
-	llvm::Function* m_debug = nullptr;
 };
 
 
