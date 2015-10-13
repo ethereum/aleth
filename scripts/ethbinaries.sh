@@ -11,8 +11,10 @@ function print_help {
 	echo "    --keep-build            If given the build directories will not be cleared."
 	echo "    --cores NUMBER          The value to the cores argument of make. e.g.: make -j4. Default is ${MAKE_CORES}."
 	echo "    --version VERSION       A string to append to the binary for the version."
+	echo "    --devtest               Don't build binaries but instead just try to build and run the tests."
 }
 
+DEV_TEST=0
 CLEAN_BUILD=1
 MAKE_CORES=4
 GIVEN_VERSION=1.0rc2 #default - mainly for testing if no version is given
@@ -51,6 +53,11 @@ do
 		continue
 	fi
 
+	if [[ $arg == "--devtest" ]]; then
+		DEV_TEST=1
+		continue
+	fi
+
 	if [[ $arg == "--cores" ]]; then
 		REQUESTED_ARG="make-cores"
 		continue
@@ -81,6 +88,12 @@ if [[ -d "build" ]]; then
 	if [[ $CLEAN_BUILD -eq 1 ]]; then
 		rm -rf build
 		mkdir build
+	else
+		 # Delete all previous binaries in the workspace
+		 rm -rf build/*.exe
+		 rm -rf build/*.dmg
+		 rm -rf build/cpp-ethereum.rb
+		 rm -rf build/*.tar.gz
 	fi
 else
 	mkdir build
@@ -88,6 +101,7 @@ fi
 cd build
 
 if [[ $OSTYPE == "cygwin" ]]; then
+	echo "ETHBINARIES - INFO: Building Windows binaries.";
 	# we should be in webthree-umbrella/build
 	source ../webthree-helpers/scripts/ethwindowsenv.sh
 	if [[ $? -ne 0 ]]; then
@@ -106,27 +120,46 @@ if [[ $OSTYPE == "cygwin" ]]; then
 		exit 1
 	fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
-	cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=RelWithDebInfo
-	if [[ $? -ne 0 ]]; then
-		echo "ETHBINARIES - ERROR: cmake configure phase failed.";
-		exit 1
-	fi
-	make -j${MAKE_CORES} appdmg
-	if [[ $? -ne 0 ]]; then
-		echo "ETHBINARIES - ERROR: Building a DMG for Macosx failed.";
-		exit 1
-	fi
-	make -j${MAKE_CORES} install
-	if [[ $? -ne 0 ]]; then
-		echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
-		exit 1
-	fi
-	../webthree-helpers/homebrew/prepare_receipt.sh --version $GIVEN_VERSION --number ${BUILD_NUMBER}
-	if [[ $? -ne 0 ]]; then
-		echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
-		exit 1
+	if [[ $DEV_TEST -eq 1 ]]; then
+		echo "ETHBINARIES - INFO: Building MacOSX for development test.";
+		cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+		make -j4
+	else
+		echo "ETHBINARIES - INFO: Building MacOSX binaries.";
+		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=RelWithDebInfo
+		if [[ $? -ne 0 ]]; then
+			echo "ETHBINARIES - ERROR: cmake configure phase failed.";
+			exit 1
+		fi
+		make -j${MAKE_CORES} appdmg
+		if [[ $? -ne 0 ]]; then
+			echo "ETHBINARIES - ERROR: Building a DMG for Macosx failed.";
+			exit 1
+		fi
+		make -j${MAKE_CORES} install
+		if [[ $? -ne 0 ]]; then
+			echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
+			exit 1
+		fi
+		../webthree-helpers/homebrew/prepare_receipt.sh --version $GIVEN_VERSION --number ${BUILD_NUMBER}
+		if [[ $? -ne 0 ]]; then
+			echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
+			exit 1
+		fi
 	fi
 else
-	echo "ETHBINARIES - WARNING: Requested to build unneeded platform. Ignoring ...";
+	echo "ETHBINARIES - INFO: Building for Linux ...";
+	cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+	make -j4
+	if [[ $? -ne 0 ]]; then
+		echo "ETHBINARIES - ERROR: Make  for Linux failed.";
+		exit 1
+	fi
 fi
 
+if [[ $OSTYPE != "cygwin" && $DEV_TEST -eq 1 ]]; then
+	echo "ETHBINARIES - INFO: Running tests ...";
+	# run all tests
+	cd ..
+	webthree-helpers/scripts/ethtests.sh libweb3core
+fi
