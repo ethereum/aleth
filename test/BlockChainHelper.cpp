@@ -87,7 +87,7 @@ TestBlock::TestBlock(std::string const& _blockRlp)
 		//thus it won't need verification
 		uncle.setBlockHeader(uBl, RecalcBlockHeader::SkipVerify);
 		m_uncles.push_back(uncle);
-	}	
+	}
 }
 
 void TestBlock::setState(State const& _state)
@@ -150,9 +150,9 @@ void TestBlock::mine(TestBlockChain const& bc)
 		if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
 			m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
 			blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ? m_blockHeader.transactionsRoot() : blockInfo.transactionsRoot(),
-							   m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : blockInfo.receiptsRoot(),
-							   m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : blockInfo.sha3Uncles(),
-							   m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : blockInfo.stateRoot());
+							m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : blockInfo.receiptsRoot(),
+							m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : blockInfo.sha3Uncles(),
+							m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : blockInfo.stateRoot());
 
 		if (m_premineUpdate.count("bloom") > 0)
 			blockInfo.setLogBloom(m_blockHeader.logBloom());
