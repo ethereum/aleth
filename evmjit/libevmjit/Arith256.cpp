@@ -38,6 +38,8 @@ namespace
 llvm::Function *generateLongMulFunc(char const *_funcName, llvm::IntegerType *_ty, llvm::IntegerType *_wordTy, llvm::Module &_module)
 {
 	auto func = llvm::Function::Create(llvm::FunctionType::get(_ty, {_ty, _ty}, false), llvm::Function::PrivateLinkage, _funcName, &_module);
+	func->setDoesNotAccessMemory();
+	func->setDoesNotThrow();
 
 	auto x = &func->getArgumentList().front();
 	x->setName("x");
@@ -55,16 +57,23 @@ llvm::Function *generateLongMulFunc(char const *_funcName, llvm::IntegerType *_t
 	auto indexTy = builder.getInt32Ty();
 	auto _0 = builder.getInt32(0);
 	auto _1 = builder.getInt32(1);
+	auto wordMask = builder.CreateZExt(llvm::ConstantInt::get(_wordTy, -1, true), dwordTy);
 	auto wordBitWidth = builder.getInt32(_wordTy->getBitWidth());
 	auto dim = builder.getInt32(_ty->getBitWidth() / _wordTy->getBitWidth()); // FIXME: assert about word type
 	builder.CreateBr(outerLoopHeaderBB);
 
+	auto extractWordAsDword = [&](llvm::Value* _a, llvm::Value* _idx, llvm::Twine const& _name)
+	{
+		auto word = builder.CreateLShr(_a, builder.CreateZExt(builder.CreateNUWMul(_idx, wordBitWidth), _ty));
+		word = builder.CreateAnd(builder.CreateTrunc(word, dwordTy), wordMask, _name);
+		return word;
+	};
+
 	builder.SetInsertPoint(outerLoopHeaderBB);
 	auto j = builder.CreatePHI(indexTy, 2, "j");
 	auto p = builder.CreatePHI(_ty, 2, "p");
-	auto yj = builder.CreateTrunc(
-			builder.CreateLShr(y, builder.CreateZExt(builder.CreateNUWMul(j, wordBitWidth), _ty)), _wordTy, "y.j");
-	auto iEnd = builder.CreateNUWSub(dim, j, "i.end");
+	auto yj = extractWordAsDword(y, j, "y.j");
+	auto iEnd = builder.CreateSub(dim, j, "i.end", true, true);
 	builder.CreateBr(innerLoopBB);
 
 	builder.SetInsertPoint(innerLoopBB);
@@ -74,24 +83,22 @@ llvm::Function *generateLongMulFunc(char const *_funcName, llvm::IntegerType *_t
 
 	auto k = builder.CreateNUWAdd(i, j, "k");
 	auto offset = builder.CreateZExt(builder.CreateNUWMul(k, wordBitWidth), _ty, "offset");
-	auto xi = builder.CreateTrunc(
-			builder.CreateLShr(x, builder.CreateZExt(builder.CreateNUWMul(i, wordBitWidth), _ty)), _wordTy, "x.i");
-	auto m = builder.CreateMul(builder.CreateZExt(xi, dwordTy), builder.CreateZExt(yj, dwordTy), "m");
-	auto mask = builder.CreateShl(builder.CreateZExt(llvm::ConstantInt::get(_wordTy, -1, true), _ty), offset,
-								  "mask");
+	auto xi = extractWordAsDword(x, i, "x.i");
+	auto m = builder.CreateNUWMul(xi, yj, "m");
+	auto mask = builder.CreateShl(builder.CreateZExt(wordMask, _ty), offset, "mask");
 	auto nmask = builder.CreateXor(mask, llvm::ConstantInt::get(_ty, -1, true), "nmask");
-	auto w = builder.CreateTrunc(builder.CreateLShr(pInner, offset), _wordTy, "w");
-	auto s = builder.CreateNUWAdd(m, builder.CreateZExt(w, dwordTy));
-	s = builder.CreateNUWAdd(s, builder.CreateZExt(carry, dwordTy), "s");
-	auto wNext = builder.CreateTrunc(s, _wordTy);
-	auto carryNext = builder.CreateTrunc(
-			builder.CreateLShr(s, llvm::ConstantInt::get(dwordTy, _wordTy->getBitWidth())), _wordTy, "carry.next");
+	auto w = builder.CreateTrunc(builder.CreateLShr(pInner, offset), dwordTy);
+	w = builder.CreateAnd(w, wordMask, "w");
+	auto s = builder.CreateAdd(w, builder.CreateZExt(carry, dwordTy), "s.wc", true, true);
+	s = builder.CreateNUWAdd(s, m, "s");
+	auto carryNext = builder.CreateTrunc(builder.CreateLShr(s, llvm::ConstantInt::get(dwordTy, _wordTy->getBitWidth())), _wordTy, "carry.next");
+	auto wNext = builder.CreateAnd(s, wordMask);
 	auto pMasked = builder.CreateAnd(pInner, nmask, "p.masked");
-	auto pNext = builder.CreateOr(pMasked, builder.CreateShl(builder.CreateZExt(wNext, _ty), offset), "p.next");
+	auto pNext = builder.CreateOr(builder.CreateShl(builder.CreateZExt(wNext, _ty), offset), pMasked, "p.next");
 
 	auto iNext = builder.CreateNUWAdd(i, _1, "i.next");
-	auto innerLoopCond = builder.CreateICmpNE(iNext, iEnd, "i.cond");
-	builder.CreateCondBr(innerLoopCond, innerLoopBB, outerLoopFooterBB);
+	auto innerLoopCond = builder.CreateICmpEQ(iNext, iEnd, "i.cond");
+	builder.CreateCondBr(innerLoopCond, outerLoopFooterBB, innerLoopBB);
 	i->addIncoming(_0, outerLoopHeaderBB);
 	i->addIncoming(iNext, innerLoopBB);
 	pInner->addIncoming(p, outerLoopHeaderBB);
@@ -101,8 +108,8 @@ llvm::Function *generateLongMulFunc(char const *_funcName, llvm::IntegerType *_t
 
 	builder.SetInsertPoint(outerLoopFooterBB);
 	auto jNext = builder.CreateNUWAdd(j, _1, "j.next");
-	auto outerLoopCond = builder.CreateICmpNE(jNext, dim, "j.cond");
-	builder.CreateCondBr(outerLoopCond, outerLoopHeaderBB, exitBB);
+	auto outerLoopCond = builder.CreateICmpEQ(jNext, dim, "j.cond");
+	builder.CreateCondBr(outerLoopCond, exitBB, outerLoopHeaderBB);
 	j->addIncoming(_0, entryBB);
 	j->addIncoming(jNext, outerLoopFooterBB);
 	p->addIncoming(llvm::ConstantInt::get(_ty, 0), entryBB);
@@ -510,7 +517,7 @@ extern "C"
 {
 	EVMJIT_API void debug(uint64_t a, uint64_t b, uint64_t c, uint64_t d, char z)
 	{
-		std::cerr << "DEBUG " << std::dec << z << ": " //<< d << c << b << a
+		DLOG(JIT) << "DEBUG " << std::dec << z << ": " //<< d << c << b << a
 				<< " ["	<< std::hex << std::setfill('0') << std::setw(16) << d << std::setw(16) << c << std::setw(16) << b << std::setw(16) << a << "]\n";
 	}
 }
