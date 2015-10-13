@@ -124,6 +124,10 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 		echo "ETHBINARIES - INFO: Building MacOSX for development test.";
 		cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 		make -j4
+		if [[ $? -ne 0 ]]; then
+			echo "ETHBINARIES - ERROR: Building for Macosx failed.";
+			exit 1
+		fi
 	else
 		echo "ETHBINARIES - INFO: Building MacOSX binaries.";
 		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=RelWithDebInfo
