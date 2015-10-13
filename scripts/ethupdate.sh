@@ -208,7 +208,7 @@ do
 		else
 			echo "ETHUPDATE - INFO: Repository ${repository} for requested project ${REQUESTED_PROJECT} did not exist. Cloning ..."
 			get_repo_url $repository
-			git clone $REPO_URL $SHALLOW_FETCH
+			git clone --recursive $REPO_URL $SHALLOW_FETCH
 			CLONED_THE_REPO=1
 			cd $repository >/dev/null 2>/dev/null
 		fi
@@ -243,6 +243,7 @@ do
 			if [[ $? -ne 0 ]]; then
 				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
 			fi
+			git submodule update
 		else
 			echo "ETHUPDATE - WARNING: Not updating ${repository} because it's not in the ${REQUESTED_BRANCH} branch"
 		fi
@@ -254,6 +255,7 @@ do
 	# Pull changes from what the user set as the upstream repository, unless it's just been cloned
 	if [[ $CLONED_THE_REPO -eq 0 ]]; then
 		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
+		git submodule update
 	else
 		# if just cloned, make a local branch tracking the origin's requested branch
 		git fetch origin $SHALLOW_FETCH
@@ -269,6 +271,7 @@ do
 			if [[ $? -ne 0 ]]; then
 				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
 			fi
+			git submodule update
 		else
 			echo "ETHUPDATE - ERROR: Pulling changes for repository ${repository} from ${UPSTREAM} into the ${REQUESTED_BRANCH} branch failed."
 		fi

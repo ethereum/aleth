@@ -11,8 +11,10 @@ fi
 TEST_EXEC="NONE"
 REPOS_TEST_MAP=("webthree-helpers:NONE"
 		"tests:NONE"
-		"libweb3core:NONE"
+		"libweb3core:libweb3core/build/test/testweb3core"
 		"libethereum:libethereum/build/test/testeth"
+		"libethereum_vmjit:libethereum/build/test/testeth --vm jit"
+		"libethereum_vmsmart:libethereum/build/test/testeth --vm smart"
 		"libwhisper:NONE"
 		"webthree:webthree/build/test/testweb3"
 		"web3.js:NONE"
@@ -40,7 +42,7 @@ function get_repo_testexec() {
 
 case $1 in
 	"libweb3core")
-		TEST_REPOSITORIES=(libethereum webthree solidity)
+		TEST_REPOSITORIES=(libweb3core libethereum libethereum_vmjit libethereum_vmsmart webthree solidity)
 		;;
 	"alethzero")
 		echo "ETHTESTS - INFO: \"$1\" contains no tests. No worries."
@@ -51,7 +53,7 @@ case $1 in
 		exit 0
 		;;
 	"libethereum")
-		TEST_REPOSITORIES=(libethereum webthree solidity)
+		TEST_REPOSITORIES=(libethereum libethereum_vmsmart libethereum_vmjit webthree solidity)
 		;;
 	"webthree")
 		TEST_REPOSITORIES=(webthree solidity)
@@ -65,6 +67,11 @@ case $1 in
 		;;
 esac
 
+# Set a special environment variable for use by evmjit tests
+# export EVMJIT="-cache=0"
+
+# remove all old test results
+rm -rf *_results.xml
 for repository in "${TEST_REPOSITORIES[@]}"
 do
 	get_repo_testexec $repository
@@ -73,8 +80,6 @@ do
 		continue;
 	fi
 	echo "ETHTESTS - INFO: Will run test file ${TEST_EXEC} for project \"$1\"."
-	# remove old test results
-	rm -rf ${repository}_results.xml
 	# run tests
 	./$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
 done
