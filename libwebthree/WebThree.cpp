@@ -31,8 +31,9 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
+#include <ethereum/BuildInfo.h>
 #include "Swarm.h"
-#include "ethereum/BuildInfo.h"
+#include "Support.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -68,7 +69,11 @@ WebThreeDirect::WebThreeDirect(
 		m_whisper = m_net.registerCapability(make_shared<WhisperHost>());
 
 	if (_interfaces.count("bzz"))
-		m_swarm = unique_ptr<bzz::Client>(new bzz::Client());
+	{
+		m_swarm.reset(new bzz::Client(this));
+	}
+
+	m_support = make_shared<Support>(this);
 }
 
 WebThreeDirect::~WebThreeDirect()
@@ -85,6 +90,13 @@ WebThreeDirect::~WebThreeDirect()
 	// use bits of data owned by m_ethereum).
 	m_net.stop();
 	m_ethereum.reset();
+}
+
+bzz::Interface* WebThreeDirect::swarm() const
+{
+	if (!m_swarm)
+		BOOST_THROW_EXCEPTION(InterfaceNotSupported("bzz"));
+	return m_swarm.get();
 }
 
 std::string WebThreeDirect::composeClientVersion(std::string const& _client, std::string const& _clientName)
