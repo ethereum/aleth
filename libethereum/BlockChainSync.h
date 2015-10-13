@@ -284,48 +284,6 @@ protected:
 	std::weak_ptr<EthereumPeer> m_syncer;		///< Peer we are currently syncing with
 };
 
-/**
- * @brief Syncrhonization over PV61. Selects a single peer and requests every c_hashSubchainSize hash, splitting the hashchain into subchains and downloading each subchain in parallel.
- * Syncs to peers and keeps up to date
- */
-class PV61Sync: public PV60Sync
-{
-public:
-	PV61Sync(EthereumHost& _host);
-
-protected:
-	void restartSync() override;
-	void completeSync() override;
-	void requestSubchain(std::shared_ptr<EthereumPeer> _peer) override;
-	void syncHashes(std::shared_ptr<EthereumPeer> _peer) override;
-	void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) override;
-	void onPeerAborting() override;
-	SyncStatus status() const override;
-	bool invariants() const override;
-
-private:
-	/// Called when subchain is complete. Check if if hashchain is fully downloaded and proceed to downloading blocks
-	void completeSubchain(std::shared_ptr<EthereumPeer> _peer, unsigned _n);
-	/// Find a subchain for peers to downloading
-	void requestSubchains();
-	/// Check if downloading hashes in parallel
-	bool isPV61Syncing() const;
-
-	struct SubChain
-	{
-		h256s hashes;	///< List of subchain hashes
-		h256 lastHash;	///< Last requested subchain hash
-	};
-
-	std::map<unsigned, SubChain> m_completeChainMap;		///< Fully downloaded subchains
-	std::map<unsigned, SubChain> m_readyChainMap;			///< Subchains ready for download
-	std::map<unsigned, SubChain> m_downloadingChainMap;		///< Subchains currently being downloading. In sync with m_chainSyncPeers
-	std::map<std::weak_ptr<EthereumPeer>, unsigned, std::owner_less<std::weak_ptr<EthereumPeer>>> m_chainSyncPeers; ///< Peers to m_downloadingSubchain number map
-	h256Hash m_knownHashes;									///< Subchain start markers. Used to track suchain completion
-	unsigned m_syncingBlockNumber = 0;						///< Current subchain marker
-	bool m_hashScanComplete = false;						///< True if leading peer completed hashchain scan and we have a list of subchains ready
-};
-
 std::ostream& operator<<(std::ostream& _out, SyncStatus const& _sync);
 
 }
