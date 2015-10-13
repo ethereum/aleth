@@ -47,7 +47,7 @@ static bytes exec(std::string const& _cmd)
 {
 	FILE* pipe = POPEN_R(_cmd.c_str());
 	if (!pipe)
-		throw system_error();
+		throw IPFSExecutableNotFound();
 	bytes ret;
 	while (!feof(pipe))
 	{
@@ -63,7 +63,7 @@ static void exec(std::string const& _cmd, bytesConstRef _in)
 {
 	FILE* pipe = POPEN_W(_cmd.c_str());
 	if (!pipe)
-		throw system_error();
+		throw IPFSExecutableNotFound();
 	fwrite(_in.data(), 1, _in.size(), pipe);
 	PCLOSE(pipe);
 }
