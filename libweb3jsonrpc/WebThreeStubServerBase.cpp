@@ -854,12 +854,14 @@ string WebThreeStubServerBase::db_get(string const& _name, string const& _key)
 
 string WebThreeStubServerBase::bzz_put(string const& _data)
 {
-	return toJS(bzz()->put(jsToBytes(_data)));
+	bytes b = jsToBytes(_data);
+	bzz()->put(b);
+	return toJS(sha3(b));
 }
 
 string WebThreeStubServerBase::bzz_get(string const& _hash)
 {
-	return toJS(bzz()->get(jsToFixed<32>(_hash)));
+	return toJS((bytesConstRef)bzz()->get(jsToFixed<32>(_hash)));
 }
 
 bool WebThreeStubServerBase::shh_post(Json::Value const& _json)
