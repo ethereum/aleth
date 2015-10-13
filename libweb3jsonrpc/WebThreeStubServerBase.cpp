@@ -303,7 +303,7 @@ string WebThreeStubServerBase::eth_sendRawTransaction(std::string const& _rlp)
 		if (client()->injectTransaction(jsToBytes(_rlp)) == ImportResult::Success)
 		{
 			Transaction tx(jsToBytes(_rlp), CheckTransaction::None);
-			return tx.sha3();
+			return toJS(tx.sha3());
 		}
 		else
 			return toJS(h256());
