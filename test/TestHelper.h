@@ -236,10 +236,12 @@ public:
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
 	static std::string const& testName() { return m_currentTestName; };
+	static std::string const& caseName() { return m_currentTestCaseName; };
 private:
 	static size_t m_currTest;
 	static size_t m_maxTests;
 	static std::string m_currentTestName;
+	static std::string m_currentTestCaseName;
 };
 
 /// Allows observing test execution process.

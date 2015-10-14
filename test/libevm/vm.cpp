@@ -294,20 +294,16 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 
 namespace dev { namespace test {
 
-void doVMTests(json_spirit::mValue& v, bool _fillin)
+void doVMTests(json_spirit::mValue& _v, bool _fillin)
 {
-	string testname;
-	for (auto& i: v.get_obj())
+	TestOutputHelper::initTest(_v);
+	for (auto& i: _v.get_obj())
 	{
-		mObject& o = i.second.get_obj();
-		if (test::Options::get().singleTest && test::Options::get().singleTestName != i.first)
-		{
-			o.clear();
-			continue;
-		}
+		string testname = i.first;
+		json_spirit::mObject& o = i.second.get_obj();
 
-		cnote << i.first;
-		testname = "(" + i.first + ") ";
+		if (!TestOutputHelper::passTest(o, testname))
+			continue;
 
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
