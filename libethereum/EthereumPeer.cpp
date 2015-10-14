@@ -248,15 +248,78 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	}
 	case GetBlockHashesPacket:
 	{
-		h256 later = _r[0].toHash<h256>();
-		unsigned limit = _r[1].toInt<unsigned>();
-		clog(NetMessageSummary) << "GetBlockHashes (" << limit << "entries," << later << ")";
-		unsigned c = min<unsigned>(host()->chain().number(later), min(limit, c_maxHashesToSend));
+		/// Packet layout:
+		/// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]
+		auto blockId = _r[0];
+		auto maxHeaders = _r[1].toInt<unsigned>();
+		auto skip = _r[2].toInt<unsigned>();
+		auto reverse = _r[3].toInt<bool>();
+
+		h256 blockHash;
+		unsigned blockNumber = 0;
+		if (blockId.size() == 32) // block id is a hash
+		{
+			blockHash = blockId.toHash<h256>();
+			blockNumber = host()->chain().number(blockHash);
+			clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
+				<< ", maxHeaders: " << maxHeaders
+				<< ", skip: " << skip << ", reverse: " << reverse << ")";
+		}
+		else // block id is a number
+		{
+			blockNumber = blockId.toInt<unsigned>();
+			blockHash = host()->chain().numberHash(blockNumber); // get hash of numbered block, can be a null
+			clog(NetMessageSummary) << "GetBlockHeaders (block (number): " << blockNumber
+				<< ", maxHeaders: " << maxHeaders
+				<< ", skip: " << skip << ", reverse: " << reverse << ")";
+		}
+
+		maxHeaders = std::min(maxHeaders, c_maxHashesToSend); // limit the response size according to local config
+		auto lastBlockNumber = host()->chain().number();
+
+		unsigned beginBlockNumber = 0;
+
+		if (reverse)
+		{
+			if (blockNumber < skip) //FIXME: reverse if-else
+				maxHeaders = 0;
+			else
+			{
+				beginBlockNumber = blockNumber - skip;
+				// if beginBlockNumber == UINT_MAX we get 0, but that's ok (block number invalid in first place)
+				maxHeaders = std::min(maxHeaders, beginBlockNumber + 1);
+			}
+		}
+		else
+		{
+			auto low = static_cast<uint64_t>(blockNumber) + skip;
+			static_assert(sizeof(low) > sizeof(blockNumber), "Use bigger type to catch int overflows");
+			if (low > lastBlockNumber)
+				maxHeaders = 0;
+			else if (maxHeaders > 0)
+			{
+				auto high = low + maxHeaders - 1;
+				//beginBlockNumber = static_cast<decltype(beginBlockNumber)>(beg);
+				if (high > lastBlockNumber)
+					high = lastBlockNumber;
+				beginBlockNumber = static_cast<decltype(beginBlockNumber)>(high);
+				maxHeaders = static_cast<decltype(maxHeaders)>(high - low + 1);
+			}
+		}
+
+		auto hash = host()->chain().numberHash(beginBlockNumber);
+
 		RLPStream s;
-		prep(s, BlockHashesPacket, c);
-		h256 p = host()->chain().details(later).parent;
-		for (unsigned i = 0; i < c && p; ++i, p = host()->chain().details(p).parent)
-			s << p;
+		prep(s, BlockHashesPacket, maxHeaders);
+		for (unsigned i = 0; i != maxHeaders; ++i)
+		{
+			if (!hash)
+				break;
+
+			auto details = host()->chain().details(hash);
+			s << hash; // FIXME: Send header, not hash
+			hash = details.parent;
+		}
 		sealAndSend(s);
 		addRating(0);
 		break;
