@@ -4,11 +4,10 @@
 
 By Gav Wood et al*, 2013, 2014, 2015.
 
-          | Linux   | OSX | Windows
-----------|---------|-----|--------
-develop   | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Linux%20C%2B%2B%20develop%20branch)](https://build.ethdev.com/builders/Linux%20C%2B%2B%20develop%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=OSX%20C%2B%2B%20develop%20branch)](https://build.ethdev.com/builders/OSX%20C%2B%2B%20develop%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Windows%20C%2B%2B%20develop%20branch)](https://build.ethdev.com/builders/Windows%20C%2B%2B%20develop%20branch/builds/-1)
-master    | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Linux%20C%2B%2B%20master%20branch)](https://build.ethdev.com/builders/Linux%20C%2B%2B%20master%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=OSX%20C%2B%2B%20master%20branch)](https://build.ethdev.com/builders/OSX%20C%2B%2B%20master%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Windows%20C%2B%2B%20master%20branch)](https://build.ethdev.com/builders/Windows%20C%2B%2B%20master%20branch/builds/-1)
-evmjit    | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Linux%20C%2B%2B%20develop%20evmjit)](https://build.ethdev.com/builders/Linux%20C%2B%2B%20develop%20evmjit/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=OSX%20C%2B%2B%20develop%20evmjit)](https://build.ethdev.com/builders/OSX%20C%2B%2B%20develop%20evmjit/builds/-1) | N/A
+          | Status
+----------|-----------
+develop   | [![Build Status](http://52.28.164.97/job/ethbinaries-develop/badge/icon)](http://52.28.164.97/job/ethbinaries-develop/)
+release   | [![Build Status](http://52.28.164.97/job/ethbinaries-release/badge/icon)](http://52.28.164.97/job/ethbinaries-release/)
 
 [![Stories in Ready](https://badge.waffle.io/ethereum/cpp-ethereum.png?label=ready&title=Ready)](http://waffle.io/ethereum/cpp-ethereum)
 
