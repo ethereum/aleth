@@ -6,8 +6,8 @@ By Gav Wood et al*, 2013, 2014, 2015.
 
           | Status
 ----------|-----------
-develop   | [![Build Status](http://52.28.164.97/job/ethbinaries-develop/badge/icon)](http://52.28.164.97/job/ethbinaries-develop/)
-release   | [![Build Status](http://52.28.164.97/job/ethbinaries-release/badge/icon)](http://52.28.164.97/job/ethbinaries-release/)
+develop   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-develop)](http://52.28.164.97/job/ethbinaries-develop/)
+release   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-release)](http://52.28.164.97/job/ethbinaries-release/)
 
 [![Stories in Ready](https://badge.waffle.io/ethereum/cpp-ethereum.png?label=ready&title=Ready)](http://waffle.io/ethereum/cpp-ethereum)
 
