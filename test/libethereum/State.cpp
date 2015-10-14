@@ -42,7 +42,9 @@ namespace dev {  namespace test {
 
 void doStateTests(json_spirit::mValue& _v, bool _fillin)
 {
-	TestOutputHelper::initTest(_v);
+	if (string(boost::unit_test::framework::current_test_case().p_name) != "stRandom")
+		TestOutputHelper::initTest(_v);
+
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
@@ -227,6 +229,9 @@ BOOST_AUTO_TEST_CASE(stRandom)
 	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
 		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
 			testFiles.push_back(iterator->path());
+
+	test::TestOutputHelper::initTest();
+	test::TestOutputHelper::setMaxTests(testFiles.size());
 
 	for (auto& path: testFiles)
 	{

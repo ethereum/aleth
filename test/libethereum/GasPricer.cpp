@@ -36,6 +36,7 @@ namespace dev {  namespace test {
 
 void executeGasPricerTest(string const& name, double _etherPrice, double _blockFee, string const& bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid)
 {
+	test::TestOutputHelper::initTest();
 	cnote << name;
 	BasicGasPricer gp(u256(double(ether / 1000) / _etherPrice), u256(_blockFee * 1000));
 
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_SUITE(GasPricer)
 
 BOOST_AUTO_TEST_CASE(trivialGasPricer)
 {
+	test::TestOutputHelper::initTest();
 	cnote << "trivialGasPricer";
 	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
 	BOOST_CHECK_EQUAL(gp->ask(Block(Block::Null)), DefaultGasPrice);
@@ -65,6 +67,7 @@ BOOST_AUTO_TEST_CASE(trivialGasPricer)
 
 BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
 {
+	test::TestOutputHelper::initTest();
 	cnote << "basicGasPricer";
 	BasicGasPricer gp(u256(double(ether / 1000) / 30.679), u256(15.0 * 1000));
 	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), 155632494086);

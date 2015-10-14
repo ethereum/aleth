@@ -233,10 +233,12 @@ private:
 class TestOutputHelper
 {
 public:
+	static void initTest();
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
-	static std::string const& testName() { return m_currentTestName; };
-	static std::string const& caseName() { return m_currentTestCaseName; };
+	static void setMaxTests(int _count) { m_maxTests = _count; }
+	static std::string const& testName() { return m_currentTestName; }
+	static std::string const& caseName() { return m_currentTestCaseName; }
 private:
 	static size_t m_currTest;
 	static size_t m_maxTests;
