@@ -3,7 +3,7 @@
 #
 # This script should get a project name from jenkins and figure out which tests to run
 
-if [[ $# -ne 1 || $# -ne 2 ]]; then
+if [[ $# -ne 1 && $# -ne 2 ]]; then
 	echo "RUNTESTS - ERROR: Expected either 1 or 2 arguments for the run tests script but got $#!"
 	exit 1
 fi
