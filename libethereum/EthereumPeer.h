@@ -72,9 +72,6 @@ public:
 	/// Abort sync and reset fetch
 	void setIdle();
 
-	/// Request hashes by number. v61+ protocol version only
-	void requestHashes(u256 _number, unsigned _count);
-
 	/// Request hashes for given parent hash.
 	void requestHashes(h256 const& _lastHash);
 
