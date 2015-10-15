@@ -828,14 +828,10 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 	// create messages
 	if (debugMode)
 	{
-		// only for debugging
-		// delete this after debugging is complete
+		// only for debugging. delete this block after debugging is complete.
 		bytes p1, p2;
-		p1 += h.asBytes();
-		h = sha3(h);
-		p2 += h.asBytes();
-		p1.resize(1736);
-		p2.resize(160);		
+		p1.resize(1736, 'x');
+		p2.resize(160, 'z');
 		packetsOut.push_back(p1);
 		packetsOut.push_back(p2);
 	}
@@ -902,10 +898,9 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 
-	bool debugMode = true; // delete this after debugging is done
 	int const dequeLen = 1024;
-	int const numMessages = debugMode ? 2 : 62;
-	uint16_t const numSubprotocols = 1;
+	int const numMessages = 4000;
+	uint16_t const numSubprotocols = 8;
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
 	h256 h = sha3("some pseudorandom stuff here");
@@ -919,28 +914,13 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	map<size_t, size_t> msgPerSubprotocol;
 
 	// create messages
-	if (debugMode)
+	for (int i = 0; i < numMessages; ++i)
 	{
-		// only for debugging
-		// delete this after debugging is complete
-		bytes p1, p2;
-		p1 += h.asBytes();
 		h = sha3(h);
-		p2 += h.asBytes();
-		p1.resize(1736);
-		p2.resize(160);		
-		packetsOut.push_back(p1);
-		packetsOut.push_back(p2);
-		totalPacketsSize = p1.size() + p2.size();
+		auto pack = generatePseudorandomPacket(h);
+		packetsOut.push_back(pack);
+		totalPacketsSize += pack.size();
 	}
-	else
-		for (int i = 0; i < numMessages; ++i)
-		{
-			h = sha3(h);
-			auto pack = generatePseudorandomPacket(h);
-			packetsOut.push_back(pack);
-			totalPacketsSize += pack.size();
-		}
 
 	// create readers & writers
 	for (uint16_t i = 0; i < numSubprotocols; ++i)
@@ -953,14 +933,14 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	// enque messages into writers
 	for (int i = 0; i < numMessages; ++i)
 	{
-		int sub = 0; //////////////////////////////////////////// packetsOut[i][1] % numSubprotocols;
+		int sub = packetsOut[i][1] % numSubprotocols;
 		writers[sub].enque(packetType, (RLPStream() << packetsOut[i]));
 		msgPerSubprotocol[sub]++;
 	}
 
-	bool done = false;
 	for (uint16_t i = 0; i < numSubprotocols; ++i)
 	{
+		bool done = false;
 		while (!done)
 		{
 			size_t prev = encframes.size();
@@ -1006,6 +986,8 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 		BOOST_REQUIRE_EQUAL(sha3(RLP(packets[i].data()).payload()), sha3(packetsOut[i]));
 		BOOST_REQUIRE_EQUAL(sha3(packets[i].type()), sha3(packetTypeRLP));
 	}
+
+	--total;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
