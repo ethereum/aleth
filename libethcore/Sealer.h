@@ -24,8 +24,10 @@
 #pragma once
 
 #include <functional>
+#include <unordered_map>
 #include <libdevcore/Guards.h>
 #include <libdevcore/RLP.h>
+#include "BlockInfo.h"
 #include "Common.h"
 
 namespace dev
@@ -34,6 +36,7 @@ namespace eth
 {
 
 class BlockInfo;
+class ChainOperationParams;
 
 class SealEngineFace
 {
@@ -41,9 +44,15 @@ public:
 	virtual ~SealEngineFace() {}
 
 	virtual std::string name() const = 0;
-	virtual unsigned revision() const = 0;
-	virtual unsigned sealFields() const = 0;
-	virtual bytes sealRLP() const = 0;
+	virtual unsigned revision() const { return 0; }
+	virtual unsigned sealFields() const { return 0; }
+	virtual bytes sealRLP() const { return bytes(); }
+	virtual StringHashMap jsInfo(BlockInfo const&) const { return StringHashMap(); }
+
+	/// Don't forget to call Super::verify when subclassing & overriding.
+	virtual void verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent = BlockInfo(), bytesConstRef _block = bytesConstRef()) const;
+	/// Don't forget to call Super::populateFromParent when subclassing & overriding.
+	virtual void populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const;
 
 	bytes option(std::string const& _name) const { Guard l(x_options); return m_options.count(_name) ? m_options.at(_name) : bytes(); }
 	bool setOption(std::string const& _name, bytes const& _value) { Guard l(x_options); try { if (onOptionChanging(_name, _value)) { m_options[_name] = _value; return true; } } catch (...) {} return false; }
@@ -55,6 +64,10 @@ public:
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;
 	virtual void cancelGeneration() {}
 
+	ChainOperationParams const& chainParams() const { return m_params; }
+	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
+	SealEngineFace* withChainParams(ChainOperationParams const& _params) { m_params = _params; return this; }
+
 protected:
 	virtual bool onOptionChanging(std::string const&, bytes const&) { return true; }
 	void injectOption(std::string const& _name, bytes const& _value) { Guard l(x_options); m_options[_name] = _value; }
@@ -62,17 +75,47 @@ protected:
 private:
 	mutable Mutex x_options;
 	std::unordered_map<std::string, bytes> m_options;
+
+	ChainOperationParams m_params;
 };
 
-template <class Sealer>
 class SealEngineBase: public SealEngineFace
 {
 public:
-	std::string name() const override { return Sealer::name(); }
-	unsigned revision() const override { return Sealer::revision(); }
-	unsigned sealFields() const override { return Sealer::BlockHeader::SealFields; }
-	bytes sealRLP() const override { RLPStream s(sealFields()); s.appendRaw(typename Sealer::BlockHeader().sealFieldsRLP(), sealFields()); return s.out(); }
+	void generateSeal(BlockInfo const& _bi) override
+	{
+		RLPStream ret;
+		_bi.streamRLP(ret);
+		if (m_onSealGenerated)
+			m_onSealGenerated(ret.out());
+	}
+	void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
+
+private:
+	std::function<void(bytes const& s)> m_onSealGenerated;
 };
+
+using SealEngineFactory = std::function<SealEngineFace*()>;
+
+class SealEngineRegistrar
+{
+public:
+	/// Creates the seal engine and uses it to "polish" the params (i.e. fill in implicit values) as necessary. Use this rather than the other two
+	/// unless you *know* that the params contain all information regarding the seal on the Genesis block.
+	static SealEngineFace* create(ChainOperationParams const& _params);
+	static SealEngineFace* create(std::string const& _name) { if (!get()->m_sealEngines.count(_name)) return nullptr; return get()->m_sealEngines[_name](); }
+
+	template <class Sealer> static SealEngineFactory registerSealEngine(std::string const& _name) { return (get()->m_sealEngines[_name] = [](){return new Sealer;}); }
+	static void unregisterSealEngine(std::string const& _name) { get()->m_sealEngines.erase(_name); }
+
+private:
+	static SealEngineRegistrar* get() { if (!s_this) s_this = new SealEngineRegistrar; return s_this; }
+
+	std::unordered_map<std::string, SealEngineFactory> m_sealEngines;
+	static SealEngineRegistrar* s_this;
+};
+
+#define ETH_REGISTER_SEAL_ENGINE(Name) static SealEngineFactory __eth_registerSealEngineFactory ## Name = SealEngineRegistrar::registerSealEngine<Name>(#Name)
 
 }
 }

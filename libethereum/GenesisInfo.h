@@ -25,8 +25,10 @@
 #include <libdevcore/FixedHash.h>
 #include <libethcore/Common.h>
 
-namespace dev {
-namespace eth {
+namespace dev
+{
+namespace eth
+{
 
 std::string const& genesisInfo(Network _n);
 h256 const& genesisStateRoot(Network _n);

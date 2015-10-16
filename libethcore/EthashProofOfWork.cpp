@@ -14,31 +14,27 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Sealer.cpp
+/** @file Ethash.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
+ *
+ * Determines the PoW algorithm.
  */
 
-#include "Sealer.h"
+#include "EthashProofOfWork.h"
+#include "Ethash.h"
 using namespace std;
+using namespace chrono;
 using namespace dev;
 using namespace eth;
 
-SealEngineRegistrar* SealEngineRegistrar::s_this = nullptr;
+const unsigned EthashProofOfWork::defaultLocalWorkSize = 64;
+const unsigned EthashProofOfWork::defaultGlobalWorkSizeMultiplier = 4096; // * CL_DEFAULT_LOCAL_WORK_SIZE
+const unsigned EthashProofOfWork::defaultMSPerBatch = 0;
+const EthashProofOfWork::WorkPackage EthashProofOfWork::NullWorkPackage = EthashProofOfWork::WorkPackage();
 
-void SealEngineFace::verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const
-{
-	_bi.verify(_s, _parent, _block);
-}
-
-void SealEngineFace::populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const
-{
-	_bi.populateFromParent(_parent);
-}
-
-SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
-{
-	SealEngineFace* ret = create(_params.sealEngineName);
-	ret->setChainParams(_params);
-	return ret;
-}
+EthashProofOfWork::WorkPackage::WorkPackage(BlockInfo const& _bh):
+	boundary(Ethash::boundary(_bh)),
+	headerHash(_bh.hash(WithoutSeal)),
+	seedHash(Ethash::seedHash(_bh))
+{}

@@ -48,11 +48,12 @@ enum class Network
 {
 	Olympic = 0,
 	Frontier = 1,
-	Morden = 2
+	Morden = 2,
+	Fluidity = 69,
+	Test = 70,
+	TestBasicAuthority = 71,
+	Special = 0xff
 };
-extern Network c_network;
-
-Network resetNetwork(Network _n);
 
 /// User-friendly string representation of the amount _b in wei.
 std::string formatBalance(bigint const& _b);

@@ -13,22 +13,20 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
- */
-/** @file FixedClient.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
+*/
+/** @file ChainOperationParams.h
+ * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
 
-#include "FixedClient.h"
-
+#include "ChainOperationParams.h"
+#include <libdevcore/Log.h>
+#include <libdevcore/CommonData.h>
+using namespace std;
 using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
+using namespace eth;
 
-Block FixedClient::asOf(h256 const& _h) const
+u256 ChainOperationParams::u256Param(string const& _name) const
 {
-	ReadGuard l(x_stateDB);
-	Block ret(bc(), m_block.db());
-	ret.populateFromChain(bc(), _h);
-	return ret;
+	return u256(fromBigEndian<u256>(fromHex(at(otherParams, _name))));
 }

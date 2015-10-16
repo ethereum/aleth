@@ -25,6 +25,7 @@
 #include <libethash/ethash.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/Worker.h>
+#include "EthashProofOfWork.h"
 #include "Ethash.h"
 
 namespace dev
@@ -33,47 +34,6 @@ namespace eth
 {
 
 struct DAGChannel: public LogChannel { static const char* name(); static const int verbosity = 1; };
-
-/// Proof of work definition for Ethash.
-struct EthashProofOfWork
-{
-	struct Solution
-	{
-		Nonce nonce;
-		h256 mixHash;
-	};
-
-	struct Result
-	{
-		h256 value;
-		h256 mixHash;
-	};
-
-	struct WorkPackage
-	{
-		WorkPackage() = default;
-		WorkPackage(Ethash::BlockHeader const& _bh):
-			boundary(_bh.boundary()),
-			headerHash(_bh.hashWithout()),
-			seedHash(_bh.seedHash())
-		{}
-		void reset() { headerHash = h256(); }
-		operator bool() const { return headerHash != h256(); }
-
-		h256 boundary;
-		h256 headerHash;	///< When h256() means "pause until notified a new work package is available".
-		h256 seedHash;
-	};
-
-	static const WorkPackage NullWorkPackage;
-
-	/// Default value of the local work size. Also known as workgroup size.
-	static const unsigned defaultLocalWorkSize;
-	/// Default value of the global work size as a multiplier of the local work size
-	static const unsigned defaultGlobalWorkSizeMultiplier;
-	/// Default value of the milliseconds per global work size (per batch)
-	static const unsigned defaultMSPerBatch;
-};
 
 class EthashAux
 {

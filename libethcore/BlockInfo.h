@@ -21,11 +21,144 @@
 
 #pragma once
 
+#include <initializer_list>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
 #include "Common.h"
+#include "ChainOperationParams.h"
 #include "Exceptions.h"
+
+template <class T>
+class FlagSet
+{
+public:
+
+	using Type = T;
+	using StoreType = decltype(T()|T());
+
+	// Default constructor (all 0s)
+	FlagSet() : FlagSet(StoreType(0)) {}
+
+	// Initializer list constructor
+	FlagSet(const std::initializer_list<Type>& initList)
+	{
+		// This line didn't work in the initializer list like I thought it would.  It seems to dislike the use of the lambda.  Forbidden, or a compiler bug?
+		m_flags = std::accumulate(initList.begin(), initList.end(), StoreType(0), [](Type x, Type y) { return x | y; });
+	}
+
+	// Value constructor
+	explicit FlagSet(StoreType value) : m_flags(value) {}
+
+	// Explicit conversion operator
+	operator StoreType() const { return m_flags; }
+	operator std::string() const { return toString(); }
+	bool operator[](Type flag) const { return test(flag); }
+
+	std::string toString() const
+	{
+		std::string str(size(), '0');
+		for (size_t x = 0; x < size(); ++x)
+			str[size()-x-1] = (m_flags & (1<<x) ? '1' : '0');
+		return str;
+	}
+
+	FlagSet& set()
+	{
+		m_flags = ~StoreType(0);
+		return *this;
+	}
+
+	FlagSet& set(Type flag, bool val = true)
+	{
+		m_flags = (val ? (m_flags|flag) : (m_flags&~flag));
+		return *this;
+	}
+
+	FlagSet& reset()
+	{
+		m_flags = StoreType(0);
+		return *this;
+	}
+
+	FlagSet& reset(Type flag)
+	{
+		m_flags &= ~flag;
+		return *this;
+	}
+
+	FlagSet& flip()
+	{
+		m_flags = ~m_flags;
+		return *this;
+	}
+
+	FlagSet& flip(Type flag)
+	{
+		m_flags ^= flag;
+		return *this;
+	}
+
+	size_t count() const
+	{
+		// http://www-graphics.stanford.edu/~seander/bithacks.html#CountBitsSetKernighan
+
+		StoreType bits = m_flags;
+		size_t total = 0;
+		for (; bits != 0; ++total)
+		{
+			bits &= bits - 1; // clear the least significant bit set
+		}
+		return total;
+	}
+
+	constexpr size_t size() const   // constexpr not supported in vs2010 yet
+	{
+		return sizeof(Type)*8;
+	}
+
+	bool test(Type flag) const
+	{
+		return (m_flags & flag) > 0;
+	}
+
+	bool any() const
+	{
+		return m_flags > 0;
+	}
+
+	bool none() const
+	{
+		return m_flags == 0;
+	}
+
+private:
+	StoreType m_flags;
+};
+
+template<typename enumT>
+FlagSet<enumT> operator & (const FlagSet<enumT>& lhs, const FlagSet<enumT>& rhs)
+{
+	return FlagSet<enumT>(FlagSet<enumT>::StoreType(lhs) & FlagSet<enumT>::StoreType(rhs));
+}
+
+template<typename enumT>
+FlagSet<enumT> operator | (const FlagSet<enumT>& lhs, const FlagSet<enumT>& rhs)
+{
+	return FlagSet<enumT>(FlagSet<enumT>::StoreType(lhs) | FlagSet<enumT>::StoreType(rhs));
+}
+
+template<typename enumT>
+FlagSet<enumT> operator ^ (const FlagSet<enumT>& lhs, const FlagSet<enumT>& rhs)
+{
+	return FlagSet<enumT>(FlagSet<enumT>::StoreType(lhs) ^ FlagSet<enumT>::StoreType(rhs));
+}
+
+template <class charT, class traits, typename enumT>
+std::basic_ostream<charT, traits> & operator << (std::basic_ostream<charT, traits>& os, const FlagSet<enumT>& flagSet)
+{
+	return os << flagSet.toString();
+}
 
 namespace dev
 {
@@ -38,14 +171,33 @@ enum IncludeProof
 	WithProof = 1
 };
 
+enum IncludeSeal
+{
+	WithoutSeal = 0,
+	WithSeal = 1,
+	OnlySeal = 2
+};
+
 enum Strictness
 {
 	CheckEverything,
 	JustSeal,
 	QuickNonce,
 	IgnoreSeal,
-	CheckNothing
+	CheckNothingNew
 };
+
+/*enum Check
+{
+	CheckBasic,
+	CheckExtended,
+	CheckBlock,
+	CheckParent,
+	CheckSeal,
+	CheckSealQuickly,
+	CheckAll = CheckBasic | CheckExtended | CheckBlock | CheckParent | CheckSeal,
+};
+using Checks = FlagSet<Check>;*/
 
 enum BlockDataType
 {
@@ -59,8 +211,8 @@ DEV_SIMPLE_EXCEPTION(GenesisBlockCannotBeCalculated);
 /** @brief Encapsulation of a block header.
  * Class to contain all of a block header's data. It is able to parse a block header and populate
  * from some given RLP block serialisation with the static fromHeader(), through the method
- * populateFromHeader(). This will conduct a minimal level of verification. In this case extra
- * verification can be performed through verifyInternals() and verifyParent().
+ * populate(). This will not conduct any verification above basic formating. In this case extra
+ * verification can be performed through verify().
  *
  * The object may also be populated from an entire block through the explicit
  * constructor BlockInfo(bytesConstRef) and manually with the populate() method. These will
@@ -70,9 +222,8 @@ DEV_SIMPLE_EXCEPTION(GenesisBlockCannotBeCalculated);
  * populateFromParent() method. The genesis block info may be retrieved with genesis() and the
  * corresponding RLP block created with createGenesisBlock().
  *
- * The difficulty and gas-limit derivations may be calculated with the calculateDifficulty()
- * and calculateGasLimit() and the object serialised to RLP with streamRLP. To determine the
- * header hash without the nonce (for mining), the method headerHash(WithoutNonce) is provided.
+ * To determine the header hash without the nonce (for sealing), the method hash(WithoutNonce) is
+ * provided.
  *
  * The default constructor creates an empty object, which can be tested against with the boolean
  * conversion operator.
@@ -84,8 +235,8 @@ public:
 	static const unsigned BasicFields = 13;
 
 	BlockInfo();
-	explicit BlockInfo(bytesConstRef _data, Strictness _s = CheckEverything, h256 const& _hashWith = h256(), BlockDataType _bdt = BlockData);
-	explicit BlockInfo(bytes const& _data, Strictness _s = CheckEverything, h256 const& _hashWith = h256(), BlockDataType _bdt = BlockData): BlockInfo(&_data, _s, _hashWith, _bdt) {}
+	explicit BlockInfo(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
+	explicit BlockInfo(bytes const& _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256()): BlockInfo(&_data, _bdt, _hashWith) {}
 
 	static h256 headerHashFromBlock(bytes const& _block) { return headerHashFromBlock(&_block); }
 	static h256 headerHashFromBlock(bytesConstRef _block);
@@ -97,7 +248,7 @@ public:
 	{
 		return m_parentHash == _cmp.parentHash() &&
 			m_sha3Uncles == _cmp.sha3Uncles() &&
-			m_coinbaseAddress == _cmp.beneficiary() &&
+			m_author == _cmp.author() &&
 			m_stateRoot == _cmp.stateRoot() &&
 			m_transactionsRoot == _cmp.transactionsRoot() &&
 			m_receiptsRoot == _cmp.receiptsRoot() &&
@@ -111,21 +262,21 @@ public:
 	}
 	bool operator!=(BlockInfo const& _cmp) const { return !operator==(_cmp); }
 
-	void verifyInternals(bytesConstRef _block) const;
-	void verifyParent(BlockInfo const& _parent) const;
+	void clear();
+	void noteDirty() const { m_hashWithout = m_hash = h256(); }
 	void populateFromParent(BlockInfo const& parent);
 
-	u256 calculateDifficulty(BlockInfo const& _parent) const;
-	u256 childGasLimit(u256 const& _gasFloorTarget = Invalid256) const;
-	h256 const& boundary() const;
+	// TODO: pull out into abstract class Verifier.
+	void verify(Strictness _s = CheckEverything, BlockInfo const& _parent = BlockInfo(), bytesConstRef _block = bytesConstRef()) const;
+	void verify(Strictness _s, bytesConstRef _block) const { verify(_s, BlockInfo(), _block); }
 
-	h256 const& parentHash() const { return m_parentHash; }
-	h256 const& sha3Uncles() const { return m_sha3Uncles; }
+	h256 hash(IncludeSeal _i = WithSeal) const;
+	void streamRLP(RLPStream& _s, IncludeSeal _i = WithSeal) const;
 
 	void setParentHash(h256 const& _v) { m_parentHash = _v; noteDirty(); }
 	void setSha3Uncles(h256 const& _v) { m_sha3Uncles = _v; noteDirty(); }
 	void setTimestamp(u256 const& _v) { m_timestamp = _v; noteDirty(); }
-	void setCoinbaseAddress(Address const& _v) { m_coinbaseAddress = _v; noteDirty(); }
+	void setAuthor(Address const& _v) { m_author = _v; noteDirty(); }
 	void setRoots(h256 const& _t, h256 const& _r, h256 const& _u, h256 const& _s) { m_transactionsRoot = _t; m_receiptsRoot = _r; m_stateRoot = _s; m_sha3Uncles = _u; noteDirty(); }
 	void setGasUsed(u256 const& _v) { m_gasUsed = _v; noteDirty(); }
 	void setNumber(u256 const& _v) { m_number = _v; noteDirty(); }
@@ -133,36 +284,30 @@ public:
 	void setExtraData(bytes const& _v) { m_extraData = _v; noteDirty(); }
 	void setLogBloom(LogBloom const& _v) { m_logBloom = _v; noteDirty(); }
 	void setDifficulty(u256 const& _v) { m_difficulty = _v; noteDirty(); }
+	template <class T> void setSeal(unsigned _offset, T const& _value) { if (m_seal.size() <= _offset) m_seal.resize(_offset + 1); m_seal[_offset] = rlp(_value); noteDirty(); }
+	template <class T> void setSeal(T const& _value) { setSeal(0, _value); }
 
-	Address const& beneficiary() const { return m_coinbaseAddress; }
+	h256 const& parentHash() const { return m_parentHash; }
+	h256 const& sha3Uncles() const { return m_sha3Uncles; }
+	u256 const& timestamp() const { return m_timestamp; }
+	Address const& author() const { return m_author; }
 	h256 const& stateRoot() const { return m_stateRoot; }
 	h256 const& transactionsRoot() const { return m_transactionsRoot; }
 	h256 const& receiptsRoot() const { return m_receiptsRoot; }
-	LogBloom const& logBloom() const { return m_logBloom; }
+	u256 const& gasUsed() const { return m_gasUsed; }
 	u256 const& number() const { return m_number; }
 	u256 const& gasLimit() const { return m_gasLimit; }
-	u256 const& gasUsed() const { return m_gasUsed; }
-	u256 const& timestamp() const { return m_timestamp; }
 	bytes const& extraData() const { return m_extraData; }
+	LogBloom const& logBloom() const { return m_logBloom; }
+	u256 const& difficulty() const { return m_difficulty; }
+	template <class T> T seal(unsigned _offset = 0) const { T ret; if (_offset < m_seal.size()) ret = RLP(m_seal[_offset]).convert<T>(RLP::VeryStrict); return ret; }
 
-	u256 const& difficulty() const { return m_difficulty; }		// TODO: pull out into BlockHeader
-
-	/// sha3 of the header only.
-	h256 const& hashWithout() const;
-	h256 const& hash() const { if (m_hash) return m_hash; BOOST_THROW_EXCEPTION(NoHashRecorded()); }
-
-	void clear();
-	void noteDirty() const { m_hashWithout = m_boundary = m_hash = h256(); }
-
-protected:
-	void populateFromHeader(RLP const& _header, Strictness _s = IgnoreSeal);
+private:
+	void populate(RLP const& _header);
 	void streamRLPFields(RLPStream& _s) const;
-
-	mutable h256 m_hash;						///< SHA3 hash of the block header! Not serialised.
 
 	h256 m_parentHash;
 	h256 m_sha3Uncles;
-	Address m_coinbaseAddress;
 	h256 m_stateRoot;
 	h256 m_transactionsRoot;
 	h256 m_receiptsRoot;
@@ -170,112 +315,25 @@ protected:
 	u256 m_number;
 	u256 m_gasLimit;
 	u256 m_gasUsed;
-	u256 m_timestamp = Invalid256;
 	bytes m_extraData;
+	u256 m_timestamp = Invalid256;
 
-	u256 m_difficulty;		// TODO: pull out into BlockHeader
+	Address m_author;
+	u256 m_difficulty;
 
-private:
-	mutable h256 m_hashWithout;					///< SHA3 hash of the block header! Not serialised.
-	mutable h256 m_boundary;					///< 2^256 / difficulty
+	std::vector<bytes> m_seal;		///< Additional (RLP-encoded) header fields.
+
+	mutable h256 m_hash;			///< (Memoised) SHA3 hash of the block header with seal.
+	mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.
 };
 
 inline std::ostream& operator<<(std::ostream& _out, BlockInfo const& _bi)
 {
-	_out << _bi.hashWithout() << " " << _bi.parentHash() << " " << _bi.sha3Uncles() << " " << _bi.beneficiary() << " " << _bi.stateRoot() << " " << _bi.transactionsRoot() << " " <<
+	_out << _bi.hash(WithoutSeal) << " " << _bi.parentHash() << " " << _bi.sha3Uncles() << " " << _bi.author() << " " << _bi.stateRoot() << " " << _bi.transactionsRoot() << " " <<
 			_bi.receiptsRoot() << " " << _bi.logBloom() << " " << _bi.difficulty() << " " << _bi.number() << " " << _bi.gasLimit() << " " <<
 			_bi.gasUsed() << " " << _bi.timestamp();
 	return _out;
 }
-
-template <class BlockInfoSub>
-class BlockHeaderPolished: public BlockInfoSub
-{
-public:
-	static const unsigned Fields = BlockInfoSub::BasicFields + BlockInfoSub::SealFields;
-
-	BlockHeaderPolished() {}
-	BlockHeaderPolished(BlockInfo const& _bi): BlockInfoSub(_bi) {}
-	explicit BlockHeaderPolished(bytes const& _data, Strictness _s = IgnoreSeal, h256 const& _h = h256(), BlockDataType _bdt = BlockData) { populate(&_data, _s, _h, _bdt); }
-	explicit BlockHeaderPolished(bytesConstRef _data, Strictness _s = IgnoreSeal, h256 const& _h = h256(), BlockDataType _bdt = BlockData) { populate(_data, _s, _h, _bdt); }
-
-	// deprecated - just use constructor instead.
-	static BlockHeaderPolished fromHeader(bytes const& _data, Strictness _s = IgnoreSeal, h256 const& _h = h256()) { return BlockHeaderPolished(_data, _s, _h, HeaderData); }
-	static BlockHeaderPolished fromHeader(bytesConstRef _data, Strictness _s = IgnoreSeal, h256 const& _h = h256()) { return BlockHeaderPolished(_data, _s, _h, HeaderData); }
-
-	// deprecated for public API - use constructor.
-	// TODO: make private.
-	void populate(bytesConstRef _data, Strictness _s, h256 const& _h = h256(), BlockDataType _bdt = BlockData)
-	{
-		populateFromHeader(_bdt == BlockData ? BlockInfo::extractHeader(_data) : RLP(_data), _s, _h);
-	}
-
-	void populateFromParent(BlockHeaderPolished const& _parent)
-	{
-		noteDirty();
-		BlockInfo::m_parentHash = _parent.hash();
-		BlockInfo::populateFromParent(_parent);
-		BlockInfoSub::populateFromParent(_parent);
-	}
-
-	// TODO: consider making private.
-	void verifyParent(BlockHeaderPolished const& _parent)
-	{
-		if (BlockInfo::parentHash() && BlockInfo::parentHash() != _parent.hash())
-			BOOST_THROW_EXCEPTION(InvalidParentHash());
-		BlockInfo::verifyParent(_parent);
-		BlockInfoSub::verifyParent(_parent);
-	}
-
-	// deprecated for public API - use constructor.
-	// TODO: make private.
-	void populateFromHeader(RLP const& _header, Strictness _s = IgnoreSeal, h256 const& _h = h256())
-	{
-		BlockInfo::m_hash = _h;
-		if (_h)
-			assert(_h == dev::sha3(_header.data()));
-		else
-			BlockInfo::m_hash = dev::sha3(_header.data());
-
-		if (_header.itemCount() != BlockInfo::BasicFields + BlockInfoSub::SealFields)
-			BOOST_THROW_EXCEPTION(InvalidBlockHeaderItemCount());
-
-		BlockInfo::populateFromHeader(_header, _s);
-		BlockInfoSub::populateFromHeader(_header, _s);
-	}
-
-	void clear() { BlockInfo::clear(); BlockInfoSub::clear(); BlockInfoSub::noteDirty(); }
-	void noteDirty() const { BlockInfo::noteDirty(); BlockInfoSub::noteDirty(); }
-
-	h256 headerHash(IncludeProof _i = WithProof) const
-	{
-		RLPStream s;
-		streamRLP(s, _i);
-		return sha3(s.out());
-	}
-
-	h256 const& hash() const
-	{
-		if (!BlockInfo::m_hash)
-			BlockInfo::m_hash = headerHash(WithProof);
-		return BlockInfo::m_hash;
-	}
-
-	void streamRLP(RLPStream& _s, IncludeProof _i = WithProof) const
-	{
-		_s.appendList(BlockInfo::BasicFields + (_i == WithProof ? BlockInfoSub::SealFields : 0));
-		BlockInfo::streamRLPFields(_s);
-		if (_i == WithProof)
-			BlockInfoSub::streamRLPFields(_s);
-	}
-
-	bytes sealFieldsRLP() const
-	{
-		RLPStream s;
-		BlockInfoSub::streamRLPFields(s);
-		return s.out();
-	}
-};
 
 }
 }

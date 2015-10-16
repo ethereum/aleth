@@ -168,7 +168,7 @@ public:
 	EnvInfo() {}
 	EnvInfo(BlockInfo const& _current, LastHashes const& _lh = LastHashes(), u256 const& _gasUsed = u256()):
 		m_number(_current.number()),
-		m_beneficiary(_current.beneficiary()),
+		m_author(_current.author()),
 		m_timestamp(_current.timestamp()),
 		m_difficulty(_current.difficulty()),
 		m_gasLimit(_current.gasLimit()),
@@ -178,7 +178,7 @@ public:
 
 	EnvInfo(BlockInfo const& _current, LastHashes&& _lh, u256 const& _gasUsed = u256()):
 		m_number(_current.number()),
-		m_beneficiary(_current.beneficiary()),
+		m_author(_current.author()),
 		m_timestamp(_current.timestamp()),
 		m_difficulty(_current.difficulty()),
 		m_gasLimit(_current.gasLimit()),
@@ -187,7 +187,7 @@ public:
 	{}
 
 	u256 const& number() const { return m_number; }
-	Address const& beneficiary() const { return m_beneficiary; }
+	Address const& author() const { return m_author; }
 	u256 const& timestamp() const { return m_timestamp; }
 	u256 const& difficulty() const { return m_difficulty; }
 	u256 const& gasLimit() const { return m_gasLimit; }
@@ -195,7 +195,7 @@ public:
 	u256 const& gasUsed() const { return m_gasUsed; }
 
 	void setNumber(u256 const& _v) { m_number = _v; }
-	void setBeneficiary(Address const& _v) { m_beneficiary = _v; }
+	void setAuthor(Address const& _v) { m_author = _v; }
 	void setTimestamp(u256 const& _v) { m_timestamp = _v; }
 	void setDifficulty(u256 const& _v) { m_difficulty = _v; }
 	void setGasLimit(u256 const& _v) { m_gasLimit = _v; }
@@ -205,7 +205,7 @@ public:
 
 private:
 	u256 m_number;
-	Address m_beneficiary;
+	Address m_author;
 	u256 m_timestamp;
 	u256 m_difficulty;
 	u256 m_gasLimit;

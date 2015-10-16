@@ -29,7 +29,6 @@
 #include <libdevcore/SHA3.h>
 #include "ICAP.h"
 #include "Exceptions.h"
-#include "Params.h"
 #include "BlockInfo.h"
 #include "ethereum/ConfigInfo.h"
 using namespace std;
@@ -71,7 +70,6 @@ Address toAddress(std::string const& _s)
 	catch (BadHexCharacter&) {}
 	BOOST_THROW_EXCEPTION(InvalidAddress());
 }
-
 
 vector<pair<u256, string>> const& units()
 {
@@ -149,7 +147,7 @@ static void badBlockInfo(BlockInfo const& _bi, string const& _err)
 void badBlock(bytesConstRef _block, string const& _err)
 {
 	BlockInfo bi;
-	DEV_IGNORE_EXCEPTIONS(bi = BlockInfo(_block, CheckNothing));
+	DEV_IGNORE_EXCEPTIONS(bi = BlockInfo(_block));
 	badBlockInfo(bi, _err);
 }
 

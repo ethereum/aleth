@@ -13,22 +13,29 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @file Fluidity.h
+ * @author Gav Wood <i@gavwood.com>
+ * @date 2014
+ *
+ * Determines the PoW algorithm.
  */
-/** @file FixedClient.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2015
- */
 
-#include "FixedClient.h"
+#pragma once
 
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
+#include <libdevcore/RLP.h>
+#include <libdevcrypto/Common.h>
+#include <libethcore/BlockInfo.h>
+#include <libethcore/BasicAuthority.h>
+#include <libethcore/Common.h>
+#include <libethcore/Sealer.h>
 
-Block FixedClient::asOf(h256 const& _h) const
+namespace dev
 {
-	ReadGuard l(x_stateDB);
-	Block ret(bc(), m_block.db());
-	ret.populateFromChain(bc(), _h);
-	return ret;
+namespace eth
+{
+
+using Fluidity = BasicAuthority;
+
+}
 }

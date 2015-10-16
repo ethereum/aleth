@@ -23,8 +23,9 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
-#include <libethcore/BlockInfo.h>
-
+#include <libethcore/Ethash.h>
+#include <libethcore/Ethash.h>
+#include <libethereum/ChainParams.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -43,6 +44,9 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'difficulty.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(Network::Test));
+
 	for (auto& i: v.get_obj())
 	{
 		js::mObject o = i.second.get_obj();
@@ -56,7 +60,7 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
 		current.setNumber(test::toInt(o["currentBlockNumber"]));
 
-		BOOST_CHECK_EQUAL(current.calculateDifficulty(parent), test::toInt(o["currentDifficulty"]));
+		BOOST_CHECK_EQUAL(sealEngine.calculateDifficulty(current, parent), test::toInt(o["currentDifficulty"]));
 	}
 }
 

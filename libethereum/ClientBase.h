@@ -159,25 +159,19 @@ public:
 	virtual u256 gasLimitRemaining() const override;
 	virtual u256 gasBidPrice() const override { return DefaultGasPrice; }
 
-	/// Get the coinbase address
-	virtual Address beneficiary() const override;
+	/// Get the block author
+	virtual Address author() const override;
 
 	virtual bool isKnown(h256 const& _hash) const override;
 	virtual bool isKnown(BlockNumber _block) const override;
 	virtual bool isKnownTransaction(h256 const& _transactionHash) const override;
 	virtual bool isKnownTransaction(h256 const& _blockHash, unsigned _i) const override;
 
-	/// TODO: consider moving it to a separate interface
+	virtual void startSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::startSealing")); }
+	virtual void stopSealing() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::stopSealing")); }
+	virtual bool wouldSeal() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::wouldSeal")); }
 
-	virtual void startMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::startMining")); }
-	virtual void stopMining() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::stopMining")); }
-	virtual bool isMining() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::isMining")); }
-	virtual bool wouldMine() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::wouldMine")); }
-	virtual u256 hashrate() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::hashrate")); }
-	virtual WorkingProgress miningProgress() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::miningProgress")); }
 	virtual SyncStatus syncStatus() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::syncStatus")); }
-
-	virtual void submitExternalHashrate(u256 const& _rate, h256 const& _id) override;
 
 	Block asOf(BlockNumber _h) const;
 
@@ -187,12 +181,10 @@ protected:
 	virtual BlockChain& bc() = 0;
 	virtual BlockChain const& bc() const = 0;
 	virtual Block asOf(h256 const& _h) const = 0;
-	virtual Block preMine() const = 0;
-	virtual Block postMine() const = 0;
+	virtual Block preSeal() const = 0;
+	virtual Block postSeal() const = 0;
 	virtual void prepareForTransaction() = 0;
 	/// }
-
-	u256 externalHashrate() const;
 
 	TransactionQueue m_tq;							///< Maintains a list of incoming transactions not yet in a block on the blockchain.
 
@@ -202,9 +194,6 @@ protected:
 	std::unordered_map<h256, h256s> m_specialFilters = std::unordered_map<h256, std::vector<h256>>{{PendingChangedFilter, {}}, {ChainChangedFilter, {}}};
 															///< The dictionary of special filters and their additional data
 	std::map<unsigned, ClientWatch> m_watches;				///< Each and every watch - these reference a filter.
-	
-	// external hashrate
-	mutable std::unordered_map<h256, std::pair<u256, std::chrono::steady_clock::time_point>> m_externalRates;
 };
 
 }}

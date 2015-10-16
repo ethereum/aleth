@@ -31,41 +31,45 @@ using namespace json_spirit;
 using namespace dev;
 using namespace dev::eth;
 
-namespace dev {  namespace test {
+namespace dev
+{
+namespace test
+{
 
-TestTransaction::TestTransaction(mObject const& _o): m_jsonTransaction(_o)
+TestTransaction::TestTransaction(mObject const& _o):
+	m_jsonTransaction(_o)
 {
 	ImportTest::importTransaction(_o, m_transaction); //check that json structure is valid
 }
 
-TestBlock::TestBlock(TestBlock const& _original)
+TestBlock::TestBlock()
 {
-	populateFrom(_original);
+	m_sealEngine.reset(SealEngineRegistrar::create(ChainParams(Network::Test)));
 }
 
-TestBlock& TestBlock::operator = (TestBlock const& _original)
-{
-	populateFrom(_original);
-	return *this;
-}
-
-TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify)
+TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify):
+	TestBlock()
 {
 	m_tempDirState = std::unique_ptr<TransientDirectory>(new TransientDirectory());
-	m_state = std::unique_ptr<State>(new State(OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
+
+	m_state = std::unique_ptr<State>(new State(0, OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
 	ImportTest::importState(_stateObj, *m_state.get());
 	m_state.get()->commit();
+	m_accountMap = jsonToAccountMap(json_spirit::write_string(json_spirit::mValue(_stateObj), false));
 
 	m_blockHeader = constructBlock(_blockObj, _stateObj.size() ? m_state.get()->rootHash() : h256{});
 	recalcBlockHeaderBytes(_verify);
 }
 
-TestBlock::TestBlock(std::string const& _blockRlp)
+TestBlock::TestBlock(std::string const& _blockRLP):
+	TestBlock()
 {
-	m_bytes = importByteArray(_blockRlp);
+	m_bytes = importByteArray(_blockRLP);
 
 	RLP root(m_bytes);
-	m_blockHeader.populateFromHeader(root[0], IgnoreSeal);
+	m_blockHeader = BlockInfo(m_bytes);
+	// TODO: do we want to bother verifying stuff here?
+	m_sealEngine->verify(IgnoreSeal, m_blockHeader);
 
 	m_transactionQueue.clear();
 	m_testTransactions.clear();
@@ -79,8 +83,8 @@ TestBlock::TestBlock(std::string const& _blockRlp)
 
 	for (auto const& uRLP: root[2])
 	{
-		BlockHeader uBl;
-		uBl.populateFromHeader(uRLP);
+		BlockInfo uBl(uRLP.data(), HeaderData);
+		m_sealEngine->verify(IgnoreSeal, uBl);
 		TestBlock uncle;
 		//uncle goes without transactions and uncles but
 		//it's hash could contain hashsum of transactions/uncles
@@ -88,6 +92,17 @@ TestBlock::TestBlock(std::string const& _blockRlp)
 		uncle.setBlockHeader(uBl, RecalcBlockHeader::SkipVerify);
 		m_uncles.push_back(uncle);
 	}
+}
+
+TestBlock::TestBlock(TestBlock const& _original)
+{
+	populateFrom(_original);
+}
+
+TestBlock& TestBlock::operator=(TestBlock const& _original)
+{
+	populateFrom(_original);
+	return *this;
 }
 
 void TestBlock::setState(State const& _state)
@@ -129,10 +144,10 @@ void TestBlock::mine(TestBlockChain const& bc)
 	TestBlock const& genesisBlock = bc.getTestGenesis();
 	OverlayDB const& genesisDB = genesisBlock.getState().db();
 
-	FullBlockChain<Ethash> const& blockchain = bc.getInterface();
+	BlockChain const& blockchain = bc.getInterface();
 
 	Block block = blockchain.genesisBlock(genesisDB);
-	block.setBeneficiary(genesisBlock.getBeneficiary());
+	block.setAuthor(genesisBlock.getBeneficiary());
 
 	//set some header data before mining from original blockheader
 	BlockInfo& blockInfo = *const_cast<BlockInfo*>(&block.info());
@@ -145,7 +160,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 		if (m_premineUpdate.count("parentHash") > 0)
 			blockInfo.setParentHash(m_blockHeader.parentHash());
 		if (m_premineUpdate.count("coinbase") > 0)
-			blockInfo.setCoinbaseAddress(m_blockHeader.beneficiary());
+			blockInfo.setAuthor(m_blockHeader.author());
 
 		if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
 			m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
@@ -177,7 +192,9 @@ void TestBlock::mine(TestBlockChain const& bc)
 		//for (auto const& tr : trs)
 		//	m_transactionQueue.import(tr.rlp());
 
-		dev::eth::mine(block, blockchain);
+		dev::eth::mine(block, blockchain, m_sealEngine.get());
+//		cdebug << "Block mined" << Ethash::boundary(block.info()).hex() << Ethash::nonce(block.info()) << block.info().hash(WithoutSeal).hex();
+		m_sealEngine->verify(JustSeal, block.info());
 	}
 	catch (Exception const& _e)
 	{
@@ -190,7 +207,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 		return;
 	}
 
-	m_blockHeader = BlockHeader(block.blockData());
+	m_blockHeader = BlockInfo(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
 	copyStateFrom(block.state());
 
 	//Update block hashes cause we would fill block with uncles and transactions that
@@ -198,26 +215,21 @@ void TestBlock::mine(TestBlockChain const& bc)
 	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify);
 }
 
-void TestBlock::setBlockHeader(Ethash::BlockHeader const& _header, RecalcBlockHeader _recalculate)
+void TestBlock::setBlockHeader(BlockInfo const& _header, RecalcBlockHeader _recalculate)
 {
 	m_blockHeader = _header;
 	recalcBlockHeaderBytes(_recalculate);
 }
 
 ///Test Block Private
-TestBlock::BlockHeader TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
+BlockInfo TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
 {
-	BlockHeader ret;
+	BlockInfo ret;
 	try
 	{
 		const bytes c_blockRLP = createBlockRLPFromFields(_o, _stateRoot);
-
-		RLPStream header(3);
-		header.appendRaw(c_blockRLP);			//block header
-		header.appendRaw(RLPStream(0).out());	//transactions
-		header.appendRaw(RLPStream(0).out());	//uncles
-
-		ret = BlockHeader(header.out(), Strictness::CheckNothing);
+		ret = BlockInfo(c_blockRLP, HeaderData);
+//		cdebug << "Block constructed of hash" << ret.hash() << "(without:" << ret.hash(WithoutSeal) << ")";
 	}
 	catch (Exception const& _e)
 	{
@@ -325,12 +337,12 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		if (((BlockInfo)m_blockHeader).difficulty() == 0)
 			BOOST_ERROR("Trying to mine a block with 0 difficulty!");
 
-		dev::eth::mine(m_blockHeader);
+		dev::eth::mine(m_blockHeader, m_sealEngine.get());
 		m_blockHeader.noteDirty();
 	}
 
 	RLPStream blHeaderStream;
-	m_blockHeader.streamRLP(blHeaderStream, WithProof);
+	m_blockHeader.streamRLP(blHeaderStream, WithSeal);
 
 	RLPStream ret(3);
 	ret.appendRaw(blHeaderStream.out()); //block header
@@ -341,15 +353,16 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 	{
 		try
 		{
-			m_blockHeader.verifyInternals(&ret.out());
+			// TODO: CheckNothingNew -> CheckBlock.
+			m_sealEngine->verify(CheckNothingNew, m_blockHeader, BlockInfo(), &ret.out());
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + "BlockInfo Verification failed: " << diagnostic_information(_e));
 		}
 		catch(...)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed");
+			BOOST_ERROR(TestOutputHelper::testName() + "BlockInfo Verification failed");
 		}
 	}
 	m_bytes = ret.out();
@@ -359,7 +372,7 @@ void TestBlock::copyStateFrom(State const& _state)
 {
 	//WEIRD WAY TO COPY STATE AS COPY CONSTRUCTOR FOR STATE NOT IMPLEMENTED CORRECTLY (they would share the same DB)
 	m_tempDirState.reset(new TransientDirectory());
-	m_state.reset(new State(OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
+	m_state.reset(new State(0, OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
 	json_spirit::mObject obj = fillJsonWithState(_state);
 	ImportTest::importState(obj, *m_state.get());
 }
@@ -396,24 +409,26 @@ void TestBlock::populateFrom(TestBlock const& _original)
 	m_uncles = _original.getUncles();
 	m_blockHeader = _original.getBlockHeader();
 	m_bytes = _original.getBytes();
+	m_sealEngine = _original.m_sealEngine;
 }
 
-///
 TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
 {
-	m_tempDirBlockchain = std::unique_ptr<TransientDirectory>(new TransientDirectory());
-	m_blockChain = std::unique_ptr<FullBlockChainEthash>(
-				new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.get()->path(), WithExisting::Kill));
-	m_genesisBlock = _genesisBlock;
-	m_lastBlock = m_genesisBlock;
+	reset(_genesisBlock);
 }
 
 void TestBlockChain::reset(TestBlock const& _genesisBlock)
 {
-	m_tempDirBlockchain.reset(new TransientDirectory());
-	m_blockChain.reset(new FullBlockChainEthash(_genesisBlock.getBytes(), AccountMap(), m_tempDirBlockchain.get()->path(), WithExisting::Kill));
-	m_genesisBlock = _genesisBlock;
-	m_lastBlock = m_genesisBlock;
+	m_tempDirBlockchain.reset(new TransientDirectory);
+	ChainParams p(Network::Test, _genesisBlock.getBytes(), _genesisBlock.accountMap());
+	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
+	if (!m_blockChain->isKnown(BlockInfo::headerHashFromBlock(_genesisBlock.getBytes())))
+	{
+		cdebug << "Not known:" << BlockInfo::headerHashFromBlock(_genesisBlock.getBytes()) << BlockInfo(p.genesisBlock()).hash();
+		cdebug << "Genesis block not known!";
+		throw 0;
+	}
+	m_lastBlock = m_genesisBlock = _genesisBlock;
 }
 
 void TestBlockChain::addBlock(TestBlock const& _block)
@@ -427,7 +442,7 @@ void TestBlockChain::addBlock(TestBlock const& _block)
 
 		//overwrite state in case _block had no State defined (e.x. created from RLP)
 		OverlayDB const& genesisDB = m_genesisBlock.getState().db();
-		FullBlockChain<Ethash> const& blockchain = getInterface();
+		BlockChain const& blockchain = getInterface();
 		Block block = (blockchain.genesisBlock(genesisDB));
 		block.sync(blockchain);
 		m_lastBlock.setState(block.state());
@@ -441,7 +456,7 @@ vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
 		return validUncles;
 
 	BlockQueue uncleBlockQueue;
-	FullBlockChain<Ethash>& blockchain = *m_blockChain.get();
+	BlockChain& blockchain = *m_blockChain.get();
 	uncleBlockQueue.setChain(blockchain);
 
 	for (size_t i = 0; i < uncles.size(); i++)
@@ -474,6 +489,13 @@ TestTransaction TestTransaction::getDefaultTransaction()
 	txObj["value"] = "100";
 
 	return TestTransaction(txObj);
+}
+
+AccountMap TestBlockChain::getDefaultAccountMap()
+{
+	AccountMap ret;
+	ret[Address("a94f5374fce5edbc8e2a8697c15331677e6ebf0b")] = Account(0, 10000000000);
+	return ret;
 }
 
 TestBlock TestBlockChain::getDefaultGenesisBlock()

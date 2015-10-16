@@ -41,7 +41,7 @@ BOOST_AUTO_TEST_SUITE(BlockQueueSuite)
 		TestBlock genesisBlock = TestBlockChain::getDefaultGenesisBlock();
 		TestBlockChain blockchain(genesisBlock);
 		BlockQueue blockQueue;
-		FullBlockChain<Ethash>* bc = const_cast<FullBlockChain<Ethash>*> (&blockchain.getInterface());
+		BlockChain* bc = &blockchain.getInterface();
 		blockQueue.setChain(*bc);
 		bc->sync(blockQueue, genesisBlock.getState().db(), (unsigned)4);
 		cout << "test blockQueue destructor: " << 5000 - i << std::endl;
@@ -50,31 +50,37 @@ BOOST_AUTO_TEST_SUITE(BlockQueueSuite)
 */
 BOOST_AUTO_TEST_CASE(BlockQueueImport)
 {
+	g_logVerbosity = 2;
 	TestBlock genesisBlock = TestBlockChain::getDefaultGenesisBlock();
-	TestBlockChain blockchain(genesisBlock);
-	TestBlockChain blockchain2(genesisBlock);
+	TestBlockChain blockchain;
+	TestBlockChain blockchain2;
 
 	TestBlock block1;
 	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
 	block1.addTransaction(transaction1);
 	block1.mine(blockchain);
+//	cdebug << Ethash::nonce(block1.getBlockHeader());
+	blockchain.getInterface().sealEngine()->verify(JustSeal, block1.getBlockHeader());
 
 	BlockQueue blockQueue;
 	blockQueue.setChain(blockchain.getInterface());
 	ImportResult res = blockQueue.import(&block1.getBytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::Success, "Simple block import to BlockQueue should have return Success");
 
+//	cdebug << Ethash::nonce(block1.getBlockHeader());
 	res = blockQueue.import(&block1.getBytes());
+//	cdebug << Ethash::nonce(block1.getBlockHeader());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyKnown, "Simple block import to BlockQueue should have return AlreadyKnown");
 
 	blockQueue.clear();
-	blockchain.addBlock(block1);	
+//	cdebug << "Inserting" << block1.getBlockHeader().hash(WithoutSeal).hex() << Ethash::nonce(block1.getBlockHeader());
+	blockchain.addBlock(block1);
 	res = blockQueue.import(&block1.getBytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyInChain, "Simple block import to BlockQueue should have return AlreadyInChain");
 
 	TestBlock block2;
 	block2.mine(blockchain);
-	TestBlock::BlockHeader block2Header = block2.getBlockHeader();
+	BlockInfo block2Header = block2.getBlockHeader();
 	block2Header.setTimestamp(block2Header.timestamp() + 100);
 	block2.setBlockHeader(block2Header, RecalcBlockHeader::UpdateAndVerify);
 	res = blockQueue.import(&block2.getBytes());
@@ -82,7 +88,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 
 	TestBlock block3;
 	block3.mine(blockchain);
-	TestBlock::BlockHeader block3Header = block3.getBlockHeader();
+	BlockInfo block3Header = block3.getBlockHeader();
 	block3Header.clear();
 	block3.setBlockHeader(block3Header, RecalcBlockHeader::SkipVerify);
 	res = blockQueue.import(&block3.getBytes());
@@ -93,7 +99,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	blockchain2.addBlock(block4);
 	TestBlock block5;
 	block5.mine(blockchain2);
-	TestBlock::BlockHeader block5Header = block5.getBlockHeader();
+	BlockInfo block5Header = block5.getBlockHeader();
 	block5Header.setTimestamp(block5Header.timestamp() + 100);
 	block5.setBlockHeader(block5Header, RecalcBlockHeader::UpdateAndVerify);
 	res = blockQueue.import(&block5.getBytes());
@@ -106,7 +112,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 
 	TestBlock block3b;
 	block3b.mine(blockchain2);
-	TestBlock::BlockHeader block3bHeader = block3b.getBlockHeader();
+	BlockInfo block3bHeader = block3b.getBlockHeader();
 	block3bHeader.setTimestamp(block3bHeader.timestamp() - 40);
 	block3b.setBlockHeader(block3bHeader, RecalcBlockHeader::UpdateAndVerify);
 	res = blockQueue.import(&block3b.getBytes());

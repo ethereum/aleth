@@ -20,7 +20,6 @@
  */
 
 #include "EthashAux.h"
-
 #include <boost/detail/endian.hpp>
 #include <boost/filesystem.hpp>
 #include <chrono>
@@ -33,6 +32,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
 #include <libethash/internal.h>
+#include <libethcore/Ethash.h>
 #include "BlockInfo.h"
 #include "Exceptions.h"
 using namespace std;
@@ -44,20 +44,15 @@ const char* DAGChannel::name() { return EthGreen "DAG"; }
 
 EthashAux* dev::eth::EthashAux::s_this = nullptr;
 
-const unsigned EthashProofOfWork::defaultLocalWorkSize = 64;
-const unsigned EthashProofOfWork::defaultGlobalWorkSizeMultiplier = 4096; // * CL_DEFAULT_LOCAL_WORK_SIZE
-const unsigned EthashProofOfWork::defaultMSPerBatch = 0;
-const EthashProofOfWork::WorkPackage EthashProofOfWork::NullWorkPackage = EthashProofOfWork::WorkPackage();
-
 EthashAux::~EthashAux()
 {
 }
 
 EthashAux* EthashAux::get()
 {
-    static std::once_flag flag;
-    std::call_once(flag, []{s_this = new EthashAux();});
-    return s_this;
+	static std::once_flag flag;
+	std::call_once(flag, []{s_this = new EthashAux();});
+	return s_this;
 }
 
 uint64_t EthashAux::cacheSize(BlockInfo const& _header)

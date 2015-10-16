@@ -20,120 +20,167 @@
  */
 
 #include "Ethash.h"
-
-#include <boost/detail/endian.hpp>
-#include <boost/filesystem.hpp>
-#include <chrono>
-#include <array>
-#include <thread>
-#include <thread>
-#include <libdevcore/Guards.h>
-#include <libdevcore/Log.h>
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonIO.h>
-#include <libdevcore/CommonJS.h>
-#include <libdevcrypto/CryptoPP.h>
-#include <libdevcore/FileSystem.h>
 #include <libethash/ethash.h>
 #include <libethash/internal.h>
-#include "BlockInfo.h"
-#include "EthashAux.h"
-#include "Exceptions.h"
-#include "Farm.h"
-#include "Miner.h"
-#include "Params.h"
-#include "EthashSealEngine.h"
 #include "EthashCPUMiner.h"
 #include "EthashGPUMiner.h"
+#include "ChainOperationParams.h"
+#include "CommonJS.h"
 using namespace std;
-using namespace std::chrono;
+using namespace dev;
+using namespace eth;
 
-namespace dev
-{
-namespace eth
-{
+ETH_REGISTER_SEAL_ENGINE(Ethash);
 
-h256 const& Ethash::BlockHeaderRaw::seedHash() const
+Ethash::Ethash()
 {
-	if (!m_seedHash)
-		m_seedHash = EthashAux::seedHash((unsigned)m_number);
-	return m_seedHash;
+	map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
+	sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
+#if ETH_ETHASHCL
+	sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
+#endif
+	m_farm.setSealers(sealers);
 }
 
-void Ethash::BlockHeaderRaw::populateFromHeader(RLP const& _header, Strictness _s)
+strings Ethash::sealers() const
 {
-	m_mixHash = _header[BlockInfo::BasicFields].toHash<h256>(RLP::VeryStrict);
-	m_nonce = _header[BlockInfo::BasicFields + 1].toHash<h64>(RLP::VeryStrict);
+	return {
+		"cpu"
+#if ETH_ETHASHCL
+		, "opencl"
+#endif
+	};
+}
+
+h256 Ethash::seedHash(BlockInfo const& _bi)
+{
+	return EthashAux::seedHash((unsigned)_bi.number());
+}
+
+StringHashMap Ethash::jsInfo(BlockInfo const& _bi) const
+{
+	return { { "nonce", toJS(nonce(_bi)) }, { "seedHash", toJS(seedHash(_bi)) }, { "mixHash", toJS(mixHash(_bi)) }, { "boundary", toJS(boundary(_bi)) }, { "difficulty", toJS(_bi.difficulty()) } };
+}
+
+void Ethash::verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const
+{
+	SealEngineFace::verify(_s, _bi, _parent, _block);
+
+	if (_s != CheckNothingNew)
+	{
+		if (_bi.difficulty() < chainParams().u256Param("minimumDifficulty"))
+			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(chainParams().u256Param("minimumDifficulty")), bigint(_bi.difficulty())) );
+
+		if (_bi.gasLimit() < chainParams().u256Param("minGasLimit"))
+			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().u256Param("minGasLimit")), bigint(_bi.gasLimit())) );
+
+		if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
+			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
+	}
+
+	// TODO: don't rely on BlockHeader - bring all that logic directly into here and remove BlockHeader completely.
+	// need to replicate verifySeal, nonce, mixHash
+	if (_parent)
+	{
+		// Check difficulty is correct given the two timestamps.
+		auto expected = calculateDifficulty(_bi, _parent);
+		auto difficulty = _bi.difficulty();
+		if (difficulty != expected)
+			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)expected, (bigint)difficulty));
+
+		auto gasLimit = _bi.gasLimit();
+		auto parentGasLimit = _parent.gasLimit();
+		if (gasLimit < chainParams().u256Param("minGasLimit") ||
+			gasLimit <= parentGasLimit - parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor") ||
+			gasLimit >= parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor"))
+			BOOST_THROW_EXCEPTION(InvalidGasLimit() << errinfo_min((bigint)parentGasLimit - parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor")) << errinfo_got((bigint)gasLimit) << errinfo_max((bigint)parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor")));
+	}
 
 	// check it hashes according to proof of work or that it's the genesis block.
-	if (_s == CheckEverything && m_parentHash && !verify())
+	if (_s == CheckEverything && _bi.parentHash() && !verifySeal(_bi))
 	{
 		InvalidBlockNonce ex;
-		ex << errinfo_nonce(m_nonce);
-		ex << errinfo_mixHash(m_mixHash);
-		ex << errinfo_seedHash(seedHash());
-		EthashProofOfWork::Result er = EthashAux::eval(seedHash(), hashWithout(), m_nonce);
+		ex << errinfo_nonce(nonce(_bi));
+		ex << errinfo_mixHash(mixHash(_bi));
+		ex << errinfo_seedHash(seedHash(_bi));
+		EthashProofOfWork::Result er = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));
 		ex << errinfo_ethashResult(make_tuple(er.value, er.mixHash));
-		ex << errinfo_hash256(hashWithout());
-		ex << errinfo_difficulty(m_difficulty);
-		ex << errinfo_target(boundary());
+		ex << errinfo_hash256(_bi.hash(WithoutSeal));
+		ex << errinfo_difficulty(_bi.difficulty());
+		ex << errinfo_target(boundary(_bi));
 		BOOST_THROW_EXCEPTION(ex);
 	}
-	else if (_s == QuickNonce && m_parentHash && !preVerify())
+	else if (_s == QuickNonce && _bi.parentHash() && !quickVerifySeal(_bi))
 	{
 		InvalidBlockNonce ex;
-		ex << errinfo_hash256(hashWithout());
-		ex << errinfo_difficulty(m_difficulty);
-		ex << errinfo_nonce(m_nonce);
+		ex << errinfo_hash256(_bi.hash(WithoutSeal));
+		ex << errinfo_difficulty(_bi.difficulty());
+		ex << errinfo_nonce(nonce(_bi));
 		BOOST_THROW_EXCEPTION(ex);
 	}
-
-	if (_s != CheckNothing)
-	{
-		if (m_difficulty < c_minimumDifficulty)
-			BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError(bigint(c_minimumDifficulty), bigint(m_difficulty)) );
-
-		if (m_gasLimit < c_minGasLimit)
-			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(c_minGasLimit), bigint(m_gasLimit)) );
-
-		if (m_number && m_extraData.size() > c_maximumExtraDataSize)
-			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(c_maximumExtraDataSize), bigint(m_extraData.size())) << errinfo_extraData(m_extraData));
-	}
 }
 
-void Ethash::BlockHeaderRaw::verifyParent(BlockHeaderRaw const& _parent)
+u256 Ethash::childGasLimit(BlockInfo const& _bi, u256 const& _gasFloorTarget) const
 {
-	// Check difficulty is correct given the two timestamps.
-	if (m_difficulty != calculateDifficulty(_parent))
-		BOOST_THROW_EXCEPTION(InvalidDifficulty() << RequirementError((bigint)calculateDifficulty(_parent), (bigint)m_difficulty));
-
-	if (m_gasLimit < c_minGasLimit ||
-		m_gasLimit <= _parent.m_gasLimit - _parent.m_gasLimit / c_gasLimitBoundDivisor ||
-		m_gasLimit >= _parent.m_gasLimit + _parent.m_gasLimit / c_gasLimitBoundDivisor)
-		BOOST_THROW_EXCEPTION(InvalidGasLimit() << errinfo_min((bigint)_parent.m_gasLimit - _parent.m_gasLimit / c_gasLimitBoundDivisor) << errinfo_got((bigint)m_gasLimit) << errinfo_max((bigint)_parent.m_gasLimit + _parent.m_gasLimit / c_gasLimitBoundDivisor));
+	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
+	u256 gasLimit = _bi.gasLimit();
+	u256 boundDivisor = chainParams().u256Param("gasLimitBoundDivisor");
+	if (gasLimit < gasFloorTarget)
+		return min<u256>(gasFloorTarget, gasLimit + gasLimit / boundDivisor - 1);
+	else
+		return max<u256>(gasFloorTarget, gasLimit - gasLimit / boundDivisor + 1 + (_bi.gasUsed() * 6 / 5) / boundDivisor);
 }
 
-void Ethash::BlockHeaderRaw::populateFromParent(BlockHeaderRaw const& _parent)
+void Ethash::manuallySubmitWork(const h256& _mixHash, Nonce _nonce)
 {
-	(void)_parent;
+	m_farm.submitProof(EthashProofOfWork::Solution{_nonce, _mixHash}, nullptr);
 }
 
-bool Ethash::BlockHeaderRaw::preVerify() const
+u256 Ethash::calculateDifficulty(BlockInfo const& _bi, BlockInfo const& _parent) const
 {
-	if (m_number >= ETHASH_EPOCH_LENGTH * 2048)
+	const unsigned c_expDiffPeriod = 100000;
+
+	if (!_bi.number())
+		throw GenesisBlockCannotBeCalculated();
+	auto minimumDifficulty = chainParams().u256Param("minimumDifficulty");
+	auto difficultyBoundDivisor = chainParams().u256Param("difficultyBoundDivisor");
+	auto durationLimit = chainParams().u256Param("durationLimit");
+	u256 o = max<u256>(minimumDifficulty, _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor)));
+//	if (c_network == Network::Olympic)
+//		return o;
+	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
+	if (periodCount > 1)
+		o = max<u256>(minimumDifficulty, o + (u256(1) << (periodCount - 2)));	// latter will eventually become huge, so ensure it's a bigint.
+	return o;
+}
+
+void Ethash::populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const
+{
+	SealEngineFace::populateFromParent(_bi, _parent);
+	_bi.setDifficulty(calculateDifficulty(_bi, _parent));
+	_bi.setGasLimit(childGasLimit(_parent));
+}
+
+bool Ethash::quickVerifySeal(BlockInfo const& _bi) const
+{
+	if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
 		return false;
 
+	auto h = _bi.hash(WithoutSeal);
+	auto m = mixHash(_bi);
+	auto n = nonce(_bi);
+	auto b = boundary(_bi);
 	bool ret = !!ethash_quick_check_difficulty(
-			(ethash_h256_t const*)hashWithout().data(),
-			(uint64_t)(u64)m_nonce,
-			(ethash_h256_t const*)m_mixHash.data(),
-			(ethash_h256_t const*)boundary().data());
+		(ethash_h256_t const*)h.data(),
+		(uint64_t)(u64)n,
+		(ethash_h256_t const*)m.data(),
+		(ethash_h256_t const*)b.data());
 	return ret;
 }
 
-bool Ethash::BlockHeaderRaw::verify() const
+bool Ethash::verifySeal(BlockInfo const& _bi) const
 {
-	bool pre = preVerify();
+	bool pre = quickVerifySeal(_bi);
 #if !ETH_DEBUG
 	if (!pre)
 	{
@@ -142,8 +189,8 @@ bool Ethash::BlockHeaderRaw::verify() const
 	}
 #endif
 
-	auto result = EthashAux::eval(seedHash(), hashWithout(), m_nonce);
-	bool slow = result.value <= boundary() && result.mixHash == m_mixHash;
+	auto result = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));
+	bool slow = result.value <= boundary(_bi) && result.mixHash == mixHash(_bi);
 
 //	cdebug << (slow ? "VERIFY" : "VERYBAD");
 //	cdebug << result.value.hex() << _header.boundary().hex();
@@ -153,11 +200,11 @@ bool Ethash::BlockHeaderRaw::verify() const
 	if (!pre && slow)
 	{
 		cwarn << "WARNING: evaluated result gives true whereas ethash_quick_check_difficulty gives false.";
-		cwarn << "headerHash:" << hashWithout();
-		cwarn << "nonce:" << m_nonce;
-		cwarn << "mixHash:" << m_mixHash;
-		cwarn << "difficulty:" << m_difficulty;
-		cwarn << "boundary:" << boundary();
+		cwarn << "headerHash:" << _bi.hash(WithoutSeal);
+		cwarn << "nonce:" << nonce(_bi);
+		cwarn << "mixHash:" << mixHash(_bi);
+		cwarn << "difficulty:" << _bi.difficulty();
+		cwarn << "boundary:" << boundary(_bi);
 		cwarn << "result.value:" << result.value;
 		cwarn << "result.mixHash:" << result.mixHash;
 	}
@@ -166,66 +213,31 @@ bool Ethash::BlockHeaderRaw::verify() const
 	return slow;
 }
 
-void Ethash::BlockHeaderRaw::prep(std::function<int(unsigned)> const& _f) const
+void Ethash::generateSeal(BlockInfo const& _bi)
 {
-	EthashAux::full(seedHash(), true, _f);
+	m_sealing = _bi;
+	m_farm.setWork(m_sealing);
+	m_farm.start(m_sealer);
+	m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
+	bytes shouldPrecompute = option("precomputeDAG");
+	if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
+		ensurePrecomputed((unsigned)_bi.number());
 }
 
-StringHashMap Ethash::BlockHeaderRaw::jsInfo() const
+void Ethash::onSealGenerated(std::function<void(bytes const&)> const& _f)
 {
-	return { { "nonce", toJS(m_nonce) }, { "seedHash", toJS(seedHash()) }, { "mixHash", toJS(m_mixHash) } };
-}
-
-void Ethash::manuallySetWork(SealEngineFace* _engine, BlockHeader const& _work)
-{
-	// set m_sealing to the current problem.
-	if (EthashSealEngine* e = dynamic_cast<EthashSealEngine*>(_engine))
-		e->m_sealing = _work;
-}
-
-void Ethash::manuallySubmitWork(SealEngineFace* _engine, h256 const& _mixHash, Nonce _nonce)
-{
-	if (EthashSealEngine* e = dynamic_cast<EthashSealEngine*>(_engine))
+	m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
 	{
-		// Go via the farm since the handler function object is stored as a local within the Farm's lambda.
-		// Has the side effect of stopping local workers, which is good, as long as it only does it for
-		// valid submissions.
-		static_cast<GenericFarmFace<EthashProofOfWork>&>(e->m_farm).submitProof(EthashProofOfWork::Solution{_nonce, _mixHash}, nullptr);
-	}
-}
-
-bool Ethash::isWorking(SealEngineFace* _engine)
-{
-	if (EthashSealEngine* e = dynamic_cast<EthashSealEngine*>(_engine))
-		return e->m_farm.isMining();
-	return false;
-}
-
-WorkingProgress Ethash::workingProgress(SealEngineFace* _engine)
-{
-	WorkingProgress ret;
-	if (EthashSealEngine* e = dynamic_cast<EthashSealEngine*>(_engine))
-	{
-		ret = e->m_farm.miningProgress();
-		if (ret.ms > 5000)
-			e->m_farm.resetMiningProgress();
-	}
-	return ret;
-}
-
-SealEngineFace* Ethash::createSealEngine()
-{
-	return new EthashSealEngine;
-}
-
-std::string Ethash::name()
-{
-	return "Ethash";
-}
-
-unsigned Ethash::revision()
-{
-	return ETHASH_REVISION;
+//		cdebug << m_farm.work().seedHash << m_farm.work().headerHash << sol.nonce << EthashAux::eval(m_farm.work().seedHash, m_farm.work().headerHash, sol.nonce).value;
+		setMixHash(m_sealing, sol.mixHash);
+		setNonce(m_sealing, sol.nonce);
+		if (!quickVerifySeal(m_sealing))
+			return false;
+		RLPStream ret;
+		m_sealing.streamRLP(ret);
+		_f(ret.out());
+		return true;
+	});
 }
 
 void Ethash::ensurePrecomputed(unsigned _number)
@@ -233,7 +245,4 @@ void Ethash::ensurePrecomputed(unsigned _number)
 	if (_number % ETHASH_EPOCH_LENGTH > ETHASH_EPOCH_LENGTH * 9 / 10)
 		// 90% of the way to the new epoch
 		EthashAux::computeFull(EthashAux::seedHash(_number + ETHASH_EPOCH_LENGTH), true);
-}
-
-}
 }

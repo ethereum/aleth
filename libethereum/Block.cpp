@@ -30,14 +30,14 @@
 #include <libdevcore/TrieHash.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Params.h>
+#include <libethcore/Sealer.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
 #include "CachedAddressState.h"
-#include "CanonBlockChain.h"
+#include "BlockChain.h"
 #include "TransactionQueue.h"
 using namespace std;
 using namespace dev;
@@ -53,21 +53,23 @@ const char* BlockDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
 const char* BlockTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
 const char* BlockChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
-Block::Block(OverlayDB const& _db, BaseState _bs, Address const& _coinbaseAddress):
-	m_state(_db, _bs),
-	m_beneficiary(_coinbaseAddress),
-	m_blockReward(c_blockReward)
+Block::Block(BlockChain const& _bc, OverlayDB const& _db, BaseState _bs, Address const& _author):
+	m_state(0, _db, _bs),
+	m_precommit(0),
+	m_author(_author)
 {
+	noteChain(_bc);
 	m_previousBlock.clear();
 	m_currentBlock.clear();
 //	assert(m_state.root() == m_previousBlock.stateRoot());
 }
 
-Block::Block(OverlayDB const& _db, h256 const& _root, Address const& _coinbaseAddress):
-	m_state(_db, BaseState::PreExisting),
-	m_beneficiary(_coinbaseAddress),
-	m_blockReward(c_blockReward)
+Block::Block(BlockChain const& _bc, OverlayDB const& _db, h256 const& _root, Address const& _author):
+	m_state(0, _db, BaseState::PreExisting),
+	m_precommit(0),
+	m_author(_author)
 {
+	noteChain(_bc);
 	m_state.setRoot(_root);
 	m_previousBlock.clear();
 	m_currentBlock.clear();
@@ -79,12 +81,12 @@ Block::Block(Block const& _s):
 	m_transactions(_s.m_transactions),
 	m_receipts(_s.m_receipts),
 	m_transactionSet(_s.m_transactionSet),
+	m_precommit(_s.m_state),
 	m_previousBlock(_s.m_previousBlock),
 	m_currentBlock(_s.m_currentBlock),
-	m_beneficiary(_s.m_beneficiary),
-	m_blockReward(_s.m_blockReward)
+	m_author(_s.m_author),
+	m_sealEngine(_s.m_sealEngine)
 {
-	m_precommit = m_state;
 	m_committedToMine = false;
 }
 
@@ -99,8 +101,8 @@ Block& Block::operator=(Block const& _s)
 	m_transactionSet = _s.m_transactionSet;
 	m_previousBlock = _s.m_previousBlock;
 	m_currentBlock = _s.m_currentBlock;
-	m_beneficiary = _s.m_beneficiary;
-	m_blockReward = _s.m_blockReward;
+	m_author = _s.m_author;
+	m_sealEngine = _s.m_sealEngine;
 
 	m_precommit = m_state;
 	m_committedToMine = false;
@@ -113,9 +115,9 @@ void Block::resetCurrent()
 	m_receipts.clear();
 	m_transactionSet.clear();
 	m_currentBlock = BlockInfo();
-	m_currentBlock.setCoinbaseAddress(m_beneficiary);
+	m_currentBlock.setAuthor(m_author);
 	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)utcTime()));
-	m_currentBlock.populateFromParent(m_previousBlock);
+	sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
 
 	// TODO: check.
 
@@ -124,8 +126,27 @@ void Block::resetCurrent()
 	m_committedToMine = false;
 }
 
+SealEngineFace* Block::sealEngine() const
+{
+	if (!m_sealEngine)
+		BOOST_THROW_EXCEPTION(ChainOperationWithUnknownBlockChain());
+	return m_sealEngine;
+}
+
+void Block::noteChain(BlockChain const& _bc)
+{
+	if (!m_sealEngine)
+	{
+		m_state.noteAccountStartNonce(_bc.chainParams().accountStartNonce);
+		m_precommit.noteAccountStartNonce(_bc.chainParams().accountStartNonce);
+		m_sealEngine = _bc.sealEngine();
+	}
+}
+
 PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const& _h, ImportRequirements::value _ir)
 {
+	noteChain(_bc);
+
 	PopulationStatistics ret { 0.0, 0.0 };
 
 	if (!_bc.isKnown(_h))
@@ -136,7 +157,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 	}
 
 	auto b = _bc.block(_h);
-	BlockInfo bi(b);
+	BlockInfo bi(b);		// No need to check - it's already in the DB.
 	if (bi.number())
 	{
 		// Non-genesis:
@@ -146,7 +167,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 		sync(_bc, bi.parentHash(), bip);
 
 		// 2. Enact the block's transactions onto this state.
-		m_beneficiary = bi.beneficiary();
+		m_author = bi.author();
 		Timer t;
 		auto vb = _bc.verifyBlock(&b, function<void(Exception&)>(), _ir | ImportRequirements::TransactionBasic);
 		ret.verify = t.elapsed();
@@ -158,7 +179,7 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 	{
 		// Genesis required:
 		// We know there are no transactions, so just populate directly.
-		m_state = State(m_state.db(), BaseState::Empty);	// TODO: try with PreExisting.
+		m_state = State(m_state.accountStartNonce(), m_state.db(), BaseState::Empty);	// TODO: try with PreExisting.
 		sync(_bc, _h, bi);
 	}
 
@@ -172,6 +193,8 @@ bool Block::sync(BlockChain const& _bc)
 
 bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockInfo const& _bi)
 {
+	noteChain(_bc);
+
 	bool ret = false;
 	// BLOCK
 	BlockInfo bi = _bi ? _bi : _bc.info(_block);
@@ -273,6 +296,8 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockInfo const& _bi
 
 pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned msTimeout)
 {
+	noteChain(_bc);
+
 	// TRANSACTIONS
 	pair<TransactionReceipts, bool> ret;
 	ret.second = false;
@@ -367,6 +392,8 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 
 u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 {
+	noteChain(_bc);
+
 #if ETH_TIMED_ENACTMENTS
 	Timer t;
 	double populateVerify;
@@ -377,7 +404,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	// Check family:
 	BlockInfo biParent = _bc.info(_block.info.parentHash());
-	_block.info.verifyParent(biParent);
+	_block.info.verify(CheckNothingNew/*CheckParent*/, biParent);
 
 #if ETH_TIMED_ENACTMENTS
 	populateVerify = t.elapsed();
@@ -414,6 +441,8 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 {
+	noteChain(_bc);
+
 	DEV_TIMED_FUNCTION_ABOVE(500);
 
 	// m_currentBlock is assumed to be prepopulated and reset.
@@ -520,8 +549,8 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 				}
 				excluded.insert(h);
 
-				// IgnoreSeal since it's a VerifiedBlock.
-				BlockInfo uncle(i.data(), IgnoreSeal, h, HeaderData);
+				// CheckNothing since it's a VerifiedBlock.
+				BlockInfo uncle(i.data(), HeaderData, h);
 
 				BlockInfo uncleParent;
 				if (!_bc.isKnown(uncle.parentHash()))
@@ -552,7 +581,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 					BOOST_THROW_EXCEPTION(ex);
 				}
 				// cB
-				// cB.p^1	    1 depth, valud uncle
+				// cB.p^1	    1 depth, valid uncle
 				// cB.p^2	---/  2
 				// cB.p^3	-----/  3
 				// cB.p^4	-------/  4
@@ -569,7 +598,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 					ex << errinfo_currentNumber(m_currentBlock.number());
 					BOOST_THROW_EXCEPTION(ex);
 				}
-				uncle.verifyParent(uncleParent);
+				uncle.verify(CheckNothingNew/*CheckParent*/, uncleParent);
 
 				rewarded.push_back(uncle);
 				++ii;
@@ -582,7 +611,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		}
 
 	DEV_TIMED_ABOVE("applyRewards", 500)
-		applyRewards(rewarded);
+		applyRewards(rewarded, _bc.chainParams().blockReward);
 
 	// Commit all cached state changes to the state trie.
 	DEV_TIMED_ABOVE("commit", 500)
@@ -625,19 +654,21 @@ ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Per
 	return resultReceipt.first;
 }
 
-void Block::applyRewards(vector<BlockInfo> const& _uncleBlockHeaders)
+void Block::applyRewards(vector<BlockInfo> const& _uncleBlockHeaders, u256 const& _blockReward)
 {
-	u256 r = m_blockReward;
+	u256 r = _blockReward;
 	for (auto const& i: _uncleBlockHeaders)
 	{
-		m_state.addBalance(i.beneficiary(), m_blockReward * (8 + i.number() - m_currentBlock.number()) / 8);
-		r += m_blockReward / 32;
+		m_state.addBalance(i.author(), _blockReward * (8 + i.number() - m_currentBlock.number()) / 8);
+		r += _blockReward / 32;
 	}
-	m_state.addBalance(m_currentBlock.beneficiary(), r);
+	m_state.addBalance(m_currentBlock.author(), r);
 }
 
 void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 {
+	noteChain(_bc);
+
 	if (m_committedToMine)
 		uncommitToMine();
 	else
@@ -696,7 +727,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	RLPStream(unclesCount).appendRaw(unclesData.out(), unclesCount).swapOut(m_currentUncles);
 
 	// Apply rewards last of all.
-	applyRewards(uncleBlockHeaders);
+	applyRewards(uncleBlockHeaders, _bc.chainParams().blockReward);
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
 	m_state.commit();
@@ -735,7 +766,7 @@ bool Block::sealBlock(bytesConstRef _header)
 	if (!m_committedToMine)
 		return false;
 
-	if (BlockInfo(_header, CheckNothing, h256{}, HeaderData).hashWithout() != m_currentBlock.hashWithout())
+	if (BlockInfo(_header, HeaderData).hash(WithoutSeal) != m_currentBlock.hash(WithoutSeal))
 		return false;
 
 	clog(StateDetail) << "Sealing block!";
@@ -747,7 +778,7 @@ bool Block::sealBlock(bytesConstRef _header)
 	ret.appendRaw(m_currentTxs);
 	ret.appendRaw(m_currentUncles);
 	ret.swapOut(m_currentBytes);
-	m_currentBlock = BlockInfo(_header, CheckNothing, h256(), HeaderData);
+	m_currentBlock = BlockInfo(_header, HeaderData);
 	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
 	// TODO: move into Sealer
 	StructuredLogger::minedNewBlock(
@@ -811,7 +842,7 @@ void Block::cleanup(bool _fullCommit)
 			clog(StateTrace) << "Committed: stateRoot" << m_currentBlock.stateRoot() << "=" << rootHash() << "=" << toHex(asBytes(db().lookup(rootHash())));
 
 		m_previousBlock = m_currentBlock;
-		m_currentBlock.populateFromParent(m_previousBlock);
+		sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
 
 		clog(StateTrace) << "finalising enactment. current -> previous, hash is" << m_previousBlock.hash();
 	}
@@ -823,12 +854,14 @@ void Block::cleanup(bool _fullCommit)
 
 string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir)
 {
+	noteChain(_bc);
+
 	RLP rlp(_block);
 
 	cleanup(false);
-	BlockInfo bi(_block, (_ir & ImportRequirements::ValidSeal) ? CheckEverything : IgnoreSeal);
+	BlockInfo bi(_block);
 	m_currentBlock = bi;
-	m_currentBlock.verifyInternals(_block);
+	m_currentBlock.verify((_ir & ImportRequirements::ValidSeal) ? CheckEverything : IgnoreSeal, _block);
 	m_currentBlock.noteDirty();
 
 	LastHashes lh = _bc.lastHashes(m_currentBlock.parentHash());

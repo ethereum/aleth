@@ -23,86 +23,62 @@
 
 #pragma once
 
-#include <chrono>
-#include <thread>
-#include <cstdint>
-#include <libdevcore/CommonIO.h>
-#include "Common.h"
-#include "Miner.h"
-#include "Farm.h"
+#include "EthashProofOfWork.h"
+#include "GenericFarm.h"
 #include "Sealer.h"
-
-class ethash_cl_miner;
 
 namespace dev
 {
 
-class RLP;
-class RLPStream;
-
 namespace eth
 {
 
-class BlockInfo;
-class EthashCLHook;
-
-class Ethash
+class Ethash: public SealEngineFace
 {
 public:
-	static std::string name();
-	static unsigned revision();
-	static SealEngineFace* createSealEngine();
+	Ethash();
 
-	using Nonce = h64;
+	std::string name() const override { return "Ethash"; }
+	unsigned revision() const override { return 1; }
+	unsigned sealFields() const override { return 2; }
+	bytes sealRLP() const override { return rlp(h256()) + rlp(Nonce()); }
 
-	static void manuallySubmitWork(SealEngineFace* _engine, h256 const& _mixHash, Nonce _nonce);
-	static bool isWorking(SealEngineFace* _engine);
-	static WorkingProgress workingProgress(SealEngineFace* _engine);
+	StringHashMap jsInfo(BlockInfo const& _bi) const override;
+	void verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const override;
+	void populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const override;
 
-	class BlockHeaderRaw: public BlockInfo
-	{
-		friend class EthashSealEngine;
+	strings sealers() const override;
+	std::string sealer() const override { return m_sealer; }
+	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
+	void cancelGeneration() override { m_farm.stop(); }
+	void generateSeal(BlockInfo const& _bi) override;
+	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
 
-	public:
-		static const unsigned SealFields = 2;
+	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
 
-		bool verify() const;
-		bool preVerify() const;
+	enum { MixHashField = 0, NonceField = 1 };
+	static h256 seedHash(BlockInfo const& _bi);
+	static Nonce nonce(BlockInfo const& _bi) { return _bi.seal<Nonce>(NonceField); }
+	static h256 mixHash(BlockInfo const& _bi) { return _bi.seal<h256>(MixHashField); }
+	static h256 boundary(BlockInfo const& _bi) { auto d = _bi.difficulty(); return d ? (h256)u256((bigint(1) << 256) / d) : h256(); }
+	static BlockInfo& setNonce(BlockInfo& _bi, Nonce _v) { _bi.setSeal(NonceField, _v); return _bi; }
+	static BlockInfo& setMixHash(BlockInfo& _bi, h256 const& _v) { _bi.setSeal(MixHashField, _v); return _bi; }
 
-		void prep(std::function<int(unsigned)> const& _f = std::function<int(unsigned)>()) const;
-		h256 const& seedHash() const;
-		Nonce const& nonce() const { return m_nonce; }
-		h256 const& mixHash() const { return m_mixHash; }
+	u256 calculateDifficulty(BlockInfo const& _bi, BlockInfo const& _parent) const;
+	u256 childGasLimit(BlockInfo const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
 
-		void setNonce(Nonce const& _n) { m_nonce = _n; noteDirty(); }
-		void setMixHash(h256 const& _n) { m_mixHash = _n; noteDirty(); }
+	void manuallySetWork(BlockInfo const& _work) { m_sealing = _work; }
+	void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);
 
-		StringHashMap jsInfo() const;
-
-	protected:
-		BlockHeaderRaw() = default;
-		BlockHeaderRaw(BlockInfo const& _bi): BlockInfo(_bi) {}
-
-		void populateFromHeader(RLP const& _header, Strictness _s);
-		void populateFromParent(BlockHeaderRaw const& _parent);
-		void verifyParent(BlockHeaderRaw const& _parent);
-		void clear() { m_mixHash = h256(); m_nonce = Nonce(); }
-		void noteDirty() const { m_seedHash = h256(); }
-		void streamRLPFields(RLPStream& _s) const { _s << m_mixHash << m_nonce; }
-
-	private:
-		Nonce m_nonce;
-		h256 m_mixHash;
-
-		mutable h256 m_seedHash;
-		mutable h256 m_hash;						///< SHA3 hash of the block header! Not serialised.
-	};
-	using BlockHeader = BlockHeaderPolished<BlockHeaderRaw>;
-
-	static void manuallySetWork(SealEngineFace* _engine, BlockHeader const& _work);
-
-	// TODO: Move elsewhere (EthashAux?)
 	static void ensurePrecomputed(unsigned _number);
+
+private:
+	bool verifySeal(BlockInfo const& _bi) const;
+	bool quickVerifySeal(BlockInfo const& _bi) const;
+
+	eth::GenericFarm<EthashProofOfWork> m_farm;
+	std::string m_sealer = "cpu";
+	BlockInfo m_sealing;
 };
 
 }

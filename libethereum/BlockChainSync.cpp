@@ -26,7 +26,6 @@
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Params.h>
 #include "BlockChain.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
@@ -121,7 +120,7 @@ unsigned BlockChainSync::estimatedHashes() const
 	if (lastBlockTime > now)
 		clog(NetWarn) << "Clock skew? Latest block is in the future";
 	else
-		blockCount += (now - lastBlockTime) / (unsigned)c_durationLimit;
+		blockCount += (now - lastBlockTime) / 15;	// TODO: REMOVE!!!
 	clog(NetAllDetail) << "Estimated hashes: " << blockCount;
 	return blockCount;
 }

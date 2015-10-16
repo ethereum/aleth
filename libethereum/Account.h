@@ -26,7 +26,7 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
-#include <libethcore/Params.h>
+#include <liblll/Compiler.h>
 
 namespace dev
 {
@@ -93,7 +93,7 @@ public:
 	/// Construct an alive Account, with given endowment, for either a normal (non-contract) account or for a
 	/// contract account in the
 	/// conception phase, where the code is not yet known.
-	Account(u256 _balance, NewAccountType _t, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_balance(_balance), m_codeHash(_t == NormalCreation ? EmptySHA3 : c_contractConceptionCodeHash) {}
+	Account(u256 _nonce, u256 _balance, NewAccountType _t, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance), m_codeHash(_t == NormalCreation ? EmptySHA3 : c_contractConceptionCodeHash) {}
 	/// Explicit constructor for wierd cases of construction of a normal account.
 	Account(u256 _nonce, u256 _balance, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance) {}
 
@@ -177,7 +177,7 @@ private:
 	bool m_isUnchanged = false;
 
 	/// Account's nonce.
-	u256 m_nonce = c_accountStartNonce;
+	u256 m_nonce;
 
 	/// Account's balance.
 	u256 m_balance = 0;

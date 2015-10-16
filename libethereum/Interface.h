@@ -215,36 +215,34 @@ public:
 	/// Get some information on the block queue.
 	virtual SyncStatus syncStatus() const = 0;
 
-	// [MINING API]:
+	// [SEALING API]:
 
-	/// Set the coinbase address.
-	virtual void setBeneficiary(Address const& _us) = 0;
-	/// Get the coinbase address.
-	virtual Address beneficiary() const = 0;
+	/// Set the block author address.
+	virtual void setAuthor(Address const& _us) = 0;
+	/// Get the block author address.
+	virtual Address author() const = 0;
 
-	Address account() const { return beneficiary(); }	// TODO: REMOVE!!!
-
-	/// Start mining.
-	/// NOT thread-safe - call it & stopMining only from a single thread
-	virtual void startMining() = 0;
-	/// Stop mining.
+	/// Start sealing.
+	/// NOT thread-safe - call it & stopSealing only from a single thread
+	virtual void startSealing() = 0;
+	/// Stop sealing.
 	/// NOT thread-safe
-	virtual void stopMining() = 0;
-	/// Are we mining now?
-	virtual bool isMining() const = 0;
-	/// Would we like to mine now?
-	virtual bool wouldMine() const = 0;
-	/// Current hash rate.
-	virtual u256 hashrate() const = 0;
+	virtual void stopSealing() = 0;
+	/// Would we like to be sealing now?
+	virtual bool wouldSeal() const = 0;
 
-	/// Get hash of the current block to be mined minus the nonce (the 'work hash').
-	virtual std::tuple<h256, h256, h256> getEthashWork() { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::getEthashWork")); }
-	/// Submit the nonce for the proof-of-work.
-	virtual bool submitEthashWork(h256 const&, h64 const&) { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::submitEthashWork")); }
-	/// Submit the ongoing hashrate of a particular external miner.
-	virtual void submitExternalHashrate(u256 const&, h256 const&) { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::submitExternalHashrate")); }
-	/// Check the progress of the mining.
-	virtual WorkingProgress miningProgress() const = 0;
+	/// Are we updating the chain (syncing or importing a new block)?
+	virtual bool isSyncing() const { return false; }
+	/// Are we syncing the chain?
+	virtual bool isMajorSyncing() const { return false; }
+
+	/// Gets the network id.
+	virtual u256 networkId() const { return 0; }
+	/// Sets the network id.
+	virtual void setNetworkId(u256 const&) {}
+
+	/// Get the seal engine.
+	SealEngineFace* sealEngine() const { return nullptr; }
 
 protected:
 	int m_default = PendingBlock;

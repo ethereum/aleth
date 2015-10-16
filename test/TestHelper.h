@@ -42,8 +42,8 @@ class State;
 
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
-void mine(Block& _s, BlockChain const& _bc);
-void mine(Ethash::BlockHeader& _bi);
+void mine(Block& _s, BlockChain const& _bc, SealEngineFace* _sealer);
+void mine(BlockInfo& _bi, SealEngineFace* _sealer);
 }
 
 namespace test
@@ -155,10 +155,10 @@ void checkOutput(bytes const& _output, json_spirit::mObject& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
-dev::eth::Ethash::BlockHeader constructHeader(
+dev::eth::BlockInfo constructHeader(
 	h256 const& _parentHash,
 	h256 const& _sha3Uncles,
-	Address const& _coinbaseAddress,
+	Address const& _author,
 	h256 const& _stateRoot,
 	h256 const& _transactionsRoot,
 	h256 const& _receiptsRoot,
@@ -169,7 +169,7 @@ dev::eth::Ethash::BlockHeader constructHeader(
 	u256 const& _gasUsed,
 	u256 const& _timestamp,
 	bytes const& _extraData);
-void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
+void updateEthashSeal(dev::eth::BlockInfo& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
 void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests);
 void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);

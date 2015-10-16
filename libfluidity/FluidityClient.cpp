@@ -13,22 +13,10 @@
 
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+/** @file FluidityClient.cpp
+ * @author Gav Wood <i@gavwood.com>
+ * @date 2014
  */
-/** @file FixedClient.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
- * @date 2015
- */
 
-#include "FixedClient.h"
-
-using namespace dev;
-using namespace dev::eth;
-using namespace dev::test;
-
-Block FixedClient::asOf(h256 const& _h) const
-{
-	ReadGuard l(x_stateDB);
-	Block ret(bc(), m_block.db());
-	ret.populateFromChain(bc(), _h);
-	return ret;
-}
+#include "FluidityClient.h"

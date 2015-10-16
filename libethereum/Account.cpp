@@ -45,8 +45,15 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
-
-	for (auto account: val.get_obj().count("alloc") ? val.get_obj()["alloc"].get_obj() : val.get_obj())
+	js::mObject o = val.get_obj();
+/*	if (o.count("genesis"))
+	{
+		cdebug << json_spirit::write_string(o["genesis"], true);
+		o = o["genesis"].get_obj();
+		for (auto i: o)
+			cdebug << i.first;
+	}*/
+	for (auto account: o.count("alloc") ? o["alloc"].get_obj() : o)
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
@@ -60,10 +67,13 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 		else if (o.count("balance"))
 			balance = u256Safe(o["balance"].get_str());
 
+		bool haveNonce = o.count("nonce") > 0;
+		u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : 0;
+
 		bool haveCode = o.count("code");
 		if (haveCode)
 		{
-			ret[a] = Account(balance, Account::ContractConception);
+			ret[a] = Account(nonce, balance, Account::ContractConception);
 			if (o["code"].type() == json_spirit::str_type)
 			{
 				if (o["code"].get_str().find("0x") != 0)
@@ -75,17 +85,12 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 				cerr << "Error importing code of account " << a << "! Code field needs to be a string";
 		}
 		else
-			ret[a] = Account(balance, Account::NormalCreation);
+			ret[a] = Account(nonce, balance, Account::NormalCreation);
 
 		bool haveStorage = o.count("storage");
 		if (haveStorage)
 			for (pair<string, js::mValue> const& j: o["storage"].get_obj())
 				ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
-
-		bool haveNonce = o.count("nonce");
-		if (haveNonce)
-			for (auto i = 0; i < u256Safe(o["nonce"].get_str()); ++i)
-				ret[a].incNonce();
 
 		if (o_mask)
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage);

@@ -40,7 +40,8 @@
 #include <libethcore/EthashAux.h>
 #include <libethcore/EthashGPUMiner.h>
 #include <libethcore/EthashCPUMiner.h>
-#include <libethcore/Farm.h>
+#include <libethcore/Ethash.h>
+#include <libethcore/GenericFarm.h>
 #if ETH_ETHASHCL || !ETH_TRUE
 #include <libethash-cl/ethash_cl_miner.h>
 #endif
@@ -242,7 +243,7 @@ public:
 			string m;
 			try
 			{
-				Ethash::BlockHeader bi;
+				BlockInfo bi;
 				m = boost::to_lower_copy(string(argv[++i]));
 				h256 powHash(m);
 				m = boost::to_lower_copy(string(argv[++i]));
@@ -253,19 +254,19 @@ public:
 					seedHash = EthashAux::seedHash(stol(m));
 				m = boost::to_lower_copy(string(argv[++i]));
 				bi.setDifficulty(u256(m));
-				auto boundary = bi.boundary();
+				auto boundary = Ethash::boundary(bi);
 				m = boost::to_lower_copy(string(argv[++i]));
-				bi.setNonce(h64(m));
-				auto r = EthashAux::eval(seedHash, powHash, bi.nonce());
+				Ethash::setNonce(bi, h64(m));
+				auto r = EthashAux::eval(seedHash, powHash, h64(m));
 				bool valid = r.value < boundary;
 				cout << (valid ? "VALID :-)" : "INVALID :-(") << endl;
 				cout << r.value << (valid ? " < " : " >= ") << boundary << endl;
 				cout << "  where " << boundary << " = 2^256 / " << bi.difficulty() << endl;
-				cout << "  and " << r.value << " = ethash(" << powHash << ", " << bi.nonce() << ")" << endl;
+				cout << "  and " << r.value << " = ethash(" << powHash << ", " << h64(m) << ")" << endl;
 				cout << "  with seed as " << seedHash << endl;
 				if (valid)
 					cout << "(mixHash = " << r.mixHash << ")" << endl;
-				cout << "SHA3( light(seed) ) = " << sha3(EthashAux::light(bi.seedHash())->data()) << endl;
+				cout << "SHA3( light(seed) ) = " << sha3(EthashAux::light(Ethash::seedHash(bi))->data()) << endl;
 				exit(0);
 			}
 			catch (...)
@@ -395,9 +396,9 @@ private:
 
 	void doBenchmark(std::string _m, bool _phoneHome, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
 	{
-		Ethash::BlockHeader genesis;
+		BlockInfo genesis;
 		genesis.setDifficulty(1 << 18);
-		cdebug << genesis.boundary();
+		cdebug << Ethash::boundary(genesis);
 
 		GenericFarm<EthashProofOfWork> f;
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
@@ -417,7 +418,7 @@ private:
 		cout << "Benchmarking on platform: " << platformInfo << endl;
 
 		cout << "Preparing DAG..." << endl;
-		genesis.prep();
+		Ethash::ensurePrecomputed(0);
 
 		genesis.setDifficulty(u256(1) << 63);
 		f.setWork(genesis);

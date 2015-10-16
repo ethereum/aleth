@@ -14,44 +14,39 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file EthashSealEngine.h
+/** @file FluidityClient.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
- *
- * Determines the PoW algorithm.
  */
 
 #pragma once
 
-#include "Sealer.h"
-#include "Ethash.h"
-#include "EthashAux.h"
+#include <thread>
+#include <condition_variable>
+#include <mutex>
+#include <list>
+#include <atomic>
+#include <string>
+#include <array>
+#include <libethereum/Client.h>
+#include "Fluidity.h"
 
 namespace dev
 {
 namespace eth
 {
 
-class EthashSealEngine: public SealEngineBase<Ethash>
+class FluidityClient: public Client
 {
-	friend class Ethash;
-
 public:
-	EthashSealEngine();
-
-	strings sealers() const override;
-	std::string sealer() const override { return m_sealer; }
-	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
-	void cancelGeneration() override { m_farm.stop(); }
-	void generateSeal(BlockInfo const& _bi) override;
-	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
-
-	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
-
-private:
-	eth::GenericFarm<EthashProofOfWork> m_farm;
-	std::string m_sealer = "cpu";
-	Ethash::BlockHeader m_sealing;
+	FluidityClient(
+		ChainParams const& _params,
+		int _networkID,
+		p2p::Host* _host,
+		std::shared_ptr<GasPricer> _gpForAdoption,
+		std::string const& _dbPath = std::string(),
+		WithExisting _forceAction = WithExisting::Trust
+	): Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction) {}
 };
 
 }

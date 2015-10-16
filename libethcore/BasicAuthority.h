@@ -23,71 +23,35 @@
 
 #pragma once
 
-#include <libdevcore/RLP.h>
-#include <libdevcrypto/Common.h>
-#include "BlockInfo.h"
-#include "Common.h"
 #include "Sealer.h"
-
-class BasicAuthoritySeal;
-class BasicAuthoritySealEngine;
 
 namespace dev
 {
 namespace eth
 {
 
-/**
- * The proof of work algorithm base type.
- *
- * Must implement a basic templated interface, including:
- * typename Result
- * typename Solution
- * typename CPUMiner
- * typename GPUMiner
- * and a few others. TODO
- */
-class BasicAuthority
+class BasicAuthority: public SealEngineBase
 {
-	friend class ::BasicAuthoritySealEngine;
-
 public:
-	static std::string name() { return "BasicAuthority"; }
-	static unsigned revision() { return 0; }
-	static SealEngineFace* createSealEngine();
+	std::string name() const override { return "BasicAuthority"; }
+	unsigned revision() const override { return 0; }
+	unsigned sealFields() const override { return 1; }
+	bytes sealRLP() const override { return rlp(Signature()); }
 
-	class BlockHeaderRaw: public BlockInfo
-	{
-		friend class ::BasicAuthoritySealEngine;
+	void populateFromParent(BlockInfo&, BlockInfo const&) const override;
+	StringHashMap jsInfo(BlockInfo const& _bi) const override;
+	void verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const;
+	void generateSeal(BlockInfo const& _bi) override;
 
-	public:
-		static const unsigned SealFields = 1;
-
-		bool verify() const;
-		bool preVerify() const;
-
-		Signature sig() const { return m_sig; }
-
-		StringHashMap jsInfo() const;
-
-	protected:
-		BlockHeaderRaw() = default;
-		BlockHeaderRaw(BlockInfo const& _bi): BlockInfo(_bi) {}
-
-		void populateFromHeader(RLP const& _header, Strictness _s);
-		void populateFromParent(BlockHeaderRaw const& _parent);
-		void verifyParent(BlockHeaderRaw const& _parent);
-		void streamRLPFields(RLPStream& _s) const { _s << m_sig; }
-		void clear() { m_sig = Signature(); }
-		void noteDirty() const {}
-
-	private:
-		Signature m_sig;
-	};
-	using BlockHeader = BlockHeaderPolished<BlockHeaderRaw>;
+	static Signature sig(BlockInfo const& _bi) { return _bi.seal<Signature>(); }
+	static BlockInfo& setSig(BlockInfo& _bi, Signature const& _sig) { _bi.setSeal(_sig); return _bi; }
+	void setSecret(Secret const& _s) { m_secret = _s; }
 
 private:
-	static AddressHash s_authorities;
+	bool onOptionChanging(std::string const& _name, bytes const& _value) override;
+
+	Secret m_secret;
+	AddressHash m_authorities;
 };
 
 }

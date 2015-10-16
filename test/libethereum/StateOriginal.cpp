@@ -23,9 +23,9 @@
 #include <test/TestHelper.h>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem/operations.hpp>
-#include <libethereum/CanonBlockChain.h>
+#include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
-#include <libethcore/Farm.h>
+#include <libethcore/GenericFarm.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethereum/Defaults.h>
 
@@ -44,7 +44,7 @@ BOOST_AUTO_TEST_SUITE(StateIntegration)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {
-	Block s;
+	Block s(Block::Null);
 }
 
 BOOST_AUTO_TEST_CASE(Complex)
@@ -64,11 +64,11 @@ BOOST_AUTO_TEST_CASE(Complex)
 	Defaults::setDBPath(boost::filesystem::temp_directory_path().string() + "/" + toString(chrono::system_clock::now().time_since_epoch().count()));
 
 	OverlayDB stateDB = State::openDB(h256());
-	CanonBlockChain<BasicAuthority> bc;
+	BlockChain bc(new BasicAuthority, ChainParams(Network::Olympic);
 	cout << bc;
 
 	Block s = bc.genesisBlock(stateDB);
-	s.setBeneficiary(myMiner.address());
+	s.setAuthor(myMiner.address());
 	cout << s;
 
 	// Sync up - this won't do much until we use the last state.

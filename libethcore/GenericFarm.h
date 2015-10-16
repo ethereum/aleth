@@ -14,7 +14,7 @@
  You should have received a copy of the GNU General Public License
  along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
  */
-/** @file Farm.h
+/** @file GenericFarm.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
@@ -157,7 +157,6 @@ public:
 
 	WorkPackage work() const { ReadGuard l(x_minerWork); return m_work; }
 
-private:
 	/**
 	 * @brief Called from a Miner to note a WorkPackage has a solution.
 	 * @param _p The solution.
@@ -167,7 +166,6 @@ private:
 	bool submitProof(Solution const& _s, Miner* _m) override
 	{
 		if (m_onSolutionFound && m_onSolutionFound(_s))
-		{
 			if (x_minerWork.try_lock())
 			{
 				for (std::shared_ptr<Miner> const& m: m_miners)
@@ -177,10 +175,10 @@ private:
 				x_minerWork.unlock();
 				return true;
 			}
-		}
 		return false;
 	}
 
+private:
 	void resetTimer()
 	{
 		m_lastStart = std::chrono::steady_clock::now();
