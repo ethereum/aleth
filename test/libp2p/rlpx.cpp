@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 	size_t const numMessages = 1024;
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
-	h256 h = sha3("pseudorandom string");
+	h256 h = sha3("some pseudorandom stuff here");
 	vector<bytes> encframes;
 	vector<bytes> packetsSent;
 	vector<RLPXPacket> packetsReceived;
@@ -882,7 +882,7 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	size_t const numSubprotocols = 8;
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
-	h256 h = sha3("some pseudorandom stuff here");
+	h256 h = sha3("pseudorandom string");
 	vector<bytes> encframes;
 	vector<bytes> packetsSent;
 	vector<bytes> packetsSentSorted[numSubprotocols];
