@@ -787,10 +787,10 @@ BOOST_AUTO_TEST_CASE(oddSizedMessages)
 
 bytes generatePseudorandomPacket(h256 const& _h)
 {
-	int const sz = 16;
-	int msgSizes[sz] = { 1536, 1120, 1024, 800, 512, 352, 256, 160, 128, 96, 64, 64, 32, 32, 32, 3200 };
-	int index = _h.data()[0] % sz;
-	int msgSize = msgSizes[index];
+	size_t const sz = 16;
+	size_t msgSizes[sz] = { 1536, 1120, 1024, 800, 512, 352, 256, 160, 128, 96, 64, 64, 32, 32, 32, 3200 };
+	size_t index = _h.data()[0] % sz;
+	size_t msgSize = msgSizes[index];
 	bytes ret;
 	ret.reserve(msgSize);
 
@@ -950,7 +950,6 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 		bytesRef frame = frameWithHeader.cropped(h256::size);
 		RLPXFrameInfo f(header);
 		auto px = readers[f.protocolId]->demux(decoder, f, frame);
-		size_t x = px.size();
 		for (RLPXPacket& p: px)
 		{
 			BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());
