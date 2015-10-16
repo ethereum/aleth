@@ -66,8 +66,11 @@ BlockQueue::~BlockQueue()
 
 void BlockQueue::stop()
 {
-	m_deleting = true;
-	m_moreToVerify.notify_all();
+	{
+		std::lock_guard<std::mutex> l(m_verification);
+		m_deleting = true;
+		m_moreToVerify.notify_all();
+	}
 	for (auto& i: m_verifiers)
 		i.join();
 	m_verifiers.clear();
