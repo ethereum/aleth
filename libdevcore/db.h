@@ -23,7 +23,7 @@
 
 #pragma warning(push)
 #pragma warning(disable: 4100 4267)
-#if ETH_ROCKSDB || !ETH_TRUE
+#if ETH_ROCKSDB
 #include <rocksdb/db.h>
 #include <rocksdb/write_batch.h>
 namespace ldb = rocksdb;
