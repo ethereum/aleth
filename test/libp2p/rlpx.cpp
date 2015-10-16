@@ -788,10 +788,9 @@ BOOST_AUTO_TEST_CASE(oddSizedMessages)
 bytes generatePseudorandomPacket(h256 const& _h)
 {
 	int const sz = 16;
-	int msgSizes[sz] = { 1536, 1120, 1024, 800, 512, 352, 256, 160, 128, 96, 64, 64, 32, 32, 32, 32 };
+	int msgSizes[sz] = { 1536, 1120, 1024, 800, 512, 352, 256, 160, 128, 96, 64, 64, 32, 32, 32, 3200 };
 	int index = _h.data()[0] % sz;
 	int msgSize = msgSizes[index];
-
 	bytes ret;
 	ret.reserve(msgSize);
 
@@ -799,7 +798,7 @@ bytes generatePseudorandomPacket(h256 const& _h)
 		ret += _h.asBytes();
 
 	ret.resize(msgSize);
-	return ret;
+	return move(ret);
 }
 
 BOOST_AUTO_TEST_CASE(pseudorandom)
@@ -813,49 +812,37 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 	RLPXFrameCoder encoder(true, remoteEph.pubkey(), remoteNonce.makeInsecure(), localEph, localNonce.makeInsecure(), &ackCipher, &authCipher);
 	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 
-	bool debugMode = true; // delete this after debugging is done
 	int const dequeLen = 1024;
-	int const numMessages = debugMode ? 2 : 62;
+	size_t const numMessages = 1024;
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
-	h256 h = sha3("some pseudorandom stuff here");
+	h256 h = sha3("pseudorandom string");
 	vector<bytes> encframes;
-	vector<bytes> packetsOut;
-	vector<RLPXPacket> packets;
+	vector<bytes> packetsSent;
+	vector<RLPXPacket> packetsReceived;
 	RLPXFrameWriter w(0);
 	RLPXFrameReader r(0);
 
-	// create messages
-	if (debugMode)
+	for (size_t i = 0; i < numMessages; ++i)
 	{
-		// only for debugging. delete this block after debugging is complete.
-		bytes p1, p2;
-		p1.resize(1736, 'x');
-		p2.resize(160, 'z');
-		packetsOut.push_back(p1);
-		packetsOut.push_back(p2);
+		bytes pack = generatePseudorandomPacket(h);
+		packetsSent.push_back(pack);
+		h = sha3(h);
 	}
-	else
-		for (int i = 0; i < numMessages; ++i)
-		{
-			h = sha3(h);
-			auto pack = generatePseudorandomPacket(h);
-			packetsOut.push_back(pack);
-		}
 
-	for (int i = 0; i < numMessages; ++i)
-		w.enque(packetType, (RLPStream() << packetsOut[i]));
+	for (size_t i = 0; i < numMessages; ++i)
+		w.enque(packetType, (RLPStream() << packetsSent[i]));
 
 	bool done = false;
 	while (!done)
 	{
 		size_t prev = encframes.size();
-		size_t x = w.mux(encoder, dequeLen, encframes);
+		size_t num = w.mux(encoder, dequeLen, encframes);
 		size_t diff = encframes.size() - prev;
-		done = (!x && !diff);
+		done = (!num && !diff);
 	}
 	
-	BOOST_REQUIRE_EQUAL(numMessages, packetsOut.size());
+	BOOST_REQUIRE_EQUAL(numMessages, packetsSent.size());
 	
 	for (size_t i = 0; i < encframes.size(); i++)
 	{
@@ -867,23 +854,15 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 		RLPXFrameInfo f(header);
 		auto px = r.demux(decoder, f, frame);
 		for (RLPXPacket& p: px)
-			packets.push_back(move(p));
+			packetsReceived.push_back(move(p));
 	}
 
-	BOOST_REQUIRE_EQUAL(numMessages, packets.size());
+	BOOST_REQUIRE_EQUAL(numMessages, packetsReceived.size());
 
-	vector<RLPStream> rlpPayloads;
-	for (uint16_t i = 0; i < numMessages; ++i)
-		rlpPayloads.push_back(RLPStream());
-
-	for (uint16_t i = 0; i < numMessages; ++i)
-		rlpPayloads[i] << packetsOut[i];
-
-	for (size_t i = 0; i < packets.size(); i++)
+	for (size_t i = 0; i < numMessages; i++)
 	{
-		BOOST_REQUIRE_EQUAL(packets[i].size(), packetTypeRLP.size() + rlpPayloads[i].out().size());
-		BOOST_REQUIRE_EQUAL(sha3(RLP(packets[i].data()).payload()), sha3(packetsOut[i]));
-		BOOST_REQUIRE_EQUAL(sha3(packets[i].type()), sha3(packetTypeRLP));
+		BOOST_REQUIRE(packetsReceived[i].type() == packetTypeRLP);
+		BOOST_REQUIRE_EQUAL(sha3(RLP(packetsReceived[i].data()).payload()), sha3(packetsSent[i]));
 	}
 }
 
@@ -899,61 +878,69 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	RLPXFrameCoder decoder(false, localEph.pubkey(), localNonce.makeInsecure(), remoteEph, remoteNonce.makeInsecure(), &ackCipher, &authCipher);
 
 	int const dequeLen = 1024;
-	int const numMessages = 4000;
-	uint16_t const numSubprotocols = 8;
+	size_t const numMessages = 1024;
+	size_t const numSubprotocols = 8;
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
 	h256 h = sha3("some pseudorandom stuff here");
 	vector<bytes> encframes;
-	vector<bytes> packetsOut;
-	vector<RLPXPacket> packets;
+	vector<bytes> packetsSent;
+	vector<bytes> packetsSentSorted[numSubprotocols];
+	vector<bytes> packetsSentShuffled;
+	vector<RLPXPacket> packetsReceived;
 	vector<RLPXFrameWriter> writers;
-	vector< shared_ptr<RLPXFrameReader> > readers;
-	size_t total = 0;
-	size_t totalPacketsSize = 0;
-	map<size_t, size_t> msgPerSubprotocol;
-
-	// create messages
-	for (int i = 0; i < numMessages; ++i)
-	{
-		h = sha3(h);
-		auto pack = generatePseudorandomPacket(h);
-		packetsOut.push_back(pack);
-		totalPacketsSize += pack.size();
-	}
+	vector<shared_ptr<RLPXFrameReader> > readers;
+	map<size_t, size_t> msgPerSubprotocolSent;
+	map<size_t, size_t> msgPerSubprotocolReceived;
 
 	// create readers & writers
-	for (uint16_t i = 0; i < numSubprotocols; ++i)
+	for (size_t i = 0; i < numSubprotocols; ++i)
 	{
 		writers.push_back(RLPXFrameWriter(i));
 		shared_ptr<RLPXFrameReader> p(new RLPXFrameReader(i));
 		readers.push_back(p);
-	}	
-	
-	// enque messages into writers
-	for (int i = 0; i < numMessages; ++i)
-	{
-		int sub = packetsOut[i][1] % numSubprotocols;
-		writers[sub].enque(packetType, (RLPStream() << packetsOut[i]));
-		msgPerSubprotocol[sub]++;
 	}
 
-	for (uint16_t i = 0; i < numSubprotocols; ++i)
+	// create messages
+	for (size_t i = 0; i < numMessages; ++i)
+	{
+		bytes pack = generatePseudorandomPacket(h);
+		packetsSent.push_back(pack);
+		h = sha3(h);
+	}
+	
+	// enque messages into writers
+	for (size_t i = 0; i < numMessages; ++i)
+	{
+		size_t sub = packetsSent[i][1] % numSubprotocols;
+		writers[sub].enque(packetType, (RLPStream() << packetsSent[i]));
+		msgPerSubprotocolSent[sub]++;
+		packetsSentSorted[sub].push_back(packetsSent[i]);
+	}
+
+	// note the sent messages sequence
+	for (size_t i = 0; i < numSubprotocols; ++i)
+		for (bytes const& p: packetsSentSorted[i])
+			packetsSentShuffled.push_back(p);
+
+	// mux
+	size_t total = 0;
+	for (size_t i = 0; i < numSubprotocols; ++i)
 	{
 		bool done = false;
 		while (!done)
 		{
 			size_t prev = encframes.size();
-			size_t x = writers[i].mux(encoder, dequeLen, encframes);
-			total += x;
+			size_t num = writers[i].mux(encoder, dequeLen, encframes);
 			size_t diff = encframes.size() - prev;
-			done = (!x && !diff);
+			total += num;
+			done = (!num && !diff);
 		}
 	}
 	
 	BOOST_REQUIRE_EQUAL(numMessages, total);
-	BOOST_REQUIRE_EQUAL(numMessages, packetsOut.size());
 	
+	// demux
 	for (size_t i = 0; i < encframes.size(); i++)
 	{
 		bytesRef frameWithHeader(encframes[i].data(), encframes[i].size());
@@ -967,28 +954,22 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 		for (RLPXPacket& p: px)
 		{
 			BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());
-			packets.push_back(move(p));
+			packetsReceived.push_back(move(p));
+			msgPerSubprotocolReceived[f.protocolId]++;
 		}
 	}
 
-	BOOST_REQUIRE_EQUAL(numMessages, packets.size());
+	// check if everything is OK
+	BOOST_REQUIRE_EQUAL(numMessages, packetsReceived.size());
 
-	vector<RLPStream> rlpPayloads;
-	for (uint16_t i = 0; i < numMessages; ++i)
-		rlpPayloads.push_back(RLPStream());
+	for (size_t i = 0; i < numSubprotocols; ++i)
+		BOOST_REQUIRE_EQUAL(msgPerSubprotocolReceived[i], msgPerSubprotocolSent[i]);
 
-	for (uint16_t i = 0; i < numMessages; ++i)
-		rlpPayloads[i] << packetsOut[i];
-
-	for (size_t i = 0; i < packets.size(); i++)
+	for (size_t i = 0; i < numMessages; i++)
 	{
-		BOOST_REQUIRE_EQUAL(packets[i].size(), packetTypeRLP.size() + rlpPayloads[i].out().size());
-		BOOST_REQUIRE_EQUAL(sha3(RLP(packets[i].data()).payload()), sha3(packetsOut[i]));
-		BOOST_REQUIRE_EQUAL(sha3(packets[i].type()), sha3(packetTypeRLP));
+		BOOST_REQUIRE(packetsReceived[i].type() == packetTypeRLP);
+		BOOST_REQUIRE_EQUAL(sha3(RLP(packetsReceived[i].data()).payload()), sha3(packetsSentShuffled[i]));
 	}
-
-	--total;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
