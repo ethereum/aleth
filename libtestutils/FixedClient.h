@@ -46,15 +46,15 @@ public:
 	virtual eth::BlockChain const& bc() const override { return m_bc; }
 	using ClientBase::asOf;
 	virtual eth::Block asOf(h256 const& _h) const override;
-	virtual eth::Block preMine() const override { ReadGuard l(x_stateDB); return m_block; }
-	virtual eth::Block postMine() const override { ReadGuard l(x_stateDB); return m_block; }
-	virtual void setBeneficiary(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setBeneficiary(_us); }
+	virtual eth::Block preSeal() const override { ReadGuard l(x_stateDB); return m_block; }
+	virtual eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }
+	virtual void setAuthor(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }
 	virtual void prepareForTransaction() override {}
 
 private:
 	eth::BlockChain const& m_bc;
 	eth::Block m_block;
-	mutable SharedMutex x_stateDB;			///< Lock on the state DB, effectively a lock on m_postMine.
+	mutable SharedMutex x_stateDB;			///< Lock on the state DB, effectively a lock on m_postSeal.
 };
 
 }

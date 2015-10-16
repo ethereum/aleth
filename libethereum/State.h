@@ -28,8 +28,8 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcrypto/OverlayDB.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
-#include <libethcore/Miner.h>
+#include <libethcore/BlockHeader.h>
+#include <libethereum/GenericMiner.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"
@@ -92,6 +92,11 @@ template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<FatGeneri
 template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGenericTrieDB<DB>, KeyType>;
 #endif
 
+DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);
+DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
+
+//#define ETH_ALLOW_EMPTY_BLOCK_AND_STATE 1
+
 /**
  * @brief Model of an Ethereum state, essentially a facade for the trie.
  * Allows you to query the state of accounts, and has built-in caching for various aspects of the
@@ -107,14 +112,21 @@ class State
 
 public:
 	/// Default constructor; creates with a blank database prepopulated with the genesis block.
-	State(): State(OverlayDB(), BaseState::Empty) {}
+	State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
 
 	/// Basic state object from database.
 	/// Use the default when you already have a database and you just want to make a State object
 	/// which uses it. If you have no preexisting database then set BaseState to something other
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
-	/// You can also set the coinbase address.
-	explicit State(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting);
+	explicit State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs = BaseState::PreExisting);
+
+#if ETH_ALLOW_EMPTY_BLOCK_AND_STATE
+	State(): State(Invalid256, OverlayDB(), BaseState::Empty) {}
+	explicit State(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting): State(Invalid256, _db, _bs) {}
+#endif
+
+	enum NullType { Null };
+	State(NullType): State(Invalid256, OverlayDB(), BaseState::Empty) {}
 
 	/// Copy state object.
 	State(State const& _s);
@@ -218,6 +230,11 @@ public:
 	/// Resets any uncommitted changes to the cache.
 	void setRoot(h256 const& _root);
 
+	/// Get the account start nonce. May be required.
+	u256 const& accountStartNonce() const { return m_accountStartNonce; }
+	u256 const& requireAccountStartNonce() const;
+	void noteAccountStartNonce(u256 const& _actual);
+
 private:
 	/// Retrieve all information about a given address into the cache.
 	/// If _requireMemory is true, grab the full memory should it be a contract item.
@@ -238,6 +255,8 @@ private:
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
 	mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
 	AddressHash m_touched;						///< Tracks all addresses touched so far.
+
+	u256 m_accountStartNonce;
 
 	static std::string c_defaultPath;
 

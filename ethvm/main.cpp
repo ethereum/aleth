@@ -80,11 +80,11 @@ int main(int argc, char** argv)
 	string incoming = "--";
 
 	Mode mode = Mode::Statistics;
-	State state;
+	State state(Invalid256);
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = Block().gasLimitRemaining();
+	u256 gas = 3141592;
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
@@ -132,8 +132,8 @@ int main(int argc, char** argv)
 			value = u256(argv[++i]);
 		else if (arg == "--value" && i + 1 < argc)
 			value = u256(argv[++i]);
-		else if (arg == "--beneficiary" && i + 1 < argc)
-			envInfo.setBeneficiary(Address(argv[++i]));
+		else if (arg == "--author" && i + 1 < argc)
+			envInfo.setAuthor(Address(argv[++i]));
 		else if (arg == "--number" && i + 1 < argc)
 			envInfo.setNumber(u256(argv[++i]));
 		else if (arg == "--difficulty" && i + 1 < argc)

@@ -14,13 +14,34 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Sealer.cpp
+/** @file ChainOperationParams.h
  * @author Gav Wood <i@gavwood.com>
- * @date 2014
+ * @date 2015
  */
 
-#include "Sealer.h"
+#include "ChainOperationParams.h"
+#include <libdevcore/Log.h>
+#include <libdevcore/CommonData.h>
 using namespace std;
 using namespace dev;
 using namespace eth;
 
+ChainOperationParams::ChainOperationParams()/*:
+	accountStartNonce(Invalid256)*/
+{
+	otherParams = std::unordered_map<std::string, std::string>{
+		{"minGasLimit", "0x1388"},
+		{"gasLimitBoundDivisor", "0x0400"},
+		{"minimumDifficulty", "0x020000"},
+		{"difficultyBoundDivisor", "0x0800"},
+		{"durationLimit", "0x0d"},
+		{"registrar", "5e70c0bbcd5636e0f9f9316e9f8633feb64d4050"},
+		{"networkID", "0x0"}
+	};
+	blockReward = u256("0x4563918244F40000");
+}
+
+u256 ChainOperationParams::u256Param(string const& _name) const
+{
+	return u256(fromBigEndian<u256>(fromHex(at(otherParams, _name))));
+}

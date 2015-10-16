@@ -26,7 +26,6 @@
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Params.h>
 #include "BlockChain.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
@@ -114,14 +113,14 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 
 unsigned BlockChainSync::estimatedHashes() const
 {
-	BlockInfo block = host().chain().info();
+	BlockHeader block = host().chain().info();
 	uint64_t lastBlockTime = (block.hash() == host().chain().genesisHash()) ? 1428192000 : (uint64_t)block.timestamp();
 	uint64_t now = utcTime();
 	unsigned blockCount = c_chainReorgSize;
 	if (lastBlockTime > now)
 		clog(NetWarn) << "Clock skew? Latest block is in the future";
 	else
-		blockCount += (now - lastBlockTime) / (unsigned)c_durationLimit;
+		blockCount += (now - lastBlockTime) / 15;	// TODO: REMOVE!!!
 	clog(NetAllDetail) << "Estimated hashes: " << blockCount;
 	return blockCount;
 }
@@ -187,7 +186,7 @@ void BlockChainSync::onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const
 
 	for (unsigned i = 0; i < itemCount; ++i)
 	{
-		auto h = BlockInfo::headerHashFromBlock(_r[i].data());
+		auto h = BlockHeader::headerHashFromBlock(_r[i].data());
 		if (_peer->m_sub.noteBlock(h))
 		{
 			_peer->addRating(10);
@@ -223,7 +222,7 @@ void BlockChainSync::onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const
 				logNewBlock(h);
 				if (m_state == SyncState::NewBlocks)
 				{
-					BlockInfo bi(_r[i].data());
+					BlockHeader bi(_r[i].data());
 					if (bi.number() > maxUnknownNumber)
 					{
 						maxUnknownNumber = bi.number();
@@ -271,7 +270,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
-	auto h = BlockInfo::headerHashFromBlock(_r[0].data());
+	auto h = BlockHeader::headerHashFromBlock(_r[0].data());
 
 	if (_r.itemCount() != 2)
 		_peer->disable("NewBlock without 2 data fields.");

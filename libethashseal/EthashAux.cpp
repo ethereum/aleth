@@ -20,21 +20,21 @@
  */
 
 #include "EthashAux.h"
-
 #include <boost/detail/endian.hpp>
 #include <boost/filesystem.hpp>
 #include <chrono>
 #include <array>
 #include <thread>
+#include <libethash/internal.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/Log.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
-#include <libethash/internal.h>
-#include "BlockInfo.h"
-#include "Exceptions.h"
+#include <libethcore/Exceptions.h>
+#include <libethcore/BlockHeader.h>
+#include "Ethash.h"
 using namespace std;
 using namespace chrono;
 using namespace dev;
@@ -44,23 +44,18 @@ const char* DAGChannel::name() { return EthGreen "DAG"; }
 
 EthashAux* dev::eth::EthashAux::s_this = nullptr;
 
-const unsigned EthashProofOfWork::defaultLocalWorkSize = 64;
-const unsigned EthashProofOfWork::defaultGlobalWorkSizeMultiplier = 4096; // * CL_DEFAULT_LOCAL_WORK_SIZE
-const unsigned EthashProofOfWork::defaultMSPerBatch = 0;
-const EthashProofOfWork::WorkPackage EthashProofOfWork::NullWorkPackage = EthashProofOfWork::WorkPackage();
-
 EthashAux::~EthashAux()
 {
 }
 
 EthashAux* EthashAux::get()
 {
-    static std::once_flag flag;
-    std::call_once(flag, []{s_this = new EthashAux();});
-    return s_this;
+	static std::once_flag flag;
+	std::call_once(flag, []{s_this = new EthashAux();});
+	return s_this;
 }
 
-uint64_t EthashAux::cacheSize(BlockInfo const& _header)
+uint64_t EthashAux::cacheSize(BlockHeader const& _header)
 {
 	return ethash_get_cachesize((uint64_t)_header.number());
 }

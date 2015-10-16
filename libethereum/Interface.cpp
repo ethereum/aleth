@@ -49,7 +49,7 @@ Address Interface::submitTransaction(Secret const& _secret, u256 const& _endowme
 	return submitTransaction(ts, _secret).second;
 }
 
-BlockInfo Interface::blockInfo(BlockNumber _block) const
+BlockHeader Interface::blockInfo(BlockNumber _block) const
 {
 	if (_block == PendingBlock)
 		return pendingInfo();

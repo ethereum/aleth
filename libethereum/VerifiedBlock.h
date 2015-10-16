@@ -21,7 +21,7 @@
 
 
 #include <libdevcore/Common.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 
 #pragma once
 
@@ -36,7 +36,7 @@ class Transaction;
 struct VerifiedBlockRef
 {
 	bytesConstRef block; 					///<  Block data reference
-	BlockInfo info;							///< Prepopulated block info
+	BlockHeader info;							///< Prepopulated block info
 	std::vector<Transaction> transactions;	///< Verified list of block transactions
 };
 
@@ -45,7 +45,7 @@ struct VerifiedBlock
 {
 	VerifiedBlock() {}
 
-	VerifiedBlock(BlockInfo&& _bi)
+	VerifiedBlock(BlockHeader&& _bi)
 	{
 		verified.info = std::move(_bi);
 	}

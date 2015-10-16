@@ -19,99 +19,65 @@
  * @date 2014
  */
 
-#include <libdevcore/CommonJS.h>
-#include "Exceptions.h"
 #include "BasicAuthority.h"
-#include "BlockInfo.h"
+#include <libdevcore/CommonJS.h>
+#include <libdevcore/Log.h>
+#include "Exceptions.h"
+#include "BlockHeader.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
 
-AddressHash BasicAuthority::s_authorities;
+ETH_REGISTER_SEAL_ENGINE(BasicAuthority);
 
-bool BasicAuthority::BlockHeaderRaw::verify() const
+StringHashMap BasicAuthority::jsInfo(BlockHeader const& _bi) const
 {
-	return s_authorities.count(toAddress(recover(m_sig, hashWithout())));
+	return { { "sig", toJS(sig(_bi)) } };
 }
 
-bool BasicAuthority::BlockHeaderRaw::preVerify() const
+void BasicAuthority::generateSeal(BlockHeader const& _bi)
 {
-	return SignatureStruct(m_sig).isValid();
+	BlockHeader bi = _bi;
+	h256 h = bi.hash(WithoutSeal);
+	Signature s = sign(m_secret, h);
+	setSig(bi, s);
+	SealEngineBase::generateSeal(bi);
 }
 
-void BasicAuthority::BlockHeaderRaw::populateFromHeader(RLP const& _header, Strictness _s)
+bool BasicAuthority::onOptionChanging(std::string const& _name, bytes const& _value)
 {
-	m_sig = _header[BlockInfo::BasicFields].toHash<Signature>();
+	RLP rlp(_value);
+	if (_name == "authorities")
+		m_authorities = rlp.toUnorderedSet<Address>();
+	else if (_name == "authority")
+		m_secret = Secret(rlp.toHash<h256>());
+	else
+		return false;
+	return true;
+}
 
+void BasicAuthority::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
+{
+	SealEngineFace::populateFromParent(_bi, _parent);
+}
+
+void BasicAuthority::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
+{
+	SealEngineFace::verify(_s, _bi, _parent, _block);
 	// check it hashes according to proof of work or that it's the genesis block.
-	if (_s == CheckEverything && m_parentHash && !verify())
+	Signature s = sig(_bi);
+	h256 h = _bi.hash(WithoutSeal);
+	Address a = toAddress(recover(s, h));
+	if (_s == CheckEverything && _bi.parentHash() && !m_authorities.count(a))
 	{
 		InvalidBlockNonce ex;
-		ex << errinfo_hash256(hashWithout());
-		ex << errinfo_difficulty(m_difficulty);
-		ex << errinfo_target(boundary());
+		ex << errinfo_hash256(_bi.hash(WithoutSeal));
 		BOOST_THROW_EXCEPTION(ex);
 	}
-	else if (_s == QuickNonce && m_parentHash && !preVerify())
+	else if (_s == QuickNonce && _bi.parentHash() && !SignatureStruct(sig(_bi)).isValid())
 	{
 		InvalidBlockNonce ex;
-		ex << errinfo_hash256(hashWithout());
-		ex << errinfo_difficulty(m_difficulty);
+		ex << errinfo_hash256(_bi.hash(WithoutSeal));
 		BOOST_THROW_EXCEPTION(ex);
 	}
-}
-
-void BasicAuthority::BlockHeaderRaw::verifyParent(BlockHeaderRaw const& _parent)
-{
-	(void)_parent;
-}
-
-void BasicAuthority::BlockHeaderRaw::populateFromParent(BlockHeaderRaw const& _parent)
-{
-	(void)_parent;
-}
-
-StringHashMap BasicAuthority::BlockHeaderRaw::jsInfo() const
-{
-	return { { "sig", toJS(m_sig) } };
-}
-
-
-
-class BasicAuthoritySealEngine: public SealEngineBase<BasicAuthority>
-{
-public:
-	void setSecret(Secret const& _s) { m_secret = _s; }
-	void generateSeal(BlockInfo const& _bi)
-	{
-		BasicAuthority::BlockHeader h(_bi);
-		h.m_sig = sign(m_secret, _bi.hashWithout());
-		RLPStream ret;
-		h.streamRLP(ret);
-		m_onSealGenerated(ret.out());
-	}
-	void onSealGenerated(std::function<void(bytes const&)> const& _f) { m_onSealGenerated = _f; }
-	bool isWorking() const { return false; }
-	WorkingProgress workingProgress() const { return WorkingProgress(); }
-
-private:
-	virtual bool onOptionChanging(std::string const& _name, bytes const& _value)
-	{
-		RLP rlp(_value);
-		if (_name == "authorities")
-			BasicAuthority::s_authorities = rlp.toUnorderedSet<Address>();
-		else if (_name == "authority")
-			m_secret = Secret(rlp.toHash<h256>());
-		else
-			return false;
-		return true;
-	}
-
-	Secret m_secret;
-	std::function<void(bytes const& s)> m_onSealGenerated;
-};
-
-SealEngineFace* BasicAuthority::createSealEngine()
-{
-	return new BasicAuthoritySealEngine;
 }

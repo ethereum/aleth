@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
 #include <libtestutils/FixedClient.h>
+#include <libethashseal/Ethash.h>
 #include "../TestUtils.h"
 
 using namespace std;
@@ -101,7 +102,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 			ETH_CHECK_EQUAL(expectedHashFromNumber, hashFromNumber);
 			
 			// blockInfo
-			auto compareBlockInfos = [](Json::Value const& _b, Ethash::BlockHeader _blockInfo) -> void
+			auto compareBlockInfos = [](Json::Value const& _b, BlockHeader _blockInfo) -> void
 			{
 				LogBloom expectedBlockInfoBloom = LogBloom(fromHex(_b["bloom"].asString()));
 				Address expectedBlockInfoCoinbase = Address(fromHex(_b["coinbase"].asString()));
@@ -119,7 +120,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				h256 expectedBlockInfoTransactionsRoot = h256(fromHex(_b["transactionsTrie"].asString()));
 				h256 expectedBlockInfoUncldeHash = h256(fromHex(_b["uncleHash"].asString()));
 				ETH_CHECK_EQUAL(expectedBlockInfoBloom, _blockInfo.logBloom());
-				ETH_CHECK_EQUAL(expectedBlockInfoCoinbase, _blockInfo.beneficiary());
+				ETH_CHECK_EQUAL(expectedBlockInfoCoinbase, _blockInfo.author());
 				ETH_CHECK_EQUAL(expectedBlockInfoDifficulty, _blockInfo.difficulty());
 				ETH_CHECK_EQUAL_COLLECTIONS(
 					expectedBlockInfoExtraData.begin(),
@@ -130,8 +131,8 @@ BOOST_AUTO_TEST_CASE(blocks)
 				ETH_CHECK_EQUAL(expectedBlockInfoGasLimit, _blockInfo.gasLimit());
 				ETH_CHECK_EQUAL(expectedBlockInfoGasUsed, _blockInfo.gasUsed());
 				ETH_CHECK_EQUAL(expectedBlockInfoHash, _blockInfo.hash());
-				ETH_CHECK_EQUAL(expectedBlockInfoMixHash, _blockInfo.mixHash());
-				ETH_CHECK_EQUAL(expectedBlockInfoNonce, _blockInfo.nonce());
+				ETH_CHECK_EQUAL(expectedBlockInfoMixHash, Ethash::mixHash(_blockInfo));
+				ETH_CHECK_EQUAL(expectedBlockInfoNonce, Ethash::nonce(_blockInfo));
 				ETH_CHECK_EQUAL(expectedBlockInfoNumber, _blockInfo.number());
 				ETH_CHECK_EQUAL(expectedBlockInfoParentHash, _blockInfo.parentHash());
 				ETH_CHECK_EQUAL(expectedBlockInfoReceiptsRoot, _blockInfo.receiptsRoot());
@@ -140,7 +141,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				ETH_CHECK_EQUAL(expectedBlockInfoUncldeHash, _blockInfo.sha3Uncles());
 			};
 
-			Ethash::BlockHeader blockInfo((static_cast<FixedClient&>(_client)).bc().headerData(blockHash), IgnoreSeal, h256{}, HeaderData);
+			BlockHeader blockInfo((static_cast<FixedClient&>(_client)).bc().headerData(blockHash), HeaderData);
 			compareBlockInfos(blockHeader, blockInfo);
 
 			// blockDetails
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				Json::Value u = uncles[i];
 				
 				// uncle (by hash)
-				BlockInfo uncle = _client.uncle(blockHash, i);
+				BlockHeader uncle = _client.uncle(blockHash, i);
 				compareBlockInfos(u, uncle);
 			}
 		}

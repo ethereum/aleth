@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file EthashSealEngine.h
+/** @file EthashCPUMiner.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  *
@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include "Sealer.h"
-#include "Ethash.h"
+#include "libdevcore/Worker.h"
+#include <libethereum/GenericMiner.h>
 #include "EthashAux.h"
 
 namespace dev
@@ -32,26 +32,25 @@ namespace dev
 namespace eth
 {
 
-class EthashSealEngine: public SealEngineBase<Ethash>
+class EthashCPUMiner: public GenericMiner<EthashProofOfWork>, Worker
 {
-	friend class Ethash;
-
 public:
-	EthashSealEngine();
+	EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci);
+	~EthashCPUMiner();
 
-	strings sealers() const override;
-	std::string sealer() const override { return m_sealer; }
-	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
-	void cancelGeneration() override { m_farm.stop(); }
-	void generateSeal(BlockInfo const& _bi) override;
-	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
+	static unsigned instances() { return s_numInstances > 0 ? s_numInstances : std::thread::hardware_concurrency(); }
+	static std::string platformInfo();
+	static void listDevices() {}
+	static bool configureGPU(unsigned, unsigned, unsigned, unsigned, unsigned, bool, unsigned, uint64_t) { return false; }
+	static void setNumInstances(unsigned _instances) { s_numInstances = std::min<unsigned>(_instances, std::thread::hardware_concurrency()); }
 
-	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
+protected:
+	void kickOff() override;
+	void pause() override;
 
 private:
-	eth::GenericFarm<EthashProofOfWork> m_farm;
-	std::string m_sealer = "cpu";
-	Ethash::BlockHeader m_sealing;
+	void workLoop() override;
+	static unsigned s_numInstances;
 };
 
 }

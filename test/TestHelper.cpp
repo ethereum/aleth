@@ -23,7 +23,8 @@
 
 #include <thread>
 #include <chrono>
-#include <libethcore/EthashAux.h>
+#include <libethashseal/EthashAux.h>
+#include <libethashseal/Ethash.h>
 #include <libethereum/Client.h>
 #include <libevm/ExtVMFace.h>
 #include <liblll/Compiler.h>
@@ -42,10 +43,10 @@ void mine(Client& c, int numBlocks)
 {
 	auto startBlock = c.blockChain().details().number;
 
-	c.startMining();
+	c.startSealing();
 	while(c.blockChain().details().number < startBlock + numBlocks)
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-	c.stopMining();
+	c.stopSealing();
 }
 
 void connectClients(Client& c1, Client& c2)
@@ -62,27 +63,27 @@ void connectClients(Client& c1, Client& c2)
 #endif
 }
 
-void mine(Block& s, BlockChain const& _bc)
+void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
 {
-	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	s.commitToSeal(_bc);
 	Notified<bytes> sealed;
-	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
-	sealer->generateSeal(s.info());
+	_sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
+	_sealer->generateSeal(s.info());
 	sealed.waitNot({});
-	sealer.reset();
+	_sealer->onSealGenerated([](bytes const&){});
 	s.sealBlock(sealed);
 }
 
-void mine(Ethash::BlockHeader& _bi)
+void mine(BlockHeader& _bi, SealEngineFace* _sealer)
 {
-	std::unique_ptr<SealEngineFace> sealer(Ethash::createSealEngine());
 	Notified<bytes> sealed;
-	sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
-	sealer->generateSeal(_bi);
+	_sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
+	_sealer->generateSeal(_bi);
 	sealed.waitNot({});
-	sealer.reset();
-	_bi = Ethash::BlockHeader(sealed, CheckNothing, h256{}, HeaderData);
+	_sealer->onSealGenerated([](bytes const&){});
+	_bi = BlockHeader(sealed, HeaderData);
+//	cdebug << "Block mined" << Ethash::boundary(_bi).hex() << Ethash::nonce(_bi) << _bi.hash(WithoutSeal).hex();
+	_sealer->verify(JustSeal, _bi);
 }
 
 }
@@ -96,8 +97,8 @@ struct MissingFields : virtual Exception {};
 bigint const c_max256plus1 = bigint(1) << 256;
 
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
-	m_statePre(OverlayDB(), eth::BaseState::Empty),
-	m_statePost(OverlayDB(), eth::BaseState::Empty),
+	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
+	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
 	m_testObject(_o)
 {
 	if (testTemplate == testType::StateTests)
@@ -180,7 +181,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
-	m_envInfo.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	m_envInfo.setAuthor(Address(_o["currentCoinbase"].get_str()));
 	m_envInfo.setLastHashes( lastHashes( m_envInfo.number() ) );
 }
 
@@ -356,7 +357,7 @@ int ImportTest::exportTest(bytes const& _output)
 	if (m_testObject.count("expect") > 0)
 	{
 		eth::AccountMaskMap stateMap;
-		State expectState(OverlayDB(), eth::BaseState::Empty);
+		State expectState(0, OverlayDB(), eth::BaseState::Empty);
 		importState(m_testObject["expect"].get_obj(), expectState, stateMap);
 		compareStates(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
 		m_testObject.erase(m_testObject.find("expect"));
@@ -834,10 +835,10 @@ LastHashes lastHashes(u256 _currentBlockNumber)
 	return ret;
 }
 
-dev::eth::Ethash::BlockHeader constructHeader(
+dev::eth::BlockHeader constructHeader(
 	h256 const& _parentHash,
 	h256 const& _sha3Uncles,
-	Address const& _coinbaseAddress,
+	Address const& _author,
 	h256 const& _stateRoot,
 	h256 const& _transactionsRoot,
 	h256 const& _receiptsRoot,
@@ -850,26 +851,18 @@ dev::eth::Ethash::BlockHeader constructHeader(
 	bytes const& _extraData)
 {
 	RLPStream rlpStream;
-	rlpStream.appendList(Ethash::BlockHeader::Fields);
+	rlpStream.appendList(15);
 
-	rlpStream << _parentHash << _sha3Uncles << _coinbaseAddress << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
+	rlpStream << _parentHash << _sha3Uncles << _author << _stateRoot << _transactionsRoot << _receiptsRoot << _logBloom
 		<< _difficulty << _number << _gasLimit << _gasUsed << _timestamp << _extraData << h256{} << Nonce{};
 
-	return Ethash::BlockHeader(rlpStream.out(), CheckNothing, h256{}, HeaderData);
+	return BlockHeader(rlpStream.out(), HeaderData);
 }
 
-void updateEthashSeal(dev::eth::Ethash::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce)
+void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, h64 const& _nonce)
 {
-	RLPStream source;
-	_header.streamRLP(source);
-	RLP sourceRlp(source.out());
-	RLPStream header;
-	header.appendList(Ethash::BlockHeader::Fields);
-	for (size_t i = 0; i < BlockInfo::BasicFields; i++)
-		header << sourceRlp[i];
-
-	header << _mixHash << _nonce;
-	_header = Ethash::BlockHeader(header.out(), CheckNothing, h256{}, HeaderData);
+	Ethash::setNonce(_header, _nonce);
+	Ethash::setMixHash(_header, _mixHash);
 }
 
 namespace

@@ -20,7 +20,6 @@
  */
 
 #include "Client.h"
-
 #include <chrono>
 #include <memory>
 #include <thread>
@@ -30,7 +29,6 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/StructuredLogger.h>
 #include <libp2p/Host.h>
-#include <libethcore/Ethash.h>
 #include "Sentinel.h"
 #include "Defaults.h"
 #include "Executive.h"
@@ -38,7 +36,6 @@
 #include "Utility.h"
 #include "Block.h"
 #include "TransactionQueue.h"
-
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -63,24 +60,22 @@ const char* ClientTrace::name() { return EthTeal "⧫" EthGray " ◎"; }
 const char* ClientDetail::name() { return EthTeal "⧫" EthCoal " ●"; }
 #endif
 
-bool Client::s_shouldExit = false;
-void Client::exitHandler(int)
-{
-	s_shouldExit = true;
-}
-
-static const Addresses c_canaries =
-{
-	Address("539dd9aaf45c3feb03f9c004f4098bd3268fef6b"),		// gav
-	Address("c8158da0b567a8cc898991c2c2a073af67dc03a9"),		// vitalik
-	Address("959c33de5961820567930eccce51ea715c496f85"),		// jeff
-	Address("7a19a893f91d5b6e2cdf941b6acbba2cbcf431ee")			// christoph
-};
-
-Client::Client(std::shared_ptr<GasPricer> _gp):
+Client::Client(
+	ChainParams const& _params,
+	int _networkID,
+	p2p::Host* _host,
+	std::shared_ptr<GasPricer> _gpForAdoption,
+	std::string const& _dbPath,
+	WithExisting _forceAction
+):
 	Worker("eth", 0),
-	m_gp(_gp ? _gp : make_shared<TrivialGasPricer>())
+	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
+	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
+	m_preSeal(chainParams().accountStartNonce),
+	m_postSeal(chainParams().accountStartNonce),
+	m_working(chainParams().accountStartNonce)
 {
+	init(_host, _dbPath, _forceAction, _networkID);
 }
 
 Client::~Client()
@@ -97,8 +92,8 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 	// until after the construction.
 	m_stateDB = State::openDB(_dbPath, bc().genesisHash(), _forceAction);
 	// LAZY. TODO: move genesis state construction/commiting to stateDB openning and have this just take the root from the genesis block.
-	m_preMine = bc().genesisBlock(m_stateDB);
-	m_postMine = m_preMine;
+	m_preSeal = bc().genesisBlock(m_stateDB);
+	m_postSeal = m_preSeal;
 
 	m_bq.setChain(bc());
 
@@ -128,7 +123,7 @@ Block Client::asOf(h256 const& _block) const
 {
 	try
 	{
-		Block ret(m_stateDB);
+		Block ret(bc(), m_stateDB);
 		ret.populateFromChain(bc(), _block);
 		return ret;
 	}
@@ -136,7 +131,7 @@ Block Client::asOf(h256 const& _block) const
 	{
 		ex << errinfo_block(bc().block(_block));
 		onBadBlock(ex);
-		return Block();
+		return Block(bc());
 	}
 }
 
@@ -245,7 +240,7 @@ void Client::onBadBlock(Exception& _ex) const
 		{
 			RLP r(*ed);
 			if (r[0].toInt<int>() == 0)
-				report["hints"]["minerVersion"] = r[1].toString();
+				report["hints"]["sealerVersion"] = r[1].toString();
 		}
 		catch (...) {}
 	}
@@ -273,21 +268,14 @@ void Client::onBadBlock(Exception& _ex) const
 	}
 }
 
-bool Client::isChainBad() const
+u256 Client::networkId() const
 {
-	unsigned numberBad = 0;
-	for (auto const& a: c_canaries)
-		if (!!stateAt(a, 0))
-			numberBad++;
-	return numberBad >= 2;
+	if (auto h = m_host.lock())
+		return h->networkId();
+	return 0;
 }
 
-bool Client::isUpgradeNeeded() const
-{
-	return stateAt(c_canaries[0], 0) == 2;
-}
-
-void Client::setNetworkId(u256 _n)
+void Client::setNetworkId(u256 const& _n)
 {
 	if (auto h = m_host.lock())
 		h->setNetworkId(_n);
@@ -323,14 +311,14 @@ void Client::startedWorking()
 	// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
 	clog(ClientTrace) << "startedWorking()";
 
-	DEV_WRITE_GUARDED(x_preMine)
-		m_preMine.sync(bc());
-	DEV_READ_GUARDED(x_preMine)
+	DEV_WRITE_GUARDED(x_preSeal)
+		m_preSeal.sync(bc());
+	DEV_READ_GUARDED(x_preSeal)
 	{
 		DEV_WRITE_GUARDED(x_working)
-			m_working = m_preMine;
-		DEV_WRITE_GUARDED(x_postMine)
-			m_postMine = m_preMine;
+			m_working = m_preSeal;
+		DEV_WRITE_GUARDED(x_postSeal)
+			m_postSeal = m_preSeal;
 	}
 }
 
@@ -338,43 +326,51 @@ void Client::doneWorking()
 {
 	// Synchronise the state according to the head of the block chain.
 	// TODO: currently it contains keys for *all* blocks. Make it remove old ones.
-	DEV_WRITE_GUARDED(x_preMine)
-		m_preMine.sync(bc());
-	DEV_READ_GUARDED(x_preMine)
+	DEV_WRITE_GUARDED(x_preSeal)
+		m_preSeal.sync(bc());
+	DEV_READ_GUARDED(x_preSeal)
 	{
 		DEV_WRITE_GUARDED(x_working)
-			m_working = m_preMine;
-		DEV_WRITE_GUARDED(x_postMine)
-			m_postMine = m_preMine;
+			m_working = m_preSeal;
+		DEV_WRITE_GUARDED(x_postSeal)
+			m_postSeal = m_preSeal;
 	}
 }
 
 void Client::reopenChain(WithExisting _we)
 {
-	bool wasMining = isMining();
-	if (wasMining)
-		stopMining();
+	reopenChain(bc().chainParams(), _we);
+}
+
+void Client::reopenChain(ChainParams const& _p, WithExisting _we)
+{
+	bool wasSealing = wouldSeal();
+	if (wasSealing)
+		stopSealing();
 	stopWorking();
 
 	m_tq.clear();
 	m_bq.clear();
-	m_sealEngine->cancelGeneration();
+	sealEngine()->cancelGeneration();
 
 	{
-		WriteGuard l(x_postMine);
-		WriteGuard l2(x_preMine);
+		WriteGuard l(x_postSeal);
+		WriteGuard l2(x_preSeal);
 		WriteGuard l3(x_working);
 
-		m_preMine = Block();
-		m_postMine = Block();
-		m_working = Block();
+		auto author = m_preSeal.author();	// backup and restore author.
+		m_preSeal = Block(chainParams().accountStartNonce);
+		m_postSeal = Block(chainParams().accountStartNonce);
+		m_working = Block(chainParams().accountStartNonce);
 
 		m_stateDB = OverlayDB();
-		bc().reopen(_we);
+		bc().reopen(_p, _we);
 		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), _we);
 
-		m_preMine = bc().genesisBlock(m_stateDB);
-		m_postMine = m_preMine;
+		m_preSeal = bc().genesisBlock(m_stateDB);
+		m_preSeal.setAuthor(author);
+		m_postSeal = m_preSeal;
+		m_working = Block(chainParams().accountStartNonce);
 	}
 
 	if (auto h = m_host.lock())
@@ -384,22 +380,22 @@ void Client::reopenChain(WithExisting _we)
 	doWork();
 
 	startWorking();
-	if (wasMining)
-		startMining();
+	if (wasSealing)
+		startSealing();
 }
 
 void Client::clearPending()
 {
-	DEV_WRITE_GUARDED(x_postMine)
+	DEV_WRITE_GUARDED(x_postSeal)
 	{
-		if (!m_postMine.pending().size())
+		if (!m_postSeal.pending().size())
 			return;
 		m_tq.clear();
-		DEV_READ_GUARDED(x_preMine)
-			m_postMine = m_preMine;
+		DEV_READ_GUARDED(x_preSeal)
+			m_postSeal = m_preSeal;
 	}
 
-	startMining();
+	startSealing();
 	h256Hash changeds;
 	noteChanged(changeds);
 }
@@ -469,42 +465,15 @@ void Client::appendFromBlock(h256 const& _block, BlockPolarity _polarity, h256Ha
 	}
 }
 
-void Client::setShouldPrecomputeDAG(bool _precompute)
-{
-	bytes trueBytes {1};
-	bytes falseBytes {0};
-	sealEngine()->setOption("precomputeDAG", _precompute ? trueBytes: falseBytes);
-}
-
-bool Client::isMining() const
-{
-	return Ethash::isWorking(m_sealEngine.get());
-}
-
-WorkingProgress Client::miningProgress() const
-{
-	if (Ethash::isWorking(m_sealEngine.get()))
-		return Ethash::workingProgress(m_sealEngine.get());
-	return WorkingProgress();
-}
-
-u256 Client::hashrate() const
-{
-	u256 r = externalHashrate();
-	if (Ethash::isWorking(m_sealEngine.get()))
-		r += Ethash::workingProgress(m_sealEngine.get()).rate();
-	return r;
-}
-
 ExecutionResult Client::call(Address _dest, bytes const& _data, u256 _gas, u256 _value, u256 _gasPrice, Address const& _from)
 {
 	ExecutionResult ret;
 	try
 	{
-		Block temp;
-		clog(ClientDetail) << "Nonce at " << _dest << " pre:" << m_preMine.transactionsFrom(_dest) << " post:" << m_postMine.transactionsFrom(_dest);
-		DEV_READ_GUARDED(x_postMine)
-			temp = m_postMine;
+		Block temp(chainParams().accountStartNonce);
+		clog(ClientDetail) << "Nonce at " << _dest << " pre:" << m_preSeal.transactionsFrom(_dest) << " post:" << m_postSeal.transactionsFrom(_dest);
+		DEV_READ_GUARDED(x_postSeal)
+			temp = m_postSeal;
 		temp.mutableState().addBalance(_from, _value + _gasPrice * _gas);
 		Executive e(temp);
 		e.setResultRecipient(ret);
@@ -559,12 +528,12 @@ void Client::syncTransactionQueue()
 		return;
 
 	DEV_READ_GUARDED(x_working)
-		DEV_WRITE_GUARDED(x_postMine)
-			m_postMine = m_working;
+		DEV_WRITE_GUARDED(x_postSeal)
+			m_postSeal = m_working;
 
-	DEV_READ_GUARDED(x_postMine)
+	DEV_READ_GUARDED(x_postSeal)
 		for (size_t i = 0; i < newPendingReceipts.size(); i++)
-			appendFromNewPending(newPendingReceipts[i], changeds, m_postMine.pending()[i].sha3());
+			appendFromNewPending(newPendingReceipts[i], changeds, m_postSeal.pending()[i].sha3());
 
 	// Tell farm about new transaction (i.e. restart mining).
 	onPostStateChanged();
@@ -614,32 +583,29 @@ void Client::resyncStateFromChain()
 	if (!isMajorSyncing())
 	{
 		bool preChanged = false;
-		Block newPreMine;
-		DEV_READ_GUARDED(x_preMine)
-			newPreMine = m_preMine;
+		Block newPreMine(chainParams().accountStartNonce);
+		DEV_READ_GUARDED(x_preSeal)
+			newPreMine = m_preSeal;
 
-		// TODO: use m_postMine to avoid re-evaluating our own blocks.
+		// TODO: use m_postSeal to avoid re-evaluating our own blocks.
 		preChanged = newPreMine.sync(bc());
 
-		if (preChanged || m_postMine.beneficiary() != m_preMine.beneficiary())
+		if (preChanged || m_postSeal.author() != m_preSeal.author())
 		{
-			if (isMining())
-				clog(ClientTrace) << "New block on chain.";
-
-			DEV_WRITE_GUARDED(x_preMine)
-				m_preMine = newPreMine;
+			DEV_WRITE_GUARDED(x_preSeal)
+				m_preSeal = newPreMine;
 			DEV_WRITE_GUARDED(x_working)
 				m_working = newPreMine;
-			DEV_READ_GUARDED(x_postMine)
-				for (auto const& t: m_postMine.pending())
+			DEV_READ_GUARDED(x_postSeal)
+				for (auto const& t: m_postSeal.pending())
 				{
-					clog(ClientTrace) << "Resubmitting post-mine transaction " << t;
+					clog(ClientTrace) << "Resubmitting post-seal transaction " << t;
 					auto ir = m_tq.import(t, IfDropped::Retry);
 					if (ir != ImportResult::Success)
 						onTransactionQueueReady();
 				}
-			DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postMine)
-				m_postMine = m_working;
+			DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
+				m_postSeal = m_working;
 
 			onPostStateChanged();
 		}
@@ -652,14 +618,14 @@ void Client::resyncStateFromChain()
 
 void Client::resetState()
 {
-	Block newPreMine;
-	DEV_READ_GUARDED(x_preMine)
-		newPreMine = m_preMine;
+	Block newPreMine(chainParams().accountStartNonce);
+	DEV_READ_GUARDED(x_preSeal)
+		newPreMine = m_preSeal;
 
 	DEV_WRITE_GUARDED(x_working)
 		m_working = newPreMine;
-	DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postMine)
-		m_postMine = m_working;
+	DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
+		m_postSeal = m_working;
 
 	onPostStateChanged();
 	onTransactionQueueReady();
@@ -687,41 +653,46 @@ bool Client::remoteActive() const
 void Client::onPostStateChanged()
 {
 	clog(ClientTrace) << "Post state changed.";
-	rejigMining();
+	rejigSealing();
 	m_remoteWorking = false;
 }
 
-void Client::startMining()
+void Client::startSealing()
 {
-	clog(ClientNote) << "Mining Beneficiary: " << beneficiary();
-	if (beneficiary())
+	clog(ClientNote) << "Mining Beneficiary: " << author();
+	if (author())
 	{
-		m_wouldMine = true;
-		rejigMining();
+		m_wouldSeal = true;
+		rejigSealing();
 	}
 	else
-		clog(ClientNote) << "You need to set a beneficiary in order to mine!";
+		clog(ClientNote) << "You need to set an author in order to seal!";
 }
 
-void Client::rejigMining()
+void Client::rejigSealing()
 {
-	if ((wouldMine() || remoteActive()) && !isMajorSyncing() && (!isChainBad() || mineOnBadChain()) /*&& (forceMining() || transactionsWaiting())*/)
+	if ((wouldSeal() || remoteActive()) && !isMajorSyncing() && sealEngine()->shouldSeal(this))
 	{
-		clog(ClientTrace) << "Rejigging mining...";
+		clog(ClientTrace) << "Rejigging seal engine...";
 		DEV_WRITE_GUARDED(x_working)
 			m_working.commitToSeal(bc(), m_extraData);
 		DEV_READ_GUARDED(x_working)
 		{
-			DEV_WRITE_GUARDED(x_postMine)
-				m_postMine = m_working;
-			m_miningInfo = m_postMine.info();
+			DEV_WRITE_GUARDED(x_postSeal)
+				m_postSeal = m_working;
+			m_sealingInfo = m_postSeal.info();
 		}
 
-		if (m_wouldMine)
-			m_sealEngine->generateSeal(m_miningInfo);
+		if (m_wouldSeal)
+		{
+			sealEngine()->onSealGenerated([=](bytes const& header){
+				this->submitSealed(header);
+			});
+			sealEngine()->generateSeal(m_sealingInfo);
+		}
 	}
-	if (!m_wouldMine)
-		m_sealEngine->cancelGeneration();
+	if (!m_wouldSeal)
+		sealEngine()->cancelGeneration();
 }
 
 void Client::noteChanged(h256Hash const& _filters)
@@ -822,7 +793,7 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 {
 	try
 	{
-		Block ret(m_stateDB);
+		Block ret(bc(), m_stateDB);
 		PopulationStatistics s = ret.populateFromChain(bc(), _blockHash);
 		if (o_stats)
 			swap(s, *o_stats);
@@ -832,7 +803,7 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 	{
 		ex << errinfo_block(bc().block(_blockHash));
 		onBadBlock(ex);
-		return Block();
+		return Block(chainParams().accountStartNonce);
 	}
 }
 
@@ -846,16 +817,16 @@ State Client::state(unsigned _txi, h256 const& _blockHash) const
 	{
 		ex << errinfo_block(bc().block(_blockHash));
 		onBadBlock(ex);
-		return State();
+		return State(chainParams().accountStartNonce);
 	}
 }
 
 eth::State Client::state(unsigned _txi) const
 {
-	DEV_READ_GUARDED(x_postMine)
-		return m_postMine.fromPending(_txi);
+	DEV_READ_GUARDED(x_postSeal)
+		return m_postSeal.fromPending(_txi);
 	assert(false);
-	return State();
+	return State(chainParams().accountStartNonce);
 }
 
 void Client::flushTransactions()
@@ -882,52 +853,11 @@ bool Client::submitSealed(bytes const& _header)
 	bytes newBlock;
 	DEV_READ_GUARDED(x_working)
 	{
-		DEV_WRITE_GUARDED(x_postMine)
-			m_postMine = m_working;
+		DEV_WRITE_GUARDED(x_postSeal)
+			m_postSeal = m_working;
 		newBlock = m_working.blockData();
 	}
 
-	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postMine that contains all trie changes.
+	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postSeal that contains all trie changes.
 	return m_bq.import(&newBlock, true) == ImportResult::Success;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-std::tuple<h256, h256, h256> EthashClient::getEthashWork()
-{
-	// lock the work so a later submission isn't invalidated by processing a transaction elsewhere.
-	// this will be reset as soon as a new block arrives, allowing more transactions to be processed.
-	bool oldShould = shouldServeWork();
-	m_lastGetWork = chrono::system_clock::now();
-
-	if (!m_mineOnBadChain && isChainBad())
-		return std::tuple<h256, h256, h256>();
-
-	// if this request has made us bother to serve work, prep it now.
-	if (!oldShould && shouldServeWork())
-		onPostStateChanged();
-	else
-		// otherwise, set this to true so that it gets prepped next time.
-		m_remoteWorking = true;
-	Ethash::BlockHeader bh = Ethash::BlockHeader(m_miningInfo);
-	Ethash::manuallySetWork(m_sealEngine.get(), bh);
-	return std::tuple<h256, h256, h256>(bh.hashWithout(), bh.seedHash(), bh.boundary());
-}
-
-bool EthashClient::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
-{
-	Ethash::manuallySubmitWork(m_sealEngine.get(), _mixHash, _nonce);
-	return true;
-}
-
