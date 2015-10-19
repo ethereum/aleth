@@ -88,6 +88,8 @@ public:
 			m_privateChain = argv[++i];
 		else if (arg == "--master" && i + 1 < argc)
 			m_masterPassword = argv[++i];
+		else if (arg == "--authority" && i + 1 < argc)
+			m_authorities.push_back(Address(argv[++i]));
 		else
 		{
 			p2p::NodeSpec ns(arg);
@@ -116,6 +118,12 @@ public:
 			auto gasPricer = make_shared<eth::TrivialGasPricer>(0, 0);
 			web3.ethereum()->setGasPricer(gasPricer);
 
+			// Set up fluidity authorities & signing key.
+			web3.ethereum()->setSealOption("authorities", rlp(m_authorities));
+			for (auto i: m_authorities)
+				if (Secret s = m_keyManager.secret(i))
+					web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
+
 			JSLocalConsole console;
 			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<FixedAccountHolder>([&](){ return web3.ethereum(); }, vector<KeyPair>()), vector<KeyPair>(), m_keyManager, *gasPricer);
 			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
@@ -123,7 +131,6 @@ public:
 			while (!Client::shouldExit())
 				console.readAndEval();
 			rpcServer->StopListening();
-
 			break;
 		}
 		}
@@ -173,6 +180,7 @@ private:
 	string m_dbPath = getDataDir("fluidity");
 	string m_masterPassword;
 
+	Addresses m_authorities;
 	string m_privateChain;
 
 	/// Networking params.
