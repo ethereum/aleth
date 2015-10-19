@@ -64,7 +64,7 @@ private:
 	virtual dev::eth::Interface* client() override;					// TODO: rename eth
 	virtual std::shared_ptr<dev::shh::Interface> face() override;	// TODO: rename shh
 	virtual dev::bzz::Interface* bzz() override;
-	virtual dev::WebThreeNetworkFace* network() override;
+	virtual dev::NetworkFace* network() override;
 	virtual dev::WebThreeStubDatabaseFace* db() override;
 
 	virtual std::string get(std::string const& _name, std::string const& _key) override;

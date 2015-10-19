@@ -51,7 +51,7 @@ namespace bzz { class Interface; class Client; }
 
 class Support;
 
-class WebThreeNetworkFace
+class NetworkFace
 {
 public:
 	/// Get information concerning this node.
@@ -68,10 +68,10 @@ public:
 
 	/// Add node to connect to.
 	virtual void addNode(p2p::NodeID const& _node, bi::tcp::endpoint const& _hostEndpoint) = 0;
-	
+
 	/// Require connection to peer.
 	virtual void requirePeer(p2p::NodeID const& _node, bi::tcp::endpoint const& _endpoint) = 0;
-	
+
 	/// Save peers
 	virtual dev::bytes saveNetwork() = 0;
 
@@ -102,6 +102,141 @@ public:
 };
 
 
+class NetworkBase: public NetworkFace
+{
+public:
+	/// Constructor for private instance. If there is already another process on the machine using @a _dbPath, then this will throw an exception.
+	/// ethereum() may be safely static_cast()ed to a eth::Client*.
+	NetworkBase(
+		std::string const& _clientVersion,
+		p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),
+		bytesConstRef _network = bytesConstRef()
+	):
+		m_clientVersion(_clientVersion),
+		m_net(_clientVersion, _n, _network)
+	{
+	}
+
+	/// Destructor.
+	~NetworkBase()
+	{
+		m_net.stop();
+	}
+
+	// Misc stuff:
+
+	static std::string composeClientVersion(std::string const& _client, std::string const& _clientName)
+	{
+		return _client + "-" + "v" + dev::Version + "/" + _clientName + "/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
+	}
+
+	std::string const& clientVersion() const { return m_clientVersion; }
+	void setClientVersion(std::string const& _name) { m_clientVersion = _name; }
+
+	// Network stuff:
+
+	/// Get information on the current peer set.
+	std::vector<p2p::PeerSessionInfo> peers() override
+	{
+		return m_net.peerSessionInfo();
+	}
+
+	/// Same as peers().size(), but more efficient.
+	size_t peerCount() const override
+	{
+		return m_net.peerCount();
+	}
+
+	/// Generalised peer addition.
+	virtual void addPeer(p2p::NodeSpec const& _node, p2p::PeerType _t) override
+	{
+		m_net.addPeer(_node, _t);
+	}
+
+	/// Add node to connect to.
+	virtual void addNode(p2p::NodeID const& _node, bi::tcp::endpoint const& _hostEndpoint) override
+	{
+		m_net.addNode(_node, p2p::NodeIPEndpoint(_hostEndpoint.address(), _hostEndpoint.port(), _hostEndpoint.port()));
+	}
+
+	/// Add node to connect to.
+	void addNode(p2p::NodeID const& _node, std::string const& _hostString) { addNode(_node, p2p::Network::resolveHost(_hostString)); }
+
+	/// Add node to connect to.
+	void addNode(bi::tcp::endpoint const& _endpoint) { addNode(p2p::NodeID(), _endpoint); }
+
+	/// Add node to connect to.
+	void addNode(std::string const& _hostString) { addNode(p2p::NodeID(), _hostString); }
+
+	/// Require connection to peer.
+	void requirePeer(p2p::NodeID const& _node, bi::tcp::endpoint const& _hostEndpoint) override
+	{
+		m_net.requirePeer(_node, p2p::NodeIPEndpoint(_hostEndpoint.address(), _hostEndpoint.port(), _hostEndpoint.port()));
+	}
+
+	/// Require connection to peer.
+	void requirePeer(p2p::NodeID const& _node, std::string const& _hostString) { requirePeer(_node, p2p::Network::resolveHost(_hostString)); }
+
+	/// Save peers
+	dev::bytes saveNetwork() override
+	{
+		return m_net.saveNetwork();
+	}
+
+	/// Sets the ideal number of peers.
+	void setIdealPeerCount(size_t _n) override
+	{
+		return m_net.setIdealPeerCount(_n);
+	}
+
+	/// Experimental. Sets ceiling for incoming connections to multiple of ideal peer count.
+	void setPeerStretch(size_t _n)
+	{
+		return m_net.setPeerStretch(_n);
+	}
+
+	bool haveNetwork() const override { return m_net.haveNetwork(); }
+
+	p2p::NetworkPreferences const& networkPreferences() const override
+	{
+		return m_net.networkPreferences();
+	}
+
+	void setNetworkPreferences(p2p::NetworkPreferences const& _n, bool _dropPeers = false) override
+	{
+		auto had = isNetworkStarted();
+		if (had)
+			stopNetwork();
+		m_net.setNetworkPreferences(_n, _dropPeers);
+		if (had)
+			startNetwork();
+	}
+
+	p2p::NodeInfo nodeInfo() const override { return m_net.nodeInfo(); }
+
+	p2p::NodeID id() const override { return m_net.id(); }
+
+	std::string enode() const override { return m_net.enode(); }
+
+	/// Gets the nodes.
+	p2p::Peers nodes() const override { return m_net.getPeers(); }
+
+	/// Start the network subsystem.
+	void startNetwork() override { m_net.start(); }
+
+	/// Stop the network subsystem.
+	void stopNetwork() override { m_net.stop(); }
+
+	/// Is network working? there may not be any peers yet.
+	bool isNetworkStarted() const override { return m_net.isStarted(); }
+
+protected:
+	std::string m_clientVersion;					///< Our end-application client's name/version.
+
+	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
+};
+
+
 /**
  * @brief Main API hub for interfacing with Web 3 components. This doesn't do any local multiplexing, so you can only have one
  * running on any given machine for the provided DB path.
@@ -112,7 +247,7 @@ public:
  *
  * Provides a baseline for the multiplexed multi-protocol session class, WebThree.
  */
-class WebThreeDirect: public WebThreeNetworkFace
+class WebThreeDirect: public NetworkBase
 {
 public:
 	/// Constructor for private instance. If there is already another process on the machine using @a _dbPath, then this will throw an exception.
@@ -206,10 +341,6 @@ public:
 	bool isNetworkStarted() const override { return m_net.isStarted(); }
 
 private:
-	std::string m_clientVersion;					///< Our end-application client's name/version.
-
-	p2p::Host m_net;								///< Should run in background and send us events when blocks found and allow us to send blocks as required.
-
 	std::unique_ptr<eth::Client> m_ethereum;		///< Client for Ethereum ("eth") protocol.
 	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Client for Whisper ("shh") protocol.
 	std::shared_ptr<bzz::Client> m_swarm;			///< Client for Swarm ("bzz") protocol.

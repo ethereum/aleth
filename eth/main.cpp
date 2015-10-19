@@ -215,33 +215,6 @@ void importPresale(KeyManager& _km, string const& _file, function<string()> _pas
 	_km.import(k.secret(), "Presale wallet" + _file + " (insecure)");
 }
 
-Address c_config = Address("ccdeac59d35627b7de09332e819d5159e7bb7250");
-string pretty(h160 _a, dev::eth::State const& _st)
-{
-	string ns;
-	h256 n;
-	if (h160 nameReg = (u160)_st.storage(c_config, 0))
-		n = _st.storage(nameReg, (u160)(_a));
-	if (n)
-	{
-		std::string s((char const*)n.data(), 32);
-		if (s.find_first_of('\0') != string::npos)
-			s.resize(s.find_first_of('\0'));
-		ns = " " + s;
-	}
-	return ns;
-}
-
-inline bool isPrime(unsigned _number)
-{
-	if (((!(_number & 1)) && _number != 2 ) || (_number < 2) || (_number % 3 == 0 && _number != 3))
-		return false;
-	for(unsigned k = 1; 36 * k * k - 12 * k < _number; ++k)
-		if ((_number % (6 * k + 1) == 0) || (_number % (6 * k - 1) == 0))
-			return false;
-	return true;
-}
-
 enum class NodeMode
 {
 	PeerServer,
@@ -333,7 +306,7 @@ int main(int argc, char** argv)
 	
 	unsigned peers = 11;
 	unsigned peerStretch = 7;
-	std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
+	std::map<NodeID, pair<NodeIPEndpoint, bool>> preferredNodes;
 	bool bootstrap = true;
 	bool disableDiscovery = false;
 	bool pinning = false;
@@ -1034,27 +1007,7 @@ int main(int argc, char** argv)
 		cout << imported << " imported in " << e << " seconds at " << (round(imported * 10 / e) / 10) << " blocks/s (#" << web3.ethereum()->number() << ")" << endl;
 		return 0;
 	}
-/*
-	if (c_network == eth::Network::Frontier && !yesIReallyKnowWhatImDoing)
-	{
-		auto pd = contents(getDataDir() + "primes");
-		unordered_set<unsigned> primes = RLP(pd).toUnorderedSet<unsigned>();
-		while (true)
-		{
-			if (!prime)
-				try
-				{
-					prime = stoi(getPassword("To enter the Frontier, enter a 6 digit prime that you have not entered before: "));
-				}
-				catch (...) {}
-			if (isPrime(prime) && !primes.count(prime))
-				break;
-			prime = 0;
-		}
-		primes.insert(prime);
-		writeFile(getDataDir() + "primes", rlp(primes));
-	}
-*/
+
 	if (keyManager.exists())
 	{
 		if (!keyManager.load(masterPassword))

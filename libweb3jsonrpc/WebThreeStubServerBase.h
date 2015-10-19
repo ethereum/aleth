@@ -36,7 +36,7 @@
 
 namespace dev
 {
-class WebThreeNetworkFace;
+class NetworkFace;
 class KeyPair;
 namespace eth
 {
@@ -217,7 +217,7 @@ protected:
 	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
 	virtual std::shared_ptr<dev::shh::Interface> face() = 0;	// TODO: rename to shh
 	virtual dev::bzz::Interface* bzz() = 0;
-	virtual dev::WebThreeNetworkFace* network() = 0;
+	virtual dev::NetworkFace* network() = 0;
 	virtual dev::WebThreeStubDatabaseFace* db() = 0;
 
 	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;

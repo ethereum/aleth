@@ -333,7 +333,7 @@ std::shared_ptr<dev::shh::Interface> WebThreeStubServer::face()
 	return m_web3.whisper();
 }
 
-dev::WebThreeNetworkFace* WebThreeStubServer::network()
+dev::NetworkFace* WebThreeStubServer::network()
 {
 	return &m_web3;
 }
