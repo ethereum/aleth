@@ -148,7 +148,7 @@ void EthereumPeer::requestHashes(h256 const& _lastHash)
 	}
 	setAsking(Asking::Hashes);
 	RLPStream s;
-	prep(s, GetBlockHashesPacket, 2) << _lastHash << c_maxHashesAsk;
+	prep(s, GetBlockHeadersPacket, 2) << _lastHash << c_maxHashesAsk;
 	clog(NetMessageDetail) << "Requesting block hashes staring from " << _lastHash;
 	m_syncHash = _lastHash;
 	m_syncHashNumber = 0;
@@ -246,7 +246,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		host()->onPeerTransactions(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())), _r);
 		break;
 	}
-	case GetBlockHashesPacket:
+	case GetBlockHeadersPacket:
 	{
 		/// Packet layout:
 		/// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]

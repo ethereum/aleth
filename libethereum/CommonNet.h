@@ -60,7 +60,7 @@ enum
 	StatusPacket = 0,
 	NewBlockHashesPacket,
 	TransactionsPacket,
-	GetBlockHashesPacket,
+	GetBlockHeadersPacket,
 	BlockHashesPacket,
 	GetBlocksPacket,
 	BlocksPacket,
