@@ -312,7 +312,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			if (!hash)
 				break;
 
-			s << host()->chain().headerData(hash);
+			s.appendRaw(host()->chain().headerData(hash));
 			hash = host()->chain().details(hash).parent;
 		}
 		sealAndSend(s);
