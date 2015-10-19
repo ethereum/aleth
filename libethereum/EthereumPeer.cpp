@@ -306,7 +306,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		auto hash = host()->chain().numberHash(static_cast<unsigned>(blockNumber));
 
 		RLPStream s;
-		prep(s, BlockHashesPacket, numHeadersToSend);
+		prep(s, BlockHeadersPacket, numHeadersToSend);
 		for (unsigned i = 0; i != numHeadersToSend; ++i)
 		{
 			if (!hash)
@@ -319,7 +319,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		addRating(0);
 		break;
 	}
-	case BlockHashesPacket:
+	case BlockHeadersPacket:
 	{
 		unsigned itemCount = _r.itemCount();
 		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");

@@ -61,7 +61,7 @@ enum
 	NewBlockHashesPacket,
 	TransactionsPacket,
 	GetBlockHeadersPacket,
-	BlockHashesPacket,
+	BlockHeadersPacket,
 	GetBlocksPacket,
 	BlocksPacket,
 	NewBlockPacket,
