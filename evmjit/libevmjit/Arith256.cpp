@@ -23,7 +23,7 @@ Arith256::Arith256(IRBuilder& _builder) :
 	CompilerHelper(_builder)
 {}
 
-void Arith256::debug(llvm::Value *_value, char _c, llvm::Module &_module, IRBuilder &_builder)
+void Arith256::debug(llvm::Value* _value, char _c, llvm::Module& _module, IRBuilder& _builder)
 {
 	static const auto funcName = "debug";
 	auto func = _module.getFunction(funcName);
@@ -35,7 +35,7 @@ void Arith256::debug(llvm::Value *_value, char _c, llvm::Module &_module, IRBuil
 
 namespace
 {
-llvm::Function *generateLongMulFunc(char const *_funcName, llvm::IntegerType *_ty, llvm::IntegerType *_wordTy, llvm::Module &_module)
+llvm::Function* generateLongMulFunc(char const* _funcName, llvm::IntegerType* _ty, llvm::IntegerType* _wordTy, llvm::Module& _module)
 {
 	auto func = llvm::Function::Create(llvm::FunctionType::get(_ty, {_ty, _ty}, false), llvm::Function::PrivateLinkage, _funcName, &_module);
 	func->setDoesNotAccessMemory();
