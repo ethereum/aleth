@@ -36,6 +36,8 @@ const char* WorkInChannel::name() { return EthOrange "⚒" EthGreen "▬▶"; }
 const char* WorkOutChannel::name() { return EthOrange "⚒" EthNavy "◀▬"; }
 const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
+namespace dev { namespace eth { const u256 c_maxGasEstimate = 50000000; } }
+
 Block ClientBase::asOf(BlockNumber _h) const
 {
 	if (_h == PendingBlock)
@@ -73,9 +75,10 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 	try
 	{
 		Block temp = asOf(_blockNumber);
-		u256 n = temp.transactionsFrom(_from);
+		u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
 		u256 gas = _gas == UndefinedU256 ? gasLimitRemaining() : _gas;
-		Transaction t(_value, _gasPrice, gas, _dest, _data, n);
+		u256 gasPrice = _gasPrice == UndefinedU256 ? gasBidPrice() : _gasPrice;
+		Transaction t(_value, gasPrice, gas, _dest, _data, nonce);
 		t.forceSender(_from);
 		if (_ff == FudgeFactor::Lenient)
 			temp.mutableState().addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
@@ -107,6 +110,57 @@ ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes cons
 		// TODO: Some sort of notification of failure.
 	}
 	return ret;
+}
+
+std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u256 _value, Address _dest, bytes const& _data, u256 _maxGas, u256 _gasPrice, BlockNumber _blockNumber, GasEstimationCallback const& _callback)
+{
+	try
+	{
+		u256 upperBound = _maxGas;
+		if (upperBound == UndefinedU256 || upperBound > c_maxGasEstimate)
+			upperBound = c_maxGasEstimate;
+		u256 lowerBound = (u256)Transaction::gasRequired(_data, 0);
+		Block block = asOf(_blockNumber);
+		u256 gasPrice = _gasPrice == UndefinedU256 ? gasBidPrice() : _gasPrice;
+		ExecutionResult er;
+		ExecutionResult lastGood;
+		bool good = false;
+		while (upperBound != lowerBound)
+		{
+			u256 mid = (lowerBound + upperBound) / 2;
+			u256 n = block.transactionsFrom(_from);
+			Transaction t;
+			if (_dest)
+				t = Transaction(_value, gasPrice, mid, _dest, _data, n);
+			else
+				t = Transaction(_value, gasPrice, mid, _data, n);
+			t.forceSender(_from);
+			EnvInfo env(block.info(), bc().lastHashes(), 0);
+			env.setGasLimit(mid);
+			State tempState(block.state());
+			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
+			er = tempState.execute(env, t, Permanence::Reverted).first;
+			if (er.excepted == TransactionException::OutOfGas || er.excepted == TransactionException::OutOfGasBase || er.excepted == TransactionException::OutOfGasIntrinsic || er.codeDeposit == CodeDeposit::Failed)
+				lowerBound = lowerBound == mid ? upperBound : mid;
+			else
+			{
+				lastGood = er;
+				upperBound = upperBound == mid ? lowerBound : mid;
+				good = true;
+			}
+
+			if (_callback)
+				_callback(GasEstimationProgress { lowerBound, upperBound });
+		}
+		if (_callback)
+			_callback(GasEstimationProgress { lowerBound, upperBound });
+		return make_pair(upperBound, good ? lastGood : er);
+	}
+	catch (...)
+	{
+		// TODO: Some sort of notification of failure.
+		return make_pair(u256(), ExecutionResult());
+	}
 }
 
 ImportResult ClientBase::injectBlock(bytes const& _block)

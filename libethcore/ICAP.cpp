@@ -143,7 +143,7 @@ pair<Address, bytes> ICAP::lookup(std::function<bytes(Address, bytes)> const& _c
 		Address r = _reg;
 		for (unsigned i = 0; i < ss.size() - 1; ++i)
 			r = abiOut<Address>(_call(r, abiIn("subRegistrar(bytes32)", ss[i])));*/
-		return abiOut<Address>(_call(_reg, abiIn("addr(bytes32)", s)));
+		return abiOut<Address>(_call(_reg, abiIn("addr(string)", s)));
 	};
 	if (m_asset == "XET")
 	{
