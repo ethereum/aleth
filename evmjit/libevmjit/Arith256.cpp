@@ -59,7 +59,8 @@ llvm::Function* generateLongMulFunc(char const* _funcName, llvm::IntegerType* _t
 	auto _1 = builder.getInt32(1);
 	auto wordMask = builder.CreateZExt(llvm::ConstantInt::get(_wordTy, -1, true), dwordTy);
 	auto wordBitWidth = builder.getInt32(_wordTy->getBitWidth());
-	auto dim = builder.getInt32(_ty->getBitWidth() / _wordTy->getBitWidth()); // FIXME: assert about word type
+	assert(_ty->getBitWidth() / _wordTy->getBitWidth() >= 4 && "Word type must be at least 4 times smaller than full type");
+	auto dim = builder.getInt32(_ty->getBitWidth() / _wordTy->getBitWidth());
 	builder.CreateBr(outerLoopHeaderBB);
 
 	auto extractWordAsDword = [&](llvm::Value* _a, llvm::Value* _idx, llvm::Twine const& _name)
