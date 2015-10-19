@@ -368,6 +368,7 @@ int main(int argc, char** argv)
 
 	/// Wallet password stuff
 	string masterPassword;
+	bool masterSet = false;
 	
 	/// Whisper
 	bool useWhisper = false;
@@ -423,7 +424,10 @@ int main(int argc, char** argv)
 		else if (arg == "--password" && i + 1 < argc)
 			passwordsToNote.push_back(argv[++i]);
 		else if (arg == "--master" && i + 1 < argc)
+		{
 			masterPassword = argv[++i];
+			masterSet = true;
+		}
 		else if ((arg == "-I" || arg == "--import" || arg == "import") && i + 1 < argc)
 		{
 			mode = OperationMode::Import;
@@ -1055,28 +1059,44 @@ int main(int argc, char** argv)
 		writeFile(getDataDir() + "primes", rlp(primes));
 	}
 */
-	if (keyManager.exists())
+	try
 	{
-		if (!keyManager.load(masterPassword))
-			while (true)
-			{
-				masterPassword = getPassword("Please enter your MASTER password: ");
-				if (keyManager.load(masterPassword))
-					break;
-				cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " + getDataDir("ethereum") + "/keys.info" << endl;
-			}
-	}
-	else
-	{
-		while (true)
+		if (keyManager.exists())
 		{
-			masterPassword = getPassword("Please enter a MASTER password to protect your key store (make it strong!): ");
-			string confirm = getPassword("Please confirm the password by entering it again: ");
-			if (masterPassword == confirm)
-				break;
-			cout << "Passwords were different. Try again." << endl;
+			if (!keyManager.load(masterPassword))
+			{
+				if (masterSet)
+				{
+					cerr << "Incorrect password specified." << endl;
+					return -1;
+				}
+				while (true)
+				{
+					masterPassword = getPassword("Please enter your MASTER password: ");
+					if (keyManager.load(masterPassword))
+						break;
+					cout << "The password you entered is incorrect. If you have forgotten your password, and you wish to start afresh, manually remove the file: " + getDataDir("ethereum") + "/keys.info" << endl;
+				}
+			}
 		}
-		keyManager.create(masterPassword);
+		else
+		{
+			if (!masterSet)
+				while (true)
+				{
+					masterPassword = getPassword("Please enter a MASTER password to protect your key store (make it strong!): ");
+					string confirm = getPassword("Please confirm the password by entering it again: ");
+					if (masterPassword == confirm)
+						break;
+					cout << "Passwords were different. Try again." << endl;
+				}
+			keyManager.create(masterPassword);
+		}
+	}
+	catch(...)
+	{
+		cerr << "Error initializing key manager: " << boost::current_exception_diagnostic_information() << endl;
+		return -1;
 	}
 
 	for (auto const& presale: presaleImports)
