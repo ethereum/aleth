@@ -251,74 +251,69 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		/// Packet layout:
 		/// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]
 		auto blockId = _r[0];
-		auto maxHeaders = _r[1].toInt<unsigned>();
-		auto skip = _r[2].toInt<unsigned>();
+		auto maxHeaders = _r[1].toInt<bigint>();
+		auto skip = _r[2].toInt<bigint>();
 		auto reverse = _r[3].toInt<bool>();
 
-		h256 blockHash;
-		unsigned blockNumber = 0;
+		bigint blockNumber;
 		if (blockId.size() == 32) // block id is a hash
 		{
-			blockHash = blockId.toHash<h256>();
+			auto blockHash = blockId.toHash<h256>();
 			blockNumber = host()->chain().number(blockHash);
 			clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
-				<< ", maxHeaders: " << maxHeaders
-				<< ", skip: " << skip << ", reverse: " << reverse << ")";
+			<< ", maxHeaders: " << maxHeaders
+			<< ", skip: " << skip << ", reverse: " << reverse << ")";
 		}
 		else // block id is a number
 		{
-			blockNumber = blockId.toInt<unsigned>();
-			blockHash = host()->chain().numberHash(blockNumber); // get hash of numbered block, can be a null
+			blockNumber = blockId.toInt<bigint>();
 			clog(NetMessageSummary) << "GetBlockHeaders (block (number): " << blockNumber
-				<< ", maxHeaders: " << maxHeaders
-				<< ", skip: " << skip << ", reverse: " << reverse << ")";
+			<< ", maxHeaders: " << maxHeaders
+			<< ", skip: " << skip << ", reverse: " << reverse << ")";
 		}
 
-		maxHeaders = std::min(maxHeaders, c_maxHashesToSend); // limit the response size according to local config
-		auto lastBlockNumber = host()->chain().number();
-
-		unsigned beginBlockNumber = 0;
-
+		// Find a top requested block
 		if (reverse)
 		{
-			if (blockNumber < skip) //FIXME: reverse if-else
-				maxHeaders = 0;
-			else
+			blockNumber -= skip; // in descending order just skip blocks
+			if (blockNumber < 0)
 			{
-				beginBlockNumber = blockNumber - skip;
-				// if beginBlockNumber == UINT_MAX we get 0, but that's ok (block number invalid in first place)
-				maxHeaders = std::min(maxHeaders, beginBlockNumber + 1);
+				// TODO: Better solution would be to use safe u256 and treat all catches of overflows as stupid requests.
+				clog(NetImpolite) << "Requesting negative starting block.";
+				addRating(-10);
+				break;
 			}
 		}
 		else
+			blockNumber += skip + maxHeaders - 1; // in ascending order find number of the block that end the requested subset
+
+		auto lastBlockNumber = host()->chain().number();
+		if (blockNumber > lastBlockNumber)
 		{
-			auto low = static_cast<uint64_t>(blockNumber) + skip;
-			static_assert(sizeof(low) > sizeof(blockNumber), "Use bigger type to catch int overflows");
-			if (low > lastBlockNumber)
+			maxHeaders -= (blockNumber - lastBlockNumber);
+			if (maxHeaders < 0) // we don't have any of requested blocks
 				maxHeaders = 0;
-			else if (maxHeaders > 0)
-			{
-				auto high = low + maxHeaders - 1;
-				//beginBlockNumber = static_cast<decltype(beginBlockNumber)>(beg);
-				if (high > lastBlockNumber)
-					high = lastBlockNumber;
-				beginBlockNumber = static_cast<decltype(beginBlockNumber)>(high);
-				maxHeaders = static_cast<decltype(maxHeaders)>(high - low + 1);
-			}
+			blockNumber = lastBlockNumber;
 		}
 
-		auto hash = host()->chain().numberHash(beginBlockNumber);
+		maxHeaders = std::min(maxHeaders, bigint{c_maxHashesToSend}); // limit the response size according to local config
+
+		// These asserts validate the logic above. In case we missed something we will send a stupid answer.
+		assert(blockNumber >= 0 && blockNumber <= lastBlockNumber && "Invalid calculated block number");
+		assert(maxHeaders >= 0 && maxHeaders <= c_maxHashesToSend && "Invalid calculated number of headers");
+
+		auto numHeadersToSend = static_cast<decltype(c_maxHashesToSend)>(maxHeaders);
+		auto hash = host()->chain().numberHash(static_cast<unsigned>(blockNumber));
 
 		RLPStream s;
-		prep(s, BlockHashesPacket, maxHeaders);
-		for (unsigned i = 0; i != maxHeaders; ++i)
+		prep(s, BlockHashesPacket, numHeadersToSend);
+		for (unsigned i = 0; i != numHeadersToSend; ++i)
 		{
 			if (!hash)
 				break;
 
-			auto details = host()->chain().details(hash);
-			s << hash; // FIXME: Send header, not hash
-			hash = details.parent;
+			s << host()->chain().headerData(hash);
+			hash = host()->chain().details(hash).parent;
 		}
 		sealAndSend(s);
 		addRating(0);
