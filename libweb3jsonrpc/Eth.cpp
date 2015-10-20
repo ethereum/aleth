@@ -27,15 +27,14 @@
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
 #include <libethereum/Client.h>
+#include <libethereum/EthashClient.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
-
 #if ETH_SOLIDITY || !ETH_TRUE
 #include <libsolidity/CompilerStack.h>
 #include <libsolidity/Scanner.h>
 #include <libsolidity/SourceReferenceFormatter.h>
 #endif
-
 #include "Eth.h"
 #include "AccountHolder.h"
 #include "JsonHelper.h"
@@ -66,17 +65,31 @@ string Eth::eth_protocolVersion()
 
 string Eth::eth_coinbase()
 {
-	return toJS(client()->beneficiary());
+	return toJS(client()->author());
 }
 
 string Eth::eth_hashrate()
 {
-	return toJS(client()->hashrate());
+	try
+	{
+		return toJS(asEthashClient(client())->hashrate());
+	}
+	catch (InvalidSealEngine&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
 bool Eth::eth_mining()
 {
-	return client()->isMining();
+	try
+	{
+		return asEthashClient(client())->isMining();
+	}
+	catch (InvalidSealEngine&)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
 string Eth::eth_gasPrice()
@@ -320,9 +333,9 @@ Json::Value Eth::eth_getBlockByHash(string const& _blockHash, bool _includeTrans
 			return Json::Value(Json::nullValue);
 
 		if (_includeTransactions)
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h));
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
 		else
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h));
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
 	}
 	catch (...)
 	{
@@ -339,9 +352,9 @@ Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeT
 			return Json::Value(Json::nullValue);
 
 		if (_includeTransactions)
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h));
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactions(h), client()->sealEngine());
 		else
-			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h));
+			return toJson(client()->blockInfo(h), client()->blockDetails(h), client()->uncleHashes(h), client()->transactionHashes(h), client()->sealEngine());
 	}
 	catch (...)
 	{
@@ -420,7 +433,7 @@ Json::Value Eth::eth_getUncleByBlockHashAndIndex(string const& _blockHash, strin
 {
 	try
 	{
-		return toJson(client()->uncle(jsToFixed<32>(_blockHash), jsToInt(_uncleIndex)));
+		return toJson(client()->uncle(jsToFixed<32>(_blockHash), jsToInt(_uncleIndex)), client()->sealEngine());
 	}
 	catch (...)
 	{
@@ -432,7 +445,7 @@ Json::Value Eth::eth_getUncleByBlockNumberAndIndex(string const& _blockNumber, s
 {
 	try
 	{
-		return toJson(client()->uncle(jsToBlockNumber(_blockNumber), jsToInt(_uncleIndex)));
+		return toJson(client()->uncle(jsToBlockNumber(_blockNumber), jsToInt(_uncleIndex)), client()->sealEngine());
 	}
 	catch (...)
 	{
@@ -646,12 +659,19 @@ Json::Value Eth::eth_getLogsEx(Json::Value const& _json)
 
 Json::Value Eth::eth_getWork()
 {
-	Json::Value ret(Json::arrayValue);
-	auto r = client()->getEthashWork();
-	ret.append(toJS(get<0>(r)));
-	ret.append(toJS(get<1>(r)));
-	ret.append(toJS(get<2>(r)));
-	return ret;
+	try
+	{
+		Json::Value ret(Json::arrayValue);
+		auto r = asEthashClient(client())->getEthashWork();
+		ret.append(toJS(get<0>(r)));
+		ret.append(toJS(get<1>(r)));
+		ret.append(toJS(get<2>(r)));
+		return ret;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
 Json::Value Eth::eth_syncing()
@@ -671,7 +691,7 @@ bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mix
 {
 	try
 	{
-		return client()->submitEthashWork(jsToFixed<32>(_mixHash), jsToFixed<Nonce::size>(_nonce));
+		return asEthashClient(client())->submitEthashWork(jsToFixed<32>(_mixHash), jsToFixed<Nonce::size>(_nonce));
 	}
 	catch (...)
 	{
@@ -681,8 +701,15 @@ bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mix
 
 bool Eth::eth_submitHashrate(string const& _hashes, string const& _id)
 {
-	client()->submitExternalHashrate(jsToInt<32>(_hashes), jsToFixed<32>(_id));
-	return true;
+	try
+	{
+		asEthashClient(client())->submitExternalHashrate(jsToInt<32>(_hashes), jsToFixed<32>(_id));
+		return true;
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
 }
 
 string Eth::eth_register(string const& _address)

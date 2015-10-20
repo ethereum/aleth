@@ -202,7 +202,7 @@ h256s WhisperHost::checkWatch(unsigned _watchId)
 void WhisperHost::doWork()
 {
 	for (auto i: peerSessions())
-		i.first->cap<WhisperPeer>().get()->sendMessages();
+		i.first->cap<WhisperPeer>()->sendMessages();
 	cleanup();
 }
 
@@ -219,7 +219,7 @@ void WhisperHost::cleanup()
 void WhisperHost::noteAdvertiseTopicsOfInterest()
 {
 	for (auto i: peerSessions())
-		i.first->cap<WhisperPeer>().get()->noteAdvertiseTopicsOfInterest();
+		i.first->cap<WhisperPeer>()->noteAdvertiseTopicsOfInterest();
 }
 
 bool WhisperHost::isWatched(Envelope const& _e) const

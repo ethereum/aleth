@@ -69,10 +69,7 @@ bytes Support::auxLookup(strings const& _path, std::string const& _query) const
 
 Address Support::registrar() const
 {
-	if (c_network == Network::Frontier)
-		return Address("c6d9d2cd449a754c494264e1809c50e34d64562b");
-	else
-		return Address("5e70c0bbcd5636e0f9f9316e9f8633feb64d4050");
+	return Address(m_web3->ethereum()->chainParams().otherParams.at("registrar"));
 }
 
 Address Support::urlHint() const

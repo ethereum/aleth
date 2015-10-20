@@ -24,6 +24,7 @@
 
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
+#include <libethcore/Sealer.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
@@ -83,7 +84,7 @@ Json::Value toJson(p2p::PeerSessionInfo const& _p)
 namespace eth
 {
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi)
+Json::Value toJson(dev::eth::BlockInfo const& _bi, SealEngineFace* _sealer)
 {
 	Json::Value res;
 	if (_bi)
@@ -91,22 +92,22 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi)
 		DEV_IGNORE_EXCEPTIONS(res["hash"] = toJS(_bi.hash()));
 		res["parentHash"] = toJS(_bi.parentHash());
 		res["sha3Uncles"] = toJS(_bi.sha3Uncles());
-		res["miner"] = toJS(_bi.beneficiary());
+		res["author"] = toJS(_bi.author());
 		res["stateRoot"] = toJS(_bi.stateRoot());
 		res["transactionsRoot"] = toJS(_bi.transactionsRoot());
 		res["receiptsRoot"] = toJS(_bi.receiptsRoot());
-		res["difficulty"] = toJS(_bi.difficulty());
 		res["number"] = toJS(_bi.number());
 		res["gasUsed"] = toJS(_bi.gasUsed());
 		res["gasLimit"] = toJS(_bi.gasLimit());
-		res["timestamp"] = toJS(_bi.timestamp());
 		res["extraData"] = toJS(_bi.extraData());
 		res["logsBloom"] = toJS(_bi.logBloom());
-		res["target"] = toJS(_bi.boundary());
+		res["timestamp"] = toJS(_bi.timestamp());
+		// TODO: remove once JSONRPC spec is updated to use "author" over "miner".
+		res["miner"] = toJS(_bi.author());
+		if (_sealer)
+			for (auto const& i: _sealer->jsInfo(_bi))
+				res[i.first] = i.second;
 
-		// TODO: move into ProofOfWork.
-//		res["nonce"] = toJS(_bi.proof.nonce);
-//		res["seedHash"] = toJS(_bi.proofCache());
 	}
 	return res;
 }
@@ -131,9 +132,9 @@ Json::Value toJson(dev::eth::Transaction const& _t, std::pair<h256, unsigned> _l
 	return res;
 }
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, UncleHashes const& _us, Transactions const& _ts)
+Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, UncleHashes const& _us, Transactions const& _ts, SealEngineFace* _face)
 {
-	Json::Value res = toJson(_bi);
+	Json::Value res = toJson(_bi, _face);
 	if (_bi)
 	{
 		res["totalDifficulty"] = toJS(_bd.totalDifficulty);
@@ -147,9 +148,9 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, Uncl
 	return res;
 }
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, UncleHashes const& _us, TransactionHashes const& _ts)
+Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, UncleHashes const& _us, TransactionHashes const& _ts, SealEngineFace* _face)
 {
-	Json::Value res = toJson(_bi);
+	Json::Value res = toJson(_bi, _face);
 	if (_bi)
 	{
 		res["totalDifficulty"] = toJS(_bd.totalDifficulty);
