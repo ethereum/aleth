@@ -139,6 +139,8 @@ public:
 			auto v = argv[++i];
 			m_kdfParams[n] = v;
 		}
+		else if (arg == "newbare")
+			m_mode = OperationMode::NewBare;
 		else if (arg == "inspect")
 			m_mode = OperationMode::Inspect;
 		else if ((arg == "-s" || arg == "--sign-tx" || arg == "sign") && i + 1 < argc)
