@@ -55,7 +55,7 @@
 { "name": "eth_fetchQueuedTransactions", "params": [""], "order": [], "returns": []},
 { "name": "eth_signTransaction", "params": [{}], "order": [], "returns": ""},
 { "name": "eth_inspectTransaction", "params": [""], "order": [], "returns": {}},
-{ "name": "eth_sendRawTransaction", "params": [""], "order": [], "returns": true},
+{ "name": "eth_sendRawTransaction", "params": [""], "order": [], "returns": ""},
 { "name": "eth_notePassword", "params": [""], "order": [], "returns": true},
 { "name": "eth_syncing", "params": [], "order": [], "returns": {}},
 { "name": "eth_estimateGas", "params": [{}], "order": [], "returns": ""},
