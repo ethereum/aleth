@@ -581,8 +581,12 @@ Json::Value WebThreeStubServerBase::admin_net_nodeInfo(const string& _session)
 bool WebThreeStubServerBase::admin_exit(string const& _session)
 {
 	ADMIN;
-	Client::exitHandler(SIGTERM);
-	return true;
+	if (system())
+	{
+		system()->exit();
+		return true;
+	}
+	return false;
 }
 
 bool WebThreeStubServerBase::admin_eth_setMining(bool _on, std::string const& _session)

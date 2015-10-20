@@ -49,7 +49,7 @@ struct SessionPermissions
 class WebThreeStubServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
 {
 public:
-	WebThreeStubServer(jsonrpc::AbstractServerConnector& _conn, dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
+	WebThreeStubServer(jsonrpc::AbstractServerConnector& _conn, dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp, dev::SystemManager* _system = nullptr);
 
 	virtual std::string web3_clientVersion() override;
 
@@ -92,14 +92,17 @@ private:
 	virtual bool personal_unlockAccount(const std::string& _address, const std::string& _password, int _duration);
 
 private:
+	SystemManager* system() override { return m_system; }
+
 	h256 blockHash(std::string const& _blockNumberOrHash) const;
 
-	dev::eth::BlockChain const& bc() const;
-	dev::eth::BlockQueue const& bq() const;
+	eth::BlockChain const& bc() const;
+	eth::BlockQueue const& bq() const;
 
-	dev::WebThreeDirect& m_web3;
-	dev::eth::KeyManager& m_keyMan;
-	dev::eth::TrivialGasPricer& m_gp;
+	WebThreeDirect& m_web3;
+	SystemManager* m_system = nullptr;
+	eth::KeyManager& m_keyMan;
+	eth::TrivialGasPricer& m_gp;
 	ldb::ReadOptions m_readOptions;
 	ldb::WriteOptions m_writeOptions;
 	ldb::DB* m_db;

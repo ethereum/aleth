@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 {
 	cnote << "Testing jsonrpc transact...";
 	string coinbase = jsonrpcClient->eth_coinbase();
-	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->address());
+	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->author());
 	
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	web3->ethereum()->setAuthor(address);
 
 	coinbase = jsonrpcClient->eth_coinbase();
-	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->address());
+	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->author());
 	BOOST_CHECK_EQUAL(jsToAddress(coinbase), address);
 	
 	jsonrpcServer->setAccounts({key});

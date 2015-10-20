@@ -28,6 +28,7 @@
 #include <jsonrpccpp/server.h>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcrypto/Common.h>
+#include <libwebthree/SystemManager.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "AbstractWebThreeStubServer.h"
@@ -172,6 +173,7 @@ public:
 	virtual Json::Value shh_getFilterChanges(std::string const& _filterId);
 	virtual Json::Value shh_getMessages(std::string const& _filterId);
 
+	virtual bool admin_exit(std::string const& _session);
 	virtual bool admin_setVerbosity(int _v, std::string const& _session);
 	virtual bool admin_net_start(std::string const& _session);
 	virtual bool admin_net_stop(std::string const& _session);
@@ -179,7 +181,6 @@ public:
 	virtual Json::Value admin_net_peers(std::string const& _session);
 	virtual Json::Value admin_net_nodeInfo(std::string const& _session);
 
-	virtual bool admin_exit(std::string const& _session);
 	virtual bool admin_eth_setMining(bool _on, std::string const& _session);
 	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) { (void)_session; return Json::Value(); }
 	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
@@ -214,16 +215,17 @@ protected:
 	void setTransactionDefaults(eth::TransactionSkeleton & _t);
 	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const { (void)_session; (void)_l; return false; }
 
-	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
-	virtual std::shared_ptr<dev::shh::Interface> face() = 0;	// TODO: rename to shh
-	virtual dev::bzz::Interface* bzz() = 0;
-	virtual dev::NetworkFace* network() = 0;
-	virtual dev::WebThreeStubDatabaseFace* db() = 0;
+	virtual eth::Interface* client() = 0;					// TODO: rename to eth
+	virtual std::shared_ptr<shh::Interface> face() = 0;	// TODO: rename to shh
+	virtual bzz::Interface* bzz() = 0;
+	virtual NetworkFace* network() = 0;
+	virtual WebThreeStubDatabaseFace* db() = 0;
+	virtual SystemManager* system() { return nullptr; }
 
-	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;
+	std::shared_ptr<eth::AccountHolder> m_ethAccounts;
 
-	std::map<dev::Public, dev::Secret> m_shhIds;
-	std::map<unsigned, dev::Public> m_shhWatches;
+	std::map<Public, Secret> m_shhIds;
+	std::map<unsigned, Public> m_shhWatches;
 
 	std::unique_ptr<jsonrpc::AbstractServerConnector> m_ipcConnector;
 	jsonrpc::IClientConnectionHandler* m_handler;

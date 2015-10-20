@@ -49,8 +49,8 @@ void version()
 
 int main(int argc, char** argv)
 {
-	MainCLI m(MainCLI::Mode::Console);
-	g_logVerbosity = 0;
+	MainCLI m;
+	g_logVerbosity = 2;
 
 	for (int i = 1; i < argc; ++i)
 	{

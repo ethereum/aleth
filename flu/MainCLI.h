@@ -25,6 +25,7 @@
 #include <libp2p/NodeTable.h>
 #include <libp2p/Network.h>
 #include <libethcore/KeyManager.h>
+#include <libwebthree/SystemManager.h>
 
 namespace dev
 {
@@ -43,22 +44,26 @@ public:
 	}
 };
 
-class MainCLI: public CLI
+class MainCLI: public CLI, public dev::SystemManager
 {
 public:
 	enum class Mode
 	{
+		Dumb,
 		Console
 	};
 
-	MainCLI(Mode _mode = Mode::Console);
+	MainCLI(Mode _mode = Mode::Dumb);
 
 	bool interpretOption(int& i, int argc, char** argv);
 	void execute();
 
 	static void streamHelp(std::ostream& _out);
 
+	static void staticExitHandler(int) { s_this->m_shouldExit = true; }
+
 private:
+	void exit() override { staticExitHandler(0); }
 	void setup();
 	void setupKeyManager();
 
@@ -86,7 +91,10 @@ private:
 	eth::KeyManager m_keyManager;
 	p2p::NetworkPreferences m_netPrefs;
 
+	std::atomic<bool> m_shouldExit = {false};
 	std::string m_logBuffer;
+
+	static MainCLI* s_this;
 };
 
 }

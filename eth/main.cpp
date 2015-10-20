@@ -121,7 +121,7 @@ void help()
 		<< "    --unsafe-transactions  Allow all transactions to proceed without verification. EXTREMELY UNSAFE."
 		<< endl
 		<< "Client mining:" << endl
-		<< "    -a,--address <addr>  Set the coinbase (mining payout) address to given address (default: auto)." << endl
+		<< "    -a,--address <addr>  Set the author (mining payout) address to given address (default: auto)." << endl
 		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off)." << endl
 		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off)." << endl
 		<< "    --mine-on-wrong-chain  Mine even when we know that it is the wrong chain (default: off)." << endl
@@ -245,6 +245,19 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 	}
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
+
+class ExitHandler: public SystemManager
+{
+public:
+	void exit() { exitHandler(0); }
+	static void exitHandler(int) { s_shouldExit = true; }
+	bool shouldExit() const { return s_shouldExit; }
+
+private:
+	static bool s_shouldExit;
+};
+
+bool ExitHandler::s_shouldExit = false;
 
 int main(int argc, char** argv)
 {
@@ -497,7 +510,7 @@ int main(int argc, char** argv)
 				cerr << "-c is DEPRECATED. It will be removed for the Frontier. Use --client-name instead." << endl;
 			clientName = argv[++i];
 		}
-		else if ((arg == "-a" || arg == "--address" || arg == "--coinbase-address") && i + 1 < argc)
+		else if ((arg == "-a" || arg == "--address" || arg == "--author") && i + 1 < argc)
 			try {
 				author = h160(fromHex(argv[++i], WhenError::Throw));
 			}
@@ -1131,12 +1144,14 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
+	ExitHandler eh;
+
 	if (jsonRPCURL > -1 || ipc)
 	{
 		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 		safeConnector->setAllowedOrigin(rpcCorsDomain);
 		jsonrpcConnector.reset(safeConnector);
-		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
+		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer, &eh);
 		if (jsonRPCURL > -1)
 			jsonrpcServer->StartListening();
 		jsonrpcServer->enableIpc(ipc);
@@ -1162,9 +1177,9 @@ int main(int argc, char** argv)
 	if (!remoteHost.empty())
 		web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
 
-	signal(SIGABRT, &Client::exitHandler);
-	signal(SIGTERM, &Client::exitHandler);
-	signal(SIGINT, &Client::exitHandler);
+	signal(SIGABRT, &ExitHandler::exitHandler);
+	signal(SIGTERM, &ExitHandler::exitHandler);
+	signal(SIGINT, &ExitHandler::exitHandler);
 
 	if (c)
 	{
@@ -1175,10 +1190,10 @@ int main(int argc, char** argv)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
 			JSLocalConsole console;
-			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
+			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer, &eh);
 			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
-			while (!Client::shouldExit())
+			while (!eh.shouldExit())
 			{
 				console.readAndEval();
 				stopSealingAfterXBlocks(c, n, mining);
@@ -1187,11 +1202,11 @@ int main(int argc, char** argv)
 #endif
 		}
 		else
-			while (!Client::shouldExit())
+			while (!eh.shouldExit())
 				stopSealingAfterXBlocks(c, n, mining);
 	}
 	else
-		while (!Client::shouldExit())
+		while (!eh.shouldExit())
 			this_thread::sleep_for(chrono::milliseconds(1000));
 
 #if ETH_JSONRPC

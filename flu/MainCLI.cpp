@@ -30,16 +30,23 @@ using namespace dev;
 using namespace p2p;
 using namespace eth;
 
+MainCLI* MainCLI::s_this = nullptr;
+
 MainCLI::MainCLI(Mode _mode):
 	m_mode(_mode),
 	m_keyManager(getDataDir("fluidity") + "/keys.info")
 {
+	s_this = this;
 }
 
 bool MainCLI::interpretOption(int& i, int argc, char** argv)
 {
 	string arg = argv[i];
-	if (arg == "--client-name" && i + 1 < argc)
+	if (arg == "console")
+		m_mode = Mode::Console;
+	else if (arg == "--path" && i + 1 < argc)
+		m_dbPath = argv[++i];
+	else if (arg == "--client-name" && i + 1 < argc)
 		m_clientName = argv[++i];
 	else if (arg == "--public-ip" && i + 1 < argc)
 		m_publicIP = argv[++i];
@@ -72,13 +79,20 @@ void MainCLI::execute()
 	switch (m_mode)
 	{
 	case Mode::Console:
+	case Mode::Dumb:
 	{
+		auto nodesState = contents(m_dbPath + "/network.rlp");
 		dev::WebThreeDirect web3(
-			WebThreeDirect::composeClientVersion("web3", m_clientName),
+			WebThreeDirect::composeClientVersion("flu", m_clientName),
 			m_dbPath,
 			WithExisting::Trust,
 			set<string>{"flu"},
-			m_netPrefs);
+			m_netPrefs,
+			&nodesState);
+
+		signal(SIGABRT, &MainCLI::staticExitHandler);
+		signal(SIGTERM, &MainCLI::staticExitHandler);
+		signal(SIGINT, &MainCLI::staticExitHandler);
 
 		// TODO: remove all gas pricing components.
 		auto gasPricer = make_shared<eth::TrivialGasPricer>(0, 0);
@@ -88,27 +102,50 @@ void MainCLI::execute()
 		web3.ethereum()->setSealOption("authorities", rlp(m_authorities));
 		for (auto i: m_authorities)
 			if (Secret s = m_keyManager.secret(i))
+			{
 				web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
+				web3.ethereum()->setAuthor(i);
+			}
 
-		JSLocalConsole console;
-		shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(
-			*console.connector(),
-			web3,
-			make_shared<SimpleAccountHolder>(
-				[&](){ return web3.ethereum(); },
-				[](Address){ return string(); },
-				m_keyManager),
-			vector<KeyPair>(),
-			m_keyManager,
-			*gasPricer
-		);
-		string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
-		console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
+		web3.startNetwork();
+		if (contents(m_dbPath + "/network.rlp").empty())
+			writeFile(m_dbPath + "/network.rlp", web3.saveNetwork());
+		cout << "Node ID: " << web3.enode() << endl;
+
+		for (auto const& p: m_preferredNodes)
+			if (p.second.second)
+				web3.requirePeer(p.first, p.second.first);
+
 		if (m_startSealing)
 			web3.ethereum()->startSealing();
-		while (!Client::shouldExit())
-			console.readAndEval();
-		rpcServer->StopListening();
+
+		if (m_mode == Mode::Console)
+		{
+			JSLocalConsole console;
+			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(
+				*console.connector(),
+				web3,
+				make_shared<SimpleAccountHolder>(
+					[&](){ return web3.ethereum(); },
+					[](Address){ return string(); },
+					m_keyManager),
+				vector<KeyPair>(),
+				m_keyManager,
+				*gasPricer,
+				this
+			);
+			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
+			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
+			while (!m_shouldExit)
+				console.readAndEval();
+			rpcServer->StopListening();
+		}
+		else if (m_mode == Mode::Dumb)
+			while (!m_shouldExit)
+				this_thread::sleep_for(chrono::milliseconds(300));
+		auto netData = web3.saveNetwork();
+		if (!netData.empty())
+			writeFile(m_dbPath + "/network.rlp", netData);
 		break;
 	}
 	}
@@ -119,7 +156,7 @@ void MainCLI::setupKeyManager()
 	if (m_keyManager.exists())
 	{
 		if (!m_keyManager.load(m_masterPassword))
-			exit(0);
+			::exit(0);
 	}
 	else
 		m_keyManager.create(m_masterPassword);
