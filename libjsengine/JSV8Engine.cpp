@@ -183,7 +183,8 @@ JSV8Engine::JSV8Engine(): m_scope(new JSV8Scope())
 	string admin = resources.loadResourceAsString("admin");
 	eval(common.c_str());
 	eval(web3.c_str());
-	eval("web3 = require('web3');");
+	eval("Web3 = require('web3');");
+	eval("web3 = new Web3()");
 	eval(admin.c_str());
 
 	auto consoleTemplate = ObjectTemplate::New();

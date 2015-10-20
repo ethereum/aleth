@@ -99,5 +99,5 @@ JSV8RPC::JSV8RPC(JSV8Engine const& _engine): m_engine(_engine)
 	v8::Handle<v8::Object> web3object = v8::Handle<v8::Object>::Cast(m_engine.context()->Global()->Get(web3));
 	v8::Handle<v8::Function> func = v8::Handle<v8::Function>::Cast(web3object->Get(setProvider));
 	v8::Local<v8::Value> values[1] = {obj};
-	func->Call(func, 1, values);
+	func->Call(web3object, 1, values);
 }
