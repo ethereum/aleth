@@ -188,7 +188,7 @@ void SecretStore::load(string const& _keysPath)
 
 h128 SecretStore::readKey(string const& _file, bool _takeFileOwnership)
 {
-	cnote << "Reading" << _file;
+	ctrace << "Reading" << _file;
 	return readKeyContent(contentsString(_file), _takeFileOwnership ? _file : string());
 }
 

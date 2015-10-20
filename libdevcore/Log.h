@@ -111,6 +111,7 @@ struct RightChannel: public LogChannel { static const char* name(); };
 struct WarnChannel: public LogChannel { static const char* name(); static const int verbosity = 0; static const bool debug = false; };
 struct NoteChannel: public LogChannel { static const char* name(); static const bool debug = false; };
 struct DebugChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
+struct TraceChannel: public LogChannel { static const char* name(); static const int verbosity = 4; static const bool debug = true; };
 
 enum class LogTag
 {
@@ -276,6 +277,7 @@ public:
 #define cdebug clog(dev::DebugChannel)
 #define cnote clog(dev::NoteChannel)
 #define cwarn clog(dev::WarnChannel)
+#define ctrace clog(dev::TraceChannel)
 
 // Null stream-like objects.
 #define ndebug DEV_STATEMENT_ONCE() if (true) {} else dev::NullOutputStream()

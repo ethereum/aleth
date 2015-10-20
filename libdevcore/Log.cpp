@@ -75,6 +75,7 @@ const char* RightChannel::name() { return EthGreen "-->"; }
 const char* WarnChannel::name() { return EthOnRed EthBlackBold "  X"; }
 const char* NoteChannel::name() { return EthBlue "  i"; }
 const char* DebugChannel::name() { return EthWhite "  D"; }
+const char* TraceChannel::name() { return EthGray "..."; }
 #else
 const char* LogChannel::name() { return EthGray "···"; }
 const char* LeftChannel::name() { return EthNavy "◀▬▬"; }
@@ -82,6 +83,7 @@ const char* RightChannel::name() { return EthGreen "▬▬▶"; }
 const char* WarnChannel::name() { return EthOnRed EthBlackBold "  ✘"; }
 const char* NoteChannel::name() { return EthBlue "  ℹ"; }
 const char* DebugChannel::name() { return EthWhite "  ◇"; }
+const char* TraceChannel::name() { return EthGray "..."; }
 #endif
 
 LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* _info, unsigned _v, bool _autospacing):
