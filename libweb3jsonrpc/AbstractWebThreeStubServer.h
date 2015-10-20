@@ -66,7 +66,7 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
             this->bindAndAddMethod(jsonrpc::Procedure("eth_fetchQueuedTransactions", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_ARRAY, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::eth_fetchQueuedTransactionsI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_signTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &AbstractWebThreeStubServer::eth_signTransactionI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_inspectTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::eth_inspectTransactionI);
-            this->bindAndAddMethod(jsonrpc::Procedure("eth_sendRawTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::eth_sendRawTransactionI);
+            this->bindAndAddMethod(jsonrpc::Procedure("eth_sendRawTransaction", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::eth_sendRawTransactionI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_notePassword", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::eth_notePasswordI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_syncing", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &AbstractWebThreeStubServer::eth_syncingI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_estimateGas", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &AbstractWebThreeStubServer::eth_estimateGasI);
@@ -571,7 +571,7 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
         virtual Json::Value eth_fetchQueuedTransactions(const std::string& param1) = 0;
         virtual std::string eth_signTransaction(const Json::Value& param1) = 0;
         virtual Json::Value eth_inspectTransaction(const std::string& param1) = 0;
-        virtual bool eth_sendRawTransaction(const std::string& param1) = 0;
+        virtual std::string eth_sendRawTransaction(const std::string& param1) = 0;
         virtual bool eth_notePassword(const std::string& param1) = 0;
         virtual Json::Value eth_syncing() = 0;
         virtual std::string eth_estimateGas(const Json::Value& param1) = 0;
