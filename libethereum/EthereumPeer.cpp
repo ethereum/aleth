@@ -38,9 +38,7 @@ using namespace dev::eth;
 using namespace p2p;
 
 static const unsigned c_maxIncomingNewHashes = 1024;
-static const unsigned c_maxHeadersToSend = 65536;
-static const unsigned c_maxBlockSkip = 99999;
-static_assert(c_maxHeadersToSend * (c_maxBlockSkip + 1) > c_maxHeadersToSend, "Multiplication of config constants overflows");
+static const unsigned c_maxHeadersToSend = 1024;
 
 string toString(Asking _a)
 {
@@ -252,22 +250,23 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	{
 		/// Packet layout:
 		/// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]
-		auto blockId = _r[0];
-		auto maxHeaders = _r[1].toInt<bigint>();
-		auto skip = _r[2].toInt<bigint>();
-		auto reverse = _r[3].toInt<bool>();
+		const auto blockId = _r[0];
+		const auto maxHeaders = _r[1].toInt<u256>();
+		const auto skip = _r[2].toInt<u256>();
+		const auto reverse = _r[3].toInt<bool>();
 
 		auto& bc = host()->chain();
 
 		auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ? static_cast<unsigned>(maxHeaders) : c_maxHeadersToSend;
 
-		if (skip > c_maxBlockSkip)
+		if (skip > std::numeric_limits<unsigned>::max() - 1)
 		{
-			clog(NetAllDetail) << "Requested block skip is too big: " << skip << ", max: " << c_maxBlockSkip;
+			clog(NetAllDetail) << "Requested block skip is too big: " << skip;
 			break;
 		}
 
 		auto step = static_cast<unsigned>(skip) + 1;
+		assert(step > 0 && "step must not be 0");
 
 		h256 blockHash;
 		if (blockId.size() == 32) // block id is a hash
@@ -281,9 +280,23 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			if (!reverse)
 			{
 				auto n = bc.number(blockHash);
-				n += step * numHeadersToSend;
-				blockHash = bc.numberHash(n);
+				if (n != 0 || blockHash == bc.genesisHash())
+				{
+					auto top = n + uint64_t(step) * numHeadersToSend;
+					auto lastBlock = bc.number();
+					if (top > lastBlock)
+					{
+						numHeadersToSend = (lastBlock - n) / step;
+						top = n + step * numHeadersToSend;
+					}
+					assert(top <= lastBlock && "invalid top block calculated");
+					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+				}
+				else
+					blockHash = {};
 			}
+			else if (!bc.isKnown(blockHash))
+				blockHash = {};
 		}
 		else // block id is a number
 		{
@@ -292,27 +305,69 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			<< ", maxHeaders: " << maxHeaders
 			<< ", skip: " << skip << ", reverse: " << reverse << ")";
 
-			if (reverse)
-				n += step * numHeadersToSend;
-
-			if (n <= bc.number())
+			if (!reverse)
+			{
+				auto lastBlock = bc.number();
+				if (n > lastBlock)
+					blockHash = {};
+				else
+				{
+					bigint top = n + uint64_t(step) * numHeadersToSend;
+					if (top > lastBlock)
+					{
+						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step;
+						top = n + step * numHeadersToSend;
+					}
+					assert(top <= lastBlock && "invalid top block calculated");
+					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+				}
+			}
+			else if (n <= std::numeric_limits<unsigned>::max())
 				blockHash = bc.numberHash(static_cast<unsigned>(n));
 			else
 				blockHash = {};
 		}
 
-		assert(step > 0 && "step must not be 0");
+		auto nextHash = [&bc](h256 _h, unsigned _step)
+		{
+			static const unsigned c_blockNumberUsageLimit = 1000;
+
+			const auto lastBlock = bc.number();
+			const auto limitBlock = lastBlock > c_blockNumberUsageLimit ? lastBlock - c_blockNumberUsageLimit : 0; // find the number of the block below which we don't expect BC changes.
+
+			while (_step) // parent hash traversal
+			{
+				auto details = bc.details(_h);
+				if (details.number < limitBlock)
+					break; // stop using parent hash traversal, fallback to using block numbers
+				_h = details.parent;
+				--_step;
+			}
+
+			if (_step) // still need lower block
+			{
+				auto n = bc.number(_h);
+				if (n >= _step)
+					_h = bc.numberHash(n - _step);
+				else
+					_h = {};
+			}
+
+
+			return _h;
+		};
+
+
 		RLPStream s;
 		prep(s, BlockHeadersPacket, numHeadersToSend); // FIXME: We may not send numHeadersToSend headers.
 		for (unsigned i = 0; i != numHeadersToSend; ++i)
 		{
-			if (!blockHash)
+			if (!blockHash || !bc.isKnown(blockHash))
 				break;
 
-			s.appendRaw(host()->chain().headerData(blockHash));
+			s.appendRaw(bc.headerData(blockHash));
 
-			for (unsigned s = 0; s != step; ++s)
-				blockHash = host()->chain().details(blockHash).parent;
+			blockHash = nextHash(blockHash, step);
 		}
 		sealAndSend(s);
 		addRating(0);
