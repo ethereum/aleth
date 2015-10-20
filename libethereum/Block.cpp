@@ -44,7 +44,6 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-#define ctrace clog(BlockTrace)
 #define ETH_TIMED_ENACTMENTS 0
 
 static const unsigned c_maxSyncTransactions = 256;
