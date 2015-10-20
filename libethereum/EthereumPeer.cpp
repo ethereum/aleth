@@ -357,18 +357,21 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			return _h;
 		};
 
-
-		RLPStream s;
-		prep(s, BlockHeadersPacket, numHeadersToSend); // FIXME: We may not send numHeadersToSend headers.
+		bytes rlp;
+		unsigned itemCount = 0;
 		for (unsigned i = 0; i != numHeadersToSend; ++i)
 		{
 			if (!blockHash || !bc.isKnown(blockHash))
 				break;
 
-			s.appendRaw(bc.headerData(blockHash));
+			rlp += bc.headerData(blockHash);
+			++itemCount;
 
 			blockHash = nextHash(blockHash, step);
 		}
+
+		RLPStream s;
+		prep(s, BlockHeadersPacket, itemCount).appendRaw(rlp, itemCount);
 		sealAndSend(s);
 		addRating(0);
 		break;
