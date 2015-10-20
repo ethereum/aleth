@@ -111,11 +111,11 @@ BOOST_AUTO_TEST_CASE(jsonrpc_isMining)
 {
 	cnote << "Testing jsonrpc isMining...";
 
-	web3->ethereum()->startMining();
+	web3->ethereum()->startSealing();
 	bool miningOn = jsonrpcClient->eth_mining();
 	BOOST_CHECK_EQUAL(miningOn, web3->ethereum()->isMining());
 
-	web3->ethereum()->stopMining();
+	web3->ethereum()->stopSealing();
 	bool miningOff = jsonrpcClient->eth_mining();
 	BOOST_CHECK_EQUAL(miningOff, web3->ethereum()->isMining());
 }
@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	dev::KeyPair key = KeyPair::create();
 	auto address = key.address();
 	auto receiver = KeyPair::create();
-	web3->ethereum()->setBeneficiary(address);
+	web3->ethereum()->setAuthor(address);
 
 	coinbase = jsonrpcClient->eth_coinbase();
 	BOOST_CHECK_EQUAL(jsToAddress(coinbase), web3->ethereum()->address());
@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(simple_contract)
 {
 	cnote << "Testing jsonrpc contract...";
 	KeyPair kp = KeyPair::create();
-	web3->ethereum()->setBeneficiary(kp.address());
+	web3->ethereum()->setAuthor(kp.address());
 	jsonrpcServer->setAccounts({kp});
 
 	dev::eth::mine(*(web3->ethereum()), 1);
@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(contract_storage)
 {
 	cnote << "Testing jsonrpc contract storage...";
 	KeyPair kp = KeyPair::create();
-	web3->ethereum()->setBeneficiary(kp.address());
+	web3->ethereum()->setAuthor(kp.address());
 	jsonrpcServer->setAccounts({kp});
 
 	dev::eth::mine(*(web3->ethereum()), 1);

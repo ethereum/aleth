@@ -31,7 +31,8 @@ using namespace p2p;
 using namespace eth;
 
 MainCLI::MainCLI(Mode _mode):
-	m_mode(_mode)
+	m_mode(_mode),
+	m_keyManager(getDataDir("fluidity") + "/keys.info")
 {
 }
 
@@ -52,6 +53,8 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 		m_masterPassword = argv[++i];
 	else if (arg == "--authority" && i + 1 < argc)
 		m_authorities.push_back(Address(argv[++i]));
+	else if (arg == "--start-mining")
+		m_startSealing = true;
 	else
 	{
 		p2p::NodeSpec ns(arg);
@@ -65,6 +68,7 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 void MainCLI::execute()
 {
 	setup();
+	setupKeyManager();
 	switch (m_mode)
 	{
 	case Mode::Console:
@@ -87,9 +91,21 @@ void MainCLI::execute()
 				web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
 
 		JSLocalConsole console;
-		shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<FixedAccountHolder>([&](){ return web3.ethereum(); }, vector<KeyPair>()), vector<KeyPair>(), m_keyManager, *gasPricer);
+		shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(
+			*console.connector(),
+			web3,
+			make_shared<SimpleAccountHolder>(
+				[&](){ return web3.ethereum(); },
+				[](Address){ return string(); },
+				m_keyManager),
+			vector<KeyPair>(),
+			m_keyManager,
+			*gasPricer
+		);
 		string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 		console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
+		if (m_startSealing)
+			web3.ethereum()->startSealing();
 		while (!Client::shouldExit())
 			console.readAndEval();
 		rpcServer->StopListening();
@@ -114,11 +130,8 @@ void MainCLI::setupKeyManager()
 
 void MainCLI::setup()
 {
-	if (!m_privateChain.empty())
-	{
-		CanonBlockChain<Fluidity>::forceGenesisExtraData(sha3(m_privateChain).asBytes());
-		c_network = resetNetwork(eth::Network::Fluidity);
-	}
+	CanonBlockChain<Fluidity>::forceGenesisExtraData(sha3(m_privateChain).asBytes());
+	c_network = resetNetwork(eth::Network::Fluidity);
 	m_netPrefs = m_publicIP.empty() ? NetworkPreferences(m_listenIP, m_listenPort, false) : NetworkPreferences(m_publicIP, m_listenIP, m_listenPort, false);
 	m_netPrefs.discovery = false;
 	m_netPrefs.pin = true;

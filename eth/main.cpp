@@ -236,11 +236,11 @@ enum class Format
 	Human
 };
 
-void stopMiningAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mining)
+void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mining)
 {
 	if (io_mining != ~(unsigned)0 && io_mining && _c->isMining() && _c->blockChain().details().number - _start == io_mining)
 	{
-		_c->stopMining();
+		_c->stopSealing();
 		io_mining = ~(unsigned)0;
 	}
 	this_thread::sleep_for(chrono::milliseconds(100));
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 	bool mineOnWrongChain = false;
 	Address signingKey;
 	Address sessionKey;
-	Address beneficiary = signingKey;
+	Address author = signingKey;
 	strings presaleImports;
 	bytes extraData;
 
@@ -357,7 +357,7 @@ int main(int argc, char** argv)
 		{
 			RLP config(b);
 			signingKey = config[0].toHash<Address>();
-			beneficiary = config[1].toHash<Address>();
+			author = config[1].toHash<Address>();
 		}
 		catch (...) {}
 	}
@@ -499,7 +499,7 @@ int main(int argc, char** argv)
 		}
 		else if ((arg == "-a" || arg == "--address" || arg == "--coinbase-address") && i + 1 < argc)
 			try {
-				beneficiary = h160(fromHex(argv[++i], WhenError::Throw));
+				author = h160(fromHex(argv[++i], WhenError::Throw));
 			}
 			catch (BadHexCharacter&)
 			{
@@ -845,7 +845,7 @@ int main(int argc, char** argv)
 	for (auto const& s: passwordsToNote)
 		keyManager.notePassword(s);
 
-	writeFile(configFile, rlpList(signingKey, beneficiary));
+	writeFile(configFile, rlpList(signingKey, author));
 
 	if (sessionKey)
 		signingKey = sessionKey;
@@ -1065,11 +1065,11 @@ int main(int argc, char** argv)
 	if (keyManager.accounts().empty())
 	{
 		h128 uuid = keyManager.import(ICAP::createDirect(), "Default key");
-		if (!beneficiary)
-			beneficiary = keyManager.address(uuid);
+		if (!author)
+			author = keyManager.address(uuid);
 		if (!signingKey)
 			signingKey = keyManager.address(uuid);
-		writeFile(configFile, rlpList(signingKey, beneficiary));
+		writeFile(configFile, rlpList(signingKey, author));
 	}
 
 	cout << ethCredits();
@@ -1085,7 +1085,7 @@ int main(int argc, char** argv)
 		// TODO: expose sealant interface.
 		c->setShouldPrecomputeDAG(m.shouldPrecompute());
 		c->setSealer(m.minerType());
-		c->setBeneficiary(beneficiary);
+		c->setAuthor(author);
 		c->setNetworkId(networkId);
 	}
 
@@ -1095,7 +1095,7 @@ int main(int argc, char** argv)
 	};
 
 	cout << "Transaction Signer: " << renderFullAddress(signingKey) << endl;
-	cout << "Mining Beneficiary: " << renderFullAddress(beneficiary) << endl;
+	cout << "Mining Beneficiary: " << renderFullAddress(author) << endl;
 	cout << "Foundation: " << renderFullAddress(Address("de0b295669a9fd93d5f28d9ec85e40f4cb697bae")) << endl;
 
 	if (bootstrap || !remoteHost.empty() || disableDiscovery)
@@ -1170,7 +1170,7 @@ int main(int argc, char** argv)
 	{
 		unsigned n = c->blockChain().details().number;
 		if (mining)
-			c->startMining();
+			c->startSealing();
 		if (useConsole)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
@@ -1181,14 +1181,14 @@ int main(int argc, char** argv)
 			while (!Client::shouldExit())
 			{
 				console.readAndEval();
-				stopMiningAfterXBlocks(c, n, mining);
+				stopSealingAfterXBlocks(c, n, mining);
 			}
 			rpcServer->StopListening();
 #endif
 		}
 		else
 			while (!Client::shouldExit())
-				stopMiningAfterXBlocks(c, n, mining);
+				stopSealingAfterXBlocks(c, n, mining);
 	}
 	else
 		while (!Client::shouldExit())

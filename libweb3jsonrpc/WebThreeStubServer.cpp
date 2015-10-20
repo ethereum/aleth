@@ -160,14 +160,14 @@ Json::Value WebThreeStubServer::admin_eth_allAccounts(std::string const& _sessio
 	Json::Value ret;
 	u256 total = 0;
 	u256 pendingtotal = 0;
-	Address beneficiary;
+	Address author;
 	for (auto const& address: m_keyMan.accounts())
 	{
 		auto pending = m_web3.ethereum()->balanceAt(address, PendingBlock);
 		auto latest = m_web3.ethereum()->balanceAt(address, LatestBlock);
 		Json::Value a;
-		if (address == beneficiary)
-			a["beneficiary"] = true;
+		if (address == author)
+			a["author"] = true;
 		a["address"] = toJS(address);
 		a["balance"] = toJS(latest);
 		a["nicebalance"] = formatBalance(latest);
@@ -220,7 +220,7 @@ bool WebThreeStubServer::admin_eth_setMiningBenefactor(std::string const& _uuidO
 	if (m_setMiningBenefactor)
 		m_setMiningBenefactor(a);
 	else
-		m_web3.ethereum()->setBeneficiary(a);
+		m_web3.ethereum()->setAuthor(a);
 	return true;
 }
 

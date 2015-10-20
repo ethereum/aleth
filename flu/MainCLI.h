@@ -73,6 +73,8 @@ private:
 	Addresses m_authorities;
 	std::string m_privateChain;
 
+	bool m_startSealing = false;
+
 	/// Networking params.
 	std::string m_clientName;
 	std::string m_listenIP;

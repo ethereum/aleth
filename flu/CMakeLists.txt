@@ -1,6 +1,6 @@
 aux_source_directory(. SRC_LIST)
 
-set(EXECUTABLE web3)
+set(EXECUTABLE flu)
 
 add_executable(${EXECUTABLE} ${SRC_LIST})
 

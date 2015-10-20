@@ -91,7 +91,7 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi)
 		DEV_IGNORE_EXCEPTIONS(res["hash"] = toJS(_bi.hash()));
 		res["parentHash"] = toJS(_bi.parentHash());
 		res["sha3Uncles"] = toJS(_bi.sha3Uncles());
-		res["miner"] = toJS(_bi.beneficiary());
+		res["miner"] = toJS(_bi.author());
 		res["stateRoot"] = toJS(_bi.stateRoot());
 		res["transactionsRoot"] = toJS(_bi.transactionsRoot());
 		res["receiptsRoot"] = toJS(_bi.receiptsRoot());

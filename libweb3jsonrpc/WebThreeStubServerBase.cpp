@@ -104,7 +104,7 @@ string WebThreeStubServerBase::eth_protocolVersion()
 
 string WebThreeStubServerBase::eth_coinbase()
 {
-	return toJS(client()->beneficiary());
+	return toJS(client()->author());
 }
 
 string WebThreeStubServerBase::eth_hashrate()
@@ -589,9 +589,9 @@ bool WebThreeStubServerBase::admin_eth_setMining(bool _on, std::string const& _s
 {
 	ADMIN;
 	if (_on)
-		client()->startMining();
+		client()->startSealing();
 	else
-		client()->stopMining();
+		client()->stopSealing();
 	return true;
 }
 
