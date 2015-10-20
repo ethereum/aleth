@@ -268,6 +268,7 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 
 int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
+	bool wasError = false;
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
@@ -277,7 +278,10 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 					return 1;				\
 			}								\
 			else							\
+			{								\
 				BOOST_WARN_MESSAGE(a,b);	\
+				wasError = true;			\
+			}								\
 		}
 
 	for (auto const& a: _stateExpect.addresses())
@@ -326,7 +330,8 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
-	return 0;
+
+	return wasError;
 }
 
 int ImportTest::exportTest(bytes const& _output)
