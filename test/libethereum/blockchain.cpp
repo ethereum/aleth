@@ -781,9 +781,9 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 	dev::test::userDefinedTest(dev::test::doBlockchainTests);
 }
 
-BOOST_AUTO_TEST_CASE(bcStateTest)
+BOOST_AUTO_TEST_CASE(bcStateTest2)
 {
-	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcStateTest2", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
