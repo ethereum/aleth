@@ -40,7 +40,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-unsigned const EthereumHost::c_oldProtocolVersion = 60; //TODO: remove this once v61+ is common
+unsigned const EthereumHost::c_oldProtocolVersion = 62; //TODO: remove this once v63+ is common
 static unsigned const c_maxSendTransactions = 256;
 
 char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"Idle", "Waiting", "Hashes", "Blocks", "NewBlocks" };
@@ -282,14 +282,14 @@ BlockChainSync* EthereumHost::sync()
 	if (m_sync)
 		return m_sync.get(); // We only chose sync strategy once
 
-	bool pv61 = false;
+	bool pv63 = false;
 	foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
 	{
 		if (_p->m_protocolVersion == protocolVersion())
-			pv61 = true;
-		return !pv61;
+			pv63 = true;
+		return !pv63;
 	});
-	if (pv61)
+	if (pv63)
 	{
 		m_syncStart = 0;
 		m_sync.reset(new PV61Sync(*this));

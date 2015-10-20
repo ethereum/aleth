@@ -230,7 +230,7 @@ bool EthereumPeer::isConversing() const
 
 bool EthereumPeer::isCriticalSyncing() const
 {
-	return m_asking == Asking::Hashes || m_asking == Asking::State || (m_asking == Asking::Blocks && m_protocolVersion == 60);
+	return m_asking == Asking::Hashes || m_asking == Asking::State || (m_asking == Asking::Blocks && m_protocolVersion == 62);
 }
 
 bool EthereumPeer::interpret(unsigned _id, RLP const& _r)

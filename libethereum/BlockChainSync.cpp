@@ -1202,7 +1202,7 @@ SyncStatus PV61Sync::status() const
 {
 	RecursiveGuard l(x_sync);
 	SyncStatus res = PV60Sync::status();
-	res.protocolVersion = 61;
+	res.protocolVersion = 63;
 	res.startBlockNumber = m_startingBlock;
 	res.currentBlockNumber = host().chain().number();
 	if (m_state == SyncState::Hashes && isPV61Syncing())
