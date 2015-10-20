@@ -140,6 +140,7 @@
                 ]
             },
             {
+		"expectException" : "UncleIsBrother",
                 "blockHeader" : {
                     "populateFromBlock" : "2"
                 },
@@ -221,6 +222,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidUncleParentHash",
                 "transactions" : [
                     {
                         "data" : "",
@@ -393,6 +395,7 @@
                 ]
             },
             {
+		"expectException" : "InvalidNumber",
                 "transactions" : [
                     {
                         "data" : "",
@@ -481,6 +484,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -571,6 +575,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -657,6 +662,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -759,6 +765,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -875,6 +882,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1006,6 +1014,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1152,6 +1161,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1238,6 +1248,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1426,6 +1437,7 @@
                 ]
             },
             {
+		"expectException" : "TooManyUncles",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2292,6 +2304,7 @@
                 ]
             },
             {
+		"expectException" : "UncleTooOld",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2403,6 +2416,7 @@
                 ]
             },
             {
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",

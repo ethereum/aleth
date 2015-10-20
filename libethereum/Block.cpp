@@ -338,6 +338,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					}
 					else
 					{
+						clog(StateTrace) << t.sha3() << "Temporarily no gas left in current block (txs gas > block's gas limit)";
 						// Temporarily no gas left in current block.
 						// OPTIMISE: could note this and then we don't evaluate until a block that does have the gas left.
 						// for now, just leave alone.
@@ -525,7 +526,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 				BlockInfo uncleParent;
 				if (!_bc.isKnown(uncle.parentHash()))
-					BOOST_THROW_EXCEPTION(UnknownParent());
+					BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(uncle.parentHash()));
 				uncleParent = BlockInfo(_bc.block(uncle.parentHash()));
 
 				// m_currentBlock.number() - uncle.number()		m_cB.n - uP.n()

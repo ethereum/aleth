@@ -134,12 +134,8 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "expect" : {
-            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "storage" : {
-                    "0x" : "0xc89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6",
-                    "0x01" : "0xad7c5bef027816a800da1736444fb58a807ef4c9603b7848673f7e3a68eb14a5",
-                    "0x02" : "0x6ca54da2c4784ea43fd88b3402de07ae4bced597cbb19f323b7595857a6720ae"
-                }
+	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0x3b8f5850"
             }
         },
         "pre" : {

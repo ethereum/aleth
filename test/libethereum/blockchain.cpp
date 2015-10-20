@@ -47,7 +47,30 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vecto
 void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
 void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
+void checkExpectedException(mObject& _blObj, Exception const& _e);
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
+struct chainBranch
+{
+	chainBranch(TestBlock const& _genesis):
+		blockchain(_genesis) { importedBlocks.push_back(_genesis); }
+	void reset() { blockchain.reset(importedBlocks.at(0)); }
+	void restoreFromHistory(size_t _importBlockNumber)
+	{
+		//Restore blockchain up to block.number to start new block mining after specific block
+		for (size_t i = 1; i < importedBlocks.size(); i++) //0 block is genesis
+			if (i < _importBlockNumber)
+				blockchain.addBlock(importedBlocks.at(i));
+			else
+				break;
+
+		//Drop old blocks as we would construct new history
+		size_t originalSize = importedBlocks.size();
+		for (size_t i = _importBlockNumber; i < originalSize; i++)
+			importedBlocks.pop_back();
+	}
+	TestBlockChain blockchain;
+	vector<TestBlock> importedBlocks;
+};
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
@@ -76,9 +99,9 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			mArray blArray;
 			size_t importBlockNumber = 0;
-			vector<TestBlock> importedBlocks;
-			importedBlocks.push_back(genesisBlock);
-			TestBlockChain blockchain(genesisBlock);
+			string chainname = "default";
+			std::map<string, chainBranch*> chainMap = { {chainname , new chainBranch(genesisBlock)}};
+
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
@@ -87,23 +110,25 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				else
 					importBlockNumber++;
 
-				if (o.count("noBlockChainHistory") == 0)
-				{
-					blockchain.reset(importedBlocks.at(0));
-					//Restore blockchain up to block.number to start import from it
-					for (size_t i = 1; i < importedBlocks.size(); i++) //0 block is genesis
-						if (i < importBlockNumber)
-							blockchain.addBlock(importedBlocks.at(i));
-						else
-							break;
+				if (blObj.count("chainname") > 0)
+					chainname = blObj["chainname"].get_str();
+				else
+					chainname = "default";
 
-					//Drop old blocks
-					size_t originalSize = importedBlocks.size();
-					for (size_t i = importBlockNumber; i < originalSize; i++)
-						importedBlocks.pop_back();
+				if (chainMap.count(chainname) > 0)
+				{
+					if (o.count("noBlockChainHistory") == 0)
+					{
+						chainMap[chainname]->reset();
+						chainMap[chainname]->restoreFromHistory(importBlockNumber);
+					}
 				}
+				else
+					chainMap[chainname] = new chainBranch(genesisBlock);
 
 				TestBlock block;
+				TestBlockChain& blockchain = chainMap[chainname]->blockchain;
+				vector<TestBlock>& importedBlocks = chainMap[chainname]->importedBlocks;
 
 				//Import Transactions
 				BOOST_REQUIRE(blObj.count("transactions"));
@@ -118,7 +143,12 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					TestBlock uncle;
 					mObject uncleHeaderObj = uHObj.get_obj();
-					overwriteUncleHeaderForTest(uncleHeaderObj, uncle, block.getUncles(), importedBlocks);
+					string uncleChainName = chainname;
+					if (uncleHeaderObj.count("chainname") > 0)
+						uncleChainName = uncleHeaderObj["chainname"].get_str();
+
+					vector<TestBlock>& importedBlocksForUncle = chainMap[uncleChainName]->importedBlocks;
+					overwriteUncleHeaderForTest(uncleHeaderObj, uncle, block.getUncles(), importedBlocksForUncle);
 					block.addUncle(uncle);
 				}
 
@@ -157,6 +187,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					blockchain.addBlock(alterBlock);
 					trueBc.addBlock(alterBlock);
+					BOOST_REQUIRE_MESSAGE(blObj.count("expectException") == 0, "block import expected exception, but no exeption was thrown!");
 					if (o.count("noBlockChainHistory") == 0)
 					{
 						importedBlocks.push_back(alterBlock);
@@ -166,15 +197,18 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				catch (Exception const& _e)
 				{
 					cnote << testname + "block import throw an exception: " << diagnostic_information(_e);
+					checkExpectedException(blObj, _e);
 					eraseJsonSectionForInvalidBlock(blObj);
 				}
 				catch (std::exception const& _e)
 				{
 					cnote << testname + "block import throw an exception: " << _e.what();
+					cout << testname + "block import thrown std exeption" << std::endl;
 					eraseJsonSectionForInvalidBlock(blObj);
 				}
 				catch (...)
 				{
+					cout << testname + "block import thrown unknown exeption" << std::endl;
 					eraseJsonSectionForInvalidBlock(blObj);
 				}
 
@@ -200,6 +234,10 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			State prestate(OverlayDB(), BaseState::Empty);
 			ImportTest::importState(o["pre"].get_obj(), prestate);
 			o["pre"] = fillJsonWithState(prestate);
+
+			for (auto iterator = chainMap.begin(); iterator != chainMap.end(); iterator++)
+				delete iterator->second;
+
 		}//fillin
 		else
 		{
@@ -273,13 +311,31 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					cerr << testname + "Error importing block from fields to blockchain: " << diagnostic_information(_e);
 					break;
 				}
+
+				//Check that imported block to the chain is equal to declared block from test
+				bytes importedblock = trueBc.getInterface().block(blockFromFields.getBlockHeader().hash());
+				TestBlock inchainBlock(toHex(importedblock));
+				checkBlocks(inchainBlock, blockFromFields, testname);
+
+				//Check that trueBc is rearanged correctrly after importing this block
+				string blockNumber;
+				string blockChainName = "default";
+				if (blObj.count("chainname") > 0)
+					blockChainName = blObj["chainname"].get_str();
+				if (blObj.count("blocknumber") > 0)
+					blockNumber = blObj["blocknumber"].get_str();
+
+				cnote << "Tested topblock number" << blockNumber << "for chain " << blockChainName << testname;
+
 			}//allBlocks
 
+			//Check lastblock hash
 			BOOST_REQUIRE((o.count("lastblockhash") > 0));
 			string lastTrueBlockHash = toString(trueBc.getTopBlock().getBlockHeader().hash());
 			BOOST_CHECK_MESSAGE(lastTrueBlockHash == o["lastblockhash"].get_str(),
 					testname + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + o["lastblockhash"].get_str());
 
+			//Check final state (just to be sure)
 			BOOST_CHECK_MESSAGE(toString(trueBc.getTopBlock().getState().rootHash()) ==
 								toString(blockchain.getTopBlock().getState().rootHash()),
 								testname + "State root in chain from RLP blocks != State root in chain from Field blocks!");
@@ -551,6 +607,16 @@ mObject writeBlockHeaderToJson(Ethash::BlockHeader const& _bi)
 	return o;
 }
 
+void checkExpectedException(mObject& _blObj, Exception const& _e)
+{
+	BOOST_REQUIRE_MESSAGE(_blObj.count("expectException") > 0, TestOutputHelper::testName() + "block import thrown unexpected Excpetion!");
+	string exWhat {	_e.what() };
+	string exExpect = _blObj.at("expectException").get_str();
+
+	BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + "block import expected another exeption: " + exExpect);
+	_blObj.erase(_blObj.find("expectException"));
+}
+
 void checkJsonSectionForInvalidBlock(mObject& _blObj)
 {
 	BOOST_CHECK(_blObj.count("blockHeader") == 0);
@@ -635,6 +701,21 @@ BOOST_AUTO_TEST_CASE(bcForkUncleTest)
 {
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcStateTest)
+{
+	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcForkStressTest)
+{
+	dev::test::executeTests("bcForkStressTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcMultiChainTest)
+{
+	dev::test::executeTests("bcMultiChainTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
