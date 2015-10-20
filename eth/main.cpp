@@ -79,7 +79,7 @@ void help()
 		<< "Operating mode (default is non-interactive node):" << endl
 #if ETH_JSCONSOLE || !ETH_TRUE
 		<< "    console  Enter interactive console mode (default: non-interactive)." << endl
-		<< "    attach  Ether interactive console mode of already-running eth."
+		<< "    attach  Ether interactive console mode of already-running eth." << endl
 		<< "    import <file>  Import file as a concatenated series of blocks." << endl
 		<< "    export <file>  Export file as a concatenated series of blocks." << endl
 #endif
