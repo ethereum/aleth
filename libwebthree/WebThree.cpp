@@ -27,7 +27,6 @@
 #include <libdevcore/Log.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
-#include <libfluidity/FluidityClient.h>
 #include <libwhisper/WhisperHost.h>
 #include <ethereum/BuildInfo.h>
 #include "Swarm.h"
