@@ -91,22 +91,18 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi)
 		DEV_IGNORE_EXCEPTIONS(res["hash"] = toJS(_bi.hash()));
 		res["parentHash"] = toJS(_bi.parentHash());
 		res["sha3Uncles"] = toJS(_bi.sha3Uncles());
-		res["miner"] = toJS(_bi.author());
+		res["author"] = toJS(_bi.author());
 		res["stateRoot"] = toJS(_bi.stateRoot());
 		res["transactionsRoot"] = toJS(_bi.transactionsRoot());
 		res["receiptsRoot"] = toJS(_bi.receiptsRoot());
-		res["difficulty"] = toJS(_bi.difficulty());
 		res["number"] = toJS(_bi.number());
 		res["gasUsed"] = toJS(_bi.gasUsed());
 		res["gasLimit"] = toJS(_bi.gasLimit());
-		res["timestamp"] = toJS(_bi.timestamp());
 		res["extraData"] = toJS(_bi.extraData());
 		res["logsBloom"] = toJS(_bi.logBloom());
-		res["target"] = toJS(_bi.boundary());
-
-		// TODO: move into ProofOfWork.
-//		res["nonce"] = toJS(_bi.proof.nonce);
-//		res["seedHash"] = toJS(_bi.proofCache());
+		res["timestamp"] = toJS(_bi.timestamp());
+		// TODO: remove once JSONRPC spec is updated to use "author" over "miner".
+		res["miner"] = toJS(_bi.author());
 	}
 	return res;
 }
