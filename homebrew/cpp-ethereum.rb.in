@@ -31,7 +31,6 @@ class CppEthereum < Formula
 
   depends_on 'cmake' => :build
   depends_on 'boost'
-  depends_on 'boost-python' => "c++11"
   depends_on 'qt5' if build.with? 'gui'
   depends_on 'readline'
   depends_on 'cryptopp'
