@@ -86,6 +86,7 @@ void MainCLI::execute()
 			WebThreeDirect::composeClientVersion("flu", m_clientName),
 			m_dbPath,
 			WithExisting::Trust,
+			m_chainParams,
 			set<string>{"flu"},
 			m_netPrefs,
 			&nodesState);
@@ -167,8 +168,7 @@ void MainCLI::setupKeyManager()
 
 void MainCLI::setup()
 {
-	CanonBlockChain<Fluidity>::forceGenesisExtraData(sha3(m_privateChain).asBytes());
-	c_network = resetNetwork(eth::Network::Fluidity);
+	m_chainParams = ChainParams(eth::Network::Fluidity);
 	m_netPrefs = m_publicIP.empty() ? NetworkPreferences(m_listenIP, m_listenPort, false) : NetworkPreferences(m_publicIP, m_listenIP, m_listenPort, false);
 	m_netPrefs.discovery = false;
 	m_netPrefs.pin = true;

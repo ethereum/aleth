@@ -34,6 +34,7 @@
 #include <libp2p/Host.h>
 #include <libwhisper/WhisperHost.h>
 #include <libethereum/Client.h>
+#include <libethereum/ChainParams.h>
 
 namespace dev
 {
@@ -256,6 +257,7 @@ public:
 		std::string const& _clientVersion,
 		std::string const& _dbPath,
 		WithExisting _we = WithExisting::Trust,
+		eth::ChainParams const& _params,
 		std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
 		p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),
 		bytesConstRef _network = bytesConstRef()

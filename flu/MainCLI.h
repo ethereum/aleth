@@ -25,6 +25,7 @@
 #include <libp2p/NodeTable.h>
 #include <libp2p/Network.h>
 #include <libethcore/KeyManager.h>
+#include <libethereum/ChainParams.h>
 #include <libwebthree/SystemManager.h>
 
 namespace dev
@@ -90,6 +91,7 @@ private:
 
 	eth::KeyManager m_keyManager;
 	p2p::NetworkPreferences m_netPrefs;
+	eth::ChainParams m_chainParams;
 
 	std::atomic<bool> m_shouldExit = {false};
 	std::string m_logBuffer;

@@ -827,17 +827,18 @@ int main(int argc, char** argv)
 	}
 
 	// Set up all the chain config stuff.
-	resetNetwork(releaseNetwork);
+	ChainParams chainParams(releaseNetwork);
+	if (!genesisJSON.empty())
+		chainParams = ChainParams(genesisJSON);
 	if (!privateChain.empty())
 	{
-		CanonBlockChain<Ethash>::forceGenesisExtraData(sha3(privateChain).asBytes());
-		CanonBlockChain<Ethash>::forceGenesisDifficulty(c_minimumDifficulty);
-		CanonBlockChain<Ethash>::forceGenesisGasLimit(u256(1) << 32);
+		chainParams.extraData = sha3(privateChain).asBytes();
+		chainParams.difficulty = chainParams.u256Param("minimumDifficulty");
+		chainParams.gasLimit = u256(1) << 32;
 	}
-	if (!genesisJSON.empty())
-		CanonBlockChain<Ethash>::setGenesis(genesisJSON);
-	if (gasFloor != UndefinedU256)
-		c_gasFloorTarget = gasFloor;
+	// TODO: Open some other API path
+//	if (gasFloor != UndefinedU256)
+//		c_gasFloorTarget = gasFloor;
 	if (networkId == (unsigned)-1)
 		networkId =  (unsigned)c_network;
 
