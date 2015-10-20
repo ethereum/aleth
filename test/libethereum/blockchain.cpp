@@ -703,11 +703,6 @@ BOOST_AUTO_TEST_CASE(bcForkUncleTest)
 		dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
-BOOST_AUTO_TEST_CASE(bcStateTest)
-{
-	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
-}
-
 BOOST_AUTO_TEST_CASE(bcForkStressTest)
 {
 	dev::test::executeTests("bcForkStressTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
