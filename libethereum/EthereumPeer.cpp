@@ -37,8 +37,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-const unsigned c_maxIncomingNewHashes = 1024;
-const unsigned c_maxHashesToSend = 65536;
+static const unsigned c_maxIncomingNewHashes = 1024;
+static const unsigned c_maxHeadersToSend = 65536;
+static const unsigned c_maxBlockSkip = 99999;
+static_assert(c_maxHeadersToSend * (c_maxBlockSkip + 1) > c_maxHeadersToSend, "Multiplication of config constants overflows");
 
 string toString(Asking _a)
 {
@@ -255,65 +257,62 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		auto skip = _r[2].toInt<bigint>();
 		auto reverse = _r[3].toInt<bool>();
 
-		bigint blockNumber;
+		auto& bc = host()->chain();
+
+		auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ? static_cast<unsigned>(maxHeaders) : c_maxHeadersToSend;
+
+		if (skip > c_maxBlockSkip)
+		{
+			clog(NetAllDetail) << "Requested block skip is too big: " << skip << ", max: " << c_maxBlockSkip;
+			break;
+		}
+
+		auto step = static_cast<unsigned>(skip) + 1;
+
+		h256 blockHash;
 		if (blockId.size() == 32) // block id is a hash
 		{
-			auto blockHash = blockId.toHash<h256>();
-			blockNumber = host()->chain().number(blockHash);
+			blockHash = blockId.toHash<h256>();
+			//blockNumber = host()->chain().number(blockHash);
 			clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
 			<< ", maxHeaders: " << maxHeaders
 			<< ", skip: " << skip << ", reverse: " << reverse << ")";
+
+			if (!reverse)
+			{
+				auto n = bc.number(blockHash);
+				n += step * numHeadersToSend;
+				blockHash = bc.numberHash(n);
+			}
 		}
 		else // block id is a number
 		{
-			blockNumber = blockId.toInt<bigint>();
-			clog(NetMessageSummary) << "GetBlockHeaders (block (number): " << blockNumber
+			auto n = blockId.toInt<bigint>();
+			clog(NetMessageSummary) << "GetBlockHeaders (block (number): " << n
 			<< ", maxHeaders: " << maxHeaders
 			<< ", skip: " << skip << ", reverse: " << reverse << ")";
+
+			if (reverse)
+				n += step * numHeadersToSend;
+
+			if (n <= bc.number())
+				blockHash = bc.numberHash(static_cast<unsigned>(n));
+			else
+				blockHash = {};
 		}
 
-		// Find a top requested block
-		if (reverse)
-		{
-			blockNumber -= skip; // in descending order just skip blocks
-			if (blockNumber < 0)
-			{
-				// TODO: Better solution would be to use safe u256 and treat all catches of overflows as stupid requests.
-				clog(NetImpolite) << "Requesting negative starting block.";
-				addRating(-10);
-				break;
-			}
-		}
-		else
-			blockNumber += skip + maxHeaders - 1; // in ascending order find number of the block that end the requested subset
-
-		auto lastBlockNumber = host()->chain().number();
-		if (blockNumber > lastBlockNumber)
-		{
-			maxHeaders -= (blockNumber - lastBlockNumber);
-			if (maxHeaders < 0) // we don't have any of requested blocks
-				maxHeaders = 0;
-			blockNumber = lastBlockNumber;
-		}
-
-		maxHeaders = std::min(maxHeaders, bigint{c_maxHashesToSend}); // limit the response size according to local config
-
-		// These asserts validate the logic above. In case we missed something we will send a stupid answer.
-		assert(blockNumber >= 0 && blockNumber <= lastBlockNumber && "Invalid calculated block number");
-		assert(maxHeaders >= 0 && maxHeaders <= c_maxHashesToSend && "Invalid calculated number of headers");
-
-		auto numHeadersToSend = static_cast<decltype(c_maxHashesToSend)>(maxHeaders);
-		auto hash = host()->chain().numberHash(static_cast<unsigned>(blockNumber));
-
+		assert(step > 0 && "step must not be 0");
 		RLPStream s;
-		prep(s, BlockHeadersPacket, numHeadersToSend);
+		prep(s, BlockHeadersPacket, numHeadersToSend); // FIXME: We may not send numHeadersToSend headers.
 		for (unsigned i = 0; i != numHeadersToSend; ++i)
 		{
-			if (!hash)
+			if (!blockHash)
 				break;
 
-			s.appendRaw(host()->chain().headerData(hash));
-			hash = host()->chain().details(hash).parent;
+			s.appendRaw(host()->chain().headerData(blockHash));
+
+			for (unsigned s = 0; s != step; ++s)
+				blockHash = host()->chain().details(blockHash).parent;
 		}
 		sealAndSend(s);
 		addRating(0);
