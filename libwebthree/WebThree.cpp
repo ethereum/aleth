@@ -25,7 +25,6 @@
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
 #include <libdevcore/Log.h>
-#include <libfluidity/Fluidity.h>
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libfluidity/FluidityClient.h>
@@ -54,17 +53,6 @@ WebThreeDirect::WebThreeDirect(
 	if (_interfaces.count("eth"))
 	{
 		m_ethereum.reset(new eth::EthashClient(&m_net, shared_ptr<GasPricer>(), _dbPath, _we));
-		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
-		vector<string> bps;
-		boost::split(bps, bp, boost::is_any_of("/"));
-		bps[0] = bps[0].substr(0, 5);
-		bps[1] = bps[1].substr(0, 3);
-		bps.back() = bps.back().substr(0, 3);
-		m_ethereum->setExtraData(rlpList(0, string(dev::Version) + "++" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? "-" : "*") + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, "/")));
-	}
-	else if (_interfaces.count("flu"))
-	{
-		m_ethereum.reset(new eth::FluidityClient(&m_net, _dbPath, _we));
 		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
 		vector<string> bps;
 		boost::split(bps, bp, boost::is_any_of("/"));
