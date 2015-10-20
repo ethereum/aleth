@@ -45,7 +45,8 @@ WebThreeDirect::WebThreeDirect(
 	NetworkPreferences const& _n,
 	bytesConstRef _network
 ):
-	NetworkBase(_clientVersion, _n, _network)
+	m_clientVersion(_clientVersion),
+	m_net(_clientVersion, _n, _network)
 {
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);
