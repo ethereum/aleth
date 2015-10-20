@@ -19,11 +19,12 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT ${CMAKE_BUILD_TYPE} STREQUAL "D
 endif()
 
 # LLVM
-find_package(LLVM 3.7 REQUIRED CONFIG PATHS
-	"/usr/local/opt/llvm/share/llvm/cmake"
-	"${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake"
-)
-message(STATUS "Found LLVM ${LLVM_VERSION} (${LLVM_INSTALL_PREFIX}; cmake: ${LLVM_DIR})")
+find_package(LLVM REQUIRED CONFIG)
+if (${LLVM_VERSION} VERSION_LESS 3.7)
+	message(FATAL_ERROR "Incompatible LLVM version ${LLVM_VERSION}")
+endif()
+message(STATUS "Found LLVM ${LLVM_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 llvm_map_components_to_libnames(LLVM_LIBS core support mcjit x86asmparser x86codegen ipo)
 
 add_subdirectory(libevmjit)
