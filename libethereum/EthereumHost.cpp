@@ -292,7 +292,7 @@ BlockChainSync* EthereumHost::sync()
 	if (pv63)
 	{
 		m_syncStart = 0;
-		m_sync.reset(new PV61Sync(*this));
+		m_sync.reset(new PV60Sync(*this));
 	}
 	else if (!m_syncStart)
 		m_syncStart = std::chrono::system_clock::to_time_t(chrono::system_clock::now());

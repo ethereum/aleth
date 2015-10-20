@@ -139,20 +139,6 @@ void EthereumPeer::requestStatus()
 	sealAndSend(s);
 }
 
-void EthereumPeer::requestHashes(u256 _number, unsigned _count)
-{
-	assert(m_asking == Asking::Nothing);
-	assert(m_protocolVersion == host()->protocolVersion());
-	m_syncHashNumber = _number;
-	m_syncHash = h256();
-	setAsking(Asking::Hashes);
-	RLPStream s;
-	prep(s, GetBlockHashesByNumberPacket, 2) << m_syncHashNumber << _count;
-	clog(NetMessageDetail) << "Requesting block hashes for numbers " << m_syncHashNumber << "-" << m_syncHashNumber + _count - 1;
-	m_lastAskedHashes = _count;
-	sealAndSend(s);
-}
-
 void EthereumPeer::requestHashes(h256 const& _lastHash)
 {
 	if (m_asking != Asking::Nothing)
@@ -271,29 +257,6 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		h256 p = host()->chain().details(later).parent;
 		for (unsigned i = 0; i < c && p; ++i, p = host()->chain().details(p).parent)
 			s << p;
-		sealAndSend(s);
-		addRating(0);
-		break;
-	}
-	case GetBlockHashesByNumberPacket:
-	{
-		u256 number256 = _r[0].toInt<u256>();
-		unsigned number = (unsigned) number256;
-		unsigned limit = _r[1].toInt<unsigned>();
-		clog(NetMessageSummary) << "GetBlockHashesByNumber (" << number << "-" << number + limit - 1 << ")";
-		RLPStream s;
-		if (number <= host()->chain().number())
-		{
-			unsigned c = min<unsigned>(host()->chain().number() - number + 1, min(limit, c_maxHashesToSend));
-			prep(s, BlockHashesPacket, c);
-			for (unsigned n = number; n < number + c; n++)
-			{
-				h256 p = host()->chain().numberHash(n);
-				s << p;
-			}
-		}
-		else
-			prep(s, BlockHashesPacket, 0);
 		sealAndSend(s);
 		addRating(0);
 		break;

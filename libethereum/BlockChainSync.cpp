@@ -39,7 +39,6 @@ using namespace dev::eth;
 using namespace p2p;
 
 unsigned const c_chainReorgSize = 30000; /// Added to estimated hashes to account for potential chain reorganiation
-unsigned const c_hashSubchainSize = 8192; /// PV61 subchain size
 unsigned const c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
