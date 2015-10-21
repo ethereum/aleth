@@ -32,6 +32,7 @@ using namespace std;
 using namespace dev;
 /*namespace bp = boost::process;
 namespace bi = boost::iostreams;*/
+#include "libexecstream/exec-stream.h"
 
 #if WIN32
 #define POPEN_R(X) _popen(X, "rb")
