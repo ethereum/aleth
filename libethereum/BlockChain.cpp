@@ -367,9 +367,9 @@ LastHashes BlockChain::lastHashes(h256 const& _parent) const
 	if (m_lastLastHashes.empty() || m_lastLastHashes.back() != _parent)
 	{
 		m_lastLastHashes.resize(256);
-		m_lastLastHashes[255] = _parent;
-		for (unsigned i = 255; i > 0; --i)
-			m_lastLastHashes[i - 1] = m_lastLastHashes[i] ? info(m_lastLastHashes[i]).parentHash() : h256();
+		m_lastLastHashes[0] = _parent;
+		for (unsigned i = 0; i < 255; ++i)
+			m_lastLastHashes[i + 1] = m_lastLastHashes[i] ? info(m_lastLastHashes[i]).parentHash() : h256();
 	}
 	return m_lastLastHashes;
 }
