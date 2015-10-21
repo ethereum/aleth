@@ -241,14 +241,22 @@ void exec_stream_t::impl_t::start( std::string const & program )
         }catch( std::exception const & e ) {
             const char * msg=e.what();
             std::size_t len=strlen( msg );
-            write( status_pipe.w(), &len, sizeof( len ) );
-            write( status_pipe.w(), msg, len );
-            _exit( -1 );
+			// no sense in checking return of write here, but gcc has a long standing but
+			// which would generate warnings if we did not: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=25509
+            if (-1 == write( status_pipe.w(), &len, sizeof( len ) ))
+				_exit( -1 );
+            if (-1 == write( status_pipe.w(), msg, len ))
+				_exit( -1 );
+			_exit( -1 );
         }catch( ... ) {
             const char* msg = "exec_stream_t::start: unknown exception in child process";
             std::size_t len=strlen( msg );
-            write( status_pipe.w(), &len, sizeof( len ) );
-            write( status_pipe.w(), msg, len );
+			// no sense in checking return of write here, but gcc has a long standing but
+			// which would generate warnings if we did not: https://gcc.gnu.org/bugzilla/show_bug.cgi?id=25509
+            if (-1 ==  write( status_pipe.w(), &len, sizeof( len ) ))
+				_exit( 1 );
+            if (-1 == write( status_pipe.w(), msg, len ))
+				_exit ( 1 );
             _exit( 1 );
         }
     }else {
