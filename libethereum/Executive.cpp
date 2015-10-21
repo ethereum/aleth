@@ -142,7 +142,7 @@ string StandardTrace::json(bool _styled) const
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
-	Executive(_s, _bc.lastHashes(unsigned(_s.info().number() - 1)), _level)
+	Executive(_s, _bc.lastHashes(_s.info().parentHash()), _level)
 {}
 
 Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
@@ -151,17 +151,9 @@ Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 	m_depth(_level)
 {}
 
-Executive::Executive(State& _s, BlockChain const& _bc, EnvInfo const& _envInfo, unsigned _level):
-	m_s(_s),
-	m_envInfo(_envInfo),
-	m_depth(_level)
-{
-	m_envInfo.setLastHashes(_bc.lastHashes((unsigned)m_envInfo.number() - 1));
-}
-
-Executive::Executive(State& _s, BlockChain const& _bc, unsigned _number, unsigned _level):
-	m_s(_s),
-	m_envInfo(_bc.info(_bc.numberHash(_number)), _bc.lastHashes(_number - 1)),
+Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
+	m_s(_s = _block.fromPending(_txIndex)),
+	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level)
 {}
 
