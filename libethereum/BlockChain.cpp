@@ -369,7 +369,7 @@ LastHashes BlockChain::lastHashes(h256 const& _parent) const
 		m_lastLastHashes.resize(256);
 		m_lastLastHashes[255] = _parent;
 		for (unsigned i = 255; i > 0; --i)
-			m_lastLastHashes[i - 1] = info(m_lastLastHashes[i]).parentHash();
+			m_lastLastHashes[i - 1] = m_lastLastHashes[i] ? info(m_lastLastHashes[i]).parentHash() : h256();
 	}
 	return m_lastLastHashes;
 }
