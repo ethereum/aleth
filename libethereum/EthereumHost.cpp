@@ -307,11 +307,11 @@ void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		sync()->onPeerStatus(_peer);
 }
 
-void EthereumHost::onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, h256s const &_hashes)
+void EthereumHost::onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerHeaders(_peer, _hashes);
+		sync()->onPeerHeaders(_peer, _headers);
 }
 
 void EthereumHost::onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)

@@ -390,14 +390,11 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		setIdle();
 		if (itemCount > m_lastAskedHeaders)
 		{
-			disable("Too many hashes");
+			disable("Too many headers");
 			break;
 		}
-		h256s hashes(itemCount);
-		for (unsigned i = 0; i < itemCount; ++i)
-			hashes[i] = _r[i].toHash<h256>();
 
-		host()->onPeerHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
+		host()->onPeerHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
 	case GetBlocksPacket:

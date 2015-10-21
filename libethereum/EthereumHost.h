@@ -90,7 +90,7 @@ public:
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
-	void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, h256s const &_hashes);
+	void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers);
 	void onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes);
 	void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
