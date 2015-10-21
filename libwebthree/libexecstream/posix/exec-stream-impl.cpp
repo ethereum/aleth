@@ -25,6 +25,7 @@ WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
 OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
+using namespace helpers;
 
 // exec_stream_t::impl_t
 struct exec_stream_t::impl_t {
@@ -244,7 +245,7 @@ void exec_stream_t::impl_t::start( std::string const & program )
             write( status_pipe.w(), msg, len );
             _exit( -1 );
         }catch( ... ) {
-            char * msg="exec_stream_t::start: unknown exception in child process";
+            const char* msg = "exec_stream_t::start: unknown exception in child process";
             std::size_t len=strlen( msg );
             write( status_pipe.w(), &len, sizeof( len ) );
             write( status_pipe.w(), msg, len );

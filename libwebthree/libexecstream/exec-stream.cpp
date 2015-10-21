@@ -61,7 +61,7 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 // helper classes
-namespace {
+namespace helpers {
 
 class buffer_list_t {
 public:
@@ -212,7 +212,7 @@ void buffer_list_t::clear()
 
 // platform-dependent helpers
 
-namespace {
+namespace helpers {
 
 #include HELPERS_H
 #include HELPERS_CPP
@@ -220,7 +220,7 @@ namespace {
 }
 
 // stream buffer class
-namespace {
+namespace helpers {
 
 class exec_stream_buffer_t : public std::streambuf {
 public:

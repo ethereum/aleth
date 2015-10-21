@@ -6,11 +6,6 @@ set(EXECUTABLE webthree)
 
 file(GLOB HEADERS "*.h")
 list(APPEND SRC_LIST libexecstream/exec-stream.cpp)
-if (MSVC)
-	list(APPEND SRC_LIST libexecstream/win/exec-stream-helpers.cpp libexecstream/win/exec-stream-impl.cpp)
-else()
-	list(APPEND SRC_LIST libexecstream/posix/exec-stream-helpers.cpp libexecstream/posix/exec-stream-impl.cpp)
-endif()
 
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
