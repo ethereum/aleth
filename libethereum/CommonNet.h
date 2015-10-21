@@ -37,14 +37,14 @@ namespace eth
 {
 
 #if ETH_DEBUG
-static const unsigned c_maxHashes = 2048;		///< Maximum number of hashes BlockHashes will ever send.
-static const unsigned c_maxHashesAsk = 2048;		///< Maximum number of hashes GetBlockHashes will ever ask for.
+static const unsigned c_maxHeaders = 2048;		///< Maximum number of hashes BlockHashes will ever send.
+static const unsigned c_maxHeadersAsk = 2048;	///< Maximum number of hashes GetBlockHashes will ever ask for.
 static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks will ever send.
 static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
 static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
 #else
-static const unsigned c_maxHashes = 2048;		///< Maximum number of hashes BlockHashes will ever send.
-static const unsigned c_maxHashesAsk = 2048;	///< Maximum number of hashes GetBlockHashes will ever ask for.
+static const unsigned c_maxHeaders = 2048;		///< Maximum number of hashes BlockHashes will ever send.
+static const unsigned c_maxHeadersAsk = 2048;	///< Maximum number of hashes GetBlockHashes will ever ask for.
 static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks will ever send.
 static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
 static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.

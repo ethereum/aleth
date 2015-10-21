@@ -148,11 +148,11 @@ void EthereumPeer::requestHashes(h256 const& _lastHash)
 	}
 	setAsking(Asking::Headers);
 	RLPStream s;
-	prep(s, GetBlockHeadersPacket, 2) << _lastHash << c_maxHashesAsk;
+	prep(s, GetBlockHeadersPacket, 2) << _lastHash << c_maxHeadersAsk;
 	clog(NetMessageDetail) << "Requesting block hashes staring from " << _lastHash;
 	m_syncHash = _lastHash;
 	m_syncHashNumber = 0;
-	m_lastAskedHashes = c_maxHashesAsk;
+	m_lastAskedHeaders = c_maxHeadersAsk;
 	sealAndSend(s);
 }
 
@@ -380,7 +380,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	case BlockHeadersPacket:
 	{
 		unsigned itemCount = _r.itemCount();
-		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)";
 
 		if (m_asking != Asking::Headers)
 		{
@@ -388,7 +388,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 		setIdle();
-		if (itemCount > m_lastAskedHashes)
+		if (itemCount > m_lastAskedHeaders)
 		{
 			disable("Too many hashes");
 			break;
@@ -397,7 +397,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		for (unsigned i = 0; i < itemCount; ++i)
 			hashes[i] = _r[i].toHash<h256>();
 
-		host()->onPeerHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
+		host()->onPeerHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
 		break;
 	}
 	case GetBlocksPacket:

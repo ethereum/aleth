@@ -695,7 +695,7 @@ void PV60Sync::syncHashes(std::shared_ptr<EthereumPeer> _peer)
 	}
 }
 
-void PV60Sync::onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes)
+void PV60Sync::onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, h256s const &_hashes)
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;

@@ -74,7 +74,7 @@ public:
 	virtual void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) = 0;
 
 	/// Called by peer once it has another sequential block of hashes during sync
-	virtual void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) = 0;
+	virtual void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, h256s const &_hashes) = 0;
 
 	/// Called by peer when it is disconnecting
 	virtual void onPeerAborting() = 0;
@@ -212,7 +212,7 @@ public:
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) override;
 
 	/// Called by peer once it has another sequential block of hashes during sync
-	void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) override;
+	void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, h256s const &_hashes) override;
 
 	/// Called by peer when it is disconnecting
 	void onPeerAborting() override;
