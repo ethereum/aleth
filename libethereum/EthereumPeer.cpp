@@ -45,7 +45,7 @@ string toString(Asking _a)
 	switch (_a)
 	{
 	case Asking::Blocks: return "Blocks";
-	case Asking::Hashes: return "Hashes";
+	case Asking::Headers: return "Headers";
 	case Asking::Nothing: return "Nothing";
 	case Asking::State: return "State";
 	}
@@ -143,16 +143,16 @@ void EthereumPeer::requestHashes(h256 const& _lastHash)
 {
 	if (m_asking != Asking::Nothing)
 	{
-		clog(NetWarn) << "Asking hashes while requesting " << (m_asking == Asking::Nothing ? "nothing" : m_asking == Asking::State ? "state" : m_asking == Asking::Hashes ? "hashes" : m_asking == Asking::Blocks ? "blocks" : "?");
+		clog(NetWarn) << "Asking hashes while requesting " << (m_asking == Asking::Nothing ? "nothing" : m_asking == Asking::State ? "state" : m_asking == Asking::Headers ? "hashes" : m_asking == Asking::Blocks ? "blocks" : "?");
 		// TODO: fix.
 	}
-	setAsking(Asking::Hashes);
+	setAsking(Asking::Headers);
 	RLPStream s;
-	prep(s, GetBlockHeadersPacket, 2) << _lastHash << c_maxHashesAsk;
+	prep(s, GetBlockHeadersPacket, 2) << _lastHash << c_maxHeadersAsk;
 	clog(NetMessageDetail) << "Requesting block hashes staring from " << _lastHash;
 	m_syncHash = _lastHash;
 	m_syncHashNumber = 0;
-	m_lastAskedHashes = c_maxHashesAsk;
+	m_lastAskedHeaders = c_maxHeadersAsk;
 	sealAndSend(s);
 }
 
@@ -195,7 +195,8 @@ void EthereumPeer::setAsking(Asking _a)
 	auto s = session();
 	if (s)
 	{
-		s->addNote("ask", _a == Asking::Nothing ? "nothing" : _a == Asking::State ? "state" : _a == Asking::Hashes ? "hashes" : _a == Asking::Blocks ? "blocks" : "?");
+		s->addNote("ask", _a == Asking::Nothing ? "nothing" : _a == Asking::State ? "state" : _a == Asking::Headers
+																							  ? "hashes" : _a == Asking::Blocks ? "blocks" : "?");
 		s->addNote("sync", string(isCriticalSyncing() ? "ONGOING" : "holding") + (needsSyncing() ? " & needed" : ""));
 	}
 }
@@ -216,7 +217,7 @@ bool EthereumPeer::isConversing() const
 
 bool EthereumPeer::isCriticalSyncing() const
 {
-	return m_asking == Asking::Hashes || m_asking == Asking::State || (m_asking == Asking::Blocks && m_protocolVersion == 60);
+	return m_asking == Asking::Headers || m_asking == Asking::State || (m_asking == Asking::Blocks && m_protocolVersion == 60);
 }
 
 bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
@@ -379,24 +380,21 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	case BlockHeadersPacket:
 	{
 		unsigned itemCount = _r.itemCount();
-		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)";
 
-		if (m_asking != Asking::Hashes)
+		if (m_asking != Asking::Headers)
 		{
-			clog(NetAllDetail) << "Peer giving us hashes when we didn't ask for them.";
+			clog(NetAllDetail) << "Peer giving us headers when we didn't ask for them.";
 			break;
 		}
 		setIdle();
-		if (itemCount > m_lastAskedHashes)
+		if (itemCount > m_lastAskedHeaders)
 		{
-			disable("Too many hashes");
+			disable("Too many headers");
 			break;
 		}
-		h256s hashes(itemCount);
-		for (unsigned i = 0; i < itemCount; ++i)
-			hashes[i] = _r[i].toHash<h256>();
 
-		host()->onPeerHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
+		host()->onPeerHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
 	case GetBlocksPacket:

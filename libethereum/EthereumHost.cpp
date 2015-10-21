@@ -43,7 +43,7 @@ using namespace p2p;
 unsigned const EthereumHost::c_oldProtocolVersion = 60; //TODO: remove this once v61+ is common
 static unsigned const c_maxSendTransactions = 256;
 
-char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"Idle", "Waiting", "Hashes", "Blocks", "NewBlocks" };
+char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"Idle", "Waiting", "Headers", "Blocks", "NewBlocks" };
 
 #ifdef _WIN32
 const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
@@ -307,11 +307,11 @@ void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		sync()->onPeerStatus(_peer);
 }
 
-void EthereumHost::onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes)
+void EthereumHost::onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerHashes(_peer, _hashes);
+		sync()->onPeerHeaders(_peer, _headers);
 }
 
 void EthereumHost::onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)

@@ -431,7 +431,7 @@ void PV60Sync::transition(std::shared_ptr<EthereumPeer> _peer, SyncState _s, boo
 		{
 			if (!isSyncing(_peer))
 			{
-				clog(NetWarn) << "Bad state: asking for Hashes yet not syncing!";
+				clog(NetWarn) << "Bad state: asking for Headers yet not syncing!";
 				return;
 			}
 			if (shouldGrabBlocks(_peer))
@@ -678,7 +678,7 @@ void PV60Sync::syncHashes(std::shared_ptr<EthereumPeer> _peer)
 	if (m_state == SyncState::Idle)
 	{
 		if (isSyncing(_peer))
-			clog(NetWarn) << "Bad state: not asking for Hashes, yet syncing!";
+			clog(NetWarn) << "Bad state: not asking for Headers, yet syncing!";
 
 		m_syncingLatestHash = _peer->m_latestHash;
 		m_syncingTotalDifficulty = _peer->m_totalDifficulty;
@@ -688,70 +688,16 @@ void PV60Sync::syncHashes(std::shared_ptr<EthereumPeer> _peer)
 	else if (m_state == SyncState::Hashes)
 	{
 		if (!isSyncing(_peer))
-			clog(NetWarn) << "Bad state: asking for Hashes yet not syncing!";
+			clog(NetWarn) << "Bad state: asking for Headers yet not syncing!";
 
 		setState(_peer, SyncState::Hashes, true);
 		_peer->requestHashes(m_syncingLastReceivedHash);
 	}
 }
 
-void PV60Sync::onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes)
+void PV60Sync::onPeerHeaders(std::shared_ptr<EthereumPeer>, RLP const&)
 {
-	RecursiveGuard l(x_sync);
-	DEV_INVARIANT_CHECK;
-	if (!isSyncing(_peer))
-	{
-		clog(NetMessageSummary) << "Ignoring hashes since not syncing";
-		return;
-	}
-	if (_peer->m_syncHash != (m_syncingLastReceivedHash ? m_syncingLastReceivedHash : m_syncingLatestHash))
-	{
-		clog(NetMessageSummary) << "Ignoring unexpected hashes";
-		return;
-	}
-	if (_hashes.size() == 0)
-	{
-		transition(_peer, SyncState::Blocks);
-		return;
-	}
-	unsigned knowns = 0;
-	unsigned unknowns = 0;
-	for (unsigned i = 0; i < _hashes.size(); ++i)
-	{
-		auto h = _hashes[i];
-		auto status = host().bq().blockStatus(h);
-		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(h))
-		{
-			clog(NetMessageSummary) << "block hash ready:" << h << ". Start blocks download...";
-			assert (isSyncing(_peer));
-			transition(_peer, SyncState::Blocks);
-			return;
-		}
-		else if (status == QueueStatus::Bad)
-		{
-			cwarn << "block hash bad!" << h << ". Bailing...";
-			_peer->disable("Bad blocks");
-			restartSync();
-			return;
-		}
-		else if (status == QueueStatus::Unknown)
-		{
-			unknowns++;
-			m_syncingNeededBlocks.push_back(h);
-		}
-		else
-			knowns++;
-		m_syncingLastReceivedHash = h;
-	}
-	clog(NetMessageSummary) << knowns << "knowns," << unknowns << "unknowns; now at" << m_syncingLastReceivedHash;
-	if (m_syncingNeededBlocks.size() > _peer->m_expectedHashes)
-	{
-		_peer->disable("Too many hashes");
-		restartSync();
-		return;
-	}
-	// run through - ask for more.
-	transition(_peer, SyncState::Hashes);
+	// Do nothing
 }
 
 void PV60Sync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes)
