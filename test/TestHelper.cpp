@@ -280,7 +280,8 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 			else							\
 			{								\
 				BOOST_WARN_MESSAGE(a,b);	\
-				wasError = true;			\
+				if (!a)						\
+					wasError = true;		\
 			}								\
 		}
 
