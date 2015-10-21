@@ -61,7 +61,6 @@ class State;
 class Block;
 
 struct AlreadyHaveBlock: virtual Exception {};
-struct UnknownParent: virtual Exception {};
 struct FutureTime: virtual Exception {};
 struct TransientError: virtual Exception {};
 
@@ -124,10 +123,16 @@ public:
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
 	std::pair<ImportResult, ImportRoute> attemptImport(bytes const& _block, OverlayDB const& _stateDB, bool _mutBeNew = true) noexcept;
 
-	/// Import block into disk-backed DB
+	/// Import block into disk-backed DB.
 	/// @returns the block hashes of any blocks that came into/went out of the canonical block chain.
 	ImportRoute import(bytes const& _block, OverlayDB const& _stateDB, bool _mustBeNew = true);
 	ImportRoute import(VerifiedBlockRef const& _block, OverlayDB const& _db, bool _mustBeNew = true);
+
+	/// Import data into disk-backed DB.
+	/// This will not execute the block and populate the state trie, but rather will simply add the
+	/// block/header and receipts directly into the databases.
+	void insert(bytes const& _block, bytesConstRef _receipts, bool _mustBeNew = true);
+	void insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew = true);
 
 	/// Returns true if the given block is known (though not necessarily a part of the canon chain).
 	bool isKnown(h256 const& _hash) const;

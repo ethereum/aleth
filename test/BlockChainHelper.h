@@ -44,7 +44,7 @@ enum class RecalcBlockHeader
 	Update,				//find new valid nonce and hash
 	Verify,				//check that block content is matching header
 	UpdateAndVerify,
-	SkipVerify
+	SkipVerify			//recalculate bytes but not verify content
 };
 
 class TestTransaction
@@ -53,6 +53,9 @@ public:
 	TestTransaction(json_spirit::mObject const& _o);
 	TestTransaction(Transaction const& _tr) : m_transaction(_tr) {}
 	Transaction const& getTransaction() const { return m_transaction; }
+	json_spirit::mObject& getJsonObject() { return m_jsonTransaction; }
+	static TestTransaction getDefaultTransaction();
+
 private:
 	json_spirit::mObject m_jsonTransaction;
 	Transaction m_transaction;
@@ -116,6 +119,8 @@ public:
 	TestBlock const& getTopBlock() { return m_lastBlock; }
 	FullBlockChain<Ethash> const& getInterface() const { return *m_blockChain.get();}
 	TestBlock const& getTestGenesis() const { return m_genesisBlock; }
+	static TestBlock getDefaultGenesisBlock();
+
 private:
 	std::unique_ptr<FullBlockChainEthash> m_blockChain;
 	TestBlock m_genesisBlock;

@@ -31,6 +31,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/RLP.h>
+#include <libdevcore/TrieHash.h>
 #include <libdevcore/StructuredLogger.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
@@ -483,6 +484,131 @@ ImportRoute BlockChain::import(bytes const& _block, OverlayDB const& _db, bool _
 	return import(block, _db, _mustBeNew);
 }
 
+void BlockChain::insert(bytes const& _block, bytesConstRef _receipts, bool _mustBeNew)
+{
+	// VERIFY: populates from the block and checks the block is internally coherent.
+	VerifiedBlockRef block;
+
+#if ETH_CATCH
+	try
+#endif
+	{
+		block = verifyBlock(&_block, m_onBad, ImportRequirements::OutOfOrderChecks);
+	}
+#if ETH_CATCH
+	catch (Exception& ex)
+	{
+//		clog(BlockChainNote) << "   Malformed block: " << diagnostic_information(ex);
+		ex << errinfo_phase(2);
+		ex << errinfo_now(time(0));
+		throw;
+	}
+#endif
+
+	insert(block, _receipts, _mustBeNew);
+}
+
+void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _mustBeNew)
+{
+	// Check block doesn't already exist first!
+	if (isKnown(_block.info.hash()) && _mustBeNew)
+	{
+		clog(BlockChainNote) << _block.info.hash() << ": Not new.";
+		BOOST_THROW_EXCEPTION(AlreadyHaveBlock());
+	}
+
+	// Work out its number as the parent's number + 1
+	if (!isKnown(_block.info.parentHash()))
+	{
+		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
+		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
+		BOOST_THROW_EXCEPTION(UnknownParent());
+	}
+
+	// Check receipts
+	vector<bytesConstRef> receipts;
+	for (auto i: RLP(_receipts))
+		receipts.push_back(i.data());
+	h256 receiptsRoot = orderedTrieRoot(receipts);
+	if (_block.info.receiptsRoot() != receiptsRoot)
+	{
+		clog(BlockChainNote) << _block.info.hash() << ": Invalid receipts root " << _block.info.receiptsRoot() << " not " << receiptsRoot;
+		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
+		BOOST_THROW_EXCEPTION(InvalidReceiptsStateRoot());
+	}
+
+	auto pd = details(_block.info.parentHash());
+	if (!pd)
+	{
+		auto pdata = pd.rlp();
+		clog(BlockChainDebug) << "Details is returning false despite block known:" << RLP(pdata);
+		auto parentBlock = block(_block.info.parentHash());
+		clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
+		clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
+		clog(BlockChainDebug) << "Block:" << BlockInfo(&parentBlock);
+		clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
+		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
+		exit(-1);
+	}
+
+	// Check it's not crazy
+	if (_block.info.timestamp() > utcTime())
+	{
+		clog(BlockChainChat) << _block.info.hash() << ": Future time " << _block.info.timestamp() << " (now at " << utcTime() << ")";
+		// Block has a timestamp in the future. This is no good.
+		BOOST_THROW_EXCEPTION(FutureTime());
+	}
+
+	// Verify parent-critical parts
+	verifyBlock(_block.block, m_onBad, ImportRequirements::InOrderChecks);
+
+	// OK - we're happy. Insert into database.
+	ldb::WriteBatch blocksBatch;
+	ldb::WriteBatch extrasBatch;
+
+	BlockLogBlooms blb;
+	for (auto i: RLP(_receipts))
+		blb.blooms.push_back(TransactionReceipt(i.data()).bloom());
+
+	// ensure parent is cached for later addition.
+	// TODO: this is a bit horrible would be better refactored into an enveloping UpgradableGuard
+	// together with an "ensureCachedWithUpdatableLock(l)" method.
+	// This is safe in practice since the caches don't get flushed nearly often enough to be
+	// done here.
+	details(_block.info.parentHash());
+	DEV_WRITE_GUARDED(x_details)
+		m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+
+	blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
+	DEV_READ_GUARDED(x_details)
+		extrasBatch.Put(toSlice(_block.info.parentHash(), ExtraDetails), (ldb::Slice)dev::ref(m_details[_block.info.parentHash()].rlp()));
+
+	BlockDetails bd((unsigned)pd.number + 1, pd.totalDifficulty + _block.info.difficulty(), _block.info.parentHash(), {});
+	extrasBatch.Put(toSlice(_block.info.hash(), ExtraDetails), (ldb::Slice)dev::ref(bd.rlp()));
+	extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));
+	extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)_receipts);
+
+	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
+	if (!o.ok())
+	{
+		cwarn << "Error writing to blockchain database: " << o.ToString();
+		WriteBatchNoter n;
+		blocksBatch.Iterate(&n);
+		cwarn << "Fail writing to blockchain database. Bombing out.";
+		exit(-1);
+	}
+
+	o = m_extrasDB->Write(m_writeOptions, &extrasBatch);
+	if (!o.ok())
+	{
+		cwarn << "Error writing to extras database: " << o.ToString();
+		WriteBatchNoter n;
+		extrasBatch.Iterate(&n);
+		cwarn << "Fail writing to extras database. Bombing out.";
+		exit(-1);
+	}
+}
+
 ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& _db, bool _mustBeNew)
 {
 	//@tidy This is a behemoth of a method - could do to be split into a few smaller ones.
@@ -509,7 +635,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
-		BOOST_THROW_EXCEPTION(UnknownParent());
+		BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
 	}
 
 	auto pd = details(_block.info.parentHash());
