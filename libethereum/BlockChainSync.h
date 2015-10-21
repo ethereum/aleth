@@ -140,7 +140,7 @@ private:
 /**
  * Transitions:
  *
- * Idle->Hashes
+ * Idle->Headers
  * 		Triggered when:
  * 			* A new peer appears that we can sync to
  * 			* Transtition to Idle, there are peers we can sync to
@@ -148,7 +148,7 @@ private:
  * 			* Set chain sync  (m_syncingTotalDifficulty, m_syncingLatestHash, m_syncer)
  * 			* Requests hashes from m_syncer
  *
- *  Hashes->Idle
+ *  Headers->Idle
  * 		Triggered when:
  * 			* Received too many hashes
  * 			* Received 0 total hashes from m_syncer
@@ -156,7 +156,7 @@ private:
  * 		Effects:
  * 			In case of too many hashes sync is reset
  *
- *  Hashes->Blocks
+ *  Headers->Blocks
  * 		Triggered when:
  * 			* Received known hash from m_syncer
  * 			* Received 0 hashes from m_syncer and m_syncingTotalBlocks not empty

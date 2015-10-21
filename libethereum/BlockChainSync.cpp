@@ -431,7 +431,7 @@ void PV60Sync::transition(std::shared_ptr<EthereumPeer> _peer, SyncState _s, boo
 		{
 			if (!isSyncing(_peer))
 			{
-				clog(NetWarn) << "Bad state: asking for Hashes yet not syncing!";
+				clog(NetWarn) << "Bad state: asking for Headers yet not syncing!";
 				return;
 			}
 			if (shouldGrabBlocks(_peer))
@@ -678,7 +678,7 @@ void PV60Sync::syncHashes(std::shared_ptr<EthereumPeer> _peer)
 	if (m_state == SyncState::Idle)
 	{
 		if (isSyncing(_peer))
-			clog(NetWarn) << "Bad state: not asking for Hashes, yet syncing!";
+			clog(NetWarn) << "Bad state: not asking for Headers, yet syncing!";
 
 		m_syncingLatestHash = _peer->m_latestHash;
 		m_syncingTotalDifficulty = _peer->m_totalDifficulty;
@@ -688,7 +688,7 @@ void PV60Sync::syncHashes(std::shared_ptr<EthereumPeer> _peer)
 	else if (m_state == SyncState::Hashes)
 	{
 		if (!isSyncing(_peer))
-			clog(NetWarn) << "Bad state: asking for Hashes yet not syncing!";
+			clog(NetWarn) << "Bad state: asking for Headers yet not syncing!";
 
 		setState(_peer, SyncState::Hashes, true);
 		_peer->requestHashes(m_syncingLastReceivedHash);

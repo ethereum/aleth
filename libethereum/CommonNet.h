@@ -71,7 +71,7 @@ enum
 enum class Asking
 {
 	State,
-	Hashes,
+	Headers,
 	Blocks,
 	Nothing
 };
