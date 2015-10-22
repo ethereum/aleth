@@ -360,7 +360,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		bytes rlp;
 		unsigned itemCount = 0;
-		for (unsigned i = 0; i != numHeadersToSend; ++i)
+		for (unsigned i = 0; i != numHeadersToSend && rlp.size() < c_maxPayload; ++i)
 		{
 			if (!blockHash || !bc.isKnown(blockHash))
 				break;
@@ -399,31 +399,38 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	}
 	case GetBlockBodiesPacket:
 	{
-		unsigned count = _r.itemCount();
-		clog(NetMessageSummary) << "GetBlocks (" << dec << count << "entries)";
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		clog(NetMessageSummary) << "GetBlockBodies (" << dec << count << "entries)";
 
 		if (!count)
 		{
-			clog(NetImpolite) << "Zero-entry GetBlocks: Not replying.";
+			clog(NetImpolite) << "Zero-entry GetBlockBodies: Not replying.";
 			addRating(-10);
 			break;
 		}
 		// return the requested blocks.
 		bytes rlp;
 		unsigned n = 0;
-		for (unsigned i = 0; i < min(count, c_maxBlocks) && rlp.size() < c_maxPayload; ++i)
+		auto numBodiesToSend = std::min(count, c_maxBlocks);
+		for (unsigned i = 0; i < numBodiesToSend && rlp.size() < c_maxPayload; ++i)
 		{
 			auto h = _r[i].toHash<h256>();
 			if (host()->chain().isKnown(h))
 			{
-				rlp += host()->chain().block(_r[i].toHash<h256>());
+				auto blockBytes = host()->chain().block(h);
+				RLP block{blockBytes};
+				auto transactions = block[1].data();
+				auto uncles = block[2].data();
+				auto inserter = std::back_inserter(rlp);
+				std::copy(transactions.begin(), transactions.end(), inserter);
+				std::copy(uncles.begin(), uncles.end(), inserter);
 				++n;
 			}
 		}
 		if (count > 20 && n == 0)
 			clog(NetWarn) << "all" << count << "unknown blocks requested; peer on different chain?";
 		else
-			clog(NetMessageSummary) << n << "blocks known and returned;" << (min(count, c_maxBlocks) - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+			clog(NetMessageSummary) << n << "blocks known and returned;" << (numBodiesToSend - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
 
 		addRating(0);
 		RLPStream s;
