@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(bStates)
 	State stateBofore = testBlockchain.getTopBlock().getState();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
+	TestTransaction transaction1 = TestTransaction::getDefaultTransaction("1");
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::getDefaultTransaction("1");
+	TestTransaction transaction2 = TestTransaction::getDefaultTransaction("2");
 	testBlock.addTransaction(transaction2);
 
 	testBlock.mine(testBlockchain);
