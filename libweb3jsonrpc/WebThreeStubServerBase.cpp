@@ -62,10 +62,11 @@ const unsigned dev::SensibleHttpThreads = 4;
 #endif
 const unsigned dev::SensibleHttpPort = 8545;
 
-WebThreeStubServerBase::WebThreeStubServerBase(AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
-	AbstractWebThreeStubServer(_conn),
-	m_ethAccounts(_ethAccounts),
-	m_handler(_conn.GetHandler())
+WebThreeStubServerBase::WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
+	AbstractWebThreeStubServer(),
+	m_ethAccounts(_ethAccounts)
+// TODO: fix this!
+//	m_handler(_conn.GetHandler())
 {
 	setIdentities(_sshAccounts);
 }

@@ -49,7 +49,7 @@ struct SessionPermissions
 class WebThreeStubServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
 {
 public:
-	WebThreeStubServer(jsonrpc::AbstractServerConnector& _conn, dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
+	WebThreeStubServer(dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
 
 	virtual std::string web3_clientVersion() override;
 

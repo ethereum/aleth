@@ -70,7 +70,6 @@ public:
 
 private:
 	std::unique_ptr<jsonrpc::AbstractServerConnector> m_connection;
-
 protected:
 	std::unique_ptr<jsonrpc::IProtocolHandler> m_handler;
 };

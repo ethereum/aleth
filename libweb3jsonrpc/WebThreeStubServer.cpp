@@ -52,8 +52,8 @@ template <class T> bool isHash(std::string const& _hash)
 	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
 }
 
-WebThreeStubServer::WebThreeStubServer(jsonrpc::AbstractServerConnector& _conn, WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
-	WebThreeStubServerBase(_conn, _ethAccounts, _shhAccounts),
+WebThreeStubServer::WebThreeStubServer(WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
+	WebThreeStubServerBase(_ethAccounts, _shhAccounts),
 	m_web3(_web3),
 	m_keyMan(_keyMan),
 	m_gp(_gp)
