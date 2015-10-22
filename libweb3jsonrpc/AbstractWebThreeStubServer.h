@@ -5,12 +5,12 @@
 #ifndef JSONRPC_CPP_STUB_ABSTRACTWEBTHREESTUBSERVER_H_
 #define JSONRPC_CPP_STUB_ABSTRACTWEBTHREESTUBSERVER_H_
 
-#include <jsonrpccpp/server.h>
+#include "ModularServer.h"
 
-class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThreeStubServer>
+class AbstractWebThreeStubServer : public ServerInterface<AbstractWebThreeStubServer>
 {
     public:
-        AbstractWebThreeStubServer(jsonrpc::AbstractServerConnector &conn, jsonrpc::serverVersion_t type = jsonrpc::JSONRPC_SERVER_V2) : jsonrpc::AbstractServer<AbstractWebThreeStubServer>(conn, type)
+        AbstractWebThreeStubServer()
         {
             this->bindAndAddMethod(jsonrpc::Procedure("web3_sha3", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::web3_sha3I);
             this->bindAndAddMethod(jsonrpc::Procedure("web3_clientVersion", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::web3_clientVersionI);
