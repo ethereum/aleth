@@ -903,7 +903,7 @@ void Listener::notifyTestFinished()
 
 size_t TestOutputHelper::m_currTest = 0;
 size_t TestOutputHelper::m_maxTests = 0;
-string TestOutputHelper::m_currentTestName = "n/a";
+string TestOutputHelper::m_currentTestName = " n/a ";
 
 using namespace boost;
 void TestOutputHelper::initTest(json_spirit::mValue& _v)

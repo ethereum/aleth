@@ -55,8 +55,6 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 	State stateBofore = testBlockchain.getTopBlock().getState();
 
-	//Block block = blockchain.genesisBlock(genesisDB);
-	//block.setBeneficiary(genesisBlock.getBeneficiary());
 	TestBlock testBlock;
 	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
 	testBlock.addTransaction(transaction1);
@@ -101,15 +99,15 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 BOOST_AUTO_TEST_CASE(bGasPricer)
 {
-	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock());
+	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock("63000"));
 	TestBlock const& genesisBlock = testBlockchain.getTestGenesis();
 	OverlayDB const& genesisDB = genesisBlock.getState().db();
 	FullBlockChain<Ethash> const& blockchain = testBlockchain.getInterface();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction("0", "1500000");
+	TestTransaction transaction1 = TestTransaction::getDefaultTransaction("1", "21000");
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::getDefaultTransaction("1", "1500000");
+	TestTransaction transaction2 = TestTransaction::getDefaultTransaction("2", "21000");
 	testBlock.addTransaction(transaction2);
 
 	{
@@ -134,7 +132,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Transactions valid but exceed block gasLimit - BlockGasLimitReached
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction("2", "1500000");
+		TestTransaction transaction = TestTransaction::getDefaultTransaction("3", "1500000");
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -144,21 +142,44 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
 	}
 
-	/*{
+	{
+		//Temporary no gas left in the block
 		TestBlock testBlockT = testBlock;
-		try
-		{
-			ZeroGasPricer gp;
-			Block block = blockchain.genesisBlock(genesisDB);
-			block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-			BOOST_ERROR("Expected exception: BlockGasLimitReached");
-		}
-		catch (std::exception const& _e)
-		{
-			BOOST_REQUIRE(string(_e.what()).find("BlockGasLimitReached") != string::npos);
-			BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 0);
-		}
-	}*/
+		TestTransaction transaction = TestTransaction::getDefaultTransaction("3", "25000", "238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749");
+		testBlockT.addTransaction(transaction);
+
+		ZeroGasPricer gp;
+		Block block = blockchain.genesisBlock(genesisDB);
+		block.sync(blockchain);
+		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 3);
+	}
+
+	{
+		//Invalid nonce - nonces ahead
+		TestBlock testBlockT = testBlock;
+		TestTransaction transaction = TestTransaction::getDefaultTransaction("12", "21000");
+		testBlockT.addTransaction(transaction);
+
+		ZeroGasPricer gp;
+		Block block = blockchain.genesisBlock(genesisDB);
+		block.sync(blockchain);
+		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
+	}
+
+	{
+		//Invalid nonce - nonce too low
+		TestBlock testBlockT = testBlock;
+		TestTransaction transaction = TestTransaction::getDefaultTransaction("0", "21000");
+		testBlockT.addTransaction(transaction);
+
+		ZeroGasPricer gp;
+		Block block = blockchain.genesisBlock(genesisDB);
+		block.sync(blockchain);
+		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
+	}
 }
 
 //move expect exception under checkstate option
@@ -206,7 +227,6 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 	{
 		BOOST_REQUIRE(string(_e.what()).find("BlockNotFound") != string::npos);
 	}
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()
