@@ -62,8 +62,8 @@ enum
 	TransactionsPacket,
 	GetBlockHeadersPacket,
 	BlockHeadersPacket,
-	GetBlocksPacket,
-	BlocksPacket,
+	GetBlockBodiesPacket,
+	BlockBodiesPacket,
 	NewBlockPacket,
 	PacketCount
 };
