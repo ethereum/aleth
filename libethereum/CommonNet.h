@@ -66,6 +66,9 @@ enum: byte
 	BlockBodiesPacket = 0x06,
 	NewBlockPacket = 0x07,
 
+	GetNodeDataPacket = 0x0d,
+	NodeDataPacket = 0x0e,
+
 	PacketCount
 };
 

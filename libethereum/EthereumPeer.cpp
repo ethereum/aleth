@@ -474,6 +474,40 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		host()->onPeerNewHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
 		break;
 	}
+	case GetNodeDataPacket:
+	{
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		if (!count)
+		{
+			clog(NetImpolite) << "Zero-entry GetNodeData: Not replying.";
+			addRating(-10);
+			break;
+		}
+		clog(NetMessageSummary) << "GetNodeData (" << dec << count << "entries)";
+
+		// return the requested blocks.
+		bytes rlp;
+		unsigned n = 0;
+		auto numItemsToSend = std::min(count, c_maxBlocks);
+		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			auto h = _r[i].toHash<h256>();
+			auto node = host()->db().lookup(h);
+			if (!node.empty())
+			{
+				auto nodeData = RLPStream{}.append(node).out();
+				rlp.insert(rlp.end(), nodeData.begin(), nodeData.end());
+				++n;
+			}
+		}
+		clog(NetMessageSummary) << n << " nodes known and returned;" << (numItemsToSend - n) << "nodes unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+
+		addRating(0);
+		RLPStream s;
+		prep(s, NodeDataPacket, n).appendRaw(rlp, n);
+		sealAndSend(s);
+		break;
+	}
 	default:
 		return false;
 	}
