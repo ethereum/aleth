@@ -33,6 +33,7 @@
 #include <libdevcore/Worker.h>
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
+#include <libdevcrypto/OverlayDB.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
 #include "DownloadMan.h"
@@ -60,7 +61,7 @@ class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 public:
 	/// Start server, but don't listen.
-	EthereumHost(BlockChain const& _ch, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+	EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
 	/// Will block on network process events.
 	virtual ~EthereumHost();
@@ -80,6 +81,7 @@ public:
 	void noteNewBlocks() { m_newBlocks = true; }
 
 	BlockChain const& chain() const { return m_chain; }
+	OverlayDB const& db() const { return m_db; }
 	BlockQueue& bq() { return m_bq; }
 	BlockQueue const& bq() const { return m_bq; }
 	SyncStatus status() const;
@@ -121,6 +123,7 @@ private:
 	BlockChainSync* sync();
 
 	BlockChain const& m_chain;
+	OverlayDB const& m_db;					///< References to DB, needed for some of the Ethereum Protocol responses.
 	TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
 	BlockQueue& m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 
