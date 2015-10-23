@@ -56,9 +56,9 @@ BOOST_AUTO_TEST_CASE(bStates)
 	State stateBofore = testBlockchain.getTopBlock().getState();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction("1");
+	TestTransaction transaction1 = TestTransaction::getDefaultTransaction(1);
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::getDefaultTransaction("2");
+	TestTransaction transaction2 = TestTransaction::getDefaultTransaction(2);
 	testBlock.addTransaction(transaction2);
 
 	testBlock.mine(testBlockchain);
@@ -99,15 +99,15 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 BOOST_AUTO_TEST_CASE(bGasPricer)
 {
-	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock("63000"));
+	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock(63000));
 	TestBlock const& genesisBlock = testBlockchain.getTestGenesis();
 	OverlayDB const& genesisDB = genesisBlock.getState().db();
 	FullBlockChain<Ethash> const& blockchain = testBlockchain.getInterface();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction("1", "21000");
+	TestTransaction transaction1 = TestTransaction::getDefaultTransaction(1, 21000);
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::getDefaultTransaction("2", "21000");
+	TestTransaction transaction2 = TestTransaction::getDefaultTransaction(2, 21000);
 	testBlock.addTransaction(transaction2);
 
 	{
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Transactions valid but exceed block gasLimit - BlockGasLimitReached
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction("3", "1500000");
+		TestTransaction transaction = TestTransaction::getDefaultTransaction(3, 1500000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Temporary no gas left in the block
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction("3", "25000", "238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749");
+		TestTransaction transaction = TestTransaction::getDefaultTransaction(3, 25000, importByteArray("238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749"));
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Invalid nonce - nonces ahead
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction("12", "21000");
+		TestTransaction transaction = TestTransaction::getDefaultTransaction(12, 21000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Invalid nonce - nonce too low
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction("0", "21000");
+		TestTransaction transaction = TestTransaction::getDefaultTransaction(0, 21000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -217,16 +217,9 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 	//block31.populateFromChain(blockchain, genesisBlock.getBlockHeader().hash());
 	//BOOST_REQUIRE(block31.info() == (BlockInfo)genesisBlock.getBlockHeader());
 
-	try
-	{
-		Block block32 = blockchain.genesisBlock(genesisDB);
-		block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001"));
-		BOOST_ERROR("Expected BlockNotFound exception!");
-	}
-	catch (std::exception const& _e)
-	{
-		BOOST_REQUIRE(string(_e.what()).find("BlockNotFound") != string::npos);
-	}
+	Block block32 = blockchain.genesisBlock(genesisDB);
+	auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("BlockNotFound") != string::npos; };
+	BOOST_CHECK_EXCEPTION(block32.populateFromChain(blockchain, h256("0x0000000000000000000000000000000000000000000000000000000000000001")), BlockNotFound, is_critical);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
