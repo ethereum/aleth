@@ -162,7 +162,7 @@ void EthereumPeer::requestBlocks(h256s const& _blocks)
 	if (_blocks.size())
 	{
 		RLPStream s;
-		prep(s, GetBlocksPacket, _blocks.size());
+		prep(s, GetBlockBodiesPacket, _blocks.size());
 		for (auto const& i: _blocks)
 			s << i;
 		sealAndSend(s);
@@ -178,7 +178,7 @@ void EthereumPeer::requestBlocks()
 	if (blocks.size())
 	{
 		RLPStream s;
-		prep(s, GetBlocksPacket, blocks.size());
+		prep(s, GetBlockBodiesPacket, blocks.size());
 		for (auto const& i: blocks)
 			s << i;
 		sealAndSend(s);
@@ -360,7 +360,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		bytes rlp;
 		unsigned itemCount = 0;
-		for (unsigned i = 0; i != numHeadersToSend; ++i)
+		for (unsigned i = 0; i != numHeadersToSend && rlp.size() < c_maxPayload; ++i)
 		{
 			if (!blockHash || !bc.isKnown(blockHash))
 				break;
@@ -397,44 +397,52 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		host()->onPeerHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
-	case GetBlocksPacket:
+	case GetBlockBodiesPacket:
 	{
-		unsigned count = _r.itemCount();
-		clog(NetMessageSummary) << "GetBlocks (" << dec << count << "entries)";
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		clog(NetMessageSummary) << "GetBlockBodies (" << dec << count << "entries)";
 
 		if (!count)
 		{
-			clog(NetImpolite) << "Zero-entry GetBlocks: Not replying.";
+			clog(NetImpolite) << "Zero-entry GetBlockBodies: Not replying.";
 			addRating(-10);
 			break;
 		}
 		// return the requested blocks.
 		bytes rlp;
 		unsigned n = 0;
-		for (unsigned i = 0; i < min(count, c_maxBlocks) && rlp.size() < c_maxPayload; ++i)
+		auto numBodiesToSend = std::min(count, c_maxBlocks);
+		for (unsigned i = 0; i < numBodiesToSend && rlp.size() < c_maxPayload; ++i)
 		{
 			auto h = _r[i].toHash<h256>();
 			if (host()->chain().isKnown(h))
 			{
-				rlp += host()->chain().block(_r[i].toHash<h256>());
+				bytes blockBytes = host()->chain().block(h);
+				RLP block{blockBytes};
+				RLPStream body;
+				body.appendList(2);
+				body.appendRaw(block[1].data()); // transactions
+				body.appendRaw(block[2].data()); // uncles
+				auto bodyBytes = body.out();
+				rlp.insert(rlp.end(), bodyBytes.begin(), bodyBytes.end());
 				++n;
 			}
 		}
 		if (count > 20 && n == 0)
 			clog(NetWarn) << "all" << count << "unknown blocks requested; peer on different chain?";
 		else
-			clog(NetMessageSummary) << n << "blocks known and returned;" << (min(count, c_maxBlocks) - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+			clog(NetMessageSummary) << n << "blocks known and returned;" << (numBodiesToSend - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
 
 		addRating(0);
 		RLPStream s;
-		prep(s, BlocksPacket, n).appendRaw(rlp, n);
+		prep(s, BlockBodiesPacket, n).appendRaw(rlp, n);
 		sealAndSend(s);
 		break;
 	}
-	case BlocksPacket:
+	case BlockBodiesPacket:
 	{
 		if (m_asking != Asking::Blocks)
-			clog(NetImpolite) << "Peer giving us blocks when we didn't ask for them.";
+			clog(NetImpolite) << "Peer giving us block bodies when we didn't ask for them.";
 		else
 		{
 			setIdle();
