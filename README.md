@@ -36,10 +36,6 @@ See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build ins
 
 To run the tests, make sure you clone the tests repository from github.com/ethereum to tests as a sibling to cpp-ethereum.
 
-### Yet To Do
-
-See [TODO](https://github.com/ethereum/cpp-ethereum/wiki/TODO)
-
 ### License
 
 All new contributions are under the [MIT license](http://opensource.org/licenses/MIT).
