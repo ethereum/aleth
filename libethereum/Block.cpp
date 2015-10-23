@@ -436,7 +436,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 	LastHashes lh;
 	DEV_TIMED_ABOVE("lastHashes", 500)
-		lh = _bc.lastHashes((unsigned)m_previousBlock.number());
+		lh = _bc.lastHashes(m_currentBlock.parentHash());
 
 	RLP rlp(_block.block);
 
@@ -831,7 +831,7 @@ string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequire
 	m_currentBlock.verifyInternals(_block);
 	m_currentBlock.noteDirty();
 
-	LastHashes lh = _bc.lastHashes((unsigned)m_previousBlock.number());
+	LastHashes lh = _bc.lastHashes(m_currentBlock.parentHash());
 
 	string ret;
 	unsigned i = 0;
