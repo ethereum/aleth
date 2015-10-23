@@ -417,13 +417,14 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			auto h = _r[i].toHash<h256>();
 			if (host()->chain().isKnown(h))
 			{
-				auto blockBytes = host()->chain().block(h);
+				bytes blockBytes = host()->chain().block(h);
 				RLP block{blockBytes};
-				auto transactions = block[1].data();
-				auto uncles = block[2].data();
-				auto inserter = std::back_inserter(rlp);
-				std::copy(transactions.begin(), transactions.end(), inserter);
-				std::copy(uncles.begin(), uncles.end(), inserter);
+				RLPStream body;
+				body.appendList(2);
+				body.appendRaw(block[1].data()); // transactions
+				body.appendRaw(block[2].data()); // uncles
+				auto bodyBytes = body.out();
+				rlp.insert(rlp.end(), bodyBytes.begin(), bodyBytes.end());
 				++n;
 			}
 		}
