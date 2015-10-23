@@ -55,16 +55,17 @@ class TransactionQueue;
 class EthereumHost;
 class EthereumPeer;
 
-enum
+enum: byte
 {
-	StatusPacket = 0,
-	NewBlockHashesPacket,
-	TransactionsPacket,
-	GetBlockHeadersPacket,
-	BlockHeadersPacket,
-	GetBlockBodiesPacket,
-	BlockBodiesPacket,
-	NewBlockPacket,
+	StatusPacket = 0x00,
+	NewBlockHashesPacket = 0x01,
+	TransactionsPacket = 0x02,
+	GetBlockHeadersPacket = 0x03,
+	BlockHeadersPacket = 0x04,
+	GetBlockBodiesPacket = 0x05,
+	BlockBodiesPacket = 0x06,
+	NewBlockPacket = 0x07,
+
 	PacketCount
 };
 
