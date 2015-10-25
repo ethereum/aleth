@@ -34,7 +34,8 @@ MainCLI* MainCLI::s_this = nullptr;
 
 MainCLI::MainCLI(Mode _mode):
 	m_mode(_mode),
-	m_keyManager(getDataDir("fluidity") + "/keys.info")
+	m_keyManager(getDataDir("fluidity") + "/keys.info"),
+	m_chainParams(eth::Network::Fluidity)
 {
 	s_this = this;
 }
@@ -85,8 +86,8 @@ void MainCLI::execute()
 		dev::WebThreeDirect web3(
 			WebThreeDirect::composeClientVersion("flu", m_clientName),
 			m_dbPath,
-			WithExisting::Trust,
 			m_chainParams,
+			WithExisting::Trust,
 			set<string>{"flu"},
 			m_netPrefs,
 			&nodesState);

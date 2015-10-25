@@ -84,7 +84,7 @@ string WebThreeStubServerBase::web3_sha3(string const& _param1)
 
 string WebThreeStubServerBase::net_version()
 {
-	return toJS((unsigned)c_network);
+	return toJS(client()->networkId());
 }
 
 string WebThreeStubServerBase::net_peerCount()

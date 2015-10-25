@@ -256,8 +256,8 @@ public:
 	WebThreeDirect(
 		std::string const& _clientVersion,
 		std::string const& _dbPath,
-		WithExisting _we = WithExisting::Trust,
 		eth::ChainParams const& _params,
+		WithExisting _we = WithExisting::Trust,
 		std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
 		p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),
 		bytesConstRef _network = bytesConstRef()

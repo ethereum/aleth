@@ -42,8 +42,8 @@ using namespace dev::shh;
 WebThreeDirect::WebThreeDirect(
 	std::string const& _clientVersion,
 	std::string const& _dbPath,
-	WithExisting _we,
 	eth::ChainParams const& _params,
+	WithExisting _we,
 	std::set<std::string> const& _interfaces,
 	NetworkPreferences const& _n,
 	bytesConstRef _network
@@ -54,7 +54,7 @@ WebThreeDirect::WebThreeDirect(
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
 	{
-		m_ethereum.reset(new eth::EthashClient(_params, &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+		m_ethereum.reset(new eth::EthashClient(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
 		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
 		vector<string> bps;
 		boost::split(bps, bp, boost::is_any_of("/"));
@@ -65,7 +65,7 @@ WebThreeDirect::WebThreeDirect(
 	}
 	else if (_interfaces.count("flu"))
 	{
-		m_ethereum.reset(new eth::FluidityClient(_params, &m_net, _dbPath, _we));
+		m_ethereum.reset(new eth::FluidityClient(_params, (int)_params.u256Param("networkID"), &m_net, _dbPath, _we));
 		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
 		vector<string> bps;
 		boost::split(bps, bp, boost::is_any_of("/"));
