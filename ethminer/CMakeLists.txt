@@ -8,8 +8,8 @@ add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED JsonRpc::Client Dev::devcore Eth::ethcore)
 
-jsonrcpstub_client_create(minerfarm.json FarmClient FarmClient)
-jsonrcpstub_client_create(minerphonehome.json PhoneHome PhoneHome)
+jsonrpcstub_client_create(minerfarm.json FarmClient FarmClient)
+jsonrpcstub_client_create(minerphonehome.json PhoneHome PhoneHome)
 
 if (APPLE)
 	install(TARGETS ${EXECUTABLE} DESTINATION bin)
