@@ -229,7 +229,7 @@ macro(eth_appdmg)
 	endif()
 endmacro()
 
-macro(jsonrcpstub_client_create SPEC CLIENTNAME CLIENTFILENAME)
+macro(jsonrpcstub_client_create SPEC CLIENTNAME CLIENTFILENAME)
 	if (ETH_JSON_RPC_STUB)
 		add_custom_target(${SPEC}stub)
 		add_custom_command(
