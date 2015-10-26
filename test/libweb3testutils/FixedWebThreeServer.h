@@ -34,8 +34,8 @@
 class FixedWebThreeServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
 {
 public:
-	FixedWebThreeServer(jsonrpc::AbstractServerConnector& _conn, std::vector<dev::KeyPair> const& _allAccounts, dev::eth::Interface* _client):
-		WebThreeStubServerBase(_conn, std::make_shared<dev::eth::FixedAccountHolder>([=](){return _client;}, _allAccounts), _allAccounts),
+	FixedWebThreeServer(std::vector<dev::KeyPair> const& _allAccounts, dev::eth::Interface* _client):
+		WebThreeStubServerBase(std::make_shared<dev::eth::FixedAccountHolder>([=](){return _client;}, _allAccounts), _allAccounts),
 		m_client(_client)
 	{}
 

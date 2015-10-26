@@ -56,6 +56,7 @@
 #include <libweb3jsonrpc/SafeHttpServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <libweb3jsonrpc/ModularServer.h>
+#include <libweb3jsonrpc/IpcServer.h>
 #endif
 #include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
@@ -1136,7 +1137,6 @@ int main(int argc, char** argv)
 
 #if ETH_JSONRPC || !ETH_TRUE
 	unique_ptr<ModularServer<dev::WebThreeStubServer>> jsonrpcServer;
-	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
 
 	AddressHash allowedDestinations;
 
@@ -1161,14 +1161,17 @@ int main(int argc, char** argv)
 
 	if (jsonRPCURL > -1 || ipc)
 	{
-		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
-		safeConnector->setAllowedOrigin(rpcCorsDomain);
-		jsonrpcConnector.reset(safeConnector);
-		dev::WebThreeStubServer* webthreeFace = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
-		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer>(safeConnector, webthreeFace));
+		auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
+		auto ipcConnector = new IpcServer("geth");
+		auto webthreeFace = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
+		
+		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer>(webthreeFace));
+		httpConnector->setAllowedOrigin(rpcCorsDomain);
+		jsonrpcServer->addConnector(httpConnector);
+		jsonrpcServer->addConnector(ipcConnector);
 		if (jsonRPCURL > -1)
 			jsonrpcServer->StartListening();
-		webthreeFace->enableIpc(ipc);
+		ipcConnector->StartListening();
 		if (jsonAdmin.empty())
 			jsonAdmin = webthreeFace->newSession(SessionPermissions{{Privilege::Admin}});
 		else
@@ -1207,7 +1210,8 @@ int main(int argc, char** argv)
 			// TODO: ownership of connector
 			JSLocalConsole console;
 			dev::WebThreeStubServer* webthreeFace = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
-			ModularServer<dev::WebThreeStubServer> rpcServer(console.connector(), webthreeFace);
+			ModularServer<dev::WebThreeStubServer> rpcServer(webthreeFace);
+			rpcServer.addConnector(console.createConnector());
 			rpcServer.StartListening();
 			string sessionKey = webthreeFace->newSession(SessionPermissions{{Privilege::Admin}});
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");

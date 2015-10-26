@@ -65,8 +65,6 @@ const unsigned dev::SensibleHttpPort = 8545;
 WebThreeStubServerBase::WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
 	AbstractWebThreeStubServer(),
 	m_ethAccounts(_ethAccounts)
-// TODO: fix this!
-//	m_handler(_conn.GetHandler())
 {
 	setIdentities(_sshAccounts);
 }
@@ -1017,20 +1015,5 @@ Json::Value WebThreeStubServerBase::shh_getMessages(string const& _filterId)
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
-	}
-}
-
-void WebThreeStubServerBase::enableIpc(bool _enable)
-{
-	if (_enable && !m_ipcConnector)
-	{
-		m_ipcConnector.reset(new IpcServer("geth"));
-		m_ipcConnector->SetHandler(m_handler);
-		m_ipcConnector->StartListening();
-	}
-	else if (!_enable && m_ipcConnector.get())
-	{
-		m_ipcConnector->StopListening();
-		m_ipcConnector.reset();
 	}
 }

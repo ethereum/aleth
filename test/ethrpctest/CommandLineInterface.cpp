@@ -29,6 +29,7 @@
 #include <libtestutils/Common.h>
 #include <libtestutils/BlockChainLoader.h>
 #include <libtestutils/FixedClient.h>
+#include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3testutils/FixedWebThreeServer.h>
 #include "CommandLineInterface.h"
 
@@ -115,11 +116,10 @@ void CommandLineInterface::actOnInput()
 	BlockChainLoader bcl(m_json);
 	cerr << "void CommandLineInterface::actOnInput() FixedClient now accepts eth::Block!!!" << endl;
 	FixedClient client(bcl.bc(), eth::Block{}/*bcl.state()*/);
-	unique_ptr<FixedWebThreeServer> jsonrpcServer;
-	auto server = new jsonrpc::HttpServer(8080, "", "", 2);
-	jsonrpcServer.reset(new FixedWebThreeServer(*server, {}, &client));
-	jsonrpcServer->StartListening();
-
+	ModularServer<FixedWebThreeServer> server(new FixedWebThreeServer({}, &client));
+	server.addConnector(new jsonrpc::HttpServer(8080, "", "", 2));
+	server.StartListening();
+	
 	signal(SIGABRT, &sighandler);
 	signal(SIGTERM, &sighandler);
 	signal(SIGINT, &sighandler);

@@ -20,15 +20,5 @@
  * Ethereum client.
  */
 
-#include <iostream>
 #include "JSLocalConsole.h"
-#include "JSV8Connector.h"
 
-using namespace std;
-using namespace dev;
-using namespace dev::eth;
-
-JSLocalConsole::JSLocalConsole()
-{
-	m_jsonrpcConnector.reset(new JSV8Connector(m_engine));
-}

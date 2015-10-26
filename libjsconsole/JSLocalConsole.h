@@ -25,6 +25,7 @@
 #include <libjsengine/JSV8Engine.h>
 #include <libjsengine/JSV8Printer.h>
 #include "JSConsole.h"
+#include "JSV8Connector.h"
 
 class WebThreeStubServer;
 namespace jsonrpc { class AbstractServerConnector; }
@@ -37,13 +38,8 @@ namespace eth
 class JSLocalConsole: public JSConsole<JSV8Engine, JSV8Printer>
 {
 public:
-	JSLocalConsole();
 	virtual ~JSLocalConsole() {}
-
-	jsonrpc::AbstractServerConnector* connector() { return m_jsonrpcConnector.get(); }
-
-private:
-	std::unique_ptr<jsonrpc::AbstractServerConnector> m_jsonrpcConnector;
+	jsonrpc::AbstractServerConnector* createConnector() { return new JSV8Connector(m_engine); }
 };
 
 }

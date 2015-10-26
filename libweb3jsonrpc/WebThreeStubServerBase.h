@@ -198,9 +198,6 @@ public:
 	virtual std::string personal_newAccount(const std::string&) { return ""; }
 	virtual bool personal_unlockAccount(const std::string&, const std::string&, int) { return false; }
 
-	// IPC connector
-	void enableIpc(bool _enable);
-
 	// TODO REMOVE
 	virtual bool admin_eth_setReferencePrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
 	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
@@ -224,9 +221,6 @@ protected:
 
 	std::map<dev::Public, dev::Secret> m_shhIds;
 	std::map<unsigned, dev::Public> m_shhWatches;
-
-	std::unique_ptr<jsonrpc::AbstractServerConnector> m_ipcConnector;
-	jsonrpc::IClientConnectionHandler* m_handler;
 };
 
 } //namespace dev
