@@ -50,6 +50,7 @@ static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we as
 static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
 #endif
 static const unsigned c_maxNodes = c_maxBlocks; ///< Maximum number of nodes will ever send.
+static const unsigned c_maxReceipts = c_maxBlocks; ///< Maximum number of receipts will ever send.
 
 class BlockChain;
 class TransactionQueue;
@@ -69,6 +70,8 @@ enum: byte
 
 	GetNodeDataPacket = 0x0d,
 	NodeDataPacket = 0x0e,
+	GetReceiptsPacket = 0x0f,
+	ReceiptsPacket = 0x10,
 
 	PacketCount
 };

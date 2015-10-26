@@ -507,6 +507,40 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		sealAndSend(s);
 		break;
 	}
+	case GetReceiptsPacket:
+	{
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		if (!count)
+		{
+			clog(NetImpolite) << "Zero-entry GetReceipts: Not replying.";
+			addRating(-10);
+			break;
+		}
+		clog(NetMessageSummary) << "GetReceipts (" << dec << count << " entries)";
+
+		// return the requested receipts.
+		bytes rlp;
+		unsigned n = 0;
+		auto numItemsToSend = std::min(count, c_maxReceipts);
+		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			auto h = _r[i].toHash<h256>();
+			if (host()->chain().isKnown(h))
+			{
+				auto const receipts = host()->chain().receipts(h);
+				auto receiptsRlpList = receipts.rlp();
+				rlp.insert(rlp.end(), receiptsRlpList.begin(), receiptsRlpList.end());
+				++n;
+			}
+		}
+		clog(NetMessageSummary) << n << " receipt lists known and returned;" << (numItemsToSend - n) << " unknown;" << (count > c_maxReceipts ? count - c_maxReceipts : 0) << " ignored";
+
+		addRating(0);
+		RLPStream s;
+		prep(s, ReceiptsPacket, n).appendRaw(rlp, n);
+		sealAndSend(s);
+		break;
+	}
 	default:
 		return false;
 	}
