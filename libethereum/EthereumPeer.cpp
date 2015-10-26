@@ -495,8 +495,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			auto node = host()->db().lookup(h);
 			if (!node.empty())
 			{
-				auto nodeData = RLPStream{}.append(node).out();
-				rlp.insert(rlp.end(), nodeData.begin(), nodeData.end());
+				rlp.insert(rlp.end(), node.begin(), node.end());
 				++n;
 			}
 		}
