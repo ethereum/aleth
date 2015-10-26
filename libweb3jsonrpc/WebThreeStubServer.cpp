@@ -278,8 +278,8 @@ Json::Value WebThreeStubServer::admin_eth_vmTrace(std::string const& _blockNumbe
 	if ((unsigned)_txIndex < block.pending().size())
 	{
 		Transaction t = block.pending()[_txIndex];
-		State state = block.fromPending(_txIndex);
-		Executive e(state, bc(), 0);
+		State s;
+		Executive e(s, block, _txIndex, bc());
 		try
 		{
 			StandardTrace st;
