@@ -49,6 +49,7 @@ static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks w
 static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
 static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
 #endif
+static const unsigned c_maxNodes = c_maxBlocks; ///< Maximum number of nodes will ever send.
 
 class BlockChain;
 class TransactionQueue;

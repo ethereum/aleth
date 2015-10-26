@@ -485,10 +485,10 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		}
 		clog(NetMessageSummary) << "GetNodeData (" << dec << count << "entries)";
 
-		// return the requested blocks.
+		// return the requested nodes.
 		bytes rlp;
 		unsigned n = 0;
-		auto numItemsToSend = std::min(count, c_maxBlocks);
+		auto numItemsToSend = std::min(count, c_maxNodes);
 		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
 		{
 			auto h = _r[i].toHash<h256>();
