@@ -14,8 +14,8 @@ jsonrpcstub_create(spec.json
 )
 
 jsonrpcstub_create(db.json
-	AbstractDb ${CMAKE_CURRENT_SOURCE_DIR} AbstractDb
-	DbClient ${CMAKE_CURRENT_BINARY_DIR} DbClient
+	dev::rpc::DBFace ${CMAKE_CURRENT_SOURCE_DIR} DBFace
+	DBClient ${CMAKE_CURRENT_BINARY_DIR} DBClient
 )
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )

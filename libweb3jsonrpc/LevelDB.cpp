@@ -1,4 +1,4 @@
-#include "LevelDBFace.h"
+#include "LevelDB.h"
 #include <leveldb/db.h>
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
@@ -6,10 +6,11 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::rpc;
 namespace fs = boost::filesystem;
 namespace ldb = leveldb;
 
-LevelDBFace::LevelDBFace()
+LevelDB::LevelDB()
 {
 	auto path = getDataDir() + "/.web3";
 	fs::create_directories(path);
@@ -19,7 +20,7 @@ LevelDBFace::LevelDBFace()
 	ldb::DB::Open(o, path, &m_db);
 }
 
-bool LevelDBFace::db_put(std::string const& _name, std::string const& _key, std::string const& _value)
+bool LevelDB::db_put(std::string const& _name, std::string const& _key, std::string const& _value)
 {
 	bytes k = sha3(_name).asBytes() + sha3(_key).asBytes();
 	auto status = m_db->Put(ldb::WriteOptions(),
@@ -28,7 +29,7 @@ bool LevelDBFace::db_put(std::string const& _name, std::string const& _key, std:
 	return status.ok();
 }
 
-std::string LevelDBFace::db_get(std::string const& _name, std::string const& _key)
+std::string LevelDB::db_get(std::string const& _name, std::string const& _key)
 {
 	bytes k = sha3(_name).asBytes() + sha3(_key).asBytes();
 	string ret;

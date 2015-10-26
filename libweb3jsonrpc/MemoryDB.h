@@ -1,7 +1,12 @@
 #pragma once
-#include "AbstractDb.h"
+#include "DBFace.h"
 
-class MemoryDBFace: public AbstractDb
+namespace dev
+{
+namespace rpc
+{
+
+class MemoryDB: public dev::rpc::DBFace
 {
 public:
 	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value) override;
@@ -10,3 +15,6 @@ public:
 private:
 	std::map<std::string, std::string> m_db;
 };
+
+}
+}

@@ -57,7 +57,7 @@
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/IpcServer.h>
-#include <libweb3jsonrpc/LevelDBFace.h>
+#include <libweb3jsonrpc/LevelDB.h>
 #endif
 #include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
@@ -1137,7 +1137,7 @@ int main(int argc, char** argv)
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
 #if ETH_JSONRPC || !ETH_TRUE
-	unique_ptr<ModularServer<dev::WebThreeStubServer, AbstractDb>> jsonrpcServer;
+	unique_ptr<ModularServer<dev::WebThreeStubServer, rpc::DBFace>> jsonrpcServer;
 
 	AddressHash allowedDestinations;
 
@@ -1166,7 +1166,7 @@ int main(int argc, char** argv)
 		auto ipcConnector = new IpcServer("geth");
 		auto webthreeFace = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
 		
-		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, AbstractDb>(webthreeFace, new LevelDBFace()));
+		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, rpc::DBFace>(webthreeFace, new rpc::LevelDB()));
 		httpConnector->setAllowedOrigin(rpcCorsDomain);
 		jsonrpcServer->addConnector(httpConnector);
 		jsonrpcServer->addConnector(ipcConnector);
@@ -1209,7 +1209,7 @@ int main(int argc, char** argv)
 #if ETH_JSCONSOLE || !ETH_TRUE
 			JSLocalConsole console;
 			dev::WebThreeStubServer* webthreeFace = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
-			ModularServer<dev::WebThreeStubServer> rpcServer(webthreeFace);
+			ModularServer<dev::WebThreeStubServer, rpc::DBFace> rpcServer(webthreeFace, new rpc::LevelDB());
 			rpcServer.addConnector(console.createConnector());
 			rpcServer.StartListening();
 			string sessionKey = webthreeFace->newSession(SessionPermissions{{Privilege::Admin}});
