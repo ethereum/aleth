@@ -86,6 +86,7 @@ public:
 		(void)_input;
 	}
 
+	/// server takes ownership of the connector
 	unsigned addConnector(jsonrpc::AbstractServerConnector* _connector)
 	{
 		m_connectors.emplace_back(_connector);
