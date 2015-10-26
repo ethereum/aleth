@@ -95,9 +95,6 @@ class CppEthereum < Formula
     system "make"
     system "make", "install"
 
-    bin.install 'test/testeth'
-    (prefix/"test").install Dir['test/*.json']
-
     if build.with? "gui"
       prefix.install 'alethzero/alethzero/AlethZero.app'
       prefix.install 'alethzero/alethone/AlethOne.app'
@@ -112,10 +109,6 @@ class CppEthereum < Formula
       or it did not install automatically, make sure to install it with
       `brew install llvm --HEAD --with-clang`
     EOS
-  end
-
-  test do
-    system "testeth"
   end
 
   def plist; <<-EOS.undent
