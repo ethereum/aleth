@@ -287,6 +287,8 @@ public:
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
 		}
+                else if (arg == "--disable-submit-hashrate")
+                        m_submitHashrate = false;
 		else
 			return false;
 		return true;
@@ -363,6 +365,7 @@ public:
 			<< "    --allow-opencl-cpu Allows CPU to be considered as an OpenCL device if the OpenCL platform supports it." << endl
 			<< "    --list-devices List the detected OpenCL devices and exit." << endl
 			<< "    --current-block Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory." << endl
+			<< "    --disable-submit-hashrate  When mining, don't submit hashrate to node." << endl
 #if ETH_ETHASHCL || !ETH_TRUE
 			<< "    --cl-extragpu-mem Set the memory (in MB) you believe your GPU requires for stuff other than mining. Windows rendering e.t.c.." << endl
 			<< "    --cl-local-work Set the OpenCL local work size. Default is " << toString(ethash_cl_miner::c_defaultLocalWorkSize) << endl
@@ -512,15 +515,18 @@ private:
 					else
 						minelog << "Getting work package...";
 
-					auto rate = mp.rate();
-					try
+					if (m_submitHashrate)
 					{
-						rpc.eth_submitHashrate(toJS((u256)rate), "0x" + id.hex());
-					}
-					catch (jsonrpc::JsonRpcException const& _e)
-					{
-						cwarn << "Failed to submit hashrate.";
-						cwarn << boost::diagnostic_information(_e);
+						auto rate = mp.rate();
+						try
+						{
+							rpc.eth_submitHashrate(toJS((u256)rate), "0x" + id.hex());
+						}
+						catch (jsonrpc::JsonRpcException const& _e)
+						{
+							cwarn << "Failed to submit hashrate.";
+							cwarn << boost::diagnostic_information(_e);
+						}
 					}
 
 					Json::Value v = rpc.eth_getWork();
@@ -613,4 +619,5 @@ private:
 	string m_farmURL = "http://127.0.0.1:8545";
 	unsigned m_farmRecheckPeriod = 500;
 	bool m_precompute = true;
+	bool m_submitHashrate = true;
 };
