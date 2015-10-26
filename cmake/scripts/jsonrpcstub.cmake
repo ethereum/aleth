@@ -36,7 +36,7 @@ if (NOT ETH_SERVER_DIR)
 		COMMAND ${ETH_JSON_RPC_STUB} ${ETH_SPEC_PATH}
 			--cpp-client=${ETH_CLIENT_NAME} --cpp-client-file=${CLIENT_TMPFILE}
 			OUTPUT_VARIABLE ERR ERROR_QUIET
-			)
+	)
 else ()
 	execute_process(
 		COMMAND ${ETH_JSON_RPC_STUB} ${ETH_SPEC_PATH}
