@@ -49,22 +49,30 @@ static const unsigned c_maxBlocks = 128;		///< Maximum number of blocks Blocks w
 static const unsigned c_maxBlocksAsk = 128;		///< Maximum number of blocks we ask to receive in Blocks (when using GetChain).
 static const unsigned c_maxPayload = 262144;	///< Maximum size of packet for us to send.
 #endif
+static const unsigned c_maxNodes = c_maxBlocks; ///< Maximum number of nodes will ever send.
+static const unsigned c_maxReceipts = c_maxBlocks; ///< Maximum number of receipts will ever send.
 
 class BlockChain;
 class TransactionQueue;
 class EthereumHost;
 class EthereumPeer;
 
-enum
+enum: byte
 {
-	StatusPacket = 0,
-	NewBlockHashesPacket,
-	TransactionsPacket,
-	GetBlockHeadersPacket,
-	BlockHeadersPacket,
-	GetBlockBodiesPacket,
-	BlockBodiesPacket,
-	NewBlockPacket,
+	StatusPacket = 0x00,
+	NewBlockHashesPacket = 0x01,
+	TransactionsPacket = 0x02,
+	GetBlockHeadersPacket = 0x03,
+	BlockHeadersPacket = 0x04,
+	GetBlockBodiesPacket = 0x05,
+	BlockBodiesPacket = 0x06,
+	NewBlockPacket = 0x07,
+
+	GetNodeDataPacket = 0x0d,
+	NodeDataPacket = 0x0e,
+	GetReceiptsPacket = 0x0f,
+	ReceiptsPacket = 0x10,
+
 	PacketCount
 };
 

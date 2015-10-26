@@ -51,10 +51,11 @@ const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
 const char* EthereumHostTrace::name() { return EthPurple "⧫" EthGray " "; }
 #endif
 
-EthereumHost::EthereumHost(BlockChain const& _ch, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
+EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
 	HostCapability<EthereumPeer>(),
 	Worker		("ethsync"),
 	m_chain		(_ch),
+	m_db(_db),
 	m_tq		(_tq),
 	m_bq		(_bq),
 	m_networkId	(_networkId)

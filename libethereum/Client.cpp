@@ -114,7 +114,7 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 
 	m_gp->update(bc());
 
-	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_tq, m_bq, _networkId));
+	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
 	m_host = host;
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
 
@@ -309,9 +309,11 @@ bool Client::isSyncing() const
 
 bool Client::isMajorSyncing() const
 {
-	// TODO: only return true if it is actually doing a proper chain sync.
 	if (auto h = m_host.lock())
-		return h->isSyncing() || h->bq().items().first > 10;
+	{
+		SyncState state = h->status().state;
+		return (state != SyncState::Idle && state != SyncState::NewBlocks) || h->bq().items().first > 10;
+	}
 	return false;
 }
 
