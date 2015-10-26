@@ -93,7 +93,8 @@ public:
 		return m_connectors.size() - 1;
 	}
 
-	jsonrpc::AbstractServerConnector* connector(unsigned _i) const {
+	jsonrpc::AbstractServerConnector* connector(unsigned _i) const
+	{
 		return m_connectors.at(_i).get();
 	}
 
