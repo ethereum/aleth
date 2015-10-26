@@ -483,7 +483,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			addRating(-10);
 			break;
 		}
-		clog(NetMessageSummary) << "GetNodeData (" << dec << count << "entries)";
+		clog(NetMessageSummary) << "GetNodeData (" << dec << count << " entries)";
 
 		// return the requested nodes.
 		bytes rlp;
@@ -500,7 +500,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 				++n;
 			}
 		}
-		clog(NetMessageSummary) << n << " nodes known and returned;" << (numItemsToSend - n) << "nodes unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+		clog(NetMessageSummary) << n << " nodes known and returned;" << (numItemsToSend - n) << " unknown;" << (count > c_maxNodes ? count - c_maxNodes : 0) << " ignored";
 
 		addRating(0);
 		RLPStream s;
