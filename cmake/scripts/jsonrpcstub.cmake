@@ -45,6 +45,12 @@ else ()
 			OUTPUT_VARIABLE ERR ERROR_QUIET
 	)
 
+	# get name without namespace
+	string(REPLACE "::" ";" SERVER_NAME_LIST ${ETH_SERVER_NAME})
+	list(LENGTH SERVER_NAME_LIST SERVER_NAME_LENGTH)
+	math(EXPR SERVER_NAME_POS "${SERVER_NAME_LENGTH} - 1")
+	list(GET SERVER_NAME_LIST ${SERVER_NAME_POS} SERVER_NAME)
+
 	file(READ ${SERVER_TMPFILE} SERVER_CONTENT)
 
 	# The following cmake regexps are equal to this sed command
@@ -52,8 +58,8 @@ else ()
 	#		-e s/public\ jsonrpc::AbstractServer\<${NAME}\>/public\ ServerInterface\<${NAME}\>/g \
 	#		-e s/${NAME}\(jsonrpc::AbstractServerConnector\ \&conn,\ jsonrpc::serverVersion_t\ type\ =\ jsonrpc::JSONRPC_SERVER_V2\)\ :\ jsonrpc::AbstractServer\<${NAME}\>\(conn,\ type\)/${NAME}\(\)/g \
 	string(REGEX REPLACE "include\ <jsonrpccpp/server\.h>" "include\ \"ModularServer.h\"" SERVER_CONTENT "${SERVER_CONTENT}")
-	string(REGEX REPLACE "public\ jsonrpc::AbstractServer<${ETH_SERVER_NAME}>" "public ServerInterface<${ETH_SERVER_NAME}>" SERVER_CONTENT "${SERVER_CONTENT}")
-	string(REGEX REPLACE "${ETH_SERVER_NAME}\\(jsonrpc::AbstractServerConnector\ &conn,\ jsonrpc::serverVersion_t\ type\ =\ jsonrpc::JSONRPC_SERVER_V2\\)\ :\ jsonrpc::AbstractServer<${ETH_SERVER_NAME}>\\(conn, type\\)" "${ETH_SERVER_NAME}()" SERVER_CONTENT "${SERVER_CONTENT}")
+	string(REGEX REPLACE "public\ jsonrpc::AbstractServer<${SERVER_NAME}>" "public ServerInterface<${SERVER_NAME}>" SERVER_CONTENT "${SERVER_CONTENT}")
+	string(REGEX REPLACE "${SERVER_NAME}\\(jsonrpc::AbstractServerConnector\ &conn,\ jsonrpc::serverVersion_t\ type\ =\ jsonrpc::JSONRPC_SERVER_V2\\)\ :\ jsonrpc::AbstractServer<${SERVER_NAME}>\\(conn, type\\)" "${SERVER_NAME}()" SERVER_CONTENT "${SERVER_CONTENT}")
 
 	file(WRITE ${SERVER_TMPFILE} "${SERVER_CONTENT}")
 endif()
