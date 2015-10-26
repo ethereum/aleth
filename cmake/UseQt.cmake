@@ -11,18 +11,12 @@ if (${SUBMODULE} STREQUAL "Core")
 
 	if (APPLE)
 		find_program(MACDEPLOYQT_APP macdeployqt)
-		message(" - macdeployqt path: ${MACDEPLOYQT_APP}")
+		find_program(ETH_APP_DMG appdmg)
 	endif()
 
 	# we need to find path to windeployqt on windows
 	if (WIN32)
 		find_program(WINDEPLOYQT_APP windeployqt)
-		message(" - windeployqt path: ${WINDEPLOYQT_APP}")
-	endif()
-
-	if (APPLE)
-		find_program(ETH_APP_DMG appdmg)
-		message(" - appdmg location : ${ETH_APP_DMG}")
 	endif()
 
 	if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang") AND NOT (CMAKE_CXX_COMPILER_VERSION VERSION_LESS "3.6") AND NOT APPLE)
@@ -49,6 +43,15 @@ if (${SUBMODULE} STREQUAL "Widgets")
 		find_package(Qt5PrintSupport ${ETH_QT_VERSION} ${REQUIRED})
 		target_link_libraries(${EXECUTABLE} Qt5::PrintSupport)
 	endif()
+endif()
+
+if (${SUBMODULE} STREQUAL "Network")
+	eth_use(${TARGET} ${REQUIRED} Qt::Core)
+	find_package(Qt5Network ${ETH_QT_VERSION} ${REQUIRED})
+	if (NOT Qt5Network_FOUND)
+		return()
+	endif()
+	target_link_libraries(${TARGET} Qt5::Network)
 endif()
 
 if (${SUBMODULE} STREQUAL "WebEngine")

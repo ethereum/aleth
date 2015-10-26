@@ -178,6 +178,7 @@ macro(eth_nsis)
 
 		set(CPACK_COMPONENT_ALETHZERO_GROUP "Applications")
 		set(CPACK_COMPONENT_ALETHONE_GROUP "Applications")
+		set(CPACK_COMPONENT_ALETHFIVE_GROUP "Applications")
 		set(CPACK_COMPONENT_MIX_GROUP "Applications")
 		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
 		set(CPACK_COMPONENT_ETH_GROUP "CLI")
@@ -185,7 +186,7 @@ macro(eth_nsis)
 		set(CPACK_COMPONENT_RLP_GROUP "CLI")
 		set(CPACK_COMPONENT_ABI_GROUP "CLI")
 
-		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer rlp abi)
+		set(CPACK_COMPONENTS_ALL AlethZero AlethOne AlethFive Mix solc eth ethminer rlp abi)
 
 		# nsis specific stuff
 		if (CMAKE_CL_64)
@@ -196,6 +197,7 @@ macro(eth_nsis)
 			set(CPACK_PACKAGE_INSTALL_REGISTRY_KEY "${CPACK_PACKAGE_NAME} ${CPACK_PACKAGE_VERSION}")
 		endif()
 
+		set(CPACK_PACKAGE_FILE_NAME "Ethereum")
 		set(CPACK_NSIS_DISPLAY_NAME "Ethereum")
 		set(CPACK_NSIS_HELP_LINK "https://github.com/ethereum/cpp-ethereum")
 		set(CPACK_NSIS_URL_INFO_ABOUT "https://github.com/ethereum/cpp-ethereum")

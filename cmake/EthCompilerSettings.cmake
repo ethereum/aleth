@@ -21,6 +21,10 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 	set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -DSHAREDLIB -fPIC -fstack-protector-strong -Wstack-protector")
+	if (EMSCRIPTEN)
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1")
+		add_definitions(-DETH_EMSCRIPTEN=1)
+	endif()
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_DEBUGSAN       "-O1 -g -fsanitize=address,integer,undefined -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/sanitizer-blacklist.txt -fno-omit-frame-pointer -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
@@ -44,10 +48,10 @@ elseif (DEFINED MSVC)
 	# disable conversion from 'type1' to 'type2', possible loss of data (4244)
 	# disable forcing value to bool 'true' or 'false' (performance warning) (4800)
 	# disable warning C4535: calling _set_se_translator() requires /EHa (for boost tests)
-	# declare Windows XP requirement
+	# declare Windows Vista API requirement
 	# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 	# define miniupnp static library
-	add_compile_options(/MP /EHsc /wd4068 /wd4996 /wd4503 /wd4267 /wd4180 /wd4290 /wd4244 /wd4800 -D_WIN32_WINNT=0x0501 /DNOMINMAX /DMINIUPNP_STATICLIB)
+	add_compile_options(/MP /EHsc /wd4068 /wd4996 /wd4503 /wd4267 /wd4180 /wd4290 /wd4244 /wd4800 -D_WIN32_WINNT=0x0600 /DNOMINMAX /DMINIUPNP_STATICLIB)
 	# disable empty object file warning
 	set(CMAKE_STATIC_LINKER_FLAGS "${CMAKE_STATIC_LINKER_FLAGS} /ignore:4221")
 	# warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/SAFESEH' specification

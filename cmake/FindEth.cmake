@@ -7,7 +7,8 @@
 #  ETH_FOUND, If false, do not try to use ethereum.
 #  TODO: ETH_INCLUDE_DIRS
 
-set(LIBS ethereum;evm;ethcore;lll;evmasm;evmcore;ethash-cl;ethash;natspec;jsengine;jsconsole;evmjit;evmjit-cpp;solidity;testutils)
+include(EthUtils)
+set(LIBS ethereum;evm;ethcore;lll;evmasm;evmcore;ethash-cl;ethash;natspec;jsengine;jsconsole;evmjit;solidity;testutils)
 
 set(Eth_INCLUDE_DIRS "${ETH_DIR}")
 
@@ -15,7 +16,7 @@ set(Eth_INCLUDE_DIRS "${ETH_DIR}")
 # use same pattern for variables as Boost uses
 if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED ethereum_VERSION))
 
-	foreach (l ${LIBS}) 
+	foreach (l ${LIBS})
 		string(TOUPPER ${l} L)
 		set ("Eth_${L}_LIBRARIES" ${l})
 	endforeach()
@@ -28,10 +29,9 @@ else()
 		find_library(Eth_${L}_LIBRARY
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
 			# libevmjit is nested...
 			"evmjit/libevmjit" "evmjit/libevmjit/Release"
-			"evmjit/libevmjit-cpp" "evmjit/libevmjit-cpp/Release"
 			NO_DEFAULT_PATH
 		)
 
@@ -41,17 +41,13 @@ else()
 			find_library(Eth_${L}_LIBRARY_DEBUG
 				NAMES ${l}
 				PATHS ${CMAKE_LIBRARY_PATH}
-				PATH_SUFFIXES "lib${l}/Debug" 
+				PATH_SUFFIXES "lib${l}/Debug"
 				# libevmjit is nested...
 				"evmjit/libevmjit/Debug"
-				"evmjit/libevmjit-cpp/Debug"
 				NO_DEFAULT_PATH
 			)
-
-			set(Eth_${L}_LIBRARIES optimized ${Eth_${L}_LIBRARY} debug ${Eth_${L}_LIBRARY_DEBUG})
-
+			eth_check_library_link(Eth_${L})
 		endif()
 	endforeach()
 
 endif()
-

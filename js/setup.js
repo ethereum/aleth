@@ -14,27 +14,13 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file $NAME.cpp
- * @author Gav Wood <i@gavwood.com>
- * @date 2015
+/** @file setup.js
+ * @authors:
+ *   Marek Kotewicz <marek@ethdev.com>
+ * @date 2014
  */
 
-#include "$NAME.h"
-#include <libaleth/AlethFace.h>
-#include "ZeroFace.h"
-using namespace std;
-using namespace dev;
-using namespace eth;
-using namespace aleth;
-using namespace zero;
+var Web3 = require('web3');
+var web3 = new Web3();
+web3.setProvider(new web3.providers.HttpProvider("http://localhost:8545"));
 
-ZERO_NOTE_PLUGIN($NAME);
-
-$NAME::$NAME(ZeroFace* _z):
-	Plugin(_m, "$NAME")
-{
-}
-
-$NAME::~$NAME()
-{
-}

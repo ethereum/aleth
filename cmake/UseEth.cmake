@@ -9,6 +9,11 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	find_package(Eth)
 
 	target_include_directories(${TARGET} BEFORE PUBLIC ${Eth_INCLUDE_DIRS})
+	if ((DEFINED cpp-ethereum_VERSION) OR (DEFINED ethereum_VERSION))
+		target_include_directories(${TARGET} PUBLIC "${CMAKE_BINARY_DIR}/libethereum/include/")
+	else()
+		target_include_directories(${TARGET} PUBLIC "${ETH_BUILD_DIR}/include/")
+	endif()
 
 	if (${SUBMODULE} STREQUAL "ethash")
 		# even if ethash is required, Cryptopp is optional
@@ -18,15 +23,12 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "ethash-cl")
 		if (ETHASHCL)
+			eth_use(${TARGET} ${REQUIRED} OpenCL)
 			if (OpenCL_FOUND)
 				eth_use(${TARGET} ${REQUIRED} Eth::ethash)
 				target_include_directories(${TARGET} SYSTEM PUBLIC ${OpenCL_INCLUDE_DIRS})
-				target_link_libraries(${TARGET} ${OpenCL_LIBRARIES})
 				target_link_libraries(${TARGET} ${Eth_ETHASH-CL_LIBRARIES})
 				target_compile_definitions(${TARGET} PUBLIC ETH_ETHASHCL)
-				eth_copy_dlls(${TARGET} OpenCL_DLLS)
-			elseif (${REQUIRED} STREQUAL "REQUIRED")
-				message(FATAL_ERROR "OpenCL library was not found")
 			endif()
 		endif()
 	endif()
@@ -36,6 +38,15 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		# even if ethcore is required, ethash-cl and cpuid are optional
 		eth_use(${TARGET} OPTIONAL Eth::ethash-cl Cpuid)
 		target_link_libraries(${TARGET} ${Eth_ETHCORE_LIBRARIES})
+
+		# workaround for https://github.com/ethereum/alethzero/issues/69
+		# force linking to libOpenCL as early as possible
+		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux" AND ETHASHCL)
+			find_package (OpenCL)
+			if (OpenCL_FOUND)
+				target_link_libraries(${TARGET} "-Wl,--no-as-needed -l${OpenCL_LIBRARIES} -Wl,--as-needed")
+			endif()
+		endif()
 	endif()
 
 	if (${SUBMODULE} STREQUAL "evmcore")
@@ -44,12 +55,11 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "evmjit")
-		# TODO: not sure if should use evmjit and/or evmjit-cpp
+		# TODO: not sure if should use evmjit
 		# TODO: take into account REQUIRED variable
 		if (EVMJIT)
 			target_link_libraries(${TARGET} ${Eth_EVMJIT_LIBRARIES})
-			target_link_libraries(${TARGET} ${Eth_EVMJIT-CPP_LIBRARIES})
-			target_compile_definitions(${TARGET} PUBLIC ETH_EVMJIT)
+			eth_copy_dlls(${TARGET} EVMJIT_DLLS)
 		endif()
 	endif()
 
@@ -70,7 +80,10 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "ethereum")
-		eth_use(${TARGET} ${REQUIRED} Eth::evm Eth::lll Dev::p2p Dev::devcrypto Eth::ethcore JsonRpc::Server JsonRpc::Client)
+		eth_use(${TARGET} ${REQUIRED} Eth::evm Eth::ethcore)
+		if (NOT EMSCRIPTEN)
+			eth_use(${TARGET} ${REQUIRED} Eth::lll Dev::p2p Dev::devcrypto JsonRpc::Server JsonRpc::Client)
+		endif()
 		target_link_libraries(${TARGET} ${Boost_REGEX_LIBRARIES})
 		target_link_libraries(${TARGET} ${Eth_ETHEREUM_LIBRARIES})
 	endif()
@@ -80,7 +93,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "testutils")
-		eth_use(${EXECUTABLE} ${REQUIRED} Eth::ethereum)
+		eth_use(${TARGET} ${REQUIRED} Eth::ethereum)
 		target_link_libraries(${TARGET} ${Eth_TESTUTILS_LIBRARIES})
 	endif()
 

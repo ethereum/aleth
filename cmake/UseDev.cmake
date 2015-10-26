@@ -9,22 +9,13 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	target_include_directories(${TARGET} BEFORE PUBLIC ${Dev_INCLUDE_DIRS})
 
-	if (${SUBMODULE} STREQUAL "buildinfo")
-		if (DEFINED dev_VERSION)
-			add_dependencies(${TARGET} BuildInfo.h)
-			add_dependencies(${TARGET} ConfigInfo.h)
-		endif()
-		set_target_properties(${TARGET} PROPERTIES AUTOGEN_TARGET_DEPENDS ConfigInfo.h)
-
-        target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BUILD_DIR})
-        target_include_directories(${TARGET} BEFORE PUBLIC ${CMAKE_BINARY_DIR})
-		target_include_directories(${TARGET} BEFORE PUBLIC ${DEV_BUILD_DIR})
-	endif()
-
 	# Base is where all dependencies for devcore are
 	if (${SUBMODULE} STREQUAL "base")
 		# if it's ethereum source dir, alwasy build BuildInfo.h before
-		eth_use(${TARGET} ${REQUIRED} Dev::buildinfo Jsoncpp DB::auto)
+		eth_use(${TARGET} ${REQUIRED} Dev::buildinfo Jsoncpp)
+		if (NOT EMSCRIPTEN)
+			eth_use(${TARGET} ${REQUIRED} DB::auto)
+		endif()
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 
 		target_link_libraries(${TARGET} ${Boost_THREAD_LIBRARIES})
@@ -49,7 +40,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "devcrypto")
 		eth_use(${TARGET} ${REQUIRED} Dev::devcore Utils::scrypt Cryptopp)
-		if (NOT DEFINED MSVC)
+		if ((NOT EMSCRIPTEN) AND (NOT DEFINED MSVC))
 			eth_use(${TARGET} ${REQUIRED} Utils::secp256k1)
 		endif()
 

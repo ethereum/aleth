@@ -6,6 +6,7 @@
 #  Utils_XXX_LIBRARIES, the libraries needed to use ethereum.
 #  Utils_INCLUDE_DIRS
 
+include(EthUtils)
 set(LIBS secp256k1;scrypt)
 
 set(Utils_INCLUDE_DIRS "${UTILS_DIR}")
@@ -27,7 +28,7 @@ else()
 		find_library(Utils_${L}_LIBRARY
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" 
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" "${l}/Release" 
 			NO_DEFAULT_PATH
 		)
 
@@ -37,12 +38,10 @@ else()
 			find_library(Utils_${L}_LIBRARY_DEBUG
 				NAMES ${l}
 				PATHS ${CMAKE_LIBRARY_PATH}
-				PATH_SUFFIXES "lib${l}/Debug" 
+				PATH_SUFFIXES "lib${l}/Debug" "${l}/Debug" 
 				NO_DEFAULT_PATH
 			)
-
-			set(Utils_${L}_LIBRARIES optimized ${Utils_${L}_LIBRARY} debug ${Utils_${L}_LIBRARY_DEBUG})
-
+			eth_check_library_link(Utils_${L})
 		endif()
 	endforeach()
 

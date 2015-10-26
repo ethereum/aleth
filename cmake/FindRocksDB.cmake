@@ -43,7 +43,7 @@ endif()
 # handle the QUIETLY and REQUIRED arguments and set ROCKSDB_FOUND to TRUE
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(rocksdb DEFAULT_MSG
+find_package_handle_standard_args(RocksDB DEFAULT_MSG
 	ROCKSDB_INCLUDE_DIR ROCKSDB_LIBRARY)
 mark_as_advanced (ROCKSDB_INCLUDE_DIR ROCKSDB_LIBRARY)
 
