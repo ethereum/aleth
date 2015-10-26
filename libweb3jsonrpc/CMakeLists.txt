@@ -10,7 +10,12 @@ eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
 
 jsonrpcstub_create(spec.json 
 	AbstractWebThreeStubServer ${CMAKE_CURRENT_SOURCE_DIR} AbstractWebThreeStubServer
-	WebThreeStubClient "${CMAKE_CURRENT_BINARY_DIR}" WebThreeStubClient
+	WebThreeStubClient ${CMAKE_CURRENT_BINARY_DIR} WebThreeStubClient
+)
+
+jsonrpcstub_create(db.json
+	AbstractDb ${CMAKE_CURRENT_SOURCE_DIR} AbstractDb
+	DbClient ${CMAKE_CURRENT_BINARY_DIR} DbClient
 )
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
