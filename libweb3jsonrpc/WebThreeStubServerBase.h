@@ -56,13 +56,6 @@ class Interface;
 extern const unsigned SensibleHttpThreads;
 extern const unsigned SensibleHttpPort;
 
-class WebThreeStubDatabaseFace
-{
-public:
-	virtual std::string get(std::string const& _name, std::string const& _key) = 0;
-	virtual void put(std::string const& _name, std::string const& _key, std::string const& _value) = 0;
-};
-
 enum class Privilege
 {
 	Admin
@@ -156,9 +149,6 @@ public:
 	virtual bool eth_notePassword(std::string const&) { return false; }
 	virtual Json::Value eth_syncing() override;
 
-	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value);
-	virtual std::string db_get(std::string const& _name, std::string const& _key);
-
 	virtual std::string bzz_put(std::string const& _data);
 	virtual std::string bzz_get(std::string const& _hash);
 
@@ -215,7 +205,6 @@ protected:
 	virtual std::shared_ptr<dev::shh::Interface> face() = 0;	// TODO: rename to shh
 	virtual dev::bzz::Interface* bzz() = 0;
 	virtual dev::WebThreeNetworkFace* network() = 0;
-	virtual dev::WebThreeStubDatabaseFace* db() = 0;
 
 	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;
 

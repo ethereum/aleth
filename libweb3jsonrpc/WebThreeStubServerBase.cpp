@@ -846,17 +846,6 @@ Json::Value WebThreeStubServerBase::eth_fetchQueuedTransactions(string const& _a
 	}
 }
 
-bool WebThreeStubServerBase::db_put(string const& _name, string const& _key, string const& _value)
-{
-	db()->put(_name, _key,_value);
-	return true;
-}
-
-string WebThreeStubServerBase::db_get(string const& _name, string const& _key)
-{
-	return db()->get(_name, _key);;
-}
-
 string WebThreeStubServerBase::bzz_put(string const& _data)
 {
 	bytes b = jsToBytes(_data);

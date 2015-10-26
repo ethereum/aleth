@@ -46,7 +46,7 @@ struct SessionPermissions
 /**
  * @brief JSON-RPC api implementation for WebThreeDirect
  */
-class WebThreeStubServer: public dev::WebThreeStubServerBase, public dev::WebThreeStubDatabaseFace
+class WebThreeStubServer: public dev::WebThreeStubServerBase
 {
 public:
 	WebThreeStubServer(dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
@@ -65,10 +65,6 @@ private:
 	virtual std::shared_ptr<dev::shh::Interface> face() override;	// TODO: rename shh
 	virtual dev::bzz::Interface* bzz() override;
 	virtual dev::WebThreeNetworkFace* network() override;
-	virtual dev::WebThreeStubDatabaseFace* db() override;
-
-	virtual std::string get(std::string const& _name, std::string const& _key) override;
-	virtual void put(std::string const& _name, std::string const& _key, std::string const& _value) override;
 
 	virtual bool eth_notePassword(std::string const& _password) override;
 	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) override;
@@ -100,9 +96,6 @@ private:
 	dev::WebThreeDirect& m_web3;
 	dev::eth::KeyManager& m_keyMan;
 	dev::eth::TrivialGasPricer& m_gp;
-	ldb::ReadOptions m_readOptions;
-	ldb::WriteOptions m_writeOptions;
-	ldb::DB* m_db;
 
 	std::function<void(Address const&)> m_setMiningBenefactor;
 	std::unordered_map<std::string, SessionPermissions> m_sessions;
