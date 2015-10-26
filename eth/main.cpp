@@ -1206,8 +1206,6 @@ int main(int argc, char** argv)
 		if (useConsole)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
-			
-			// TODO: ownership of connector
 			JSLocalConsole console;
 			dev::WebThreeStubServer* webthreeFace = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
 			ModularServer<dev::WebThreeStubServer> rpcServer(webthreeFace);

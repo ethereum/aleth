@@ -59,6 +59,8 @@ public:
 	ModularServer()
 	: m_handler(jsonrpc::RequestHandlerFactory::createProtocolHandler(jsonrpc::JSONRPC_SERVER_V2, *this)) {}
 
+	virtual ~ModularServer() { StopListening(); }
+
 	virtual void StartListening()
 	{
 		for (auto const& connector: m_connectors)
