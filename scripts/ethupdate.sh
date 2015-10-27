@@ -136,7 +136,15 @@ function get_repo_branch() {
 		#fetch the requested branch
 		git fetch https://github.com/${GH_PR_USER}/$1 ${REQUESTED_BRANCH}:refs/remotes/origin/${REQUESTED_BRANCH}
 		if [[ $? -ne 0 ]]; then
-			echo "ETHUPDATE - ERROR: Could not fetch ${REQUESTED_BRANCH} of ${1} for Github user ${GH_PR_USER}. Defaulting to develop"
+			if [[ $GH_PR_USER != "ethereum" ]]; then
+				echo "ETHUPDATE - WARNING: Could not find ${REQUESTED_BRANCH} of ${1} from the fork of ${GH_PR_USER}. Trying the ethereum upstream"
+				git fetch https://github.com/ethereum/$1 ${REQUESTED_BRANCH}:refs/remotes/origin/${REQUESTED_BRANCH}
+				if [[ $? -eq 0 ]]; then
+					echo "ETHUPDATE - INFO: Found ${REQUESTED_BRANCH} of ${1} in the ethereum upstream"
+					return
+				fi
+			fi
+			echo "ETHUPDATE - ERROR: Could not fetch ${REQUESTED_BRANCH} of ${1} for ${GH_PR_USER} or from the ethereum upstream.. Defaulting to develop."
 			REQUESTED_BRANCH="develop"
 		fi
 	fi
