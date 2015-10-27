@@ -3,11 +3,12 @@
 #
 # This script should get a project name from jenkins and figure out which tests to run
 
-if [[ $# -ne 1 ]]; then
-	echo "RUNTESTS - ERROR: Expected 1 argument for the run tests script but got $#!"
+if [[ $# -ne 1 && $# -ne 2 ]]; then
+	echo "RUNTESTS - ERROR: Expected either 1 or 2 arguments for the run tests script but got $#!"
 	exit 1
 fi
 
+RUN_FROM_UMBRELLA=0
 TEST_EXEC="NONE"
 REPOS_TEST_MAP=("webthree-helpers:NONE"
 		"tests:NONE"
@@ -39,6 +40,14 @@ function get_repo_testexec() {
 		exit 1
 	fi
 }
+
+if [[ $2 != "" ]]; then
+	if [[ $2 != "--umbrella" ]]; then
+		echo "ETHTESTS - ERROR: Second argument can only be --umbrella if tests are run from the umbrella repo"
+		exit 1
+	fi
+	RUN_FROM_UMBRELLA=1
+fi
 
 case $1 in
 	"libweb3core")
@@ -81,5 +90,9 @@ do
 	fi
 	echo "ETHTESTS - INFO: Will run test file ${TEST_EXEC} for project \"$1\"."
 	# run tests
-	./$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
+	if [[ $RUN_FROM_UMBRELLA -eq 0 ]]; then
+		./$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
+	else
+		./webthree-umbrella/$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
+	fi
 done

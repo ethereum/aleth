@@ -76,6 +76,82 @@ function get_repo_url() {
 	fi
 }
 
+# Takes a repository as an argument and using the environment variables tries to see if
+# the requested branch exists for that repo and if it does it sets it
+function get_repo_branch() {
+	if [[ $1 == "" ]]; then
+		echo "ETHUPDATE - ERROR: get_repo_branch() function called without an argument."
+		exit 1
+	fi
+	# get the name of the Requested Branch
+	REQUESTED_BRANCH="develop"
+	case $1 in
+		"webthree-helpers")
+			if [[ $WEBTHREEHELPERS_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${WEBTHREEHELPERS_BRANCH}
+			fi
+			;;
+		"libweb3core")
+			if [[ $LIBWEB3CORE_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${LIBWEB3CORE_BRANCH}
+			fi
+			;;
+		"libethereum")
+			if [[ $LIBETHEREUM_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${LIBETHEREUM_BRANCH}
+			fi
+			;;
+		"webthree")
+			if [[ $WEBTHREE_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${WEBTHREE_BRANCH}
+			fi
+			;;
+		"web3.js")
+			if [[ $WEB3JS_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${WEB3JS_BRANCH}
+			fi
+			;;
+		"solidity")
+			if [[ $SOLIDITY_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${SOLIDITY_BRANCH}
+			fi
+			;;
+		"alethzero")
+			if [[ $ALETHZERO_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${ALETHZERO_BRANCH}
+			fi
+			;;
+		"mix")
+			if [[ $MIX_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${MIX_BRANCH}
+			fi
+			;;
+		"tests")
+			if [[ $TESTS_BRANCH != "" ]]; then
+				REQUESTED_BRANCH=${TESTS_BRANCH}
+			fi
+			;;
+		*)
+			echo "ETHUPDATE - ERROR: Unrecognized repo argument at get_repo_branch() \"$1\".";
+			exit 1
+			;;
+	esac
+	echo "ETHUPDATE - INFO: get_repo_branch() setting branch for $1 to ${REQUESTED_BRANCH}."
+	#if not develop or master we got some work to do
+	if [[ $REQUESTED_BRANCH != "develop" && $REQUESTED_BRANCH != "master" ]]; then
+		if [[ $GH_PR_USER == "" ]];then
+			$GH_PR_USER="ethereum"
+			echo "ETHUPDATE - INFO: get_repo_branch() no GH_PR_USER given, defaulting to ethereum repo."
+		fi
+		#fetch the requested branch
+		git fetch https://github.com/${GH_PR_USER}/$1 ${REQUESTED_BRANCH}:refs/remotes/origin/${REQUESTED_BRANCH}
+		if [[ $? -ne 0 ]]; then
+			echo "ETHUPDATE - ERROR: Could not fetch ${REQUESTED_BRANCH} of ${1} for Github user ${GH_PR_USER}. Defaulting to develop"
+			$REQUESTED_BRANCH="develop"
+		fi
+	fi
+}
+
 function print_help {
 	echo "Usage: ethupdate.sh [options]"
 	echo "Arguments:"
@@ -217,10 +293,9 @@ do
 		BRANCH="(unnamed branch)"     # detached HEAD
 	BRANCH=${BRANCH##refs/heads/}
 
-	# if the "none" value was given then checkout and pull develop.
-	# Web3.js is excused from here since it only has a master branch and we don't really build it
-	if [[ $BUILD_PR == "none" && $repository != "web3.js" ]]; then
-		REQUESTED_BRANCH="develop"
+	# if the "none" value was given then checkout and pull requested branch
+	if [[ $BUILD_PR == "none" ]]; then
+		get_repo_branch $repository
 		git checkout develop
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Could not checkout develop for ${repository}."
@@ -236,20 +311,27 @@ do
 		git checkout $BUILD_PR
 		cd $ROOT_DIR
 		continue
-	elif [[ $BRANCH != $REQUESTED_BRANCH ]]; then
-		if [[ $DO_SIMPLE_PULL -eq 1 ]]; then
-			echo "ETHUPDATE - INFO: ${repository} not in the ${REQUESTED_BRANCH} branch but performing simple pull anyway ..."
-			git pull $SHALLOW_FETCH
-			if [[ $? -ne 0 ]]; then
-				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
-			fi
-			git submodule update
+	elif [[ $DO_SIMPLE_PULL -eq 1 ]]; then
+		echo "ETHUPDATE - INFO: Performing simple pull for ${repository} ..."
+		git pull $SHALLOW_FETCH
+		if [[ $? -ne 0 ]]; then
+			echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
+		fi
+		git submodule update
+		cd $ROOT_DIR
+		continue
+	fi
+
+	if [[ $REQUESTED_BRANCH != "develop" && $REQUESTED_BRANCH != "master" ]];then
+		#by this point we should have succesfully fetched the branch from the remote so just check it out
+		git checkout $REQUESTED_BRANCH
+		if [[ $? -ne 0 ]]; then
+			echo "ETHUPDATE - ERROR: Could not check out branch ${REQUESTED_BRANCH} for repository ${repository}. Skipping ..."
 		else
-			echo "ETHUPDATE - WARNING: Not updating ${repository} because it's not in the ${REQUESTED_BRANCH} branch"
+			echo "ETHUPDATE - INFO: Checked out branch ${REQUESTED_BRANCH} for repository ${repository}."
 		fi
 		cd $ROOT_DIR
 		continue
-
 	fi
 
 	# Pull changes from what the user set as the upstream repository, unless it's just been cloned

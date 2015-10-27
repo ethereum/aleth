@@ -31,7 +31,6 @@ class CppEthereum < Formula
 
   depends_on 'cmake' => :build
   depends_on 'boost'
-  depends_on 'boost-python' => "c++11"
   depends_on 'qt5' if build.with? 'gui'
   depends_on 'readline'
   depends_on 'cryptopp'
@@ -96,9 +95,6 @@ class CppEthereum < Formula
     system "make"
     system "make", "install"
 
-    bin.install 'test/testeth'
-    (prefix/"test").install Dir['test/*.json']
-
     if build.with? "gui"
       prefix.install 'alethzero/alethzero/AlethZero.app'
       prefix.install 'alethzero/alethone/AlethOne.app'
@@ -113,10 +109,6 @@ class CppEthereum < Formula
       or it did not install automatically, make sure to install it with
       `brew install llvm --HEAD --with-clang`
     EOS
-  end
-
-  test do
-    system "testeth"
   end
 
   def plist; <<-EOS.undent
