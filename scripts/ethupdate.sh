@@ -76,6 +76,14 @@ function get_repo_url() {
 	fi
 }
 
+# Takes a branch value and if it is not empty or "null" sets the requested branch to it
+# "null" can come from the way jenkins handles empty variables
+function set_requested_branch() {
+	if [[ $1 != "" && $1 != "null" ]]; then
+		REQUESTED_BRANCH=$1
+	fi
+}
+
 # Takes a repository as an argument and using the environment variables tries to see if
 # the requested branch exists for that repo and if it does it sets it
 function get_repo_branch() {
@@ -87,49 +95,31 @@ function get_repo_branch() {
 	REQUESTED_BRANCH="develop"
 	case $1 in
 		"webthree-helpers")
-			if [[ $WEBTHREEHELPERS_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${WEBTHREEHELPERS_BRANCH}
-			fi
+			set_requested_branch $WEBTHREEHELPERS_BRANCH
 			;;
 		"libweb3core")
-			if [[ $LIBWEB3CORE_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${LIBWEB3CORE_BRANCH}
-			fi
+			set_requested_branch $LIBWEB3CORE_BRANCH
 			;;
 		"libethereum")
-			if [[ $LIBETHEREUM_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${LIBETHEREUM_BRANCH}
-			fi
+			set_requested_branch $LIBETHEREUM_BRANCH
 			;;
 		"webthree")
-			if [[ $WEBTHREE_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${WEBTHREE_BRANCH}
-			fi
+			set_requested_branch $WEBTHREE_BRANCH
 			;;
 		"web3.js")
-			if [[ $WEB3JS_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${WEB3JS_BRANCH}
-			fi
+			set_requested_branch $WEB3JS_BRANCH
 			;;
 		"solidity")
-			if [[ $SOLIDITY_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${SOLIDITY_BRANCH}
-			fi
+			set_requested_branch $SOLIDITY_BRANCH
 			;;
 		"alethzero")
-			if [[ $ALETHZERO_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${ALETHZERO_BRANCH}
-			fi
+			set_requested_branch $ALETHZERO_BRANCH
 			;;
 		"mix")
-			if [[ $MIX_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${MIX_BRANCH}
-			fi
+			set_requested_branch $MIX_BRANCH
 			;;
 		"tests")
-			if [[ $TESTS_BRANCH != "" ]]; then
-				REQUESTED_BRANCH=${TESTS_BRANCH}
-			fi
+			set_requested_branch $TESTS_BRANCH
 			;;
 		*)
 			echo "ETHUPDATE - ERROR: Unrecognized repo argument at get_repo_branch() \"$1\".";
@@ -140,14 +130,14 @@ function get_repo_branch() {
 	#if not develop or master we got some work to do
 	if [[ $REQUESTED_BRANCH != "develop" && $REQUESTED_BRANCH != "master" ]]; then
 		if [[ $GH_PR_USER == "" ]];then
-			$GH_PR_USER="ethereum"
+			GH_PR_USER="ethereum"
 			echo "ETHUPDATE - INFO: get_repo_branch() no GH_PR_USER given, defaulting to ethereum repo."
 		fi
 		#fetch the requested branch
 		git fetch https://github.com/${GH_PR_USER}/$1 ${REQUESTED_BRANCH}:refs/remotes/origin/${REQUESTED_BRANCH}
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Could not fetch ${REQUESTED_BRANCH} of ${1} for Github user ${GH_PR_USER}. Defaulting to develop"
-			$REQUESTED_BRANCH="develop"
+			REQUESTED_BRANCH="develop"
 		fi
 	fi
 }
