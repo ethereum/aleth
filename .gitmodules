@@ -9,7 +9,7 @@
 [submodule "solidity"]
 	path = solidity
 	url = https://github.com/ethereum/solidity
-	branch = develop
+	branch = release
 [submodule "webthree"]
 	path = webthree
 	url = https://github.com/ethereum/webthree
