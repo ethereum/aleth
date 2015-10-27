@@ -327,6 +327,12 @@ do
 
 	# Pull changes from what the user set as the upstream repository, unless it's just been cloned
 	if [[ $CLONED_THE_REPO -eq 0 ]]; then
+		if [[ $REQUESTED_BRANCH == "develop" || $REQUESTED_BRANCH == "master" ]]; then
+			# We get here if no special branch was requested, so make sure we got the non-special
+			# branch checked out before pulling
+			echo "ETHUPDATE - INFO: Make sure we are in $REQUESTED_BRANCH"
+			git checkout $REQUESTED_BRANCH
+		fi
 		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 		git submodule update
 	else
