@@ -295,12 +295,13 @@ do
 
 	# if the "none" value was given then checkout and pull requested branch
 	if [[ $BUILD_PR == "none" ]]; then
-		get_repo_branch $repository
 		git checkout develop
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Could not checkout develop for ${repository}."
 			exit 1
 		fi
+	else
+		get_repo_branch $repository
 	fi
 
 	# if we need to checkout specific commit for a PR do so
