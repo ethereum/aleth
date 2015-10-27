@@ -35,6 +35,8 @@
 #include "RLPXFrameCoder.h"
 #include "RLPXSocket.h"
 #include "Common.h"
+#include "RLPXFrameWriter.h"
+#include "RLPXFrameReader.h"
 
 namespace dev
 {
@@ -96,12 +98,14 @@ private:
 
 	/// Perform a read on the socket.
 	void doRead();
+	void doReadFr();
 	
 	/// Check error code after reading and drop peer if error code.
 	bool checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length);
 
 	/// Perform a single round of the write operation. This could end up calling itself asynchronously.
 	void write();
+	void writeFr();
 
 	/// Deliver RLPX packet to Session or Capability for interpretation.
 	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
@@ -136,6 +140,13 @@ private:
 	std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
 
 	std::map<CapDesc, std::shared_ptr<Capability>> m_capabilities;	///< The peer's capability set.
+
+	// framing-related stuff
+	bool const m_isFarmingEnabled = false;
+	int const m_dequeLen = 1024;
+	RLPXFrameWriter m_frameWriter;
+	RLPXFrameReader m_frameReader;
+	std::vector<bytes> m_encframes;
 };
 
 }

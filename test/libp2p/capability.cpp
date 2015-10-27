@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(capability)
 
 	int const step = 10;
 	const char* const localhost = "127.0.0.1";
-	NetworkPreferences prefs1(localhost, 30301, false);
-	NetworkPreferences prefs2(localhost, 30302, false);
+	NetworkPreferences prefs1(localhost, 0, false);
+	NetworkPreferences prefs2(localhost, 0, false);
 	Host host1("Test", prefs1);
 	Host host2("Test", prefs2);
 	auto thc1 = host1.registerCapability(make_shared<TestHostCapability>());
@@ -125,14 +125,14 @@ BOOST_AUTO_TEST_CASE(capability)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
 	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
-	host1.requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), prefs2.listenPort, prefs2.listenPort));
+	host1.requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
 	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
 	BOOST_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
 
-	int const target = 7;
+	int const target = 100;
 	int checksum = 0;
 	for (int i = 0; i < target; checksum += i++)
 		thc2->sendTestMessage(host1.id(), i);

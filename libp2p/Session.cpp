@@ -39,7 +39,9 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
 	m_socket(_s),
 	m_peer(_n),
 	m_info(_info),
-	m_ping(chrono::steady_clock::time_point::max())
+	m_ping(chrono::steady_clock::time_point::max()),
+	m_frameWriter(0),
+	m_frameReader(0)
 {
 	m_peer->m_lastDisconnect = NoDisconnect;
 	m_lastReceived = m_connect = chrono::steady_clock::now();
@@ -264,14 +266,37 @@ void Session::send(bytes&& _msg)
 		return;
 
 	bool doWrite = false;
-	{
-		Guard l(x_writeQueue);
-		m_writeQueue.push_back(std::move(_msg));
-		doWrite = (m_writeQueue.size() == 1);
-	}
 
-	if (doWrite)
-		write();
+	if (m_isFarmingEnabled)
+	{
+		DEV_GUARDED(x_writeQueue)
+		{
+			doWrite = m_encframes.empty();
+			m_frameWriter.enque(RLPXPacket(m_frameWriter.protocolType(), msg));
+			bool done = false;
+			while (!done)
+			{
+				size_t prev = m_encframes.size();
+				size_t num = m_frameWriter.mux(*m_io, m_dequeLen, m_encframes);
+				size_t diff = m_encframes.size() - prev;
+				done = (!num && !diff);
+			}
+		}
+
+		if (doWrite)
+			writeFr();
+	}
+	else
+	{
+		DEV_GUARDED(x_writeQueue)
+		{
+			m_writeQueue.push_back(std::move(_msg));
+			doWrite = (m_writeQueue.size() == 1);
+		}
+
+		if (doWrite)
+			write();
+	}
 }
 
 void Session::write()
@@ -302,6 +327,43 @@ void Session::write()
 				return;
 		}
 		write();
+	});
+}
+
+void Session::writeFr()
+{
+	bytes const* out = nullptr;
+	DEV_GUARDED(x_writeQueue)
+	{
+		if (m_encframes.empty() || m_encframes[0].empty())
+			return;
+		else
+			out = &m_encframes[0];
+	}
+
+	auto self(shared_from_this());
+	ba::async_write(m_socket->ref(), ba::buffer(*out), [this, self](boost::system::error_code ec, std::size_t /*length*/)
+	{
+		ThreadContext tc(info().id.abridged());
+		ThreadContext tc2(info().clientVersion);
+		// must check queue, as write callback can occur following dropped()
+		if (ec)
+		{
+			clog(NetWarn) << "Error sending: " << ec.message();
+			drop(TCPError);
+			return;
+		}
+
+		DEV_GUARDED(x_writeQueue)
+		{
+			if (!m_encframes.empty())
+				m_encframes.erase(m_encframes.begin());
+
+			if (m_encframes.empty())
+				return;
+		}
+
+		writeFr();
 	});
 }
 
@@ -351,7 +413,11 @@ void Session::disconnect(DisconnectReason _reason)
 void Session::start()
 {
 	ping();
-	doRead();
+
+	if (m_isFarmingEnabled)
+		doReadFr();
+	else
+		doRead();
 }
 
 void Session::doRead()
@@ -374,7 +440,6 @@ void Session::doRead()
 			drop(BadProtocol); // todo: better error
 			return;
 		}
-
 		
 		uint16_t hProtocolId;
 		uint32_t hLength;
@@ -458,4 +523,63 @@ bool Session::checkRead(std::size_t _expected, boost::system::error_code _ec, st
 	}
 
 	return true;
+}
+
+void Session::doReadFr()
+{
+	if (m_dropped)
+		return; // ignore packets received while waiting to disconnect
+
+	auto self(shared_from_this());
+	m_data.resize(h256::size);
+	ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, h256::size), [this, self](boost::system::error_code ec, std::size_t length)
+	{
+		ThreadContext tc(info().id.abridged());
+		ThreadContext tc2(info().clientVersion);
+		if (!checkRead(h256::size, ec, length))
+			return;
+
+		if (!m_io->authAndDecryptHeader(bytesRef(m_data.data(), length)))
+		{
+			clog(NetWarn) << "header decrypt failed";
+			drop(BadProtocol); // todo: better error
+			return;
+		}
+
+		bytesConstRef rawHeader(m_data.data(), length);
+		try
+		{
+			RLPXFrameInfo tmpHeader(rawHeader);
+		}
+		catch (std::exception const& _e)
+		{
+			clog(NetWarn) << "Exception decoding frame header RLP:" << _e.what() << bytesConstRef(m_data.data(), h128::size).cropped(3);
+			drop(BadProtocol);
+			return;
+		}
+
+		RLPXFrameInfo header(rawHeader);
+		auto tlen = header.length + header.padding + h128::size; // padded frame and mac
+		m_data.resize(tlen);
+		ba::async_read(m_socket->ref(), boost::asio::buffer(m_data, tlen), [this, self, tlen, header](boost::system::error_code ec, std::size_t length)
+		{
+			ThreadContext tc(info().id.abridged());
+			ThreadContext tc2(info().clientVersion);
+			if (!checkRead(tlen, ec, length))
+				return;
+
+			bytesRef frame(m_data.data(), tlen);
+			auto px = m_frameReader.demux(*m_io, header, frame);
+			for (RLPXPacket& p: px)
+			{
+				PacketType packetType = (PacketType)RLP(p.type()).toInt<unsigned>();
+				bool ok = readPacket(header.protocolId, packetType, RLP(p.data()));
+#if ETH_DEBUG
+				if (!ok)
+					clog(NetWarn) << "Couldn't interpret packet." << RLP(p.data());
+#endif
+			}
+			doReadFr();
+		});
+	});
 }
