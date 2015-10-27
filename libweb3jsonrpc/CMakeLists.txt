@@ -18,6 +18,11 @@ jsonrpcstub_create(db.json
 	DBClient ${CMAKE_CURRENT_BINARY_DIR} DBClient
 )
 
+jsonrpcstub_create(whisper.json
+	dev::rpc::WhisperFace ${CMAKE_CURRENT_SOURCE_DIR} WhisperFace
+	WhisperClient ${CMAKE_CURRENT_BINARY_DIR} WhisperClient
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
