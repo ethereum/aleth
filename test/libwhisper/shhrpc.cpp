@@ -27,6 +27,7 @@
 #include <libwebthree/WebThree.h>
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/ModularServer.h>
+#include <libweb3jsonrpc/Whisper.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <test/TestHelper.h>
@@ -44,8 +45,9 @@ namespace js = json_spirit;
 
 WebThreeDirect* web3;
 
-unique_ptr<ModularServer<WebThreeStubServer>> modularServer;
-WebThreeStubServer* webthreeFace;
+unique_ptr<ModularServer<WebThreeStubServer, rpc::WhisperFace>> modularServer;
+rpc::WhisperFace* whisperFace;
+WebThreeStubServer* web3Face;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 static string const c_version("shhrpc-web3");
 static unsigned const c_ttl = 777000;
@@ -63,12 +65,11 @@ struct Setup
 			web3 = new WebThreeDirect(c_version, "", WithExisting::Trust, {"shh"}, nprefs);
 			web3->setIdealPeerCount(9);
 			auto server = new jsonrpc::HttpServer(8080);
-			vector<KeyPair> v;
 			KeyManager keyMan;
 			TrivialGasPricer gp;
-			webthreeFace = new WebThreeStubServer(*web3, nullptr, v, keyMan, gp);
-			webthreeFace->setIdentities({});
-			modularServer.reset(new ModularServer<WebThreeStubServer>(webthreeFace));
+			whisperFace = new rpc::Whisper(*web3, {});
+			web3Face = new WebThreeStubServer(*web3, {}, keyMan, gp);
+			modularServer.reset(new ModularServer<WebThreeStubServer, rpc::WhisperFace>(web3Face, whisperFace));
 			modularServer->addConnector(server);
 			modularServer->StartListening();
 			auto client = new jsonrpc::HttpClient("http://localhost:8080");
@@ -299,34 +300,34 @@ BOOST_AUTO_TEST_CASE(serverBasic)
 {
 	cnote << "Testing basic jsonrpc server...";
 
-	string s = webthreeFace->web3_clientVersion();
+	string s = web3Face->web3_clientVersion();
 	BOOST_REQUIRE_EQUAL(s, c_version);
 
-	s = webthreeFace->net_version();
+	s = web3Face->net_version();
 	BOOST_REQUIRE(s.empty());
 
-	s = webthreeFace->web3_sha3("some pseudo-random string here");
+	s = web3Face->web3_sha3("some pseudo-random string here");
 	BOOST_REQUIRE_EQUAL(s.size(), h256::size * 2 + 2);
 	BOOST_REQUIRE('0' == s[0] && 'x' == s[1]);
 
-	s = webthreeFace->net_peerCount();
+	s = web3Face->net_peerCount();
 	BOOST_REQUIRE(!s.empty());
 
 	KeyPair src = KeyPair::create();
 	KeyPair dst = KeyPair::create();
 	Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
-	bool b = webthreeFace->shh_post(t1);
+	bool b = whisperFace->shh_post(t1);
 	BOOST_REQUIRE(b);
 
-	string const id = webthreeFace->shh_newIdentity();
+	string const id = whisperFace->shh_newIdentity();
 	BOOST_REQUIRE_EQUAL(id.size(), 130);
 	BOOST_REQUIRE('0' == id[0] && 'x' == id[1]);
 
-	b = webthreeFace->shh_hasIdentity(id);
+	b = whisperFace->shh_hasIdentity(id);
 	BOOST_REQUIRE(b);
 
 	Json::Value t2 = createMessage(id, id);
-	b = webthreeFace->shh_post(t2);
+	b = whisperFace->shh_post(t2);
 	BOOST_REQUIRE(b);
 }
 
@@ -341,40 +342,40 @@ BOOST_AUTO_TEST_CASE(server)
 	permissions.privileges.insert(Privilege::Admin);
 	string const text = string("0x") + h256::random().hex(); // message must be in raw form
 
-	string sess1 = webthreeFace->newSession(permissions);
+	string sess1 = web3Face->newSession(permissions);
 	string sess2("session number two");
-	webthreeFace->addSession(sess2, permissions);
+	web3Face->addSession(sess2, permissions);
 	
 	int newVerbosity = 10;
 	int oldVerbosity = g_logVerbosity;
-	b = webthreeFace->admin_setVerbosity(newVerbosity, sess1);
+	b = web3Face->admin_setVerbosity(newVerbosity, sess1);
 	BOOST_REQUIRE(b);
 	BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
 
-	b = webthreeFace->admin_setVerbosity(oldVerbosity, sess1);
+	b = web3Face->admin_setVerbosity(oldVerbosity, sess1);
 	BOOST_REQUIRE(b);
 	BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
 
-	b = webthreeFace->admin_net_start(sess1);
+	b = web3Face->admin_net_start(sess1);
 	BOOST_REQUIRE(b);
 
 	unsigned const step = 10;
-	for (unsigned i = 0; i < 3000 && !webthreeFace->net_listening(); i += step)
+	for (unsigned i = 0; i < 3000 && !web3Face->net_listening(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	b = webthreeFace->net_listening();
+	b = web3Face->net_listening();
 	BOOST_REQUIRE(b);
 	
-	b = webthreeFace->admin_net_stop(sess1);
+	b = web3Face->admin_net_stop(sess1);
 	BOOST_REQUIRE(b);
 
-	b = webthreeFace->net_listening();
+	b = web3Face->net_listening();
 	BOOST_REQUIRE(!b);
 
-	j = webthreeFace->admin_net_peers(sess1);
+	j = web3Face->admin_net_peers(sess1);
 	BOOST_REQUIRE(j.empty());
 
-	j = webthreeFace->admin_net_nodeInfo(sess2);
+	j = web3Face->admin_net_nodeInfo(sess2);
 	BOOST_REQUIRE_EQUAL(j["id"].asString(), web3->id().hex());
 	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), web3->nodeInfo().port);
 
@@ -386,23 +387,23 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE(port2);
 	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
-	b = webthreeFace->admin_net_start(sess2);
+	b = web3Face->admin_net_start(sess2);
 	BOOST_REQUIRE(b);
 	
 	for (unsigned i = 0; i < 2000 && !host2.haveNetwork(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	for (unsigned i = 0; i < 2000 && !webthreeFace->net_listening(); i += step)
+	for (unsigned i = 0; i < 2000 && !web3Face->net_listening(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
 	BOOST_REQUIRE(host2.haveNetwork());
-	BOOST_REQUIRE(webthreeFace->net_listening());
+	BOOST_REQUIRE(web3Face->net_listening());
 
 	string node("enode://");
 	node += host2.id().hex();
 	node += "@127.0.0.1:";
 	node += toString(port2);
-	b = webthreeFace->admin_net_connect(node, sess2);
+	b = web3Face->admin_net_connect(node, sess2);
 
 	for (unsigned i = 0; i < 3000 && !host2.peerCount(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
@@ -410,36 +411,36 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
 	this_thread::sleep_for(chrono::milliseconds(step));
 
-	j = webthreeFace->admin_net_peers(sess2);
+	j = web3Face->admin_net_peers(sess2);
 	BOOST_REQUIRE_EQUAL(j.size(), 1);
 	Json::Value peer = j[0];
 	s = peer["id"].asString();
 	BOOST_REQUIRE_EQUAL(s, host2.id().hex());
 	BOOST_REQUIRE_EQUAL(peer["port"].asUInt(), port2);
 
-	s = webthreeFace->net_peerCount();
+	s = web3Face->net_peerCount();
 	BOOST_REQUIRE_EQUAL(s, "0x1");
 
 	KeyPair src = KeyPair::create();
 	KeyPair dst = KeyPair::create();
 
 	Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
-	b = webthreeFace->shh_post(t1);
+	b = whisperFace->shh_post(t1);
 	BOOST_REQUIRE(b);
 
-	string const id = webthreeFace->shh_newIdentity();
+	string const id = whisperFace->shh_newIdentity();
 	BOOST_REQUIRE_EQUAL(id.size(), 130);
-	BOOST_REQUIRE(webthreeFace->shh_hasIdentity(id));
+	BOOST_REQUIRE(whisperFace->shh_hasIdentity(id));
 
 	Json::Value t2 = createMessage(id, id);
-	b = webthreeFace->shh_post(t2);
+	b = whisperFace->shh_post(t2);
 	BOOST_REQUIRE(b);
 
 	string const nonexistent = "123456789";
-	b = webthreeFace->shh_uninstallFilter(nonexistent);
+	b = whisperFace->shh_uninstallFilter(nonexistent);
 	BOOST_REQUIRE(b);
 
-	j = webthreeFace->shh_getMessages(nonexistent);
+	j = whisperFace->shh_getMessages(nonexistent);
 	BOOST_REQUIRE(j.empty());
 
 	string const topic = "unicorns";
@@ -448,20 +449,20 @@ BOOST_AUTO_TEST_CASE(server)
 	Json::Value f;
 	f["to"] = id;
 	f["topics"] = t;
-	string const filter = webthreeFace->shh_newFilter(f);
+	string const filter = whisperFace->shh_newFilter(f);
 
-	j = webthreeFace->shh_getFilterChanges(filter);
+	j = whisperFace->shh_getFilterChanges(filter);
 	BOOST_REQUIRE(j.empty());
 
-	j = webthreeFace->shh_getMessages(filter);
+	j = whisperFace->shh_getMessages(filter);
 	BOOST_REQUIRE(j.empty());
 
 	Json::Value msg = createMessage(id, id, topic, text);
-	b = webthreeFace->shh_post(msg);
+	b = whisperFace->shh_post(msg);
 	BOOST_REQUIRE(b);
 	this_thread::sleep_for(chrono::milliseconds(50));
 
-	j = webthreeFace->shh_getFilterChanges(filter);
+	j = whisperFace->shh_getFilterChanges(filter);
 	BOOST_REQUIRE(!j.empty());
 	Json::Value m1 = j[0];
 	BOOST_REQUIRE_EQUAL(m1["ttl"], toJS(c_ttl));
@@ -469,7 +470,7 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(m1["to"], id);
 	BOOST_REQUIRE_EQUAL(m1["payload"], text);
 
-	j = webthreeFace->shh_getMessages(filter);	
+	j = whisperFace->shh_getMessages(filter);	
 	BOOST_REQUIRE(!j.empty());
 	Json::Value m2 = j[0];
 	BOOST_REQUIRE_EQUAL(m2["ttl"], toJS(c_ttl));
@@ -477,10 +478,10 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(m2["to"], id);
 	BOOST_REQUIRE_EQUAL(m2["payload"], text);
 
-	j = webthreeFace->shh_getFilterChanges(filter);
+	j = whisperFace->shh_getFilterChanges(filter);
 	BOOST_REQUIRE(j.empty());
 
-	j = webthreeFace->shh_getMessages(filter);
+	j = whisperFace->shh_getMessages(filter);
 	BOOST_REQUIRE(!j.empty());
 	m1 = j[0];
 	BOOST_REQUIRE_EQUAL(m1["ttl"], toJS(c_ttl));
@@ -489,40 +490,40 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(m1["payload"], text);
 
 	msg = createMessage(id, id, topic);
-	b = webthreeFace->shh_post(msg);
+	b = whisperFace->shh_post(msg);
 	BOOST_REQUIRE(b);
 	this_thread::sleep_for(chrono::milliseconds(50));
 
-	j = webthreeFace->shh_getFilterChanges(filter);
+	j = whisperFace->shh_getFilterChanges(filter);
 	BOOST_REQUIRE_EQUAL(j.size(), 1);
 
-	j = webthreeFace->shh_getMessages(filter);
+	j = whisperFace->shh_getMessages(filter);
 	BOOST_REQUIRE_EQUAL(j.size(), 2);
 
-	b = webthreeFace->shh_uninstallFilter(filter);
+	b = whisperFace->shh_uninstallFilter(filter);
 	BOOST_REQUIRE(b);
 
-	j = webthreeFace->shh_getFilterChanges(filter);
+	j = whisperFace->shh_getFilterChanges(filter);
 	BOOST_REQUIRE(j.empty());
 
-	j = webthreeFace->shh_getMessages(filter);
+	j = whisperFace->shh_getMessages(filter);
 	BOOST_REQUIRE(j.empty());
 
 	msg = createMessage(id, id, topic);
-	b = webthreeFace->shh_post(msg);
+	b = whisperFace->shh_post(msg);
 	BOOST_REQUIRE(b);
 	this_thread::sleep_for(chrono::milliseconds(50));
 
-	j = webthreeFace->shh_getFilterChanges(filter);
+	j = whisperFace->shh_getFilterChanges(filter);
 	BOOST_REQUIRE(j.empty());
 
-	j = webthreeFace->shh_getMessages(filter);
+	j = whisperFace->shh_getMessages(filter);
 	BOOST_REQUIRE(j.empty());
 
-	b = webthreeFace->admin_net_stop(sess2);
+	b = web3Face->admin_net_stop(sess2);
 	BOOST_REQUIRE(b);
 
-	b = webthreeFace->net_listening();
+	b = web3Face->net_listening();
 	BOOST_REQUIRE(!b);
 }
 

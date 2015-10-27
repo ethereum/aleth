@@ -35,13 +35,12 @@ class FixedWebThreeServer: public dev::WebThreeStubServerBase
 {
 public:
 	FixedWebThreeServer(std::vector<dev::KeyPair> const& _allAccounts, dev::eth::Interface* _client):
-		WebThreeStubServerBase(std::make_shared<dev::eth::FixedAccountHolder>([=](){return _client;}, _allAccounts), _allAccounts),
+		WebThreeStubServerBase(std::make_shared<dev::eth::FixedAccountHolder>([=](){return _client;}, _allAccounts)),
 		m_client(_client)
 	{}
 
 private:
 	dev::eth::Interface* client() override { return m_client; }
-	std::shared_ptr<dev::shh::Interface> face() override {	BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::shh::Interface")); }
 	dev::bzz::Interface* bzz() override { BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::bzz::Interface")); }
 	dev::WebThreeNetworkFace* network() override { BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::WebThreeNetworkFace")); }
 

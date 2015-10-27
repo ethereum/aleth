@@ -9,7 +9,7 @@ class WebThreeDirect;
 
 namespace shh
 {
-	class Interface;
+class Interface;
 }
 
 namespace rpc
@@ -20,6 +20,8 @@ class Whisper: public WhisperFace
 public:
 	// TODO: init with whisper interface instead of webthreedirect
 	Whisper(WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts);
+	
+	virtual void setIdentities(std::vector<dev::KeyPair> const& _ids);
 
 	virtual bool shh_post(Json::Value const& _json) override;
 	virtual std::string shh_newIdentity() override;
@@ -30,10 +32,9 @@ public:
 	virtual bool shh_uninstallFilter(std::string const& _filterId) override;
 	virtual Json::Value shh_getFilterChanges(std::string const& _filterId) override;
 	virtual Json::Value shh_getMessages(std::string const& _filterId) override;
-
+	
 private:
 	shh::Interface* shh() const;
-	void setIdentities(std::vector<dev::KeyPair> const& _ids);
 
 	WebThreeDirect& m_web3;
 	std::map<dev::Public, dev::Secret> m_ids;

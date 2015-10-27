@@ -52,8 +52,8 @@ template <class T> bool isHash(std::string const& _hash)
 	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
 }
 
-WebThreeStubServer::WebThreeStubServer(WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
-	WebThreeStubServerBase(_ethAccounts, _shhAccounts),
+WebThreeStubServer::WebThreeStubServer(WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
+	WebThreeStubServerBase(_ethAccounts),
 	m_web3(_web3),
 	m_keyMan(_keyMan),
 	m_gp(_gp)
@@ -319,11 +319,6 @@ dev::eth::Interface* WebThreeStubServer::client()
 dev::bzz::Interface* WebThreeStubServer::bzz()
 {
 	return m_web3.swarm();
-}
-
-std::shared_ptr<dev::shh::Interface> WebThreeStubServer::face()
-{
-	return m_web3.whisper();
 }
 
 dev::WebThreeNetworkFace* WebThreeStubServer::network()

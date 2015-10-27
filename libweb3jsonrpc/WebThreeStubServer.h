@@ -49,7 +49,7 @@ struct SessionPermissions
 class WebThreeStubServer: public dev::WebThreeStubServerBase
 {
 public:
-	WebThreeStubServer(dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
+	WebThreeStubServer(dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
 
 	virtual std::string web3_clientVersion() override;
 
@@ -62,7 +62,6 @@ private:
 	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const override { auto it = m_sessions.find(_session); return it != m_sessions.end() && it->second.privileges.count(_l); }
 
 	virtual dev::eth::Interface* client() override;					// TODO: rename eth
-	virtual std::shared_ptr<dev::shh::Interface> face() override;	// TODO: rename shh
 	virtual dev::bzz::Interface* bzz() override;
 	virtual dev::WebThreeNetworkFace* network() override;
 
