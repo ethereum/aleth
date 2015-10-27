@@ -136,10 +136,12 @@ function get_repo_branch() {
 			exit 1
 			;;
 	esac
+	echo "ETHUPDATE - INFO: get_repo_branch() setting branch for $1 to ${REQUESTED_BRANCH}."
 	#if not develop or master we got some work to do
 	if [[ $REQUESTED_BRANCH != "develop" && $REQUESTED_BRANCH != "master" ]]; then
-		if [[ $GH_PR_USER != "" ]];then
+		if [[ $GH_PR_USER == "" ]];then
 			$GH_PR_USER="ethereum"
+			echo "ETHUPDATE - INFO: get_repo_branch() no GH_PR_USER given, defaulting to ethereum repo."
 		fi
 		#fetch the requested branch
 		git fetch https://github.com/${GH_PR_USER}/$1 ${REQUESTED_BRANCH}:refs/remotes/origin/${REQUESTED_BRANCH}
