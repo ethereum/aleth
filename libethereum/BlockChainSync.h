@@ -64,14 +64,14 @@ public:
 	/// Called by peer to report status
 	virtual void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
 
-	/// Called by peer once it has new blocks during syn
-	virtual void onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	/// Called by peer once it has new block headers during sync
+	virtual void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 
-	/// Called by peer once it has new blocks
+	/// Called by peer once it has new block bodies
+	virtual void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+
+	/// Called by peer once it has new block bodies
 	virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
-
-	/// Called by peer once it has new hashes
-	virtual void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) = 0;
 
 	/// Called by peer once it has another sequential block of hashes during sync
 	virtual void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) = 0;
@@ -117,7 +117,7 @@ private:
 	EthereumHost& m_host;
 
 protected:
-	Handler<> m_bqRoomAvailable;			///< Triggered once block queue
+	Handler<> m_bqRoomAvailable;			///< Triggered once block queue has space for more blocks
 	mutable RecursiveMutex x_sync;
 	SyncState m_state = SyncState::Idle;	///< Current sync state
 	unsigned m_estimatedHashes = 0;			///< Number of estimated hashes for the last peer over PV60. Used for status reporting only.
@@ -282,6 +282,25 @@ protected:
 	h256 m_syncingLatestHash;					///< Latest block's hash of the peer we are syncing to, as of the current sync.
 	u256 m_syncingTotalDifficulty;				///< Latest block's total difficulty of the peer we aresyncing to, as of the current sync.
 	std::weak_ptr<EthereumPeer> m_syncer;		///< Peer we are currently syncing with
+
+	struct SubChain
+	{
+		h256s hashes;	///< List of subchain hashes
+		h256 lastHash;	///< Last requested subchain hash
+	};
+
+	std::map<unsigned, SubChain> m_completeChainMap;		///< Fully downloaded subchains
+	std::map<unsigned, SubChain> m_readyChainMap;			///< Subchains ready for download
+	std::map<unsigned, SubChain> m_downloadingChainMap;		///< Subchains currently being downloading. In sync with m_chainSyncPeers
+	std::map<unsigned, std::vector<bytes>> m_headers;	    ///< Downloaded headers
+	std::map<unsigned, std::vector<bytes>> m_bodies;	    ///< Downloaded block bodies
+	std::map<std::weak_ptr<EthereumPeer>, unsigned, std::owner_less<std::weak_ptr<EthereumPeer>>> m_chainSyncPeers; ///< Peers to m_downloadingSubchain number map
+	h256Hash m_knownHashes;									///< Subchain start markers. Used to track suchain completion
+	unsigned m_syncingBlockNumber = 0;						///< Current subchain marker
+	bool m_hashScanComplete = false;						///< True if leading peer completed hashchain scan and we have a list of subchains ready
+
+
+
 };
 
 std::ostream& operator<<(std::ostream& _out, SyncStatus const& _sync);

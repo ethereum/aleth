@@ -31,7 +31,6 @@
 #include <libethcore/Common.h>
 #include <libp2p/Capability.h>
 #include "CommonNet.h"
-#include "DownloadMan.h"
 
 namespace dev
 {
@@ -45,11 +44,6 @@ namespace eth
  */
 class EthereumPeer: public p2p::Capability
 {
-	friend class EthereumHost; //TODO: remove this
-	friend class BlockChainSync; //TODO: remove this
-	friend class PV60Sync; //TODO: remove this
-	friend class PV61Sync; //TODO: remove this
-
 public:
 	/// Basic constructor.
 	EthereumPeer(std::shared_ptr<p2p::Session> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap);
@@ -73,13 +67,11 @@ public:
 	void setIdle();
 
 	/// Request hashes for given parent hash.
-	void requestHashes(h256 const& _lastHash);
-
-	/// Request blocks. Uses block download manager.
-	void requestBlocks();
+	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip);
+	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip);
 
 	/// Request specified blocks from peer.
-	void requestBlocks(h256s const& _blocks);
+	void requestBlockBodies(h256s const& _blocks);
 
 	/// Check if this node is rude.
 	bool isRude() const;
@@ -138,12 +130,8 @@ private:
 
 	/// This is built as we ask for hashes. Once no more hashes are given, we present this to the
 	/// host who initialises the DownloadMan and m_sub becomes active for us to begin asking for blocks.
-	unsigned m_expectedHashes = 0;			///< Estimated upper bound of hashes to expect from this peer.
 	u256 m_syncHashNumber = 0;				///< Number of latest hash we sync to (PV61+)
 	h256 m_syncHash;						///< Latest hash we sync to (PV60)
-
-	/// Once we're asking for blocks, this becomes in use.
-	DownloadSub m_sub;
 
 	u256 m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?

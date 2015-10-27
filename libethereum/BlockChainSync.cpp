@@ -69,19 +69,13 @@ BlockChainSync::~BlockChainSync()
 	abortSync();
 }
 
-DownloadMan const& BlockChainSync::downloadMan() const
-{
-	return host().downloadMan();
-}
-
-DownloadMan& BlockChainSync::downloadMan()
-{
-	return host().downloadMan();
-}
-
 void BlockChainSync::abortSync()
 {
-	downloadMan().reset();
+	host().foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
+	{
+		_p->abortSync();
+	});
+
 }
 
 void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
@@ -104,26 +98,9 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
 		_peer->disable("Peer banned for unexpected status message.");
 	else
-	{
-		unsigned hashes = estimatedHashes();
-		_peer->m_expectedHashes = hashes;
 		onNewPeer(_peer);
-	}
 }
 
-unsigned BlockChainSync::estimatedHashes() const
-{
-	BlockInfo block = host().chain().info();
-	uint64_t lastBlockTime = (block.hash() == host().chain().genesisHash()) ? 1428192000 : (uint64_t)block.timestamp();
-	uint64_t now = utcTime();
-	unsigned blockCount = c_chainReorgSize;
-	if (lastBlockTime > now)
-		clog(NetWarn) << "Clock skew? Latest block is in the future";
-	else
-		blockCount += (now - lastBlockTime) / (unsigned)c_durationLimit;
-	clog(NetAllDetail) << "Estimated hashes: " << blockCount;
-	return blockCount;
-}
 
 void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 {
@@ -150,7 +127,60 @@ void BlockChainSync::logNewBlock(h256 const& _h)
 	m_knownNewHashes.erase(_h);
 }
 
-void BlockChainSync::onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+void BlockChainSync::mergeInto(std::map<unsigned, std::vector<bytes>>& _container, usinged _number, bytesConstRef const& _data)
+{
+		auto lower = _container.lower_bound(_number);
+		if (lower != _container.end() && (lower->first + lower->second.size() <= _number))
+		{
+			// extend existing chunk
+			assert(lower->first + lower->second.size() == _number);
+			lower->second.emplace_back(_data.toBytes());
+
+			auto next = lower++;
+			if (next != _container.end() && (lower->first + lower->second.size() == next->first))
+			{
+				// merge with the next chunk
+				std::move(lower->second.begin(), lower->second.end(), std::back_inserter(next->second));
+				_container.erase(next);
+			}
+
+		}
+		else
+			// insert a new chunk
+			_container.insert(lower, std::pair(_number, std::vector<bytes> { _data.toBytes() } ));
+}
+
+void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+{
+	RecursiveGuard l(x_sync);
+	size_t itemCount = _r.length();
+	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+	if (m_state != SyncState::Blocks && m_state != SyncState::NewBlocks && m_state != SyncState::Waiting)
+	{
+		clog(NetMessageSummary) << "Ignoring unexpected blocks";
+		return;
+	}
+	if (m_state == SyncState::Waiting)
+	{
+		clog(NetAllDetail) << "Ignored blocks while waiting";
+		return;
+	}
+	for (unsigned i = 0; i < count; i++)
+	{
+		BlockInfo info(_r[i], h256(), HeaderData);
+
+		// merge into existing headers
+		unsigned blockNumber = static_cast<unsigned>(info.number());
+		auto lower = m_headers.lower_bound(blockNumber);
+		if (lower != m_headers.end())
+		{
+
+		}
+
+	}
+}
+
+void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
 	unsigned itemCount = _r.itemCount();
