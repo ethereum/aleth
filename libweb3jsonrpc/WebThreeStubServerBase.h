@@ -56,13 +56,6 @@ class Interface;
 extern const unsigned SensibleHttpThreads;
 extern const unsigned SensibleHttpPort;
 
-class WebThreeStubDatabaseFace
-{
-public:
-	virtual std::string get(std::string const& _name, std::string const& _key) = 0;
-	virtual void put(std::string const& _name, std::string const& _key, std::string const& _value) = 0;
-};
-
 enum class Privilege
 {
 	Admin
@@ -91,7 +84,7 @@ namespace dev
 class WebThreeStubServerBase: public AbstractWebThreeStubServer
 {
 public:
-	WebThreeStubServerBase(jsonrpc::AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _sshAccounts);
+	WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _sshAccounts);
 
 	std::shared_ptr<dev::eth::AccountHolder> const& ethAccounts() const { return m_ethAccounts; }
 
@@ -156,9 +149,6 @@ public:
 	virtual bool eth_notePassword(std::string const&) { return false; }
 	virtual Json::Value eth_syncing() override;
 
-	virtual bool db_put(std::string const& _name, std::string const& _key, std::string const& _value);
-	virtual std::string db_get(std::string const& _name, std::string const& _key);
-
 	virtual std::string bzz_put(std::string const& _data);
 	virtual std::string bzz_get(std::string const& _hash);
 
@@ -198,9 +188,6 @@ public:
 	virtual std::string personal_newAccount(const std::string&) { return ""; }
 	virtual bool personal_unlockAccount(const std::string&, const std::string&, int) { return false; }
 
-	// IPC connector
-	void enableIpc(bool _enable);
-
 	// TODO REMOVE
 	virtual bool admin_eth_setReferencePrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
 	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
@@ -218,15 +205,11 @@ protected:
 	virtual std::shared_ptr<dev::shh::Interface> face() = 0;	// TODO: rename to shh
 	virtual dev::bzz::Interface* bzz() = 0;
 	virtual dev::WebThreeNetworkFace* network() = 0;
-	virtual dev::WebThreeStubDatabaseFace* db() = 0;
 
 	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;
 
 	std::map<dev::Public, dev::Secret> m_shhIds;
 	std::map<unsigned, dev::Public> m_shhWatches;
-
-	std::unique_ptr<jsonrpc::AbstractServerConnector> m_ipcConnector;
-	jsonrpc::IClientConnectionHandler* m_handler;
 };
 
 } //namespace dev

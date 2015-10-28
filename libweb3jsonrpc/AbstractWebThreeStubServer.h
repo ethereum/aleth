@@ -5,12 +5,12 @@
 #ifndef JSONRPC_CPP_STUB_ABSTRACTWEBTHREESTUBSERVER_H_
 #define JSONRPC_CPP_STUB_ABSTRACTWEBTHREESTUBSERVER_H_
 
-#include <jsonrpccpp/server.h>
+#include "ModularServer.h"
 
-class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThreeStubServer>
+class AbstractWebThreeStubServer : public ServerInterface<AbstractWebThreeStubServer>
 {
     public:
-        AbstractWebThreeStubServer(jsonrpc::AbstractServerConnector &conn, jsonrpc::serverVersion_t type = jsonrpc::JSONRPC_SERVER_V2) : jsonrpc::AbstractServer<AbstractWebThreeStubServer>(conn, type)
+        AbstractWebThreeStubServer()
         {
             this->bindAndAddMethod(jsonrpc::Procedure("web3_sha3", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::web3_sha3I);
             this->bindAndAddMethod(jsonrpc::Procedure("web3_clientVersion", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::web3_clientVersionI);
@@ -70,8 +70,6 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
             this->bindAndAddMethod(jsonrpc::Procedure("eth_notePassword", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::eth_notePasswordI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_syncing", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &AbstractWebThreeStubServer::eth_syncingI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_estimateGas", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_OBJECT, NULL), &AbstractWebThreeStubServer::eth_estimateGasI);
-            this->bindAndAddMethod(jsonrpc::Procedure("db_put", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::db_putI);
-            this->bindAndAddMethod(jsonrpc::Procedure("db_get", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::db_getI);
             this->bindAndAddMethod(jsonrpc::Procedure("shh_post", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_OBJECT, NULL), &AbstractWebThreeStubServer::shh_postI);
             this->bindAndAddMethod(jsonrpc::Procedure("shh_newIdentity", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::shh_newIdentityI);
             this->bindAndAddMethod(jsonrpc::Procedure("shh_hasIdentity", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::shh_hasIdentityI);
@@ -360,14 +358,6 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
         {
             response = this->eth_estimateGas(request[0u]);
         }
-        inline virtual void db_putI(const Json::Value &request, Json::Value &response)
-        {
-            response = this->db_put(request[0u].asString(), request[1u].asString(), request[2u].asString());
-        }
-        inline virtual void db_getI(const Json::Value &request, Json::Value &response)
-        {
-            response = this->db_get(request[0u].asString(), request[1u].asString());
-        }
         inline virtual void shh_postI(const Json::Value &request, Json::Value &response)
         {
             response = this->shh_post(request[0u]);
@@ -575,8 +565,6 @@ class AbstractWebThreeStubServer : public jsonrpc::AbstractServer<AbstractWebThr
         virtual bool eth_notePassword(const std::string& param1) = 0;
         virtual Json::Value eth_syncing() = 0;
         virtual std::string eth_estimateGas(const Json::Value& param1) = 0;
-        virtual bool db_put(const std::string& param1, const std::string& param2, const std::string& param3) = 0;
-        virtual std::string db_get(const std::string& param1, const std::string& param2) = 0;
         virtual bool shh_post(const Json::Value& param1) = 0;
         virtual std::string shh_newIdentity() = 0;
         virtual bool shh_hasIdentity(const std::string& param1) = 0;

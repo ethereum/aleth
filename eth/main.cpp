@@ -55,6 +55,9 @@
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
+#include <libweb3jsonrpc/ModularServer.h>
+#include <libweb3jsonrpc/IpcServer.h>
+#include <libweb3jsonrpc/LevelDB.h>
 #endif
 #include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
@@ -1134,8 +1137,7 @@ int main(int argc, char** argv)
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
 #if ETH_JSONRPC || !ETH_TRUE
-	shared_ptr<dev::WebThreeStubServer> jsonrpcServer;
-	unique_ptr<jsonrpc::AbstractServerConnector> jsonrpcConnector;
+	unique_ptr<ModularServer<dev::WebThreeStubServer, rpc::DBFace>> jsonrpcServer;
 
 	AddressHash allowedDestinations;
 
@@ -1160,17 +1162,30 @@ int main(int argc, char** argv)
 
 	if (jsonRPCURL > -1 || ipc)
 	{
-		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
-		safeConnector->setAllowedOrigin(rpcCorsDomain);
-		jsonrpcConnector.reset(safeConnector);
-		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
+		auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer);
+		
+		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, rpc::DBFace>(web3Face, new rpc::LevelDB()));
+
 		if (jsonRPCURL > -1)
+		{
+			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
+			httpConnector->setAllowedOrigin(rpcCorsDomain);
+			jsonrpcServer->addConnector(httpConnector);
 			jsonrpcServer->StartListening();
-		jsonrpcServer->enableIpc(ipc);
+		}
+
+		if (ipc)
+		{
+			auto ipcConnector = new IpcServer("geth");
+			jsonrpcServer->addConnector(ipcConnector);
+			ipcConnector->StartListening();
+		}
+
 		if (jsonAdmin.empty())
-			jsonAdmin = jsonrpcServer->newSession(SessionPermissions{{Privilege::Admin}});
+			jsonAdmin = web3Face->newSession(SessionPermissions{{Privilege::Admin}});
 		else
-			jsonrpcServer->addSession(jsonAdmin, SessionPermissions{{Privilege::Admin}});
+			web3Face->addSession(jsonAdmin, SessionPermissions{{Privilege::Admin}});
+
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
@@ -1201,16 +1216,21 @@ int main(int argc, char** argv)
 		if (useConsole)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
+			auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
+			string sessionKey = web3Face->newSession(SessionPermissions{{Privilege::Admin}});
+			
+			ModularServer<dev::WebThreeStubServer, rpc::DBFace> rpcServer(web3Face, new rpc::LevelDB());
 			JSLocalConsole console;
-			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer);
-			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
+			rpcServer.addConnector(console.createConnector());
+			rpcServer.StartListening();
+
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
 			while (!Client::shouldExit())
 			{
 				console.readAndEval();
 				stopMiningAfterXBlocks(c, n, mining);
 			}
-			rpcServer->StopListening();
+			rpcServer.StopListening();
 #endif
 		}
 		else

@@ -14,11 +14,26 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file JSLocalConsole.cpp
- * @author Marek Kotewicz <marek@ethdev.com>
+/** @file MemoryDB.cpp
+ * @authors:
+ *   Gav Wood <i@gavwood.com>
+ *   Marek Kotewicz <marek@ethdev.com>
  * @date 2015
- * Ethereum client.
  */
 
-#include "JSLocalConsole.h"
+#include "MemoryDB.h"
 
+using namespace dev::rpc;
+
+bool MemoryDB::db_put(std::string const& _name, std::string const& _key, std::string const& _value)
+{
+	std::string k(_name + "/" + _key);
+	m_db[k] = _value;
+	return true;
+}
+
+std::string MemoryDB::db_get(std::string const& _name, std::string const& _key)
+{
+	std::string k(_name + "/" + _key);
+	return m_db[k];
+}

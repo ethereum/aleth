@@ -52,19 +52,12 @@ template <class T> bool isHash(std::string const& _hash)
 	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
 }
 
-WebThreeStubServer::WebThreeStubServer(jsonrpc::AbstractServerConnector& _conn, WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
-	WebThreeStubServerBase(_conn, _ethAccounts, _shhAccounts),
+WebThreeStubServer::WebThreeStubServer(WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _shhAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
+	WebThreeStubServerBase(_ethAccounts, _shhAccounts),
 	m_web3(_web3),
 	m_keyMan(_keyMan),
 	m_gp(_gp)
-{
-	auto path = getDataDir() + "/.web3";
-	fs::create_directories(path);
-	DEV_IGNORE_EXCEPTIONS(fs::permissions(path, fs::owner_all));
-	ldb::Options o;
-	o.create_if_missing = true;
-	ldb::DB::Open(o, path, &m_db);
-}
+{}
 
 std::string WebThreeStubServer::newSession(SessionPermissions const& _p)
 {
@@ -336,25 +329,6 @@ std::shared_ptr<dev::shh::Interface> WebThreeStubServer::face()
 dev::WebThreeNetworkFace* WebThreeStubServer::network()
 {
 	return &m_web3;
-}
-
-dev::WebThreeStubDatabaseFace* WebThreeStubServer::db()
-{
-	return this;
-}
-
-std::string WebThreeStubServer::get(std::string const& _name, std::string const& _key)
-{
-	bytes k = sha3(_name).asBytes() + sha3(_key).asBytes();
-	string ret;
-	m_db->Get(m_readOptions, ldb::Slice((char const*)k.data(), k.size()), &ret);
-	return ret;
-}
-
-void WebThreeStubServer::put(std::string const& _name, std::string const& _key, std::string const& _value)
-{
-	bytes k = sha3(_name).asBytes() + sha3(_key).asBytes();
-	m_db->Put(m_writeOptions, ldb::Slice((char const*)k.data(), k.size()), ldb::Slice((char const*)_value.data(), _value.size()));
 }
 
 std::string WebThreeStubServer::personal_newAccount(const std::string& _password)

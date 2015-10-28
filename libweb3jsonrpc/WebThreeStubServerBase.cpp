@@ -62,10 +62,9 @@ const unsigned dev::SensibleHttpThreads = 4;
 #endif
 const unsigned dev::SensibleHttpPort = 8545;
 
-WebThreeStubServerBase::WebThreeStubServerBase(AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
-	AbstractWebThreeStubServer(_conn),
-	m_ethAccounts(_ethAccounts),
-	m_handler(_conn.GetHandler())
+WebThreeStubServerBase::WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
+	AbstractWebThreeStubServer(),
+	m_ethAccounts(_ethAccounts)
 {
 	setIdentities(_sshAccounts);
 }
@@ -847,17 +846,6 @@ Json::Value WebThreeStubServerBase::eth_fetchQueuedTransactions(string const& _a
 	}
 }
 
-bool WebThreeStubServerBase::db_put(string const& _name, string const& _key, string const& _value)
-{
-	db()->put(_name, _key,_value);
-	return true;
-}
-
-string WebThreeStubServerBase::db_get(string const& _name, string const& _key)
-{
-	return db()->get(_name, _key);;
-}
-
 string WebThreeStubServerBase::bzz_put(string const& _data)
 {
 	bytes b = jsToBytes(_data);
@@ -1016,20 +1004,5 @@ Json::Value WebThreeStubServerBase::shh_getMessages(string const& _filterId)
 	catch (...)
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
-	}
-}
-
-void WebThreeStubServerBase::enableIpc(bool _enable)
-{
-	if (_enable && !m_ipcConnector)
-	{
-		m_ipcConnector.reset(new IpcServer("geth"));
-		m_ipcConnector->SetHandler(m_handler);
-		m_ipcConnector->StartListening();
-	}
-	else if (!_enable && m_ipcConnector.get())
-	{
-		m_ipcConnector->StopListening();
-		m_ipcConnector.reset();
 	}
 }
