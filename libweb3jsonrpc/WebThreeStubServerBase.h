@@ -48,10 +48,6 @@ namespace shh
 {
 class Interface;
 }
-namespace bzz
-{
-class Interface;
-}
 
 extern const unsigned SensibleHttpThreads;
 extern const unsigned SensibleHttpPort;
@@ -145,9 +141,6 @@ public:
 	virtual bool eth_notePassword(std::string const&) { return false; }
 	virtual Json::Value eth_syncing() override;
 
-	virtual std::string bzz_put(std::string const& _data);
-	virtual std::string bzz_get(std::string const& _hash);
-
 	virtual bool admin_setVerbosity(int _v, std::string const& _session);
 	virtual bool admin_net_start(std::string const& _session);
 	virtual bool admin_net_stop(std::string const& _session);
@@ -187,7 +180,6 @@ protected:
 	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const { (void)_session; (void)_l; return false; }
 
 	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
-	virtual dev::bzz::Interface* bzz() = 0;
 	virtual dev::WebThreeNetworkFace* network() = 0;
 
 	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;

@@ -37,7 +37,6 @@
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
 #include <libethereum/Client.h>
-#include <libwebthree/Swarm.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
 #include <libwhisper/Message.h>
@@ -821,16 +820,4 @@ Json::Value WebThreeStubServerBase::eth_fetchQueuedTransactions(string const& _a
 	{
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
-}
-
-string WebThreeStubServerBase::bzz_put(string const& _data)
-{
-	bytes b = jsToBytes(_data);
-	bzz()->put(b);
-	return toJS(sha3(b));
-}
-
-string WebThreeStubServerBase::bzz_get(string const& _hash)
-{
-	return toJS((bytesConstRef)bzz()->get(jsToFixed<32>(_hash)));
 }

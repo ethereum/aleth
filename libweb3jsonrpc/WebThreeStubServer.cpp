@@ -316,11 +316,6 @@ dev::eth::Interface* WebThreeStubServer::client()
 	return m_web3.ethereum();
 }
 
-dev::bzz::Interface* WebThreeStubServer::bzz()
-{
-	return m_web3.swarm();
-}
-
 dev::WebThreeNetworkFace* WebThreeStubServer::network()
 {
 	return &m_web3;

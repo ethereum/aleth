@@ -62,7 +62,6 @@ private:
 	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const override { auto it = m_sessions.find(_session); return it != m_sessions.end() && it->second.privileges.count(_l); }
 
 	virtual dev::eth::Interface* client() override;					// TODO: rename eth
-	virtual dev::bzz::Interface* bzz() override;
 	virtual dev::WebThreeNetworkFace* network() override;
 
 	virtual bool eth_notePassword(std::string const& _password) override;
