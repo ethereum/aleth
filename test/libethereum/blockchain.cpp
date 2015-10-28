@@ -187,7 +187,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					blockchain.addBlock(alterBlock);
 					trueBc.addBlock(alterBlock);
-					BOOST_REQUIRE_MESSAGE(blObj.count("expectException") == 0, "block import expected exception, but no exeption was thrown!");
+					if (test::Options::get().checkState == true)
+						BOOST_REQUIRE_MESSAGE(blObj.count("expectException") == 0, "block import expected exception, but no exeption was thrown!");
 					if (o.count("noBlockChainHistory") == 0)
 					{
 						importedBlocks.push_back(alterBlock);
@@ -609,6 +610,9 @@ mObject writeBlockHeaderToJson(Ethash::BlockHeader const& _bi)
 
 void checkExpectedException(mObject& _blObj, Exception const& _e)
 {
+	if (!test::Options::get().checkState)
+		return;
+
 	BOOST_REQUIRE_MESSAGE(_blObj.count("expectException") > 0, TestOutputHelper::testName() + "block import thrown unexpected Excpetion!");
 	string exWhat {	_e.what() };
 	string exExpect = _blObj.at("expectException").get_str();
@@ -776,9 +780,9 @@ BOOST_AUTO_TEST_CASE(userDefinedFile)
 	dev::test::userDefinedTest(dev::test::doBlockchainTests);
 }
 
-BOOST_AUTO_TEST_CASE(bcStateTest2)
+BOOST_AUTO_TEST_CASE(bcStateTest)
 {
-	dev::test::executeTests("bcStateTest2", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	dev::test::executeTests("bcStateTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
