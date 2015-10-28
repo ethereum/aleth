@@ -23,6 +23,11 @@ jsonrpcstub_create(whisper.json
 	WhisperClient ${CMAKE_CURRENT_BINARY_DIR} WhisperClient
 )
 
+jsonrpcstub_create(net.json
+	dev::rpc::NetFace ${CMAKE_CURRENT_SOURCE_DIR} NetFace
+	NetClient ${CMAKE_CURRENT_BINARY_DIR} NetClient
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
