@@ -59,6 +59,7 @@
 #include <libweb3jsonrpc/IpcServer.h>
 #include <libweb3jsonrpc/LevelDB.h>
 #include <libweb3jsonrpc/Whisper.h>
+#include <libweb3jsonrpc/Net.h>
 #endif
 #include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
@@ -1138,7 +1139,7 @@ int main(int argc, char** argv)
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
 #if ETH_JSONRPC || !ETH_TRUE
-	unique_ptr<ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace>> jsonrpcServer;
+	unique_ptr<ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace>> jsonrpcServer;
 
 	AddressHash allowedDestinations;
 
@@ -1165,7 +1166,7 @@ int main(int argc, char** argv)
 	{
 		auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), keyManager, *gasPricer);
 		
-		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace>(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {})));
+		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace>(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3)));
 
 		if (jsonRPCURL > -1)
 		{
@@ -1220,7 +1221,7 @@ int main(int argc, char** argv)
 			auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), keyManager, *gasPricer);
 			string sessionKey = web3Face->newSession(SessionPermissions{{Privilege::Admin}});
 			
-			ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace> rpcServer(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}));
+			ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace> rpcServer(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3));
 			JSLocalConsole console;
 			rpcServer.addConnector(console.createConnector());
 			rpcServer.StartListening();

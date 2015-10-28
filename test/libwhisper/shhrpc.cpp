@@ -28,6 +28,7 @@
 #include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/Whisper.h>
+#include <libweb3jsonrpc/Net.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <test/TestHelper.h>
@@ -45,8 +46,9 @@ namespace js = json_spirit;
 
 WebThreeDirect* web3;
 
-unique_ptr<ModularServer<WebThreeStubServer, rpc::WhisperFace>> modularServer;
+unique_ptr<ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace>> modularServer;
 rpc::WhisperFace* whisperFace;
+rpc::NetFace* netFace;
 WebThreeStubServer* web3Face;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 static string const c_version("shhrpc-web3");
@@ -69,7 +71,8 @@ struct Setup
 			TrivialGasPricer gp;
 			whisperFace = new rpc::Whisper(*web3, {});
 			web3Face = new WebThreeStubServer(*web3, {}, keyMan, gp);
-			modularServer.reset(new ModularServer<WebThreeStubServer, rpc::WhisperFace>(web3Face, whisperFace));
+			netFace = new rpc::Net(*web3);
+			modularServer.reset(new ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace>(web3Face, whisperFace, netFace));
 			modularServer->addConnector(server);
 			modularServer->StartListening();
 			auto client = new jsonrpc::HttpClient("http://localhost:8080");
@@ -303,14 +306,14 @@ BOOST_AUTO_TEST_CASE(serverBasic)
 	string s = web3Face->web3_clientVersion();
 	BOOST_REQUIRE_EQUAL(s, c_version);
 
-	s = web3Face->net_version();
+	s = netFace->net_version();
 	BOOST_REQUIRE(s.empty());
 
 	s = web3Face->web3_sha3("some pseudo-random string here");
 	BOOST_REQUIRE_EQUAL(s.size(), h256::size * 2 + 2);
 	BOOST_REQUIRE('0' == s[0] && 'x' == s[1]);
 
-	s = web3Face->net_peerCount();
+	s = netFace->net_peerCount();
 	BOOST_REQUIRE(!s.empty());
 
 	KeyPair src = KeyPair::create();
@@ -360,16 +363,16 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE(b);
 
 	unsigned const step = 10;
-	for (unsigned i = 0; i < 3000 && !web3Face->net_listening(); i += step)
+	for (unsigned i = 0; i < 3000 && !netFace->net_listening(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	b = web3Face->net_listening();
+	b = netFace->net_listening();
 	BOOST_REQUIRE(b);
 	
 	b = web3Face->admin_net_stop(sess1);
 	BOOST_REQUIRE(b);
 
-	b = web3Face->net_listening();
+	b = netFace->net_listening();
 	BOOST_REQUIRE(!b);
 
 	j = web3Face->admin_net_peers(sess1);
@@ -393,11 +396,11 @@ BOOST_AUTO_TEST_CASE(server)
 	for (unsigned i = 0; i < 2000 && !host2.haveNetwork(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	for (unsigned i = 0; i < 2000 && !web3Face->net_listening(); i += step)
+	for (unsigned i = 0; i < 2000 && !netFace->net_listening(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
 	BOOST_REQUIRE(host2.haveNetwork());
-	BOOST_REQUIRE(web3Face->net_listening());
+	BOOST_REQUIRE(netFace->net_listening());
 
 	string node("enode://");
 	node += host2.id().hex();
@@ -418,7 +421,7 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(s, host2.id().hex());
 	BOOST_REQUIRE_EQUAL(peer["port"].asUInt(), port2);
 
-	s = web3Face->net_peerCount();
+	s = netFace->net_peerCount();
 	BOOST_REQUIRE_EQUAL(s, "0x1");
 
 	KeyPair src = KeyPair::create();
@@ -523,7 +526,7 @@ BOOST_AUTO_TEST_CASE(server)
 	b = web3Face->admin_net_stop(sess2);
 	BOOST_REQUIRE(b);
 
-	b = web3Face->net_listening();
+	b = netFace->net_listening();
 	BOOST_REQUIRE(!b);
 }
 
