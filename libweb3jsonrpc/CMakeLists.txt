@@ -28,6 +28,11 @@ jsonrpcstub_create(net.json
 	NetClient ${CMAKE_CURRENT_BINARY_DIR} NetClient
 )
 
+jsonrpcstub_create(bzz.json
+	dev::rpc::BzzFace ${CMAKE_CURRENT_SOURCE_DIR} BzzFace
+	BzzClient ${CMAKE_CURRENT_BINARY_DIR} BzzClient
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
