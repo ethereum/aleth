@@ -270,7 +270,6 @@ void BlockChain::close()
 	m_cacheUsage.clear();
 	m_inUse.clear();
 	m_lastLastHashes.clear();
-	m_lastLastHashesNumber = (unsigned)-1;
 }
 
 void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress, bool _prepPoW)
@@ -362,15 +361,15 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 	boost::filesystem::remove_all(path + "/extras.old");
 }
 
-LastHashes BlockChain::lastHashes(unsigned _n) const
+LastHashes BlockChain::lastHashes(h256 const& _parent) const
 {
 	Guard l(x_lastLastHashes);
-	if (m_lastLastHashesNumber != _n || m_lastLastHashes.empty())
+	if (m_lastLastHashes.empty() || m_lastLastHashes.back() != _parent)
 	{
 		m_lastLastHashes.resize(256);
-		for (unsigned i = 0; i < 256; ++i)
-			m_lastLastHashes[i] = _n >= i ? numberHash(_n - i) : h256();
-		m_lastLastHashesNumber = _n;
+		m_lastLastHashes[0] = _parent;
+		for (unsigned i = 0; i < 255; ++i)
+			m_lastLastHashes[i + 1] = m_lastLastHashes[i] ? info(m_lastLastHashes[i]).parentHash() : h256();
 	}
 	return m_lastLastHashes;
 }
@@ -635,7 +634,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
-		BOOST_THROW_EXCEPTION(UnknownParent());
+		BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(_block.info.parentHash()));
 	}
 
 	auto pd = details(_block.info.parentHash());

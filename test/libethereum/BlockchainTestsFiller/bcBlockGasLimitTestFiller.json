@@ -97,8 +97,9 @@
         },
         "blocks" : [
             {
+		"expectException" : "BlockGasLimitReached",
 		"blockHeaderPremine" : {
-                    "gasLimit" : "246800"
+                    "gasLimit" : "149000"
                 },
 		"blockHeader" : {
                     "gasLimit" : "146900",

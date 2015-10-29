@@ -103,17 +103,12 @@ public:
 	 */
 	Executive(Block& _s, LastHashes const& _lh = LastHashes(), unsigned _level = 0);
 
-	/** Partially-automated split constructor; executive will operate on given state, with the given
-	 * environment info, populating the last hashes from the given chain.
+	/** Previous-state constructor.
+	 * Creates executive to operate on the state of a particular transaction in the given block,
+	 * populating environment info from the given Block and the LastHashes portion from the BlockChain.
+	 * State is assigned the resultant value, but otherwise unused.
 	 */
-	Executive(State& _s, BlockChain const& _bc, EnvInfo const& _envInfo, unsigned _level = 0);
-
-	/**
-	 * Automated split constructor; executive will operate on given state, with the environment info
-	 * populated from the given chain.
-	 * @note This will only work when the state to be operated on is already in the chain.
-	 */
-	Executive(State& _s, BlockChain const& _bc, unsigned _number, unsigned _level = 0);
+	Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
 
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;

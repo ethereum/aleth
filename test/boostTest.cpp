@@ -29,6 +29,7 @@
 #include <boost/test/included/unit_test.hpp>
 #pragma GCC diagnostic pop
 #include <test/TestHelper.h>
+#include <boost/version.hpp>
 
 using namespace boost::unit_test;
 
@@ -77,11 +78,15 @@ int main( int argc, char* argv[] )
 	try
 	{
 		framework::init(init_func, argc, argv);
-
+#if BOOST_VERSION >= 105900
+		if(!runtime_config::test_to_run().empty())
+		{
+			test_case_counter filter;
+#else
 		if( !runtime_config::test_to_run().is_empty() )
 		{
 			test_case_filter filter(runtime_config::test_to_run());
-
+#endif
 			traverse_test_tree(framework::master_test_suite().p_id, filter);
 		}
 

@@ -502,7 +502,7 @@
         },
         "expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "1000"
+                "balance" : "1976363"
             }
         },
         "pre" : {
@@ -543,14 +543,12 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba"
         },
         "expect" : {
-            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "1000000000000000000"
-            },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "771500"
+                "balance" : "99972878"
             },
-            "aaaaaaaaace5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "1000000000000000000"
+	    "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
+                "balance" : "0x0a",
+                "code" : "0x600060006000600060003060405a03f1"
             }
         },
         "pre" : {

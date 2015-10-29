@@ -74,7 +74,7 @@ public:
 	virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 
 	/// Called by peer once it has another sequential block of hashes during sync
-	virtual void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) = 0;
+	virtual void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers) = 0;
 
 	/// Called by peer when it is disconnecting
 	virtual void onPeerAborting() = 0;
@@ -140,7 +140,7 @@ private:
 /**
  * Transitions:
  *
- * Idle->Hashes
+ * Idle->Headers
  * 		Triggered when:
  * 			* A new peer appears that we can sync to
  * 			* Transtition to Idle, there are peers we can sync to
@@ -148,7 +148,7 @@ private:
  * 			* Set chain sync  (m_syncingTotalDifficulty, m_syncingLatestHash, m_syncer)
  * 			* Requests hashes from m_syncer
  *
- *  Hashes->Idle
+ *  Headers->Idle
  * 		Triggered when:
  * 			* Received too many hashes
  * 			* Received 0 total hashes from m_syncer
@@ -156,7 +156,7 @@ private:
  * 		Effects:
  * 			In case of too many hashes sync is reset
  *
- *  Hashes->Blocks
+ *  Headers->Blocks
  * 		Triggered when:
  * 			* Received known hash from m_syncer
  * 			* Received 0 hashes from m_syncer and m_syncingTotalBlocks not empty
@@ -212,7 +212,7 @@ public:
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) override;
 
 	/// Called by peer once it has another sequential block of hashes during sync
-	void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes) override;
+	void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers) override;
 
 	/// Called by peer when it is disconnecting
 	void onPeerAborting() override;

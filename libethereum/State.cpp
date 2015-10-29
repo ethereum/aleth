@@ -45,7 +45,6 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-#define ctrace clog(StateTrace)
 #define ETH_TIMED_ENACTMENTS 0
 
 const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }

@@ -150,7 +150,8 @@ BOOST_AUTO_TEST_CASE(ttTransactionTest)
 
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 {
-	dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
+	if (!dev::test::Options::get().fillTests)
+		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)
