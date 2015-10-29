@@ -28,6 +28,7 @@
 #include <jsonrpccpp/server.h>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcrypto/Common.h>
+#include "SessionManager.h"
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #include "AbstractWebThreeStubServer.h"
@@ -51,21 +52,6 @@ class Interface;
 
 extern const unsigned SensibleHttpThreads;
 extern const unsigned SensibleHttpPort;
-
-enum class Privilege
-{
-	Admin
-};
-
-}
-
-namespace std
-{
-
-template<> struct hash<dev::Privilege>
-{
-	size_t operator()(dev::Privilege _value) const { return (size_t)_value; }
-};
 
 }
 
@@ -179,8 +165,6 @@ protected:
 
 	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;
 
-	std::map<dev::Public, dev::Secret> m_shhIds;
-	std::map<unsigned, dev::Public> m_shhWatches;
 };
 
 } //namespace dev

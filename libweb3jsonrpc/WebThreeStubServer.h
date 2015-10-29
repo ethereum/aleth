@@ -25,6 +25,7 @@
 
 #include <libdevcore/db.h>
 #include "WebThreeStubServerBase.h"
+#include "SessionManager.h"
 
 namespace dev
 {
@@ -37,11 +38,6 @@ class TrivialGasPricer;
 class BlockChain;
 class BlockQueue;
 }
-
-struct SessionPermissions
-{
-	std::unordered_set<Privilege> privileges;
-};
 
 /**
  * @brief JSON-RPC api implementation for WebThreeDirect
