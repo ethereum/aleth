@@ -70,95 +70,62 @@ public:
 
 	std::shared_ptr<dev::eth::AccountHolder> const& ethAccounts() const { return m_ethAccounts; }
 
-	virtual std::string eth_protocolVersion();
-	virtual std::string eth_hashrate();
-	virtual std::string eth_coinbase();
-	virtual bool eth_mining();
-	virtual std::string eth_gasPrice();
-	virtual Json::Value eth_accounts();
-	virtual std::string eth_blockNumber();
-	virtual std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber);
-	virtual std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber);
-	virtual std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber);
-	virtual Json::Value eth_getBlockTransactionCountByHash(std::string const& _blockHash);
-	virtual Json::Value eth_getBlockTransactionCountByNumber(std::string const& _blockNumber);
-	virtual Json::Value eth_getUncleCountByBlockHash(std::string const& _blockHash);
-	virtual Json::Value eth_getUncleCountByBlockNumber(std::string const& _blockNumber);
-	virtual std::string eth_getCode(std::string const& _address, std::string const& _blockNumber);
-	virtual std::string eth_sendTransaction(Json::Value const& _json);
-	virtual std::string eth_call(Json::Value const& _json, std::string const& _blockNumber);
-	virtual std::string eth_estimateGas(Json::Value const& _json);
-	virtual bool eth_flush();
-	virtual Json::Value eth_getBlockByHash(std::string const& _blockHash, bool _includeTransactions);
-	virtual Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _includeTransactions);
-	virtual Json::Value eth_getTransactionByHash(std::string const& _transactionHash);
-	virtual Json::Value eth_getTransactionByBlockHashAndIndex(std::string const& _blockHash, std::string const& _transactionIndex);
-	virtual Json::Value eth_getTransactionByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _transactionIndex);
-	virtual Json::Value eth_getTransactionReceipt(std::string const& _transactionHash);
-	virtual Json::Value eth_getUncleByBlockHashAndIndex(std::string const& _blockHash, std::string const& _uncleIndex);
-	virtual Json::Value eth_getUncleByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _uncleIndex);
-	virtual Json::Value eth_getCompilers();
-	virtual std::string eth_compileLLL(std::string const& _s);
-	virtual std::string eth_compileSerpent(std::string const& _s);
-	virtual Json::Value eth_compileSolidity(std::string const& _code);
-	virtual std::string eth_newFilter(Json::Value const& _json);
-	virtual std::string eth_newFilterEx(Json::Value const& _json);
-	virtual std::string eth_newBlockFilter();
-	virtual std::string eth_newPendingTransactionFilter();
-	virtual bool eth_uninstallFilter(std::string const& _filterId);
-	virtual Json::Value eth_getFilterChanges(std::string const& _filterId);
-	virtual Json::Value eth_getFilterChangesEx(std::string const& _filterId);
-	virtual Json::Value eth_getFilterLogs(std::string const& _filterId);
-	virtual Json::Value eth_getFilterLogsEx(std::string const& _filterId);
-	virtual Json::Value eth_getLogs(Json::Value const& _json);
-	virtual Json::Value eth_getLogsEx(Json::Value const& _json);
-	virtual Json::Value eth_getWork();
-	virtual bool eth_submitWork(std::string const& _nonce, std::string const&, std::string const& _mixHash);
-	virtual bool eth_submitHashrate(std::string const& _hashes, std::string const& _id);
-	virtual std::string eth_register(std::string const& _address);
-	virtual bool eth_unregister(std::string const& _accountId);
-	virtual Json::Value eth_fetchQueuedTransactions(std::string const& _accountId);
-	virtual std::string eth_signTransaction(Json::Value const& _transaction);
-	virtual Json::Value eth_inspectTransaction(std::string const& _rlp);
-	virtual std::string eth_sendRawTransaction(std::string const& _rlp);
-	virtual bool eth_notePassword(std::string const&) { return false; }
+	virtual std::string eth_protocolVersion() override;
+	virtual std::string eth_hashrate() override;
+	virtual std::string eth_coinbase() override;
+	virtual bool eth_mining() override;
+	virtual std::string eth_gasPrice() override;
+	virtual Json::Value eth_accounts() override;
+	virtual std::string eth_blockNumber()override;
+	virtual std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber) override;
+	virtual std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber) override;
+	virtual std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber) override;
+	virtual Json::Value eth_getBlockTransactionCountByHash(std::string const& _blockHash) override;
+	virtual Json::Value eth_getBlockTransactionCountByNumber(std::string const& _blockNumber) override;
+	virtual Json::Value eth_getUncleCountByBlockHash(std::string const& _blockHash) override;
+	virtual Json::Value eth_getUncleCountByBlockNumber(std::string const& _blockNumber) override;
+	virtual std::string eth_getCode(std::string const& _address, std::string const& _blockNumber) override;
+	virtual std::string eth_sendTransaction(Json::Value const& _json) override;
+	virtual std::string eth_call(Json::Value const& _json, std::string const& _blockNumber) override;
+	virtual std::string eth_estimateGas(Json::Value const& _json) override;
+	virtual bool eth_flush() override;
+	virtual Json::Value eth_getBlockByHash(std::string const& _blockHash, bool _includeTransactions) override;
+	virtual Json::Value eth_getBlockByNumber(std::string const& _blockNumber, bool _includeTransactions) override;
+	virtual Json::Value eth_getTransactionByHash(std::string const& _transactionHash) override;
+	virtual Json::Value eth_getTransactionByBlockHashAndIndex(std::string const& _blockHash, std::string const& _transactionIndex) override;
+	virtual Json::Value eth_getTransactionByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _transactionIndex) override;
+	virtual Json::Value eth_getTransactionReceipt(std::string const& _transactionHash) override;
+	virtual Json::Value eth_getUncleByBlockHashAndIndex(std::string const& _blockHash, std::string const& _uncleIndex) override;
+	virtual Json::Value eth_getUncleByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _uncleIndex) override;
+	virtual Json::Value eth_getCompilers() override;
+	virtual std::string eth_compileLLL(std::string const& _s) override;
+	virtual std::string eth_compileSerpent(std::string const& _s) override;
+	virtual Json::Value eth_compileSolidity(std::string const& _code) override;
+	virtual std::string eth_newFilter(Json::Value const& _json) override;
+	virtual std::string eth_newFilterEx(Json::Value const& _json) override;
+	virtual std::string eth_newBlockFilter() override;
+	virtual std::string eth_newPendingTransactionFilter() override;
+	virtual bool eth_uninstallFilter(std::string const& _filterId) override;
+	virtual Json::Value eth_getFilterChanges(std::string const& _filterId) override;
+	virtual Json::Value eth_getFilterChangesEx(std::string const& _filterId) override;
+	virtual Json::Value eth_getFilterLogs(std::string const& _filterId) override;
+	virtual Json::Value eth_getFilterLogsEx(std::string const& _filterId) override;
+	virtual Json::Value eth_getLogs(Json::Value const& _json) override;
+	virtual Json::Value eth_getLogsEx(Json::Value const& _json) override;
+	virtual Json::Value eth_getWork() override;
+	virtual bool eth_submitWork(std::string const& _nonce, std::string const&, std::string const& _mixHash) override;
+	virtual bool eth_submitHashrate(std::string const& _hashes, std::string const& _id) override;
+	virtual std::string eth_register(std::string const& _address) override;
+	virtual bool eth_unregister(std::string const& _accountId) override;
+	virtual Json::Value eth_fetchQueuedTransactions(std::string const& _accountId) override;
+	virtual std::string eth_signTransaction(Json::Value const& _transaction) override;
+	virtual Json::Value eth_inspectTransaction(std::string const& _rlp) override;
+	virtual std::string eth_sendRawTransaction(std::string const& _rlp) override;
+	virtual bool eth_notePassword(std::string const&) override { return false; }
 	virtual Json::Value eth_syncing() override;
-
-	virtual bool admin_setVerbosity(int _v, std::string const& _session);
-	virtual bool admin_net_start(std::string const& _session);
-	virtual bool admin_net_stop(std::string const& _session);
-	virtual bool admin_net_connect(std::string const& _node, std::string const& _session);
-	virtual Json::Value admin_net_peers(std::string const& _session);
-	virtual Json::Value admin_net_nodeInfo(std::string const& _session);
-
-	virtual bool admin_exit(std::string const& _session);
-	virtual bool admin_eth_setMining(bool _on, std::string const& _session);
-	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) { (void)_session; return Json::Value(); }
-	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
-	virtual bool admin_eth_setBidPrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
-	virtual Json::Value admin_eth_findBlock(std::string const& _blockHash, std::string const& _session) { (void)_blockHash; (void)_session; return Json::Value(); }
-	virtual std::string admin_eth_blockQueueFirstUnknown(std::string const& _session) { (void)_session; return ""; }
-	virtual bool admin_eth_blockQueueRetryUnknown(std::string const& _session) { (void)_session; return false; }
-	virtual Json::Value admin_eth_allAccounts(std::string const& _session) { (void)_session; return Json::Value(); }
-	virtual Json::Value admin_eth_newAccount(const Json::Value& _info, std::string const& _session) { (void)_info; (void)_session; return Json::Value(); }
-	virtual bool admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, std::string const& _session) { (void)_uuidOrAddress; (void)_session; return false; }
-	virtual Json::Value admin_eth_inspect(std::string const& _address, std::string const& _session) { (void)_address; (void)_session; return Json::Value(); }
-	virtual Json::Value admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session) { (void)_blockNumberOrHash; (void)_session; return Json::Value(); }
-	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
-	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) { (void)_blockNumberOrHash; (void)_txIndex; (void)_session; return Json::Value(); }
-
-	virtual std::string personal_newAccount(const std::string&) { return ""; }
-	virtual bool personal_unlockAccount(const std::string&, const std::string&, int) { return false; }
-
-	// TODO REMOVE
-	virtual bool admin_eth_setReferencePrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
-	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
-	virtual bool admin_eth_setSigningKey(std::string const& _uuidOrAddress, std::string const& _session) { (void)_uuidOrAddress; (void)_session; return false; }
-
+	
+	void setTransactionDefaults(eth::TransactionSkeleton& _t);
 protected:
-	void requires(std::string const& _session, Privilege _l) const { if (!hasPrivilegeLevel(_session, _l)) throw jsonrpc::JsonRpcException("Invalid privileges"); }
-	void setTransactionDefaults(eth::TransactionSkeleton & _t);
-	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const { (void)_session; (void)_l; return false; }
 
 	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
 	virtual dev::WebThreeNetworkFace* network() = 0;

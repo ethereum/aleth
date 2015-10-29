@@ -53,37 +53,12 @@ public:
 	virtual void setMiningBenefactorChanger(std::function<void(Address const&)> const& _f) { m_setMiningBenefactor = _f; }
 
 private:
-	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const override { auto it = m_sessions.find(_session); return it != m_sessions.end() && it->second.privileges.count(_l); }
-
-	virtual dev::eth::Interface* client() override;					// TODO: rename eth
-	virtual dev::WebThreeNetworkFace* network() override;
 
 	virtual bool eth_notePassword(std::string const& _password) override;
-	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) override;
-	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) override;
-	virtual bool admin_eth_setBidPrice(std::string const& _wei, std::string const& _session) override;
-
-	virtual Json::Value admin_eth_findBlock(std::string const& _blockHash, std::string const& _session) override;
-	virtual std::string admin_eth_blockQueueFirstUnknown(std::string const& _session) override;
-	virtual bool admin_eth_blockQueueRetryUnknown(std::string const& _session) override;
-
-	virtual bool admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, std::string const& _session) override;
-	virtual Json::Value admin_eth_allAccounts(std::string const& _session) override;
-	virtual Json::Value admin_eth_newAccount(const Json::Value& _info, std::string const& _session) override;
-	virtual Json::Value admin_eth_inspect(std::string const& _address, std::string const& _session) override;
-	virtual Json::Value admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session) override;
-	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
-	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 	virtual Json::Value eth_syncing() override;
 
-	virtual std::string personal_newAccount(const std::string& _password);
-	virtual bool personal_unlockAccount(const std::string& _address, const std::string& _password, int _duration);
-
 private:
-	h256 blockHash(std::string const& _blockNumberOrHash) const;
 
-	dev::eth::BlockChain const& bc() const;
-	dev::eth::BlockQueue const& bq() const;
 
 	dev::WebThreeDirect& m_web3;
 	dev::eth::KeyManager& m_keyMan;
