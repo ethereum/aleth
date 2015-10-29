@@ -84,9 +84,6 @@ public:
 
 	std::shared_ptr<dev::eth::AccountHolder> const& ethAccounts() const { return m_ethAccounts; }
 
-	virtual std::string web3_sha3(std::string const& _param1);
-	virtual std::string web3_clientVersion() { return "C++ (ethereum-cpp)"; }
-
 	virtual std::string eth_protocolVersion();
 	virtual std::string eth_hashrate();
 	virtual std::string eth_coinbase();
@@ -171,8 +168,6 @@ public:
 	virtual bool admin_eth_setReferencePrice(std::string const& _wei, std::string const& _session) { (void)_wei; (void)_session; return false; }
 	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
 	virtual bool admin_eth_setSigningKey(std::string const& _uuidOrAddress, std::string const& _session) { (void)_uuidOrAddress; (void)_session; return false; }
-
-	std::map<dev::Public, dev::Secret> const& ids() const { return m_shhIds; }
 
 protected:
 	void requires(std::string const& _session, Privilege _l) const { if (!hasPrivilegeLevel(_session, _l)) throw jsonrpc::JsonRpcException("Invalid privileges"); }

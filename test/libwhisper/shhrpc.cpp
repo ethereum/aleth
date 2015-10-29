@@ -29,6 +29,7 @@
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/Whisper.h>
 #include <libweb3jsonrpc/Net.h>
+#include <libweb3jsonrpc/Web3.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <test/TestHelper.h>
@@ -46,9 +47,10 @@ namespace js = json_spirit;
 
 WebThreeDirect* web3;
 
-unique_ptr<ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace>> modularServer;
+unique_ptr<ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face>> modularServer;
 rpc::WhisperFace* whisperFace;
 rpc::NetFace* netFace;
+rpc::Web3Face* w3Face;
 WebThreeStubServer* web3Face;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 static string const c_version("shhrpc-web3");
@@ -72,7 +74,8 @@ struct Setup
 			whisperFace = new rpc::Whisper(*web3, {});
 			web3Face = new WebThreeStubServer(*web3, {}, keyMan, gp);
 			netFace = new rpc::Net(*web3);
-			modularServer.reset(new ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace>(web3Face, whisperFace, netFace));
+			w3Face = new rpc::Web3(web3->clientVersion());
+			modularServer.reset(new ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face>(web3Face, whisperFace, netFace, w3Face));
 			modularServer->addConnector(server);
 			modularServer->StartListening();
 			auto client = new jsonrpc::HttpClient("http://localhost:8080");
@@ -303,13 +306,13 @@ BOOST_AUTO_TEST_CASE(serverBasic)
 {
 	cnote << "Testing basic jsonrpc server...";
 
-	string s = web3Face->web3_clientVersion();
+	string s = w3Face->web3_clientVersion();
 	BOOST_REQUIRE_EQUAL(s, c_version);
 
 	s = netFace->net_version();
 	BOOST_REQUIRE(s.empty());
 
-	s = web3Face->web3_sha3("some pseudo-random string here");
+	s = w3Face->web3_sha3("some pseudo-random string here");
 	BOOST_REQUIRE_EQUAL(s.size(), h256::size * 2 + 2);
 	BOOST_REQUIRE('0' == s[0] && 'x' == s[1]);
 

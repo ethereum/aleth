@@ -67,11 +67,6 @@ WebThreeStubServerBase::WebThreeStubServerBase(std::shared_ptr<dev::eth::Account
 {
 }
 
-string WebThreeStubServerBase::web3_sha3(string const& _param1)
-{
-	return toJS(sha3(jsToBytes(_param1)));
-}
-
 string WebThreeStubServerBase::eth_protocolVersion()
 {
 	return toJS(eth::c_protocolVersion);

@@ -12,8 +12,6 @@ class AbstractWebThreeStubServer : public ServerInterface<AbstractWebThreeStubSe
     public:
         AbstractWebThreeStubServer()
         {
-            this->bindAndAddMethod(jsonrpc::Procedure("web3_sha3", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING, NULL), &AbstractWebThreeStubServer::web3_sha3I);
-            this->bindAndAddMethod(jsonrpc::Procedure("web3_clientVersion", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::web3_clientVersionI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_protocolVersion", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::eth_protocolVersionI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_hashrate", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::eth_hashrateI);
             this->bindAndAddMethod(jsonrpc::Procedure("eth_coinbase", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &AbstractWebThreeStubServer::eth_coinbaseI);
@@ -95,15 +93,6 @@ class AbstractWebThreeStubServer : public ServerInterface<AbstractWebThreeStubSe
             this->bindAndAddMethod(jsonrpc::Procedure("personal_unlockAccount", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_INTEGER, NULL), &AbstractWebThreeStubServer::personal_unlockAccountI);
         }
 
-        inline virtual void web3_sha3I(const Json::Value &request, Json::Value &response)
-        {
-            response = this->web3_sha3(request[0u].asString());
-        }
-        inline virtual void web3_clientVersionI(const Json::Value &request, Json::Value &response)
-        {
-            (void)request;
-            response = this->web3_clientVersion();
-        }
         inline virtual void eth_protocolVersionI(const Json::Value &request, Json::Value &response)
         {
             (void)request;
@@ -433,8 +422,6 @@ class AbstractWebThreeStubServer : public ServerInterface<AbstractWebThreeStubSe
         {
             response = this->personal_unlockAccount(request[0u].asString(), request[1u].asString(), request[2u].asInt());
         }
-        virtual std::string web3_sha3(const std::string& param1) = 0;
-        virtual std::string web3_clientVersion() = 0;
         virtual std::string eth_protocolVersion() = 0;
         virtual std::string eth_hashrate() = 0;
         virtual std::string eth_coinbase() = 0;

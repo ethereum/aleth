@@ -45,6 +45,7 @@ public:
 	Whisper(WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts);
 	
 	virtual void setIdentities(std::vector<dev::KeyPair> const& _ids);
+	std::map<dev::Public, dev::Secret> const& ids() const { return m_ids; }
 
 	virtual bool shh_post(Json::Value const& _json) override;
 	virtual std::string shh_newIdentity() override;

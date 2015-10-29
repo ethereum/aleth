@@ -306,11 +306,6 @@ Json::Value WebThreeStubServer::admin_eth_getReceiptByHashAndIndex(std::string c
 	return toJson(rs.receipts[_txIndex]);
 }
 
-std::string WebThreeStubServer::web3_clientVersion()
-{
-	return m_web3.clientVersion();
-}
-
 dev::eth::Interface* WebThreeStubServer::client()
 {
 	return m_web3.ethereum();

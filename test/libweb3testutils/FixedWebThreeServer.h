@@ -40,7 +40,7 @@ public:
 	{}
 
 private:
-	dev::eth::Interface* client() override { return m_client; }
+	dev::eth::Interface* client() override { return m_client; }	
 	dev::WebThreeNetworkFace* network() override { BOOST_THROW_EXCEPTION(dev::InterfaceNotSupported("dev::WebThreeNetworkFace")); }
 
 private:

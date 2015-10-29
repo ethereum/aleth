@@ -1,7 +1,4 @@
 [
-{ "name": "web3_sha3", "params": [""], "order": [], "returns" : "" },
-{ "name": "web3_clientVersion", "params": [], "order": [], "returns" : "" },
-
 { "name": "eth_protocolVersion", "params": [], "order": [], "returns" : "" },
 { "name": "eth_hashrate", "params": [], "order": [], "returns" : "" },
 { "name": "eth_coinbase", "params": [], "order": [], "returns" : "" },

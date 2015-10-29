@@ -51,8 +51,6 @@ class WebThreeStubServer: public dev::WebThreeStubServerBase
 public:
 	WebThreeStubServer(dev::WebThreeDirect& _web3, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, dev::eth::KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp);
 
-	virtual std::string web3_clientVersion() override;
-
 	std::string newSession(SessionPermissions const& _p);
 	void addSession(std::string const& _session, SessionPermissions const& _p) { m_sessions[_session] = _p; }
 

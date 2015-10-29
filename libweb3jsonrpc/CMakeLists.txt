@@ -33,6 +33,11 @@ jsonrpcstub_create(bzz.json
 	BzzClient ${CMAKE_CURRENT_BINARY_DIR} BzzClient
 )
 
+jsonrpcstub_create(web3.json
+	dev::rpc::Web3Face ${CMAKE_CURRENT_SOURCE_DIR} Web3Face
+	Web3Client ${CMAKE_CURRENT_BINARY_DIR} Web3Client
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 

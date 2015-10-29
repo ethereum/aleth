@@ -60,6 +60,7 @@
 #include <libweb3jsonrpc/LevelDB.h>
 #include <libweb3jsonrpc/Whisper.h>
 #include <libweb3jsonrpc/Net.h>
+#include <libweb3jsonrpc/Web3.h>
 #endif
 #include "ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
@@ -1139,7 +1140,7 @@ int main(int argc, char** argv)
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
 #if ETH_JSONRPC || !ETH_TRUE
-	unique_ptr<ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace>> jsonrpcServer;
+	unique_ptr<ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face>> jsonrpcServer;
 
 	AddressHash allowedDestinations;
 
@@ -1166,7 +1167,7 @@ int main(int argc, char** argv)
 	{
 		auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), keyManager, *gasPricer);
 		
-		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace>(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3)));
+		jsonrpcServer.reset(new ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face>(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion())));
 
 		if (jsonRPCURL > -1)
 		{
@@ -1221,7 +1222,7 @@ int main(int argc, char** argv)
 			auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), keyManager, *gasPricer);
 			string sessionKey = web3Face->newSession(SessionPermissions{{Privilege::Admin}});
 			
-			ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace> rpcServer(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3));
+			ModularServer<dev::WebThreeStubServer, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face> rpcServer(web3Face, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()));
 			JSLocalConsole console;
 			rpcServer.addConnector(console.createConnector());
 			rpcServer.StartListening();
