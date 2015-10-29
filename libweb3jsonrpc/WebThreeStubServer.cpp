@@ -38,19 +38,19 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-bool isHex(std::string const& _s)
-{
-	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
-	for (; i < _s.size(); ++i)
-		if (fromHex(_s[i], WhenError::DontThrow) == -1)
-			return false;
-	return true;
-}
-
-template <class T> bool isHash(std::string const& _hash)
-{
-	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
-}
+//bool isHex(std::string const& _s)
+//{
+//	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
+//	for (; i < _s.size(); ++i)
+//		if (fromHex(_s[i], WhenError::DontThrow) == -1)
+//			return false;
+//	return true;
+//}
+//
+//template <class T> bool isHash(std::string const& _hash)
+//{
+//	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
+//}
 
 WebThreeStubServer::WebThreeStubServer(WebThreeDirect& _web3, shared_ptr<AccountHolder> const& _ethAccounts, KeyManager& _keyMan, dev::eth::TrivialGasPricer& _gp):
 	WebThreeStubServerBase(_ethAccounts),
@@ -201,49 +201,49 @@ Json::Value WebThreeStubServer::admin_eth_newAccount(Json::Value const& _info, s
 
 bool WebThreeStubServer::admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, std::string const& _session)
 {
-	ADMIN_GUARD;
-	Address a;
-	h128 uuid = fromUUID(_uuidOrAddress);
-	if (uuid)
-		a = m_keyMan.address(uuid);
-	else if (isHash<Address>(_uuidOrAddress))
-		a = Address(_uuidOrAddress);
-	else
-		throw jsonrpc::JsonRpcException("Invalid UUID or address");
-	if (m_setMiningBenefactor)
-		m_setMiningBenefactor(a);
-	else
-		m_web3.ethereum()->setBeneficiary(a);
-	return true;
+//	ADMIN_GUARD;
+//	Address a;
+//	h128 uuid = fromUUID(_uuidOrAddress);
+//	if (uuid)
+//		a = m_keyMan.address(uuid);
+//	else if (isHash<Address>(_uuidOrAddress))
+//		a = Address(_uuidOrAddress);
+//	else
+//		throw jsonrpc::JsonRpcException("Invalid UUID or address");
+//	if (m_setMiningBenefactor)
+//		m_setMiningBenefactor(a);
+//	else
+//		m_web3.ethereum()->setBeneficiary(a);
+//	return true;
 }
 
 Json::Value WebThreeStubServer::admin_eth_inspect(std::string const& _address, std::string const& _session)
 {
-	ADMIN_GUARD;
-	if (!isHash<Address>(_address))
-		throw jsonrpc::JsonRpcException("Invalid address given.");
-
-	Json::Value ret;
-	auto h = Address(fromHex(_address));
-	ret["storage"] = toJson(m_web3.ethereum()->storageAt(h, PendingBlock));
-	ret["balance"] = toJS(m_web3.ethereum()->balanceAt(h, PendingBlock));
-	ret["nonce"] = toJS(m_web3.ethereum()->countAt(h, PendingBlock));
-	ret["code"] = toJS(m_web3.ethereum()->codeAt(h, PendingBlock));
-	return ret;
+//	ADMIN_GUARD;
+//	if (!isHash<Address>(_address))
+//		throw jsonrpc::JsonRpcException("Invalid address given.");
+//
+//	Json::Value ret;
+//	auto h = Address(fromHex(_address));
+//	ret["storage"] = toJson(m_web3.ethereum()->storageAt(h, PendingBlock));
+//	ret["balance"] = toJS(m_web3.ethereum()->balanceAt(h, PendingBlock));
+//	ret["nonce"] = toJS(m_web3.ethereum()->countAt(h, PendingBlock));
+//	ret["code"] = toJS(m_web3.ethereum()->codeAt(h, PendingBlock));
+//	return ret;
 }
 
 h256 WebThreeStubServer::blockHash(std::string const& _blockNumberOrHash) const
 {
-	if (isHash<h256>(_blockNumberOrHash))
-		return h256(_blockNumberOrHash.substr(_blockNumberOrHash.size() - 64, 64));
-	try
-	{
-		return bc().numberHash(stoul(_blockNumberOrHash));
-	}
-	catch (...)
-	{
-		throw jsonrpc::JsonRpcException("Invalid argument");
-	}
+//	if (isHash<h256>(_blockNumberOrHash))
+//		return h256(_blockNumberOrHash.substr(_blockNumberOrHash.size() - 64, 64));
+//	try
+//	{
+//		return bc().numberHash(stoul(_blockNumberOrHash));
+//	}
+//	catch (...)
+//	{
+//		throw jsonrpc::JsonRpcException("Invalid argument");
+//	}
 }
 
 Json::Value WebThreeStubServer::admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session)
