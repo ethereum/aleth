@@ -21,10 +21,12 @@
 
 #pragma once
 
-#include <string>
 #include <map>
-#include <vector>
 #include <memory>
+#include <string>
+#include <tuple>
+#include <vector>
+
 #include <jsonrpccpp/common/procedure.h>
 #include <jsonrpccpp/server/iprocedureinvokationhandler.h>
 #include <jsonrpccpp/server/abstractserverconnector.h>
@@ -33,34 +35,17 @@
 template <class I> using AbstractMethodPointer = void(I::*)(Json::Value const& _parameter, Json::Value& _result);
 template <class I> using AbstractNotificationPointer = void(I::*)(Json::Value const& _parameter);
 
-template <template <class I> class C, class I>
-class ProcedureBinding
-{
-public:
-	using CallPointer = C<I>;
-
-	ProcedureBinding(jsonrpc::Procedure const& _procedure, CallPointer _call)
-	: m_procedure(_procedure), m_call(_call) {}
-
-	jsonrpc::Procedure const& procedure() const { return m_procedure; }
-	CallPointer call() const { return m_call; }
-
-private:
-	jsonrpc::Procedure m_procedure;
-	CallPointer m_call;
-};
-
-template <class I> using MethodBinding = ProcedureBinding<AbstractMethodPointer, I>;
-template <class I> using NotificationBinding = ProcedureBinding<AbstractNotificationPointer, I>;
-
 template <class I>
 class ServerInterface
 {
 public:
 	using MethodPointer = AbstractMethodPointer<I>;
 	using NotificationPointer = AbstractNotificationPointer<I>;
-	using Methods = std::vector<MethodBinding<I>>;
-	using Notifications = std::vector<NotificationBinding<I>>;
+
+	using MethodBinding = std::tuple<jsonrpc::Procedure, AbstractMethodPointer<I>>;
+	using NotificationBinding = std::tuple<jsonrpc::Procedure, AbstractNotificationPointer<I>>;
+	using Methods = std::vector<MethodBinding>;
+	using Notifications = std::vector<NotificationBinding>;
 
 	Methods const& methods() const { return m_methods; }
 	Notifications const& notifications() const { return m_notifications; }
@@ -88,7 +73,7 @@ public:
 		for (auto const& connector: m_connectors)
 			connector->StartListening();
 	}
-	
+
 	virtual void StopListening()
 	{
 		for (auto const& connector: m_connectors)
@@ -137,14 +122,14 @@ public:
 	{
 		for (auto const& method: m_interface->methods())
 		{
-			m_methods[method.procedure().GetProcedureName()] = method.call();
-			this->m_handler->AddProcedure(method.procedure());
+			m_methods[std::get<0>(method).GetProcedureName()] = std::get<1>(method);
+			this->m_handler->AddProcedure(std::get<0>(method));
 		}
-		
+
 		for (auto const& notification: m_interface->notifications())
 		{
-			m_notifications[notification.procedure().GetProcedureName()] = notification.call();
-			this->m_handler->AddProcedure(notification.procedure());
+			m_notifications[std::get<0>(notification).GetProcedureName()] = std::get<1>(notification);
+			this->m_handler->AddProcedure(std::get<0>(notification));
 		}
 	}
 
