@@ -293,7 +293,7 @@ do
 
 	# if the "none" value was given then checkout and pull requested branch
 	if [[ $BUILD_PR == "none" ]]; then
-		git checkout develop
+		git checkout -f develop
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Could not checkout develop for ${repository}."
 			exit 1
@@ -307,7 +307,7 @@ do
 		echo "ETHUPDATE - INFO: Checking out commit ${BUILD_PR} for ${repository} as requested."
 		get_repo_url $repository
 		git fetch --tags --progress $REPO_URL +refs/pull/*:refs/remotes/origin/pr/*
-		git checkout $BUILD_PR
+		git checkout -f $BUILD_PR
 		cd $ROOT_DIR
 		continue
 	elif [[ $DO_SIMPLE_PULL -eq 1 ]]; then
@@ -323,7 +323,7 @@ do
 
 	if [[ $REQUESTED_BRANCH != "develop" && $REQUESTED_BRANCH != "master" ]];then
 		#by this point we should have succesfully fetched the branch from the remote so just check it out
-		git checkout $REQUESTED_BRANCH
+		git checkout -f $REQUESTED_BRANCH
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Could not check out branch ${REQUESTED_BRANCH} for repository ${repository}. Skipping ..."
 		else
@@ -339,7 +339,7 @@ do
 			# We get here if no special branch was requested, so make sure we got the non-special
 			# branch checked out before pulling
 			echo "ETHUPDATE - INFO: Make sure we are in $REQUESTED_BRANCH"
-			git checkout $REQUESTED_BRANCH
+			git checkout -f $REQUESTED_BRANCH
 		fi
 		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 		git submodule update
@@ -347,7 +347,7 @@ do
 		# if just cloned, make a local branch tracking the origin's requested branch
 		git fetch origin $SHALLOW_FETCH
 		if [[ $BRANCH != $REQUESTED_BRANCH ]]; then
-			git checkout --track -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
+			git checkout -f --track -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
 		fi
 	fi
 
