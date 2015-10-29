@@ -24,6 +24,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <memory>
 #include <jsonrpccpp/common/procedure.h>
 #include <jsonrpccpp/server/iprocedureinvokationhandler.h>
 #include <jsonrpccpp/server/abstractserverconnector.h>
