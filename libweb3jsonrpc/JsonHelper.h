@@ -76,7 +76,7 @@ public:
 };
 
 template <class BlockInfoSub>
-Json::Value toJson(BlockHeaderPolished<BlockInfoSub> const& _bh)
+Json::Value toJson(typename BlockInfoSub::BlockHeader const& _bh)
 {
 	Json::Value res;
 	if (_bh)
