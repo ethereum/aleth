@@ -48,10 +48,6 @@ namespace shh
 {
 class Interface;
 }
-namespace bzz
-{
-class Interface;
-}
 
 extern const unsigned SensibleHttpThreads;
 extern const unsigned SensibleHttpPort;
@@ -84,16 +80,12 @@ namespace dev
 class WebThreeStubServerBase: public AbstractWebThreeStubServer
 {
 public:
-	WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, std::vector<dev::KeyPair> const& _sshAccounts);
+	WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts);
 
 	std::shared_ptr<dev::eth::AccountHolder> const& ethAccounts() const { return m_ethAccounts; }
 
 	virtual std::string web3_sha3(std::string const& _param1);
 	virtual std::string web3_clientVersion() { return "C++ (ethereum-cpp)"; }
-
-	virtual std::string net_version();
-	virtual std::string net_peerCount();
-	virtual bool net_listening();
 
 	virtual std::string eth_protocolVersion();
 	virtual std::string eth_hashrate();
@@ -149,19 +141,6 @@ public:
 	virtual bool eth_notePassword(std::string const&) { return false; }
 	virtual Json::Value eth_syncing() override;
 
-	virtual std::string bzz_put(std::string const& _data);
-	virtual std::string bzz_get(std::string const& _hash);
-
-	virtual bool shh_post(Json::Value const& _json);
-	virtual std::string shh_newIdentity();
-	virtual bool shh_hasIdentity(std::string const& _identity);
-	virtual std::string shh_newGroup(std::string const& _id, std::string const& _who);
-	virtual std::string shh_addToGroup(std::string const& _group, std::string const& _who);
-	virtual std::string shh_newFilter(Json::Value const& _json);
-	virtual bool shh_uninstallFilter(std::string const& _filterId);
-	virtual Json::Value shh_getFilterChanges(std::string const& _filterId);
-	virtual Json::Value shh_getMessages(std::string const& _filterId);
-
 	virtual bool admin_setVerbosity(int _v, std::string const& _session);
 	virtual bool admin_net_start(std::string const& _session);
 	virtual bool admin_net_stop(std::string const& _session);
@@ -193,7 +172,6 @@ public:
 	virtual bool admin_eth_setPriority(int _percent, std::string const& _session) { (void)_percent; (void)_session; return false; }
 	virtual bool admin_eth_setSigningKey(std::string const& _uuidOrAddress, std::string const& _session) { (void)_uuidOrAddress; (void)_session; return false; }
 
-	void setIdentities(std::vector<dev::KeyPair> const& _ids);
 	std::map<dev::Public, dev::Secret> const& ids() const { return m_shhIds; }
 
 protected:
@@ -202,8 +180,6 @@ protected:
 	virtual bool hasPrivilegeLevel(std::string const& _session, Privilege _l) const { (void)_session; (void)_l; return false; }
 
 	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
-	virtual std::shared_ptr<dev::shh::Interface> face() = 0;	// TODO: rename to shh
-	virtual dev::bzz::Interface* bzz() = 0;
 	virtual dev::WebThreeNetworkFace* network() = 0;
 
 	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;

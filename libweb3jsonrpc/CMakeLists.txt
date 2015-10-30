@@ -18,6 +18,21 @@ jsonrpcstub_create(db.json
 	DBClient ${CMAKE_CURRENT_BINARY_DIR} DBClient
 )
 
+jsonrpcstub_create(whisper.json
+	dev::rpc::WhisperFace ${CMAKE_CURRENT_SOURCE_DIR} WhisperFace
+	WhisperClient ${CMAKE_CURRENT_BINARY_DIR} WhisperClient
+)
+
+jsonrpcstub_create(net.json
+	dev::rpc::NetFace ${CMAKE_CURRENT_SOURCE_DIR} NetFace
+	NetClient ${CMAKE_CURRENT_BINARY_DIR} NetClient
+)
+
+jsonrpcstub_create(bzz.json
+	dev::rpc::BzzFace ${CMAKE_CURRENT_SOURCE_DIR} BzzFace
+	BzzClient ${CMAKE_CURRENT_BINARY_DIR} BzzClient
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
