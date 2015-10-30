@@ -355,8 +355,8 @@ BOOST_AUTO_TEST_CASE(server)
 	bool b;
 	string s;
 	Json::Value j;
-	SessionPermissions permissions;
-	permissions.privileges.insert(Privilege::Admin);
+	rpc::SessionPermissions permissions;
+	permissions.privileges.insert(rpc::Privilege::Admin);
 	string const text = string("0x") + h256::random().hex(); // message must be in raw form
 
 	string sess1 = sm.newSession(permissions);

@@ -16,7 +16,7 @@ namespace rpc
 
 class SessionManager;
 
-class AdminEth: dev::rpc::AdminEthFace
+class AdminEth: public AdminEthFace
 {
 public:
 	AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm);

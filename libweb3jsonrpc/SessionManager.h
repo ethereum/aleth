@@ -6,29 +6,34 @@
 
 namespace dev
 {
+namespace rpc
+{
+
 enum class Privilege
 {
 	Admin
 };
+
+}
 }
 
 namespace std
 {
-	template<> struct hash<dev::Privilege>
+	template<> struct hash<dev::rpc::Privilege>
 	{
-		size_t operator()(dev::Privilege _value) const { return (size_t)_value; }
+		size_t operator()(dev::rpc::Privilege _value) const { return (size_t)_value; }
 	};
 }
 
 namespace dev
 {
+namespace rpc
+{
+
 struct SessionPermissions
 {
 	std::unordered_set<Privilege> privileges;
 };
-
-namespace rpc
-{
 
 class SessionManager
 {
