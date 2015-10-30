@@ -8,7 +8,7 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
 
-jsonrpcstub_create(spec.json 
+jsonrpcstub_create(eth.json 
 	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace 
 	EthFace ${CMAKE_CURRENT_BINARY_DIR} EthFace
 )
@@ -61,4 +61,3 @@ jsonrpcstub_create(personal.json
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
-add_custom_target(aux_json SOURCES "spec.json")
