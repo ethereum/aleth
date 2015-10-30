@@ -36,12 +36,13 @@ public:
 	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 
-
+	virtual void setMiningBenefactorChanger(std::function<void(Address const&)> const& _f) { m_setMiningBenefactor = _f; }
 private:
 	eth::Client& m_eth;
 	eth::TrivialGasPricer& m_gp;
 	eth::KeyManager& m_keyManager;
 	SessionManager& m_sm;
+	std::function<void(Address const&)> m_setMiningBenefactor;
 
 	h256 blockHash(std::string const& _blockNumberOrHash) const;
 };

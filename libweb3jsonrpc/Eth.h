@@ -29,10 +29,7 @@
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcrypto/Common.h>
 #include "SessionManager.h"
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#include "AbstractWebThreeStubServer.h"
-#pragma GCC diagnostic pop
+#include "EthFace.h"
 
 
 namespace dev
@@ -58,17 +55,18 @@ extern const unsigned SensibleHttpPort;
 namespace dev
 {
 
+namespace rpc
+{
+
 /**
  * @brief JSON-RPC api implementation
- * @todo split these up according to subprotocol (eth, shh, db, p2p, web3) and make it /very/ clear about how to add other subprotocols.
- * @todo modularise everything so additional subprotocols don't need to change this file.
  */
-class WebThreeStubServerBase: public AbstractWebThreeStubServer
+class Eth: public dev::rpc::EthFace
 {
 public:
-	WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts);
+	Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts);
 
-	std::shared_ptr<dev::eth::AccountHolder> const& ethAccounts() const { return m_ethAccounts; }
+	eth::AccountHolder const& ethAccounts() const { return m_ethAccounts; }
 
 	virtual std::string eth_protocolVersion() override;
 	virtual std::string eth_hashrate() override;
@@ -127,11 +125,12 @@ public:
 	void setTransactionDefaults(eth::TransactionSkeleton& _t);
 protected:
 
-	virtual dev::eth::Interface* client() = 0;					// TODO: rename to eth
-	virtual dev::WebThreeNetworkFace* network() = 0;
-
-	std::shared_ptr<dev::eth::AccountHolder> m_ethAccounts;
+	eth::Interface* client() { return &m_eth; }
+	
+	eth::Interface& m_eth;
+	eth::AccountHolder& m_ethAccounts;
 
 };
 
+}
 } //namespace dev

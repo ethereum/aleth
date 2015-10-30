@@ -167,7 +167,10 @@ bool AdminEth::admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, 
 	else
 		throw jsonrpc::JsonRpcException("Invalid UUID or address");
 
-	m_eth.setBeneficiary(a);
+	if (m_setMiningBenefactor)
+		m_setMiningBenefactor(a);
+	else
+		m_eth.setBeneficiary(a);
 	return true;
 }
 

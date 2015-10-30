@@ -1,5 +1,4 @@
 add_subdirectory(ethrpctest)
-add_subdirectory(libweb3testutils)
 
 aux_source_directory(. SRCS)
 aux_source_directory(./libwhisper SRCS)

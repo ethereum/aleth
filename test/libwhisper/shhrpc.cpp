@@ -25,11 +25,15 @@
 #include <libdevcore/CommonIO.h>
 #include <libethcore/CommonJS.h>
 #include <libwebthree/WebThree.h>
-#include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/ModularServer.h>
 #include <libweb3jsonrpc/Whisper.h>
 #include <libweb3jsonrpc/Net.h>
 #include <libweb3jsonrpc/Web3.h>
+#include <libweb3jsonrpc/Eth.h>
+#include <libweb3jsonrpc/AccountHolder.h>
+#include <libweb3jsonrpc/SessionManager.h>
+#include <libweb3jsonrpc/AdminNet.h>
+#include <libweb3jsonrpc/AdminUtils.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <test/TestHelper.h>
@@ -47,11 +51,15 @@ namespace js = json_spirit;
 
 WebThreeDirect* web3;
 
-unique_ptr<ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face>> modularServer;
+unique_ptr<ModularServer<rpc::EthFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::AdminNetFace, rpc::AdminUtilsFace>> modularServer;
 rpc::WhisperFace* whisperFace;
 rpc::NetFace* netFace;
 rpc::Web3Face* w3Face;
-WebThreeStubServer* web3Face;
+rpc::SessionManager sm;
+rpc::EthFace* ethFace;
+rpc::AdminNetFace* adminNetFace;
+rpc::AdminUtilsFace* adminUtilsFace;
+unique_ptr<AccountHolder> accountHolder;
 unique_ptr<WebThreeStubClient> jsonrpcClient;
 static string const c_version("shhrpc-web3");
 static unsigned const c_ttl = 777000;
@@ -71,11 +79,14 @@ struct Setup
 			auto server = new jsonrpc::HttpServer(8080);
 			KeyManager keyMan;
 			TrivialGasPricer gp;
+			accountHolder.reset(new FixedAccountHolder([&](){return web3->ethereum();}, {}));
 			whisperFace = new rpc::Whisper(*web3, {});
-			web3Face = new WebThreeStubServer(*web3, {}, keyMan, gp);
+			ethFace = new rpc::Eth(*web3->ethereum(), *accountHolder.get());
 			netFace = new rpc::Net(*web3);
 			w3Face = new rpc::Web3(web3->clientVersion());
-			modularServer.reset(new ModularServer<WebThreeStubServer, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face>(web3Face, whisperFace, netFace, w3Face));
+			adminNetFace = new rpc::AdminNet(*web3, sm);
+			adminUtilsFace = new rpc::AdminUtils(sm);
+			modularServer.reset(new ModularServer<rpc::EthFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, whisperFace, netFace, w3Face, adminNetFace, adminUtilsFace));
 			modularServer->addConnector(server);
 			modularServer->StartListening();
 			auto client = new jsonrpc::HttpClient("http://localhost:8080");
@@ -348,21 +359,21 @@ BOOST_AUTO_TEST_CASE(server)
 	permissions.privileges.insert(Privilege::Admin);
 	string const text = string("0x") + h256::random().hex(); // message must be in raw form
 
-	string sess1 = web3Face->newSession(permissions);
+	string sess1 = sm.newSession(permissions);
 	string sess2("session number two");
-	web3Face->addSession(sess2, permissions);
+	sm.addSession(sess2, permissions);
 	
 	int newVerbosity = 10;
 	int oldVerbosity = g_logVerbosity;
-	b = web3Face->admin_setVerbosity(newVerbosity, sess1);
+	b = adminUtilsFace->admin_setVerbosity(newVerbosity, sess1);
 	BOOST_REQUIRE(b);
 	BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
 
-	b = web3Face->admin_setVerbosity(oldVerbosity, sess1);
+	b = adminUtilsFace->admin_setVerbosity(oldVerbosity, sess1);
 	BOOST_REQUIRE(b);
 	BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
 
-	b = web3Face->admin_net_start(sess1);
+	b = adminNetFace->admin_net_start(sess1);
 	BOOST_REQUIRE(b);
 
 	unsigned const step = 10;
@@ -372,16 +383,16 @@ BOOST_AUTO_TEST_CASE(server)
 	b = netFace->net_listening();
 	BOOST_REQUIRE(b);
 	
-	b = web3Face->admin_net_stop(sess1);
+	b = adminNetFace->admin_net_stop(sess1);
 	BOOST_REQUIRE(b);
 
 	b = netFace->net_listening();
 	BOOST_REQUIRE(!b);
 
-	j = web3Face->admin_net_peers(sess1);
+	j = adminNetFace->admin_net_peers(sess1);
 	BOOST_REQUIRE(j.empty());
 
-	j = web3Face->admin_net_nodeInfo(sess2);
+	j = adminNetFace->admin_net_nodeInfo(sess2);
 	BOOST_REQUIRE_EQUAL(j["id"].asString(), web3->id().hex());
 	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), web3->nodeInfo().port);
 
@@ -393,7 +404,7 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE(port2);
 	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
-	b = web3Face->admin_net_start(sess2);
+	b = adminNetFace->admin_net_start(sess2);
 	BOOST_REQUIRE(b);
 	
 	for (unsigned i = 0; i < 2000 && !host2.haveNetwork(); i += step)
@@ -409,7 +420,7 @@ BOOST_AUTO_TEST_CASE(server)
 	node += host2.id().hex();
 	node += "@127.0.0.1:";
 	node += toString(port2);
-	b = web3Face->admin_net_connect(node, sess2);
+	b = adminNetFace->admin_net_connect(node, sess2);
 
 	for (unsigned i = 0; i < 3000 && !host2.peerCount(); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
@@ -417,7 +428,7 @@ BOOST_AUTO_TEST_CASE(server)
 	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
 	this_thread::sleep_for(chrono::milliseconds(step));
 
-	j = web3Face->admin_net_peers(sess2);
+	j = adminNetFace->admin_net_peers(sess2);
 	BOOST_REQUIRE_EQUAL(j.size(), 1);
 	Json::Value peer = j[0];
 	s = peer["id"].asString();
@@ -526,7 +537,7 @@ BOOST_AUTO_TEST_CASE(server)
 	j = whisperFace->shh_getMessages(filter);
 	BOOST_REQUIRE(j.empty());
 
-	b = web3Face->admin_net_stop(sess2);
+	b = adminNetFace->admin_net_stop(sess2);
 	BOOST_REQUIRE(b);
 
 	b = netFace->net_listening();

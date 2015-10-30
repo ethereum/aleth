@@ -9,8 +9,8 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
 
 jsonrpcstub_create(spec.json 
-	AbstractWebThreeStubServer ${CMAKE_CURRENT_SOURCE_DIR} AbstractWebThreeStubServer
-	WebThreeStubClient ${CMAKE_CURRENT_BINARY_DIR} WebThreeStubClient
+	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace 
+	EthFace ${CMAKE_CURRENT_BINARY_DIR} EthFace
 )
 
 jsonrpcstub_create(db.json
