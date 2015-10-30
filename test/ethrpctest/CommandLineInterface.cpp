@@ -30,7 +30,9 @@
 #include <libtestutils/BlockChainLoader.h>
 #include <libtestutils/FixedClient.h>
 #include <libweb3jsonrpc/ModularServer.h>
-#include <libweb3testutils/FixedWebThreeServer.h>
+#include <libweb3jsonrpc/AccountHolder.h>
+#include <libweb3jsonrpc/Eth.h>
+//#include <libweb3testutils/FixedWebThreeServer.h>
 #include "CommandLineInterface.h"
 
 using namespace std;
@@ -116,7 +118,8 @@ void CommandLineInterface::actOnInput()
 	BlockChainLoader bcl(m_json);
 	cerr << "void CommandLineInterface::actOnInput() FixedClient now accepts eth::Block!!!" << endl;
 	FixedClient client(bcl.bc(), eth::Block{}/*bcl.state()*/);
-	ModularServer<FixedWebThreeServer> server(new FixedWebThreeServer({}, &client));
+	FixedAccountHolder accountHolder([&](){return &client;}, {});
+	ModularServer<rpc::EthFace> server(new rpc::Eth(client, accountHolder));
 	server.addConnector(new jsonrpc::HttpServer(8080, "", "", 2));
 	server.StartListening();
 	

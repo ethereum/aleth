@@ -14,45 +14,38 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file WebThreeStubServerBase.cpp
+/** @file Eth.cpp
  * @authors:
  *   Gav Wood <i@gavwood.com>
  *   Marek Kotewicz <marek@ethdev.com>
  * @date 2014
  */
 
-#include "WebThreeStubServerBase.h"
-
-#include <signal.h>
-// Make sure boost/asio.hpp is included before windows.h.
-#include <boost/asio.hpp>
-
+#include <csignal>
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonData.h>
-#if ETH_SOLIDITY || !ETH_TRUE
-#include <libsolidity/CompilerStack.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/SourceReferenceFormatter.h>
-#endif
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
-#include <libwhisper/Message.h>
-#include <libwhisper/WhisperHost.h>
-#if ETH_SERPENT || !ETH_TRUE
-#include <libserpent/funcs.h>
+
+#if ETH_SOLIDITY || !ETH_TRUE
+#include <libsolidity/CompilerStack.h>
+#include <libsolidity/Scanner.h>
+#include <libsolidity/SourceReferenceFormatter.h>
 #endif
+
+#include "Eth.h"
 #include "AccountHolder.h"
 #include "JsonHelper.h"
-#include "IpcServer.h"
 
 using namespace std;
 using namespace jsonrpc;
 using namespace dev;
 using namespace eth;
 using namespace shh;
+using namespace dev::rpc;
 
 #if ETH_DEBUG
 const unsigned dev::SensibleHttpThreads = 1;
@@ -61,57 +54,51 @@ const unsigned dev::SensibleHttpThreads = 4;
 #endif
 const unsigned dev::SensibleHttpPort = 8545;
 
-WebThreeStubServerBase::WebThreeStubServerBase(std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts):
-	AbstractWebThreeStubServer(),
-	m_ethAccounts(_ethAccounts)
+Eth::Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts)
+: m_eth(_eth), m_ethAccounts(_ethAccounts)
 {
 }
 
-string WebThreeStubServerBase::web3_sha3(string const& _param1)
-{
-	return toJS(sha3(jsToBytes(_param1)));
-}
-
-string WebThreeStubServerBase::eth_protocolVersion()
+string Eth::eth_protocolVersion()
 {
 	return toJS(eth::c_protocolVersion);
 }
 
-string WebThreeStubServerBase::eth_coinbase()
+string Eth::eth_coinbase()
 {
 	return toJS(client()->beneficiary());
 }
 
-string WebThreeStubServerBase::eth_hashrate()
+string Eth::eth_hashrate()
 {
 	return toJS(client()->hashrate());
 }
 
-bool WebThreeStubServerBase::eth_mining()
+bool Eth::eth_mining()
 {
 	return client()->isMining();
 }
 
-string WebThreeStubServerBase::eth_gasPrice()
+string Eth::eth_gasPrice()
 {
 	return toJS(client()->gasBidPrice());
 }
 
-Json::Value WebThreeStubServerBase::eth_accounts()
+Json::Value Eth::eth_accounts()
 {
 	Json::Value ret(Json::arrayValue);
-	for (auto const& i: m_ethAccounts->allAccounts())
+	for (auto const& i: m_ethAccounts.allAccounts())
 		ret.append(toJS(i));
 	return ret;
 }
 
-string WebThreeStubServerBase::eth_blockNumber()
+string Eth::eth_blockNumber()
 {
 	return toJS(client()->number());
 }
 
 
-string WebThreeStubServerBase::eth_getBalance(string const& _address, string const& _blockNumber)
+string Eth::eth_getBalance(string const& _address, string const& _blockNumber)
 {
 	try
 	{
@@ -123,7 +110,7 @@ string WebThreeStubServerBase::eth_getBalance(string const& _address, string con
 	}
 }
 
-string WebThreeStubServerBase::eth_getStorageAt(string const& _address, string const& _position, string const& _blockNumber)
+string Eth::eth_getStorageAt(string const& _address, string const& _position, string const& _blockNumber)
 {
 	try
 	{
@@ -135,7 +122,7 @@ string WebThreeStubServerBase::eth_getStorageAt(string const& _address, string c
 	}
 }
 
-string WebThreeStubServerBase::eth_getTransactionCount(string const& _address, string const& _blockNumber)
+string Eth::eth_getTransactionCount(string const& _address, string const& _blockNumber)
 {
 	try
 	{
@@ -147,7 +134,7 @@ string WebThreeStubServerBase::eth_getTransactionCount(string const& _address, s
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getBlockTransactionCountByHash(string const& _blockHash)
+Json::Value Eth::eth_getBlockTransactionCountByHash(string const& _blockHash)
 {
 	try
 	{
@@ -163,7 +150,7 @@ Json::Value WebThreeStubServerBase::eth_getBlockTransactionCountByHash(string co
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getBlockTransactionCountByNumber(string const& _blockNumber)
+Json::Value Eth::eth_getBlockTransactionCountByNumber(string const& _blockNumber)
 {
 	try
 	{
@@ -179,7 +166,7 @@ Json::Value WebThreeStubServerBase::eth_getBlockTransactionCountByNumber(string 
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getUncleCountByBlockHash(string const& _blockHash)
+Json::Value Eth::eth_getUncleCountByBlockHash(string const& _blockHash)
 {
 	try
 	{
@@ -195,7 +182,7 @@ Json::Value WebThreeStubServerBase::eth_getUncleCountByBlockHash(string const& _
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getUncleCountByBlockNumber(string const& _blockNumber)
+Json::Value Eth::eth_getUncleCountByBlockNumber(string const& _blockNumber)
 {
 	try
 	{
@@ -211,7 +198,7 @@ Json::Value WebThreeStubServerBase::eth_getUncleCountByBlockNumber(string const&
 	}
 }
 
-string WebThreeStubServerBase::eth_getCode(string const& _address, string const& _blockNumber)
+string Eth::eth_getCode(string const& _address, string const& _blockNumber)
 {
 	try
 	{
@@ -223,19 +210,19 @@ string WebThreeStubServerBase::eth_getCode(string const& _address, string const&
 	}
 }
 
-void WebThreeStubServerBase::setTransactionDefaults(TransactionSkeleton& _t)
+void Eth::setTransactionDefaults(TransactionSkeleton& _t)
 {
 	if (!_t.from)
-		_t.from = m_ethAccounts->defaultTransactAccount();
+		_t.from = m_ethAccounts.defaultTransactAccount();
 }
 
-string WebThreeStubServerBase::eth_sendTransaction(Json::Value const& _json)
+string Eth::eth_sendTransaction(Json::Value const& _json)
 {
 	try
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		return toJS(m_ethAccounts->authenticate(t));
+		return toJS(m_ethAccounts.authenticate(t));
 	}
 	catch (...)
 	{
@@ -243,13 +230,13 @@ string WebThreeStubServerBase::eth_sendTransaction(Json::Value const& _json)
 	}
 }
 
-string WebThreeStubServerBase::eth_signTransaction(Json::Value const& _json)
+string Eth::eth_signTransaction(Json::Value const& _json)
 {
 	try
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		m_ethAccounts->authenticate(t);
+		m_ethAccounts.authenticate(t);
 
 		return toJS((t.creation ? Transaction(t.value, t.gasPrice, t.gas, t.data) : Transaction(t.value, t.gasPrice, t.gas, t.to, t.data)).sha3(WithoutSignature));
 	}
@@ -259,7 +246,7 @@ string WebThreeStubServerBase::eth_signTransaction(Json::Value const& _json)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_inspectTransaction(std::string const& _rlp)
+Json::Value Eth::eth_inspectTransaction(std::string const& _rlp)
 {
 	try
 	{
@@ -271,7 +258,7 @@ Json::Value WebThreeStubServerBase::eth_inspectTransaction(std::string const& _r
 	}
 }
 
-string WebThreeStubServerBase::eth_sendRawTransaction(std::string const& _rlp)
+string Eth::eth_sendRawTransaction(std::string const& _rlp)
 {
 	try
 	{
@@ -289,7 +276,7 @@ string WebThreeStubServerBase::eth_sendRawTransaction(std::string const& _rlp)
 	}
 }
 
-string WebThreeStubServerBase::eth_call(Json::Value const& _json, string const& _blockNumber)
+string Eth::eth_call(Json::Value const& _json, string const& _blockNumber)
 {
 	try
 	{
@@ -304,7 +291,7 @@ string WebThreeStubServerBase::eth_call(Json::Value const& _json, string const& 
 	}
 }
 
-string WebThreeStubServerBase::eth_estimateGas(Json::Value const& _json)
+string Eth::eth_estimateGas(Json::Value const& _json)
 {
 	try
 	{
@@ -318,13 +305,13 @@ string WebThreeStubServerBase::eth_estimateGas(Json::Value const& _json)
 	}
 }
 
-bool WebThreeStubServerBase::eth_flush()
+bool Eth::eth_flush()
 {
 	client()->flushTransactions();
 	return true;
 }
 
-Json::Value WebThreeStubServerBase::eth_getBlockByHash(string const& _blockHash, bool _includeTransactions)
+Json::Value Eth::eth_getBlockByHash(string const& _blockHash, bool _includeTransactions)
 {
 	try
 	{
@@ -343,7 +330,7 @@ Json::Value WebThreeStubServerBase::eth_getBlockByHash(string const& _blockHash,
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getBlockByNumber(string const& _blockNumber, bool _includeTransactions)
+Json::Value Eth::eth_getBlockByNumber(string const& _blockNumber, bool _includeTransactions)
 {
 	try
 	{
@@ -362,7 +349,7 @@ Json::Value WebThreeStubServerBase::eth_getBlockByNumber(string const& _blockNum
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getTransactionByHash(string const& _transactionHash)
+Json::Value Eth::eth_getTransactionByHash(string const& _transactionHash)
 {
 	try
 	{
@@ -378,7 +365,7 @@ Json::Value WebThreeStubServerBase::eth_getTransactionByHash(string const& _tran
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getTransactionByBlockHashAndIndex(string const& _blockHash, string const& _transactionIndex)
+Json::Value Eth::eth_getTransactionByBlockHashAndIndex(string const& _blockHash, string const& _transactionIndex)
 {
 	try
 	{
@@ -395,7 +382,7 @@ Json::Value WebThreeStubServerBase::eth_getTransactionByBlockHashAndIndex(string
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getTransactionByBlockNumberAndIndex(string const& _blockNumber, string const& _transactionIndex)
+Json::Value Eth::eth_getTransactionByBlockNumberAndIndex(string const& _blockNumber, string const& _transactionIndex)
 {
 	try
 	{
@@ -413,7 +400,7 @@ Json::Value WebThreeStubServerBase::eth_getTransactionByBlockNumberAndIndex(stri
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getTransactionReceipt(string const& _transactionHash)
+Json::Value Eth::eth_getTransactionReceipt(string const& _transactionHash)
 {
 	try
 	{
@@ -429,7 +416,7 @@ Json::Value WebThreeStubServerBase::eth_getTransactionReceipt(string const& _tra
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getUncleByBlockHashAndIndex(string const& _blockHash, string const& _uncleIndex)
+Json::Value Eth::eth_getUncleByBlockHashAndIndex(string const& _blockHash, string const& _uncleIndex)
 {
 	try
 	{
@@ -441,7 +428,7 @@ Json::Value WebThreeStubServerBase::eth_getUncleByBlockHashAndIndex(string const
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getUncleByBlockNumberAndIndex(string const& _blockNumber, string const& _uncleIndex)
+Json::Value Eth::eth_getUncleByBlockNumberAndIndex(string const& _blockNumber, string const& _uncleIndex)
 {
 	try
 	{
@@ -453,21 +440,18 @@ Json::Value WebThreeStubServerBase::eth_getUncleByBlockNumberAndIndex(string con
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getCompilers()
+Json::Value Eth::eth_getCompilers()
 {
 	Json::Value ret(Json::arrayValue);
 	ret.append("lll");
 #if ETH_SOLIDITY || !TRUE
 	ret.append("solidity");
 #endif
-#if ETH_SERPENT || !TRUE
-	ret.append("serpent");
-#endif
 	return ret;
 }
 
 
-string WebThreeStubServerBase::eth_compileLLL(string const& _source)
+string Eth::eth_compileLLL(string const& _source)
 {
 	// TODO throw here jsonrpc errors
 	string res;
@@ -477,100 +461,13 @@ string WebThreeStubServerBase::eth_compileLLL(string const& _source)
 	return res;
 }
 
-string WebThreeStubServerBase::eth_compileSerpent(string const& _source)
+string Eth::eth_compileSerpent(string const& _source)
 {
-	// TODO throw here jsonrpc errors
-	string res;
-#if ETH_SERPENT || !ETH_TRUE
-	try
-	{
-		res = toJS(dev::asBytes(::compile(_source)));
-	}
-	catch (string err)
-	{
-		cwarn << "Serpent compilation error: " << err;
-	}
-	catch (...)
-	{
-		cwarn << "Uncought serpent compilation exception";
-	}
-#else
 	(void)_source;
-#endif
-	return res;
+	BOOST_THROW_EXCEPTION(JsonRpcException("Serpent compilation not supported!"));
 }
 
-#define ADMIN requires(_session, Privilege::Admin)
-
-bool WebThreeStubServerBase::admin_setVerbosity(int _v, string const& _session)
-{
-	ADMIN;
-	g_logVerbosity = _v;
-	return true;
-}
-
-bool WebThreeStubServerBase::admin_net_start(std::string const& _session)
-{
-	ADMIN;
-	network()->startNetwork();
-	return true;
-}
-
-bool WebThreeStubServerBase::admin_net_stop(std::string const& _session)
-{
-	ADMIN;
-	network()->stopNetwork();
-	return true;
-}
-
-bool WebThreeStubServerBase::admin_net_connect(std::string const& _node, std::string const& _session)
-{
-	ADMIN;
-	network()->addPeer(p2p::NodeSpec(_node), p2p::PeerType::Required);
-	return true;
-}
-
-Json::Value WebThreeStubServerBase::admin_net_peers(std::string const& _session)
-{
-	ADMIN;
-	Json::Value ret;
-	for (p2p::PeerSessionInfo const& i: network()->peers())
-		ret.append(toJson(i));
-	return ret;
-}
-
-Json::Value WebThreeStubServerBase::admin_net_nodeInfo(const string& _session)
-{
-	ADMIN;
-	Json::Value ret;
-	p2p::NodeInfo i = network()->nodeInfo();
-	ret["name"] = i.version;
-	ret["port"] = i.port;
-	ret["address"] = i.address;
-	ret["listenAddr"] = i.address + ":" + toString(i.port);
-	ret["id"] = i.id.hex();
-	ret["enode"] = i.enode();
-	return ret;
-}
-
-bool WebThreeStubServerBase::admin_exit(string const& _session)
-{
-	ADMIN;
-	Client::exitHandler(SIGTERM);
-	return true;
-}
-
-bool WebThreeStubServerBase::admin_eth_setMining(bool _on, std::string const& _session)
-{
-	ADMIN;
-	if (_on)
-		client()->startMining();
-	else
-		client()->stopMining();
-	return true;
-}
-
-Json::Value WebThreeStubServerBase::eth_compileSolidity(string const& _source)
+Json::Value Eth::eth_compileSolidity(string const& _source)
 {
 	// TOOD throw here jsonrpc errors
 	Json::Value res(Json::objectValue);
@@ -619,7 +516,7 @@ Json::Value WebThreeStubServerBase::eth_compileSolidity(string const& _source)
 	return res;
 }
 
-string WebThreeStubServerBase::eth_newFilter(Json::Value const& _json)
+string Eth::eth_newFilter(Json::Value const& _json)
 {
 	try
 	{
@@ -631,7 +528,7 @@ string WebThreeStubServerBase::eth_newFilter(Json::Value const& _json)
 	}
 }
 
-string WebThreeStubServerBase::eth_newFilterEx(Json::Value const& _json)
+string Eth::eth_newFilterEx(Json::Value const& _json)
 {
 	try
 	{
@@ -643,19 +540,19 @@ string WebThreeStubServerBase::eth_newFilterEx(Json::Value const& _json)
 	}
 }
 
-string WebThreeStubServerBase::eth_newBlockFilter()
+string Eth::eth_newBlockFilter()
 {
 	h256 filter = dev::eth::ChainChangedFilter;
 	return toJS(client()->installWatch(filter));
 }
 
-string WebThreeStubServerBase::eth_newPendingTransactionFilter()
+string Eth::eth_newPendingTransactionFilter()
 {
 	h256 filter = dev::eth::PendingChangedFilter;
 	return toJS(client()->installWatch(filter));
 }
 
-bool WebThreeStubServerBase::eth_uninstallFilter(string const& _filterId)
+bool Eth::eth_uninstallFilter(string const& _filterId)
 {
 	try
 	{
@@ -667,7 +564,7 @@ bool WebThreeStubServerBase::eth_uninstallFilter(string const& _filterId)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getFilterChanges(string const& _filterId)
+Json::Value Eth::eth_getFilterChanges(string const& _filterId)
 {
 	try
 	{
@@ -683,7 +580,7 @@ Json::Value WebThreeStubServerBase::eth_getFilterChanges(string const& _filterId
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getFilterChangesEx(string const& _filterId)
+Json::Value Eth::eth_getFilterChangesEx(string const& _filterId)
 {
 	try
 	{
@@ -699,7 +596,7 @@ Json::Value WebThreeStubServerBase::eth_getFilterChangesEx(string const& _filter
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getFilterLogs(string const& _filterId)
+Json::Value Eth::eth_getFilterLogs(string const& _filterId)
 {
 	try
 	{
@@ -711,7 +608,7 @@ Json::Value WebThreeStubServerBase::eth_getFilterLogs(string const& _filterId)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getFilterLogsEx(string const& _filterId)
+Json::Value Eth::eth_getFilterLogsEx(string const& _filterId)
 {
 	try
 	{
@@ -723,7 +620,7 @@ Json::Value WebThreeStubServerBase::eth_getFilterLogsEx(string const& _filterId)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getLogs(Json::Value const& _json)
+Json::Value Eth::eth_getLogs(Json::Value const& _json)
 {
 	try
 	{
@@ -735,7 +632,7 @@ Json::Value WebThreeStubServerBase::eth_getLogs(Json::Value const& _json)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getLogsEx(Json::Value const& _json)
+Json::Value Eth::eth_getLogsEx(Json::Value const& _json)
 {
 	try
 	{
@@ -747,7 +644,7 @@ Json::Value WebThreeStubServerBase::eth_getLogsEx(Json::Value const& _json)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_getWork()
+Json::Value Eth::eth_getWork()
 {
 	Json::Value ret(Json::arrayValue);
 	auto r = client()->getEthashWork();
@@ -757,12 +654,12 @@ Json::Value WebThreeStubServerBase::eth_getWork()
 	return ret;
 }
 
-Json::Value WebThreeStubServerBase::eth_syncing()
+Json::Value Eth::eth_syncing()
 {
 	return Json::Value(false);
 }
 
-bool WebThreeStubServerBase::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)
+bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)
 {
 	try
 	{
@@ -774,17 +671,17 @@ bool WebThreeStubServerBase::eth_submitWork(string const& _nonce, string const&,
 	}
 }
 
-bool WebThreeStubServerBase::eth_submitHashrate(string const& _hashes, string const& _id)
+bool Eth::eth_submitHashrate(string const& _hashes, string const& _id)
 {
 	client()->submitExternalHashrate(jsToInt<32>(_hashes), jsToFixed<32>(_id));
 	return true;
 }
 
-string WebThreeStubServerBase::eth_register(string const& _address)
+string Eth::eth_register(string const& _address)
 {
 	try
 	{
-		return toJS(m_ethAccounts->addProxyAccount(jsToAddress(_address)));
+		return toJS(m_ethAccounts.addProxyAccount(jsToAddress(_address)));
 	}
 	catch (...)
 	{
@@ -792,11 +689,11 @@ string WebThreeStubServerBase::eth_register(string const& _address)
 	}
 }
 
-bool WebThreeStubServerBase::eth_unregister(string const& _accountId)
+bool Eth::eth_unregister(string const& _accountId)
 {
 	try
 	{
-		return m_ethAccounts->removeProxyAccount(jsToInt(_accountId));
+		return m_ethAccounts.removeProxyAccount(jsToInt(_accountId));
 	}
 	catch (...)
 	{
@@ -804,16 +701,16 @@ bool WebThreeStubServerBase::eth_unregister(string const& _accountId)
 	}
 }
 
-Json::Value WebThreeStubServerBase::eth_fetchQueuedTransactions(string const& _accountId)
+Json::Value Eth::eth_fetchQueuedTransactions(string const& _accountId)
 {
 	try
 	{
 		auto id = jsToInt(_accountId);
 		Json::Value ret(Json::arrayValue);
 		// TODO: throw an error on no account with given id
-		for (TransactionSkeleton const& t: m_ethAccounts->queuedTransactions(id))
+		for (TransactionSkeleton const& t: m_ethAccounts.queuedTransactions(id))
 			ret.append(toJson(t));
-		m_ethAccounts->clearQueue(id);
+		m_ethAccounts.clearQueue(id);
 		return ret;
 	}
 	catch (...)

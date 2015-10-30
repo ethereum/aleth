@@ -8,9 +8,9 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
 
-jsonrpcstub_create(spec.json 
-	AbstractWebThreeStubServer ${CMAKE_CURRENT_SOURCE_DIR} AbstractWebThreeStubServer
-	WebThreeStubClient ${CMAKE_CURRENT_BINARY_DIR} WebThreeStubClient
+jsonrpcstub_create(eth.json 
+	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace 
+	EthFace ${CMAKE_CURRENT_BINARY_DIR} EthFace
 )
 
 jsonrpcstub_create(db.json
@@ -33,7 +33,31 @@ jsonrpcstub_create(bzz.json
 	BzzClient ${CMAKE_CURRENT_BINARY_DIR} BzzClient
 )
 
+jsonrpcstub_create(web3.json
+	dev::rpc::Web3Face ${CMAKE_CURRENT_SOURCE_DIR} Web3Face
+	Web3Client ${CMAKE_CURRENT_BINARY_DIR} Web3Client
+)
+
+jsonrpcstub_create(admin_net.json
+	dev::rpc::AdminNetFace ${CMAKE_CURRENT_SOURCE_DIR} AdminNetFace
+	AdminNetClient ${CMAKE_CURRENT_BINARY_DIR} AdminNetClient
+)
+
+jsonrpcstub_create(admin_eth.json
+	dev::rpc::AdminEthFace ${CMAKE_CURRENT_SOURCE_DIR} AdminEthFace
+	AdminEthClient ${CMAKE_CURRENT_BINARY_DIR} AdminEthClient
+)
+
+jsonrpcstub_create(admin_utils.json
+	dev::rpc::AdminUtilsFace ${CMAKE_CURRENT_SOURCE_DIR} AdminUtilsFace
+	AdminUtilsClient ${CMAKE_CURRENT_BINARY_DIR} AdminUtilsClient
+)
+
+jsonrpcstub_create(personal.json
+	dev::rpc::PersonalFace ${CMAKE_CURRENT_SOURCE_DIR} PersonalFace
+	PersonalClient ${CMAKE_CURRENT_BINARY_DIR} PersonalClient
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
-add_custom_target(aux_json SOURCES "spec.json")
