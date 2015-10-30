@@ -93,7 +93,7 @@ void RLPXSocketIO::deferWrite()
 void RLPXSocketIO::write(size_t _dequed)
 {
 	auto self(shared_from_this());
-	ba::async_write(m_socket, ba::buffer(m_toSend), [this, self, _dequed](boost::system::error_code ec, size_t written)
+	ba::async_write(m_socket, ba::buffer(m_toSend[0]), [this, self, _dequed](boost::system::error_code ec, size_t written)
 	{
 		if (ec)
 			return; // TCPSocketWriteError

@@ -72,7 +72,7 @@ public:
 	void enque(uint8_t _packetType, RLPStream& _payload, PacketPriority _priority = PriorityLow);
 
 	/// Returns number of packets framed and outputs frames to o_bytes. Not thread-safe.
-	size_t mux(RLPXFrameCoder& _coder, unsigned _size, std::vector<bytes>& o_toWrite);
+	size_t mux(RLPXFrameCoder& _coder, unsigned _size, std::deque<bytes>& o_toWrite);
 	
 	/// Moves @_p to queue, to be muxed into frames by mux() when network buffer is ready for writing. Thread-safe.
 	void enque(RLPXPacket&& _p, PacketPriority _priority = PriorityLow);

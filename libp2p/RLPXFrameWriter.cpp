@@ -42,7 +42,7 @@ void RLPXFrameWriter::enque(uint8_t _packetType, RLPStream& _payload, PacketPrio
 	enque(RLPXPacket(m_protocolType, (RLPStream() << _packetType), _payload), _priority);
 }
 
-size_t RLPXFrameWriter::mux(RLPXFrameCoder& _coder, unsigned _size, vector<bytes>& o_toWrite)
+size_t RLPXFrameWriter::mux(RLPXFrameCoder& _coder, unsigned _size, deque<bytes>& o_toWrite)
 {
 	static const size_t c_blockSize = h128::size;
 	static const size_t c_overhead = c_blockSize * 3; // header + headerMac + frameMAC

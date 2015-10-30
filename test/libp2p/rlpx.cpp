@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(segmentedPacketFlush)
 	uint8_t packetType = 0;
 	bytes packetTypeRLP = (RLPStream() << packetType).out();
 	w.enque(packetType, rlpPayload);
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	for (unsigned i = 1; i < drains; i++)
 	{
 		auto n = w.mux(encoder, RLPXFrameWriter::MinFrameDequeLength, encframes);
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 	/// a single 1KB frame will incldue all four packets.
 	auto dequeLen = 1024; // sufficient enough for all packets
 	bytes stuff = sha3("A").asBytes();
-	vector<bytes> packetsOut;
+	deque<bytes> packetsOut;
 	for (unsigned i = 0; i < 4; i++)
 		packetsOut.push_back(stuff);
 	
@@ -554,7 +554,7 @@ BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 	for (auto const& p: packetsOut)
 		w.enque(packetType, (RLPStream() << p));
 
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	BOOST_REQUIRE_EQUAL(4, w.mux(encoder, dequeLen, encframes));
 	BOOST_REQUIRE_EQUAL(0, w.mux(encoder, dequeLen, encframes));
 	BOOST_REQUIRE_EQUAL(1, encframes.size());
@@ -604,7 +604,7 @@ BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 	bytes packetTypeRLP((RLPStream() << packetType).out());
 	w.enque(packetType, (RLPStream() << stuff));
 	
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	auto dequeLen = RLPXFrameWriter::EmptyFrameLength + 34;
 	dequeLen += ((16 - (dequeLen % 16)) % 16);
 	BOOST_REQUIRE_EQUAL(1, w.mux(encoder, dequeLen, encframes));
@@ -674,7 +674,7 @@ BOOST_AUTO_TEST_CASE(multiProtocol)
 	mw[1]->enque(packetType, (RLPStream() << packetsOut[i++]));
 	mw[1]->enque(packetType, (RLPStream() << packetsOut[i++]));
 
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	BOOST_REQUIRE_EQUAL(2, mw[0]->mux(encoder, dequeLen, encframes));
 	BOOST_REQUIRE_EQUAL(2, mw[1]->mux(encoder, dequeLen, encframes));
 	BOOST_REQUIRE_EQUAL(0, mw[0]->mux(encoder, dequeLen, encframes));
@@ -759,7 +759,7 @@ BOOST_AUTO_TEST_CASE(oddSizedMessages)
 	for (auto const& p: packetsOut)
 		w.enque(packetType, (RLPStream() << p));
 
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	size_t n;
 	n = w.mux(encoder, dequeLen, encframes);
 	BOOST_REQUIRE_EQUAL(n, 1);
@@ -822,7 +822,7 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
 	h256 h = sha3("some pseudorandom stuff here");
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	vector<bytes> packetsSent;
 	vector<RLPXPacket> packetsReceived;
 	RLPXFrameWriter w(0);
@@ -888,7 +888,7 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	uint8_t const packetType = 127;
 	bytes const packetTypeRLP((RLPStream() << packetType).out());
 	h256 h = sha3("pseudorandom string");
-	vector<bytes> encframes;
+	deque<bytes> encframes;
 	vector<bytes> packetsSent;
 	vector<bytes> packetsSentSorted[numSubprotocols];
 	vector<bytes> packetsSentShuffled;
