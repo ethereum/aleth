@@ -1148,6 +1148,8 @@ int main(int argc, char** argv)
 	unique_ptr<ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 	rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
 	rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>> jsonrpcServer;
+	unique_ptr<rpc::SessionManager> sessionManager;
+	unique_ptr<SimpleAccountHolder> accountHolder;
 
 	AddressHash allowedDestinations;
 
@@ -1172,13 +1174,13 @@ int main(int argc, char** argv)
 
 	if (jsonRPCURL > -1 || ipc)
 	{
-		SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator);
-		auto ethFace = new rpc::Eth(*web3.ethereum(), accountHolder);
-		
+		sessionManager.reset(new rpc::SessionManager());
+		accountHolder.reset(new SimpleAccountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator));
+		auto ethFace = new rpc::Eth(*web3.ethereum(), *accountHolder.get());
+		auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 		jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(
-	ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), nullptr, nullptr, nullptr));
+							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())));
 
 		if (jsonRPCURL > -1)
 		{
@@ -1195,10 +1197,10 @@ int main(int argc, char** argv)
 			ipcConnector->StartListening();
 		}
 
-//		if (jsonAdmin.empty())
-//			jsonAdmin = web3Face->newSession(SessionPermissions{{Privilege::Admin}});
-//		else
-//			web3Face->addSession(jsonAdmin, SessionPermissions{{Privilege::Admin}});
+		if (jsonAdmin.empty())
+			jsonAdmin = sessionManager->newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
+		else
+			sessionManager->addSession(jsonAdmin, rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
 		cout << "JSONRPC Admin Session Key: " << jsonAdmin << endl;
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
@@ -1231,12 +1233,16 @@ int main(int argc, char** argv)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
 			SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator);
-			auto ethFace = new rpc::Eth(*web3.ethereum(), accountHolder);
-//			auto web3Face = new dev::WebThreeStubServer(web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), keyManager, *gasPricer);
-//			string sessionKey = web3Face->newSession(SessionPermissions{{Privilege::Admin}});
-			string sessionKey = "";
+			rpc::SessionManager sessionManager;
+			string sessionKey = sessionManager.newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
 			
-			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()));
+			auto ethFace = new rpc::Eth(*web3.ethereum(), accountHolder);
+			auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, sessionManager);
+			auto adminNetFace = new rpc::AdminNet(web3, sessionManager);
+			auto adminUtilsFace = new rpc::AdminUtils(sessionManager);
+			
+			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, adminNetFace, adminUtilsFace);
+
 			JSLocalConsole console;
 			rpcServer.addConnector(console.createConnector());
 			rpcServer.StartListening();
