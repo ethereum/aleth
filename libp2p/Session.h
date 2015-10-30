@@ -76,7 +76,7 @@ public:
 	std::shared_ptr<PeerCap> cap(u256 const& _version) const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), _version))); } catch (...) { return nullptr; } }
 
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
-	void sealAndSend(RLPStream& _s);
+	void sealAndSend(RLPStream& _s, uint16_t _protocolID);
 
 	ReputationManager& repMan() const;
 	int rating() const;
@@ -91,21 +91,21 @@ public:
 	void serviceNodesRequest();
 
 private:
-	void send(bytes&& _msg);
+	void send(bytes&& _msg, uint16_t _protocolID);
 
 	/// Drop the connection for the reason @a _r.
 	void drop(DisconnectReason _r);
 
 	/// Perform a read on the socket.
 	void doRead();
-	void doReadFr();
+	void doReadFrames();
 	
 	/// Check error code after reading and drop peer if error code.
 	bool checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length);
 
 	/// Perform a single round of the write operation. This could end up calling itself asynchronously.
 	void write();
-	void writeFr();
+	void writeFrames();
 
 	/// Deliver RLPX packet to Session or Capability for interpretation.
 	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
@@ -141,12 +141,22 @@ private:
 
 	std::map<CapDesc, std::shared_ptr<Capability>> m_capabilities;	///< The peer's capability set.
 
-	// framing-related stuff
-	bool const m_isFarmingEnabled = false;
-	int const m_dequeLen = 1024;
-	RLPXFrameWriter m_frameWriter;
-	RLPXFrameReader m_frameReader;
+	// framing-related stuff (protected by x_writeQueue mutex)
+	struct Framing
+	{
+		Framing() = delete;
+		Framing(uint16_t _protocolID): writer(_protocolID), reader(_protocolID) {}
+		RLPXFrameWriter writer;
+		RLPXFrameReader reader;
+	};
+
+	std::map<uint16_t, std::shared_ptr<Framing> > m_framing;
 	std::vector<bytes> m_encframes;
+
+	bool isFramingEnabled() const { return true; } // { return m_info.protocolVersion >= 5; }
+	unsigned maxFrameSize() const { return 1024; }
+	std::shared_ptr<Framing> getFraming(uint16_t _protocolID);
+	void multiplexAll();
 };
 
 }

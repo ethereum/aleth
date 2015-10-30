@@ -36,7 +36,7 @@ class Capability: public std::enable_shared_from_this<Capability>
 	friend class Session;
 
 public:
-	Capability(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset);
+	Capability(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset, uint16_t _protocolID);
 	virtual ~Capability() {}
 
 	// Implement these in the derived class.
@@ -48,6 +48,7 @@ public:
 	HostCapabilityFace* hostCapability() const { return m_hostCap; }
 	Host* host() const { return m_hostCap->host(); }
 	ReputationManager& repMan() const;
+	uint16_t protocolID() const { return m_protocolID; }
 
 protected:
 	virtual bool interpret(unsigned _id, RLP const&) = 0;
@@ -63,7 +64,11 @@ private:
 	HostCapabilityFace* m_hostCap;
 	bool m_enabled = true;
 	unsigned m_idOffset;
+	uint16_t m_protocolID;
 };
+
+const uint16_t c_ethProtocolID = 301;
+const uint16_t c_shhProtocolID = 302;
 
 }
 }

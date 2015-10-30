@@ -42,7 +42,7 @@ struct P2PFixture
 class TestCapability: public Capability
 {
 public:
-	TestCapability(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset, CapDesc const&): Capability(_s, _h, _idOffset), m_cntReceivedMessages(0), m_testSum(0) {}
+	TestCapability(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset, CapDesc const&): Capability(_s, _h, _idOffset, 0xBEEF), m_cntReceivedMessages(0), m_testSum(0) {}
 	virtual ~TestCapability() {}
 	int countReceivedMessages() { return m_cntReceivedMessages; }
 	int testSum() { return m_testSum; }
@@ -60,7 +60,7 @@ protected:
 
 bool TestCapability::interpret(unsigned _id, RLP const& _r) 
 {
-	cnote << "Capability::interpret(): custom message received";
+	//cnote << "Capability::interpret(): custom message received";
 	++m_cntReceivedMessages;
 	m_testSum += _r[0].toInt();
 	BOOST_ASSERT(_id == UserPacket);
@@ -132,12 +132,12 @@ BOOST_AUTO_TEST_CASE(capability)
 
 	BOOST_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
 
-	int const target = 100;
+	int const target = 64;
 	int checksum = 0;
 	for (int i = 0; i < target; checksum += i++)
 		thc2->sendTestMessage(host1.id(), i);
 
-	this_thread::sleep_for(chrono::seconds(1));
+	this_thread::sleep_for(chrono::seconds(target / 64 + 1));
 	std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
 	BOOST_REQUIRE_EQUAL(target, testData.first);
 	BOOST_REQUIRE_EQUAL(checksum, testData.second);
