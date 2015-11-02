@@ -57,7 +57,6 @@ macro(configure_project)
 		set(VERSION_SUFFIX "")
 	endif()
 	set (PROJECT_VERSION_TWEAK ${BUILD_NUMBER})
-	set (PROJECT_VERSION "${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK}")
 
 	# Clear invalid option
 	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
