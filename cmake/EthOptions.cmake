@@ -43,6 +43,21 @@ macro(configure_project)
 		add_definitions(-DETH_JSCONSOLE)
 	endif()
 
+	# CI Builds should provide (for user builds this is totally optional)
+	# -DBUILD_NUMBER - A number to identify the current build with. Becomes TWEAK component of project version.
+	# -DVERSION_SUFFIX - A string to append to the end of the version string where applicable.
+	if (NOT DEFINED BUILD_NUMBER)
+		# default is big so that local build is always considered greater
+		# and can easily replace CI build for for all platforms if needed.
+		# Windows max version component number is 65535
+		set(BUILD_NUMBER 65535)
+	endif()
+	# Suffix like "-rc1" e.t.c. to append to versions wherever needed.
+	if (NOT DEFINED VERSION_SUFFIX)
+		set(VERSION_SUFFIX "")
+	endif()
+	set (PROJECT_VERSION_TWEAK ${BUILD_NUMBER})
+
 	# Clear invalid option
 	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 		if (PARANOID)
