@@ -47,9 +47,10 @@ macro(configure_project)
 	# -DBUILD_NUMBER - A number to identify the current build with. Becomes TWEAK component of project version.
 	# -DVERSION_SUFFIX - A string to append to the end of the version string where applicable.
 	if (NOT DEFINED BUILD_NUMBER)
-		# default is very big so that local build is always considered greater
-		# and can easily replace CI build for for all platforms if needed
-		set(BUILD_NUMBER 9999999)
+		# default is big so that local build is always considered greater
+		# and can easily replace CI build for for all platforms if needed.
+		# Windows max version component number is 65535
+		set(BUILD_NUMBER 65535)
 	endif()
 	# Suffix like "-rc1" e.t.c. to append to versions wherever needed.
 	if (NOT DEFINED VERSION_SUFFIX)
