@@ -37,6 +37,8 @@ namespace dev
 namespace eth
 {
 
+struct SyncStatus;
+
 using TransactionHashes = h256s;
 using UncleHashes = h256s;
 
@@ -209,6 +211,9 @@ public:
 	virtual u256 gasLimitRemaining() const = 0;
 	// Get the gas bidding price
 	virtual u256 gasBidPrice() const = 0;
+
+	/// Get some information on the block queue.
+	virtual SyncStatus syncStatus() const = 0;
 
 	// [MINING API]:
 

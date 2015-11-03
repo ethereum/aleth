@@ -866,7 +866,11 @@ void Client::flushTransactions()
 SyncStatus Client::syncStatus() const
 {
 	auto h = m_host.lock();
-	return h ? h->status() : SyncStatus();
+	if (!h)
+		return SyncStatus();
+	SyncStatus status = h->status();
+	status.majorSyncing = isMajorSyncing();
+	return status;
 }
 
 bool Client::submitSealed(bytes const& _header)

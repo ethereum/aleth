@@ -27,6 +27,7 @@
 #include "LogFilter.h"
 #include "TransactionQueue.h"
 #include "Block.h"
+#include "CommonNet.h"
 
 namespace dev
 {
@@ -174,6 +175,7 @@ public:
 	virtual bool wouldMine() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::wouldMine")); }
 	virtual u256 hashrate() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::hashrate")); }
 	virtual WorkingProgress miningProgress() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::miningProgress")); }
+	virtual SyncStatus syncStatus() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::syncStatus")); }
 
 	virtual void submitExternalHashrate(u256 const& _rate, h256 const& _id) override;
 
