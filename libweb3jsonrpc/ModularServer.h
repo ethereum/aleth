@@ -47,6 +47,7 @@ public:
 	using Methods = std::vector<MethodBinding>;
 	using Notifications = std::vector<NotificationBinding>;
 
+	virtual ~ServerInterface() {}
 	Methods const& methods() const { return m_methods; }
 	Notifications const& notifications() const { return m_notifications; }
 
