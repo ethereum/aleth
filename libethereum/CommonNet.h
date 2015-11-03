@@ -100,6 +100,7 @@ struct SyncStatus
 	unsigned startBlockNumber;
 	unsigned currentBlockNumber;
 	unsigned highestBlockNumber;
+	bool majorSyncing = false;
 };
 
 }

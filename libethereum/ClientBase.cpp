@@ -140,7 +140,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 			State tempState(block.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 			er = tempState.execute(env, t, Permanence::Reverted).first;
-			if (er.excepted == TransactionException::OutOfGas || er.excepted == TransactionException::OutOfGasBase || er.excepted == TransactionException::OutOfGasIntrinsic || er.codeDeposit == CodeDeposit::Failed)
+			if (er.excepted == TransactionException::OutOfGas || er.excepted == TransactionException::OutOfGasBase || er.excepted == TransactionException::OutOfGasIntrinsic || er.codeDeposit == CodeDeposit::Failed || er.excepted == TransactionException::BadJumpDestination)
 				lowerBound = lowerBound == mid ? upperBound : mid;
 			else
 			{
