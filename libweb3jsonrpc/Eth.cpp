@@ -114,7 +114,7 @@ string Eth::eth_getStorageAt(string const& _address, string const& _position, st
 {
 	try
 	{
-		return toJS(toCompactBigEndian(client()->stateAt(jsToAddress(_address), jsToU256(_position), jsToBlockNumber(_blockNumber)), 1));
+		return toJS(toCompactBigEndian(client()->stateAt(jsToAddress(_address), jsToU256(_position), jsToBlockNumber(_blockNumber)), 32));
 	}
 	catch (...)
 	{
@@ -656,7 +656,15 @@ Json::Value Eth::eth_getWork()
 
 Json::Value Eth::eth_syncing()
 {
-	return Json::Value(false);
+	dev::eth::SyncStatus sync = client()->syncStatus();
+	if (sync.state == SyncState::Idle || !sync.majorSyncing)
+		return Json::Value(false);
+
+	Json::Value info(Json::objectValue);
+	info["startingBlock"] = sync.startBlockNumber;
+	info["highestBlock"] = sync.highestBlockNumber;
+	info["currentBlock"] = sync.currentBlockNumber;
+	return info;
 }
 
 bool Eth::eth_submitWork(string const& _nonce, string const&, string const& _mixHash)
