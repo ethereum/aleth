@@ -302,7 +302,7 @@ int main(int argc, char** argv)
 	string jsonAdmin;
 	string genesisJSON;
 	dev::eth::Network releaseNetwork = c_network;
-	u256 gasFloor = UndefinedU256;
+	u256 gasFloor = Invalid256;
 	string privateChain;
 
 	bool upnp = true;
@@ -837,7 +837,7 @@ int main(int argc, char** argv)
 		chainParams.gasLimit = u256(1) << 32;
 	}
 	// TODO: Open some other API path
-//	if (gasFloor != UndefinedU256)
+//	if (gasFloor != Invalid256)
 //		c_gasFloorTarget = gasFloor;
 	if (networkId == (unsigned)-1)
 		networkId =  (unsigned)c_network;

@@ -24,6 +24,7 @@
 
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
+#include <libethcore/Sealer.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
@@ -83,7 +84,7 @@ Json::Value toJson(p2p::PeerSessionInfo const& _p)
 namespace eth
 {
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi)
+Json::Value toJson(dev::eth::BlockInfo const& _bi, SealEngineFace* _sealer)
 {
 	Json::Value res;
 	if (_bi)
@@ -103,6 +104,10 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi)
 		res["timestamp"] = toJS(_bi.timestamp());
 		// TODO: remove once JSONRPC spec is updated to use "author" over "miner".
 		res["miner"] = toJS(_bi.author());
+		if (_sealer)
+			for (auto const& i: _sealer->jsInfo(_bi))
+				res[i.first] = i.second;
+
 	}
 	return res;
 }
