@@ -47,8 +47,7 @@ public:
 	std::shared_ptr<Session> session() const { return m_session.lock(); }
 	HostCapabilityFace* hostCapability() const { return m_hostCap; }
 	Host* host() const { return m_hostCap->host(); }
-	ReputationManager& repMan() const;
-	uint16_t protocolID() const { return m_protocolID; }
+	ReputationManager& repMan() const;	
 
 protected:
 	virtual bool interpret(unsigned _id, RLP const&) = 0;
@@ -59,16 +58,15 @@ protected:
 	void sealAndSend(RLPStream& _s);
 	void addRating(int _r);
 
+public:
+	uint16_t const c_protocolID;
+
 private:
 	std::weak_ptr<Session> m_session;
 	HostCapabilityFace* m_hostCap;
 	bool m_enabled = true;
-	unsigned m_idOffset;
-	uint16_t m_protocolID;
+	unsigned m_idOffset;	
 };
-
-const uint16_t c_ethProtocolID = 301;
-const uint16_t c_shhProtocolID = 302;
 
 }
 }

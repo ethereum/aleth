@@ -169,8 +169,9 @@ bool Session::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 		for (auto const& i: m_capabilities)
 		{
 			bool isValidPacketType = (_t >= (int)i.second->m_idOffset && _t - i.second->m_idOffset < i.second->hostCapability()->messageCount());
-			bool isSuitableCapability = (i.second->protocolID() == _capId || !isFramingEnabled());
-			if (isSuitableCapability && isValidPacketType)
+			bool isSuitableCapability = (i.second->c_protocolID == _capId);
+			bool match = (isFramingEnabled() ? isSuitableCapability : isValidPacketType);
+			if (match)
 				return i.second->m_enabled ? i.second->interpret(_t - i.second->m_idOffset, _r) : true;
 		}
 		return false;

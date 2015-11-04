@@ -255,6 +255,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	auto clientVersion = _rlp[1].toString();
 	auto caps = _rlp[2].toVector<CapDesc>();
 	auto listenPort = _rlp[3].toInt<unsigned short>();
+	auto capIDs = _rlp[5].toVector<uint16_t>();
 	
 	// clang error (previously: ... << hex << caps ...)
 	// "'operator<<' should be declared prior to the call site or in an associated namespace of one of its arguments"
@@ -302,10 +303,11 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		}
 		
 		// todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
+		unsigned j = 0;
 		unsigned o = (unsigned)UserPacket;
 		for (auto const& i: caps)
 		{
-			ps->m_capabilities[i] = m_capabilities[i]->newPeerCapability(ps, o, i);
+			ps->m_capabilities[i] = m_capabilities[i]->newPeerCapability(ps, o, i, capIDs[j++]);
 			o += m_capabilities[i]->messageCount();
 		}
 		ps->start();

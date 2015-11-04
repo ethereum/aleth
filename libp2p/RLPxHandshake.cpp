@@ -196,14 +196,15 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 		m_io.reset(new RLPXFrameCoder(*this));
 
 		// old packet format
-		// 5 arguments, HelloPacket
+		// 6 arguments, HelloPacket
 		RLPStream s;
-		s.append((unsigned)HelloPacket).appendList(5)
+		s.append((unsigned)HelloPacket).appendList(6)
 		<< dev::p2p::c_protocolVersion
 		<< m_host->m_clientVersion
 		<< m_host->caps()
 		<< m_host->listenPort()
-		<< m_host->id();
+		<< m_host->id()
+		<< m_host->capIDs();
 		bytes packet;
 		s.swapOut(packet);
 		m_io->writeSingleFramePacket(&packet, m_handshakeOutBuffer);

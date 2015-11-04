@@ -153,7 +153,7 @@ private:
 	std::map<uint16_t, std::shared_ptr<Framing> > m_framing;
 	std::deque<bytes> m_encframes;
 
-	bool isFramingEnabled() const { return true; } // { return m_info.protocolVersion >= 5; }
+	bool isFramingEnabled() const { return false; } // { return m_info.protocolVersion >= 5; }
 	unsigned maxFrameSize() const { return 1024; }
 	std::shared_ptr<Framing> getFraming(uint16_t _protocolID);
 	void multiplexAll();
