@@ -37,6 +37,46 @@ namespace
 {
 llvm::Function* generateLongMulFunc(char const* _funcName, llvm::IntegerType* _ty, llvm::IntegerType* _wordTy, llvm::Module& _module)
 {
+	// C++ reference implementation:
+
+	//	using word = std::uint64_t;
+	//	using dword = __uint128_t;
+	//
+	//	static const auto wordBits = sizeof(word) * 8;
+	//
+	//	template<unsigned _N>
+	//	struct i
+	//	{
+	//		static const unsigned N = _N/8/sizeof(word);
+	//		word w[N];
+	//	};
+	//
+	//	using int256 = i<256>;
+	//
+	//	template<unsigned N>
+	//	i<N> long_mul(i<N> a, i<N> b)
+	//	{
+	//		decltype(a) r = {{0}};
+	//
+	//		for (int j = 0; j < b.N; ++j)
+	//		{
+	//			dword carry = 0;
+	//			for (int i = 0; i < (a.N - j); ++i)
+	//			{
+	//				auto& slot = r.w[j + i];
+	//
+	//				// sum of current multiplication, carry and the value from previous round using dword type
+	//				// no overflow because (2^N - 1)*(2^N - 1) + (2^N - 1) + (2^N - 1) == 2^2N - 1
+	//				auto s = (dword)b.w[j] * a.w[i] + carry + slot; // safe, no overflow
+	//
+	//				slot = (word) s;
+	//				carry = s >> wordBits;
+	//			}
+	//		}
+	//
+	//		return r;
+	//	}
+
 	auto func = llvm::Function::Create(llvm::FunctionType::get(_ty, {_ty, _ty}, false), llvm::Function::PrivateLinkage, _funcName, &_module);
 	func->setDoesNotAccessMemory();
 	func->setDoesNotThrow();
