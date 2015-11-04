@@ -139,6 +139,10 @@ bool LowerEVMPass::runOnBasicBlock(llvm::BasicBlock& _bb)
 		{
 			switch (inst.getOpcode())
 			{
+			case llvm::Instruction::Mul:
+				func = Arith256::getMul512Func(*module);
+				break;
+
 			case llvm::Instruction::URem:
 				func = Arith256::getURem512Func(*module);
 				break;
