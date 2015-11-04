@@ -10,7 +10,7 @@ eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
 
 jsonrpcstub_create(eth.json 
 	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace 
-	EthFace ${CMAKE_CURRENT_BINARY_DIR} EthFace
+	EthClient ${CMAKE_CURRENT_BINARY_DIR} EthClient
 )
 
 jsonrpcstub_create(db.json
