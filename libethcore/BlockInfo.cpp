@@ -193,7 +193,7 @@ void BlockInfo::populateFromParent(BlockInfo const& _parent)
 u256 BlockInfo::childGasLimit(u256 const& _gasFloorTarget) const
 {
 	u256 gasFloorTarget =
-		_gasFloorTarget == UndefinedU256 ? c_gasFloorTarget : _gasFloorTarget;
+		_gasFloorTarget == Invalid256 ? c_gasFloorTarget : _gasFloorTarget;
 
 	if (m_gasLimit < gasFloorTarget)
 		return min<u256>(gasFloorTarget, m_gasLimit + m_gasLimit / c_gasLimitBoundDivisor - 1);
