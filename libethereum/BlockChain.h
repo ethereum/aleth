@@ -245,7 +245,7 @@ public:
 	void rewind(unsigned _newHead);
 
 	/// Rescue the database.
-	void rescue(OverlayDB& _db);
+	void rescue(OverlayDB const& _db);
 
 	/** @returns a tuple of:
 	 * - an vector of hashes of all blocks between @a _from and @a _to, all blocks are ordered first by a number of

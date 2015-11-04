@@ -1033,7 +1033,7 @@ void BlockChain::clearBlockBlooms(unsigned _begin, unsigned _end)
 	}
 }
 
-void BlockChain::rescue(OverlayDB& _db)
+void BlockChain::rescue(OverlayDB const& _db)
 {
 	cout << "Rescuing database..." << endl;
 
