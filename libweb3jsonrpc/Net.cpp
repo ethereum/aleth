@@ -29,11 +29,11 @@
 using namespace dev;
 using namespace dev::rpc;
 
-Net::Net(WebThreeNetworkFace& _network): m_network(_network) {}
+Net::Net(NetworkFace& _network): m_network(_network) {}
 
 std::string Net::net_version()
 {
-	return toJS((unsigned)eth::c_network);
+	return "";	// what is this?
 }
 
 std::string Net::net_peerCount()

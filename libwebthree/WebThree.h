@@ -52,7 +52,7 @@ namespace bzz { class Interface; class Client; }
 
 class Support;
 
-class WebThreeNetworkFace
+class NetworkFace
 {
 public:
 	/// Get information concerning this node.
@@ -113,7 +113,7 @@ public:
  *
  * Provides a baseline for the multiplexed multi-protocol session class, WebThree.
  */
-class WebThreeDirect: public WebThreeNetworkFace
+class WebThreeDirect: public NetworkFace
 {
 public:
 	/// Constructor for private instance. If there is already another process on the machine using @a _dbPath, then this will throw an exception.

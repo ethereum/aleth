@@ -13,7 +13,7 @@ using namespace dev;
 using namespace dev::rpc;
 using namespace dev::eth;
 
-bool isHex(std::string const& _s)
+bool static isHex(std::string const& _s)
 {
 	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
 	for (; i < _s.size(); ++i)
@@ -22,7 +22,7 @@ bool isHex(std::string const& _s)
 	return true;
 }
 
-template <class T> bool isHash(std::string const& _hash)
+template <class T> static bool isHash(std::string const& _hash)
 {
 	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
 }
@@ -34,9 +34,9 @@ bool AdminEth::admin_eth_setMining(bool _on, std::string const& _session)
 {
 	RPC_ADMIN;
 	if (_on)
-		m_eth.startMining();
+		m_eth.startSealing();
 	else
-		m_eth.stopMining();
+		m_eth.stopSealing();
 	return true;
 }
 
@@ -170,7 +170,7 @@ bool AdminEth::admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, 
 	if (m_setMiningBenefactor)
 		m_setMiningBenefactor(a);
 	else
-		m_eth.setBeneficiary(a);
+		m_eth.setAuthor(a);
 	return true;
 }
 
@@ -227,7 +227,7 @@ Json::Value AdminEth::admin_eth_vmTrace(std::string const& _blockNumberOrHash, i
 	if ((unsigned)_txIndex < block.pending().size())
 	{
 		Transaction t = block.pending()[_txIndex];
-		State s;
+		State s(State::Null);
 		Executive e(s, block, _txIndex, m_eth.blockChain());
 		try
 		{

@@ -27,7 +27,7 @@
 namespace dev
 {
 
-class WebThreeNetworkFace;
+class NetworkFace;
 
 namespace rpc
 {
@@ -35,13 +35,13 @@ namespace rpc
 class Net: public NetFace
 {
 public:
-	Net(WebThreeNetworkFace& _network);
+	Net(NetworkFace& _network);
 	virtual std::string net_version() override;
 	virtual std::string net_peerCount() override;
 	virtual bool net_listening() override;
 
 private:
-	WebThreeNetworkFace& m_network;
+	NetworkFace& m_network;
 };
 
 }

@@ -38,7 +38,7 @@ using namespace dev;
 using namespace dev::eth;
 namespace fs = boost::filesystem;
 
-bool isHex(std::string const& _s)
+static bool isHex(std::string const& _s)
 {
 	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
 	for (; i < _s.size(); ++i)
@@ -47,7 +47,7 @@ bool isHex(std::string const& _s)
 	return true;
 }
 
-template <class T> bool isHash(std::string const& _hash)
+template <class T> static bool isHash(std::string const& _hash)
 {
 	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
 }
@@ -288,8 +288,8 @@ Json::Value WebThreeStubServer::admin_eth_vmTrace(std::string const& _blockNumbe
 	if ((unsigned)_txIndex < block.pending().size())
 	{
 		Transaction t = block.pending()[_txIndex];
-		State state = block.fromPending(_txIndex);
-		Executive e(state, bc(), 0);
+		State state(State::Null);
+		Executive e(state, block, _txIndex, bc(), 0);
 		try
 		{
 			StandardTrace st;

@@ -34,7 +34,7 @@
 
 namespace dev
 {
-class WebThreeNetworkFace;
+class NetworkFace;
 class KeyPair;
 namespace eth
 {
