@@ -50,15 +50,19 @@ if [[ $2 != "" ]]; then
 fi
 
 case $1 in
+	"webthree-helpers")
+		echo "ETHTESTS - INFO: Not running any tests for project \"$1\"."
+		exit 0
+		;;
 	"libweb3core")
 		TEST_REPOSITORIES=(libweb3core libethereum libethereum_vmjit libethereum_vmsmart webthree solidity)
 		;;
 	"alethzero")
-		echo "ETHTESTS - INFO: \"$1\" contains no tests. No worries."
+		echo "ETHTESTS - INFO: Not running any tests for project \"$1\"."
 		exit 0
 		;;
 	"mix")
-		echo "ETHTESTS - INFO: \"$1\" contains no tests. No worries."
+		echo "ETHTESTS - INFO: Not running any tests for project \"$1\"."
 		exit 0
 		;;
 	"libethereum")
