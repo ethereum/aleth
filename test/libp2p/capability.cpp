@@ -77,7 +77,7 @@ public:
 	{
 		for (auto i: peerSessions())
 			if (_id == i.second->id)
-				i.first->cap<TestCapability>().get()->sendTestMessage(_x);
+				i.first->cap<TestCapability>()->sendTestMessage(_x);
 	}
 
 	std::pair<int, int> retrieveTestData(NodeID const& _id)
@@ -87,8 +87,8 @@ public:
 		for (auto i: peerSessions())
 			if (_id == i.second->id)
 			{
-				cnt += i.first->cap<TestCapability>().get()->countReceivedMessages();
-				checksum += i.first->cap<TestCapability>().get()->testSum();
+				cnt += i.first->cap<TestCapability>()->countReceivedMessages();
+				checksum += i.first->cap<TestCapability>()->testSum();
 			}
 
 		return std::pair<int, int>(cnt, checksum);
