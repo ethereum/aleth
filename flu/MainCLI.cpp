@@ -22,27 +22,9 @@
 #include "MainCLI.h"
 #include <libfluidity/FluidityClient.h>
 #include <libwebthree/WebThree.h>
+#include <libweb3jsonrpc/WebThreeStubServer.h>
 #include <libweb3jsonrpc/AccountHolder.h>
-#if ETH_JSCONSOLE || !ETH_TRUE
 #include <libjsconsole/JSLocalConsole.h>
-#endif
-#if ETH_JSONRPC || !ETH_TRUE
-#include <libweb3jsonrpc/AccountHolder.h>
-#include <libweb3jsonrpc/Eth.h>
-#include <libweb3jsonrpc/SafeHttpServer.h>
-#include <jsonrpccpp/client/connectors/httpclient.h>
-#include <libweb3jsonrpc/ModularServer.h>
-#include <libweb3jsonrpc/IpcServer.h>
-#include <libweb3jsonrpc/LevelDB.h>
-#include <libweb3jsonrpc/Whisper.h>
-#include <libweb3jsonrpc/Net.h>
-#include <libweb3jsonrpc/Web3.h>
-#include <libweb3jsonrpc/SessionManager.h>
-#include <libweb3jsonrpc/AdminNet.h>
-#include <libweb3jsonrpc/AdminEth.h>
-#include <libweb3jsonrpc/AdminUtils.h>
-#include <libweb3jsonrpc/Personal.h>
-#endif
 using namespace std;
 using namespace dev;
 using namespace p2p;
@@ -141,25 +123,24 @@ void MainCLI::execute()
 
 		if (m_mode == Mode::Console)
 		{
-			SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, [](Address){ return string(); }, m_keyManager);
-			rpc::SessionManager sessionManager;
-			string sessionKey = sessionManager.newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
-
-			auto ethFace = new rpc::Eth(*web3.ethereum(), accountHolder);
-			auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), m_keyManager, sessionManager);
-			auto adminNetFace = new rpc::AdminNet(web3, sessionManager);
-			auto adminUtilsFace = new rpc::AdminUtils(sessionManager, this);
-
-			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(m_keyManager), adminEthFace, adminNetFace, adminUtilsFace);
-
 			JSLocalConsole console;
-			rpcServer.addConnector(console.createConnector());
-			rpcServer.StartListening();
-
+			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(
+				*console.connector(),
+				web3,
+				make_shared<SimpleAccountHolder>(
+					[&](){ return web3.ethereum(); },
+					[](Address){ return string(); },
+					m_keyManager),
+				vector<KeyPair>(),
+				m_keyManager,
+				*gasPricer,
+				this
+			);
+			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
 			while (!m_shouldExit)
 				console.readAndEval();
-			rpcServer.StopListening();
+			rpcServer->StopListening();
 		}
 		else if (m_mode == Mode::Dumb)
 			while (!m_shouldExit)
