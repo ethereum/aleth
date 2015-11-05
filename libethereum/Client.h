@@ -130,8 +130,6 @@ public:
 	BlockQueue const& blockQueue() const { return m_bq; }
 	/// Get the block queue.
 	OverlayDB const& stateDB() const { return m_stateDB; }
-	/// Handles a request to exit the client with a specific signal
-	static void exitHandler(int signal);
 
 	/// Freeze worker thread and sync some of the block queue.
 	std::tuple<ImportRoute, bool, unsigned> syncQueue(unsigned _max = 1);
