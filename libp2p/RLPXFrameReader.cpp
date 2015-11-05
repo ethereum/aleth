@@ -34,7 +34,7 @@ std::vector<RLPXPacket> RLPXFrameReader::demux(RLPXFrameCoder& _coder, RLPXFrame
 	if (_frame.empty())
 		// drop: bad frame (empty)
 		return ret;
-	if (_info.multiFrame && _info.totalLength && _frame.size() > _info.totalLength)
+	if (_info.multiFrame && _info.totalLength && (_frame.size() - (h128::size + _info.padding) > _info.totalLength))
 		// drop: bad frame (too large)
 		return ret;
 	

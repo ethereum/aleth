@@ -90,11 +90,16 @@ RLP RLP::operator[](size_t _i) const
 	return RLP(m_lastItem, ThrowOnFail | FailIfTooSmall);
 }
 
-RLPs RLP::toList() const
+RLPs RLP::toList(int _flags) const
 {
 	RLPs ret;
 	if (!isList())
-		return ret;
+	{
+		if (_flags & ThrowOnFail)
+			BOOST_THROW_EXCEPTION(BadCast());
+		else
+			return ret;
+	}
 	for (auto const& i: *this)
 		ret.push_back(i);
 	return ret;

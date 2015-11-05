@@ -132,8 +132,6 @@ using u160s = std::vector<u160>;
 using u256Set = std::set<u256>;
 using u160Set = std::set<u160>;
 
-extern const u256 UndefinedU256;
-
 // Map types.
 using StringMap = std::map<std::string, std::string>;
 using BytesMap = std::map<bytes, bytes>;
@@ -152,9 +150,9 @@ using string32 = std::array<char, 32>;
 static const string32 ZeroString32 = {{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }};
 
 // Null/Invalid values for convenience.
-static const u256 Invalid256 = ~(u256)0;
 static const bytes NullBytes;
 static const std::map<u256, u256> EmptyMapU256U256;
+extern const u256 Invalid256;
 
 /// Interprets @a _u as a two's complement signed number and returns the resulting s256.
 inline s256 u2s(u256 _u)
