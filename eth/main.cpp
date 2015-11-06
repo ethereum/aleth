@@ -37,10 +37,11 @@
 #include <libethcore/EthashAux.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
-#include <libethereum/All.h>
-#include <libethereum/BlockChainSync.h>
 #include <libethcore/KeyManager.h>
 #include <libethcore/ICAP.h>
+#include <libethereum/All.h>
+#include <libethereum/BlockChainSync.h>
+#include <libethereum/EthashClient.h>
 #include <libwebthree/WebThree.h>
 #if ETH_JSCONSOLE || !ETH_TRUE
 #include <libjsconsole/JSLocalConsole.h>
@@ -98,7 +99,7 @@ void help()
 		<< "    --olympic  Use the Olympic (0.9) protocol." << endl
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
 		<< "    --private <name>  Use a private chain." << endl
-		<< "    --genesis-json <file>  Import the genesis block information from the given JSON file." << endl
+		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
 		<< endl
@@ -276,11 +277,18 @@ enum class Format
 
 void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mining)
 {
-	if (io_mining != ~(unsigned)0 && io_mining && _c->isMining() && _c->blockChain().details().number - _start == io_mining)
+	try
 	{
-		_c->stopSealing();
-		io_mining = ~(unsigned)0;
+		if (io_mining != ~(unsigned)0 && io_mining && asEthashClient(_c)->isMining() && _c->blockChain().details().number - _start == io_mining)
+		{
+			_c->stopSealing();
+			io_mining = ~(unsigned)0;
+		}
 	}
+	catch (InvalidSealEngine&)
+	{
+	}
+
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
@@ -338,8 +346,8 @@ int main(int argc, char** argv)
 	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
-	string genesisJSON;
-	dev::eth::Network releaseNetwork = c_network;
+	string paramsJSON;
+	eth::Network releaseNetwork = eth::Network::Frontier;
 	u256 gasFloor = Invalid256;
 	string privateChain;
 
@@ -363,7 +371,7 @@ int main(int argc, char** argv)
 	bool pinning = false;
 	bool enableDiscovery = false;
 	bool noPinning = false;
-	unsigned networkId = (unsigned)-1;
+	unsigned networkID = (unsigned)-1;
 
 	/// Mining params
 	unsigned mining = 0;
@@ -520,7 +528,7 @@ int main(int argc, char** argv)
 		}
 		else if (arg == "--network-id" && i + 1 < argc)
 			try {
-				networkId = stol(argv[++i]);
+				networkID = stol(argv[++i]);
 			}
 			catch (...)
 			{
@@ -589,11 +597,13 @@ int main(int argc, char** argv)
 		}
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
-		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
+		else if ((arg == "--genesis-json" || arg == "--genesis" || arg == "--config") && i + 1 < argc)
 		{
+			if (arg == "-genesis-json" || arg == "-genesis")
+				cerr << arg << " is DEPRECATED. It will be removed for the Frontier. Use --config instead." << endl;
 			try
 			{
-				genesisJSON = contentsString(argv[++i]);
+				paramsJSON = contentsString(argv[++i]);
 			}
 			catch (...)
 			{
@@ -866,8 +876,8 @@ int main(int argc, char** argv)
 
 	// Set up all the chain config stuff.
 	ChainParams chainParams(releaseNetwork);
-	if (!genesisJSON.empty())
-		chainParams = ChainParams(genesisJSON);
+	if (!paramsJSON.empty())
+		chainParams = ChainParams(paramsJSON);
 	if (!privateChain.empty())
 	{
 		chainParams.extraData = sha3(privateChain).asBytes();
@@ -877,17 +887,15 @@ int main(int argc, char** argv)
 	// TODO: Open some other API path
 //	if (gasFloor != Invalid256)
 //		c_gasFloorTarget = gasFloor;
-	if (networkId == (unsigned)-1)
-		networkId =  (unsigned)c_network;
 
 	if (g_logVerbosity > 0)
 	{
 		cout << EthGrayBold "(++)Ethereum" EthReset << endl;
-		if (c_network == eth::Network::Olympic)
+		if (releaseNetwork == eth::Network::Olympic)
 			cout << "Welcome to Olympic!" << endl;
-		else if (c_network == eth::Network::Frontier)
+		else if (releaseNetwork == eth::Network::Frontier)
 			cout << "Beware. You're entering the " EthMaroonBold "Frontier" EthReset "!" << endl;
-		else if (c_network == eth::Network::Morden)
+		else if (releaseNetwork == eth::Network::Morden)
 			cout << "Morden welcomes you. What do you want?" << endl;
 	}
 
@@ -964,6 +972,7 @@ int main(int argc, char** argv)
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("++eth", clientName),
 		dbPath,
+		chainParams,
 		withExisting,
 		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
@@ -1134,11 +1143,11 @@ int main(int argc, char** argv)
 	if (c)
 	{
 		c->setGasPricer(gasPricer);
-		// TODO: expose sealant interface.
-		c->setShouldPrecomputeDAG(m.shouldPrecompute());
+		DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
 		c->setSealer(m.minerType());
 		c->setAuthor(author);
-		c->setNetworkId(networkId);
+		if (networkID != (unsigned)-1)
+			c->setNetworkId(networkID);
 	}
 
 	auto renderFullAddress = [&](Address const& _a) -> std::string

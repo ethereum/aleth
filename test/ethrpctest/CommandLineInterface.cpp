@@ -117,7 +117,7 @@ void CommandLineInterface::actOnInput()
 {
 	BlockChainLoader bcl(m_json);
 	cerr << "void CommandLineInterface::actOnInput() FixedClient now accepts eth::Block!!!" << endl;
-	FixedClient client(bcl.bc(), eth::Block{}/*bcl.state()*/);
+	FixedClient client(bcl.bc(), eth::Block(Block::Null)/*bcl.state()*/);
 	FixedAccountHolder accountHolder([&](){return &client;}, {});
 	ModularServer<rpc::EthFace> server(new rpc::Eth(client, accountHolder));
 	server.addConnector(new jsonrpc::HttpServer(8080, "", "", 2));

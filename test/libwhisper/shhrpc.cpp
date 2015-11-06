@@ -74,7 +74,7 @@ struct Setup
 		{
 			setup = true;
 			NetworkPreferences nprefs("127.0.0.1", 0, false);
-			web3 = new WebThreeDirect(c_version, "", WithExisting::Trust, {"shh"}, nprefs);
+			web3 = new WebThreeDirect(c_version, "", ChainParams(), WithExisting::Trust, {"shh"}, nprefs);
 			web3->setIdealPeerCount(9);
 			auto server = new jsonrpc::HttpServer(8080);
 			KeyManager keyMan;
