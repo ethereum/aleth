@@ -1186,7 +1186,6 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
-<<<<<<< HEAD
 	ExitHandler eh;// TODO: use.
 
 	if (jsonRPCURL > -1 || ipc)
@@ -1198,16 +1197,6 @@ int main(int argc, char** argv)
 		jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
 							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())));
-=======
-	ExitHandler eh;
-
-	if (jsonRPCURL > -1 || ipc)
-	{
-		auto safeConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
-		safeConnector->setAllowedOrigin(rpcCorsDomain);
-		jsonrpcConnector.reset(safeConnector);
-		jsonrpcServer = make_shared<dev::WebThreeStubServer>(*jsonrpcConnector.get(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator), vector<KeyPair>(), keyManager, *gasPricer, &eh);
->>>>>>> a7e08df090bb754c1cf6fc88f991502d88aa9279
 		if (jsonRPCURL > -1)
 		{
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
@@ -1270,14 +1259,9 @@ int main(int argc, char** argv)
 			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, adminNetFace, adminUtilsFace);
 
 			JSLocalConsole console;
-<<<<<<< HEAD
 			rpcServer.addConnector(console.createConnector());
 			rpcServer.StartListening();
 
-=======
-			shared_ptr<dev::WebThreeStubServer> rpcServer = make_shared<dev::WebThreeStubServer>(*console.connector(), web3, make_shared<SimpleAccountHolder>([&](){ return web3.ethereum(); }, getAccountPassword, keyManager), vector<KeyPair>(), keyManager, *gasPricer, &eh);
-			string sessionKey = rpcServer->newSession(SessionPermissions{{Privilege::Admin}});
->>>>>>> a7e08df090bb754c1cf6fc88f991502d88aa9279
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
 			while (!eh.shouldExit())
 			{

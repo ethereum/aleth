@@ -27,7 +27,6 @@
 #include "JSConsole.h"
 #include "JSV8Connector.h"
 
-class WebThreeStubServer;
 namespace jsonrpc { class AbstractServerConnector; }
 
 namespace dev

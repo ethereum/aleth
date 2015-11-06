@@ -53,37 +53,9 @@ const unsigned dev::SensibleHttpThreads = 4;
 #endif
 const unsigned dev::SensibleHttpPort = 8545;
 
-<<<<<<< HEAD:libweb3jsonrpc/Eth.cpp
-Eth::Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts)
-: m_eth(_eth), m_ethAccounts(_ethAccounts)
-=======
-WebThreeStubServerBase::WebThreeStubServerBase(AbstractServerConnector& _conn, std::shared_ptr<dev::eth::AccountHolder> const& _ethAccounts, vector<dev::KeyPair> const& _sshAccounts):
-	AbstractWebThreeStubServer(_conn),
-	m_ethAccounts(_ethAccounts),
-	m_handler(_conn.GetHandler())
-{
-	setIdentities(_sshAccounts);
-}
-
-void WebThreeStubServerBase::setIdentities(vector<dev::KeyPair> const& _ids)
-{
-	m_shhIds.clear();
-	for (auto i: _ids)
-		m_shhIds[i.pub()] = i.secret();
-}
-
-string WebThreeStubServerBase::web3_sha3(string const& _param1)
-{
-	return toJS(sha3(jsToBytes(_param1)));
-}
-
-string WebThreeStubServerBase::net_version()
-{
-	return toJS(client()->networkId());
-}
-
-string WebThreeStubServerBase::net_peerCount()
->>>>>>> a7e08df090bb754c1cf6fc88f991502d88aa9279:libweb3jsonrpc/WebThreeStubServerBase.cpp
+Eth::Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts):\
+	m_eth(_eth),
+	m_ethAccounts(_ethAccounts)
 {
 }
 
@@ -509,55 +481,7 @@ string Eth::eth_compileSerpent(string const& _source)
 	BOOST_THROW_EXCEPTION(JsonRpcException("Serpent compilation not supported!"));
 }
 
-<<<<<<< HEAD:libweb3jsonrpc/Eth.cpp
 Json::Value Eth::eth_compileSolidity(string const& _source)
-=======
-Json::Value WebThreeStubServerBase::admin_net_peers(std::string const& _session)
-{
-	ADMIN;
-	Json::Value ret;
-	for (p2p::PeerSessionInfo const& i: network()->peers())
-		ret.append(toJson(i));
-	return ret;
-}
-
-Json::Value WebThreeStubServerBase::admin_net_nodeInfo(const string& _session)
-{
-	ADMIN;
-	Json::Value ret;
-	p2p::NodeInfo i = network()->nodeInfo();
-	ret["name"] = i.version;
-	ret["port"] = i.port;
-	ret["address"] = i.address;
-	ret["listenAddr"] = i.address + ":" + toString(i.port);
-	ret["id"] = i.id.hex();
-	ret["enode"] = i.enode();
-	return ret;
-}
-
-bool WebThreeStubServerBase::admin_exit(string const& _session)
-{
-	ADMIN;
-	if (system())
-	{
-		system()->exit();
-		return true;
-	}
-	return false;
-}
-
-bool WebThreeStubServerBase::admin_eth_setMining(bool _on, std::string const& _session)
-{
-	ADMIN;
-	if (_on)
-		client()->startSealing();
-	else
-		client()->stopSealing();
-	return true;
-}
-
-Json::Value WebThreeStubServerBase::eth_compileSolidity(string const& _source)
->>>>>>> a7e08df090bb754c1cf6fc88f991502d88aa9279:libweb3jsonrpc/WebThreeStubServerBase.cpp
 {
 	// TOOD throw here jsonrpc errors
 	Json::Value res(Json::objectValue);
