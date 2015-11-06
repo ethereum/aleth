@@ -255,7 +255,18 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	auto clientVersion = _rlp[1].toString();
 	auto caps = _rlp[2].toVector<CapDesc>();
 	auto listenPort = _rlp[3].toInt<unsigned short>();
-	auto capIDs = _rlp[5].toVector<uint16_t>();
+
+	map<CapDesc, uint16_t> capIDs;
+	bool isFramingAllowed = Session::isFramingAllowedForVersion(protocolVersion);
+	if (isFramingAllowed)
+	{
+		auto IDs = _rlp[5].toVector<uint16_t>();
+		if (IDs.size() != caps.size())
+			BOOST_THROW_EXCEPTION(Exception("Wrong size of CapIDs"));
+
+		for (auto i = 0; i < caps.size(); ++i)
+			capIDs[caps[i]] = IDs[i];
+	}
 	
 	// clang error (previously: ... << hex << caps ...)
 	// "'operator<<' should be declared prior to the call site or in an associated namespace of one of its arguments"
@@ -303,12 +314,16 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		}
 		
 		// todo: mutex Session::m_capabilities and move for(:caps) out of mutex.
-		unsigned j = 0;
-		unsigned o = (unsigned)UserPacket;
+		unsigned offset = (unsigned)UserPacket;
 		for (auto const& i: caps)
 		{
-			ps->m_capabilities[i] = m_capabilities[i]->newPeerCapability(ps, o, i, capIDs[j++]);
-			o += m_capabilities[i]->messageCount();
+			auto pcap = m_capabilities[i];
+			if (!pcap)
+				return ps->disconnect(IncompatibleProtocol);
+
+			uint16_t capid = isFramingAllowed ? capIDs[i] : 0;
+			ps->m_capabilities[i] = pcap->newPeerCapability(ps, offset, i, capid);
+			offset += pcap->messageCount();
 		}
 		ps->start();
 		m_sessions[_id] = ps;
@@ -316,6 +331,21 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	
 	clog(NetP2PNote) << "p2p.host.peer.register" << _id;
 	StructuredLogger::p2pConnected(_id.abridged(), ps->m_peer->endpoint, ps->m_peer->m_lastConnected, clientVersion, peerCount());
+}
+
+vector<uint16_t> Host::capIDs(CapDescs const& _caps) const
+{
+	std::vector<uint16_t> ret;
+	for (auto const& cap: _caps)
+	{
+		auto p = m_capabilities.find(cap);
+		if (p != m_capabilities.end())
+			ret.push_back(p->second->capID());
+		else
+			ret.push_back(0);
+	}
+
+	return ret;
 }
 
 void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)

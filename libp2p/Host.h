@@ -154,8 +154,8 @@ public:
 
 	bool haveCapability(CapDesc const& _name) const { return m_capabilities.count(_name) != 0; }
 	CapDescs caps() const { CapDescs ret; for (auto const& i: m_capabilities) ret.push_back(i.first); return ret; }
-	std::vector<uint16_t> capIDs() const { std::vector<uint16_t> ret; for (auto const& i: m_capabilities) ret.push_back(i.second->capID()); return ret; }
 	template <class T> std::shared_ptr<T> cap() const { try { return std::static_pointer_cast<T>(m_capabilities.at(std::make_pair(T::staticName(), T::staticVersion()))); } catch (...) { return nullptr; } }
+	std::vector<uint16_t> capIDs(CapDescs const& _caps) const;
 
 	/// Add a potential peer.
 	void addPeer(NodeSpec const& _s, PeerType _t);

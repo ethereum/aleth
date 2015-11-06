@@ -61,10 +61,9 @@ protected:
 	virtual void onStarting() {}
 	virtual void onStopping() {}
 
-	uint16_t m_capID = 0;
-
 private:
 	Host* m_host = nullptr;
+	uint16_t m_capID = 0;
 };
 
 template<class PeerCap>
