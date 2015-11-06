@@ -244,6 +244,13 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		else
 		{
 			TestBlockChain blockchain(genesisBlock);
+
+			if (o.count("genesisRLP") > 0)
+			{
+				TestBlock genesisFromRLP(o["genesisRLP"].get_str());
+				checkBlocks(genesisBlock, genesisFromRLP, testname);
+			}
+
 			for (auto const& bl: o["blocks"].get_array())
 			{
 				mObject blObj = bl.get_obj();
