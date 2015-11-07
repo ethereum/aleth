@@ -165,12 +165,6 @@ namespace dev
 namespace eth
 {
 
-enum IncludeProof
-{
-	WithoutProof = 0,
-	WithProof = 1
-};
-
 enum IncludeSeal
 {
 	WithoutSeal = 0,
