@@ -134,7 +134,7 @@ h256 ChainParams::calculateStateRoot() const
 	MemoryDB db;
 	SecureTrieDB<Address, MemoryDB> state(&db);
 	state.init();
-	if (!db.exists(stateRoot))
+	if (!stateRoot)
 	{
 		// TODO: use hash256
 		//stateRoot = hash256(toBytesMap(gs));

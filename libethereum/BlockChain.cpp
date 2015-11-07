@@ -167,6 +167,7 @@ BlockInfo const& BlockChain::genesis() const
 		auto gb = m_params.genesisBlock();
 		UpgradeGuard ul(l);
 		m_genesis = BlockInfo(gb);
+		m_genesisHeaderBytes = BlockInfo::extractHeader(&gb).data().toBytes();
 		m_genesisHash = m_genesis.hash();
 	}
 	return m_genesis;
@@ -1415,10 +1416,7 @@ bytes BlockChain::block(h256 const& _hash) const
 bytes BlockChain::headerData(h256 const& _hash) const
 {
 	if (_hash == m_genesisHash)
-	{
-		auto gb = m_params.genesisBlock();	// TODO: memoise.
-		return BlockInfo::extractHeader(&gb).data().toBytes();
-	}
+		return m_genesisHeaderBytes;
 
 	{
 		ReadGuard l(x_blocks);

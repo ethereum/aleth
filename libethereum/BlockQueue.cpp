@@ -375,7 +375,7 @@ bool BlockQueue::doneDrain(h256s const& _bad)
 	{
 		// at least one of them was bad.
 		m_knownBad += _bad;
-		for (h256 const& b : _bad)
+		for (h256 const& b: _bad)
 			updateBad_WITH_LOCK(b);
 	}
 	return !m_readySet.empty();

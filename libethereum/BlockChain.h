@@ -397,6 +397,7 @@ private:
 	std::shared_ptr<SealEngineFace> m_sealEngine;	// consider shared_ptr.
 	mutable SharedMutex x_genesis;
 	mutable BlockInfo m_genesis;	// mutable because they're effectively memos.
+	mutable bytes m_genesisHeaderBytes;	// mutable because they're effectively memos.
 	mutable h256 m_genesisHash;		// mutable because they're effectively memos.
 
 	std::function<void(Exception&)> m_onBad;									///< Called if we have a block that doesn't verify.
