@@ -29,7 +29,7 @@
 #include <libdevcore/SHA3.h>
 #include "ICAP.h"
 #include "Exceptions.h"
-#include "BlockInfo.h"
+#include "BlockHeader.h"
 #include "ethereum/ConfigInfo.h"
 using namespace std;
 using namespace dev;
@@ -127,7 +127,7 @@ std::string formatBalance(bigint const& _b)
 	return ret.str();
 }
 
-static void badBlockInfo(BlockInfo const& _bi, string const& _err)
+static void badBlockInfo(BlockHeader const& _bi, string const& _err)
 {
 	string const c_line = EthReset EthOnMaroon + string(80, ' ') + EthReset;
 	string const c_border = EthReset EthOnMaroon + string(2, ' ') + EthReset EthMaroonBold;
@@ -146,8 +146,8 @@ static void badBlockInfo(BlockInfo const& _bi, string const& _err)
 
 void badBlock(bytesConstRef _block, string const& _err)
 {
-	BlockInfo bi;
-	DEV_IGNORE_EXCEPTIONS(bi = BlockInfo(_block));
+	BlockHeader bi;
+	DEV_IGNORE_EXCEPTIONS(bi = BlockHeader(_block));
 	badBlockInfo(bi, _err);
 }
 

@@ -1,6 +1,6 @@
 aux_source_directory(. SRC_LIST)
 
-set(EXECUTABLE fluidity)
+set(EXECUTABLE ethashseal)
 
 file(GLOB HEADERS "*.h")
 

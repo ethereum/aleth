@@ -24,7 +24,7 @@
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <libdevcore/TransientDirectory.h>
-#include <libethcore/Ethash.h>
+#include <libethashseal/Ethash.h>
 
 using namespace std;
 using namespace json_spirit;
@@ -77,14 +77,14 @@ public:
 	void setPremine(std::string const& _parameter);
 	void mine(TestBlockChain const& _bc);
 
-	void setBlockHeader(BlockInfo const& _header, RecalcBlockHeader _recalculate);
+	void setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate);
 	void setState(State const& _state);
 	void clearState();
 
 	bytes const& getBytes() const { return m_bytes; }
 	AccountMap const& accountMap() const { return m_accountMap; }
 	State const& getState() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
-	BlockInfo const& getBlockHeader() const { return m_blockHeader;}
+	BlockHeader const& getBlockHeader() const { return m_blockHeader;}
 	TransactionQueue const& getTransactionQueue() const { return m_transactionQueue; }
 	TransactionQueue & getTransactionQueue() { return m_transactionQueue; }
 	vector<TestTransaction> const& getTestTransactions() const { return m_testTransactions; }
@@ -92,13 +92,13 @@ public:
 	Address const& getBeneficiary() const { return m_blockHeader.author(); }
 
 private:
-	BlockInfo constructBlock(mObject const& _o, h256 const& _stateRoot);
+	BlockHeader constructBlock(mObject const& _o, h256 const& _stateRoot);
 	bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
 	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
 
-	BlockInfo m_blockHeader;
+	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
 	std::unique_ptr<State> m_state;
 	TransactionQueue m_transactionQueue;

@@ -23,8 +23,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
-#include <libethcore/Ethash.h>
-#include <libethcore/Ethash.h>
+#include <libethashseal/Ethash.h>
+#include <libethashseal/Ethash.h>
 #include <libethereum/ChainParams.h>
 using namespace std;
 using namespace dev;
@@ -45,18 +45,18 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 	js::read_string(s, v);
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(Network::Test));
+	sealEngine.setChainParams(ChainParams());
 
 	for (auto& i: v.get_obj())
 	{
 		js::mObject o = i.second.get_obj();
 		cnote << "Difficulty test: " << i.first;
-		BlockInfo parent;
+		BlockHeader parent;
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
 		parent.setNumber(test::toInt(o["currentBlockNumber"]) - 1);
 
-		BlockInfo current;
+		BlockHeader current;
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
 		current.setNumber(test::toInt(o["currentBlockNumber"]));
 

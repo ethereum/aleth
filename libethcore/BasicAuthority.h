@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "Sealer.h"
+#include "SealEngine.h"
 
 namespace dev
 {
@@ -38,13 +38,13 @@ public:
 	unsigned sealFields() const override { return 1; }
 	bytes sealRLP() const override { return rlp(Signature()); }
 
-	void populateFromParent(BlockInfo&, BlockInfo const&) const override;
-	StringHashMap jsInfo(BlockInfo const& _bi) const override;
-	void verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const;
-	void generateSeal(BlockInfo const& _bi) override;
+	void populateFromParent(BlockHeader&, BlockHeader const&) const override;
+	StringHashMap jsInfo(BlockHeader const& _bi) const override;
+	void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const;
+	void generateSeal(BlockHeader const& _bi) override;
 
-	static Signature sig(BlockInfo const& _bi) { return _bi.seal<Signature>(); }
-	static BlockInfo& setSig(BlockInfo& _bi, Signature const& _sig) { _bi.setSeal(_sig); return _bi; }
+	static Signature sig(BlockHeader const& _bi) { return _bi.seal<Signature>(); }
+	static BlockHeader& setSig(BlockHeader& _bi, Signature const& _sig) { _bi.setSeal(_sig); return _bi; }
 	void setSecret(Secret const& _s) { m_secret = _s; }
 
 private:

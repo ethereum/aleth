@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 
 	TestBlock block2;
 	block2.mine(blockchain);
-	BlockInfo block2Header = block2.getBlockHeader();
+	BlockHeader block2Header = block2.getBlockHeader();
 	block2Header.setTimestamp(block2Header.timestamp() + 100);
 	block2.setBlockHeader(block2Header, RecalcBlockHeader::UpdateAndVerify);
 	res = blockQueue.import(&block2.getBytes());
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 
 	TestBlock block3;
 	block3.mine(blockchain);
-	BlockInfo block3Header = block3.getBlockHeader();
+	BlockHeader block3Header = block3.getBlockHeader();
 	block3Header.clear();
 	block3.setBlockHeader(block3Header, RecalcBlockHeader::SkipVerify);
 	res = blockQueue.import(&block3.getBytes());
@@ -99,7 +99,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	blockchain2.addBlock(block4);
 	TestBlock block5;
 	block5.mine(blockchain2);
-	BlockInfo block5Header = block5.getBlockHeader();
+	BlockHeader block5Header = block5.getBlockHeader();
 	block5Header.setTimestamp(block5Header.timestamp() + 100);
 	block5.setBlockHeader(block5Header, RecalcBlockHeader::UpdateAndVerify);
 	res = blockQueue.import(&block5.getBytes());
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 
 	TestBlock block3b;
 	block3b.mine(blockchain2);
-	BlockInfo block3bHeader = block3b.getBlockHeader();
+	BlockHeader block3bHeader = block3b.getBlockHeader();
 	block3bHeader.setTimestamp(block3bHeader.timestamp() - 40);
 	block3b.setBlockHeader(block3bHeader, RecalcBlockHeader::UpdateAndVerify);
 	res = blockQueue.import(&block3b.getBytes());

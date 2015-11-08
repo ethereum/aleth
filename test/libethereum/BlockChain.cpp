@@ -24,7 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <libdevcore/FileSystem.h>
-#include <libethcore/Ethash.h>
+#include <libethashseal/Ethash.h>
 #include <test/TestHelper.h>
 #include <test/BlockChainHelper.h>
 #include <test/JsonSpiritHeaders.h>
@@ -41,7 +41,7 @@ namespace test {
 //Functions that working with test json
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);
 mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
-mObject writeBlockHeaderToJson(BlockInfo const& _bi);
+mObject writeBlockHeaderToJson(BlockHeader const& _bi);
 void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vector<TestBlock> const& importedBlocks, RecalcBlockHeader _verification);
 void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
 void eraseJsonSectionForInvalidBlock(mObject& _blObj);
@@ -359,8 +359,8 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 	//_parentHeader - parent blockheader
 
 	RecalcBlockHeader findNewValidNonce = _verification;
-	BlockInfo tmp;
-	BlockInfo const& header = _block.getBlockHeader();
+	BlockHeader tmp;
+	BlockHeader const& header = _block.getBlockHeader();
 	auto ho = _blObj;
 	if (ho.size() != 14)
 	{
@@ -395,17 +395,17 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 		_block.setPremine(ho.count("extraData") ? "extraData" : "");
 
 		Ethash sealEngine;
-		sealEngine.setChainParams(ChainParams(Network::Test));
+		sealEngine.setChainParams(ChainParams());
 		if (ho.count("RelTimestamp"))
 		{
-			BlockInfo parentHeader = _importedBlocks.at(_importedBlocks.size() - 1).getBlockHeader();
+			BlockHeader parentHeader = _importedBlocks.at(_importedBlocks.size() - 1).getBlockHeader();
 			tmp.setTimestamp(toInt(ho["RelTimestamp"]) + parentHeader.timestamp());
 			tmp.setDifficulty(sealEngine.calculateDifficulty(tmp, parentHeader));
 			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
 		}
 
 		// find new valid nonce
-		if (static_cast<BlockInfo>(tmp) != static_cast<BlockInfo>(header) && tmp.difficulty())
+		if (static_cast<BlockHeader>(tmp) != static_cast<BlockHeader>(header) && tmp.difficulty())
 			findNewValidNonce = RecalcBlockHeader::Update;
 
 		if (ho.count("updatePoW"))
@@ -424,7 +424,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 	}
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(Network::Test));
+	sealEngine.setChainParams(ChainParams());
 
 	if (ho.count("populateFromBlock"))
 	{
@@ -432,7 +432,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 		ho.erase("populateFromBlock");
 		if (number < _importedBlocks.size())
 		{
-			BlockInfo parentHeader = _importedBlocks.at(number).getBlockHeader();
+			BlockHeader parentHeader = _importedBlocks.at(number).getBlockHeader();
 			sealEngine.populateFromParent(tmp, parentHeader);
 			findNewValidNonce = RecalcBlockHeader::UpdateAndVerify;
 		}
@@ -499,10 +499,10 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 	}
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(Network::Test));
+	sealEngine.setChainParams(ChainParams());
 
 	//construct actual block
-	BlockInfo uncleHeader;
+	BlockHeader uncleHeader;
 	if (uncleHeaderObj.count("populateFromBlock"))
 	{
 		uncleHeader.setTimestamp((u256)time(0));
@@ -589,7 +589,7 @@ mArray writeTransactionsToJson(TransactionQueue const& _txsQueue)
 	return txArray;
 }
 
-mObject writeBlockHeaderToJson(BlockInfo const& _bi)
+mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 {
 	mObject o;
 	o["parentHash"] = toString(_bi.parentHash());
@@ -642,8 +642,8 @@ void eraseJsonSectionForInvalidBlock(mObject& _blObj)
 
 void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname)
 {
-	BlockInfo const& blockHeaderFromFields = _blockFromFields.getBlockHeader();
-	BlockInfo const& blockFromRlp = _blockFromRlp.getBlockHeader();
+	BlockHeader const& blockHeaderFromFields = _blockFromFields.getBlockHeader();
+	BlockHeader const& blockFromRlp = _blockFromRlp.getBlockHeader();
 
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.hash(WithSeal) == blockFromRlp.hash(WithSeal), _testname + "hash in given RLP not matching the block hash!");
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.parentHash() == blockFromRlp.parentHash(), _testname + "parentHash in given RLP not matching the block parentHash!");

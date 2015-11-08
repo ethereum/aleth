@@ -32,17 +32,16 @@ namespace eth
 struct ChainOperationParams
 {
 	ChainOperationParams(): accountStartNonce(Invalid256) {}
-	ChainOperationParams(eth::Network _n);
 
 	explicit operator bool() const { return accountStartNonce != Invalid256; }
 
 	/// The chain sealer name: e.g. Ethash, Fluidity, BasicAuthority
-	std::string sealEngineName;
+	std::string sealEngineName = "NoProof";
 
 	/// Chain params.
-	u256 blockReward;
-	u256 maximumExtraDataSize;
-	u256 accountStartNonce;
+	u256 blockReward = 0;
+	u256 maximumExtraDataSize = 1024;
+	u256 accountStartNonce = 0;
 
 	std::unordered_map<std::string, std::string> otherParams;
 	u256 u256Param(std::string const& _name) const;

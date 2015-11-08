@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file BlockInfo.cpp
+/** @file BlockHeader.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
@@ -25,25 +25,24 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcore/TrieHash.h>
 #include <libethcore/Common.h>
-#include "EthashAux.h"
 #include "Exceptions.h"
-#include "BlockInfo.h"
+#include "BlockHeader.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
-BlockInfo::BlockInfo()
+BlockHeader::BlockHeader()
 {
 }
 
-BlockInfo::BlockInfo(bytesConstRef _block, BlockDataType _bdt, h256 const& _hashWith)
+BlockHeader::BlockHeader(bytesConstRef _block, BlockDataType _bdt, h256 const& _hashWith)
 {
 	RLP header = _bdt == BlockData ? extractHeader(_block) : RLP(_block);
 	m_hash = _hashWith ? _hashWith : sha3(header.data());
 	populate(header);
 }
 
-void BlockInfo::clear()
+void BlockHeader::clear()
 {
 	m_parentHash = h256();
 	m_sha3Uncles = EmptyListSHA3;
@@ -62,7 +61,7 @@ void BlockInfo::clear()
 	noteDirty();
 }
 
-h256 BlockInfo::hash(IncludeSeal _i) const
+h256 BlockHeader::hash(IncludeSeal _i) const
 {
 	h256 dummy;
 	h256& memo = _i == WithSeal ? m_hash : _i == WithoutSeal ? m_hashWithout : dummy;
@@ -75,30 +74,30 @@ h256 BlockInfo::hash(IncludeSeal _i) const
 	return memo;
 }
 
-void BlockInfo::streamRLPFields(RLPStream& _s) const
+void BlockHeader::streamRLPFields(RLPStream& _s) const
 {
 	_s	<< m_parentHash << m_sha3Uncles << m_author << m_stateRoot << m_transactionsRoot << m_receiptsRoot << m_logBloom
 		<< m_difficulty << m_number << m_gasLimit << m_gasUsed << m_timestamp << m_extraData;
 }
 
-void BlockInfo::streamRLP(RLPStream& _s, IncludeSeal _i) const
+void BlockHeader::streamRLP(RLPStream& _s, IncludeSeal _i) const
 {
 	if (_i != OnlySeal)
 	{
-		_s.appendList(BlockInfo::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()));
-		BlockInfo::streamRLPFields(_s);
+		_s.appendList(BlockHeader::BasicFields + (_i == WithoutSeal ? 0 : m_seal.size()));
+		BlockHeader::streamRLPFields(_s);
 	}
 	if (_i != WithoutSeal)
 		for (unsigned i = 0; i < m_seal.size(); ++i)
 			_s.appendRaw(m_seal[i]);
 }
 
-h256 BlockInfo::headerHashFromBlock(bytesConstRef _block)
+h256 BlockHeader::headerHashFromBlock(bytesConstRef _block)
 {
 	return sha3(RLP(_block)[0].data());
 }
 
-RLP BlockInfo::extractHeader(bytesConstRef _block)
+RLP BlockHeader::extractHeader(bytesConstRef _block)
 {
 	RLP root(_block);
 	if (!root.isList())
@@ -113,7 +112,7 @@ RLP BlockInfo::extractHeader(bytesConstRef _block)
 	return header;
 }
 
-void BlockInfo::populate(RLP const& _header)
+void BlockHeader::populate(RLP const& _header)
 {
 	int field = 0;
 	try
@@ -144,7 +143,7 @@ void BlockInfo::populate(RLP const& _header)
 
 struct BlockInfoDiagnosticsChannel: public LogChannel { static const char* name() { return EthBlue "▧" EthWhite " ◌"; } static const int verbosity = 9; };
 
-void BlockInfo::populateFromParent(BlockInfo const& _parent)
+void BlockHeader::populateFromParent(BlockHeader const& _parent)
 {
 	m_stateRoot = _parent.stateRoot();
 	m_number = _parent.m_number + 1;
@@ -154,7 +153,7 @@ void BlockInfo::populateFromParent(BlockInfo const& _parent)
 	m_gasUsed = 0;
 }
 
-void BlockInfo::verify(Strictness _s, BlockInfo const& _parent, bytesConstRef _block) const
+void BlockHeader::verify(Strictness _s, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	if (m_number > ~(unsigned)0)
 		BOOST_THROW_EXCEPTION(InvalidNumber());

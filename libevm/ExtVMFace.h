@@ -29,7 +29,7 @@
 #include <libdevcore/SHA3.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Common.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 
 namespace dev
 {
@@ -166,7 +166,7 @@ class EnvInfo
 {
 public:
 	EnvInfo() {}
-	EnvInfo(BlockInfo const& _current, LastHashes const& _lh = LastHashes(), u256 const& _gasUsed = u256()):
+	EnvInfo(BlockHeader const& _current, LastHashes const& _lh = LastHashes(), u256 const& _gasUsed = u256()):
 		m_number(_current.number()),
 		m_author(_current.author()),
 		m_timestamp(_current.timestamp()),
@@ -176,7 +176,7 @@ public:
 		m_gasUsed(_gasUsed)
 	{}
 
-	EnvInfo(BlockInfo const& _current, LastHashes&& _lh, u256 const& _gasUsed = u256()):
+	EnvInfo(BlockHeader const& _current, LastHashes&& _lh, u256 const& _gasUsed = u256()):
 		m_number(_current.number()),
 		m_author(_current.author()),
 		m_timestamp(_current.timestamp()),

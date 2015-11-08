@@ -26,7 +26,7 @@
 
 #include "libdevcore/Worker.h"
 #include "EthashAux.h"
-#include "Miner.h"
+#include "GenericMiner.h"
 
 class ethash_cl_miner;
 

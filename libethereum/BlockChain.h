@@ -30,8 +30,8 @@
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/Guards.h>
 #include <libethcore/Common.h>
-#include <libethcore/BlockInfo.h>
-#include <libethcore/Sealer.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/SealEngine.h>
 #include <libevm/ExtVMFace.h>
 #include "BlockDetails.h"
 #include "Account.h"
@@ -141,8 +141,8 @@ public:
 	bool isKnown(h256 const& _hash, bool _isCurrent = true) const;
 
 	/// Get the partial-header of a block (or the most recent mined if none given). Thread-safe.
-	BlockInfo info(h256 const& _hash) const { return BlockInfo(headerData(_hash), HeaderData); }
-	BlockInfo info() const { return info(currentHash()); }
+	BlockHeader info(h256 const& _hash) const { return BlockHeader(headerData(_hash), HeaderData); }
+	BlockHeader info() const { return info(currentHash()); }
 
 	/// Get a block (RLP format) for the given hash (or the most recent mined if none given). Thread-safe.
 	bytes block(h256 const& _hash) const;
@@ -239,7 +239,7 @@ public:
 
 	/// Run through database and verify all blocks by reevaluating.
 	/// Will call _progress with the progress in this operation first param done, second total.
-	void rebuild(std::string const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>(), bool _prepPoW = false);
+	void rebuild(std::string const& _path, ProgressCallback const& _progress = std::function<void(unsigned, unsigned)>());
 
 	/// Alter the head of the chain to some prior block along it.
 	void rewind(unsigned _newHead);
@@ -306,7 +306,7 @@ public:
 
 	SealEngineFace* sealEngine() const { return m_sealEngine.get(); }
 
-	BlockInfo const& genesis() const;
+	BlockHeader const& genesis() const;
 
 private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
@@ -396,7 +396,7 @@ private:
 	ChainParams m_params;
 	std::shared_ptr<SealEngineFace> m_sealEngine;	// consider shared_ptr.
 	mutable SharedMutex x_genesis;
-	mutable BlockInfo m_genesis;	// mutable because they're effectively memos.
+	mutable BlockHeader m_genesis;	// mutable because they're effectively memos.
 	mutable bytes m_genesisHeaderBytes;	// mutable because they're effectively memos.
 	mutable h256 m_genesisHash;		// mutable because they're effectively memos.
 

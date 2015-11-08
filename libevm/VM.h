@@ -26,7 +26,7 @@
 #include <libethcore/Common.h>
 #include <libevmcore/Instruction.h>
 #include <libdevcore/SHA3.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 #include <libevmcore/Params.h>
 #include "VMFace.h"
 

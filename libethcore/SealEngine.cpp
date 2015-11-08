@@ -14,16 +14,33 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Fluidity.cpp
+/** @file SealEngine.cpp
  * @author Gav Wood <i@gavwood.com>
- * @date 2015
+ * @date 2014
  */
 
-#include <libdevcore/CommonJS.h>
-#include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
-#include "Fluidity.h"
+#include "SealEngine.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
 
+SealEngineRegistrar* SealEngineRegistrar::s_this = nullptr;
+
+ETH_REGISTER_SEAL_ENGINE(NoProof);
+
+void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
+{
+	_bi.verify(_s, _parent, _block);
+}
+
+void SealEngineFace::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
+{
+	_bi.populateFromParent(_parent);
+}
+
+SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
+{
+	SealEngineFace* ret = create(_params.sealEngineName);
+	ret->setChainParams(_params);
+	return ret;
+}

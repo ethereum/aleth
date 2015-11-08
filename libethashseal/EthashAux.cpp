@@ -25,16 +25,16 @@
 #include <chrono>
 #include <array>
 #include <thread>
+#include <libethash/internal.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/Log.h>
 #include <libdevcrypto/CryptoPP.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/FileSystem.h>
-#include <libethash/internal.h>
-#include <libethcore/Ethash.h>
-#include "BlockInfo.h"
-#include "Exceptions.h"
+#include <libethcore/Exceptions.h>
+#include <libethcore/BlockHeader.h>
+#include "Ethash.h"
 using namespace std;
 using namespace chrono;
 using namespace dev;
@@ -55,7 +55,7 @@ EthashAux* EthashAux::get()
 	return s_this;
 }
 
-uint64_t EthashAux::cacheSize(BlockInfo const& _header)
+uint64_t EthashAux::cacheSize(BlockHeader const& _header)
 {
 	return ethash_get_cachesize((uint64_t)_header.number());
 }

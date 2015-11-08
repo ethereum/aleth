@@ -24,7 +24,7 @@
 #include <sstream>
 #include <libdevcore/Log.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 #include "BlockChain.h"
 #include "VerifiedBlock.h"
 #include "State.h"
@@ -109,7 +109,7 @@ void BlockQueue::verifierBody()
 				return;
 			swap(work, m_unverified.front());
 			m_unverified.pop_front();
-			BlockInfo bi;
+			BlockHeader bi;
 			bi.setSha3Uncles(work.hash);
 			bi.setParentHash(work.parentHash);
 			m_verifying.emplace_back(move(bi));
@@ -196,7 +196,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 {
 	clog(BlockQueueTraceChannel) << std::this_thread::get_id();
 	// Check if we already know this block.
-	h256 h = BlockInfo::headerHashFromBlock(_block);
+	h256 h = BlockHeader::headerHashFromBlock(_block);
 
 	clog(BlockQueueTraceChannel) << "Queuing block" << h << "for import...";
 
@@ -209,10 +209,10 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 		return ImportResult::AlreadyKnown;
 	}
 
-	BlockInfo bi;
+	BlockHeader bi;
 	try
 	{
-		// TODO: quick verification of seal - will require BlockQueue to be templated on Sealer
+		// TODO: quick verification of seal - will require BlockQueue to be templated on SealEngine
 		// VERIFY: populates from the block and checks the block is internally coherent.
 		bi = m_bc->verifyBlock(_block, m_onBad, ImportRequirements::PostGenesis).info;
 	}

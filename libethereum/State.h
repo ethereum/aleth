@@ -28,8 +28,8 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcrypto/OverlayDB.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
-#include <libethcore/Miner.h>
+#include <libethcore/BlockHeader.h>
+#include <libethereum/GenericMiner.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"

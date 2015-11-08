@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Sealer.h
+/** @file SealEngine.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  *
@@ -27,7 +27,7 @@
 #include <unordered_map>
 #include <libdevcore/Guards.h>
 #include <libdevcore/RLP.h>
-#include "BlockInfo.h"
+#include "BlockHeader.h"
 #include "Common.h"
 
 namespace dev
@@ -35,7 +35,7 @@ namespace dev
 namespace eth
 {
 
-class BlockInfo;
+class BlockHeader;
 class ChainOperationParams;
 
 class SealEngineFace
@@ -47,12 +47,12 @@ public:
 	virtual unsigned revision() const { return 0; }
 	virtual unsigned sealFields() const { return 0; }
 	virtual bytes sealRLP() const { return bytes(); }
-	virtual StringHashMap jsInfo(BlockInfo const&) const { return StringHashMap(); }
+	virtual StringHashMap jsInfo(BlockHeader const&) const { return StringHashMap(); }
 
 	/// Don't forget to call Super::verify when subclassing & overriding.
-	virtual void verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent = BlockInfo(), bytesConstRef _block = bytesConstRef()) const;
+	virtual void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent = BlockHeader(), bytesConstRef _block = bytesConstRef()) const;
 	/// Don't forget to call Super::populateFromParent when subclassing & overriding.
-	virtual void populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const;
+	virtual void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const;
 
 	bytes option(std::string const& _name) const { Guard l(x_options); return m_options.count(_name) ? m_options.at(_name) : bytes(); }
 	bool setOption(std::string const& _name, bytes const& _value) { Guard l(x_options); try { if (onOptionChanging(_name, _value)) { m_options[_name] = _value; return true; } } catch (...) {} return false; }
@@ -60,7 +60,7 @@ public:
 	virtual strings sealers() const { return { "default" }; }
 	virtual std::string sealer() const { return "default"; }
 	virtual void setSealer(std::string const&) {}
-	virtual void generateSeal(BlockInfo const& _bi) = 0;
+	virtual void generateSeal(BlockHeader const& _bi) = 0;
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;
 	virtual void cancelGeneration() {}
 
@@ -82,7 +82,7 @@ private:
 class SealEngineBase: public SealEngineFace
 {
 public:
-	void generateSeal(BlockInfo const& _bi) override
+	void generateSeal(BlockHeader const& _bi) override
 	{
 		RLPStream ret;
 		_bi.streamRLP(ret);
@@ -105,7 +105,7 @@ public:
 	static SealEngineFace* create(ChainOperationParams const& _params);
 	static SealEngineFace* create(std::string const& _name) { if (!get()->m_sealEngines.count(_name)) return nullptr; return get()->m_sealEngines[_name](); }
 
-	template <class Sealer> static SealEngineFactory registerSealEngine(std::string const& _name) { return (get()->m_sealEngines[_name] = [](){return new Sealer;}); }
+	template <class SealEngine> static SealEngineFactory registerSealEngine(std::string const& _name) { return (get()->m_sealEngines[_name] = [](){return new SealEngine;}); }
 	static void unregisterSealEngine(std::string const& _name) { get()->m_sealEngines.erase(_name); }
 
 private:
@@ -116,6 +116,12 @@ private:
 };
 
 #define ETH_REGISTER_SEAL_ENGINE(Name) static SealEngineFactory __eth_registerSealEngineFactory ## Name = SealEngineRegistrar::registerSealEngine<Name>(#Name)
+
+class NoProof: public eth::SealEngineBase
+{
+public:
+	std::string name() const override { return "NoProof"; }
+};
 
 }
 }

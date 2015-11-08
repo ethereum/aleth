@@ -88,7 +88,7 @@ public:
 
 	void insert(Block const& _block, BlockChain const& _bcSource)
 	{
-		BlockInfo bi(&_block.blockData());
+		BlockHeader bi(&_block.blockData());
 		bytes receipts = _bcSource.receipts(bi.hash()).rlp();
 		m_bc.insert(_block.blockData(), &receipts);
 		assert(m_bc.isKnown(bi.hash(), false));
@@ -124,7 +124,7 @@ h256s subs(bytesConstRef _node)
 
 void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& _dbDest)
 {
-	BlockInfo bi(_block);
+	BlockHeader bi(_block);
 	cout << "Root is " << bi.stateRoot() << endl;
 
 	h256s todo = {bi.stateRoot()};

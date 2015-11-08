@@ -23,8 +23,8 @@
 #include <fstream>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
-#include <libethcore/Ethash.h>
-#include <libethcore/EthashAux.h>
+#include <libethashseal/Ethash.h>
+#include <libethashseal/EthashAux.h>
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
 
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(basic_test)
 		cnote << i.first;
 		js::mObject& o = i.second.get_obj();
 		vector<pair<string, string>> ss;
-		BlockInfo header(fromHex(o["header"].get_str()), HeaderData);
+		BlockHeader header(fromHex(o["header"].get_str()), HeaderData);
 		h256 headerHash(o["header_hash"].get_str());
 		Nonce nonce(o["nonce"].get_str());
 		BOOST_REQUIRE_EQUAL(headerHash, header.hash(WithoutSeal));

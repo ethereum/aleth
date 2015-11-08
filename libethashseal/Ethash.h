@@ -23,9 +23,9 @@
 
 #pragma once
 
+#include <libethcore/SealEngine.h>
+#include <libethereum/GenericFarm.h>
 #include "EthashProofOfWork.h"
-#include "GenericFarm.h"
-#include "Sealer.h"
 
 namespace dev
 {
@@ -43,42 +43,42 @@ public:
 	unsigned sealFields() const override { return 2; }
 	bytes sealRLP() const override { return rlp(h256()) + rlp(Nonce()); }
 
-	StringHashMap jsInfo(BlockInfo const& _bi) const override;
-	void verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const override;
-	void populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const override;
+	StringHashMap jsInfo(BlockHeader const& _bi) const override;
+	void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const override;
+	void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override;
 
 	strings sealers() const override;
 	std::string sealer() const override { return m_sealer; }
 	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
 	void cancelGeneration() override { m_farm.stop(); }
-	void generateSeal(BlockInfo const& _bi) override;
+	void generateSeal(BlockHeader const& _bi) override;
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
 
 	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
 
 	enum { MixHashField = 0, NonceField = 1 };
-	static h256 seedHash(BlockInfo const& _bi);
-	static Nonce nonce(BlockInfo const& _bi) { return _bi.seal<Nonce>(NonceField); }
-	static h256 mixHash(BlockInfo const& _bi) { return _bi.seal<h256>(MixHashField); }
-	static h256 boundary(BlockInfo const& _bi) { auto d = _bi.difficulty(); return d ? (h256)u256((bigint(1) << 256) / d) : h256(); }
-	static BlockInfo& setNonce(BlockInfo& _bi, Nonce _v) { _bi.setSeal(NonceField, _v); return _bi; }
-	static BlockInfo& setMixHash(BlockInfo& _bi, h256 const& _v) { _bi.setSeal(MixHashField, _v); return _bi; }
+	static h256 seedHash(BlockHeader const& _bi);
+	static Nonce nonce(BlockHeader const& _bi) { return _bi.seal<Nonce>(NonceField); }
+	static h256 mixHash(BlockHeader const& _bi) { return _bi.seal<h256>(MixHashField); }
+	static h256 boundary(BlockHeader const& _bi) { auto d = _bi.difficulty(); return d ? (h256)u256((bigint(1) << 256) / d) : h256(); }
+	static BlockHeader& setNonce(BlockHeader& _bi, Nonce _v) { _bi.setSeal(NonceField, _v); return _bi; }
+	static BlockHeader& setMixHash(BlockHeader& _bi, h256 const& _v) { _bi.setSeal(MixHashField, _v); return _bi; }
 
-	u256 calculateDifficulty(BlockInfo const& _bi, BlockInfo const& _parent) const;
-	u256 childGasLimit(BlockInfo const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
+	u256 calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const;
+	u256 childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
 
-	void manuallySetWork(BlockInfo const& _work) { m_sealing = _work; }
+	void manuallySetWork(BlockHeader const& _work) { m_sealing = _work; }
 	void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);
 
 	static void ensurePrecomputed(unsigned _number);
 
 private:
-	bool verifySeal(BlockInfo const& _bi) const;
-	bool quickVerifySeal(BlockInfo const& _bi) const;
+	bool verifySeal(BlockHeader const& _bi) const;
+	bool quickVerifySeal(BlockHeader const& _bi) const;
 
 	eth::GenericFarm<EthashProofOfWork> m_farm;
 	std::string m_sealer = "cpu";
-	BlockInfo m_sealing;
+	BlockHeader m_sealing;
 };
 
 }

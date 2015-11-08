@@ -30,7 +30,7 @@
 #include <libdevcore/TrieHash.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Sealer.h>
+#include <libethcore/SealEngine.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
 #include "Defaults.h"
@@ -114,7 +114,7 @@ void Block::resetCurrent()
 	m_transactions.clear();
 	m_receipts.clear();
 	m_transactionSet.clear();
-	m_currentBlock = BlockInfo();
+	m_currentBlock = BlockHeader();
 	m_currentBlock.setAuthor(m_author);
 	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)utcTime()));
 	sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
@@ -157,13 +157,13 @@ PopulationStatistics Block::populateFromChain(BlockChain const& _bc, h256 const&
 	}
 
 	auto b = _bc.block(_h);
-	BlockInfo bi(b);		// No need to check - it's already in the DB.
+	BlockHeader bi(b);		// No need to check - it's already in the DB.
 	if (bi.number())
 	{
 		// Non-genesis:
 
 		// 1. Start at parent's end state (state root).
-		BlockInfo bip(_bc.block(bi.parentHash()));
+		BlockHeader bip(_bc.block(bi.parentHash()));
 		sync(_bc, bi.parentHash(), bip);
 
 		// 2. Enact the block's transactions onto this state.
@@ -191,13 +191,13 @@ bool Block::sync(BlockChain const& _bc)
 	return sync(_bc, _bc.currentHash());
 }
 
-bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockInfo const& _bi)
+bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _bi)
 {
 	noteChain(_bc);
 
 	bool ret = false;
 	// BLOCK
-	BlockInfo bi = _bi ? _bi : _bc.info(_block);
+	BlockHeader bi = _bi ? _bi : _bc.info(_block);
 #if ETH_PARANOIA
 	if (!bi)
 		while (1)
@@ -403,7 +403,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 #endif
 
 	// Check family:
-	BlockInfo biParent = _bc.info(_block.info.parentHash());
+	BlockHeader biParent = _bc.info(_block.info.parentHash());
 	_block.info.verify(CheckNothingNew/*CheckParent*/, biParent);
 
 #if ETH_TIMED_ENACTMENTS
@@ -411,7 +411,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	t.restart();
 #endif
 
-	BlockInfo biGrandParent;
+	BlockHeader biGrandParent;
 	if (biParent.number())
 		biGrandParent = _bc.info(biParent.parentHash());
 
@@ -420,7 +420,7 @@ u256 Block::enactOn(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	t.restart();
 #endif
 
-	sync(_bc, _block.info.parentHash(), BlockInfo());
+	sync(_bc, _block.info.parentHash(), BlockHeader());
 	resetCurrent();
 
 #if ETH_TIMED_ENACTMENTS
@@ -526,7 +526,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		BOOST_THROW_EXCEPTION(ex);
 	}
 
-	vector<BlockInfo> rewarded;
+	vector<BlockHeader> rewarded;
 	h256Hash excluded;
 	DEV_TIMED_ABOVE("allKin", 500)
 		excluded = _bc.allKinFrom(m_currentBlock.parentHash(), 6);
@@ -550,12 +550,12 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 				excluded.insert(h);
 
 				// CheckNothing since it's a VerifiedBlock.
-				BlockInfo uncle(i.data(), HeaderData, h);
+				BlockHeader uncle(i.data(), HeaderData, h);
 
-				BlockInfo uncleParent;
+				BlockHeader uncleParent;
 				if (!_bc.isKnown(uncle.parentHash()))
 					BOOST_THROW_EXCEPTION(UnknownParent() << errinfo_hash256(uncle.parentHash()));
-				uncleParent = BlockInfo(_bc.block(uncle.parentHash()));
+				uncleParent = BlockHeader(_bc.block(uncle.parentHash()));
 
 				// m_currentBlock.number() - uncle.number()		m_cB.n - uP.n()
 				// 1											2
@@ -654,7 +654,7 @@ ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Per
 	return resultReceipt.first;
 }
 
-void Block::applyRewards(vector<BlockInfo> const& _uncleBlockHeaders, u256 const& _blockReward)
+void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward)
 {
 	u256 r = _blockReward;
 	for (auto const& i: _uncleBlockHeaders)
@@ -674,7 +674,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	else
 		m_precommit = m_state;
 
-	vector<BlockInfo> uncleBlockHeaders;
+	vector<BlockHeader> uncleBlockHeaders;
 
 	RLPStream unclesData;
 	unsigned unclesCount = 0;
@@ -766,7 +766,7 @@ bool Block::sealBlock(bytesConstRef _header)
 	if (!m_committedToMine)
 		return false;
 
-	if (BlockInfo(_header, HeaderData).hash(WithoutSeal) != m_currentBlock.hash(WithoutSeal))
+	if (BlockHeader(_header, HeaderData).hash(WithoutSeal) != m_currentBlock.hash(WithoutSeal))
 		return false;
 
 	clog(StateDetail) << "Sealing block!";
@@ -778,9 +778,9 @@ bool Block::sealBlock(bytesConstRef _header)
 	ret.appendRaw(m_currentTxs);
 	ret.appendRaw(m_currentUncles);
 	ret.swapOut(m_currentBytes);
-	m_currentBlock = BlockInfo(_header, HeaderData);
+	m_currentBlock = BlockHeader(_header, HeaderData);
 	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
-	// TODO: move into Sealer
+	// TODO: move into SealEngine
 	StructuredLogger::minedNewBlock(
 		m_currentBlock.hash().abridged(),
 		"",	// Can't give the nonce here.
@@ -859,7 +859,7 @@ string Block::vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequire
 	RLP rlp(_block);
 
 	cleanup(false);
-	BlockInfo bi(_block);
+	BlockHeader bi(_block);
 	m_currentBlock = bi;
 	m_currentBlock.verify((_ir & ImportRequirements::ValidSeal) ? CheckEverything : IgnoreSeal, _block);
 	m_currentBlock.noteDirty();

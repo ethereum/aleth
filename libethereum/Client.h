@@ -32,7 +32,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/Worker.h>
-#include <libethcore/Sealer.h>
+#include <libethcore/SealEngine.h>
 #include <libethcore/ABI.h>
 #include <libp2p/Common.h>
 #include "BlockChain.h"
@@ -310,7 +310,7 @@ protected:
 	Block m_postSeal;						///< The state of the client which we're mining (i.e. it'll have all the rewards added).
 	mutable SharedMutex x_working;			///< Lock on m_working.
 	Block m_working;						///< The state of the client which we're mining (i.e. it'll have all the rewards added), while we're actually working on it.
-	BlockInfo m_sealingInfo;				///< The header we're attempting to seal on (derived from m_postSeal).
+	BlockHeader m_sealingInfo;				///< The header we're attempting to seal on (derived from m_postSeal).
 	bool remoteActive() const;				///< Is there an active and valid remote worker?
 	bool m_remoteWorking = false;			///< Has the remote worker recently been reset?
 	std::atomic<bool> m_needStateReset = { false };			///< Need reset working state to premin on next sync

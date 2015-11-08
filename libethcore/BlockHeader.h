@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file BlockInfo.h
+/** @file BlockHeader.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
@@ -209,10 +209,10 @@ DEV_SIMPLE_EXCEPTION(GenesisBlockCannotBeCalculated);
  * verification can be performed through verify().
  *
  * The object may also be populated from an entire block through the explicit
- * constructor BlockInfo(bytesConstRef) and manually with the populate() method. These will
+ * constructor BlockHeader(bytesConstRef) and manually with the populate() method. These will
  * conduct verification of the header against the other information in the block.
  *
- * The object may be populated with a template given a parent BlockInfo object with the
+ * The object may be populated with a template given a parent BlockHeader object with the
  * populateFromParent() method. The genesis block info may be retrieved with genesis() and the
  * corresponding RLP block created with createGenesisBlock().
  *
@@ -222,15 +222,15 @@ DEV_SIMPLE_EXCEPTION(GenesisBlockCannotBeCalculated);
  * The default constructor creates an empty object, which can be tested against with the boolean
  * conversion operator.
  */
-class BlockInfo
+class BlockHeader
 {
 	friend class BlockChain;
 public:
 	static const unsigned BasicFields = 13;
 
-	BlockInfo();
-	explicit BlockInfo(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
-	explicit BlockInfo(bytes const& _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256()): BlockInfo(&_data, _bdt, _hashWith) {}
+	BlockHeader();
+	explicit BlockHeader(bytesConstRef _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256());
+	explicit BlockHeader(bytes const& _data, BlockDataType _bdt = BlockData, h256 const& _hashWith = h256()): BlockHeader(&_data, _bdt, _hashWith) {}
 
 	static h256 headerHashFromBlock(bytes const& _block) { return headerHashFromBlock(&_block); }
 	static h256 headerHashFromBlock(bytesConstRef _block);
@@ -238,7 +238,7 @@ public:
 
 	explicit operator bool() const { return m_timestamp != Invalid256; }
 
-	bool operator==(BlockInfo const& _cmp) const
+	bool operator==(BlockHeader const& _cmp) const
 	{
 		return m_parentHash == _cmp.parentHash() &&
 			m_sha3Uncles == _cmp.sha3Uncles() &&
@@ -254,15 +254,15 @@ public:
 			m_timestamp == _cmp.timestamp() &&
 			m_extraData == _cmp.extraData();
 	}
-	bool operator!=(BlockInfo const& _cmp) const { return !operator==(_cmp); }
+	bool operator!=(BlockHeader const& _cmp) const { return !operator==(_cmp); }
 
 	void clear();
 	void noteDirty() const { m_hashWithout = m_hash = h256(); }
-	void populateFromParent(BlockInfo const& parent);
+	void populateFromParent(BlockHeader const& parent);
 
 	// TODO: pull out into abstract class Verifier.
-	void verify(Strictness _s = CheckEverything, BlockInfo const& _parent = BlockInfo(), bytesConstRef _block = bytesConstRef()) const;
-	void verify(Strictness _s, bytesConstRef _block) const { verify(_s, BlockInfo(), _block); }
+	void verify(Strictness _s = CheckEverything, BlockHeader const& _parent = BlockHeader(), bytesConstRef _block = bytesConstRef()) const;
+	void verify(Strictness _s, bytesConstRef _block) const { verify(_s, BlockHeader(), _block); }
 
 	h256 hash(IncludeSeal _i = WithSeal) const;
 	void streamRLP(RLPStream& _s, IncludeSeal _i = WithSeal) const;
@@ -321,7 +321,7 @@ private:
 	mutable h256 m_hashWithout;		///< (Memoised) SHA3 hash of the block header without seal.
 };
 
-inline std::ostream& operator<<(std::ostream& _out, BlockInfo const& _bi)
+inline std::ostream& operator<<(std::ostream& _out, BlockHeader const& _bi)
 {
 	_out << _bi.hash(WithoutSeal) << " " << _bi.parentHash() << " " << _bi.sha3Uncles() << " " << _bi.author() << " " << _bi.stateRoot() << " " << _bi.transactionsRoot() << " " <<
 			_bi.receiptsRoot() << " " << _bi.logBloom() << " " << _bi.difficulty() << " " << _bi.number() << " " << _bi.gasLimit() << " " <<

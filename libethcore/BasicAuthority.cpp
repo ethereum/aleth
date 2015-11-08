@@ -23,21 +23,21 @@
 #include <libdevcore/CommonJS.h>
 #include <libdevcore/Log.h>
 #include "Exceptions.h"
-#include "BlockInfo.h"
+#include "BlockHeader.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
 
 ETH_REGISTER_SEAL_ENGINE(BasicAuthority);
 
-StringHashMap BasicAuthority::jsInfo(BlockInfo const& _bi) const
+StringHashMap BasicAuthority::jsInfo(BlockHeader const& _bi) const
 {
 	return { { "sig", toJS(sig(_bi)) } };
 }
 
-void BasicAuthority::generateSeal(BlockInfo const& _bi)
+void BasicAuthority::generateSeal(BlockHeader const& _bi)
 {
-	BlockInfo bi = _bi;
+	BlockHeader bi = _bi;
 	h256 h = bi.hash(WithoutSeal);
 	Signature s = sign(m_secret, h);
 	setSig(bi, s);
@@ -56,12 +56,12 @@ bool BasicAuthority::onOptionChanging(std::string const& _name, bytes const& _va
 	return true;
 }
 
-void BasicAuthority::populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const
+void BasicAuthority::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
 {
 	SealEngineFace::populateFromParent(_bi, _parent);
 }
 
-void BasicAuthority::verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const
+void BasicAuthority::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	SealEngineFace::verify(_s, _bi, _parent, _block);
 	// check it hashes according to proof of work or that it's the genesis block.

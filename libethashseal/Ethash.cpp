@@ -22,10 +22,10 @@
 #include "Ethash.h"
 #include <libethash/ethash.h>
 #include <libethash/internal.h>
+#include <libethcore/ChainOperationParams.h>
+#include <libethcore/CommonJS.h>
 #include "EthashCPUMiner.h"
 #include "EthashGPUMiner.h"
-#include "ChainOperationParams.h"
-#include "CommonJS.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -52,17 +52,17 @@ strings Ethash::sealers() const
 	};
 }
 
-h256 Ethash::seedHash(BlockInfo const& _bi)
+h256 Ethash::seedHash(BlockHeader const& _bi)
 {
 	return EthashAux::seedHash((unsigned)_bi.number());
 }
 
-StringHashMap Ethash::jsInfo(BlockInfo const& _bi) const
+StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 {
 	return { { "nonce", toJS(nonce(_bi)) }, { "seedHash", toJS(seedHash(_bi)) }, { "mixHash", toJS(mixHash(_bi)) }, { "boundary", toJS(boundary(_bi)) }, { "difficulty", toJS(_bi.difficulty()) } };
 }
 
-void Ethash::verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _parent, bytesConstRef _block) const
+void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	SealEngineFace::verify(_s, _bi, _parent, _block);
 
@@ -120,7 +120,7 @@ void Ethash::verify(Strictness _s, BlockInfo const& _bi, BlockInfo const& _paren
 	}
 }
 
-u256 Ethash::childGasLimit(BlockInfo const& _bi, u256 const& _gasFloorTarget) const
+u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
 {
 	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
 	u256 gasLimit = _bi.gasLimit();
@@ -136,7 +136,7 @@ void Ethash::manuallySubmitWork(const h256& _mixHash, Nonce _nonce)
 	m_farm.submitProof(EthashProofOfWork::Solution{_nonce, _mixHash}, nullptr);
 }
 
-u256 Ethash::calculateDifficulty(BlockInfo const& _bi, BlockInfo const& _parent) const
+u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const
 {
 	const unsigned c_expDiffPeriod = 100000;
 
@@ -154,14 +154,14 @@ u256 Ethash::calculateDifficulty(BlockInfo const& _bi, BlockInfo const& _parent)
 	return o;
 }
 
-void Ethash::populateFromParent(BlockInfo& _bi, BlockInfo const& _parent) const
+void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
 {
 	SealEngineFace::populateFromParent(_bi, _parent);
 	_bi.setDifficulty(calculateDifficulty(_bi, _parent));
 	_bi.setGasLimit(childGasLimit(_parent));
 }
 
-bool Ethash::quickVerifySeal(BlockInfo const& _bi) const
+bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 {
 	if (_bi.number() >= ETHASH_EPOCH_LENGTH * 2048)
 		return false;
@@ -178,7 +178,7 @@ bool Ethash::quickVerifySeal(BlockInfo const& _bi) const
 	return ret;
 }
 
-bool Ethash::verifySeal(BlockInfo const& _bi) const
+bool Ethash::verifySeal(BlockHeader const& _bi) const
 {
 	bool pre = quickVerifySeal(_bi);
 #if !ETH_DEBUG
@@ -213,7 +213,7 @@ bool Ethash::verifySeal(BlockInfo const& _bi) const
 	return slow;
 }
 
-void Ethash::generateSeal(BlockInfo const& _bi)
+void Ethash::generateSeal(BlockHeader const& _bi)
 {
 	m_sealing = _bi;
 	m_farm.setWork(m_sealing);

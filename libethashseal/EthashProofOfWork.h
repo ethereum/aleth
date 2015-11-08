@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "BlockInfo.h"
+#include <libethcore/BlockHeader.h>
 
 namespace dev
 {
@@ -48,7 +48,7 @@ struct EthashProofOfWork
 	struct WorkPackage
 	{
 		WorkPackage() = default;
-		WorkPackage(BlockInfo const& _bh);
+		WorkPackage(BlockHeader const& _bh);
 		void reset() { headerHash = h256(); }
 		operator bool() const { return headerHash != h256(); }
 

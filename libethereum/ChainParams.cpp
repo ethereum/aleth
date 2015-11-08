@@ -23,8 +23,8 @@
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/TrieDB.h>
-#include <libethcore/Sealer.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/SealEngine.h>
+#include <libethcore/BlockHeader.h>
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Account.h"
@@ -33,24 +33,10 @@ using namespace dev;
 using namespace eth;
 namespace js = json_spirit;
 
-ChainParams::ChainParams(Network _n):
-	ChainParams(genesisInfo(_n))
+ChainParams::ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state):
+	ChainParams(_json)
 {
-	stateRoot = genesisStateRoot(_n);
-}
-
-ChainParams::ChainParams(Network _n, bytes const& _genesisRLP, AccountMap const& _state): ChainParams(_n)
-{
-	if (!RLP(&_genesisRLP)[0].isList())
-	{
-		cwarn << "*************************************************************";
-		cwarn << "**                                                         **";
-		cwarn << "**  BAD GENESIS BLOCK PASSED - SHOULD BE BLOCK NOT HEADER  **";
-		cwarn << "**                                                         **";
-		cwarn << "*************************************************************";
-		exit(0);
-	}
-	BlockInfo bi(_genesisRLP, RLP(&_genesisRLP)[0].isList() ? BlockData : HeaderData);
+	BlockHeader bi(_genesisRLP, RLP(&_genesisRLP)[0].isList() ? BlockData : HeaderData);
 	parentHash = bi.parentHash();
 	author = bi.author();
 	difficulty = bi.difficulty();
@@ -60,23 +46,23 @@ ChainParams::ChainParams(Network _n, bytes const& _genesisRLP, AccountMap const&
 	extraData = bi.extraData();
 	genesisState = _state;
 	RLP r(_genesisRLP);
-	sealFields = r[0].itemCount() - BlockInfo::BasicFields;
+	sealFields = r[0].itemCount() - BlockHeader::BasicFields;
 	sealRLP.clear();
-	for (unsigned i = BlockInfo::BasicFields; i < r[0].itemCount(); ++i)
+	for (unsigned i = BlockHeader::BasicFields; i < r[0].itemCount(); ++i)
 		sealRLP += r[0][i].data();
 
 	auto b = genesisBlock();
 	if (b != _genesisRLP)
 	{
 		cdebug << "Block passed:" << bi.hash() << bi.hash(WithoutSeal);
-		cdebug << "Genesis now:" << BlockInfo::headerHashFromBlock(b);
+		cdebug << "Genesis now:" << BlockHeader::headerHashFromBlock(b);
 		cdebug << RLP(b);
 		cdebug << RLP(_genesisRLP);
 		throw 0;
 	}
 }
 
-ChainParams::ChainParams(std::string const& _json)
+ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
 {
 	js::mValue val;
 	json_spirit::read_string(_json, val);
@@ -98,6 +84,7 @@ ChainParams::ChainParams(std::string const& _json)
 	// genesis
 	{
 		genesisState = jsonToAccountMap(_json);
+		stateRoot = _stateRoot;
 		parentHash = h256(genesis["parentHash"].get_str());
 		author = genesis.count("coinbase") ? h160(genesis["coinbase"].get_str()) : h160(genesis["author"].get_str());
 		difficulty = genesis.count("difficulty") ? u256(fromBigEndian<u256>(fromHex(genesis["difficulty"].get_str()))) : 0;
@@ -150,7 +137,7 @@ bytes ChainParams::genesisBlock() const
 
 	calculateStateRoot();
 
-	block.appendList(BlockInfo::BasicFields + sealFields)
+	block.appendList(BlockHeader::BasicFields + sealFields)
 			<< parentHash
 			<< EmptyListSHA3	// sha3(uncles)
 			<< author

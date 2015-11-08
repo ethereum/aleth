@@ -22,7 +22,7 @@
 #pragma once
 
 #include <tuple>
-#include "Client.h"
+#include <libethereum/Client.h>
 
 namespace dev
 {

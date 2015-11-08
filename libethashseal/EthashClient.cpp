@@ -20,7 +20,7 @@
  */
 
 #include "EthashClient.h"
-#include <libethcore/Ethash.h>
+#include "Ethash.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;

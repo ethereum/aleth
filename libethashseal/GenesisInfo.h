@@ -22,14 +22,26 @@
 #pragma once
 
 #include <string>
+#include <libdevcore/FixedHash.h>
+#include <libethcore/Common.h>
 
 namespace dev
 {
 namespace eth
 {
 
-std::string const c_genesisInfoFluidity;
-std::string const c_genesisInfoTestBasicAuthority;
+/// The network id.
+enum class Network
+{
+	Olympic = 0,
+	Frontier = 1,
+	Morden = 2,
+	Test = 70,
+	Special = 0xff
+};
+
+std::string const& genesisInfo(Network _n);
+h256 const& genesisStateRoot(Network _n);
 
 }
 }

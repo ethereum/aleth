@@ -19,13 +19,12 @@
  * @date 2015
  */
 
+#include <libdevcore/TransientDirectory.h>
 #include <libethereum/Block.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
-#include <libdevcore/TransientDirectory.h>
 #include <test/BlockChainHelper.h>
 #include <test/TestHelper.h>
-
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
@@ -44,7 +43,7 @@ TestTransaction::TestTransaction(mObject const& _o):
 
 TestBlock::TestBlock()
 {
-	m_sealEngine.reset(SealEngineRegistrar::create(ChainParams(Network::Test)));
+	m_sealEngine.reset(SealEngineRegistrar::create(ChainParams()));
 }
 
 TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify):
@@ -67,7 +66,7 @@ TestBlock::TestBlock(std::string const& _blockRLP):
 	m_bytes = importByteArray(_blockRLP);
 
 	RLP root(m_bytes);
-	m_blockHeader = BlockInfo(m_bytes);
+	m_blockHeader = BlockHeader(m_bytes);
 	// TODO: do we want to bother verifying stuff here?
 	m_sealEngine->verify(IgnoreSeal, m_blockHeader);
 
@@ -83,7 +82,7 @@ TestBlock::TestBlock(std::string const& _blockRLP):
 
 	for (auto const& uRLP: root[2])
 	{
-		BlockInfo uBl(uRLP.data(), HeaderData);
+		BlockHeader uBl(uRLP.data(), HeaderData);
 		m_sealEngine->verify(IgnoreSeal, uBl);
 		TestBlock uncle;
 		//uncle goes without transactions and uncles but
@@ -150,7 +149,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 	block.setAuthor(genesisBlock.getBeneficiary());
 
 	//set some header data before mining from original blockheader
-	BlockInfo& blockInfo = *const_cast<BlockInfo*>(&block.info());
+	BlockHeader& blockInfo = *const_cast<BlockHeader*>(&block.info());
 
 	try
 	{
@@ -207,7 +206,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 		return;
 	}
 
-	m_blockHeader = BlockInfo(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
+	m_blockHeader = BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
 	copyStateFrom(block.state());
 
 	//Update block hashes cause we would fill block with uncles and transactions that
@@ -215,20 +214,20 @@ void TestBlock::mine(TestBlockChain const& bc)
 	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify);
 }
 
-void TestBlock::setBlockHeader(BlockInfo const& _header, RecalcBlockHeader _recalculate)
+void TestBlock::setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate)
 {
 	m_blockHeader = _header;
 	recalcBlockHeaderBytes(_recalculate);
 }
 
 ///Test Block Private
-BlockInfo TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
+BlockHeader TestBlock::constructBlock(mObject const& _o, h256 const& _stateRoot)
 {
-	BlockInfo ret;
+	BlockHeader ret;
 	try
 	{
 		const bytes c_blockRLP = createBlockRLPFromFields(_o, _stateRoot);
-		ret = BlockInfo(c_blockRLP, HeaderData);
+		ret = BlockHeader(c_blockRLP, HeaderData);
 //		cdebug << "Block constructed of hash" << ret.hash() << "(without:" << ret.hash(WithoutSeal) << ")";
 	}
 	catch (Exception const& _e)
@@ -334,7 +333,7 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		//if (txList.size())
 		//	m_blockHeader.setRoots(sha3(txStream.out()), m_blockHeader.receiptsRoot(), m_blockHeader.sha3Uncles(), m_blockHeader.stateRoot());
 
-		if (((BlockInfo)m_blockHeader).difficulty() == 0)
+		if (((BlockHeader)m_blockHeader).difficulty() == 0)
 			BOOST_ERROR("Trying to mine a block with 0 difficulty!");
 
 		dev::eth::mine(m_blockHeader, m_sealEngine.get());
@@ -354,15 +353,15 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		try
 		{
 			// TODO: CheckNothingNew -> CheckBlock.
-			m_sealEngine->verify(CheckNothingNew, m_blockHeader, BlockInfo(), &ret.out());
+			m_sealEngine->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &ret.out());
 		}
 		catch (Exception const& _e)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "BlockInfo Verification failed: " << diagnostic_information(_e));
+			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed: " << diagnostic_information(_e));
 		}
 		catch(...)
 		{
-			BOOST_ERROR(TestOutputHelper::testName() + "BlockInfo Verification failed");
+			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed");
 		}
 	}
 	m_bytes = ret.out();
@@ -422,9 +421,9 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock)
 	m_tempDirBlockchain.reset(new TransientDirectory);
 	ChainParams p(Network::Test, _genesisBlock.getBytes(), _genesisBlock.accountMap());
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
-	if (!m_blockChain->isKnown(BlockInfo::headerHashFromBlock(_genesisBlock.getBytes())))
+	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.getBytes())))
 	{
-		cdebug << "Not known:" << BlockInfo::headerHashFromBlock(_genesisBlock.getBytes()) << BlockInfo(p.genesisBlock()).hash();
+		cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.getBytes()) << BlockHeader(p.genesisBlock()).hash();
 		cdebug << "Genesis block not known!";
 		throw 0;
 	}

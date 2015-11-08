@@ -25,7 +25,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/Common.h>
-#include <libethcore/Ethash.h>
+#include <libethcore/SealEngine.h>
 #include <libethereum/GasPricer.h>
 #include "LogFilter.h"
 #include "Transaction.h"
@@ -163,27 +163,27 @@ public:
 
 	virtual bool isKnown(BlockNumber _block) const = 0;
 	virtual bool isKnown(h256 const& _hash) const = 0;
-	virtual BlockInfo blockInfo(h256 _hash) const = 0;
+	virtual BlockHeader blockInfo(h256 _hash) const = 0;
 	virtual BlockDetails blockDetails(h256 _hash) const = 0;
 	virtual Transaction transaction(h256 _blockHash, unsigned _i) const = 0;
 	virtual LocalisedTransaction localisedTransaction(h256 const& _blockHash, unsigned _i) const = 0;
-	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const = 0;
+	virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const = 0;
 	virtual UncleHashes uncleHashes(h256 _blockHash) const = 0;
 	virtual unsigned transactionCount(h256 _blockHash) const = 0;
 	virtual unsigned uncleCount(h256 _blockHash) const = 0;
 	virtual Transactions transactions(h256 _blockHash) const = 0;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const = 0;
 
-	virtual BlockInfo pendingInfo() const { return BlockInfo(); }
+	virtual BlockHeader pendingInfo() const { return BlockHeader(); }
 	virtual BlockDetails pendingDetails() const { return BlockDetails(); }
 
-	BlockInfo blockInfo(BlockNumber _block) const;
+	BlockHeader blockInfo(BlockNumber _block) const;
 	BlockDetails blockDetails(BlockNumber _block) const;
 	Transaction transaction(BlockNumber _block, unsigned _i) const { auto p = transactions(_block); return _i < p.size() ? p[_i] : Transaction(); }
 	unsigned transactionCount(BlockNumber _block) const { if (_block == PendingBlock) { auto p = pending(); return p.size(); } return transactionCount(hashFromNumber(_block)); }
 	Transactions transactions(BlockNumber _block) const { if (_block == PendingBlock) return pending(); return transactions(hashFromNumber(_block)); }
 	TransactionHashes transactionHashes(BlockNumber _block) const { if (_block == PendingBlock) return pendingHashes(); return transactionHashes(hashFromNumber(_block)); }
-	BlockInfo uncle(BlockNumber _block, unsigned _i) const { return uncle(hashFromNumber(_block), _i); }
+	BlockHeader uncle(BlockNumber _block, unsigned _i) const { return uncle(hashFromNumber(_block), _i); }
 	UncleHashes uncleHashes(BlockNumber _block) const { return uncleHashes(hashFromNumber(_block)); }
 	unsigned uncleCount(BlockNumber _block) const { return uncleCount(hashFromNumber(_block)); }
 

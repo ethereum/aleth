@@ -21,7 +21,7 @@
  */
 
 #include <libtestutils/BlockChainLoader.h>
-#include <libethcore/Ethash.h>
+#include <libethashseal/Ethash.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/ChainParams.h>
 #include <libethereum/GasPricer.h>

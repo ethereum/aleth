@@ -24,7 +24,7 @@
 #include <libdevcore/Common.h>
 #include <libethcore/Common.h>
 #include <libethcore/ChainOperationParams.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 #include "Account.h"
 
 namespace dev
@@ -37,22 +37,21 @@ class SealEngineFace;
 struct ChainParams: public ChainOperationParams
 {
 	ChainParams() = default;
-	ChainParams(eth::Network _n);
-	ChainParams(std::string const& _s);
-	ChainParams(eth::Network _n, bytes const& _genesisRLP, AccountMap const& _state);
+	ChainParams(std::string const& _s, h256 const& _stateRoot = h256());
+	ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state);
 
 	SealEngineFace* createSealEngine();
 
 	/// Genesis params.
-	h256 parentHash;
-	h160 author;
-	u256 difficulty;
-	u256 gasLimit;
-	u256 gasUsed;
-	u256 timestamp;
+	h256 parentHash = h256();
+	Address author = Address();
+	u256 difficulty = 0;
+	u256 gasLimit = 1 << 31;
+	u256 gasUsed = 0;
+	u256 timestamp = 0;
 	bytes extraData;
 	mutable h256 stateRoot;	///< Only pre-populate if known equivalent to genesisState's root. If they're different Bad Things Will Happen.
-	AccountMap genesisState;
+	AccountMap genesisState = {{Address(1), Account(0, 1)}, {Address(2), Account(0, 1)}, {Address(3), Account(0, 1)}, {Address(4), Account(0, 1)}};
 
 	unsigned sealFields = 0;
 	bytes sealRLP;

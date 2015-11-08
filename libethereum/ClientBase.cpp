@@ -378,11 +378,11 @@ LocalisedLogEntries ClientBase::checkWatch(unsigned _watchId)
 	return ret;
 }
 
-BlockInfo ClientBase::blockInfo(h256 _hash) const
+BlockHeader ClientBase::blockInfo(h256 _hash) const
 {
 	if (_hash == PendingBlockHash)
 		return preSeal().info();
-	return BlockInfo(bc().block(_hash));
+	return BlockHeader(bc().block(_hash));
 }
 
 BlockDetails ClientBase::blockDetails(h256 _hash) const
@@ -456,14 +456,14 @@ TransactionHashes ClientBase::transactionHashes(h256 _blockHash) const
 	return bc().transactionHashes(_blockHash);
 }
 
-BlockInfo ClientBase::uncle(h256 _blockHash, unsigned _i) const
+BlockHeader ClientBase::uncle(h256 _blockHash, unsigned _i) const
 {
 	auto bl = bc().block(_blockHash);
 	RLP b(bl);
 	if (_i < b[2].itemCount())
-		return BlockInfo(b[2][_i].data(), HeaderData);
+		return BlockHeader(b[2][_i].data(), HeaderData);
 	else
-		return BlockInfo();
+		return BlockHeader();
 }
 
 UncleHashes ClientBase::uncleHashes(h256 _blockHash) const
@@ -500,7 +500,7 @@ h256s ClientBase::pendingHashes() const
 	return h256s() + postSeal().pendingHashes();
 }
 
-BlockInfo ClientBase::pendingInfo() const
+BlockHeader ClientBase::pendingInfo() const
 {
 	return postSeal().info();
 }

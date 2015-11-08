@@ -28,8 +28,7 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcrypto/OverlayDB.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
-#include <libethcore/Miner.h>
+#include <libethcore/BlockHeader.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
@@ -235,7 +234,7 @@ public:
 	bool sync(BlockChain const& _bc);
 
 	/// Sync with the block chain, but rather than synching to the latest block, instead sync to the given block.
-	bool sync(BlockChain const& _bc, h256 const& _blockHash, BlockInfo const& _bi = BlockInfo());
+	bool sync(BlockChain const& _bc, h256 const& _blockHash, BlockHeader const& _bi = BlockHeader());
 
 	/// Execute all transactions within a given block.
 	/// @returns the additional total difficulty.
@@ -281,7 +280,7 @@ public:
 	bytes const& blockData() const { return m_currentBytes; }
 
 	/// Get the header information on the present block.
-	BlockInfo const& info() const { return m_currentBlock; }
+	BlockHeader const& info() const { return m_currentBlock; }
 
 private:
 	SealEngineFace* sealEngine() const;
@@ -303,7 +302,7 @@ private:
 	u256 enact(VerifiedBlockRef const& _block, BlockChain const& _bc);
 
 	/// Finalise the block, applying the earned rewards.
-	void applyRewards(std::vector<BlockInfo> const& _uncleBlockHeaders, u256 const& _blockReward);
+	void applyRewards(std::vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward);
 
 	/// @returns gas used by transactions thus far executed.
 	u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().gasUsed() : 0; }
@@ -317,8 +316,8 @@ private:
 	h256Hash m_transactionSet;					///< The set of transaction hashes that we've included in the state.
 	State m_precommit;							///< State at the point immediately prior to rewards.
 
-	BlockInfo m_previousBlock;					///< The previous block's information.
-	BlockInfo m_currentBlock;					///< The current block's information.
+	BlockHeader m_previousBlock;					///< The previous block's information.
+	BlockHeader m_currentBlock;					///< The current block's information.
 	bytes m_currentBytes;						///< The current block.
 	bool m_committedToMine = false;				///< Have we committed to mine on the present m_currentBlock?
 

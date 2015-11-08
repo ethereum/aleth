@@ -14,40 +14,27 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file FluidityClient.h
+/** @file Ethash.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
+ *
+ * Determines the PoW algorithm.
  */
 
-#pragma once
+#include "EthashProofOfWork.h"
+#include "Ethash.h"
+using namespace std;
+using namespace chrono;
+using namespace dev;
+using namespace eth;
 
-#include <thread>
-#include <condition_variable>
-#include <mutex>
-#include <list>
-#include <atomic>
-#include <string>
-#include <array>
-#include <libethereum/Client.h>
-#include "Fluidity.h"
+const unsigned EthashProofOfWork::defaultLocalWorkSize = 64;
+const unsigned EthashProofOfWork::defaultGlobalWorkSizeMultiplier = 4096; // * CL_DEFAULT_LOCAL_WORK_SIZE
+const unsigned EthashProofOfWork::defaultMSPerBatch = 0;
+const EthashProofOfWork::WorkPackage EthashProofOfWork::NullWorkPackage = EthashProofOfWork::WorkPackage();
 
-namespace dev
-{
-namespace eth
-{
-
-class FluidityClient: public Client
-{
-public:
-	FluidityClient(
-		ChainParams const& _params,
-		int _networkID,
-		p2p::Host* _host,
-		std::shared_ptr<GasPricer> _gpForAdoption,
-		std::string const& _dbPath = std::string(),
-		WithExisting _forceAction = WithExisting::Trust
-	): Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction) {}
-};
-
-}
-}
+EthashProofOfWork::WorkPackage::WorkPackage(BlockHeader const& _bh):
+	boundary(Ethash::boundary(_bh)),
+	headerHash(_bh.hash(WithoutSeal)),
+	seedHash(Ethash::seedHash(_bh))
+{}

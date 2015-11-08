@@ -35,8 +35,7 @@
 #include <libdevcore/StructuredLogger.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Ethash.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 #include <liblll/Compiler.h>
 #include "GenesisInfo.h"
 #include "State.h"
@@ -72,7 +71,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
 		if (it->key().ToString() != "best")
 		{
 			try {
-				BlockInfo d(bytesConstRef(it->value()));
+				BlockHeader d(bytesConstRef(it->value()));
 				_out << toHex(it->key().ToString()) << ":   " << d.number() << " @ " << d.parentHash() << (cmp == it->key().ToString() ? "  BEST" : "") << std::endl;
 			}
 			catch (...) {
@@ -159,15 +158,15 @@ BlockChain::~BlockChain()
 	close();
 }
 
-BlockInfo const& BlockChain::genesis() const
+BlockHeader const& BlockChain::genesis() const
 {
 	UpgradableGuard l(x_genesis);
 	if (!m_genesis)
 	{
 		auto gb = m_params.genesisBlock();
 		UpgradeGuard ul(l);
-		m_genesis = BlockInfo(gb);
-		m_genesisHeaderBytes = BlockInfo::extractHeader(&gb).data().toBytes();
+		m_genesis = BlockHeader(gb);
+		m_genesisHeaderBytes = BlockHeader::extractHeader(&gb).data().toBytes();
 		m_genesisHash = m_genesis.hash();
 	}
 	return m_genesis;
@@ -246,7 +245,7 @@ unsigned BlockChain::open(std::string const& _path, WithExisting _we)
 
 	if (_we != WithExisting::Verify && !details(m_genesisHash))
 	{
-		BlockInfo gb(m_params.genesisBlock());
+		BlockHeader gb(m_params.genesisBlock());
 		// Insert details of genesis block.
 		m_details[m_genesisHash] = BlockDetails(0, gb.difficulty(), h256(), {});
 		auto r = m_details[m_genesisHash].rlp();
@@ -301,7 +300,7 @@ void BlockChain::close()
 	m_lastLastHashes.clear();
 }
 
-void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress, bool _prepPoW)
+void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress)
 {
 	string path = _path.empty() ? Defaults::get()->m_dbPath : _path;
 	string chainPath = path + "/" + toHex(m_genesisHash.ref().cropped(0, 4));
@@ -360,9 +359,7 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 		{
 			bytes b = block(queryExtras<BlockHash, uint64_t, ExtraBlockHash>(d, m_blockHashes, x_blockHashes, NullBlockHash, oldExtrasDB).value);
 
-			BlockInfo bi(&b);
-			if (_prepPoW)
-				Ethash::ensurePrecomputed((unsigned)bi.number());
+			BlockHeader bi(&b);
 
 			if (bi.parentHash() != lastHash)
 			{
@@ -590,7 +587,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 		auto parentBlock = block(_block.info.parentHash());
 		clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
 		clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
-		clog(BlockChainDebug) << "Block:" << BlockInfo(&parentBlock);
+		clog(BlockChainDebug) << "Block:" << BlockHeader(&parentBlock);
 		clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
 		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
 		exit(-1);
@@ -691,7 +688,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		auto parentBlock = block(_block.info.parentHash());
 		clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
 		clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
-		clog(BlockChainDebug) << "Block:" << BlockInfo(&parentBlock);
+		clog(BlockChainDebug) << "Block:" << BlockHeader(&parentBlock);
 		clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
 		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
 		exit(-1);
@@ -843,11 +840,11 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		// Go through ret backwards until hash != last.parent and update m_transactionAddresses, m_blockHashes
 		for (auto i = route.rbegin(); i != route.rend() && *i != common; ++i)
 		{
-			BlockInfo tbi;
+			BlockHeader tbi;
 			if (*i == _block.info.hash())
 				tbi = _block.info;
 			else
-				tbi = BlockInfo(block(*i));
+				tbi = BlockHeader(block(*i));
 
 			// Collate logs into blooms.
 			h256s alteredBlooms;
@@ -1079,7 +1076,7 @@ void BlockChain::rescue(OverlayDB& _db)
 		try
 		{
 			cout << "block..." << flush;
-			BlockInfo bi(block(h));
+			BlockHeader bi(block(h));
 			cout << "extras..." << flush;
 			details(h);
 			cout << "state..." << flush;
@@ -1422,7 +1419,7 @@ bytes BlockChain::headerData(h256 const& _hash) const
 		ReadGuard l(x_blocks);
 		auto it = m_blocks.find(_hash);
 		if (it != m_blocks.end())
-			return BlockInfo::extractHeader(&it->second).data().toBytes();
+			return BlockHeader::extractHeader(&it->second).data().toBytes();
 	}
 
 	string d;
@@ -1440,19 +1437,19 @@ bytes BlockChain::headerData(h256 const& _hash) const
 	m_blocks[_hash].resize(d.size());
 	memcpy(m_blocks[_hash].data(), d.data(), d.size());
 
-	return BlockInfo::extractHeader(&m_blocks[_hash]).data().toBytes();
+	return BlockHeader::extractHeader(&m_blocks[_hash]).data().toBytes();
 }
 
 Block BlockChain::genesisBlock(OverlayDB const& _db) const
 {
-	h256 r = BlockInfo(m_params.genesisBlock()).stateRoot();
+	h256 r = BlockHeader(m_params.genesisBlock()).stateRoot();
 	if (_db.exists(r))
 		return Block(*this, _db, r);
 	Block ret(*this, _db, BaseState::Empty);
 	ret.noteChain(*this);
 	dev::eth::commit(m_params.genesisState, ret.mutableState().m_state);	// bit horrible. maybe consider a better way of constructing it?
 	ret.mutableState().db().commit();										// have to use this db() since it's the one that has been altered with the above commit.
-	ret.m_previousBlock = BlockInfo(m_params.genesisBlock());
+	ret.m_previousBlock = BlockHeader(m_params.genesisBlock());
 	ret.resetCurrent();
 	return ret;
 }
@@ -1460,20 +1457,20 @@ Block BlockChain::genesisBlock(OverlayDB const& _db) const
 VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<void(Exception&)> const& _onBad, ImportRequirements::value _ir) const
 {
 	VerifiedBlockRef res;
-	BlockInfo h;
+	BlockHeader h;
 	try
 	{
-		h = BlockInfo(_block);
+		h = BlockHeader(_block);
 		if (!!(_ir & ImportRequirements::PostGenesis) && (!h.parentHash() || h.number() == 0))
 			BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
 
-		BlockInfo parent;
+		BlockHeader parent;
 		if (!!(_ir & ImportRequirements::Parent))
 		{
 			bytes parentHeader(headerData(h.parentHash()));
 			if (parentHeader.empty())
 				BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
-			parent = BlockInfo(parentHeader, HeaderData, h.parentHash());
+			parent = BlockHeader(parentHeader, HeaderData, h.parentHash());
 		}
 		sealEngine()->verify((_ir & ImportRequirements::ValidSeal) ? Strictness::CheckEverything : Strictness::QuickNonce, h, parent, _block);
 		res.info = h;
@@ -1497,16 +1494,16 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 	if (_ir && !!(ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))
 		for (auto const& uncle: r[2])
 		{
-			BlockInfo uh(uncle.data(), HeaderData);
+			BlockHeader uh(uncle.data(), HeaderData);
 			try
 			{
-				BlockInfo parent;
+				BlockHeader parent;
 				if (!!(_ir & ImportRequirements::UncleParent))
 				{
 					bytes parentHeader(headerData(uh.parentHash()));
 					if (parentHeader.empty())
 						BOOST_THROW_EXCEPTION(InvalidUncleParentHash() << errinfo_required_h256(uh.parentHash()) << errinfo_currentNumber(h.number()) << errinfo_uncleNumber(uh.number()));
-					parent = BlockInfo(parentHeader, HeaderData, uh.parentHash());
+					parent = BlockHeader(parentHeader, HeaderData, uh.parentHash());
 				}
 				sealEngine()->verify((_ir & ImportRequirements::UncleSeals) ? Strictness::CheckEverything : Strictness::IgnoreSeal, uh, parent);
 			}

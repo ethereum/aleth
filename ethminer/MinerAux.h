@@ -37,11 +37,11 @@
 #include <libethcore/Exceptions.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/CommonJS.h>
-#include <libethcore/EthashAux.h>
-#include <libethcore/EthashGPUMiner.h>
-#include <libethcore/EthashCPUMiner.h>
-#include <libethcore/Ethash.h>
-#include <libethcore/GenericFarm.h>
+#include <libethereum/GenericFarm.h>
+#include <libethashseal/EthashAux.h>
+#include <libethashseal/EthashGPUMiner.h>
+#include <libethashseal/EthashCPUMiner.h>
+#include <libethashseal/Ethash.h>
 #if ETH_ETHASHCL || !ETH_TRUE
 #include <libethash-cl/ethash_cl_miner.h>
 #endif
@@ -243,7 +243,7 @@ public:
 			string m;
 			try
 			{
-				BlockInfo bi;
+				BlockHeader bi;
 				m = boost::to_lower_copy(string(argv[++i]));
 				h256 powHash(m);
 				m = boost::to_lower_copy(string(argv[++i]));
@@ -396,7 +396,7 @@ private:
 
 	void doBenchmark(std::string _m, bool _phoneHome, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
 	{
-		BlockInfo genesis;
+		BlockHeader genesis;
 		genesis.setDifficulty(1 << 18);
 		cdebug << Ethash::boundary(genesis);
 

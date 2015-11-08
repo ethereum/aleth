@@ -126,7 +126,7 @@ public:
 	virtual h256 hashFromNumber(BlockNumber _number) const override;
 	virtual BlockNumber numberFromHash(h256 _blockHash) const override;
 	virtual int compareBlockHashes(h256 _h1, h256 _h2) const override;
-	virtual BlockInfo blockInfo(h256 _hash) const override;
+	virtual BlockHeader blockInfo(h256 _hash) const override;
 	virtual BlockDetails blockDetails(h256 _hash) const override;
 	virtual Transaction transaction(h256 _transactionHash) const override;
 	virtual LocalisedTransaction localisedTransaction(h256 const& _transactionHash) const override;
@@ -137,14 +137,14 @@ public:
 	virtual std::pair<h256, unsigned> transactionLocation(h256 const& _transactionHash) const override;
 	virtual Transactions transactions(h256 _blockHash) const override;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const override;
-	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const override;
+	virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const override;
 	virtual UncleHashes uncleHashes(h256 _blockHash) const override;
 	virtual unsigned transactionCount(h256 _blockHash) const override;
 	virtual unsigned uncleCount(h256 _blockHash) const override;
 	virtual unsigned number() const override;
 	virtual Transactions pending() const override;
 	virtual h256s pendingHashes() const override;
-	virtual BlockInfo pendingInfo() const override;
+	virtual BlockHeader pendingInfo() const override;
 	virtual BlockDetails pendingDetails() const override;
 
 	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }

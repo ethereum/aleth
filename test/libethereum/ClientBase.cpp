@@ -22,7 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
 #include <libtestutils/FixedClient.h>
-#include <libethcore/Ethash.h>
+#include <libethashseal/Ethash.h>
 #include "../TestUtils.h"
 
 using namespace std;
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 			ETH_CHECK_EQUAL(expectedHashFromNumber, hashFromNumber);
 			
 			// blockInfo
-			auto compareBlockInfos = [](Json::Value const& _b, BlockInfo _blockInfo) -> void
+			auto compareBlockInfos = [](Json::Value const& _b, BlockHeader _blockInfo) -> void
 			{
 				LogBloom expectedBlockInfoBloom = LogBloom(fromHex(_b["bloom"].asString()));
 				Address expectedBlockInfoCoinbase = Address(fromHex(_b["coinbase"].asString()));
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				ETH_CHECK_EQUAL(expectedBlockInfoUncldeHash, _blockInfo.sha3Uncles());
 			};
 
-			BlockInfo blockInfo((static_cast<FixedClient&>(_client)).bc().headerData(blockHash), HeaderData);
+			BlockHeader blockInfo((static_cast<FixedClient&>(_client)).bc().headerData(blockHash), HeaderData);
 			compareBlockInfos(blockHeader, blockInfo);
 
 			// blockDetails
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(blocks)
 				Json::Value u = uncles[i];
 				
 				// uncle (by hash)
-				BlockInfo uncle = _client.uncle(blockHash, i);
+				BlockHeader uncle = _client.uncle(blockHash, i);
 				compareBlockInfos(u, uncle);
 			}
 		}
