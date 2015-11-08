@@ -27,7 +27,7 @@
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
 #include <libethereum/Client.h>
-#include <libethereum/EthashClient.h>
+#include <libethashseal/EthashClient.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
 #if ETH_SOLIDITY || !ETH_TRUE

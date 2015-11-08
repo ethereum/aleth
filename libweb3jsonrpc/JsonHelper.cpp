@@ -24,7 +24,7 @@
 
 #include <libevmcore/Instruction.h>
 #include <liblll/Compiler.h>
-#include <libethcore/Sealer.h>
+#include <libethcore/SealEngine.h>
 #include <libethereum/Client.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
@@ -84,7 +84,7 @@ Json::Value toJson(p2p::PeerSessionInfo const& _p)
 namespace eth
 {
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi, SealEngineFace* _sealer)
+Json::Value toJson(dev::eth::BlockHeader const& _bi, SealEngineFace* _sealer)
 {
 	Json::Value res;
 	if (_bi)
@@ -132,7 +132,7 @@ Json::Value toJson(dev::eth::Transaction const& _t, std::pair<h256, unsigned> _l
 	return res;
 }
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, UncleHashes const& _us, Transactions const& _ts, SealEngineFace* _face)
+Json::Value toJson(dev::eth::BlockHeader const& _bi, BlockDetails const& _bd, UncleHashes const& _us, Transactions const& _ts, SealEngineFace* _face)
 {
 	Json::Value res = toJson(_bi, _face);
 	if (_bi)
@@ -148,7 +148,7 @@ Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, Uncl
 	return res;
 }
 
-Json::Value toJson(dev::eth::BlockInfo const& _bi, BlockDetails const& _bd, UncleHashes const& _us, TransactionHashes const& _ts, SealEngineFace* _face)
+Json::Value toJson(dev::eth::BlockHeader const& _bi, BlockDetails const& _bd, UncleHashes const& _us, TransactionHashes const& _ts, SealEngineFace* _face)
 {
 	Json::Value res = toJson(_bi, _face);
 	if (_bi)

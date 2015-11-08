@@ -20,7 +20,7 @@
  */
 
 #include "MainCLI.h"
-#include <libfluidity/FluidityClient.h>
+#include <libethereum/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
 #if ETH_JSCONSOLE || !ETH_TRUE
 #include <libjsconsole/JSLocalConsole.h>
@@ -58,7 +58,7 @@ MainCLI* MainCLI::s_this = nullptr;
 MainCLI::MainCLI(Mode _mode):
 	m_mode(_mode),
 	m_keyManager(getDataDir("fluidity") + "/keys.info"),
-	m_chainParams(eth::Network::Fluidity)
+	m_chainParams(c_genesisInfoFluidity)
 {
 	s_this = this;
 }
@@ -193,7 +193,7 @@ void MainCLI::setupKeyManager()
 
 void MainCLI::setup()
 {
-	m_chainParams = ChainParams(eth::Network::Fluidity);
+	m_chainParams = ChainParams(c_genesisInfoFluidity);
 	m_netPrefs = m_publicIP.empty() ? NetworkPreferences(m_listenIP, m_listenPort, false) : NetworkPreferences(m_publicIP, m_listenIP, m_listenPort, false);
 	m_netPrefs.discovery = false;
 	m_netPrefs.pin = true;

@@ -34,14 +34,15 @@
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
 #include <libdevcore/StructuredLogger.h>
-#include <libethcore/EthashAux.h>
+#include <libethashseal/EthashAux.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 #include <libethcore/KeyManager.h>
 #include <libethcore/ICAP.h>
 #include <libethereum/All.h>
 #include <libethereum/BlockChainSync.h>
-#include <libethereum/EthashClient.h>
+#include <libethashseal/EthashClient.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
 #if ETH_JSCONSOLE || !ETH_TRUE
 #include <libjsconsole/JSLocalConsole.h>
@@ -347,7 +348,7 @@ int main(int argc, char** argv)
 #endif
 	string jsonAdmin;
 	string paramsJSON;
-	eth::Network releaseNetwork = eth::Network::Frontier;
+	ChainParams chainParams;
 	u256 gasFloor = Invalid256;
 	string privateChain;
 
@@ -623,14 +624,14 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
-		else if (arg == "--frontier")
-			releaseNetwork = eth::Network::Frontier;
 		else if (arg == "--gas-floor" && i + 1 < argc)
 			gasFloor = u256(argv[++i]);
+		else if (arg == "--frontier")
+			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
 		else if (arg == "--olympic")
-			releaseNetwork = eth::Network::Olympic;
+			chainParams = ChainParams(genesisInfo(eth::Network::Olympic));
 		else if (arg == "--morden" || arg == "--testnet")
-			releaseNetwork = eth::Network::Morden;
+			chainParams = ChainParams(genesisInfo(eth::Network::Morden));
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
 		{
 			try
@@ -875,7 +876,6 @@ int main(int argc, char** argv)
 	}
 
 	// Set up all the chain config stuff.
-	ChainParams chainParams(releaseNetwork);
 	if (!paramsJSON.empty())
 		chainParams = ChainParams(paramsJSON);
 	if (!privateChain.empty())
@@ -889,15 +889,7 @@ int main(int argc, char** argv)
 //		c_gasFloorTarget = gasFloor;
 
 	if (g_logVerbosity > 0)
-	{
 		cout << EthGrayBold "(++)Ethereum" EthReset << endl;
-		if (releaseNetwork == eth::Network::Olympic)
-			cout << "Welcome to Olympic!" << endl;
-		else if (releaseNetwork == eth::Network::Frontier)
-			cout << "Beware. You're entering the " EthMaroonBold "Frontier" EthReset "!" << endl;
-		else if (releaseNetwork == eth::Network::Morden)
-			cout << "Morden welcomes you. What do you want?" << endl;
-	}
 
 	m.execute();
 
