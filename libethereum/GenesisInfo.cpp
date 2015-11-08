@@ -23,7 +23,7 @@
 using namespace dev;
 using namespace eth;
 
-std::string const c_genesisInfoFluidity =
+std::string const dev::eth::c_genesisInfoFluidity =
 R"ETHEREUM(
 {
 	"sealEngine": "BasicAuthority",
@@ -50,7 +50,7 @@ R"ETHEREUM(
 }
 )ETHEREUM";
 
-std::string const c_genesisInfoTestBasicAuthority =
+std::string const dev::eth::c_genesisInfoTestBasicAuthority =
 R"E(
 {
 	"sealEngine": "BasicAuthority",

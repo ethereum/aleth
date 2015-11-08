@@ -28,8 +28,8 @@ namespace dev
 namespace eth
 {
 
-std::string const c_genesisInfoFluidity;
-std::string const c_genesisInfoTestBasicAuthority;
+extern std::string const c_genesisInfoFluidity;
+extern std::string const c_genesisInfoTestBasicAuthority;
 
 }
 }
