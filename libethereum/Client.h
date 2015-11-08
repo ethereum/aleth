@@ -160,10 +160,10 @@ public:
 	/// Are we mining now?
 	bool wouldSeal() const override { return m_wouldMine; }
 
-	/// Check to see if we'd mine on an apparently bad chain.
-	bool sealOnBadChain() const { return m_mineOnBadChain; }
-	/// Set true if you want to mine even when the canary says you're on the wrong chain.
-	void setMineOnBadChain(bool _v) { m_mineOnBadChain = _v; }
+	/// Check to see if we'd seal on an apparently bad chain.
+	bool sealOnBadChain() const { return m_sealOnBadChain; }
+	/// Set true if you want to seal even when the canary says you're on the wrong chain.
+	void setSealOnBadChain(bool _v) { m_sealOnBadChain = _v; }
 	/// @returns true if the canary says that the chain is bad.
 	bool isChainBad() const;
 	/// @returns true if the canary says that the client should be upgraded.
@@ -200,7 +200,7 @@ public:
 	void setSentinel(std::string const& _server) { m_sentinel = _server; }
 	/// Get the JSONRPC server to which we report bad blocks.
 	std::string const& sentinel() const { return m_sentinel; }
-	/// Set the extra data that goes into mined blocks.
+	/// Set the extra data that goes into sealed blocks.
 	void setExtraData(bytes const& _extraData) { m_extraData = _extraData; }
 	/// Rewind to a prior head.
 	void rewind(unsigned _n) { bc().rewind(_n); }
@@ -323,7 +323,7 @@ protected:
 	Handler<> m_bqReady;
 
 	bool m_wouldMine = false;				///< True if we /should/ be mining.
-	bool m_mineOnBadChain = false;			///< Mine even when the canary says it's a bad chain.
+	bool m_sealOnBadChain = false;			///< Mine even when the canary says it's a bad chain.
 
 	mutable std::chrono::system_clock::time_point m_lastGarbageCollection;
 											///< When did we last both doing GC on the watches?

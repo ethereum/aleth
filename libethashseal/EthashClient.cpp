@@ -88,7 +88,7 @@ std::tuple<h256, h256, h256> EthashClient::getEthashWork()
 	bool oldShould = shouldServeWork();
 	m_lastGetWork = chrono::system_clock::now();
 
-	if (!m_mineOnBadChain && isChainBad())
+	if (!m_sealOnBadChain && isChainBad())
 		return std::tuple<h256, h256, h256>();
 
 	// if this request has made us bother to serve work, prep it now.

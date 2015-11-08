@@ -251,7 +251,7 @@ void Client::onBadBlock(Exception& _ex) const
 		{
 			RLP r(*ed);
 			if (r[0].toInt<int>() == 0)
-				report["hints"]["minerVersion"] = r[1].toString();
+				report["hints"]["sealerVersion"] = r[1].toString();
 		}
 		catch (...) {}
 	}
@@ -622,7 +622,7 @@ void Client::resyncStateFromChain()
 			DEV_READ_GUARDED(x_postSeal)
 				for (auto const& t: m_postSeal.pending())
 				{
-					clog(ClientTrace) << "Resubmitting post-mine transaction " << t;
+					clog(ClientTrace) << "Resubmitting post-seal transaction " << t;
 					auto ir = m_tq.import(t, IfDropped::Retry);
 					if (ir != ImportResult::Success)
 						onTransactionQueueReady();
@@ -689,7 +689,7 @@ void Client::startSealing()
 		rejigSealing();
 	}
 	else
-		clog(ClientNote) << "You need to set a author in order to mine!";
+		clog(ClientNote) << "You need to set an author in order to seal!";
 }
 
 void Client::rejigSealing()
