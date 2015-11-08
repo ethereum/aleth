@@ -22,6 +22,7 @@
 #include "Ethash.h"
 #include <libethash/ethash.h>
 #include <libethash/internal.h>
+#include <libethereum/Interface.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/CommonJS.h>
 #include "EthashCPUMiner.h"
@@ -238,6 +239,29 @@ void Ethash::onSealGenerated(std::function<void(bytes const&)> const& _f)
 		_f(ret.out());
 		return true;
 	});
+}
+
+static const Addresses c_canaries =
+{
+	Address("539dd9aaf45c3feb03f9c004f4098bd3268fef6b"),		// gav
+	Address("c8158da0b567a8cc898991c2c2a073af67dc03a9"),		// vitalik
+	Address("959c33de5961820567930eccce51ea715c496f85"),		// jeff
+	Address("7a19a893f91d5b6e2cdf941b6acbba2cbcf431ee")			// christoph
+};
+
+template <class T> T fromRLP(bytes const& _b, RLP::Strictness _s = RLP::LaissezFaire)
+{
+	return RLP(&_b).convert<T>(_s);
+}
+
+bool Ethash::shouldSeal(Interface* _i)
+{
+	unsigned numberBad = 0;
+	for (auto const& a: c_canaries)
+		if (!!_i->stateAt(a, 0))
+			numberBad++;
+	bool isChainBad = numberBad >= 2;
+	return (!isChainBad || fromRLP<bool>(option("sealOnBadChain"))) /*&& (forceMining() || transactionsWaiting())*/;
 }
 
 void Ethash::ensurePrecomputed(unsigned _number)

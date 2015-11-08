@@ -60,14 +60,6 @@ const char* ClientTrace::name() { return EthTeal "⧫" EthGray " ◎"; }
 const char* ClientDetail::name() { return EthTeal "⧫" EthCoal " ●"; }
 #endif
 
-static const Addresses c_canaries =
-{
-	Address("539dd9aaf45c3feb03f9c004f4098bd3268fef6b"),		// gav
-	Address("c8158da0b567a8cc898991c2c2a073af67dc03a9"),		// vitalik
-	Address("959c33de5961820567930eccce51ea715c496f85"),		// jeff
-	Address("7a19a893f91d5b6e2cdf941b6acbba2cbcf431ee")			// christoph
-};
-
 Client::Client(
 	ChainParams const& _params,
 	int _networkID,
@@ -277,20 +269,6 @@ void Client::onBadBlock(Exception& _ex) const
 			cwarn << "Error reporting to sentinel. Sure the address" << m_sentinel << "is correct?";
 		}
 	}
-}
-
-bool Client::isChainBad() const
-{
-	unsigned numberBad = 0;
-	for (auto const& a: c_canaries)
-		if (!!stateAt(a, 0))
-			numberBad++;
-	return numberBad >= 2;
-}
-
-bool Client::isUpgradeNeeded() const
-{
-	return stateAt(c_canaries[0], 0) == 2;
 }
 
 u256 Client::networkId() const
@@ -685,7 +663,7 @@ void Client::startSealing()
 	clog(ClientNote) << "Mining Beneficiary: " << author();
 	if (author())
 	{
-		m_wouldMine = true;
+		m_wouldSeal = true;
 		rejigSealing();
 	}
 	else
@@ -694,9 +672,9 @@ void Client::startSealing()
 
 void Client::rejigSealing()
 {
-	if ((wouldSeal() || remoteActive()) && !isMajorSyncing() && (!isChainBad() || sealOnBadChain()) /*&& (forceMining() || transactionsWaiting())*/)
+	if ((wouldSeal() || remoteActive()) && !isMajorSyncing() && sealEngine()->shouldSeal(this))
 	{
-		clog(ClientTrace) << "Rejigging mining...";
+		clog(ClientTrace) << "Rejigging seal engine...";
 		DEV_WRITE_GUARDED(x_working)
 			m_working.commitToSeal(bc(), m_extraData);
 		DEV_READ_GUARDED(x_working)
@@ -706,10 +684,10 @@ void Client::rejigSealing()
 			m_sealingInfo = m_postSeal.info();
 		}
 
-		if (m_wouldMine)
+		if (m_wouldSeal)
 			sealEngine()->generateSeal(m_sealingInfo);
 	}
-	if (!m_wouldMine)
+	if (!m_wouldSeal)
 		sealEngine()->cancelGeneration();
 }
 

@@ -53,6 +53,7 @@ public:
 	void cancelGeneration() override { m_farm.stop(); }
 	void generateSeal(BlockHeader const& _bi) override;
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
+	bool shouldSeal(Interface* _i) override;
 
 	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
 

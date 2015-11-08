@@ -37,6 +37,7 @@ namespace eth
 
 class BlockHeader;
 class ChainOperationParams;
+class Interface;
 
 class SealEngineFace
 {
@@ -67,6 +68,8 @@ public:
 	ChainOperationParams const& chainParams() const { return m_params; }
 	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
 	SealEngineFace* withChainParams(ChainOperationParams const& _params) { m_params = _params; return this; }
+
+	virtual bool shouldSeal(Interface*) { return true; }
 
 protected:
 	virtual bool onOptionChanging(std::string const&, bytes const&) { return true; }

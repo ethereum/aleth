@@ -26,7 +26,7 @@
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/Common.h>
 #include <libethcore/SealEngine.h>
-#include <libethereum/GasPricer.h>
+#include "GasPricer.h"
 #include "LogFilter.h"
 #include "Transaction.h"
 #include "AccountDiff.h"
