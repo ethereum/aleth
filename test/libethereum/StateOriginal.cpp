@@ -25,7 +25,7 @@
 #include <boost/filesystem/operations.hpp>
 #include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
-#include <libethcore/GenericFarm.h>
+#include <libethereum/GenericFarm.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethereum/Defaults.h>
 

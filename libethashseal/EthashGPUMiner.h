@@ -25,8 +25,8 @@
 #if ETH_ETHASHCL || !ETH_TRUE
 
 #include "libdevcore/Worker.h"
+#include <libethereum/GenericMiner.h>
 #include "EthashAux.h"
-#include "GenericMiner.h"
 
 class ethash_cl_miner;
 

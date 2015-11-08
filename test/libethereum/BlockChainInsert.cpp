@@ -27,6 +27,7 @@
 #include <libethcore/BasicAuthority.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
+#include <libethereum/GenesisInfo.h>
 #include <test/TestHelper.h>
 #include <test/BlockChainHelper.h>
 using namespace std;
@@ -46,7 +47,7 @@ public:
 	TestClient(Secret const& _authority):
 		m_path(boost::filesystem::temp_directory_path().string() + "/" + toString(chrono::system_clock::now().time_since_epoch().count()) + "-" + FixedHash<4>::random().hex()),
 		m_stateDB(State::openDB(m_path, h256())),
-		m_bc(eth::ChainParams(eth::Network::TestBasicAuthority), m_path)
+		m_bc(eth::ChainParams(c_genesisInfoTestBasicAuthority), m_path)
 	{
 		sealer()->setOption("authority", rlp(_authority.makeInsecure()));
 		sealer()->setOption("authorities", rlpList(toAddress(_authority)));

@@ -33,35 +33,6 @@ using namespace dev;
 using namespace eth;
 namespace js = json_spirit;
 
-ChainParams::ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state):
-	ChainParams(_json)
-{
-	BlockHeader bi(_genesisRLP, RLP(&_genesisRLP)[0].isList() ? BlockData : HeaderData);
-	parentHash = bi.parentHash();
-	author = bi.author();
-	difficulty = bi.difficulty();
-	gasLimit = bi.gasLimit();
-	gasUsed = bi.gasUsed();
-	timestamp = bi.timestamp();
-	extraData = bi.extraData();
-	genesisState = _state;
-	RLP r(_genesisRLP);
-	sealFields = r[0].itemCount() - BlockHeader::BasicFields;
-	sealRLP.clear();
-	for (unsigned i = BlockHeader::BasicFields; i < r[0].itemCount(); ++i)
-		sealRLP += r[0][i].data();
-
-	auto b = genesisBlock();
-	if (b != _genesisRLP)
-	{
-		cdebug << "Block passed:" << bi.hash() << bi.hash(WithoutSeal);
-		cdebug << "Genesis now:" << BlockHeader::headerHashFromBlock(b);
-		cdebug << RLP(b);
-		cdebug << RLP(_genesisRLP);
-		throw 0;
-	}
-}
-
 ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
 {
 	js::mValue val;
@@ -114,6 +85,34 @@ SealEngineFace* ChainParams::createSealEngine()
 		sealRLP = ret->sealRLP();
 	}
 	return ret;
+}
+
+void ChainParams::populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state)
+{
+	BlockHeader bi(_genesisRLP, RLP(&_genesisRLP)[0].isList() ? BlockData : HeaderData);
+	parentHash = bi.parentHash();
+	author = bi.author();
+	difficulty = bi.difficulty();
+	gasLimit = bi.gasLimit();
+	gasUsed = bi.gasUsed();
+	timestamp = bi.timestamp();
+	extraData = bi.extraData();
+	genesisState = _state;
+	RLP r(_genesisRLP);
+	sealFields = r[0].itemCount() - BlockHeader::BasicFields;
+	sealRLP.clear();
+	for (unsigned i = BlockHeader::BasicFields; i < r[0].itemCount(); ++i)
+		sealRLP += r[0][i].data();
+
+	auto b = genesisBlock();
+	if (b != _genesisRLP)
+	{
+		cdebug << "Block passed:" << bi.hash() << bi.hash(WithoutSeal);
+		cdebug << "Genesis now:" << BlockHeader::headerHashFromBlock(b);
+		cdebug << RLP(b);
+		cdebug << RLP(_genesisRLP);
+		throw 0;
+	}
 }
 
 h256 ChainParams::calculateStateRoot() const

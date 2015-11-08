@@ -38,7 +38,8 @@ struct ChainParams: public ChainOperationParams
 {
 	ChainParams() = default;
 	ChainParams(std::string const& _s, h256 const& _stateRoot = h256());
-	ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state);
+	ChainParams(bytes const& _genesisRLP, AccountMap const& _state) { populateFromGenesis(_genesisRLP, _state); }
+	ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state): ChainParams(_json) { populateFromGenesis(_genesisRLP, _state); }
 
 	SealEngineFace* createSealEngine();
 
@@ -60,6 +61,9 @@ struct ChainParams: public ChainOperationParams
 
 	/// Genesis block info.
 	bytes genesisBlock() const;
+
+private:
+	void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);
 };
 
 }

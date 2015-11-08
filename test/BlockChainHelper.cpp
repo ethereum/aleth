@@ -23,6 +23,8 @@
 #include <libethereum/Block.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
+#include <libethereum/GenesisInfo.h>
+#include <libethashseal/GenesisInfo.h>
 #include <test/BlockChainHelper.h>
 #include <test/TestHelper.h>
 using namespace std;
@@ -419,7 +421,7 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
 void TestBlockChain::reset(TestBlock const& _genesisBlock)
 {
 	m_tempDirBlockchain.reset(new TransientDirectory);
-	ChainParams p(Network::Test, _genesisBlock.getBytes(), _genesisBlock.accountMap());
+	ChainParams p(genesisInfo(Network::Test), _genesisBlock.getBytes(), _genesisBlock.accountMap());
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.getBytes())))
 	{
