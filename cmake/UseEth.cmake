@@ -84,6 +84,11 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${Eth_FLUIDITY_LIBRARIES})
 	endif()
 
+	if (${SUBMODULE} STREQUAL "ethashseal")
+		eth_use(${TARGET} ${REQUIRED} Eth::ethereum)
+		target_link_libraries(${TARGET} ${Eth_ETHASHSEAL_LIBRARIES})
+	endif()
+
 	if (${SUBMODULE} STREQUAL "ethereum")
 		eth_use(${TARGET} ${REQUIRED} Eth::evm Eth::ethcore)
 		if (NOT EMSCRIPTEN)
