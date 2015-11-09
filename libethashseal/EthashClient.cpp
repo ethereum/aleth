@@ -58,7 +58,7 @@ EthashClient::EthashClient(
 
 Ethash* EthashClient::sealEngine() const
 {
-	return dynamic_cast<Ethash*>(sealEngine());
+	return dynamic_cast<Ethash*>(Client::sealEngine());
 }
 
 bool EthashClient::isMining() const
