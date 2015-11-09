@@ -36,7 +36,7 @@ namespace eth
 {
 
 class BlockHeader;
-class ChainOperationParams;
+struct ChainOperationParams;
 class Interface;
 
 class SealEngineFace
