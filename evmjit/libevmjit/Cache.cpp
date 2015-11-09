@@ -118,7 +118,7 @@ std::unique_ptr<llvm::Module> Cache::getObject(std::string const& id)
 	llvm::sys::path::append(cachePath, id);
 
 	if (auto r = llvm::MemoryBuffer::getFile(cachePath, -1, false))
-		g_lastObject = llvm::MemoryBuffer::getMemBufferCopy(r->getBuffer());
+		g_lastObject = llvm::MemoryBuffer::getMemBufferCopy(r.get()->getBuffer());
 	else if (r.getError() != std::make_error_code(std::errc::no_such_file_or_directory))
 		DLOG(cache) << r.getError().message(); // TODO: Add warning log
 
