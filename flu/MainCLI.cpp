@@ -111,7 +111,7 @@ void MainCLI::execute()
 			m_dbPath,
 			m_chainParams,
 			WithExisting::Trust,
-			set<string>{"flu"},
+			set<string>{"eth"},
 			m_netPrefs,
 			&nodesState);
 
