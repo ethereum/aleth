@@ -203,8 +203,8 @@ protected:
 	void init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId);
 
 	/// InterfaceStub methods
-	BlockChain& bc() { return m_bc; }
-	BlockChain const& bc() const { return m_bc; }
+	BlockChain& bc() override { return m_bc; }
+	BlockChain const& bc() const override { return m_bc; }
 
 	/// Returns the state object for the full block (i.e. the terminal state) for index _h.
 	/// Works properly with LatestBlock and PendingBlock.
