@@ -803,7 +803,7 @@ bytes generatePseudorandomPacket(h256 const& _h)
 		ret += _h.asBytes();
 
 	ret.resize(msgSize);
-	return move(ret);
+	return ret;
 }
 
 BOOST_AUTO_TEST_CASE(pseudorandom)
