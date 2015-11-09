@@ -37,9 +37,13 @@ using namespace dev;
 using namespace dev::crypto;
 using namespace CryptoPP;
 
-BOOST_AUTO_TEST_SUITE(devcrypto)
+struct DevcryptoTestFixture {
+	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
+	~DevcryptoTestFixture() {}
 
-static Secp256k1PP s_secp256k1;
+	Secp256k1PP* s_secp256k1;
+};
+BOOST_FIXTURE_TEST_SUITE(devcrypto, DevcryptoTestFixture)
 static CryptoPP::AutoSeededRandomPool s_rng;
 static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
@@ -75,7 +79,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_patch)
 {
 	KeyPair k = KeyPair::create();
 	bytes io_text;
-	s_secp256k1.decrypt(k.sec(), io_text);
+	s_secp256k1->decrypt(k.sec(), io_text);
 	BOOST_REQUIRE_EQUAL(io_text.size(), 0);
 }
 
@@ -151,7 +155,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 		BOOST_REQUIRE(p == pkey);
 		
 		// verify w/cryptopp
-		BOOST_REQUIRE(s_secp256k1.verify(pkey, sig, bytesConstRef(&e)));
+		BOOST_REQUIRE(s_secp256k1->verify(pkey, sig, bytesConstRef(&e)));
 		
 		// verify with secp256k1lib
 		byte encpub[65] = {0x04};
@@ -290,14 +294,14 @@ BOOST_AUTO_TEST_CASE(ecies_kdf)
 	// nonce
 	Secret z1;
 	ecdh::agree(local.sec(), remote.pub(), z1);
-	auto key1 = s_secp256k1.eciesKDF(z1, bytes(), 64);
+	auto key1 = s_secp256k1->eciesKDF(z1, bytes(), 64);
 	bytesConstRef eKey1 = bytesConstRef(&key1).cropped(0, 32);
 	bytesRef mKey1 = bytesRef(&key1).cropped(32, 32);
 	sha3(mKey1, mKey1);
 	
 	Secret z2;
 	ecdh::agree(remote.sec(), local.pub(), z2);
-	auto key2 = s_secp256k1.eciesKDF(z2, bytes(), 64);
+	auto key2 = s_secp256k1->eciesKDF(z2, bytes(), 64);
 	bytesConstRef eKey2 = bytesConstRef(&key2).cropped(0, 32);
 	bytesRef mKey2 = bytesRef(&key2).cropped(32, 32);
 	sha3(mKey2, mKey2);
@@ -320,11 +324,11 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 	string original = message;
 	bytes b = asBytes(message);
 	
-	s_secp256k1.encryptECIES(k.pub(), b);
+	s_secp256k1->encryptECIES(k.pub(), b);
 	BOOST_REQUIRE(b != asBytes(original));
 	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
 	
-	s_secp256k1.decryptECIES(k.sec(), b);
+	s_secp256k1->decryptECIES(k.sec(), b);
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
 }
 
@@ -336,10 +340,10 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 	string original = message;
 	
 	bytes b = asBytes(message);
-	s_secp256k1.encrypt(k.pub(), b);
+	s_secp256k1->encrypt(k.pub(), b);
 	BOOST_REQUIRE(b != asBytes(original));
 
-	s_secp256k1.decrypt(k.sec(), b);
+	s_secp256k1->decrypt(k.sec(), b);
 	BOOST_REQUIRE(b == asBytes(original));
 }
 
@@ -566,7 +570,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		sig.copyTo(sigAuth.ref());
 		
 		Secret ss;
-		s_secp256k1.agree(nodeB.sec(), nodeAAuth, ss);
+		s_secp256k1->agree(nodeB.sec(), nodeAAuth, ss);
 		eAAuth = recover(sigAuth, (ss ^ nonceAAuth).makeInsecure());
 		// todo: test when this fails; means remote is bad or packet bits were flipped
 		BOOST_REQUIRE_EQUAL(heA, sha3(eAAuth));
@@ -578,7 +582,7 @@ BOOST_AUTO_TEST_CASE(handshakeNew)
 		Secret ess;
 		// todo: ecdh-agree should be able to output bytes
 		eB.agree(eAAuth, ess);
-//		s_secp256k1.agree(eB.seckey(), eAAuth, ess);
+//		s_secp256k1->agree(eB.seckey(), eAAuth, ess);
 		ess.ref().copyTo(keyMaterial.cropped(0, h256::size));
 		ssB.ref().copyTo(keyMaterial.cropped(h256::size, h256::size));
 //		auto token = sha3(ssA);
