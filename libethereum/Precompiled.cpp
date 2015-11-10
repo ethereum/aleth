@@ -57,16 +57,17 @@ void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 			{
 				Public rec = recover(sig, in.hash);
 				if (rec)
+				{
 					ret = dev::sha3(rec);
-				else
-					return;
+					memset(ret.data(), 0, 12);
+					ret.ref().copyTo(_out);
+				}
 			}
-			catch (...) { return; }
+			catch (...) {}
 		}
 	}
 
-	memset(ret.data(), 0, 12);
-	ret.ref().copyTo(_out);
+	return;
 }
 
 void sha256Code(bytesConstRef _in, bytesRef _out)
