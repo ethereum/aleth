@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <initializer_list>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
@@ -35,7 +36,7 @@ class FlagSet
 public:
 
 	using Type = T;
-	using StoreType = decltype(T()|T());
+	typedef decltype(T()|T()) StoreType;
 
 	// Default constructor (all 0s)
 	FlagSet() : FlagSet(StoreType(0)) {}
