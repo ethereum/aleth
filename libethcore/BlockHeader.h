@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <numeric>
 #include <algorithm>
 #include <initializer_list>
 #include <libdevcore/Common.h>
