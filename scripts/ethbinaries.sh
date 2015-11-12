@@ -165,5 +165,5 @@ if [[ $OSTYPE != "cygwin" && $DEV_TEST -eq 1 ]]; then
 	echo "ETHBINARIES - INFO: Running tests ...";
 	# run all tests
 	cd ..
-	webthree-helpers/scripts/ethtests.sh libweb3core
+	webthree-helpers/scripts/ethtests.sh libweb3core --umbrella
 fi
