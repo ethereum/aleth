@@ -94,9 +94,5 @@ do
 	fi
 	echo "ETHTESTS - INFO: Will run test file ${TEST_EXEC} for project \"$1\"."
 	# run tests
-	if [[ $RUN_FROM_UMBRELLA -eq 0 ]]; then
-		./$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
-	else
-		./webthree-umbrella/$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
-	fi
+	./$TEST_EXEC --log_format=XML --log_sink=${repository}_results.xml --log_level=all --report_level=no
 done
