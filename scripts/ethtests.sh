@@ -23,12 +23,29 @@ REPOS_TEST_MAP=("webthree-helpers:NONE"
 		"alethzero:NONE"
 		"mix:NONE")
 
+UMBRELLA_REPOS_TEST_MAP=("webthree-helpers:NONE"
+		"tests:NONE"
+		"libweb3core:build/libweb3core/test/testweb3core"
+		"libethereum:build/libethereum/test/testeth"
+		"libethereum_vmjit:build/libethereum/test/testeth --vm jit"
+		"libethereum_vmsmart:build/libethereum/test/testeth --vm smart"
+		"libwhisper:NONE"
+		"webthree:build/webthree/test/testweb3"
+		"web3.js:NONE"
+		"solidity:build/solidity/test/soltest"
+		"alethzero:NONE"
+		"mix:NONE")
+
 function get_repo_testexec() {
 	if [[ $1 == "" ]]; then
 		echo "ETHTESTS - ERROR: get_repo_testexec() function called without an argument."
 		exit 1
 	fi
-	for repo in "${REPOS_TEST_MAP[@]}" ; do
+	REPOS_TEST_VAR="${REPOS_TEST_MAP[@]}"
+	if [[ $RUN_FROM_UMBRELLA -eq 1 ]]; then
+		REPOS_TEST_VAR="${UMBRELLA_REPOS_TEST_MAP[@]}"
+	fi
+	for repo in $REPOS_TEST_VAR ; do
 		KEY=${repo%%:*}
 		if [[ $KEY == $1 ]]; then
 			TEST_EXEC=${repo#*:}
@@ -85,6 +102,7 @@ esac
 
 # remove all old test results
 rm -rf *_results.xml
+echo "ETHTESTS - INFO: We are about to run the tests from ${PWD}"
 for repository in "${TEST_REPOSITORIES[@]}"
 do
 	get_repo_testexec $repository
