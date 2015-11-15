@@ -78,6 +78,17 @@ if [[ ${REQUESTED_ARG} != "" ]]; then
 	exit 1
 fi
 
+# If we need to also run tests clone/update the tests repo
+if [[ $DEV_TEST -eq 1 ]]; then
+	if [[ ! -d "tests" ]]; then
+		git clone https://github.com/ethereum/tests
+	else
+		cd tests
+		git pull origin master
+		cd ..
+	fi
+fi
+
 if [[ ! -d "webthree-umbrella" ]]; then
 	git clone --recursive https://github.com/ethereum/webthree-umbrella
 fi
