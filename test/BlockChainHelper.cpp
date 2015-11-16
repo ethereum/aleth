@@ -421,7 +421,7 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
 void TestBlockChain::reset(TestBlock const& _genesisBlock)
 {
 	m_tempDirBlockchain.reset(new TransientDirectory);
-	ChainParams p(genesisInfo(Network::Test), _genesisBlock.getBytes(), _genesisBlock.accountMap());
+	ChainParams p(/*genesisInfo(Network::Test), */_genesisBlock.getBytes(), _genesisBlock.accountMap());
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.getBytes())))
 	{
@@ -434,7 +434,18 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock)
 
 void TestBlockChain::addBlock(TestBlock const& _block)
 {
-	m_blockChain.get()->import(_block.getBytes(), m_genesisBlock.getState().db());
+	while (true)
+	{
+		try
+		{
+			m_blockChain.get()->import(_block.getBytes(), m_genesisBlock.getState().db());
+			break;
+		}
+		catch (FutureTime)
+		{
+			this_thread::sleep_for(chrono::milliseconds(100));
+		}
+	}
 
 	//Imported and best
 	if (_block.getBytes() == m_blockChain.get()->block())

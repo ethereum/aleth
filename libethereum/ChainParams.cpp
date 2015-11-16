@@ -33,6 +33,10 @@ using namespace dev;
 using namespace eth;
 namespace js = json_spirit;
 
+ChainParams::ChainParams()
+{
+}
+
 ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
 {
 	js::mValue val;

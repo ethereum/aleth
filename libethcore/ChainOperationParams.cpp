@@ -26,6 +26,21 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
+ChainOperationParams::ChainOperationParams()/*:
+	accountStartNonce(Invalid256)*/
+{
+	otherParams = std::unordered_map<std::string, std::string>{
+		{"minGasLimit", "125000"},
+		{"gasLimitBoundDivisor", "0x0400"},
+		{"minimumDifficulty", "0x020000"},
+		{"difficultyBoundDivisor", "0x0800"},
+		{"durationLimit", "0x08"},
+		{"registrar", "5e70c0bbcd5636e0f9f9316e9f8633feb64d4050"},
+		{"networkID", "0x0"}
+	};
+	blockReward = u256("0x14D1120D7B160000");
+}
+
 u256 ChainOperationParams::u256Param(string const& _name) const
 {
 	return u256(fromBigEndian<u256>(fromHex(at(otherParams, _name))));

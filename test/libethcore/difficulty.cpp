@@ -24,7 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
 #include <libethashseal/Ethash.h>
-#include <libethashseal/Ethash.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
 using namespace std;
 using namespace dev;
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 	js::read_string(s, v);
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams());
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Frontier)));
 
 	for (auto& i: v.get_obj())
 	{

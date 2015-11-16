@@ -31,7 +31,7 @@ namespace eth
 
 struct ChainOperationParams
 {
-	ChainOperationParams(): accountStartNonce(Invalid256) {}
+	ChainOperationParams();
 
 	explicit operator bool() const { return accountStartNonce != Invalid256; }
 

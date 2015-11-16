@@ -36,7 +36,7 @@ class SealEngineFace;
 
 struct ChainParams: public ChainOperationParams
 {
-	ChainParams() = default;
+	ChainParams();
 	ChainParams(std::string const& _s, h256 const& _stateRoot = h256());
 	ChainParams(bytes const& _genesisRLP, AccountMap const& _state) { populateFromGenesis(_genesisRLP, _state); }
 	ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state): ChainParams(_json) { populateFromGenesis(_genesisRLP, _state); }
@@ -46,7 +46,7 @@ struct ChainParams: public ChainOperationParams
 	/// Genesis params.
 	h256 parentHash = h256();
 	Address author = Address();
-	u256 difficulty = 0;
+	u256 difficulty = 1;
 	u256 gasLimit = 1 << 31;
 	u256 gasUsed = 0;
 	u256 timestamp = 0;

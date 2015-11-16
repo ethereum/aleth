@@ -119,6 +119,21 @@ void State::populateFrom(AccountMap const& _map)
 	commit();
 }
 
+u256 const& State::requireAccountStartNonce() const
+{
+	if (m_accountStartNonce == Invalid256)
+		BOOST_THROW_EXCEPTION(InvalidAccountStartNonceInState());
+	return m_accountStartNonce;
+}
+
+void State::noteAccountStartNonce(u256 const& _actual)
+{
+	if (m_accountStartNonce == Invalid256)
+		m_accountStartNonce = _actual;
+	else if (m_accountStartNonce != _actual)
+		BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
+}
+
 void State::paranoia(std::string const& _when, bool _enforceRefs) const
 {
 #if ETH_PARANOIA && !ETH_FATDB

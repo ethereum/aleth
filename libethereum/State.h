@@ -232,8 +232,8 @@ public:
 
 	/// Get the account start nonce. May be required.
 	u256 const& accountStartNonce() const { return m_accountStartNonce; }
-	u256 const& requireAccountStartNonce() const { if (m_accountStartNonce == Invalid256) BOOST_THROW_EXCEPTION(InvalidAccountStartNonceInState()); return m_accountStartNonce; }
-	void noteAccountStartNonce(u256 const& _actual) { if (m_accountStartNonce == Invalid256) m_accountStartNonce = _actual; else if (m_accountStartNonce != _actual) BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState()); }
+	u256 const& requireAccountStartNonce() const;
+	void noteAccountStartNonce(u256 const& _actual);
 
 private:
 	/// Retrieve all information about a given address into the cache.

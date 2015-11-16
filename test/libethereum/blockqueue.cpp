@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
 	block1.addTransaction(transaction1);
 	block1.mine(blockchain);
-//	cdebug << Ethash::nonce(block1.getBlockHeader());
+	cdebug << Ethash::nonce(block1.getBlockHeader());
 	blockchain.getInterface().sealEngine()->verify(JustSeal, block1.getBlockHeader());
 
 	BlockQueue blockQueue;
