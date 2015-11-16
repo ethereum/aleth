@@ -149,7 +149,7 @@ void BlockHeader::populateFromParent(BlockHeader const& _parent)
 	m_number = _parent.m_number + 1;
 	m_parentHash = _parent.m_hash;
 	m_gasLimit = _parent.m_gasLimit;
-	m_difficulty = _parent.m_difficulty;
+	m_difficulty = 1;
 	m_gasUsed = 0;
 }
 
