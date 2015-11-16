@@ -413,15 +413,15 @@ void TestBlock::populateFrom(TestBlock const& _original)
 	m_sealEngine = _original.m_sealEngine;
 }
 
-TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock)
+TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)
 {
-	reset(_genesisBlock);
+	reset(_genesisBlock, _noProof);
 }
 
-void TestBlockChain::reset(TestBlock const& _genesisBlock)
+void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 {
 	m_tempDirBlockchain.reset(new TransientDirectory);
-	ChainParams p(/*genesisInfo(Network::Test), */_genesisBlock.getBytes(), _genesisBlock.accountMap());
+	ChainParams p = _noProof ? ChainParams(_genesisBlock.getBytes(), _genesisBlock.accountMap()) : ChainParams(genesisInfo(Network::Test), _genesisBlock.getBytes(), _genesisBlock.accountMap());
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.getBytes())))
 	{

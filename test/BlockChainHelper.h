@@ -115,10 +115,10 @@ private:
 class TestBlockChain
 {
 public:
-	TestBlockChain(): TestBlockChain(getDefaultGenesisBlock()) {}
-	TestBlockChain(TestBlock const& _genesisBlock);
+	TestBlockChain(bool _noProof = false): TestBlockChain(getDefaultGenesisBlock(), _noProof) {}
+	TestBlockChain(TestBlock const& _genesisBlock, bool _noProof = false);
 
-	void reset(TestBlock const& _genesisBlock);
+	void reset(TestBlock const& _genesisBlock, bool _noProof = false);
 	void addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& getTopBlock() { return m_lastBlock; }

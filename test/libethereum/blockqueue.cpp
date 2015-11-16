@@ -52,8 +52,8 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 {
 	g_logVerbosity = 2;
 	TestBlock genesisBlock = TestBlockChain::getDefaultGenesisBlock();
-	TestBlockChain blockchain;
-	TestBlockChain blockchain2;
+	TestBlockChain blockchain(true);
+	TestBlockChain blockchain2(true);
 
 	TestBlock block1;
 	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
