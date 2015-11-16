@@ -55,8 +55,7 @@ void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 		{
 			try
 			{
-				Public rec = recover(sig, in.hash);
-				if (rec)
+				if (Public rec = recover(sig, in.hash))
 				{
 					ret = dev::sha3(rec);
 					memset(ret.data(), 0, 12);
@@ -66,8 +65,6 @@ void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 			catch (...) {}
 		}
 	}
-
-	return;
 }
 
 void sha256Code(bytesConstRef _in, bytesRef _out)
