@@ -97,6 +97,7 @@ private:
 	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
+	void premineUpdate(BlockHeader& info);
 
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;

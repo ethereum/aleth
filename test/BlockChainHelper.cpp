@@ -140,6 +140,36 @@ void TestBlock::setUncles(vector<TestBlock> const& _uncles)
 	m_uncles = _uncles;
 }
 
+void TestBlock::premineUpdate(BlockHeader& _blockInfo)
+{
+	if (m_premineUpdate.count("parentHash") > 0)
+		_blockInfo.setParentHash(m_blockHeader.parentHash());
+	if (m_premineUpdate.count("coinbase") > 0)
+		_blockInfo.setAuthor(m_blockHeader.author());
+
+	if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
+		m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
+		_blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ? m_blockHeader.transactionsRoot() : _blockInfo.transactionsRoot(),
+						m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : _blockInfo.receiptsRoot(),
+						m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : _blockInfo.sha3Uncles(),
+						m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : _blockInfo.stateRoot());
+
+	if (m_premineUpdate.count("bloom") > 0)
+		_blockInfo.setLogBloom(m_blockHeader.logBloom());
+	if (m_premineUpdate.count("difficulty") > 0)
+		_blockInfo.setDifficulty(m_blockHeader.difficulty());
+	if (m_premineUpdate.count("number") > 0)
+		_blockInfo.setNumber(m_blockHeader.number());
+	if (m_premineUpdate.count("gasLimit") > 0)
+		_blockInfo.setGasLimit(m_blockHeader.gasLimit());
+	if (m_premineUpdate.count("gasUsed") > 0)
+		_blockInfo.setGasUsed(m_blockHeader.gasUsed());
+	if (m_premineUpdate.count("timestamp") > 0)
+		_blockInfo.setTimestamp(m_blockHeader.timestamp());
+	if (m_premineUpdate.count("extraData") > 0)
+		_blockInfo.setExtraData(m_blockHeader.extraData());
+}
+
 void TestBlock::mine(TestBlockChain const& bc)
 {
 	TestBlock const& genesisBlock = bc.getTestGenesis();
@@ -157,34 +187,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 	{
 		ZeroGasPricer gp;
 		block.sync(blockchain);
-
-		if (m_premineUpdate.count("parentHash") > 0)
-			blockInfo.setParentHash(m_blockHeader.parentHash());
-		if (m_premineUpdate.count("coinbase") > 0)
-			blockInfo.setAuthor(m_blockHeader.author());
-
-		if (m_premineUpdate.count("uncleHash") > 0 || m_premineUpdate.count("stateRoot") > 0 ||
-			m_premineUpdate.count("transactionsTrie") > 0 || m_premineUpdate.count("receiptTrie") > 0)
-			blockInfo.setRoots(m_premineUpdate.count("transactionsTrie") > 0 ? m_blockHeader.transactionsRoot() : blockInfo.transactionsRoot(),
-							m_premineUpdate.count("receiptTrie") > 0 ? m_blockHeader.receiptsRoot() : blockInfo.receiptsRoot(),
-							m_premineUpdate.count("uncleHash") > 0 ? m_blockHeader.sha3Uncles() : blockInfo.sha3Uncles(),
-							m_premineUpdate.count("stateRoot") > 0 ? m_blockHeader.stateRoot() : blockInfo.stateRoot());
-
-		if (m_premineUpdate.count("bloom") > 0)
-			blockInfo.setLogBloom(m_blockHeader.logBloom());
-		if (m_premineUpdate.count("difficulty") > 0)
-			blockInfo.setDifficulty(m_blockHeader.difficulty());
-		if (m_premineUpdate.count("number") > 0)
-			blockInfo.setNumber(m_blockHeader.number());
-		if (m_premineUpdate.count("gasLimit") > 0)
-			blockInfo.setGasLimit(m_blockHeader.gasLimit());
-		if (m_premineUpdate.count("gasUsed") > 0)
-			blockInfo.setGasUsed(m_blockHeader.gasUsed());
-		if (m_premineUpdate.count("timestamp") > 0)
-			blockInfo.setTimestamp(m_blockHeader.timestamp());
-		if (m_premineUpdate.count("extraData") > 0)
-			blockInfo.setExtraData(m_blockHeader.extraData());
-
+		premineUpdate(blockInfo);
 		block.sync(blockchain, m_transactionQueue, gp);
 
 		//Get only valid transactions
@@ -411,6 +414,7 @@ void TestBlock::populateFrom(TestBlock const& _original)
 	m_blockHeader = _original.getBlockHeader();
 	m_bytes = _original.getBytes();
 	m_sealEngine = _original.m_sealEngine;
+	m_accountMap = _original.accountMap();
 }
 
 TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)
