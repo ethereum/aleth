@@ -77,7 +77,7 @@ private:
 	std::string m_masterPassword;
 
 	Addresses m_authorities;
-	std::string m_privateChain;
+	std::string m_chainName;
 
 	bool m_startSealing = false;
 
@@ -87,11 +87,12 @@ private:
 	unsigned short m_listenPort = 40404;
 	std::string m_publicIP;
 
-	std::map<p2p::NodeID, std::pair<p2p::NodeIPEndpoint, bool>> m_preferredNodes;
-
 	eth::KeyManager m_keyManager;
 	p2p::NetworkPreferences m_netPrefs;
+	std::string m_paramsJson;
 	eth::ChainParams m_chainParams;
+	std::unordered_map<std::string, bytes> m_sealEngineParams;
+	std::map<p2p::NodeID, std::pair<p2p::NodeIPEndpoint, bool>> m_preferredNodes;
 
 	std::atomic<bool> m_shouldExit = {false};
 	std::string m_logBuffer;

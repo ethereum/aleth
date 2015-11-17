@@ -30,6 +30,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #endif
+#include <json_spirit/JsonSpiritHeaders.h>
 #if ETH_JSONRPC || !ETH_TRUE
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
@@ -52,13 +53,14 @@ using namespace std;
 using namespace dev;
 using namespace p2p;
 using namespace eth;
+namespace js = json_spirit;
 
 MainCLI* MainCLI::s_this = nullptr;
 
 MainCLI::MainCLI(Mode _mode):
 	m_mode(_mode),
 	m_keyManager(getDataDir("fluidity") + "/keys.info", getDataDir("fluidity") + "/keys"),
-	m_chainParams(c_genesisInfoFluidity)
+	m_paramsJson(c_genesisInfoFluidity)
 {
 	s_this = this;
 }
@@ -69,7 +71,19 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 	if (arg == "console")
 		m_mode = Mode::Console;
 	else if (arg == "--path" && i + 1 < argc)
+	{
 		m_dbPath = argv[++i];
+		m_keyManager.setKeysFile(m_dbPath + "/keys.info");
+		m_keyManager.setSecretsPath(m_dbPath + "/keys");
+	}
+	else if (arg == "--db-path" && i + 1 < argc)
+		m_dbPath = argv[++i];
+	else if (arg == "--keys-file" && i + 1 < argc)
+		m_keyManager.setKeysFile(argv[++i]);
+	else if (arg == "--keys-path" && i + 1 < argc)
+		m_keyManager.setSecretsPath(argv[++i]);
+	else if (arg == "--config" && i + 1 < argc)
+		m_paramsJson = asString(contents(argv[++i]));
 	else if (arg == "--client-name" && i + 1 < argc)
 		m_clientName = argv[++i];
 	else if (arg == "--public-ip" && i + 1 < argc)
@@ -79,12 +93,12 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 	else if (arg == "--listen-port" && i + 1 < argc)
 		m_listenPort = (short)atoi(argv[++i]);
 	else if (arg == "--chain-name" && i + 1 < argc)
-		m_privateChain = argv[++i];
+		m_chainName = argv[++i];
 	else if (arg == "--master" && i + 1 < argc)
 		m_masterPassword = argv[++i];
 	else if (arg == "--authority" && i + 1 < argc)
 		m_authorities.push_back(Address(argv[++i]));
-	else if (arg == "--start-mining")
+	else if (arg == "--start-sealing")
 		m_startSealing = true;
 	else
 	{
@@ -124,25 +138,34 @@ void MainCLI::execute()
 		web3.ethereum()->setGasPricer(gasPricer);
 
 		// Set up fluidity authorities & signing key.
-		if (m_authorities.empty())
-			m_authorities = m_keyManager.accounts();
-		web3.ethereum()->setSealOption("authorities", rlp(m_authorities));
-		for (auto i: m_authorities)
-			if (Secret s = m_keyManager.secret(i))
-			{
-				web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
-				web3.ethereum()->setAuthor(i);
-				break;
-			}
+		for (auto const& i: m_sealEngineParams)
+			web3.ethereum()->setSealOption(i.first, i.second);
+		if (!m_sealEngineParams.count("authorities"))
+		{
+			if (m_authorities.empty())
+				m_authorities = m_keyManager.accounts();
+			web3.ethereum()->setSealOption("authorities", rlp(m_authorities));
+		}
+		if (!m_sealEngineParams.count("authority"))
+			for (auto i: m_authorities)
+				if (Secret s = m_keyManager.secret(i))
+				{
+					web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
+					web3.ethereum()->setAuthor(i);	// BROKEN!!!
+					break;
+				}
 
 		web3.startNetwork();
 		if (contents(m_dbPath + "/network.rlp").empty())
 			writeFile(m_dbPath + "/network.rlp", web3.saveNetwork());
-		cout << "Node ID: " << web3.enode() << endl;
+		cnote << "Node ID: " << web3.enode();
 
 		for (auto const& p: m_preferredNodes)
 			if (p.second.second)
+			{
+				cdebug << "Requiring peer:" << p.first << p.second.first;
 				web3.requirePeer(p.first, p.second.first);
+			}
 
 		if (m_startSealing)
 			web3.ethereum()->startSealing();
@@ -191,15 +214,79 @@ void MainCLI::setupKeyManager()
 		m_keyManager.create(m_masterPassword);
 
 	if (m_keyManager.accounts().empty())
+	{
 		m_keyManager.import(Secret::random(), "Default");
+		cnote << "Created key: " << m_keyManager.accounts().front().hex();
+	}
+}
+
+static bytes toRLP(js::mValue const& _v)
+{
+	if (_v.type() == js::str_type)
+	{
+		string s = _v.get_str();
+		if (s.substr(0, 2) == "0x")
+			return rlp(fromHex(s));
+		else
+			return rlp(asBytes(s));
+	}
+	else if (_v.type() == js::int_type)
+		return rlp(_v.get_int64());
+	else if (_v.type() == js::bool_type)
+		return rlp(_v.get_bool());
+	else if (_v.type() == js::array_type)
+	{
+		js::mArray a = _v.get_array();
+		RLPStream s(a.size());
+		for (js::mValue const& i: a)
+			s.appendRaw(toRLP(i));
+		return s.out();
+	}
+	else if (_v.type() == js::obj_type)
+	{
+		js::mObject a = _v.get_obj();
+		RLPStream s(a.size());
+		for (pair<string, js::mValue> const& i: a)
+			s.appendList(2).append(i.first).appendRaw(toRLP(i.second));
+		return s.out();
+	}
+	else
+		return rlp("");
 }
 
 void MainCLI::setup()
 {
-	m_chainParams = ChainParams(c_genesisInfoFluidity);
 	m_netPrefs = m_publicIP.empty() ? NetworkPreferences(m_listenIP, m_listenPort, false) : NetworkPreferences(m_publicIP, m_listenIP, m_listenPort, false);
 	m_netPrefs.discovery = false;
 	m_netPrefs.pin = true;
+	m_chainParams = ChainParams(m_paramsJson);
+	if (!m_chainName.empty())
+		m_chainParams.extraData = sha3(m_chainName).asBytes();
+
+	js::mValue val;
+	js::read_string(m_paramsJson, val);
+	js::mObject o = val.get_obj();
+	if (o.count("options"))
+	{
+		js::mObject params = o["options"].get_obj();
+		for (pair<string, js::mValue> const& p: params)
+			m_sealEngineParams[p.first] = toRLP(p.second);
+	}
+	if (o.count("network"))
+	{
+		js::mObject params = o["network"].get_obj();
+		if (params.count("nodes"))
+		{
+			js::mArray nodes = params["nodes"].get_array();
+			for (js::mValue const& i: nodes)
+			{
+				p2p::NodeSpec ns(i.get_str());
+				if (!ns.nodeIPEndpoint())
+					continue;
+				m_preferredNodes[ns.id()] = make_pair(ns.nodeIPEndpoint(), true);
+			}
+		}
+	}
 }
 
 void MainCLI::streamHelp(ostream& _out)
@@ -209,4 +296,5 @@ void MainCLI::streamHelp(ostream& _out)
 		<< "    daemon  Daemonify." << endl
 		<< "    console  Launch interactive console." << endl
 		;
+	// TODO: all the other options.
 }
