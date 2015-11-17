@@ -46,8 +46,15 @@ enum class KDF {
 class SecretStore
 {
 public:
+	/// Construct a new SecretStore but don't read any keys yet.
+	/// Call setPath in
+	SecretStore() = default;
+
 	/// Construct a new SecretStore and read all keys in the given directory.
-	SecretStore(std::string const& _path = defaultPath());
+	SecretStore(std::string const& _path);
+
+	/// Set a path for finding secrets.
+	void setPath(std::string const& _path);
 
 	/// @returns the secret key stored by the given @a _uuid.
 	/// @param _pass function that returns the password for the key.
