@@ -77,6 +77,7 @@ public:
 	KeyManager(std::string const& _keysFile = defaultPath(), std::string const& _secretsPath = SecretStore::defaultPath());
 	~KeyManager();
 
+	void setSecretsPath(std::string const& _secretsPath) { m_store.setPath(_secretsPath); }
 	void setKeysFile(std::string const& _keysFile) { m_keysFile = _keysFile; }
 	std::string const& keysFile() const { return m_keysFile; }
 
