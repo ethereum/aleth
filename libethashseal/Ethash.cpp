@@ -41,6 +41,22 @@ Ethash::Ethash()
 	sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
 #endif
 	m_farm.setSealers(sealers);
+	m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
+	{
+//		cdebug << m_farm.work().seedHash << m_farm.work().headerHash << sol.nonce << EthashAux::eval(m_farm.work().seedHash, m_farm.work().headerHash, sol.nonce).value;
+		setMixHash(m_sealing, sol.mixHash);
+		setNonce(m_sealing, sol.nonce);
+		if (!quickVerifySeal(m_sealing))
+			return false;
+
+		if (m_onSealGenerated)
+		{
+			RLPStream ret;
+			m_sealing.streamRLP(ret);
+			m_onSealGenerated(ret.out());
+		}
+		return true;
+	});
 }
 
 strings Ethash::sealers() const
@@ -227,18 +243,7 @@ void Ethash::generateSeal(BlockHeader const& _bi)
 
 void Ethash::onSealGenerated(std::function<void(bytes const&)> const& _f)
 {
-	m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
-	{
-//		cdebug << m_farm.work().seedHash << m_farm.work().headerHash << sol.nonce << EthashAux::eval(m_farm.work().seedHash, m_farm.work().headerHash, sol.nonce).value;
-		setMixHash(m_sealing, sol.mixHash);
-		setNonce(m_sealing, sol.nonce);
-		if (!quickVerifySeal(m_sealing))
-			return false;
-		RLPStream ret;
-		m_sealing.streamRLP(ret);
-		_f(ret.out());
-		return true;
-	});
+	m_onSealGenerated = _f;
 }
 
 static const Addresses c_canaries =
