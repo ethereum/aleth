@@ -107,19 +107,18 @@ private:
 	bytes m_bytes;
 	std::unique_ptr<TransientDirectory> m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
-	std::map<std::string, bool> m_premineUpdate;
-	std::shared_ptr<SealEngineFace> m_sealEngine;
-
-	AccountMap m_accountMap;
+	std::map<std::string, bool> m_premineUpdate;			//Test Header alterate options
+	AccountMap m_accountMap;								//Needed for genesis state
+	SealEngineFace* m_sealEngine;
 };
 
 class TestBlockChain
 {
 public:
-	TestBlockChain(bool _noProof = true): TestBlockChain(getDefaultGenesisBlock(), _noProof) {}
-	TestBlockChain(TestBlock const& _genesisBlock, bool _noProof = true);
+	TestBlockChain(bool _noProof = false): TestBlockChain(getDefaultGenesisBlock(), _noProof) {}
+	TestBlockChain(TestBlock const& _genesisBlock, bool _noProof = false);
 
-	void reset(TestBlock const& _genesisBlock, bool _noProof = true);
+	void reset(TestBlock const& _genesisBlock, bool _noProof = false);
 	void addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& getTopBlock() { return m_lastBlock; }

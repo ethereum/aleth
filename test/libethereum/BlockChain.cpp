@@ -38,17 +38,6 @@ namespace dev {
 
 namespace test {
 
-//Functions that working with test json
-void compareBlocks(TestBlock const& _a, TestBlock const& _b);
-mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
-mObject writeBlockHeaderToJson(BlockHeader const& _bi);
-void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, vector<TestBlock> const& importedBlocks, RecalcBlockHeader _verification);
-void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
-void eraseJsonSectionForInvalidBlock(mObject& _blObj);
-void checkJsonSectionForInvalidBlock(mObject& _blObj);
-void checkExpectedException(mObject& _blObj, Exception const& _e);
-void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
-
 struct ChainBranch
 {
 	ChainBranch(TestBlock const& _genesis): blockchain(_genesis) { importedBlocks.push_back(_genesis); }
@@ -71,6 +60,17 @@ struct ChainBranch
 	vector<TestBlock> importedBlocks;
 };
 
+//Functions that working with test json
+void compareBlocks(TestBlock const& _a, TestBlock const& _b);
+mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
+mObject writeBlockHeaderToJson(BlockHeader const& _bi);
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, ChainBranch const& _chainBranch, RecalcBlockHeader _verification);
+void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
+void eraseJsonSectionForInvalidBlock(mObject& _blObj);
+void checkJsonSectionForInvalidBlock(mObject& _blObj);
+void checkExpectedException(mObject& _blObj, Exception const& _e);
+void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromRlp, string const& _testname);
+
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
 	//g_logVerbosity = 0;
@@ -88,9 +88,9 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 		TestBlock genesisBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj(), RecalcBlockHeader::Verify);
 		if (_fillin)
-			genesisBlock.setBlockHeader(genesisBlock.getBlockHeader(), RecalcBlockHeader::UpdateAndVerify); //update PoW
+			genesisBlock.setBlockHeader(genesisBlock.getBlockHeader(), RecalcBlockHeader::Verify); //update PoW
 		TestBlockChain testChain(genesisBlock);
-		assert(testChain.getInterface().isKnown(genesisBlock.getBlockHeader().hash(WithoutSeal)));
+		assert(testChain.getInterface().isKnown(genesisBlock.getBlockHeader().hash(WithSeal)));
 
 		if (_fillin)
 		{
@@ -159,7 +159,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				//read premining parameters
 				if (blObj.count("blockHeaderPremine"))
 				{
-					overwriteBlockHeaderForTest(blObj.at("blockHeaderPremine").get_obj(), block, importedBlocks, RecalcBlockHeader::SkipVerify);
+					overwriteBlockHeaderForTest(blObj.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname], RecalcBlockHeader::SkipVerify);
 					blObj.erase("blockHeaderPremine");
 				}
 
@@ -169,7 +169,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				TestBlock alterBlock(block);
 
 				if (blObj.count("blockHeader"))
-					overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, importedBlocks, RecalcBlockHeader::Verify);
+					overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname], RecalcBlockHeader::Verify);
 
 				blObj["rlp"] = toHex(alterBlock.getBytes(), 2, HexPrefix::Add);
 				blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.getBlockHeader());
@@ -230,7 +230,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			o["blocks"] = blArray;
 			o["postState"] = fillJsonWithState(testChain.getTopBlock().getState());
-			o["lastblockhash"] = toString(testChain.getTopBlock().getBlockHeader().hash(WithoutSeal));
+			o["lastblockhash"] = toString(testChain.getTopBlock().getBlockHeader().hash(WithSeal));
 
 			//make all values hex in pre section
 			State prestate(State::Null);
@@ -323,7 +323,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				}
 
 				//Check that imported block to the chain is equal to declared block from test
-				bytes importedblock = testChain.getInterface().block(blockFromFields.getBlockHeader().hash(WithoutSeal));
+				bytes importedblock = testChain.getInterface().block(blockFromFields.getBlockHeader().hash(WithSeal));
 				TestBlock inchainBlock(toHex(importedblock));
 				checkBlocks(inchainBlock, blockFromFields, testname);
 
@@ -340,7 +340,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 			//Check lastblock hash
 			BOOST_REQUIRE((o.count("lastblockhash") > 0));
-			string lastTrueBlockHash = toString(testChain.getTopBlock().getBlockHeader().hash(WithoutSeal));
+			string lastTrueBlockHash = toString(testChain.getTopBlock().getBlockHeader().hash(WithSeal));
 			BOOST_CHECK_MESSAGE(lastTrueBlockHash == o["lastblockhash"].get_str(),
 					testname + "Boost check: lastblockhash does not match " + lastTrueBlockHash + " expected: " + o["lastblockhash"].get_str());
 
@@ -359,12 +359,14 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 }
 
 //TestFunction
-void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::vector<TestBlock> const& _importedBlocks, RecalcBlockHeader _verification)
+void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, ChainBranch const& _chainBranch, RecalcBlockHeader _verification)
 {
 	//_blObj  - json object with header data
 	//_block  - which header would be overwritten
 	//_parentHeader - parent blockheader
 
+	vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
+	TestBlockChain const& blockchain = _chainBranch.blockchain;
 	RecalcBlockHeader findNewValidNonce = _verification;
 	BlockHeader tmp;
 	BlockHeader const& header = _block.getBlockHeader();
@@ -401,13 +403,11 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 		_block.setPremine(ho.count("timestamp") ? "timestamp" : "");
 		_block.setPremine(ho.count("extraData") ? "extraData" : "");
 
-		Ethash sealEngine;
-		sealEngine.setChainParams(ChainParams());
 		if (ho.count("RelTimestamp"))
 		{
-			BlockHeader parentHeader = _importedBlocks.at(_importedBlocks.size() - 1).getBlockHeader();
+			BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).getBlockHeader();
 			tmp.setTimestamp(toInt(ho["RelTimestamp"]) + parentHeader.timestamp());
-			tmp.setDifficulty(sealEngine.calculateDifficulty(tmp, parentHeader));
+			tmp.setDifficulty(((Ethash*)blockchain.getInterface().sealEngine())->calculateDifficulty(tmp, parentHeader));
 			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
 		}
 
@@ -430,17 +430,14 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, std::
 		tmp = TestBlock(ho, emptyState, RecalcBlockHeader::SkipVerify).getBlockHeader();
 	}
 
-	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams());
-
 	if (ho.count("populateFromBlock"))
 	{
 		size_t number = (size_t)toInt(ho.at("populateFromBlock"));
 		ho.erase("populateFromBlock");
-		if (number < _importedBlocks.size())
+		if (number < importedBlocks.size())
 		{
-			BlockHeader parentHeader = _importedBlocks.at(number).getBlockHeader();
-			sealEngine.populateFromParent(tmp, parentHeader);
+			BlockHeader parentHeader = importedBlocks.at(number).getBlockHeader();
+			blockchain.getInterface().sealEngine()->populateFromParent(tmp, parentHeader);
 			findNewValidNonce = RecalcBlockHeader::UpdateAndVerify;
 		}
 		else

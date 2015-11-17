@@ -45,7 +45,7 @@ TestTransaction::TestTransaction(mObject const& _o):
 
 TestBlock::TestBlock()
 {
-	m_sealEngine.reset(SealEngineRegistrar::create(ChainParams()));
+
 }
 
 TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify):
@@ -69,8 +69,6 @@ TestBlock::TestBlock(std::string const& _blockRLP):
 
 	RLP root(m_bytes);
 	m_blockHeader = BlockHeader(m_bytes);
-	// TODO: do we want to bother verifying stuff here?
-	m_sealEngine->verify(IgnoreSeal, m_blockHeader);
 
 	m_transactionQueue.clear();
 	m_testTransactions.clear();
@@ -85,7 +83,6 @@ TestBlock::TestBlock(std::string const& _blockRLP):
 	for (auto const& uRLP: root[2])
 	{
 		BlockHeader uBl(uRLP.data(), HeaderData);
-		m_sealEngine->verify(IgnoreSeal, uBl);
 		TestBlock uncle;
 		//uncle goes without transactions and uncles but
 		//it's hash could contain hashsum of transactions/uncles
@@ -196,9 +193,9 @@ void TestBlock::mine(TestBlockChain const& bc)
 		//for (auto const& tr : trs)
 		//	m_transactionQueue.import(tr.rlp());
 
-		dev::eth::mine(block, blockchain, m_sealEngine.get());
+		dev::eth::mine(block, blockchain, blockchain.sealEngine());
 //		cdebug << "Block mined" << Ethash::boundary(block.info()).hex() << Ethash::nonce(block.info()) << block.info().hash(WithoutSeal).hex();
-		m_sealEngine->verify(JustSeal, block.info());
+		blockchain.sealEngine()->verify(JustSeal, block.info());
 	}
 	catch (Exception const& _e)
 	{
@@ -213,7 +210,7 @@ void TestBlock::mine(TestBlockChain const& bc)
 
 	m_blockHeader = BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
 	copyStateFrom(block.state());
-
+	m_sealEngine = blockchain.sealEngine();
 	//Update block hashes cause we would fill block with uncles and transactions that
 	//actually might have been dropped because they are invalid
 	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify);
@@ -341,12 +338,12 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		if (((BlockHeader)m_blockHeader).difficulty() == 0)
 			BOOST_ERROR("Trying to mine a block with 0 difficulty!");
 
-		dev::eth::mine(m_blockHeader, m_sealEngine.get());
+		dev::eth::mine(m_blockHeader, m_sealEngine);
 		m_blockHeader.noteDirty();
 	}
 
 	RLPStream blHeaderStream;
-	m_blockHeader.streamRLP(blHeaderStream, WithoutSeal);
+	m_blockHeader.streamRLP(blHeaderStream, WithSeal);
 
 	RLPStream ret(3);
 	ret.appendRaw(blHeaderStream.out()); //block header
@@ -358,7 +355,7 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		try
 		{
 			// TODO: CheckNothingNew -> CheckBlock.
-			m_sealEngine->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &ret.out());
+			//m_sealEngine->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &ret.out());
 		}
 		catch (Exception const& _e)
 		{
@@ -413,7 +410,6 @@ void TestBlock::populateFrom(TestBlock const& _original)
 	m_uncles = _original.getUncles();
 	m_blockHeader = _original.getBlockHeader();
 	m_bytes = _original.getBytes();
-	m_sealEngine = _original.m_sealEngine;
 	m_accountMap = _original.accountMap();
 }
 
@@ -425,7 +421,9 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)
 void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 {
 	m_tempDirBlockchain.reset(new TransientDirectory);
-	ChainParams p = _noProof ? ChainParams(_genesisBlock.getBytes(), _genesisBlock.accountMap()) : ChainParams(genesisInfo(Network::Test), _genesisBlock.getBytes(), _genesisBlock.accountMap());
+	ChainParams p = _noProof ? ChainParams(_genesisBlock.getBytes(), _genesisBlock.accountMap())
+							 : ChainParams(genesisInfo(Network::Test), _genesisBlock.getBytes(), _genesisBlock.accountMap());
+
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.getBytes())))
 	{
