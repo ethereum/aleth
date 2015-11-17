@@ -666,8 +666,8 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.gasUsed() == blockFromRlp.gasUsed(), _testname + "gasUsed in given RLP not matching the block gasUsed!");
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.timestamp() == blockFromRlp.timestamp(), _testname + "timestamp in given RLP not matching the block timestamp!");
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.extraData() == blockFromRlp.extraData(), _testname + "extraData in given RLP not matching the block extraData!");
-	BOOST_CHECK_MESSAGE(Ethash::mixHash(blockHeaderFromFields) == Ethash::mixHash(blockFromRlp), _testname + "mixHash in given RLP not matching the block mixHash!");
-	BOOST_CHECK_MESSAGE(Ethash::nonce(blockHeaderFromFields) == Ethash::nonce(blockFromRlp), _testname + "nonce in given RLP not matching the block nonce!");
+	//BOOST_CHECK_MESSAGE(Ethash::mixHash(blockHeaderFromFields) == Ethash::mixHash(blockFromRlp), _testname + "mixHash in given RLP not matching the block mixHash!");
+	//BOOST_CHECK_MESSAGE(Ethash::nonce(blockHeaderFromFields) == Ethash::nonce(blockFromRlp), _testname + "nonce in given RLP not matching the block nonce!");
 
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields == blockFromRlp, _testname + "However, blockHeaderFromFields != blockFromRlp!");
 
