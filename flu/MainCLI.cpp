@@ -140,7 +140,9 @@ void MainCLI::execute()
 		// Set up fluidity authorities & signing key.
 		for (auto const& i: m_sealEngineParams)
 			web3.ethereum()->setSealOption(i.first, i.second);
-		if (!m_sealEngineParams.count("authorities"))
+		if (m_sealEngineParams.count("authorities"))
+			m_authorities = (Addresses)RLP(m_sealEngineParams["authorities"]);
+		else
 		{
 			if (m_authorities.empty())
 				m_authorities = m_keyManager.accounts();
