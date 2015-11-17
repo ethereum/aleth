@@ -392,7 +392,7 @@ void BlockQueue::tick()
 		cblockq << "Checking past-future blocks...";
 
 		uint64_t t = utcTime();
-		if (t <= m_future.begin()->first)
+		if (t < m_future.begin()->first)
 			return;
 
 		cblockq << "Past-future blocks ready.";
@@ -400,7 +400,7 @@ void BlockQueue::tick()
 		{
 			UpgradeGuard l2(l);
 			DEV_INVARIANT_CHECK;
-			auto end = m_future.lower_bound(t);
+			auto end = m_future.upper_bound(t);
 			for (auto i = m_future.begin(); i != end; ++i)
 			{
 				m_unknownSize -= i->second.second.size();
