@@ -75,9 +75,6 @@ Client::Client(
 	m_postSeal(chainParams().accountStartNonce),
 	m_working(chainParams().accountStartNonce)
 {
-	sealEngine()->onSealGenerated([=](bytes const& header){
-		this->submitSealed(header);
-	});
 	init(_host, _dbPath, _forceAction, _networkID);
 }
 
@@ -361,6 +358,7 @@ void Client::reopenChain(ChainParams const& _p, WithExisting _we)
 		WriteGuard l2(x_preSeal);
 		WriteGuard l3(x_working);
 
+		auto author = m_preSeal.author();	// backup and restore author.
 		m_preSeal = Block(chainParams().accountStartNonce);
 		m_postSeal = Block(chainParams().accountStartNonce);
 		m_working = Block(chainParams().accountStartNonce);
@@ -370,6 +368,7 @@ void Client::reopenChain(ChainParams const& _p, WithExisting _we)
 		m_stateDB = State::openDB(Defaults::dbPath(), bc().genesisHash(), _we);
 
 		m_preSeal = bc().genesisBlock(m_stateDB);
+		m_preSeal.setAuthor(author);
 		m_postSeal = m_preSeal;
 		m_working = Block(chainParams().accountStartNonce);
 	}
@@ -685,7 +684,12 @@ void Client::rejigSealing()
 		}
 
 		if (m_wouldSeal)
+		{
+			sealEngine()->onSealGenerated([=](bytes const& header){
+				this->submitSealed(header);
+			});
 			sealEngine()->generateSeal(m_sealingInfo);
+		}
 	}
 	if (!m_wouldSeal)
 		sealEngine()->cancelGeneration();

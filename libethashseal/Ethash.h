@@ -80,6 +80,7 @@ private:
 	eth::GenericFarm<EthashProofOfWork> m_farm;
 	std::string m_sealer = "cpu";
 	BlockHeader m_sealing;
+	std::function<void(bytes const&)> m_onSealGenerated;
 };
 
 }
