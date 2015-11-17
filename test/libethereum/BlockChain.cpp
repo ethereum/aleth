@@ -73,7 +73,7 @@ struct ChainBranch
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	g_logVerbosity = 0;
+	//g_logVerbosity = 0;
 	TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
@@ -90,7 +90,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 			genesisBlock.setBlockHeader(genesisBlock.getBlockHeader(), RecalcBlockHeader::UpdateAndVerify); //update PoW
 		TestBlockChain testChain(genesisBlock);
-		assert(testChain.getInterface().isKnown(genesisBlock.getBlockHeader().hash()));
+		assert(testChain.getInterface().isKnown(genesisBlock.getBlockHeader().hash(WithoutSeal)));
 
 		if (_fillin)
 		{
@@ -312,7 +312,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				try
 				{
-					blockFromFields.setBlockHeader(blockFromFields.getBlockHeader(), RecalcBlockHeader::Verify); //recalculateBytes
+					//call recalculateBytes in blockFromFields (should be done inside TestBlock logic?)
+					blockFromFields.setBlockHeader(blockFromFields.getBlockHeader(), RecalcBlockHeader::Verify);
 					blockchain.addBlock(blockFromFields);
 				}
 				catch (Exception const& _e)
@@ -322,12 +323,11 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				}
 
 				//Check that imported block to the chain is equal to declared block from test
-				bytes importedblock = testChain.getInterface().block(blockFromFields.getBlockHeader().hash());
+				bytes importedblock = testChain.getInterface().block(blockFromFields.getBlockHeader().hash(WithoutSeal));
 				TestBlock inchainBlock(toHex(importedblock));
 				checkBlocks(inchainBlock, blockFromFields, testname);
 
-				//Check that trueBc is rearanged correctrly after importing this block
-				string blockNumber;
+				string blockNumber = toString(testChain.getInterface().number());
 				string blockChainName = "default";
 				if (blObj.count("chainname") > 0)
 					blockChainName = blObj["chainname"].get_str();
@@ -652,7 +652,7 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 	BlockHeader const& blockHeaderFromFields = _blockFromFields.getBlockHeader();
 	BlockHeader const& blockFromRlp = _blockFromRlp.getBlockHeader();
 
-	BOOST_CHECK_MESSAGE(blockHeaderFromFields.hash(WithSeal) == blockFromRlp.hash(WithSeal), _testname + "hash in given RLP not matching the block hash!");
+	BOOST_CHECK_MESSAGE(blockHeaderFromFields.hash(WithoutSeal) == blockFromRlp.hash(WithoutSeal), _testname + "hash in given RLP not matching the block hash!");
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.parentHash() == blockFromRlp.parentHash(), _testname + "parentHash in given RLP not matching the block parentHash!");
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.sha3Uncles() == blockFromRlp.sha3Uncles(), _testname + "sha3Uncles in given RLP not matching the block sha3Uncles!");
 	BOOST_CHECK_MESSAGE(blockHeaderFromFields.author() == blockFromRlp.author(), _testname + "author in given RLP not matching the block author!");
