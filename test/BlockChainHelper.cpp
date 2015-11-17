@@ -427,7 +427,8 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 	{
 		cdebug << "Not known:" << BlockHeader::headerHashFromBlock(_genesisBlock.getBytes()) << BlockHeader(p.genesisBlock()).hash();
 		cdebug << "Genesis block not known!";
-		throw 0;
+		cdebug << "This should never happen.";
+		assert(false);
 	}
 	m_lastBlock = m_genesisBlock = _genesisBlock;
 }

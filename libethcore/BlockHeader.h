@@ -50,18 +50,6 @@ enum Strictness
 	CheckNothingNew
 };
 
-/*enum Check
-{
-	CheckBasic,
-	CheckExtended,
-	CheckBlock,
-	CheckParent,
-	CheckSeal,
-	CheckSealQuickly,
-	CheckAll = CheckBasic | CheckExtended | CheckBlock | CheckParent | CheckSeal,
-};
-using Checks = FlagSet<Check>;*/
-
 enum BlockDataType
 {
 	HeaderData,

@@ -95,8 +95,6 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 	}
 
-	// TODO: don't rely on BlockHeader - bring all that logic directly into here and remove BlockHeader completely.
-	// need to replicate verifySeal, nonce, mixHash
 	if (_parent)
 	{
 		// Check difficulty is correct given the two timestamps.
@@ -163,8 +161,6 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	auto difficultyBoundDivisor = chainParams().u256Param("difficultyBoundDivisor");
 	auto durationLimit = chainParams().u256Param("durationLimit");
 	u256 o = max<u256>(minimumDifficulty, _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor)));
-//	if (c_network == Network::Olympic)
-//		return o;
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
 		o = max<u256>(minimumDifficulty, o + (u256(1) << (periodCount - 2)));	// latter will eventually become huge, so ensure it's a bigint.

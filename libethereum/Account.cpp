@@ -46,13 +46,6 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
 	js::mObject o = val.get_obj();
-/*	if (o.count("genesis"))
-	{
-		cdebug << json_spirit::write_string(o["genesis"], true);
-		o = o["genesis"].get_obj();
-		for (auto i: o)
-			cdebug << i.first;
-	}*/
 	for (auto account: o.count("alloc") ? o["alloc"].get_obj() : o)
 	{
 		Address a(fromHex(account.first));

@@ -394,13 +394,7 @@ string BlockChain::dumpDatabase() const
 	ss << m_lastBlockHash << endl;
 	ldb::Iterator* i = m_extrasDB->NewIterator(m_readOptions);
 	for (i->SeekToFirst(); i->Valid(); i->Next())
-	{
 		ss << toHex(bytesConstRef(i->key())) << "/" << toHex(bytesConstRef(i->value())) << endl;
-	}
-/*	for (auto h = m_lastBlockHash; h; h = info(h).parentHash())
-	{
-		ss << h <<
-	)*/
 	return ss.str();
 }
 

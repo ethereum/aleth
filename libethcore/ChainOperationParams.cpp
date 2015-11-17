@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file ChainOperationParams.h
+/** @file ChainOperationParams.cpp
  * @author Gav Wood <i@gavwood.com>
  * @date 2015
  */
@@ -26,8 +26,7 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-ChainOperationParams::ChainOperationParams()/*:
-	accountStartNonce(Invalid256)*/
+ChainOperationParams::ChainOperationParams()
 {
 	otherParams = std::unordered_map<std::string, std::string>{
 		{"minGasLimit", "0x1388"},

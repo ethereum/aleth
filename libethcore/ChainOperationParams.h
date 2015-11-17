@@ -43,14 +43,19 @@ struct ChainOperationParams
 	u256 maximumExtraDataSize = 1024;
 	u256 accountStartNonce = 0;
 
+	/**
+	 * @brief Additional parameters.
+	 *
+	 * e.g. Ethash specific:
+	 * - minGasLimit
+	 * - gasLimitBoundDivisor
+	 * - minimumDifficulty
+	 * - difficultyBoundDivisor
+	 * - durationLimit
+	 */
 	std::unordered_map<std::string, std::string> otherParams;
+
 	u256 u256Param(std::string const& _name) const;
-	// Ethash specific:
-	//u256 minGasLimit;
-	//u256 gasLimitBoundDivisor;
-	//u256 minimumDifficulty;
-	//u256 difficultyBoundDivisor;
-	//u256 durationLimit;
 };
 
 }
