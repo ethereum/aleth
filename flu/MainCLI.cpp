@@ -57,7 +57,7 @@ MainCLI* MainCLI::s_this = nullptr;
 
 MainCLI::MainCLI(Mode _mode):
 	m_mode(_mode),
-	m_keyManager(getDataDir("fluidity") + "/keys.info"),
+	m_keyManager(getDataDir("fluidity") + "/keys.info", getDataDir("fluidity") + "/keys"),
 	m_chainParams(c_genesisInfoFluidity)
 {
 	s_this = this;
@@ -124,12 +124,15 @@ void MainCLI::execute()
 		web3.ethereum()->setGasPricer(gasPricer);
 
 		// Set up fluidity authorities & signing key.
+		if (m_authorities.empty())
+			m_authorities = m_keyManager.accounts();
 		web3.ethereum()->setSealOption("authorities", rlp(m_authorities));
 		for (auto i: m_authorities)
 			if (Secret s = m_keyManager.secret(i))
 			{
 				web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
 				web3.ethereum()->setAuthor(i);
+				break;
 			}
 
 		web3.startNetwork();
