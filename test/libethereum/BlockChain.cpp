@@ -65,7 +65,7 @@ void compareBlocks(TestBlock const& _a, TestBlock const& _b);
 mArray writeTransactionsToJson(TransactionQueue const& _txsQueue);
 mObject writeBlockHeaderToJson(BlockHeader const& _bi);
 void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, ChainBranch const& _chainBranch, RecalcBlockHeader _verification);
-void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, vector<TestBlock> const& _importedBlocks);
+void overwriteUncleHeaderForTest(mObject& _uncleHeaderObj, TestBlock& _uncle, vector<TestBlock> const& _uncles, ChainBranch const& _chainBranch);
 void eraseJsonSectionForInvalidBlock(mObject& _blObj);
 void checkJsonSectionForInvalidBlock(mObject& _blObj);
 void checkExpectedException(mObject& _blObj, Exception const& _e);
@@ -142,21 +142,21 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				//Import Uncles
 				for (auto const& uHObj: blObj.at("uncleHeaders").get_array())
 				{
+					cnote << "Generating uncle block at test " << testname;
 					TestBlock uncle;
 					mObject uncleHeaderObj = uHObj.get_obj();
 					string uncleChainName = chainname;
 					if (uncleHeaderObj.count("chainname") > 0)
 						uncleChainName = uncleHeaderObj["chainname"].get_str();
 
-					vector<TestBlock>& importedBlocksForUncle = chainMap[uncleChainName]->importedBlocks;
-					overwriteUncleHeaderForTest(uncleHeaderObj, uncle, block.getUncles(), importedBlocksForUncle);
+					overwriteUncleHeaderForTest(uncleHeaderObj, uncle, block.getUncles(), *chainMap[uncleChainName]);
 					block.addUncle(uncle);
 				}
 
 				vector<TestBlock> validUncles = blockchain.syncUncles(block.getUncles());
 				block.setUncles(validUncles);
 
-				//read premining parameters
+				//read premining parameters //DO WE REALY NEED THIS?
 				if (blObj.count("blockHeaderPremine"))
 				{
 					overwriteBlockHeaderForTest(blObj.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname], RecalcBlockHeader::SkipVerify);
@@ -165,11 +165,18 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 
 				cnote << "Mining block at test " << testname;
 				block.mine(blockchain);
+				cnote << "Block mined with...";
+				cnote << "Transactions: " << block.getTransactionQueue().topTransactions(100).size();
+				cnote << "Uncles: " << block.getUncles().size();
 
 				TestBlock alterBlock(block);
+				checkBlocks(block, alterBlock, testname);
 
 				if (blObj.count("blockHeader"))
+				{
 					overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname], RecalcBlockHeader::Verify);
+					alterBlock.updateNonce(blockchain); //update nonce due to the block fields might be changed
+				}
 
 				blObj["rlp"] = toHex(alterBlock.getBytes(), 2, HexPrefix::Add);
 				blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.getBlockHeader());
@@ -366,7 +373,8 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 	//_parentHeader - parent blockheader
 
 	vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
-	TestBlockChain const& blockchain = _chainBranch.blockchain;
+	const SealEngineFace* sealEngine = _chainBranch.blockchain.getInterface().sealEngine();
+
 	RecalcBlockHeader findNewValidNonce = _verification;
 	BlockHeader tmp;
 	BlockHeader const& header = _block.getBlockHeader();
@@ -407,7 +415,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		{
 			BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).getBlockHeader();
 			tmp.setTimestamp(toInt(ho["RelTimestamp"]) + parentHeader.timestamp());
-			tmp.setDifficulty(((Ethash*)blockchain.getInterface().sealEngine())->calculateDifficulty(tmp, parentHeader));
+			tmp.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(tmp, parentHeader));
 			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
 		}
 
@@ -437,7 +445,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		if (number < importedBlocks.size())
 		{
 			BlockHeader parentHeader = importedBlocks.at(number).getBlockHeader();
-			blockchain.getInterface().sealEngine()->populateFromParent(tmp, parentHeader);
+			sealEngine->populateFromParent(tmp, parentHeader);
 			findNewValidNonce = RecalcBlockHeader::UpdateAndVerify;
 		}
 		else
@@ -449,12 +457,14 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 	_block.setBlockHeader(tmp, findNewValidNonce);
 }
 
-void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std::vector<TestBlock> const& uncles, std::vector<TestBlock> const& importedBlocks)
+void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std::vector<TestBlock> const& uncles, ChainBranch const& _chainBranch)
 {
 	//uncleHeaderObj - json Uncle header with additional option fields
 	//uncle			 - uncle Block to overwrite
 	//uncles		 - previously imported uncles
 	//importedBlocks - blocks already included in BlockChain
+	vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
+	const SealEngineFace* sealEngine = _chainBranch.blockchain.getInterface().sealEngine();
 
 	if (uncleHeaderObj.count("sameAsPreviousSibling"))
 	{
@@ -502,9 +512,6 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 		uncleHeaderObj.erase("overwriteAndRedoPoW");
 	}
 
-	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams());
-
 	//construct actual block
 	BlockHeader uncleHeader;
 	if (uncleHeaderObj.count("populateFromBlock"))
@@ -514,7 +521,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 		uncleHeaderObj.erase("populateFromBlock");
 		if (number < importedBlocks.size())
 		{
-			sealEngine.populateFromParent(uncleHeader, importedBlocks.at(number).getBlockHeader());
+			sealEngine->populateFromParent(uncleHeader, importedBlocks.at(number).getBlockHeader());
 			//Set Default roots for empty block
 			//m_transactionsRoot = _t; m_receiptsRoot = _r; m_sha3Uncles = _u; m_stateRoot = _s;
 			uncleHeader.setRoots((h256)fromHex("56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421"),
@@ -544,7 +551,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			uncleHeader.receiptsRoot(),
 			uncleHeader.logBloom(),
 			overwrite == "difficulty" ? toInt(uncleHeaderObj.at("difficulty"))
-									  :	overwrite == "timestamp" ? sealEngine.calculateDifficulty(uncleHeader, importedBlocks.at((size_t)uncleHeader.number() - 1).getBlockHeader())
+									  :	overwrite == "timestamp" ? ((const Ethash*)sealEngine)->calculateDifficulty(uncleHeader, importedBlocks.at((size_t)uncleHeader.number() - 1).getBlockHeader())
 																 : uncleHeader.difficulty(),
 			overwrite == "number" ? toInt(uncleHeaderObj.at("number")) : uncleHeader.number(),
 			overwrite == "gasLimit" ? toInt(uncleHeaderObj.at("gasLimit")) : uncleHeader.gasLimit(),
@@ -564,6 +571,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 	}
 	else
 		uncle.setBlockHeader(uncleHeader, RecalcBlockHeader::UpdateAndVerify);
+	uncle.updateNonce(_chainBranch.blockchain);
 }
 
 void compareBlocks(TestBlock const& _a, TestBlock const& _b)

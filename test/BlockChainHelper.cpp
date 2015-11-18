@@ -139,6 +139,8 @@ void TestBlock::setUncles(vector<TestBlock> const& _uncles)
 
 void TestBlock::premineUpdate(BlockHeader& _blockInfo)
 {
+	//alter blockheader with defined fields before actual mining
+
 	if (m_premineUpdate.count("parentHash") > 0)
 		_blockInfo.setParentHash(m_blockHeader.parentHash());
 	if (m_premineUpdate.count("coinbase") > 0)
@@ -165,6 +167,8 @@ void TestBlock::premineUpdate(BlockHeader& _blockInfo)
 		_blockInfo.setTimestamp(m_blockHeader.timestamp());
 	if (m_premineUpdate.count("extraData") > 0)
 		_blockInfo.setExtraData(m_blockHeader.extraData());
+
+	m_premineHeader = _blockInfo; //needed for check that any altered fields are altered in mined block as well
 }
 
 void TestBlock::mine(TestBlockChain const& bc)
@@ -208,12 +212,13 @@ void TestBlock::mine(TestBlockChain const& bc)
 		return;
 	}
 
+	//m_sealEngine = blockchain.sealEngine();
 	m_blockHeader = BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
 	copyStateFrom(block.state());
-	m_sealEngine = blockchain.sealEngine();
 	//Update block hashes cause we would fill block with uncles and transactions that
 	//actually might have been dropped because they are invalid
 	recalcBlockHeaderBytes(RecalcBlockHeader::UpdateAndVerify);
+	updateNonce(bc); //uncle hash is updated
 }
 
 void TestBlock::setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate)
@@ -302,9 +307,20 @@ bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const& _sta
 	return rlpStream.out();
 }
 
+void TestBlock::updateNonce(TestBlockChain const& _bc)
+{
+	if (((BlockHeader)m_blockHeader).difficulty() == 0)
+		BOOST_ERROR("Trying to mine a block with 0 difficulty!");
+
+	dev::eth::mine(m_blockHeader, _bc.getInterface().sealEngine());
+	m_blockHeader.noteDirty();
+	recalcBlockHeaderBytes(RecalcBlockHeader::SkipVerify);
+}
+
 //Form bytestream of a block with [header transactions uncles]
 void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 {
+	(void)_recalculate;
 	Transactions txList;
 	for (auto const& txi: m_transactionQueue.topTransactions(std::numeric_limits<unsigned>::max()))
 		txList.push_back(txi);
@@ -326,21 +342,22 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		uncleStream.appendRaw(uncleRlp.out());
 	}
 
-	if (_recalculate == RecalcBlockHeader::Update || _recalculate == RecalcBlockHeader::UpdateAndVerify)
-	{
-		//update hashes correspong to block contents
-		if (m_uncles.size())
-			m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
+	//update hashes correspong to block contents
+	if (m_uncles.size())
+		m_blockHeader.setSha3Uncles(sha3(uncleStream.out()));
 
+	//if (_recalculate == RecalcBlockHeader::Update || _recalculate == RecalcBlockHeader::UpdateAndVerify)
+	//
+	//{
 		//if (txList.size())
 		//	m_blockHeader.setRoots(sha3(txStream.out()), m_blockHeader.receiptsRoot(), m_blockHeader.sha3Uncles(), m_blockHeader.stateRoot());
 
-		if (((BlockHeader)m_blockHeader).difficulty() == 0)
-			BOOST_ERROR("Trying to mine a block with 0 difficulty!");
+		//if (((BlockHeader)m_blockHeader).difficulty() == 0)
+		//	BOOST_ERROR("Trying to mine a block with 0 difficulty!");
 
-		dev::eth::mine(m_blockHeader, m_sealEngine);
-		m_blockHeader.noteDirty();
-	}
+		//dev::eth::mine(m_blockHeader, m_sealEngine);
+		//m_blockHeader.noteDirty();
+	//}
 
 	RLPStream blHeaderStream;
 	m_blockHeader.streamRLP(blHeaderStream, WithSeal);
@@ -350,7 +367,7 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 	ret.appendRaw(txStream.out());		 //transactions
 	ret.appendRaw(uncleStream.out());	 //uncles
 
-	if (_recalculate == RecalcBlockHeader::Verify || _recalculate == RecalcBlockHeader::UpdateAndVerify)
+	/*if (_recalculate == RecalcBlockHeader::Verify || _recalculate == RecalcBlockHeader::UpdateAndVerify)
 	{
 		try
 		{
@@ -365,7 +382,7 @@ void TestBlock::recalcBlockHeaderBytes(RecalcBlockHeader _recalculate)
 		{
 			BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed");
 		}
-	}
+	}*/
 	m_bytes = ret.out();
 }
 
@@ -384,11 +401,6 @@ void TestBlock::clearState()
 	m_tempDirState.reset(0);
 	for (size_t i = 0; i < m_uncles.size(); i++)
 		m_uncles.at(i).clearState();
-}
-
-void TestBlock::setPremine(std::string const& _parameter)
-{
-	m_premineUpdate[_parameter] = true;
 }
 
 void TestBlock::populateFrom(TestBlock const& _original)
@@ -411,6 +423,7 @@ void TestBlock::populateFrom(TestBlock const& _original)
 	m_blockHeader = _original.getBlockHeader();
 	m_bytes = _original.getBytes();
 	m_accountMap = _original.accountMap();
+	//m_sealEngine = _original.m_sealEngine;
 }
 
 TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)

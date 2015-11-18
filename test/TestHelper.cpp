@@ -65,7 +65,7 @@ void connectClients(Client& c1, Client& c2)
 
 void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
 {
-	s.commitToSeal(_bc);
+	s.commitToSeal(_bc, s.info().extraData());
 	Notified<bytes> sealed;
 	_sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
 	_sealer->generateSeal(s.info());
