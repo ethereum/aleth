@@ -7,25 +7,10 @@
 #include "AdminEth.h"
 #include "SessionManager.h"
 #include "JsonHelper.h"
-
 using namespace std;
 using namespace dev;
 using namespace dev::rpc;
 using namespace dev::eth;
-
-bool static isHex(std::string const& _s)
-{
-	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
-	for (; i < _s.size(); ++i)
-		if (fromHex(_s[i], WhenError::DontThrow) == -1)
-			return false;
-	return true;
-}
-
-template <class T> static bool isHash(std::string const& _hash)
-{
-	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
-}
 
 AdminEth::AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm)
 : m_eth(_eth), m_gp(_gp), m_keyManager(_keyManager), m_sm(_sm) {}

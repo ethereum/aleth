@@ -61,8 +61,7 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
-		else if (m.interpretOption(i, argc, argv)) {}
-		else
+		else if (!m.interpretOption(i, argc, argv))
 		{
 			cerr << "Invalid argument: " << arg << endl;
 			exit(-1);

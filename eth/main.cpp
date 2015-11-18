@@ -372,7 +372,8 @@ int main(int argc, char** argv)
 	bool pinning = false;
 	bool enableDiscovery = false;
 	bool noPinning = false;
-	unsigned networkID = (unsigned)-1;
+	static const NoNetworkID = (unsigned)-1;
+	unsigned networkID = NoNetworkID;
 
 	/// Mining params
 	unsigned mining = 0;
@@ -1138,7 +1139,7 @@ int main(int argc, char** argv)
 		DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
 		c->setSealer(m.minerType());
 		c->setAuthor(author);
-		if (networkID != (unsigned)-1)
+		if (networkID != NoNetworkID)
 			c->setNetworkId(networkID);
 	}
 
