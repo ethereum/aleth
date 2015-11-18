@@ -44,6 +44,9 @@ namespace eth
  */
 class EthereumPeer: public p2p::Capability
 {
+	friend class EthereumHost; //TODO: remove this
+	friend class BlockChainSync; //TODO: remove this
+
 public:
 	/// Basic constructor.
 	EthereumPeer(std::shared_ptr<p2p::Session> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap);
@@ -67,8 +70,8 @@ public:
 	void setIdle();
 
 	/// Request hashes for given parent hash.
-	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip);
-	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip);
+	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
+	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
 
 	/// Request specified blocks from peer.
 	void requestBlockBodies(h256s const& _blocks);
@@ -78,6 +81,9 @@ public:
 
 	/// Set that it's a rude node.
 	void setRude();
+
+	/// Abort the sync operation.
+	void abortSync();
 
 private:
 	using p2p::Capability::sealAndSend;
@@ -91,8 +97,6 @@ private:
 	/// Request status. Called from constructor
 	void requestStatus();
 
-	/// Abort the sync operation.
-	void abortSync();
 
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
@@ -131,6 +135,7 @@ private:
 	/// This is built as we ask for hashes. Once no more hashes are given, we present this to the
 	/// host who initialises the DownloadMan and m_sub becomes active for us to begin asking for blocks.
 	u256 m_syncHashNumber = 0;				///< Number of latest hash we sync to (PV61+)
+	u256 m_height = 0;						///< Chain height
 	h256 m_syncHash;						///< Latest hash we sync to (PV60)
 
 	u256 m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability

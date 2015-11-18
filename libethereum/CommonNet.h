@@ -88,10 +88,12 @@ enum class Asking
 
 enum class SyncState
 {
+	NotSynced,			///< Initial chain sync has not started yet
 	Idle,				///< Initial chain sync complete. Waiting for new packets
+	//Seeking,            ///< Gettting subchain headers
 	Waiting,			///< Block downloading paused. Waiting for block queue to process blocks and free space
 	Blocks,				///< Downloading blocks
-	Blocks,				///< Downloading blocks
+	State,				///< Downloading state
 	NewBlocks,			///< Downloading blocks learned from NewHashes packet
 
 	Size		/// Must be kept last
@@ -104,8 +106,6 @@ struct SyncStatus
 	unsigned hashesTotal = 0;
 	unsigned hashesReceived = 0;
 	bool hashesEstimated = false;
-	unsigned blocksTotal = 0;
-	unsigned blocksReceived = 0;
 	unsigned startBlockNumber;
 	unsigned currentBlockNumber;
 	unsigned highestBlockNumber;
