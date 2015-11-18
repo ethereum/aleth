@@ -37,6 +37,8 @@ namespace dev
 namespace eth
 {
 
+struct SyncStatus;
+
 using TransactionHashes = h256s;
 using UncleHashes = h256s;
 
@@ -80,11 +82,11 @@ public:
 	virtual std::pair<h256, Address> submitTransaction(TransactionSkeleton const& _t, Secret const& _secret) = 0;
 
 	/// Submits the given message-call transaction.
-	void submitTransaction(Secret const& _secret, u256 const& _value, Address const& _dest, bytes const& _data = bytes(), u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = UndefinedU256);
+	void submitTransaction(Secret const& _secret, u256 const& _value, Address const& _dest, bytes const& _data = bytes(), u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = Invalid256);
 
 	/// Submits a new contract-creation transaction.
 	/// @returns the new contract's address (assuming it all goes through).
-	Address submitTransaction(Secret const& _secret, u256 const& _endowment, bytes const& _init, u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = UndefinedU256);
+	Address submitTransaction(Secret const& _secret, u256 const& _endowment, bytes const& _init, u256 const& _gas = 1000000, u256 const& _gasPrice = DefaultGasPrice, u256 const& _nonce = Invalid256);
 
 	/// Blocks until all pending transactions have been processed.
 	virtual void flushTransactions() = 0;
@@ -209,6 +211,9 @@ public:
 	virtual u256 gasLimitRemaining() const = 0;
 	// Get the gas bidding price
 	virtual u256 gasBidPrice() const = 0;
+
+	/// Get some information on the block queue.
+	virtual SyncStatus syncStatus() const = 0;
 
 	// [MINING API]:
 

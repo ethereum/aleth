@@ -116,7 +116,7 @@ public:
 	void populateFromParent(BlockInfo const& parent);
 
 	u256 calculateDifficulty(BlockInfo const& _parent) const;
-	u256 childGasLimit(u256 const& _gasFloorTarget = UndefinedU256) const;
+	u256 childGasLimit(u256 const& _gasFloorTarget = Invalid256) const;
 	h256 const& boundary() const;
 
 	h256 const& parentHash() const { return m_parentHash; }

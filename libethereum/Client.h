@@ -116,7 +116,7 @@ public:
 	/// Get some information on the block queue.
 	BlockQueueStatus blockQueueStatus() const { return m_bq.status(); }
 	/// Get some information on the block queue.
-	SyncStatus syncStatus() const;
+	SyncStatus syncStatus() const override;
 	/// Get the block queue.
 	BlockQueue const& blockQueue() const { return m_bq; }
 	/// Get the block queue.
