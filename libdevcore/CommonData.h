@@ -69,6 +69,15 @@ int fromHex(char _i, WhenError _throw);
 /// If _throw = ThrowType::DontThrow, it replaces bad hex characters with 0's, otherwise it will throw an exception.
 bytes fromHex(std::string const& _s, WhenError _throw = WhenError::DontThrow);
 
+/// @returns true if @a _s is a hex string.
+bool isHex(std::string const& _s);
+
+/// @returns true if @a _hash is a hash conforming to FixedHash type @a T.
+template <class T> static bool isHash(std::string const& _hash)
+{
+	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
+}
+
 /// Converts byte array to a string containing the same (binary) data. Unless
 /// the byte array happens to contain ASCII data, this won't be printable.
 inline std::string asString(bytes const& _b)
