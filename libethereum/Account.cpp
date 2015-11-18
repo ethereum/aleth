@@ -23,6 +23,8 @@
 #include <liblll/Compiler.h>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libethcore/Common.h>
+#include <libethcore/ChainOperationParams.h>
+#include <libethcore/Precompiled.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -32,7 +34,17 @@ namespace js = json_spirit;
 
 const h256 Account::c_contractConceptionCodeHash;
 
-AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask)
+uint64_t toUnsigned(js::mValue const& _v)
+{
+	switch (_v.type())
+	{
+	case js::int_type: return _v.get_uint64();
+	case js::str_type: return fromBigEndian<uint64_t>(fromHex(_v.get_str()));
+	default: return 0;
+	}
+}
+
+AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
 		bigint ret(s);
@@ -46,7 +58,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
 	js::mObject o = val.get_obj();
-	for (auto account: o.count("alloc") ? o["alloc"].get_obj() : o)
+	for (auto account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
@@ -87,6 +99,28 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 
 		if (o_mask)
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage);
+
+		if (o_precompiled && o.count("precompiled"))
+		{
+			js::mObject p = o["precompiled"].get_obj();
+			auto n = p["name"].get_str();
+			try
+			{
+				if (p.count("linear"))
+				{
+					auto l = p["linear"].get_obj();
+					unsigned base = toUnsigned(l["base"]);
+					unsigned word = toUnsigned(l["word"]);
+					o_precompiled->insert(make_pair(a, PrecompiledContract(base, word, PrecompiledRegistrar::executor(n))));
+				}
+			}
+			catch (ExecutorNotFound)
+			{
+				// Oh dear - missing a plugin?
+				cwarn << "Couldn't create a precompiled contract account. Missing an executor called:" << n;
+				throw;
+			}
+		}
 	}
 
 	return ret;

@@ -38,6 +38,7 @@ namespace eth
 class BlockHeader;
 struct ChainOperationParams;
 class Interface;
+class PrecompiledFace;
 
 class SealEngineFace
 {
@@ -67,9 +68,13 @@ public:
 
 	ChainOperationParams const& chainParams() const { return m_params; }
 	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
-	SealEngineFace* withChainParams(ChainOperationParams const& _params) { m_params = _params; return this; }
+	SealEngineFace* withChainParams(ChainOperationParams const& _params) { setChainParams(_params); return this; }
 
 	virtual bool shouldSeal(Interface*) { return true; }
+
+	virtual bool isPrecompiled(Address const& _a) const { return m_params.precompiled.count(_a); }
+	virtual bigint costOfPrecompiled(Address const& _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).cost(_in); }
+	virtual void executePrecompiled(Address const& _a, bytesConstRef _in, bytesRef _out) const { return m_params.precompiled.at(_a).execute(_in, _out); }
 
 protected:
 	virtual bool onOptionChanging(std::string const&, bytes const&) { return true; }

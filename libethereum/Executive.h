@@ -42,6 +42,7 @@ class State;
 class Block;
 class BlockChain;
 class ExtVM;
+class SealEngineFace;
 struct Manifest;
 
 struct VMTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 11; };
@@ -89,7 +90,7 @@ class Executive
 {
 public:
 	/// Simple constructor; executive will operate on given state, with the given environment info.
-	Executive(State& _s, EnvInfo const& _envInfo, unsigned _level = 0): m_s(_s), m_envInfo(_envInfo), m_depth(_level) {}
+	Executive(State& _s, EnvInfo const& _envInfo, SealEngineFace* _sealEngine, unsigned _level = 0): m_s(_s), m_envInfo(_envInfo), m_depth(_level), m_sealEngine(_sealEngine) {}
 
 	/** Easiest constructor.
 	 * Creates executive to operate on the state of end of the given block, populating environment
@@ -185,6 +186,7 @@ private:
 	LogEntries m_logs;					///< The log entries created by this transaction. Set by finalize().
 
 	bigint m_gasCost;
+	SealEngineFace* m_sealEngine;
 };
 
 }

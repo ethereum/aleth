@@ -20,7 +20,6 @@
  */
 
 #include "Precompiled.h"
-
 #include <libdevcore/Log.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Hash.h>
@@ -31,10 +30,19 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+PrecompiledRegistrar* PrecompiledRegistrar::s_this = nullptr;
+
+PrecompiledExecutor const& PrecompiledRegistrar::executor(std::string const& _name)
+{
+	if (!get()->m_execs.count(_name))
+		BOOST_THROW_EXCEPTION(ExecutorNotFound());
+	return get()->m_execs[_name];
+}
+
 namespace
 {
 
-void ecrecoverCode(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, bytesRef _out)
 {
 	struct inType
 	{
@@ -55,7 +63,7 @@ void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 		{
 			try
 			{
-				if (Public rec = recover(sig, in.hash))
+				if (Public rec = dev::recover(sig, in.hash))
 				{
 					ret = dev::sha3(rec);
 					memset(ret.data(), 0, 12);
@@ -67,31 +75,19 @@ void ecrecoverCode(bytesConstRef _in, bytesRef _out)
 	}
 }
 
-void sha256Code(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(sha256)(bytesConstRef _in, bytesRef _out)
 {
-	sha256(_in).ref().copyTo(_out);
+	dev::sha256(_in).ref().copyTo(_out);
 }
 
-void ripemd160Code(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(ripemd160)(bytesConstRef _in, bytesRef _out)
 {
-	h256(ripemd160(_in), h256::AlignRight).ref().copyTo(_out);
+	h256(dev::ripemd160(_in), h256::AlignRight).ref().copyTo(_out);
 }
 
-void identityCode(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in, bytesRef _out)
 {
 	_in.copyTo(_out);
 }
 
-}
-
-std::unordered_map<unsigned, PrecompiledAddress> const& dev::eth::precompiled()
-{
-	static const std::unordered_map<unsigned, PrecompiledAddress> c_precompiled =
-	{
-		{ 1, { [](bytesConstRef) -> bigint { return c_ecrecoverGas; }, ecrecoverCode }},
-		{ 2, { [](bytesConstRef i) -> bigint { return c_sha256Gas + (i.size() + 31) / 32 * c_sha256WordGas; }, sha256Code }},
-		{ 3, { [](bytesConstRef i) -> bigint { return c_ripemd160Gas + (i.size() + 31) / 32 * c_ripemd160WordGas; }, ripemd160Code }},
-		{ 4, { [](bytesConstRef i) -> bigint { return c_identityGas + (i.size() + 31) / 32 * c_identityWordGas; }, identityCode }}
-	};
-	return c_precompiled;
 }

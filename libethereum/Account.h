@@ -243,7 +243,10 @@ private:
 using AccountMap = std::unordered_map<Address, Account>;
 using AccountMaskMap = std::unordered_map<Address, AccountMask>;
 
-AccountMap jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask = nullptr);
+class PrecompiledContract;
+using PrecompiledContractMap = std::unordered_map<Address, PrecompiledContract>;
+
+AccountMap jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask = nullptr, PrecompiledContractMap* o_precompiled = nullptr);
 
 }
 }

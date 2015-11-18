@@ -641,7 +641,7 @@ ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Per
 	// transaction as possible.
 	uncommitToMine();
 
-	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), _t, _p, _onOp);
+	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), m_sealEngine, _t, _p, _onOp);
 
 	if (_p == Permanence::Committed)
 	{

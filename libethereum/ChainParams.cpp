@@ -25,6 +25,7 @@
 #include <libdevcore/TrieDB.h>
 #include <libethcore/SealEngine.h>
 #include <libethcore/BlockHeader.h>
+#include <libethcore/Precompiled.h>
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Account.h"
@@ -35,6 +36,11 @@ namespace js = json_spirit;
 
 ChainParams::ChainParams()
 {
+	// Setup default precompiled contracts as equal to genesis of Frontier.
+	precompiled.insert(make_pair(h160(1), PrecompiledContract(3000, 0, PrecompiledRegistrar::executor("ecrecover"))));
+	precompiled.insert(make_pair(h160(2), PrecompiledContract(60, 12, PrecompiledRegistrar::executor("sha256"))));
+	precompiled.insert(make_pair(h160(3), PrecompiledContract(600, 120, PrecompiledRegistrar::executor("ripemd160"))));
+	precompiled.insert(make_pair(h160(4), PrecompiledContract(15, 3, PrecompiledRegistrar::executor("identity"))));
 }
 
 ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
@@ -58,7 +64,7 @@ ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
 
 	// genesis
 	{
-		genesisState = jsonToAccountMap(_json);
+		genesisState = jsonToAccountMap(_json, nullptr, &precompiled);
 		stateRoot = _stateRoot;
 		parentHash = h256(genesis["parentHash"].get_str());
 		author = genesis.count("coinbase") ? h160(genesis["coinbase"].get_str()) : h160(genesis["author"].get_str());

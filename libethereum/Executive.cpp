@@ -26,7 +26,6 @@
 #include "Interface.h"
 #include "State.h"
 #include "ExtVM.h"
-#include "Precompiled.h"
 #include "BlockChain.h"
 #include "Block.h"
 using namespace std;
@@ -142,19 +141,24 @@ string StandardTrace::json(bool _styled) const
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
-	Executive(_s, _bc.lastHashes(_s.info().parentHash()), _level)
+	m_s(_s.mutableState()),
+	m_envInfo(_s.info(), _bc.lastHashes(_s.info().parentHash())),
+	m_depth(_level),
+	m_sealEngine(_bc.sealEngine())
 {}
 
 Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 	m_s(_s.mutableState()),
 	m_envInfo(_s.info(), _lh),
-	m_depth(_level)
+	m_depth(_level),
+	m_sealEngine(_s.sealEngine())
 {}
 
 Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
 	m_s(_s = _block.fromPending(_txIndex)),
 	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
-	m_depth(_level)
+	m_depth(_level),
+	m_sealEngine(_bc.sealEngine())
 {}
 
 u256 Executive::gasUsed() const
@@ -250,10 +254,9 @@ bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _valu
 bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address const& _origin)
 {
 	m_isCreation = false;
-	auto it = !(_p.codeAddress & ~h160(0xffffffff)) ? precompiled().find((unsigned)(u160)_p.codeAddress) : precompiled().end();
-	if (it != precompiled().end())
+	if (m_sealEngine->isPrecompiled(_p.codeAddress))
 	{
-		bigint g = it->second.gas(_p.data);
+		bigint g = m_sealEngine->costOfPrecompiled(_p.codeAddress, _p.data);
 		if (_p.gas < g)
 		{
 			m_excepted = TransactionException::OutOfGasBase;
@@ -263,7 +266,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		else
 		{
 			m_gas = (u256)(_p.gas - g);
-			it->second.exec(_p.data, _p.out);
+			m_sealEngine->executePrecompiled(_p.codeAddress, _p.data, _p.out);
 		}
 	}
 	else
@@ -274,7 +277,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_envInfo, _p.receiveAddress, _p.senderAddress, _origin, _p.value, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.value, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
@@ -294,7 +297,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// Execute _init.
 	if (!_init.empty())
-		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
 
 	m_s.m_cache[m_newAddress] = Account(0, m_s.balance(m_newAddress), Account::ContractConception);
 	m_s.transferBalance(_sender, m_newAddress, _endowment);

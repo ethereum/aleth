@@ -139,7 +139,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 			env.setGasLimit(mid);
 			State tempState(block.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
-			er = tempState.execute(env, t, Permanence::Reverted).first;
+			er = tempState.execute(env, bc().sealEngine(), t, Permanence::Reverted).first;
 			if (er.excepted == TransactionException::OutOfGas ||
 				er.excepted == TransactionException::OutOfGasBase ||
 				er.excepted == TransactionException::OutOfGasIntrinsic ||

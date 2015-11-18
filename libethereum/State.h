@@ -97,6 +97,8 @@ DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 
 //#define ETH_ALLOW_EMPTY_BLOCK_AND_STATE 1
 
+class SealEngineFace;
+
 /**
  * @brief Model of an Ethereum state, essentially a facade for the trie.
  * Allows you to query the state of accounts, and has built-in caching for various aspects of the
@@ -153,7 +155,7 @@ public:
 
 	/// Execute a given transaction.
 	/// This will change the state accordingly.
-	std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
+	std::pair<ExecutionResult, TransactionReceipt> execute(EnvInfo const& _envInfo, SealEngineFace* _sealEngine, Transaction const& _t, Permanence _p = Permanence::Committed, OnOpFunc const& _onOp = OnOpFunc());
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;

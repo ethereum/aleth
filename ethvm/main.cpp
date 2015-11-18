@@ -26,8 +26,10 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
+#include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
 #include <libethereum/Executive.h>
+#include <libethereum/ChainParams.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 using namespace std;
@@ -165,7 +167,9 @@ int main(int argc, char** argv)
 		data = code;
 
 	state.addBalance(sender, value);
-	Executive executive(state, envInfo);
+
+	unique_ptr<SealEngineFace> se(ChainParams().createSealEngine());
+	Executive executive(state, envInfo, se.get());
 	ExecutionResult res;
 	executive.setResultRecipient(res);
 	Transaction t = eth::Transaction(value, gasPrice, gas, data, 0);
