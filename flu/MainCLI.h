@@ -45,6 +45,10 @@ public:
 	}
 };
 
+struct RPCPrivate;
+class WebThreeDirect;
+namespace eth { class TrivialGasPricer; }
+
 class MainCLI: public CLI, public dev::SystemManager
 {
 public:
@@ -67,6 +71,7 @@ private:
 	void exit() override { staticExitHandler(0); }
 	void setup();
 	void setupKeyManager();
+	void startRPC(WebThreeDirect& _web3, eth::TrivialGasPricer& _gasPricer);
 
 	Mode m_mode;
 
@@ -87,6 +92,10 @@ private:
 	unsigned short m_listenPort = 40404;
 	std::string m_publicIP;
 
+	bool m_ipc = false;
+	int m_jsonRPCPort = -1;
+	std::string m_rpcCorsDomain = "";
+
 	eth::KeyManager m_keyManager;
 	p2p::NetworkPreferences m_netPrefs;
 	std::string m_paramsJson;
@@ -96,6 +105,8 @@ private:
 
 	std::atomic<bool> m_shouldExit = {false};
 	std::string m_logBuffer;
+
+	std::shared_ptr<RPCPrivate> m_rpcPrivate;
 
 	static MainCLI* s_this;
 };

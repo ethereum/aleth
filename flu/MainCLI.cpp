@@ -100,6 +100,14 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 		m_authorities.push_back(Address(argv[++i]));
 	else if (arg == "--start-sealing")
 		m_startSealing = true;
+	else if (arg == "--ipc")
+		m_ipc = true;
+	else if (arg == "--jsonrpc")
+		m_jsonRPCPort = 8545;
+	else if (arg == "--jsonrpc-port" && i + 1 < argc)
+		m_jsonRPCPort = atoi(argv[++i]);
+	else if (arg == "--jsonrpc-cors-domain" && i + 1 < argc)
+		m_rpcCorsDomain = argv[++i];
 	else
 	{
 		p2p::NodeSpec ns(arg);
@@ -172,6 +180,8 @@ void MainCLI::execute()
 		if (m_startSealing)
 			web3.ethereum()->startSealing();
 
+		startRPC(web3, *gasPricer);
+
 		if (m_mode == Mode::Console)
 		{
 			SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, [](Address){ return string(); }, m_keyManager);
@@ -205,6 +215,55 @@ void MainCLI::execute()
 	}
 }
 
+namespace dev
+{
+struct RPCPrivate
+{
+#if ETH_JSONRPC || !ETH_TRUE
+	unique_ptr<ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>> jsonrpcServer;
+	unique_ptr<rpc::SessionManager> sessionManager;
+	unique_ptr<SimpleAccountHolder> accountHolder;
+#endif
+};
+}
+
+void MainCLI::startRPC(WebThreeDirect& _web3, TrivialGasPricer& _gasPricer)
+{
+#if ETH_JSONRPC || !ETH_TRUE
+	m_rpcPrivate = make_shared<RPCPrivate>();
+
+	if (m_jsonRPCPort > -1 || m_ipc)
+	{
+		m_rpcPrivate->sessionManager.reset(new rpc::SessionManager());
+		m_rpcPrivate->accountHolder.reset(new SimpleAccountHolder([&](){ return _web3.ethereum(); }, [](Address){ return string(); }, m_keyManager));
+		auto ethFace = new rpc::Eth(*_web3.ethereum(), *m_rpcPrivate->accountHolder);
+		auto adminEthFace = new rpc::AdminEth(*_web3.ethereum(), _gasPricer, m_keyManager, *m_rpcPrivate->sessionManager);
+		m_rpcPrivate->jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(_web3, {}), new rpc::Net(_web3), new rpc::Web3(_web3.clientVersion()), new rpc::Personal(m_keyManager), adminEthFace, new rpc::AdminNet(_web3, *m_rpcPrivate->sessionManager), new rpc::AdminUtils(*m_rpcPrivate->sessionManager)));
+		if (m_jsonRPCPort > -1)
+		{
+			auto httpConnector = new SafeHttpServer(m_jsonRPCPort, "", "", SensibleHttpThreads);
+			httpConnector->setAllowedOrigin(m_rpcCorsDomain);
+			m_rpcPrivate->jsonrpcServer->addConnector(httpConnector);
+			httpConnector->StartListening();
+		}
+		if (m_ipc)
+		{
+			auto ipcConnector = new IpcServer("geth");
+			m_rpcPrivate->jsonrpcServer->addConnector(ipcConnector);
+			ipcConnector->StartListening();
+		}
+
+		string jsonAdmin = m_rpcPrivate->sessionManager->newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
+
+		cnote << "JSONRPC Admin Session Key: " << jsonAdmin;
+		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
+		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(m_jsonRPCPort));
+	}
+#endif
+}
+
 void MainCLI::setupKeyManager()
 {
 	if (m_keyManager.exists())
@@ -218,7 +277,7 @@ void MainCLI::setupKeyManager()
 	if (m_keyManager.accounts().empty())
 	{
 		m_keyManager.import(Secret::random(), "Default");
-		cnote << "Created key: " << m_keyManager.accounts().front().hex();
+		cnote << "Created key: 0x" << m_keyManager.accounts().front().hex();
 	}
 }
 
