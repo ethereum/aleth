@@ -225,7 +225,6 @@ BOOST_AUTO_TEST_CASE(filters)
 		auto wh = h.registerCapability(make_shared<WhisperHost>());
 		wh->installWatch(BuildTopic("t1"));
 		wh->installWatch(BuildTopic("t2"));
-		db.saveTopicsToDB(*wh, persistID);
 	}
 
 	unsigned const step = 10;

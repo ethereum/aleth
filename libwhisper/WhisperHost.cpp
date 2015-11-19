@@ -287,25 +287,3 @@ void WhisperHost::loadMessagesFromBD()
 		cwarn << "Unknown Exception in WhisperHost::loadMessagesFromBD()";
 	}
 }
-
-void WhisperHost::exportFilters(RLPStream& o_dst) const
-{
-	DEV_GUARDED(m_filterLock)
-	{
-		o_dst.appendList(m_filters.size());
-
-		for (auto const& x: m_filters)
-		{
-			Topics const& topics = x.second.full;
-			unsigned const RawDataSize = topics.size() * h256::size;
-			unique_ptr<byte> p(new byte[RawDataSize]);
-			unsigned i = 0;
-
-			for (auto const& t: topics)
-				memcpy(p.get() + h256::size * i++, t.data(), h256::size);
-			
-			bytesConstRef ref(p.get(), RawDataSize);
-			o_dst.append(ref);
-		}		
-	}
-}

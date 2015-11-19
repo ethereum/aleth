@@ -149,7 +149,7 @@ void MainCLI::execute()
 		for (auto const& i: m_sealEngineParams)
 			web3.ethereum()->setSealOption(i.first, i.second);
 		if (m_sealEngineParams.count("authorities"))
-			m_authorities = (Addresses)RLP(m_sealEngineParams["authorities"]);
+			m_authorities = RLP(m_sealEngineParams["authorities"]).convert<Addresses>(RLP::LaissezFaire);
 		else
 		{
 			if (m_authorities.empty())

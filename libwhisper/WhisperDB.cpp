@@ -186,12 +186,3 @@ vector<unsigned> WhisperFiltersDB::restoreTopicsFromDB(WhisperHost* _host, h256 
 
 	return ret;
 }
-
-void WhisperFiltersDB::saveTopicsToDB(WhisperHost const& _host, h256 const& _id)
-{
-	bytes b;
-	RLPStream rlp;
-	_host.exportFilters(rlp);
-	rlp.swapOut(b);
-	insert(_id, b);
-}
