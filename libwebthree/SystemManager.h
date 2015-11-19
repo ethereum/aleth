@@ -14,32 +14,22 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file JSLocalConsole.h
- * @author Marek Kotewicz <marek@ethdev.com>
+/** @file SystemManager.h
+ * @author Gav Wood <i@gavwood.com>
  * @date 2015
- * Ethereum client.
  */
 
 #pragma once
 
-#include <libjsengine/JSV8Engine.h>
-#include <libjsengine/JSV8Printer.h>
-#include "JSConsole.h"
-#include "JSV8Connector.h"
-
-namespace jsonrpc { class AbstractServerConnector; }
+#include <libdevcore/Common.h>
 
 namespace dev
 {
-namespace eth
-{
 
-class JSLocalConsole: public JSConsole<JSV8Engine, JSV8Printer>
+class SystemManager
 {
 public:
-	virtual ~JSLocalConsole() {}
-	jsonrpc::AbstractServerConnector* createConnector() { return new JSV8Connector(m_engine); }
+	virtual void exit() = 0;
 };
 
-}
 }

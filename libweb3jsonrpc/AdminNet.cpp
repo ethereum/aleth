@@ -10,7 +10,7 @@ using namespace std;
 using namespace dev;
 using namespace dev::rpc;
 
-AdminNet::AdminNet(WebThreeNetworkFace& _network, SessionManager& _sm): m_network(_network), m_sm(_sm) {}
+AdminNet::AdminNet(NetworkFace& _network, SessionManager& _sm): m_network(_network), m_sm(_sm) {}
 
 bool AdminNet::admin_net_start(std::string const& _session)
 {

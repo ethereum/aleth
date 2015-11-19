@@ -34,6 +34,7 @@
 #include <libp2p/Host.h>
 #include <libwhisper/WhisperHost.h>
 #include <libethereum/Client.h>
+#include <libethereum/ChainParams.h>
 
 namespace dev
 {
@@ -51,7 +52,7 @@ namespace bzz { class Interface; class Client; }
 
 class Support;
 
-class WebThreeNetworkFace
+class NetworkFace
 {
 public:
 	/// Get information concerning this node.
@@ -112,7 +113,7 @@ public:
  *
  * Provides a baseline for the multiplexed multi-protocol session class, WebThree.
  */
-class WebThreeDirect: public WebThreeNetworkFace
+class WebThreeDirect: public NetworkFace
 {
 public:
 	/// Constructor for private instance. If there is already another process on the machine using @a _dbPath, then this will throw an exception.
@@ -120,6 +121,7 @@ public:
 	WebThreeDirect(
 		std::string const& _clientVersion,
 		std::string const& _dbPath,
+		eth::ChainParams const& _params,
 		WithExisting _we = WithExisting::Trust,
 		std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
 		p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),

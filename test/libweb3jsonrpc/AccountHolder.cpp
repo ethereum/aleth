@@ -17,7 +17,6 @@
 /**
  * @author Christian R <c@ethdev.com>
  * @date 2015
- * Unit tests for the account holder used by the WebThreeStubServer.
  */
 
 #include <boost/test/unit_test.hpp>

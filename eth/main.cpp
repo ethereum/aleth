@@ -34,13 +34,15 @@
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
 #include <libdevcore/StructuredLogger.h>
-#include <libethcore/EthashAux.h>
+#include <libethashseal/EthashAux.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
-#include <libethereum/All.h>
-#include <libethereum/BlockChainSync.h>
 #include <libethcore/KeyManager.h>
 #include <libethcore/ICAP.h>
+#include <libethereum/All.h>
+#include <libethereum/BlockChainSync.h>
+#include <libethashseal/EthashClient.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
 #if ETH_JSCONSOLE || !ETH_TRUE
 #include <libjsconsole/JSLocalConsole.h>
@@ -98,7 +100,7 @@ void help()
 		<< "    --olympic  Use the Olympic (0.9) protocol." << endl
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
 		<< "    --private <name>  Use a private chain." << endl
-		<< "    --genesis-json <file>  Import the genesis block information from the given JSON file." << endl
+		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
 		<< endl
@@ -132,7 +134,7 @@ void help()
 		<< "    --unsafe-transactions  Allow all transactions to proceed without verification. EXTREMELY UNSAFE."
 		<< endl
 		<< "Client mining:" << endl
-		<< "    -a,--address <addr>  Set the coinbase (mining payout) address to given address (default: auto)." << endl
+		<< "    -a,--address <addr>  Set the author (mining payout) address to given address (default: auto)." << endl
 		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off)." << endl
 		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off)." << endl
 		<< "    --mine-on-wrong-chain  Mine even when we know that it is the wrong chain (default: off)." << endl
@@ -274,15 +276,35 @@ enum class Format
 	Human
 };
 
-void stopMiningAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mining)
+void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mining)
 {
-	if (io_mining != ~(unsigned)0 && io_mining && _c->isMining() && _c->blockChain().details().number - _start == io_mining)
+	try
 	{
-		_c->stopMining();
-		io_mining = ~(unsigned)0;
+		if (io_mining != ~(unsigned)0 && io_mining && asEthashClient(_c)->isMining() && _c->blockChain().details().number - _start == io_mining)
+		{
+			_c->stopSealing();
+			io_mining = ~(unsigned)0;
+		}
 	}
+	catch (InvalidSealEngine&)
+	{
+	}
+
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
+
+class ExitHandler: public SystemManager
+{
+public:
+	void exit() { exitHandler(0); }
+	static void exitHandler(int) { s_shouldExit = true; }
+	bool shouldExit() const { return s_shouldExit; }
+
+private:
+	static bool s_shouldExit;
+};
+
+bool ExitHandler::s_shouldExit = false;
 
 int main(int argc, char** argv)
 {
@@ -325,8 +347,8 @@ int main(int argc, char** argv)
 	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
-	string genesisJSON;
-	dev::eth::Network releaseNetwork = c_network;
+	string paramsJSON;
+	ChainParams chainParams;
 	u256 gasFloor = Invalid256;
 	string privateChain;
 
@@ -350,14 +372,15 @@ int main(int argc, char** argv)
 	bool pinning = false;
 	bool enableDiscovery = false;
 	bool noPinning = false;
-	unsigned networkId = (unsigned)-1;
+	static const unsigned NoNetworkID = (unsigned)-1;
+	unsigned networkID = NoNetworkID;
 
 	/// Mining params
 	unsigned mining = 0;
 	bool mineOnWrongChain = false;
 	Address signingKey;
 	Address sessionKey;
-	Address beneficiary = signingKey;
+	Address author = signingKey;
 	strings presaleImports;
 	bytes extraData;
 
@@ -395,7 +418,7 @@ int main(int argc, char** argv)
 		{
 			RLP config(b);
 			signingKey = config[0].toHash<Address>();
-			beneficiary = config[1].toHash<Address>();
+			author = config[1].toHash<Address>();
 		}
 		catch (...) {}
 	}
@@ -507,7 +530,7 @@ int main(int argc, char** argv)
 		}
 		else if (arg == "--network-id" && i + 1 < argc)
 			try {
-				networkId = stol(argv[++i]);
+				networkID = stol(argv[++i]);
 			}
 			catch (...)
 			{
@@ -535,9 +558,9 @@ int main(int argc, char** argv)
 				cerr << "-c is DEPRECATED. It will be removed for the Frontier. Use --client-name instead." << endl;
 			clientName = argv[++i];
 		}
-		else if ((arg == "-a" || arg == "--address" || arg == "--coinbase-address") && i + 1 < argc)
+		else if ((arg == "-a" || arg == "--address" || arg == "--author") && i + 1 < argc)
 			try {
-				beneficiary = h160(fromHex(argv[++i], WhenError::Throw));
+				author = h160(fromHex(argv[++i], WhenError::Throw));
 			}
 			catch (BadHexCharacter&)
 			{
@@ -576,11 +599,13 @@ int main(int argc, char** argv)
 		}
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
-		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
+		else if ((arg == "--genesis-json" || arg == "--genesis" || arg == "--config") && i + 1 < argc)
 		{
+			if (arg == "-genesis-json" || arg == "-genesis")
+				cerr << arg << " is DEPRECATED. It will be removed for the Frontier. Use --config instead." << endl;
 			try
 			{
-				genesisJSON = contentsString(argv[++i]);
+				paramsJSON = contentsString(argv[++i]);
 			}
 			catch (...)
 			{
@@ -600,14 +625,14 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
-		else if (arg == "--frontier")
-			releaseNetwork = eth::Network::Frontier;
 		else if (arg == "--gas-floor" && i + 1 < argc)
 			gasFloor = u256(argv[++i]);
+		else if (arg == "--frontier")
+			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
 		else if (arg == "--olympic")
-			releaseNetwork = eth::Network::Olympic;
+			chainParams = ChainParams(genesisInfo(eth::Network::Olympic));
 		else if (arg == "--morden" || arg == "--testnet")
-			releaseNetwork = eth::Network::Morden;
+			chainParams = ChainParams(genesisInfo(eth::Network::Morden));
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
 		{
 			try
@@ -852,30 +877,20 @@ int main(int argc, char** argv)
 	}
 
 	// Set up all the chain config stuff.
-	resetNetwork(releaseNetwork);
+	if (!paramsJSON.empty())
+		chainParams = ChainParams(paramsJSON);
 	if (!privateChain.empty())
 	{
-		CanonBlockChain<Ethash>::forceGenesisExtraData(sha3(privateChain).asBytes());
-		CanonBlockChain<Ethash>::forceGenesisDifficulty(c_minimumDifficulty);
-		CanonBlockChain<Ethash>::forceGenesisGasLimit(u256(1) << 32);
+		chainParams.extraData = sha3(privateChain).asBytes();
+		chainParams.difficulty = chainParams.u256Param("minimumDifficulty");
+		chainParams.gasLimit = u256(1) << 32;
 	}
-	if (!genesisJSON.empty())
-		CanonBlockChain<Ethash>::setGenesis(genesisJSON);
-	if (gasFloor != Invalid256)
-		c_gasFloorTarget = gasFloor;
-	if (networkId == (unsigned)-1)
-		networkId =  (unsigned)c_network;
+	// TODO: Open some other API path
+//	if (gasFloor != Invalid256)
+//		c_gasFloorTarget = gasFloor;
 
 	if (g_logVerbosity > 0)
-	{
 		cout << EthGrayBold "(++)Ethereum" EthReset << endl;
-		if (c_network == eth::Network::Olympic)
-			cout << "Welcome to Olympic!" << endl;
-		else if (c_network == eth::Network::Frontier)
-			cout << "Beware. You're entering the " EthMaroonBold "Frontier" EthReset "!" << endl;
-		else if (c_network == eth::Network::Morden)
-			cout << "Morden welcomes you. What do you want?" << endl;
-	}
 
 	m.execute();
 
@@ -883,7 +898,7 @@ int main(int argc, char** argv)
 	for (auto const& s: passwordsToNote)
 		keyManager.notePassword(s);
 
-	writeFile(configFile, rlpList(signingKey, beneficiary));
+	writeFile(configFile, rlpList(signingKey, author));
 
 	if (sessionKey)
 		signingKey = sessionKey;
@@ -950,11 +965,12 @@ int main(int argc, char** argv)
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("++eth", clientName),
 		dbPath,
+		chainParams,
 		withExisting,
 		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
 		&nodesState);
-	web3.ethereum()->setMineOnBadChain(mineOnWrongChain);
+	web3.ethereum()->setSealOption("sealOnBadChain", rlp(mineOnWrongChain));
 	web3.ethereum()->setSentinel(sentinel);
 	if (!extraData.empty())
 		web3.ethereum()->setExtraData(extraData);
@@ -1103,11 +1119,11 @@ int main(int argc, char** argv)
 	if (keyManager.accounts().empty())
 	{
 		h128 uuid = keyManager.import(ICAP::createDirect(), "Default key");
-		if (!beneficiary)
-			beneficiary = keyManager.address(uuid);
+		if (!author)
+			author = keyManager.address(uuid);
 		if (!signingKey)
 			signingKey = keyManager.address(uuid);
-		writeFile(configFile, rlpList(signingKey, beneficiary));
+		writeFile(configFile, rlpList(signingKey, author));
 	}
 
 	cout << ethCredits();
@@ -1120,11 +1136,11 @@ int main(int argc, char** argv)
 	if (c)
 	{
 		c->setGasPricer(gasPricer);
-		// TODO: expose sealant interface.
-		c->setShouldPrecomputeDAG(m.shouldPrecompute());
+		DEV_IGNORE_EXCEPTIONS(asEthashClient(c)->setShouldPrecomputeDAG(m.shouldPrecompute()));
 		c->setSealer(m.minerType());
-		c->setBeneficiary(beneficiary);
-		c->setNetworkId(networkId);
+		c->setAuthor(author);
+		if (networkID != NoNetworkID)
+			c->setNetworkId(networkID);
 	}
 
 	auto renderFullAddress = [&](Address const& _a) -> std::string
@@ -1133,7 +1149,7 @@ int main(int argc, char** argv)
 	};
 
 	cout << "Transaction Signer: " << renderFullAddress(signingKey) << endl;
-	cout << "Mining Beneficiary: " << renderFullAddress(beneficiary) << endl;
+	cout << "Mining Beneficiary: " << renderFullAddress(author) << endl;
 	cout << "Foundation: " << renderFullAddress(Address("de0b295669a9fd93d5f28d9ec85e40f4cb697bae")) << endl;
 
 	if (bootstrap || !remoteHost.empty() || disableDiscovery)
@@ -1172,6 +1188,8 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
+	ExitHandler eh;// TODO: use.
+
 	if (jsonRPCURL > -1 || ipc)
 	{
 		sessionManager.reset(new rpc::SessionManager());
@@ -1181,7 +1199,6 @@ int main(int argc, char** argv)
 		jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
 							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())));
-
 		if (jsonRPCURL > -1)
 		{
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
@@ -1220,15 +1237,15 @@ int main(int argc, char** argv)
 	if (!remoteHost.empty())
 		web3.addNode(p2p::NodeID(), remoteHost + ":" + toString(remotePort));
 
-	signal(SIGABRT, &Client::exitHandler);
-	signal(SIGTERM, &Client::exitHandler);
-	signal(SIGINT, &Client::exitHandler);
+	signal(SIGABRT, &ExitHandler::exitHandler);
+	signal(SIGTERM, &ExitHandler::exitHandler);
+	signal(SIGINT, &ExitHandler::exitHandler);
 
 	if (c)
 	{
 		unsigned n = c->blockChain().details().number;
 		if (mining)
-			c->startMining();
+			c->startSealing();
 		if (useConsole)
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
@@ -1248,20 +1265,20 @@ int main(int argc, char** argv)
 			rpcServer.StartListening();
 
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
-			while (!Client::shouldExit())
+			while (!eh.shouldExit())
 			{
 				console.readAndEval();
-				stopMiningAfterXBlocks(c, n, mining);
+				stopSealingAfterXBlocks(c, n, mining);
 			}
 			rpcServer.StopListening();
 #endif
 		}
 		else
-			while (!Client::shouldExit())
-				stopMiningAfterXBlocks(c, n, mining);
+			while (!eh.shouldExit())
+				stopSealingAfterXBlocks(c, n, mining);
 	}
 	else
-		while (!Client::shouldExit())
+		while (!eh.shouldExit())
 			this_thread::sleep_for(chrono::milliseconds(1000));
 
 #if ETH_JSONRPC

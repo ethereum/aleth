@@ -7,36 +7,25 @@
 #include "AdminEth.h"
 #include "SessionManager.h"
 #include "JsonHelper.h"
-
 using namespace std;
 using namespace dev;
 using namespace dev::rpc;
 using namespace dev::eth;
 
-bool isHex(std::string const& _s)
-{
-	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
-	for (; i < _s.size(); ++i)
-		if (fromHex(_s[i], WhenError::DontThrow) == -1)
-			return false;
-	return true;
-}
-
-template <class T> bool isHash(std::string const& _hash)
-{
-	return (_hash.size() == T::size * 2 || (_hash.size() == T::size * 2 + 2 && _hash.substr(0, 2) == "0x")) && isHex(_hash);
-}
-
-AdminEth::AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm)
-: m_eth(_eth), m_gp(_gp), m_keyManager(_keyManager), m_sm(_sm) {}
+AdminEth::AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm):
+	m_eth(_eth),
+	m_gp(_gp),
+	m_keyManager(_keyManager),
+	m_sm(_sm)
+{}
 
 bool AdminEth::admin_eth_setMining(bool _on, std::string const& _session)
 {
 	RPC_ADMIN;
 	if (_on)
-		m_eth.startMining();
+		m_eth.startSealing();
 	else
-		m_eth.stopMining();
+		m_eth.stopSealing();
 	return true;
 }
 
@@ -170,7 +159,7 @@ bool AdminEth::admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, 
 	if (m_setMiningBenefactor)
 		m_setMiningBenefactor(a);
 	else
-		m_eth.setBeneficiary(a);
+		m_eth.setAuthor(a);
 	return true;
 }
 
@@ -227,7 +216,7 @@ Json::Value AdminEth::admin_eth_vmTrace(std::string const& _blockNumberOrHash, i
 	if ((unsigned)_txIndex < block.pending().size())
 	{
 		Transaction t = block.pending()[_txIndex];
-		State s;
+		State s(State::Null);
 		Executive e(s, block, _txIndex, m_eth.blockChain());
 		try
 		{

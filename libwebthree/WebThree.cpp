@@ -40,6 +40,7 @@ using namespace dev::shh;
 WebThreeDirect::WebThreeDirect(
 	std::string const& _clientVersion,
 	std::string const& _dbPath,
+	eth::ChainParams const& _params,
 	WithExisting _we,
 	std::set<std::string> const& _interfaces,
 	NetworkPreferences const& _n,
@@ -52,7 +53,7 @@ WebThreeDirect::WebThreeDirect(
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
 	{
-		m_ethereum.reset(new eth::EthashClient(&m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+		m_ethereum.reset(new eth::Client(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
 		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
 		vector<string> bps;
 		boost::split(bps, bp, boost::is_any_of("/"));

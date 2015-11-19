@@ -9,7 +9,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::rpc;
 
-AdminUtils::AdminUtils(SessionManager& _sm): m_sm(_sm){}
+AdminUtils::AdminUtils(SessionManager& _sm, SystemManager* _systemManager):
+	m_sm(_sm),
+	m_systemManager(_systemManager)
+{}
 
 bool AdminUtils::admin_setVerbosity(int _v, std::string const& _session)
 {
@@ -21,6 +24,10 @@ bool AdminUtils::admin_setVerbosity(int _v, std::string const& _session)
 bool AdminUtils::admin_exit(std::string const& _session)
 {
 	RPC_ADMIN;
-	Client::exitHandler(SIGTERM);
-	return true;
+	if (m_systemManager)
+	{
+		m_systemManager->exit();
+		return true;
+	}
+	return false;
 }
