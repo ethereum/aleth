@@ -85,8 +85,18 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 
 	}
 	else
+	{
 		// insert a new chunk
-		_container.insert(lower, std::make_pair(_number, std::vector<T> { _data }));
+		auto inserted = _container.insert(lower, std::make_pair(_number, std::vector<T> { _data }));
+		auto next = inserted;
+		++next;
+		if (next != _container.end() && next->first == _number + 1)
+		{
+			std::move(next->second.begin(), next->second.end(), std::back_inserter(inserted->second));
+			_container.erase(next);
+		}
+	}
+
 }
 
 BlockChainSync::BlockChainSync(EthereumHost& _host):
