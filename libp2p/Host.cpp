@@ -275,6 +275,13 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 		ps->disconnect(IncompatibleProtocol);
 		return;
 	}
+
+	if (m_netPrefs.pin && !m_requiredPeers.count(_id))
+	{
+		cdebug << "Unexpected identity from peer (got" << _id << ", must be one of " << m_requiredPeers << ")";
+		ps->disconnect(UnexpectedIdentity);
+		return;
+	}
 	
 	{
 		RecursiveGuard l(x_sessions);
@@ -481,6 +488,8 @@ void Host::addNode(NodeID const& _node, NodeIPEndpoint const& _endpoint)
 
 void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 {
+	m_requiredPeers.insert(_n);
+
 	if (!m_run)
 		return;
 	

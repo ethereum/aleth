@@ -91,6 +91,12 @@ SecretStore::SecretStore(string const& _path): m_path(_path)
 	load();
 }
 
+void SecretStore::setPath(string const& _path)
+{
+	m_path = _path;
+	load();
+}
+
 bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass, bool _useCache) const
 {
 	auto rit = m_cached.find(_uuid);

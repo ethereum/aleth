@@ -27,11 +27,9 @@ using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 
-static Secp256k1PP s_secp256k1;
-
 void dev::crypto::ecdh::agree(Secret const& _s, Public const& _r, Secret& o_s)
 {
-	s_secp256k1.agree(_s, _r, o_s);
+	Secp256k1PP::get()->agree(_s, _r, o_s);
 }
 
 void ECDHE::agree(Public const& _remote, Secret& o_sharedSecret) const
@@ -41,6 +39,6 @@ void ECDHE::agree(Public const& _remote, Secret& o_sharedSecret) const
 		BOOST_THROW_EXCEPTION(InvalidState());
 	
 	m_remoteEphemeral = _remote;
-	s_secp256k1.agree(m_ephemeral.sec(), m_remoteEphemeral, o_sharedSecret);
+	Secp256k1PP::get()->agree(m_ephemeral.sec(), m_remoteEphemeral, o_sharedSecret);
 }
 

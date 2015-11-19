@@ -24,9 +24,17 @@
 #include <boost/random/uniform_int_distribution.hpp>
 #include "Exceptions.h"
 #include "Log.h"
-
 using namespace std;
 using namespace dev;
+
+bool dev::isHex(string const& _s)
+{
+	unsigned i = (_s.size() >= 2 && _s.substr(0, 2) == "0x") ? 2 : 0;
+	for (; i < _s.size(); ++i)
+		if (fromHex(_s[i], WhenError::DontThrow) == -1)
+			return false;
+	return true;
+}
 
 std::string dev::escaped(std::string const& _s, bool _all)
 {
