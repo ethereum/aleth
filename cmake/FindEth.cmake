@@ -8,7 +8,7 @@
 #  TODO: ETH_INCLUDE_DIRS
 
 include(EthUtils)
-set(LIBS ethereum;evm;ethcore;lll;evmasm;evmcore;ethash-cl;ethash;natspec;jsengine;jsconsole;evmjit;solidity;testutils)
+set(LIBS ethashseal;ethereum;evm;ethcore;lll;evmasm;evmcore;ethash-cl;ethash;natspec;jsengine;jsconsole;evmjit;solidity;testutils)
 
 set(Eth_INCLUDE_DIRS "${ETH_DIR}")
 
