@@ -14,13 +14,19 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Sealer.cpp
+/** @file M=iningClient.h
  * @author Gav Wood <i@gavwood.com>
  * @date 2014
  */
 
-#include "Sealer.h"
-using namespace std;
-using namespace dev;
-using namespace eth;
+#pragma once
 
+#include <tuple>
+#include "Client.h"
+
+namespace dev
+{
+namespace eth
+{
+}
+}

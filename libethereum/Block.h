@@ -28,8 +28,8 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcrypto/OverlayDB.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
-#include <libethcore/Miner.h>
+#include <libethcore/BlockHeader.h>
+#include <libethcore/ChainOperationParams.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
 #include "Transaction.h"
@@ -46,6 +46,7 @@ namespace test { class ImportTest; class StateLoader; }
 namespace eth
 {
 
+class SealEngineFace;
 class BlockChain;
 class State;
 class TransactionQueue;
@@ -62,6 +63,8 @@ struct PopulationStatistics
 	double enact;
 };
 
+DEV_SIMPLE_EXCEPTION(ChainOperationWithUnknownBlockChain);
+
 /**
  * @brief Active model of a block within the block chain.
  * Keeps track of all transactions, receipts and state for a particular block. Can apply all
@@ -76,22 +79,36 @@ class Block
 	friend class BlockChain;
 
 public:
+	// TODO: pass in ChainOperationParams rather than u256
+
 	/// Default constructor; creates with a blank database prepopulated with the genesis block.
-	Block(): m_state(OverlayDB(), BaseState::Empty) {}
+	Block(u256 const& _accountStartNonce): m_state(_accountStartNonce, OverlayDB(), BaseState::Empty), m_precommit(_accountStartNonce) {}
 
 	/// Basic state object from database.
 	/// Use the default when you already have a database and you just want to make a Block object
 	/// which uses it. If you have no preexisting database then set BaseState to something other
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
-	/// You can also set the beneficiary address.
-	explicit Block(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address const& _coinbaseAddress = Address());
+	/// You can also set the author address.
+	Block(BlockChain const& _bc, OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address const& _author = Address());
 
 	/// Basic state object from database.
 	/// Use the default when you already have a database and you just want to make a Block object
 	/// which uses it.
 	/// Will throw InvalidRoot if the root passed is not in the database.
-	/// You can also set the beneficiary address.
-	Block(OverlayDB const& _db, h256 const& _root, Address const& _coinbaseAddress = Address());
+	/// You can also set the author address.
+	Block(BlockChain const& _bc, OverlayDB const& _db, h256 const& _root, Address const& _author = Address());
+
+#if ETH_ALLOW_EMPTY_BLOCK_AND_STATE
+	Block(): Block(Block::Null) {}
+	explicit Block(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address const& _author = Address()): Block(Invalid256, _db, _bs, _author) {}
+	Block(OverlayDB const& _db, h256 const& _root, Address const& _author = Address()): Block(Invalid256, _db, _root, _author) {}
+#endif
+
+	enum NullType { Null };
+	Block(NullType): m_state(0, OverlayDB(), BaseState::Empty), m_precommit(0) {}
+
+	/// Construct from a given blockchain. Empty, but associated with @a _bc 's chain params.
+	explicit Block(BlockChain const& _bc): Block(Null) { noteChain(_bc); }
 
 	/// Copy state object.
 	Block(Block const& _s);
@@ -99,12 +116,16 @@ public:
 	/// Copy state object.
 	Block& operator=(Block const& _s);
 
-	/// Get the beneficiary address for any transactions we do and rewards we get.
-	Address beneficiary() const { return m_beneficiary; }
+	/// Get the author address for any transactions we do and rewards we get.
+	Address author() const { return m_author; }
 
-	/// Set the beneficiary address for any transactions we do and rewards we get.
+	/// Set the author address for any transactions we do and rewards we get.
 	/// This causes a complete reset of current block.
-	void setBeneficiary(Address const& _id) { m_beneficiary = _id; resetCurrent(); }
+	void setAuthor(Address const& _id) { m_author = _id; resetCurrent(); }
+
+	/// Note the fact that this block is being used with a particular chain.
+	/// Call this before using any non-const methods.
+	void noteChain(BlockChain const& _bc);
 
 	// Account-getters. All operate on the final state.
 
@@ -213,7 +234,7 @@ public:
 	bool sync(BlockChain const& _bc);
 
 	/// Sync with the block chain, but rather than synching to the latest block, instead sync to the given block.
-	bool sync(BlockChain const& _bc, h256 const& _blockHash, BlockInfo const& _bi = BlockInfo());
+	bool sync(BlockChain const& _bc, h256 const& _blockHash, BlockHeader const& _bi = BlockHeader());
 
 	/// Execute all transactions within a given block.
 	/// @returns the additional total difficulty.
@@ -259,10 +280,11 @@ public:
 	bytes const& blockData() const { return m_currentBytes; }
 
 	/// Get the header information on the present block.
-	BlockInfo const& info() const { return m_currentBlock; }
-
+	BlockHeader const& info() const { return m_currentBlock; }
 
 private:
+	SealEngineFace* sealEngine() const;
+
 	/// Undo the changes to the state for committing to mine.
 	void uncommitToMine();
 
@@ -280,7 +302,7 @@ private:
 	u256 enact(VerifiedBlockRef const& _block, BlockChain const& _bc);
 
 	/// Finalise the block, applying the earned rewards.
-	void applyRewards(std::vector<BlockInfo> const& _uncleBlockHeaders);
+	void applyRewards(std::vector<BlockHeader> const& _uncleBlockHeaders, u256 const& _blockReward);
 
 	/// @returns gas used by transactions thus far executed.
 	u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().gasUsed() : 0; }
@@ -294,17 +316,17 @@ private:
 	h256Hash m_transactionSet;					///< The set of transaction hashes that we've included in the state.
 	State m_precommit;							///< State at the point immediately prior to rewards.
 
-	BlockInfo m_previousBlock;					///< The previous block's information.
-	BlockInfo m_currentBlock;					///< The current block's information.
+	BlockHeader m_previousBlock;					///< The previous block's information.
+	BlockHeader m_currentBlock;					///< The current block's information.
 	bytes m_currentBytes;						///< The current block.
 	bool m_committedToMine = false;				///< Have we committed to mine on the present m_currentBlock?
 
 	bytes m_currentTxs;							///< The RLP-encoded block of transactions.
 	bytes m_currentUncles;						///< The RLP-encoded block of uncles.
 
-	Address m_beneficiary;						///< Our address (i.e. the address to which fees go).
+	Address m_author;							///< Our address (i.e. the address to which fees go).
 
-	u256 m_blockReward;
+	SealEngineFace* m_sealEngine = nullptr;		///< The chain's seal engine.
 
 	friend std::ostream& operator<<(std::ostream& _out, Block const& _s);
 };

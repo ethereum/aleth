@@ -27,7 +27,7 @@
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
 #include <libethcore/Common.h>
-#include "CanonBlockChain.h"
+#include "BlockChain.h"
 #include "Defaults.h"
 using namespace std;
 using namespace dev;

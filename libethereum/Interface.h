@@ -25,8 +25,8 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/Common.h>
-#include <libethcore/Ethash.h>
-#include <libethereum/GasPricer.h>
+#include <libethcore/SealEngine.h>
+#include "GasPricer.h"
 #include "LogFilter.h"
 #include "Transaction.h"
 #include "AccountDiff.h"
@@ -163,27 +163,27 @@ public:
 
 	virtual bool isKnown(BlockNumber _block) const = 0;
 	virtual bool isKnown(h256 const& _hash) const = 0;
-	virtual BlockInfo blockInfo(h256 _hash) const = 0;
+	virtual BlockHeader blockInfo(h256 _hash) const = 0;
 	virtual BlockDetails blockDetails(h256 _hash) const = 0;
 	virtual Transaction transaction(h256 _blockHash, unsigned _i) const = 0;
 	virtual LocalisedTransaction localisedTransaction(h256 const& _blockHash, unsigned _i) const = 0;
-	virtual BlockInfo uncle(h256 _blockHash, unsigned _i) const = 0;
+	virtual BlockHeader uncle(h256 _blockHash, unsigned _i) const = 0;
 	virtual UncleHashes uncleHashes(h256 _blockHash) const = 0;
 	virtual unsigned transactionCount(h256 _blockHash) const = 0;
 	virtual unsigned uncleCount(h256 _blockHash) const = 0;
 	virtual Transactions transactions(h256 _blockHash) const = 0;
 	virtual TransactionHashes transactionHashes(h256 _blockHash) const = 0;
 
-	virtual BlockInfo pendingInfo() const { return BlockInfo(); }
+	virtual BlockHeader pendingInfo() const { return BlockHeader(); }
 	virtual BlockDetails pendingDetails() const { return BlockDetails(); }
 
-	BlockInfo blockInfo(BlockNumber _block) const;
+	BlockHeader blockInfo(BlockNumber _block) const;
 	BlockDetails blockDetails(BlockNumber _block) const;
 	Transaction transaction(BlockNumber _block, unsigned _i) const { auto p = transactions(_block); return _i < p.size() ? p[_i] : Transaction(); }
 	unsigned transactionCount(BlockNumber _block) const { if (_block == PendingBlock) { auto p = pending(); return p.size(); } return transactionCount(hashFromNumber(_block)); }
 	Transactions transactions(BlockNumber _block) const { if (_block == PendingBlock) return pending(); return transactions(hashFromNumber(_block)); }
 	TransactionHashes transactionHashes(BlockNumber _block) const { if (_block == PendingBlock) return pendingHashes(); return transactionHashes(hashFromNumber(_block)); }
-	BlockInfo uncle(BlockNumber _block, unsigned _i) const { return uncle(hashFromNumber(_block), _i); }
+	BlockHeader uncle(BlockNumber _block, unsigned _i) const { return uncle(hashFromNumber(_block), _i); }
 	UncleHashes uncleHashes(BlockNumber _block) const { return uncleHashes(hashFromNumber(_block)); }
 	unsigned uncleCount(BlockNumber _block) const { return uncleCount(hashFromNumber(_block)); }
 
@@ -215,36 +215,34 @@ public:
 	/// Get some information on the block queue.
 	virtual SyncStatus syncStatus() const = 0;
 
-	// [MINING API]:
+	// [SEALING API]:
 
-	/// Set the coinbase address.
-	virtual void setBeneficiary(Address const& _us) = 0;
-	/// Get the coinbase address.
-	virtual Address beneficiary() const = 0;
+	/// Set the block author address.
+	virtual void setAuthor(Address const& _us) = 0;
+	/// Get the block author address.
+	virtual Address author() const = 0;
 
-	Address account() const { return beneficiary(); }	// TODO: REMOVE!!!
-
-	/// Start mining.
-	/// NOT thread-safe - call it & stopMining only from a single thread
-	virtual void startMining() = 0;
-	/// Stop mining.
+	/// Start sealing.
+	/// NOT thread-safe - call it & stopSealing only from a single thread
+	virtual void startSealing() = 0;
+	/// Stop sealing.
 	/// NOT thread-safe
-	virtual void stopMining() = 0;
-	/// Are we mining now?
-	virtual bool isMining() const = 0;
-	/// Would we like to mine now?
-	virtual bool wouldMine() const = 0;
-	/// Current hash rate.
-	virtual u256 hashrate() const = 0;
+	virtual void stopSealing() = 0;
+	/// Would we like to be sealing now?
+	virtual bool wouldSeal() const = 0;
 
-	/// Get hash of the current block to be mined minus the nonce (the 'work hash').
-	virtual std::tuple<h256, h256, h256> getEthashWork() { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::getEthashWork")); }
-	/// Submit the nonce for the proof-of-work.
-	virtual bool submitEthashWork(h256 const&, h64 const&) { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::submitEthashWork")); }
-	/// Submit the ongoing hashrate of a particular external miner.
-	virtual void submitExternalHashrate(u256 const&, h256 const&) { BOOST_THROW_EXCEPTION(InterfaceNotSupported("Interface::submitExternalHashrate")); }
-	/// Check the progress of the mining.
-	virtual WorkingProgress miningProgress() const = 0;
+	/// Are we updating the chain (syncing or importing a new block)?
+	virtual bool isSyncing() const { return false; }
+	/// Are we syncing the chain?
+	virtual bool isMajorSyncing() const { return false; }
+
+	/// Gets the network id.
+	virtual u256 networkId() const { return 0; }
+	/// Sets the network id.
+	virtual void setNetworkId(u256 const&) {}
+
+	/// Get the seal engine.
+	SealEngineFace* sealEngine() const { return nullptr; }
 
 protected:
 	int m_default = PendingBlock;

@@ -30,7 +30,7 @@
 #include <libethcore/Common.h>
 #include <libdevcore/Guards.h>
 #include <libethcore/Common.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 #include "VerifiedBlock.h"
 
 namespace dev

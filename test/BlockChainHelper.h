@@ -24,7 +24,7 @@
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <libdevcore/TransientDirectory.h>
-#include <libethcore/Ethash.h>
+#include <libethashseal/Ethash.h>
 
 using namespace std;
 using namespace json_spirit;
@@ -64,37 +64,43 @@ private:
 class TestBlock
 {
 public:
-	typedef Ethash::BlockHeader BlockHeader;
-	TestBlock() {};
-	TestBlock(TestBlock const& _original);	
+	TestBlock();
 	TestBlock(std::string const& _blockRlp);
-	TestBlock& operator = (TestBlock const& _original);
 	TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify);
+
+	TestBlock(TestBlock const& _original);
+	TestBlock& operator=(TestBlock const& _original);
+
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
-	void setPremine(std::string const& _parameter);
+	void setPremine(std::string const& _parameter) { m_premineUpdate[_parameter] = true; }
 	void mine(TestBlockChain const& _bc);
+	void updateNonce(TestBlockChain const& _bc);
 
 	void setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate);
 	void setState(State const& _state);
 	void clearState();
 
+	BlockHeader const& premineHeader() { return m_premineHeader; } //should return fields according to m_premineUpdate. this is needed to check that premine chanes was not lost during mining .
 	bytes const& getBytes() const { return m_bytes; }
+	AccountMap const& accountMap() const { return m_accountMap; }
 	State const& getState() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
 	BlockHeader const& getBlockHeader() const { return m_blockHeader;}
 	TransactionQueue const& getTransactionQueue() const { return m_transactionQueue; }
 	TransactionQueue & getTransactionQueue() { return m_transactionQueue; }
 	vector<TestTransaction> const& getTestTransactions() const { return m_testTransactions; }
 	vector<TestBlock> const& getUncles() const { return m_uncles; }
-	Address const& getBeneficiary() const { return m_blockHeader.beneficiary(); }
+	Address const& getBeneficiary() const { return m_blockHeader.author(); }
+//SealEngineFace* m_sealEngine;
 
-private:	
+private:
 	BlockHeader constructBlock(mObject const& _o, h256 const& _stateRoot);
 	bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
 	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
+	void premineUpdate(BlockHeader& info);
 
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
@@ -104,25 +110,30 @@ private:
 	bytes m_bytes;
 	std::unique_ptr<TransientDirectory> m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
-	std::map<std::string, bool> m_premineUpdate;
+	std::map<std::string, bool> m_premineUpdate;			//Test Header alterate options
+	BlockHeader m_premineHeader;
+	AccountMap m_accountMap;								//Needed for genesis state
+
 };
 
 class TestBlockChain
 {
-private:
-	typedef FullBlockChain<Ethash> FullBlockChainEthash;
 public:
-	TestBlockChain(TestBlock const& _genesisBlock);	
-	void reset(TestBlock const& _genesisBlock);
+	TestBlockChain(bool _noProof = false): TestBlockChain(getDefaultGenesisBlock(), _noProof) {}
+	TestBlockChain(TestBlock const& _genesisBlock, bool _noProof = false);
+
+	void reset(TestBlock const& _genesisBlock, bool _noProof = false);
 	void addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& getTopBlock() { return m_lastBlock; }
-	FullBlockChain<Ethash> const& getInterface() const { return *m_blockChain.get();}
+	BlockChain const& getInterface() const { return *m_blockChain.get();}
 	TestBlock const& getTestGenesis() const { return m_genesisBlock; }
+
 	static TestBlock getDefaultGenesisBlock();
+	static AccountMap getDefaultAccountMap();
 
 private:
-	std::unique_ptr<FullBlockChainEthash> m_blockChain;
+	std::unique_ptr<BlockChain> m_blockChain;
 	TestBlock m_genesisBlock;
 	TestBlock m_lastBlock;
 	std::unique_ptr<TransientDirectory> m_tempDirBlockchain;

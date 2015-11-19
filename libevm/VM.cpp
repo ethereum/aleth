@@ -411,7 +411,7 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			m_stack.back() = (u256)_ext.blockHash(m_stack.back());
 			break;
 		case Instruction::COINBASE:
-			m_stack.push_back((u160)_ext.envInfo().beneficiary());
+			m_stack.push_back((u160)_ext.envInfo().author());
 			break;
 		case Instruction::TIMESTAMP:
 			m_stack.push_back(_ext.envInfo().timestamp());

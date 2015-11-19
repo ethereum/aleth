@@ -28,7 +28,7 @@ using namespace dev::test;
 Block FixedClient::asOf(h256 const& _h) const
 {
 	ReadGuard l(x_stateDB);
-	Block ret(m_block.db());
+	Block ret(bc(), m_block.db());
 	ret.populateFromChain(bc(), _h);
 	return ret;
 }

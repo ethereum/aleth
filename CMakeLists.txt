@@ -39,11 +39,13 @@ endif()
 
 # core libraries
 if (NOT EMSCRIPTEN)
-	add_subdirectory(libethash)
 	add_subdirectory(libethcore)
 	add_subdirectory(liblll)
 	add_subdirectory(libevm)
 	add_subdirectory(libethereum)
+
+	add_subdirectory(libethash)
+	add_subdirectory(libethashseal)
 endif()
 add_subdirectory(libevmcore)
 add_subdirectory(libevmasm)

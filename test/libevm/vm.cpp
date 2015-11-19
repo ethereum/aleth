@@ -87,7 +87,7 @@ mObject FakeExtVM::exportEnv()
 	mObject ret;
 	ret["currentDifficulty"] = toCompactHex(envInfo().difficulty(), HexPrefix::Add, 1);
 	ret["currentTimestamp"] =  toCompactHex(envInfo().timestamp(), HexPrefix::Add, 1);
-	ret["currentCoinbase"] = toString(envInfo().beneficiary());
+	ret["currentCoinbase"] = toString(envInfo().author());
 	ret["currentNumber"] = toCompactHex(envInfo().number(), HexPrefix::Add, 1);
 	ret["currentGasLimit"] = toCompactHex(envInfo().gasLimit(), HexPrefix::Add, 1);
 	return ret;
@@ -106,7 +106,7 @@ void FakeExtVM::importEnv(mObject& _o)
 	info.setGasLimit(toInt(_o["currentGasLimit"]));
 	info.setDifficulty(toInt(_o["currentDifficulty"]));
 	info.setTimestamp(toInt(_o["currentTimestamp"]));
-	info.setBeneficiary(Address(_o["currentCoinbase"].get_str()));
+	info.setAuthor(Address(_o["currentCoinbase"].get_str()));
 	info.setNumber(toInt(_o["currentNumber"]));
 	info.setLastHashes( lastHashes( info.number() ) );
 }
@@ -381,8 +381,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				if (o.count("expect") > 0)
 				{
-					State postState(OverlayDB(), eth::BaseState::Empty);
-					State expectState(OverlayDB(), eth::BaseState::Empty);
+					State postState(State::Null);
+					State expectState(State::Null);
 					AccountMaskMap expectStateMap;
 					ImportTest::importState(o["post"].get_obj(), postState);
 					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
@@ -431,7 +431,8 @@ void doVMTests(json_spirit::mValue& v, bool _fillin)
 
 				BOOST_CHECK_EQUAL(toInt(o["gas"]), fev.gas);
 
-				State postState, expectState;
+				State postState(State::Null);
+				State expectState(State::Null);
 				mObject mPostState = fev.exportState();
 				ImportTest::importState(mPostState, postState);
 				ImportTest::importState(o["post"].get_obj(), expectState);

@@ -26,8 +26,10 @@
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/SHA3.h>
+#include <libethcore/SealEngine.h>
 #include <libethereum/Block.h>
 #include <libethereum/Executive.h>
+#include <libethereum/ChainParams.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 using namespace std;
@@ -80,11 +82,11 @@ int main(int argc, char** argv)
 	string incoming = "--";
 
 	Mode mode = Mode::Statistics;
-	State state;
+	State state(Invalid256);
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = Block().gasLimitRemaining();
+	u256 gas = 3141592;
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
@@ -132,8 +134,8 @@ int main(int argc, char** argv)
 			value = u256(argv[++i]);
 		else if (arg == "--value" && i + 1 < argc)
 			value = u256(argv[++i]);
-		else if (arg == "--beneficiary" && i + 1 < argc)
-			envInfo.setBeneficiary(Address(argv[++i]));
+		else if (arg == "--author" && i + 1 < argc)
+			envInfo.setAuthor(Address(argv[++i]));
 		else if (arg == "--number" && i + 1 < argc)
 			envInfo.setNumber(u256(argv[++i]));
 		else if (arg == "--difficulty" && i + 1 < argc)
@@ -165,7 +167,9 @@ int main(int argc, char** argv)
 		data = code;
 
 	state.addBalance(sender, value);
-	Executive executive(state, envInfo);
+
+	unique_ptr<SealEngineFace> se(ChainParams().createSealEngine());
+	Executive executive(state, envInfo, se.get());
 	ExecutionResult res;
 	executive.setResultRecipient(res);
 	Transaction t = eth::Transaction(value, gasPrice, gas, data, 0);
