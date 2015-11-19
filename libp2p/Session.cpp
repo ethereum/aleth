@@ -313,8 +313,8 @@ void Session::drop(DisconnectReason _reason)
 	if (socket.is_open())
 		try
 		{
-			clog(NetConnect) << "Closing " << socket.remote_endpoint() << "(" << reasonOf(_reason) << ")";
 			boost::system::error_code ec;
+			clog(NetConnect) << "Closing " << socket.remote_endpoint(ec) << "(" << reasonOf(_reason) << ")";
 			socket.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 			socket.close();
 		}
