@@ -52,7 +52,7 @@ struct ChainParams: public ChainOperationParams
 	u256 timestamp = 0;
 	bytes extraData;
 	mutable h256 stateRoot;	///< Only pre-populate if known equivalent to genesisState's root. If they're different Bad Things Will Happen.
-	AccountMap genesisState = {{Address(1), Account(0, 1)}, {Address(2), Account(0, 1)}, {Address(3), Account(0, 1)}, {Address(4), Account(0, 1)}};
+	AccountMap genesisState;
 
 	unsigned sealFields = 0;
 	bytes sealRLP;
