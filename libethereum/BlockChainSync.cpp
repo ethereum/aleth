@@ -181,24 +181,11 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 
 void BlockChainSync::continueSync()
 {
-<<<<<<< HEAD
 	host().foreachPeer([this](std::shared_ptr<EthereumPeer> _p)
 	{
 		syncPeer(_p, false);
 		return true;
 	});
-=======
-	BlockHeader block = host().chain().info();
-	uint64_t lastBlockTime = (block.hash() == host().chain().genesisHash()) ? 1428192000 : (uint64_t)block.timestamp();
-	uint64_t now = utcTime();
-	unsigned blockCount = c_chainReorgSize;
-	if (lastBlockTime > now)
-		clog(NetWarn) << "Clock skew? Latest block is in the future";
-	else
-		blockCount += (now - lastBlockTime) / 15;	// TODO: REMOVE!!!
-	clog(NetAllDetail) << "Estimated hashes: " << blockCount;
-	return blockCount;
->>>>>>> 1585595779187d30c6fc2253a1a22f39f7c78970
 }
 
 void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
@@ -369,7 +356,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	}
 	for (unsigned i = 0; i < itemCount; i++)
 	{
-		BlockInfo info(_r[i].data(), CheckEverything, h256(), HeaderData);
+		BlockHeader info(_r[i].data(), HeaderData);
 		unsigned blockNumber = static_cast<unsigned>(info.number());
 		if (haveItem(m_headers, blockNumber))
 		{
