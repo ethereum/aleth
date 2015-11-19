@@ -4,7 +4,7 @@ set(EXECUTABLE flu)
 
 add_executable(${EXECUTABLE} ${SRC_LIST})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::fluidity Web3::web3jsonrpc JsonRpc::Client Web3::jsconsole)
+eth_use(${EXECUTABLE} REQUIRED Web3::web3jsonrpc JsonRpc::Client Web3::jsconsole)
 eth_use(${EXECUTABLE} OPTIONAL Readline)
 
 if (APPLE)
