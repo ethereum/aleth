@@ -285,7 +285,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 				auto n = bc.number(blockHash);
 				if (n != 0 || blockHash == bc.genesisHash())
 				{
-					auto top = n + uint64_t(step) * numHeadersToSend;
+					auto top = n + uint64_t(step) * numHeadersToSend - 1;
 					auto lastBlock = bc.number();
 					if (top > lastBlock)
 					{
@@ -315,7 +315,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 					blockHash = {};
 				else
 				{
-					bigint top = n + uint64_t(step) * numHeadersToSend;
+					bigint top = n + uint64_t(step) * numHeadersToSend - 1;
 					if (top > lastBlock)
 					{
 						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step;
