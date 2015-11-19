@@ -74,13 +74,15 @@ public:
 	void addTransaction(TestTransaction const& _tr);
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
-	void setPremine(std::string const& _parameter);
+	void setPremine(std::string const& _parameter) { m_premineUpdate[_parameter] = true; }
 	void mine(TestBlockChain const& _bc);
+	void updateNonce(TestBlockChain const& _bc);
 
 	void setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate);
 	void setState(State const& _state);
 	void clearState();
 
+	BlockHeader const& premineHeader() { return m_premineHeader; } //should return fields according to m_premineUpdate. this is needed to check that premine chanes was not lost during mining .
 	bytes const& getBytes() const { return m_bytes; }
 	AccountMap const& accountMap() const { return m_accountMap; }
 	State const& getState() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
@@ -90,6 +92,7 @@ public:
 	vector<TestTransaction> const& getTestTransactions() const { return m_testTransactions; }
 	vector<TestBlock> const& getUncles() const { return m_uncles; }
 	Address const& getBeneficiary() const { return m_blockHeader.author(); }
+//SealEngineFace* m_sealEngine;
 
 private:
 	BlockHeader constructBlock(mObject const& _o, h256 const& _stateRoot);
@@ -97,6 +100,7 @@ private:
 	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
+	void premineUpdate(BlockHeader& info);
 
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
@@ -106,10 +110,10 @@ private:
 	bytes m_bytes;
 	std::unique_ptr<TransientDirectory> m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
-	std::map<std::string, bool> m_premineUpdate;
-	std::shared_ptr<SealEngineFace> m_sealEngine;
+	std::map<std::string, bool> m_premineUpdate;			//Test Header alterate options
+	BlockHeader m_premineHeader;
+	AccountMap m_accountMap;								//Needed for genesis state
 
-	AccountMap m_accountMap;
 };
 
 class TestBlockChain
