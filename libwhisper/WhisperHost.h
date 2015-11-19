@@ -64,8 +64,6 @@ public:
 	virtual h256s watchMessages(unsigned _watchId) override; ///< returns IDs of messages, which match specific watch criteria
 	virtual Envelope envelope(h256 _m) const override { try { dev::ReadGuard l(x_messages); return m_messages.at(_m); } catch (...) { return Envelope(); } }
 
-	void exportFilters(dev::RLPStream& o_dst) const;
-
 protected:
 	virtual void doWork() override;
 	void noteAdvertiseTopicsOfInterest();
