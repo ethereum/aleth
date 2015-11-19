@@ -70,7 +70,7 @@ inline Integer secretToExponent(Secret const& _s) { return std::move(Integer(_s.
 class Secp256k1PP
 {	
 public:
-	Secp256k1PP(): m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()), m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder()) {}
+	static Secp256k1PP* get() { if (!s_this) s_this = new Secp256k1PP; return s_this; }
 
 	void toPublic(Secret const& _s, Public& o_public) { exponentToPublic(Integer(_s.data(), sizeof(_s)), o_public); }
 	
@@ -121,6 +121,8 @@ protected:
 	template <class T> void initializeDLScheme(Public const& _p, T& io_operator) { std::lock_guard<std::mutex> l(x_params); io_operator.AccessKey().Initialize(m_params, publicToPoint(_p)); }
 	
 private:
+	Secp256k1PP(): m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()), m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder()) {}
+
 	OID m_oid;
 	
 	std::mutex x_rng;
@@ -134,6 +136,8 @@ private:
 	
 	Integer m_q;
 	Integer m_qs;
+
+	static Secp256k1PP* s_this;
 };
 
 }
