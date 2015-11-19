@@ -815,7 +815,7 @@
                 ],
                 "uncleHeaders" : [
                     {
-			"gasLimit" : "3138524",
+			"gasLimit" : "138524",				      
 			"populateFromBlock" : "1",
 			"overwriteAndRedoPoW" : "gasLimit"
                     }
@@ -907,7 +907,7 @@
                 ],
                 "uncleHeaders" : [
                     {
-			"gasLimit" : "141591",
+			"gasLimit" : "3138494",
 			"populateFromBlock" : "1",
 			"overwriteAndRedoPoW" : "gasLimit"
                     }

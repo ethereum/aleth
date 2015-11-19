@@ -43,7 +43,7 @@ class State;
 void mine(Client& c, int numBlocks);
 void connectClients(Client& c1, Client& c2);
 void mine(Block& _s, BlockChain const& _bc, SealEngineFace* _sealer);
-void mine(BlockHeader& _bi, SealEngineFace* _sealer);
+void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify = true);
 }
 
 namespace test

@@ -51,47 +51,48 @@ BOOST_AUTO_TEST_SUITE(BlockQueueSuite)
 BOOST_AUTO_TEST_CASE(BlockQueueImport)
 {
 	g_logVerbosity = 2;
-	TestBlock genesisBlock = TestBlockChain::getDefaultGenesisBlock();
+	TestBlock genesisBlock = TestBlockChain::defaultGenesisBlock();
 	TestBlockChain blockchain(true);
 	TestBlockChain blockchain2(true);
 
 	TestBlock block1;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
+	TestTransaction transaction1 = TestTransaction::defaultTransaction();
 	block1.addTransaction(transaction1);
 	block1.mine(blockchain);
-	cdebug << Ethash::nonce(block1.getBlockHeader());
-	blockchain.getInterface().sealEngine()->verify(JustSeal, block1.getBlockHeader());
+	cdebug << Ethash::nonce(block1.blockHeader());
+	blockchain.interface().sealEngine()->verify(JustSeal, block1.blockHeader());
 
 	BlockQueue blockQueue;
-	blockQueue.setChain(blockchain.getInterface());
-	ImportResult res = blockQueue.import(&block1.getBytes());
+	blockQueue.setChain(blockchain.interface());
+	ImportResult res = blockQueue.import(&block1.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::Success, "Simple block import to BlockQueue should have return Success");
 
 //	cdebug << Ethash::nonce(block1.getBlockHeader());
-	res = blockQueue.import(&block1.getBytes());
+	res = blockQueue.import(&block1.bytes());
 //	cdebug << Ethash::nonce(block1.getBlockHeader());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyKnown, "Simple block import to BlockQueue should have return AlreadyKnown");
 
 	blockQueue.clear();
 //	cdebug << "Inserting" << block1.getBlockHeader().hash(WithoutSeal).hex() << Ethash::nonce(block1.getBlockHeader());
 	blockchain.addBlock(block1);
-	res = blockQueue.import(&block1.getBytes());
+	res = blockQueue.import(&block1.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::AlreadyInChain, "Simple block import to BlockQueue should have return AlreadyInChain");
 
 	TestBlock block2;
 	block2.mine(blockchain);
-	BlockHeader block2Header = block2.getBlockHeader();
+	BlockHeader block2Header = block2.blockHeader();
 	block2Header.setTimestamp(block2Header.timestamp() + 100);
-	block2.setBlockHeader(block2Header, RecalcBlockHeader::UpdateAndVerify);
-	res = blockQueue.import(&block2.getBytes());
+	block2.setBlockHeader(block2Header);
+	res = blockQueue.import(&block2.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::FutureTimeKnown, "Simple block import to BlockQueue should have return FutureTimeKnown");
 
 	TestBlock block3;
 	block3.mine(blockchain);
-	BlockHeader block3Header = block3.getBlockHeader();
+	BlockHeader block3Header = block3.blockHeader();
 	block3Header.clear();
-	block3.setBlockHeader(block3Header, RecalcBlockHeader::SkipVerify);
-	res = blockQueue.import(&block3.getBytes());
+	block3.setBlockHeader(block3Header);
+	block3.updateNonce(blockchain);
+	res = blockQueue.import(&block3.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::Malformed, "Simple block import to BlockQueue should have return Malformed");
 
 	TestBlock block4;
@@ -99,10 +100,11 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	blockchain2.addBlock(block4);
 	TestBlock block5;
 	block5.mine(blockchain2);
-	BlockHeader block5Header = block5.getBlockHeader();
+	BlockHeader block5Header = block5.blockHeader();
 	block5Header.setTimestamp(block5Header.timestamp() + 100);
-	block5.setBlockHeader(block5Header, RecalcBlockHeader::UpdateAndVerify);
-	res = blockQueue.import(&block5.getBytes());
+	block5.setBlockHeader(block5Header);
+	block5.updateNonce(blockchain2);
+	res = blockQueue.import(&block5.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::FutureTimeUnknown, "Simple block import to BlockQueue should have return FutureTimeUnknown");
 
 	blockQueue.clear();
@@ -112,10 +114,11 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 
 	TestBlock block3b;
 	block3b.mine(blockchain2);
-	BlockHeader block3bHeader = block3b.getBlockHeader();
+	BlockHeader block3bHeader = block3b.blockHeader();
 	block3bHeader.setTimestamp(block3bHeader.timestamp() - 40);
-	block3b.setBlockHeader(block3bHeader, RecalcBlockHeader::UpdateAndVerify);
-	res = blockQueue.import(&block3b.getBytes());
+	block3b.setBlockHeader(block3bHeader);
+	block3b.updateNonce(blockchain2);
+	res = blockQueue.import(&block3b.bytes());
 	BOOST_REQUIRE_MESSAGE(res == ImportResult::UnknownParent, "Simple block import to BlockQueue should have return UnknownParent");
 }
 
