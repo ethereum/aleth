@@ -12,8 +12,12 @@ using namespace dev;
 using namespace dev::rpc;
 using namespace dev::eth;
 
-AdminEth::AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm)
-: m_eth(_eth), m_gp(_gp), m_keyManager(_keyManager), m_sm(_sm) {}
+AdminEth::AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm):
+	m_eth(_eth),
+	m_gp(_gp),
+	m_keyManager(_keyManager),
+	m_sm(_sm)
+{}
 
 bool AdminEth::admin_eth_setMining(bool _on, std::string const& _session)
 {

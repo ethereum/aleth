@@ -372,7 +372,7 @@ int main(int argc, char** argv)
 	bool pinning = false;
 	bool enableDiscovery = false;
 	bool noPinning = false;
-	static const NoNetworkID = (unsigned)-1;
+	static const unsigned NoNetworkID = (unsigned)-1;
 	unsigned networkID = NoNetworkID;
 
 	/// Mining params
