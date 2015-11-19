@@ -25,7 +25,7 @@
 
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/CommonIO.h>
-#include <libethereum/CanonBlockChain.h>
+#include <libethereum/BlockChain.h>
 #include <libethereum/State.h>
 #include <libethereum/ExtVM.h>
 #include <libethereum/Defaults.h>

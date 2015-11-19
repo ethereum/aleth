@@ -14,31 +14,9 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** @file Precompiled.h
+/** @file MiningClient.cpp
  * @author Gav Wood <i@gavwood.com>
- * @date 2014
+ * @date 2015
  */
 
-#pragma once
-
-#include <unordered_map>
-#include <functional>
-#include <libdevcore/CommonData.h>
-
-namespace dev
-{
-namespace eth
-{
-
-/// Information structure regarding an account that is precompiled (i.e. 1, 2, 3).
-struct PrecompiledAddress
-{
-	std::function<bigint(bytesConstRef)> gas;
-	std::function<void(bytesConstRef, bytesRef)> exec;
-};
-
-/// Info on precompiled contract accounts baked into the protocol.
-std::unordered_map<unsigned, PrecompiledAddress> const& precompiled();
-
-}
-}
+#include "MiningClient.h"

@@ -27,7 +27,6 @@
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Params.h>
 #include "BlockChain.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
@@ -182,11 +181,24 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 
 void BlockChainSync::continueSync()
 {
+<<<<<<< HEAD
 	host().foreachPeer([this](std::shared_ptr<EthereumPeer> _p)
 	{
 		syncPeer(_p, false);
 		return true;
 	});
+=======
+	BlockHeader block = host().chain().info();
+	uint64_t lastBlockTime = (block.hash() == host().chain().genesisHash()) ? 1428192000 : (uint64_t)block.timestamp();
+	uint64_t now = utcTime();
+	unsigned blockCount = c_chainReorgSize;
+	if (lastBlockTime > now)
+		clog(NetWarn) << "Clock skew? Latest block is in the future";
+	else
+		blockCount += (now - lastBlockTime) / 15;	// TODO: REMOVE!!!
+	clog(NetAllDetail) << "Estimated hashes: " << blockCount;
+	return blockCount;
+>>>>>>> 1585595779187d30c6fc2253a1a22f39f7c78970
 }
 
 void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
@@ -472,7 +484,6 @@ void BlockChainSync::collectBlocks()
 			m_lastImportedBlock = headers.first + i;
 			//logNewBlock(h);
 			break;
-
 		case ImportResult::Malformed:
 		case ImportResult::BadChain:
 			//logNewBlock(h);
@@ -539,7 +550,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
-	auto h = BlockInfo::headerHashFromBlock(_r[0].data());
+	auto h = BlockHeader::headerHashFromBlock(_r[0].data());
 
 	if (_r.itemCount() != 2)
 		_peer->disable("NewBlock without 2 data fields.");

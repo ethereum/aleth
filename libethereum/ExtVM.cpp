@@ -98,7 +98,7 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 
 bool ExtVM::call(CallParameters& _p)
 {
-	Executive e(m_s, envInfo(), depth + 1);
+	Executive e(m_s, envInfo(), m_sealEngine, depth + 1);
 	if (!e.call(_p, gasPrice, origin))
 	{
 		go(depth, e, _p.onOp);
@@ -114,7 +114,7 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	// Increment associated nonce for sender.
 	m_s.noteSending(myAddress);
 
-	Executive e(m_s, envInfo(), depth + 1);
+	Executive e(m_s, envInfo(), m_sealEngine, depth + 1);
 	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
 	{
 		go(depth, e, _onOp);

@@ -27,7 +27,6 @@
 #include <libp2p/Host.h>
 #include <libp2p/Session.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Params.h>
 #include "BlockChain.h"
 #include "TransactionQueue.h"
 #include "BlockQueue.h"

@@ -35,9 +35,7 @@
 #include <libdevcore/StructuredLogger.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/EthashAux.h>
-#include <libethcore/BlockInfo.h>
-#include <libethcore/Params.h>
+#include <libethcore/BlockHeader.h>
 #include <liblll/Compiler.h>
 #include "GenesisInfo.h"
 #include "State.h"
@@ -73,7 +71,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, BlockChain const& _bc)
 		if (it->key().ToString() != "best")
 		{
 			try {
-				BlockInfo d(bytesConstRef(it->value()));
+				BlockHeader d(bytesConstRef(it->value()));
 				_out << toHex(it->key().ToString()) << ":   " << d.number() << " @ " << d.parentHash() << (cmp == it->key().ToString() ? "  BEST" : "") << std::endl;
 			}
 			catch (...) {
@@ -148,25 +146,11 @@ static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 
 #endif
 
-BlockChain::BlockChain(bytes const& _genesisBlock, AccountMap const& _genesisState, std::string const& _path):
-	m_dbPath(_path)
+BlockChain::BlockChain(ChainParams const& _p, std::string const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
+	m_dbPath(_dbPath)
 {
-	open(_genesisBlock, _genesisState, _path);
-}
-
-void BlockChain::open(bytes const& _genesisBlock, AccountMap const& _genesisState, std::string const& _path)
-{
-	// initialise deathrow.
-	m_cacheUsage.resize(c_collectionQueueSize);
-	m_lastCollection = chrono::system_clock::now();
-
-	// Initialise with the genesis as the last block on the longest chain.
-	m_genesisBlock = _genesisBlock;
-	m_genesisHash = sha3(RLP(m_genesisBlock)[0].data());
-	m_genesisState = _genesisState;
-
-	// remove the next line real soon. we don't need to be supporting this forever.
-	upgradeDatabase(_path, genesisHash());
+	init(_p, _dbPath);
+	open(_dbPath, _we, _pc);
 }
 
 BlockChain::~BlockChain()
@@ -174,7 +158,37 @@ BlockChain::~BlockChain()
 	close();
 }
 
-unsigned BlockChain::openDatabase(std::string const& _path, WithExisting _we)
+BlockHeader const& BlockChain::genesis() const
+{
+	UpgradableGuard l(x_genesis);
+	if (!m_genesis)
+	{
+		auto gb = m_params.genesisBlock();
+		UpgradeGuard ul(l);
+		m_genesis = BlockHeader(gb);
+		m_genesisHeaderBytes = BlockHeader::extractHeader(&gb).data().toBytes();
+		m_genesisHash = m_genesis.hash();
+	}
+	return m_genesis;
+}
+
+void BlockChain::init(ChainParams const& _p, std::string const& _path)
+{
+	// initialise deathrow.
+	m_cacheUsage.resize(c_collectionQueueSize);
+	m_lastCollection = chrono::system_clock::now();
+
+	// Initialise with the genesis as the last block on the longest chain.
+	m_params = _p;
+	m_sealEngine.reset(m_params.createSealEngine());
+	m_genesis.clear();
+	genesis();
+
+	// remove the next line real soon. we don't need to be supporting this forever.
+	upgradeDatabase(_path, genesisHash());
+}
+
+unsigned BlockChain::open(std::string const& _path, WithExisting _we)
 {
 	string path = _path.empty() ? Defaults::get()->m_dbPath : _path;
 	string chainPath = path + "/" + toHex(m_genesisHash.ref().cropped(0, 4));
@@ -231,11 +245,12 @@ unsigned BlockChain::openDatabase(std::string const& _path, WithExisting _we)
 
 	if (_we != WithExisting::Verify && !details(m_genesisHash))
 	{
-		BlockInfo gb(m_genesisBlock);
+		BlockHeader gb(m_params.genesisBlock());
 		// Insert details of genesis block.
 		m_details[m_genesisHash] = BlockDetails(0, gb.difficulty(), h256(), {});
 		auto r = m_details[m_genesisHash].rlp();
 		m_extrasDB->Put(m_writeOptions, toSlice(m_genesisHash, ExtraDetails), (ldb::Slice)dev::ref(r));
+		assert(isKnown(gb.hash()));
 	}
 
 #if ETH_PARANOIA
@@ -248,13 +263,26 @@ unsigned BlockChain::openDatabase(std::string const& _path, WithExisting _we)
 	m_lastBlockHash = l.empty() ? m_genesisHash : *(h256*)l.data();
 	m_lastBlockNumber = number(m_lastBlockHash);
 
-	cnote << "Opened blockchain DB. Latest: " << currentHash() << (lastMinor == c_minorProtocolVersion ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
+	ctrace << "Opened blockchain DB. Latest: " << currentHash() << (lastMinor == c_minorProtocolVersion ? "(rebuild not needed)" : "*** REBUILD NEEDED ***");
 	return lastMinor;
+}
+
+void BlockChain::open(std::string const& _path, WithExisting _we, ProgressCallback const& _pc)
+{
+	if (open(_path, _we) != c_minorProtocolVersion || _we == WithExisting::Verify)
+		rebuild(_path, _pc);
+}
+
+void BlockChain::reopen(ChainParams const& _p, WithExisting _we, ProgressCallback const& _pc)
+{
+	close();
+	init(_p, m_dbPath);
+	open(m_dbPath, _we, _pc);
 }
 
 void BlockChain::close()
 {
-	cnote << "Closing blockchain DB";
+	ctrace << "Closing blockchain DB";
 	// Not thread safe...
 	delete m_extrasDB;
 	delete m_blocksDB;
@@ -272,7 +300,7 @@ void BlockChain::close()
 	m_lastLastHashes.clear();
 }
 
-void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress, bool _prepPoW)
+void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, unsigned)> const& _progress)
 {
 	string path = _path.empty() ? Defaults::get()->m_dbPath : _path;
 	string chainPath = path + "/" + toHex(m_genesisHash.ref().cropped(0, 4));
@@ -314,7 +342,7 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 	m_lastBlockHash = genesisHash();
 	m_lastBlockNumber = 0;
 
-	m_details[m_lastBlockHash].totalDifficulty = BlockInfo(m_genesisBlock).difficulty();
+	m_details[m_lastBlockHash].totalDifficulty = s.info().difficulty();
 
 	m_extrasDB->Put(m_writeOptions, toSlice(m_lastBlockHash, ExtraDetails), (ldb::Slice)dev::ref(m_details[m_lastBlockHash].rlp()));
 
@@ -331,9 +359,7 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 		{
 			bytes b = block(queryExtras<BlockHash, uint64_t, ExtraBlockHash>(d, m_blockHashes, x_blockHashes, NullBlockHash, oldExtrasDB).value);
 
-			BlockInfo bi(&b);
-			if (_prepPoW)
-				Ethash::ensurePrecomputed((unsigned)bi.number());
+			BlockHeader bi(&b);
 
 			if (bi.parentHash() != lastHash)
 			{
@@ -359,6 +385,17 @@ void BlockChain::rebuild(std::string const& _path, std::function<void(unsigned, 
 
 	delete oldExtrasDB;
 	boost::filesystem::remove_all(path + "/extras.old");
+}
+
+string BlockChain::dumpDatabase() const
+{
+	stringstream ss;
+
+	ss << m_lastBlockHash << endl;
+	ldb::Iterator* i = m_extrasDB->NewIterator(m_readOptions);
+	for (i->SeekToFirst(); i->Valid(); i->Next())
+		ss << toHex(bytesConstRef(i->key())) << "/" << toHex(bytesConstRef(i->value())) << endl;
+	return ss.str();
 }
 
 LastHashes BlockChain::lastHashes(h256 const& _parent) const
@@ -517,7 +554,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	}
 
 	// Work out its number as the parent's number + 1
-	if (!isKnown(_block.info.parentHash()))
+	if (!isKnown(_block.info.parentHash(), false))
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
@@ -544,7 +581,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 		auto parentBlock = block(_block.info.parentHash());
 		clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
 		clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
-		clog(BlockChainDebug) << "Block:" << BlockInfo(&parentBlock);
+		clog(BlockChainDebug) << "Block:" << BlockHeader(&parentBlock);
 		clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
 		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
 		exit(-1);
@@ -630,7 +667,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 
 	// Work out its number as the parent's number + 1
-	if (!isKnown(_block.info.parentHash()))
+	if (!isKnown(_block.info.parentHash(), false))	// doesn't have to be current.
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Unknown parent " << _block.info.parentHash();
 		// We don't know the parent (yet) - discard for now. It'll get resent to us if we find out about its ancestry later on.
@@ -645,7 +682,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		auto parentBlock = block(_block.info.parentHash());
 		clog(BlockChainDebug) << "isKnown:" << isKnown(_block.info.parentHash());
 		clog(BlockChainDebug) << "last/number:" << m_lastBlockNumber << m_lastBlockHash << _block.info.number();
-		clog(BlockChainDebug) << "Block:" << BlockInfo(&parentBlock);
+		clog(BlockChainDebug) << "Block:" << BlockHeader(&parentBlock);
 		clog(BlockChainDebug) << "RLP:" << RLP(parentBlock);
 		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
 		exit(-1);
@@ -685,7 +722,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	{
 		// Check transactions are valid and that they result in a state equivalent to our state_root.
 		// Get total difficulty increase and update state, checking it.
-		Block s(_db);
+		Block s(*this, _db);
 		auto tdIncrease = s.enactOn(_block, *this);
 
 		for (unsigned i = 0; i < s.pending().size(); ++i)
@@ -758,7 +795,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #endif
 
 	StructuredLogger::chainReceivedNewBlock(
-		_block.info.hashWithout().abridged(),
+		_block.info.hash(WithoutSeal).abridged(),
 		"",//_block.info.proof.nonce.abridged(),
 		currentHash().abridged(),
 		"", // TODO: remote id ??
@@ -797,17 +834,17 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		// Go through ret backwards until hash != last.parent and update m_transactionAddresses, m_blockHashes
 		for (auto i = route.rbegin(); i != route.rend() && *i != common; ++i)
 		{
-			BlockInfo tbi;
+			BlockHeader tbi;
 			if (*i == _block.info.hash())
 				tbi = _block.info;
 			else
-				tbi = BlockInfo(block(*i));
+				tbi = BlockHeader(block(*i));
 
 			// Collate logs into blooms.
 			h256s alteredBlooms;
 			{
 				LogBloom blockBloom = tbi.logBloom();
-				blockBloom.shiftBloom<3>(sha3(tbi.beneficiary().ref()));
+				blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
 
 				// Pre-memoize everything we need before locking x_blocksBlooms
 				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
@@ -849,7 +886,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		clog(BlockChainNote) << "   Imported and best" << td << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
 
 		StructuredLogger::chainNewHead(
-			_block.info.hashWithout().abridged(),
+			_block.info.hash(WithoutSeal).abridged(),
 			"",//_block.info.proof.nonce.abridged(),
 			currentHash().abridged(),
 			_block.info.parentHash().abridged()
@@ -1033,7 +1070,7 @@ void BlockChain::rescue(OverlayDB& _db)
 		try
 		{
 			cout << "block..." << flush;
-			BlockInfo bi(block(h));
+			BlockHeader bi(block(h));
 			cout << "extras..." << flush;
 			details(h);
 			cout << "state..." << flush;
@@ -1312,7 +1349,7 @@ h256Hash BlockChain::allKinFrom(h256 const& _parent, unsigned _generations) cons
 	return ret;
 }
 
-bool BlockChain::isKnown(h256 const& _hash) const
+bool BlockChain::isKnown(h256 const& _hash, bool _isCurrent) const
 {
 	if (_hash == m_genesisHash)
 		return true;
@@ -1334,13 +1371,13 @@ bool BlockChain::isKnown(h256 const& _hash) const
 				return false;
 		}
 //	return true;
-	return details(_hash).number <= m_lastBlockNumber;		// to allow rewind functionality.
+	return !_isCurrent || details(_hash).number <= m_lastBlockNumber;		// to allow rewind functionality.
 }
 
 bytes BlockChain::block(h256 const& _hash) const
 {
 	if (_hash == m_genesisHash)
-		return m_genesisBlock;
+		return m_params.genesisBlock();
 
 	{
 		ReadGuard l(x_blocks);
@@ -1370,13 +1407,13 @@ bytes BlockChain::block(h256 const& _hash) const
 bytes BlockChain::headerData(h256 const& _hash) const
 {
 	if (_hash == m_genesisHash)
-		return BlockInfo::extractHeader(&m_genesisBlock).data().toBytes();
+		return m_genesisHeaderBytes;
 
 	{
 		ReadGuard l(x_blocks);
 		auto it = m_blocks.find(_hash);
 		if (it != m_blocks.end())
-			return BlockInfo::extractHeader(&it->second).data().toBytes();
+			return BlockHeader::extractHeader(&it->second).data().toBytes();
 	}
 
 	string d;
@@ -1394,19 +1431,117 @@ bytes BlockChain::headerData(h256 const& _hash) const
 	m_blocks[_hash].resize(d.size());
 	memcpy(m_blocks[_hash].data(), d.data(), d.size());
 
-	return BlockInfo::extractHeader(&m_blocks[_hash]).data().toBytes();
+	return BlockHeader::extractHeader(&m_blocks[_hash]).data().toBytes();
 }
 
 Block BlockChain::genesisBlock(OverlayDB const& _db) const
 {
-	h256 r = BlockInfo(m_genesisBlock, CheckNothing).stateRoot();
+	h256 r = BlockHeader(m_params.genesisBlock()).stateRoot();
 	if (_db.exists(r))
-		return Block(_db, r);
-	Block ret(_db, BaseState::Empty);
-	dev::eth::commit(m_genesisState, ret.mutableState().m_state);		// bit horrible. maybe consider a better way of constructing it?
-	ret.mutableState().db().commit();									// have to use this db() since it's the one that has been altered with the above commit.
-	ret.m_previousBlock = BlockInfo(m_genesisBlock);
+		return Block(*this, _db, r);
+	Block ret(*this, _db, BaseState::Empty);
+	ret.noteChain(*this);
+	dev::eth::commit(m_params.genesisState, ret.mutableState().m_state);	// bit horrible. maybe consider a better way of constructing it?
+	ret.mutableState().db().commit();										// have to use this db() since it's the one that has been altered with the above commit.
+	ret.m_previousBlock = BlockHeader(m_params.genesisBlock());
 	ret.resetCurrent();
 	return ret;
 }
 
+VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<void(Exception&)> const& _onBad, ImportRequirements::value _ir) const
+{
+	VerifiedBlockRef res;
+	BlockHeader h;
+	try
+	{
+		h = BlockHeader(_block);
+		if (!!(_ir & ImportRequirements::PostGenesis) && (!h.parentHash() || h.number() == 0))
+			BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
+
+		BlockHeader parent;
+		if (!!(_ir & ImportRequirements::Parent))
+		{
+			bytes parentHeader(headerData(h.parentHash()));
+			if (parentHeader.empty())
+				BOOST_THROW_EXCEPTION(InvalidParentHash() << errinfo_required_h256(h.parentHash()) << errinfo_currentNumber(h.number()));
+			parent = BlockHeader(parentHeader, HeaderData, h.parentHash());
+		}
+		sealEngine()->verify((_ir & ImportRequirements::ValidSeal) ? Strictness::CheckEverything : Strictness::QuickNonce, h, parent, _block);
+		res.info = h;
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_phase(1);
+		ex << errinfo_now(time(0));
+		ex << errinfo_block(_block.toBytes());
+		// only populate extraData if we actually managed to extract it. otherwise,
+		// we might be clobbering the existing one.
+		if (!h.extraData().empty())
+			ex << errinfo_extraData(h.extraData());
+		if (_onBad)
+			_onBad(ex);
+		throw;
+	}
+
+	RLP r(_block);
+	unsigned i = 0;
+	if (_ir && !!(ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))
+		for (auto const& uncle: r[2])
+		{
+			BlockHeader uh(uncle.data(), HeaderData);
+			try
+			{
+				BlockHeader parent;
+				if (!!(_ir & ImportRequirements::UncleParent))
+				{
+					bytes parentHeader(headerData(uh.parentHash()));
+					if (parentHeader.empty())
+						BOOST_THROW_EXCEPTION(InvalidUncleParentHash() << errinfo_required_h256(uh.parentHash()) << errinfo_currentNumber(h.number()) << errinfo_uncleNumber(uh.number()));
+					parent = BlockHeader(parentHeader, HeaderData, uh.parentHash());
+				}
+				sealEngine()->verify((_ir & ImportRequirements::UncleSeals) ? Strictness::CheckEverything : Strictness::IgnoreSeal, uh, parent);
+			}
+			catch (Exception& ex)
+			{
+				ex << errinfo_phase(1);
+				ex << errinfo_uncleIndex(i);
+				ex << errinfo_now(time(0));
+				ex << errinfo_block(_block.toBytes());
+				// only populate extraData if we actually managed to extract it. otherwise,
+				// we might be clobbering the existing one.
+				if (!uh.extraData().empty())
+					ex << errinfo_extraData(uh.extraData());
+				if (_onBad)
+					_onBad(ex);
+				throw;
+			}
+			++i;
+		}
+	i = 0;
+	if (_ir && !!(ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
+		for (RLP const& tr: r[1])
+		{
+			bytesConstRef d = tr.data();
+			try
+			{
+				res.transactions.push_back(Transaction(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None));
+			}
+			catch (Exception& ex)
+			{
+				ex << errinfo_phase(1);
+				ex << errinfo_transactionIndex(i);
+				ex << errinfo_transaction(d.toBytes());
+				ex << errinfo_block(_block.toBytes());
+				// only populate extraData if we actually managed to extract it. otherwise,
+				// we might be clobbering the existing one.
+				if (!h.extraData().empty())
+					ex << errinfo_extraData(h.extraData());
+				if (_onBad)
+					_onBad(ex);
+				throw;
+			}
+			++i;
+		}
+	res.block = bytesConstRef(_block);
+	return res;
+}

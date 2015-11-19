@@ -30,14 +30,13 @@
 #include <libdevcore/TrieHash.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/Params.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
 #include "CachedAddressState.h"
-#include "CanonBlockChain.h"
+#include "BlockChain.h"
 #include "TransactionQueue.h"
 #include "ethereum/ConfigInfo.h"
 using namespace std;
@@ -52,9 +51,10 @@ const char* StateDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
 const char* StateTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
 const char* StateChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
-State::State(OverlayDB const& _db, BaseState _bs):
+State::State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs):
 	m_db(_db),
-	m_state(&m_db)
+	m_state(&m_db),
+	m_accountStartNonce(_accountStartNonce)
 {
 	if (_bs != BaseState::PreExisting)
 		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
@@ -66,7 +66,8 @@ State::State(State const& _s):
 	m_db(_s.m_db),
 	m_state(&m_db, _s.m_state.root(), Verification::Skip),
 	m_cache(_s.m_cache),
-	m_touched(_s.m_touched)
+	m_touched(_s.m_touched),
+	m_accountStartNonce(_s.m_accountStartNonce)
 {
 	paranoia("after state cloning (copy cons).", true);
 }
@@ -108,7 +109,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 		}
 	}
 
-	cnote << "Opened state DB.";
+	ctrace << "Opened state DB.";
 	return OverlayDB(db);
 }
 
@@ -116,6 +117,21 @@ void State::populateFrom(AccountMap const& _map)
 {
 	eth::commit(_map, m_state);
 	commit();
+}
+
+u256 const& State::requireAccountStartNonce() const
+{
+	if (m_accountStartNonce == Invalid256)
+		BOOST_THROW_EXCEPTION(InvalidAccountStartNonceInState());
+	return m_accountStartNonce;
+}
+
+void State::noteAccountStartNonce(u256 const& _actual)
+{
+	if (m_accountStartNonce == Invalid256)
+		m_accountStartNonce = _actual;
+	else if (m_accountStartNonce != _actual)
+		BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
 }
 
 void State::paranoia(std::string const& _when, bool _enforceRefs) const
@@ -143,6 +159,7 @@ State& State::operator=(State const& _s)
 	m_state.open(&m_db, _s.m_state.root(), Verification::Skip);
 	m_cache = _s.m_cache;
 	m_touched = _s.m_touched;
+	m_accountStartNonce = _s.m_accountStartNonce;
 	paranoia("after state cloning (assignment op)", true);
 	return *this;
 }
@@ -208,7 +225,7 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Add
 		RLP state(stateBack);
 		Account s;
 		if (state.isNull())
-			s = Account(0, Account::NormalCreation);
+			s = Account(requireAccountStartNonce(), 0, Account::NormalCreation);
 		else
 			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
 		bool ok;
@@ -283,7 +300,7 @@ void State::noteSending(Address const& _id)
 	{
 		cwarn << "Sending from non-existant account. How did it pay!?!";
 		// this is impossible. but we'll continue regardless...
-		m_cache[_id] = Account(1, 0);
+		m_cache[_id] = Account(requireAccountStartNonce() + 1, 0);
 	}
 	else
 		it->second.incNonce();
@@ -294,7 +311,7 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
 	if (it == m_cache.end())
-		m_cache[_id] = Account(_amount, Account::NormalCreation);
+		m_cache[_id] = Account(requireAccountStartNonce(), _amount, Account::NormalCreation);
 	else
 		it->second.addBalance(_amount);
 }
@@ -320,7 +337,7 @@ Address State::newContract(u256 const& _balance, bytes const& _code)
 		auto it = m_cache.find(ret);
 		if (it == m_cache.end())
 		{
-			m_cache[ret] = Account(c_accountStartNonce, _balance, EmptyTrie, h, Account::Changed);
+			m_cache[ret] = Account(requireAccountStartNonce(), _balance, EmptyTrie, h, Account::Changed);
 			return ret;
 		}
 	}
@@ -447,7 +464,7 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 	return true;
 }
 
-std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
+std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, SealEngineFace* _sealEngine, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
 	auto onOp = _onOp;
 #if ETH_VMTRACE
@@ -463,7 +480,7 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
-	Executive e(*this, _envInfo);
+	Executive e(*this, _envInfo, _sealEngine);
 	ExecutionResult res;
 	e.setResultRecipient(res);
 	e.initialize(_t);

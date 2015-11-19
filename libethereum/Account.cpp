@@ -23,6 +23,8 @@
 #include <liblll/Compiler.h>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libethcore/Common.h>
+#include <libethcore/ChainOperationParams.h>
+#include <libethcore/Precompiled.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -32,7 +34,17 @@ namespace js = json_spirit;
 
 const h256 Account::c_contractConceptionCodeHash;
 
-AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask)
+uint64_t toUnsigned(js::mValue const& _v)
+{
+	switch (_v.type())
+	{
+	case js::int_type: return _v.get_uint64();
+	case js::str_type: return fromBigEndian<uint64_t>(fromHex(_v.get_str()));
+	default: return 0;
+	}
+}
+
+AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
 		bigint ret(s);
@@ -45,8 +57,8 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
-
-	for (auto account: val.get_obj().count("alloc") ? val.get_obj()["alloc"].get_obj() : val.get_obj())
+	js::mObject o = val.get_obj();
+	for (auto account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
@@ -60,10 +72,13 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 		else if (o.count("balance"))
 			balance = u256Safe(o["balance"].get_str());
 
+		bool haveNonce = o.count("nonce") > 0;
+		u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : 0;
+
 		bool haveCode = o.count("code");
 		if (haveCode)
 		{
-			ret[a] = Account(balance, Account::ContractConception);
+			ret[a] = Account(nonce, balance, Account::ContractConception);
 			if (o["code"].type() == json_spirit::str_type)
 			{
 				if (o["code"].get_str().find("0x") != 0)
@@ -75,20 +90,37 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 				cerr << "Error importing code of account " << a << "! Code field needs to be a string";
 		}
 		else
-			ret[a] = Account(balance, Account::NormalCreation);
+			ret[a] = Account(nonce, balance, Account::NormalCreation);
 
 		bool haveStorage = o.count("storage");
 		if (haveStorage)
 			for (pair<string, js::mValue> const& j: o["storage"].get_obj())
 				ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
 
-		bool haveNonce = o.count("nonce");
-		if (haveNonce)
-			for (auto i = 0; i < u256Safe(o["nonce"].get_str()); ++i)
-				ret[a].incNonce();
-
 		if (o_mask)
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage);
+
+		if (o_precompiled && o.count("precompiled"))
+		{
+			js::mObject p = o["precompiled"].get_obj();
+			auto n = p["name"].get_str();
+			try
+			{
+				if (p.count("linear"))
+				{
+					auto l = p["linear"].get_obj();
+					unsigned base = toUnsigned(l["base"]);
+					unsigned word = toUnsigned(l["word"]);
+					o_precompiled->insert(make_pair(a, PrecompiledContract(base, word, PrecompiledRegistrar::executor(n))));
+				}
+			}
+			catch (ExecutorNotFound)
+			{
+				// Oh dear - missing a plugin?
+				cwarn << "Couldn't create a precompiled contract account. Missing an executor called:" << n;
+				throw;
+			}
+		}
 	}
 
 	return ret;

@@ -32,7 +32,7 @@ int hexPrefixTest();
 int peerTest(int argc, char** argv);
 
 #include <libdevcore/Log.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -40,7 +40,7 @@ using namespace dev::eth;
 //BOOST_AUTO_TEST_CASE(basic_tests)
 //{
 /*	RLPStream s;
-	BlockInfo::genesis().streamRLP(s, false);
+	BlockHeader::genesis().streamRLP(s, false);
 	std::cout << RLP(s.out()) << std::endl;
 	std::cout << toHex(s.out()) << std::endl;
 	std::cout << sha3(s.out()) << std::endl;*/

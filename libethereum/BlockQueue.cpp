@@ -24,7 +24,7 @@
 #include <sstream>
 #include <libdevcore/Log.h>
 #include <libethcore/Exceptions.h>
-#include <libethcore/BlockInfo.h>
+#include <libethcore/BlockHeader.h>
 #include "BlockChain.h"
 #include "VerifiedBlock.h"
 #include "State.h"
@@ -109,7 +109,7 @@ void BlockQueue::verifierBody()
 				return;
 			swap(work, m_unverified.front());
 			m_unverified.pop_front();
-			BlockInfo bi;
+			BlockHeader bi;
 			bi.setSha3Uncles(work.hash);
 			bi.setParentHash(work.parentHash);
 			m_verifying.emplace_back(move(bi));
@@ -196,7 +196,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 {
 	clog(BlockQueueTraceChannel) << std::this_thread::get_id();
 	// Check if we already know this block.
-	h256 h = BlockInfo::headerHashFromBlock(_block);
+	h256 h = BlockHeader::headerHashFromBlock(_block);
 
 	clog(BlockQueueTraceChannel) << "Queuing block" << h << "for import...";
 
@@ -209,10 +209,10 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 		return ImportResult::AlreadyKnown;
 	}
 
-	BlockInfo bi;
+	BlockHeader bi;
 	try
 	{
-		// TODO: quick verification of seal - will require BlockQueue to be templated on Sealer
+		// TODO: quick verification of seal - will require BlockQueue to be templated on SealEngine
 		// VERIFY: populates from the block and checks the block is internally coherent.
 		bi = m_bc->verifyBlock(_block, m_onBad, ImportRequirements::PostGenesis).info;
 	}
@@ -375,7 +375,7 @@ bool BlockQueue::doneDrain(h256s const& _bad)
 	{
 		// at least one of them was bad.
 		m_knownBad += _bad;
-		for (h256 const& b : _bad)
+		for (h256 const& b: _bad)
 			updateBad_WITH_LOCK(b);
 	}
 	return !m_readySet.empty();
@@ -392,7 +392,7 @@ void BlockQueue::tick()
 		cblockq << "Checking past-future blocks...";
 
 		uint64_t t = utcTime();
-		if (t <= m_future.begin()->first)
+		if (t < m_future.begin()->first)
 			return;
 
 		cblockq << "Past-future blocks ready.";
@@ -400,7 +400,7 @@ void BlockQueue::tick()
 		{
 			UpgradeGuard l2(l);
 			DEV_INVARIANT_CHECK;
-			auto end = m_future.lower_bound(t);
+			auto end = m_future.upper_bound(t);
 			for (auto i = m_future.begin(); i != end; ++i)
 			{
 				m_unknownSize -= i->second.second.size();
