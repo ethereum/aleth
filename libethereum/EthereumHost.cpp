@@ -363,7 +363,6 @@ void EthereumHost::onPeerAborting()
 
 bool EthereumHost::isSyncing() const
 {
-	RecursiveGuard l(x_sync);
 	if (!m_sync)
 		return false;
 	return m_sync->isSyncing();

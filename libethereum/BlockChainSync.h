@@ -100,7 +100,7 @@ private:
 	unsigned estimatedHashes() const;
 
 	void resetSync();
-	void syncPeer(std::shared_ptr<EthereumPeer> _peer);
+	void syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force);
 	void requestBlocks(std::shared_ptr<EthereumPeer> _peer);
 	void clearPeerDownload(std::shared_ptr<EthereumPeer> _peer);
 	void clearPeerDownload();

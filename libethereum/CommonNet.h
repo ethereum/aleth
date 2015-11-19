@@ -103,12 +103,11 @@ struct SyncStatus
 {
 	SyncState state = SyncState::Idle;
 	unsigned protocolVersion = 0;
-	unsigned hashesTotal = 0;
-	unsigned hashesReceived = 0;
-	bool hashesEstimated = false;
 	unsigned startBlockNumber;
 	unsigned currentBlockNumber;
 	unsigned highestBlockNumber;
+	unsigned blocksTotal = 0;
+	unsigned blocksReceived = 0;
 	bool majorSyncing = false;
 };
 
