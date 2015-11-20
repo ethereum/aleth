@@ -348,7 +348,7 @@ int main(int argc, char** argv)
 #endif
 	string jsonAdmin;
 	string paramsJSON;
-	ChainParams chainParams;
+	ChainParams chainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
 	u256 gasFloor = Invalid256;
 	string privateChain;
 
