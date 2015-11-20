@@ -28,7 +28,7 @@ using namespace eth;
 void help()
 {
 	cout
-		<< "Usage web3 [OPTIONS]" << endl
+		<< "Usage flu [OPTIONS]" << endl
 		<< "Options:" << endl << endl;
 	MainCLI::streamHelp(cout);
 	cout

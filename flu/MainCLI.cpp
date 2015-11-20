@@ -70,6 +70,8 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 	string arg = argv[i];
 	if (arg == "console")
 		m_mode = Mode::Console;
+	else if (arg == "benchmark")
+		m_mode = Mode::Benchmark;
 	else if (arg == "--path" && i + 1 < argc)
 	{
 		m_dbPath = argv[++i];
@@ -100,6 +102,7 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 		m_authorities.push_back(Address(argv[++i]));
 	else if (arg == "--start-sealing")
 		m_startSealing = true;
+#if ETH_JSONRPC || !ETH_TRUE
 	else if (arg == "--ipc")
 		m_ipc = true;
 	else if (arg == "--jsonrpc")
@@ -108,6 +111,7 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 		m_jsonRPCPort = atoi(argv[++i]);
 	else if (arg == "--jsonrpc-cors-domain" && i + 1 < argc)
 		m_rpcCorsDomain = argv[++i];
+#endif
 	else
 	{
 		p2p::NodeSpec ns(arg);
@@ -125,6 +129,7 @@ void MainCLI::execute()
 	switch (m_mode)
 	{
 	case Mode::Console:
+	case Mode::Benchmark:
 	case Mode::Dumb:
 	{
 		auto nodesState = contents(m_dbPath + "/network.rlp");
@@ -161,7 +166,7 @@ void MainCLI::execute()
 				if (Secret s = m_keyManager.secret(i))
 				{
 					web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
-					web3.ethereum()->setAuthor(i);	// BROKEN!!!
+					web3.ethereum()->setAuthor(i);
 					break;
 				}
 
@@ -203,6 +208,56 @@ void MainCLI::execute()
 			while (!m_shouldExit)
 				console.readAndEval();
 			rpcServer.StopListening();
+		}
+		else if (m_mode == Mode::Benchmark)
+		{
+			unsigned const c_pitch = 500;
+			unsigned const c_delayMS = 100;
+			bool const delayAnyway = false;
+			Timer t;
+			unsigned lastSecond = 0;
+			unsigned count = 0;
+			auto limits = web3.ethereum()->transactionQueueLimits();
+			TransactionSkeleton ts;
+			ts.to = ts.from = FluidityTreasure.address();
+			ts.gas = 1000000;
+			ts.gasPrice = 0;
+			ts.nonce = web3.ethereum()->countAt(ts.from);
+			ts.value = u256(1) << 30;
+			while (!m_shouldExit)
+			{
+				auto status = web3.ethereum()->transactionQueueStatus();
+				if (status.current + c_pitch > limits.current || status.future + c_pitch > limits.future || delayAnyway)
+				{
+					// buffer overrun - sleep for a bit.
+//					cdebug << "Buffer overrun. current:" << status.current << " future:" << status.future << " unverified:" << status.unverified;
+					this_thread::sleep_for(chrono::milliseconds(c_delayMS));
+				}
+				else
+				{
+					Timer t;
+					vector<bytes> txs;
+					for (unsigned i = 0; i < c_pitch; ++i)
+					{
+						Transaction tx(ts, FluidityTreasure.secret());
+						txs.push_back(tx.rlp());
+						ts.nonce++;
+					}
+//					cdebug << "Encoded" << c_pitch << "transactions in" << (t.elapsed() * 1000) << "ms";
+//					t.restart();
+					for (bytes const& tx: txs)
+						web3.ethereum()->injectTransaction(tx);
+					cdebug << "Submitted" << c_pitch << "transactions in" << (t.elapsed() * 1000) << "ms";
+					count += c_pitch;
+				}
+
+				if (lastSecond < (unsigned)t.elapsed())
+				{
+					cdebug << "Transactions submitted:" << count << "; tx/sec:" << (count / t.elapsed());
+					lastSecond++;
+				}
+			}
+
 		}
 		else if (m_mode == Mode::Dumb)
 			while (!m_shouldExit)
@@ -354,7 +409,7 @@ void MainCLI::streamHelp(ostream& _out)
 {
 	_out
 		<< "Main operation modes:" << endl
-		<< "    daemon  Daemonify." << endl
+		<< "    benchmark  Don't sleep - just launch as many transactions as possible." << endl
 		<< "    console  Launch interactive console." << endl
 		;
 	// TODO: all the other options.

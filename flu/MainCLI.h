@@ -55,6 +55,7 @@ public:
 	enum class Mode
 	{
 		Dumb,
+		Benchmark,
 		Console
 	};
 
