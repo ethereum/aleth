@@ -62,40 +62,44 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
-		u256 balance = 0;
 
 		bool haveBalance = (o.count("wei") || o.count("finney") || o.count("balance"));
-		if (o.count("wei"))
-			balance = u256Safe(o["wei"].get_str());
-		else if (o.count("finney"))
-			balance = u256Safe(o["finney"].get_str()) * finney;
-		else if (o.count("balance"))
-			balance = u256Safe(o["balance"].get_str());
-
 		bool haveNonce = o.count("nonce") > 0;
-		u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : 0;
-
 		bool haveCode = o.count("code");
-		if (haveCode)
+		bool haveStorage = o.count("storage");
+
+		if (haveStorage || haveCode || haveNonce || haveBalance)
 		{
-			ret[a] = Account(nonce, balance, Account::ContractConception);
-			if (o["code"].type() == json_spirit::str_type)
+			u256 balance = 0;
+			if (o.count("wei"))
+				balance = u256Safe(o["wei"].get_str());
+			else if (o.count("finney"))
+				balance = u256Safe(o["finney"].get_str()) * finney;
+			else if (o.count("balance"))
+				balance = u256Safe(o["balance"].get_str());
+
+			u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : 0;
+
+			if (haveCode)
 			{
-				if (o["code"].get_str().find("0x") != 0)
-					ret[a].setCode(compileLLL(o["code"].get_str(), false));
+				ret[a] = Account(nonce, balance, Account::ContractConception);
+				if (o["code"].type() == json_spirit::str_type)
+				{
+					if (o["code"].get_str().find("0x") != 0)
+						ret[a].setCode(compileLLL(o["code"].get_str(), false));
+					else
+						ret[a].setCode(fromHex(o["code"].get_str().substr(2)));
+				}
 				else
-					ret[a].setCode(fromHex(o["code"].get_str().substr(2)));
+					cerr << "Error importing code of account " << a << "! Code field needs to be a string";
 			}
 			else
-				cerr << "Error importing code of account " << a << "! Code field needs to be a string";
-		}
-		else
-			ret[a] = Account(nonce, balance, Account::NormalCreation);
+				ret[a] = Account(nonce, balance, Account::NormalCreation);
 
-		bool haveStorage = o.count("storage");
-		if (haveStorage)
-			for (pair<string, js::mValue> const& j: o["storage"].get_obj())
-				ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
+			if (haveStorage)
+				for (pair<string, js::mValue> const& j: o["storage"].get_obj())
+					ret[a].setStorage(u256(j.first), u256(j.second.get_str()));
+		}
 
 		if (o_mask)
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage);
