@@ -28,7 +28,6 @@
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
 #include "CommonNet.h"
-#include "DownloadMan.h"
 
 namespace dev
 {
@@ -110,21 +109,15 @@ private:
 	EthereumHost& m_host;
 
 protected:
-	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
-	mutable RecursiveMutex x_sync;
-	SyncState m_state = SyncState::NotSynced;	///< Current sync state
-	unsigned m_estimatedHashes = 0;				///< Number of estimated hashes for the last peer over PV60. Used for status reporting only.
-	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
-	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
-	unsigned m_highestBlock = 0;       	     	///< Highest block number seen
-	std::weak_ptr<EthereumPeer> m_chainPeer;	///< Peer that provides subchain headers. TODO: all we actually need to store here is node id to apply reward/penalty
-	
+
 	struct Header
 	{
-		bytes data;	///< Header data
-		h256 hash;	///< Cached hash
+		bytes data;		///< Header data
+		h256 hash;		///< Block hash
+		h256 parent;	///< Parent hash
 	};
 
+	/// Used to identify header by transactions and uncles hashes
 	struct HeaderId
 	{
 		h256 transactionsRoot;
@@ -148,6 +141,13 @@ protected:
 		}
 	};
 
+	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
+	mutable RecursiveMutex x_sync;
+	SyncState m_state = SyncState::NotSynced;	///< Current sync state
+	unsigned m_estimatedHashes = 0;				///< Number of estimated hashes for the last peer over PV60. Used for status reporting only.
+	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
+	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
+	unsigned m_highestBlock = 0;       	     	///< Highest block number seen
 	std::unordered_set<unsigned> m_downloadingHeaders;
 	std::unordered_set<unsigned> m_downloadingBodies;
 	std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
@@ -155,9 +155,9 @@ protected:
 	std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_headerSyncPeers; ///< Peers to m_downloadingSubchain number map
 	std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_bodySyncPeers; ///< Peers to m_downloadingSubchain number map
 	std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
-	bool m_haveCommonHeader = false;
-	unsigned m_lastImportedBlock = 0; ///< Last imported block number
-	u256 m_syncingTotalDifficulty;
+	bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
+	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
+	u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];

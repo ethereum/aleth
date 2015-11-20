@@ -31,7 +31,6 @@
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
 #include "EthereumHost.h"
-#include "DownloadMan.h"
 
 using namespace std;
 using namespace dev;
@@ -61,6 +60,34 @@ template<typename T> bool haveItem(std::map<unsigned, T>& _container, unsigned _
 		return true;
 	--lower;
 	return lower != _container.end() && lower->first <= _number && (lower->first + lower->second.size()) > _number;
+}
+
+template<typename T> T const* findItem(std::map<unsigned, std::vector<T>>& _container, unsigned _number)
+{
+	if (_container.empty())
+		return nullptr;
+	auto lower = _container.lower_bound(_number);
+	if (lower != _container.end() && lower->first == _number)
+		return &(*lower->second.begin());
+	--lower;
+	if (lower != _container.end() && lower->first <= _number && (lower->first + lower->second.size()) > _number)
+		return &lower->second.at(_number - lower->first);
+	return nullptr;
+}
+
+template<typename T> void removeItem(std::map<unsigned, std::vector<T>>& _container, unsigned _number)
+{
+	if (_container.empty())
+		return;
+	auto lower = _container.lower_bound(_number);
+	if (lower != _container.end() && lower->first == _number)
+	{
+		_container.erase(lower);
+		return;
+	}
+	--lower;
+	if (lower != _container.end() && lower->first <= _number && (lower->first + lower->second.size()) > _number)
+		lower->second.erase(lower->second.begin() + (_number - lower->first), lower->second.end());
 }
 
 template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _container, unsigned _number, T&& _data)
@@ -170,7 +197,6 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 
 	u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
 
-
 	if (_force || _peer->m_totalDifficulty > syncingDifficulty)
 	{
 		// start sync
@@ -200,6 +226,7 @@ void BlockChainSync::continueSync()
 
 void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 {
+	clearPeerDownload(_peer);
 	if (host().bq().knownFull())
 	{
 		clog(NetAllDetail) << "Waiting for block queue before downloading blocks";
@@ -352,6 +379,7 @@ void BlockChainSync::logNewBlock(h256 const& _h)
 void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
+	DEV_INVARIANT_CHECK;
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 	clearPeerDownload(_peer);
@@ -388,7 +416,40 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		}
 		else
 		{
-			Header hdr { _r[i].data().toBytes(), info.hash() };
+			Header hdr { _r[i].data().toBytes(), info.hash(), info.parentHash() };
+
+			// validate chain
+			if (m_haveCommonHeader)
+			{
+				Header const* prevBlock = findItem(m_headers, blockNumber - 1);
+				if (prevBlock && prevBlock->hash != info.parentHash())
+				{
+					clog(NetImpolite) << "Unkown block header " << blockNumber << " " << info.hash();
+					_peer->addRating(-1);
+					continue;
+				}
+
+				Header const* nextBlock = findItem(m_headers, blockNumber + 1);
+				if (nextBlock && nextBlock->parent != info.hash())
+				{
+					clog(NetImpolite) << "Unkown block header " << blockNumber + 1 << " " << nextBlock->hash;
+					// clear following headers
+					unsigned n = blockNumber + 1;
+					auto headers = m_headers.at(n);
+					for (auto const& h : headers)
+					{
+						BlockHeader deletingInfo(h.data, HeaderData);
+						HeaderId id { deletingInfo.transactionsRoot(), deletingInfo.sha3Uncles() };
+						m_headerIdToNumber.erase(id);
+						m_downloadingBodies.erase(n);
+						m_downloadingHeaders.erase(n);
+						++n;
+					}
+					removeItem(m_headers, blockNumber + 1);
+					removeItem(m_bodies, blockNumber + 1);
+				}
+			}
+
 			mergeInto(m_headers, blockNumber, std::move(hdr));
 			HeaderId id { info.transactionsRoot(), info.sha3Uncles() };
 			if (id.transactionsRoot == EmptyTrie && id.uncles ==  EmptyListSHA3)
@@ -402,10 +463,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 				mergeInto(m_bodies, blockNumber, std::move(body));
 			}
 			else
-			{
-				assert(!m_headerIdToNumber.count(id));
 				m_headerIdToNumber[id] = blockNumber;
-			}
 		}
 	}
 	collectBlocks();
@@ -415,6 +473,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
+	DEV_INVARIANT_CHECK;
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 	clearPeerDownload(_peer);
@@ -479,17 +538,13 @@ void BlockChainSync::collectBlocks()
 		case ImportResult::Success:
 			success++;
 			m_lastImportedBlock = headers.first + i;
-			//logNewBlock(h);
 			break;
 		case ImportResult::Malformed:
 		case ImportResult::BadChain:
-			//logNewBlock(h);
-			//_peer->disable("Malformed block received."); TODO: track block origin
 			restartSync();
 			return;
 
 		case ImportResult::FutureTimeKnown:
-			//logNewBlock(h);
 			future++;
 			break;
 		case ImportResult::AlreadyInChain:
@@ -505,7 +560,6 @@ void BlockChainSync::collectBlocks()
 		{
 			assert(false);
 			unknown++;
-			//logNewBlock(h);
 			break;
 		}
 
@@ -616,11 +670,6 @@ SyncStatus BlockChainSync::status() const
 
 void BlockChainSync::resetSync()
 {
-	m_haveCommonHeader = false;
-	m_lastImportedBlock = 0;
-	m_startingBlock = 0;
-	m_highestBlock = 0;
-	m_chainPeer.reset();
 	m_downloadingHeaders.clear();
 	m_downloadingBodies.clear();
 	m_headers.clear();
@@ -635,6 +684,10 @@ void BlockChainSync::resetSync()
 void BlockChainSync::restartSync()
 {
 	resetSync();
+	m_lastImportedBlock = 0;
+	m_startingBlock = 0;
+	m_highestBlock = 0;
+	m_haveCommonHeader = false;
 	host().bq().clear();
 	m_startingBlock = host().chain().number();
 	m_state = SyncState::NotSynced;
@@ -714,5 +767,17 @@ void BlockChainSync::onPeerAborting()
 
 bool BlockChainSync::invariants() const
 {
+	if (!isSyncing() && !m_headers.empty())
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing"));
+	if (!isSyncing() && !m_bodies.empty())
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got bodies while not syncing"));
+	if (isSyncing() && m_haveCommonHeader && m_lastImportedBlock == 0)
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
+	if (isSyncing() && !m_headers.empty() &&  m_lastImportedBlock >= m_headers.begin()->first)
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header is too old"));
+	if (m_headerSyncPeers.empty() != m_downloadingHeaders.empty())
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header download map mismatch"));
+	if (m_bodySyncPeers.empty() != m_downloadingBodies.empty() && m_downloadingBodies.size() <= m_headerIdToNumber.size())
+		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Body download map mismatch"));
 	return true;
 }

@@ -281,13 +281,6 @@ void Client::setNetworkId(u256 const& _n)
 		h->setNetworkId(_n);
 }
 
-DownloadMan const* Client::downloadMan() const
-{
-	if (auto h = m_host.lock())
-		return &(h->downloadMan());
-	return nullptr;
-}
-
 bool Client::isSyncing() const
 {
 	if (auto h = m_host.lock())

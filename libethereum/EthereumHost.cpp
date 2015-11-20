@@ -31,7 +31,6 @@
 #include "TransactionQueue.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
-#include "DownloadMan.h"
 #include "BlockChainSync.h"
 
 using namespace std;
