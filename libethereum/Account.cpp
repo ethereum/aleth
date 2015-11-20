@@ -58,13 +58,13 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
 	js::mObject o = val.get_obj();
-	for (auto account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
+	for (auto const& account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
 	{
 		Address a(fromHex(account.first));
 		auto o = account.second.get_obj();
 
 		bool haveBalance = (o.count("wei") || o.count("finney") || o.count("balance"));
-		bool haveNonce = o.count("nonce") > 0;
+		bool haveNonce = o.count("nonce");
 		bool haveCode = o.count("code");
 		bool haveStorage = o.count("storage");
 
