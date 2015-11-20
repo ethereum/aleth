@@ -63,7 +63,7 @@ ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, bytesRef _out)
 		{
 			try
 			{
-				if (Public rec = dev::recover(sig, in.hash))
+				if (Public rec = recover(sig, in.hash))
 				{
 					ret = dev::sha3(rec);
 					memset(ret.data(), 0, 12);
