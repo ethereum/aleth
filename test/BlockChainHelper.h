@@ -74,6 +74,7 @@ public:
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
 	void setPremine(std::string const& _parameter) { m_premineUpdate[_parameter] = true; }
+	void noteDirty() { m_dirty = true; }
 	void mine(TestBlockChain const& _bc);
 	void updateNonce(TestBlockChain const& _bc);
 	void verify(TestBlockChain const& _bc) const;
@@ -101,6 +102,7 @@ private:
 	void populateFrom(TestBlock const& _original);
 	void premineUpdate(BlockHeader& info);
 
+	bool m_dirty;
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
 	std::unique_ptr<State> m_state;

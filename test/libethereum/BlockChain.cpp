@@ -73,7 +73,6 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	//g_logVerbosity = 0;
 	TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
@@ -177,7 +176,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				if (blObj.count("blockHeader"))
 				{
 					overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
-					alterBlock.updateNonce(blockchain); //update nonce due to the block fields might be changed
+					alterBlock.noteDirty();
 				}
 
 				blObj["rlp"] = toHex(alterBlock.bytes(), 2, HexPrefix::Add);
@@ -268,7 +267,9 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				{
 					TestBlock blRlp(blObj["rlp"].get_str());
 					blockFromRlp = blRlp;
-					testChain.addBlock(blRlp);
+					if (blObj.count("blockHeader") == 0)
+						blockFromRlp.noteDirty();			//disable blockHeader check in TestBlock
+					testChain.addBlock(blockFromRlp);
 				}
 				// if exception is thrown, RLP is invalid and no blockHeader, Transaction list, or Uncle list should be given
 				catch (Exception const& _e)
@@ -418,16 +419,8 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
 		}
 
-		// find new valid nonce
-		//if (static_cast<BlockHeader>(tmp) != static_cast<BlockHeader>(header) && tmp.difficulty())
-		//	findNewValidNonce = RecalcBlockHeader::Update;
-
-		//if (ho.count("updatePoW"))
-		//	findNewValidNonce = RecalcBlockHeader::UpdateAndVerify;
-
 		Ethash::setMixHash(tmp, ho.count("mixHash") ? h256(ho["mixHash"].get_str()) : Ethash::mixHash(header));
 		Ethash::setNonce(tmp, ho.count("nonce") ? Nonce(ho["nonce"].get_str()) : Ethash::nonce(header));
-
 		tmp.noteDirty();
 	}
 	else
@@ -452,7 +445,13 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		}
 	}
 
-	_block.setBlockHeader(tmp);
+	if (ho.count("mixHash") || ho.count("nonce"))
+		_block.setBlockHeader(tmp);
+	else
+	{
+		_block.setBlockHeader(tmp);
+		_block.updateNonce(_chainBranch.blockchain);
+	}
 }
 
 void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std::vector<TestBlock> const& uncles, ChainBranch const& _chainBranch)

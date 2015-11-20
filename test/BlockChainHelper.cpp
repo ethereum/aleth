@@ -45,7 +45,7 @@ TestTransaction::TestTransaction(mObject const& _o):
 
 TestBlock::TestBlock()
 {
-
+	m_dirty = false;
 }
 
 TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj):
@@ -320,16 +320,21 @@ dev::bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const&
 void TestBlock::updateNonce(TestBlockChain const& _bc)
 {
 	if (((BlockHeader)m_blockHeader).difficulty() == 0)
-		BOOST_ERROR("Trying to mine a block with 0 difficulty! " + TestOutputHelper::testName());
-
-	//do not verify blockheader for validity here
-	dev::eth::mine(m_blockHeader, _bc.interface().sealEngine(), false);
+		BOOST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::testName());
+	else
+	{
+		//do not verify blockheader for validity here
+		dev::eth::mine(m_blockHeader, _bc.interface().sealEngine(), false);
+	}
 
 	recalcBlockHeaderBytes();
 }
 
 void TestBlock::verify(TestBlockChain const& _bc) const
 {
+	if (m_dirty) //TestBlock have incorrect blockheader for testing purposes
+		return;
+
 	try
 	{
 		_bc.interface().sealEngine()->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
@@ -415,6 +420,7 @@ void TestBlock::populateFrom(TestBlock const& _original)
 	m_blockHeader = _original.blockHeader();
 	m_bytes = _original.bytes();
 	m_accountMap = _original.accountMap();
+	m_dirty = false;
 }
 
 TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)
