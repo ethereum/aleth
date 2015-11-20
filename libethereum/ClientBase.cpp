@@ -63,7 +63,7 @@ pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t,
 	Transaction t(ts, _secret);
 	m_tq.import(t.rlp());
 	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
-	cnote << "New transaction " << t;
+//	cnote << "New transaction " << t;
 	
 	return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
 }

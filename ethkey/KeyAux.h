@@ -148,6 +148,8 @@ public:
 			m_mode = OperationMode::SignTx;
 			m_signKey = argv[++i];
 		}
+		else if (arg == "--show-me-the-secret")
+			m_showSecret = true;
 		else if (arg == "--tx-data" && i + 1 < argc)
 			try
 			{
@@ -463,6 +465,11 @@ public:
 					cout << a.abridged() << endl;
 				cout << "  ICAP: " << ICAP(a).encoded() << endl;
 				cout << "  Raw hex: " << a.hex() << endl;
+				if (m_showSecret)
+				{
+					Secret s = keyManager().secret(a);
+					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
+				}
 			}
 			break;
 		}
@@ -517,7 +524,7 @@ public:
 					cout << "  UUID: " << toUUID(u) << ":" << endl;
 					cout << "  ICAP: " << ICAP(toAddress(Secret(s))).encoded() << endl;
 					cout << "  Raw hex: " << toAddress(Secret(s)).hex() << endl;
-					cout << "  Secret: " << toHex(s.ref().cropped(0, 8)) << "..." << endl;
+					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
 				}
 				else if (h128 u = fromUUID(i))
 				{
@@ -525,7 +532,7 @@ public:
 					cout << "Key " << i << ":" << endl;
 					cout << "  ICAP: " << ICAP(toAddress(Secret(s))).encoded() << endl;
 					cout << "  Raw hex: " << toAddress(Secret(s)).hex() << endl;
-					cout << "  Secret: " << toHex(s.ref().cropped(0, 8)) << "..." << endl;
+					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
 				}
 				else if (Address a = toAddress(i))
 				{
@@ -901,6 +908,9 @@ private:
 	/// Creating/importing
 	string m_name;
 	Address m_address;
+
+	/// Inspecting
+	bool m_showSecret = false;
 
 	/// Importing
 	strings m_inputs;
