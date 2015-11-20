@@ -72,7 +72,6 @@ public:
 
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
 
-
 	/// Called by peer when it is disconnecting
 	void onPeerAborting();
 
@@ -82,7 +81,6 @@ public:
 	static char const* stateName(SyncState _s) { return s_stateNames[static_cast<int>(_s)]; }
 
 private:
-
 	/// Resume downloading after witing state
 	void continueSync();
 
@@ -95,9 +93,6 @@ private:
 	EthereumHost& host() { return m_host; }
 	EthereumHost const& host() const { return m_host; }
 
-	/// Estimates max number of hashes peers can give us.
-	unsigned estimatedHashes() const;
-
 	void resetSync();
 	void syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force);
 	void requestBlocks(std::shared_ptr<EthereumPeer> _peer);
@@ -106,10 +101,6 @@ private:
 	void collectBlocks();
 
 private:
-	EthereumHost& m_host;
-
-protected:
-
 	struct Header
 	{
 		bytes data;		///< Header data
@@ -141,6 +132,7 @@ protected:
 		}
 	};
 
+	EthereumHost& m_host;
 	Handler<> m_bqRoomAvailable;				///< Triggered once block queue has space for more blocks
 	mutable RecursiveMutex x_sync;
 	SyncState m_state = SyncState::NotSynced;	///< Current sync state
@@ -148,8 +140,8 @@ protected:
 	h256Hash m_knownNewHashes; 					///< New hashes we know about use for logging only
 	unsigned m_startingBlock = 0;      	    	///< Last block number for the start of sync
 	unsigned m_highestBlock = 0;       	     	///< Highest block number seen
-	std::unordered_set<unsigned> m_downloadingHeaders;
-	std::unordered_set<unsigned> m_downloadingBodies;
+	std::unordered_set<unsigned> m_downloadingHeaders;		///< Set of block body numbers being downloaded
+	std::unordered_set<unsigned> m_downloadingBodies;		///< Set of block header numbers being downloaded
 	std::map<unsigned, std::vector<Header>> m_headers;	    ///< Downloaded headers
 	std::map<unsigned, std::vector<bytes>> m_bodies;	    ///< Downloaded block bodies
 	std::map<std::weak_ptr<EthereumPeer>, std::vector<unsigned>, std::owner_less<std::weak_ptr<EthereumPeer>>> m_headerSyncPeers; ///< Peers to m_downloadingSubchain number map

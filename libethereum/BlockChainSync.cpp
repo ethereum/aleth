@@ -152,7 +152,6 @@ void BlockChainSync::abortSync()
 		_p->abortSync();
 		return true;
 	});
-
 }
 
 void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
@@ -177,8 +176,6 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 	else
 		syncPeer(_peer, false);
 }
-
-
 
 void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 {
@@ -318,9 +315,7 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 			}
 		}
 		else
-		{
 			_peer->requestBlockHeaders(start, 1, 0, false);
-		}
 	}
 }
 
@@ -375,7 +370,6 @@ void BlockChainSync::logNewBlock(h256 const& _h)
 	m_knownNewHashes.erase(_h);
 }
 
-
 void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
@@ -383,7 +377,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	size_t itemCount = _r.itemCount();
 	clog(NetMessageSummary) << "BlocksHeaders (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
 	clearPeerDownload(_peer);
-	if (m_state != SyncState::Blocks && m_state != SyncState::NewBlocks && m_state != SyncState::Waiting) {
+	if (m_state != SyncState::Blocks && m_state != SyncState::NewBlocks && m_state != SyncState::Waiting)
+	{
 		clog(NetMessageSummary) << "Ignoring unexpected blocks";
 		return;
 	}
@@ -424,15 +419,23 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 				Header const* prevBlock = findItem(m_headers, blockNumber - 1);
 				if (prevBlock && prevBlock->hash != info.parentHash())
 				{
-					clog(NetImpolite) << "Unkown block header " << blockNumber << " " << info.hash();
+					// mismatching parent id, delete the previous block and don't add this one
+					clog(NetImpolite) << "Unknown block header " << blockNumber << " " << info.hash();
 					_peer->addRating(-1);
+					BlockHeader deletingInfo(prevBlock->data, HeaderData);
+					HeaderId id { deletingInfo.transactionsRoot(), deletingInfo.sha3Uncles() };
+					m_headerIdToNumber.erase(id);
+					m_downloadingBodies.erase(blockNumber - 1);
+					m_downloadingHeaders.erase(blockNumber - 1);
+					removeItem(m_headers, blockNumber - 1);
+					removeItem(m_bodies, blockNumber - 1);
 					continue;
 				}
 
 				Header const* nextBlock = findItem(m_headers, blockNumber + 1);
 				if (nextBlock && nextBlock->parent != info.hash())
 				{
-					clog(NetImpolite) << "Unkown block header " << blockNumber + 1 << " " << nextBlock->hash;
+					clog(NetImpolite) << "Unknown block header " << blockNumber + 1 << " " << nextBlock->hash;
 					// clear following headers
 					unsigned n = blockNumber + 1;
 					auto headers = m_headers.at(n);
@@ -549,6 +552,7 @@ void BlockChainSync::collectBlocks()
 			break;
 		case ImportResult::AlreadyInChain:
 		case ImportResult::AlreadyKnown:
+			m_lastImportedBlock = headers.first + i;
 			got++;
 			break;
 
