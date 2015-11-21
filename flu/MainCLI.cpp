@@ -140,7 +140,8 @@ void MainCLI::execute()
 			WithExisting::Trust,
 			set<string>{"eth"},
 			m_netPrefs,
-			&nodesState);
+			&nodesState,
+			TransactionQueue::Limits{10240, 10240});
 
 		signal(SIGABRT, &MainCLI::staticExitHandler);
 		signal(SIGTERM, &MainCLI::staticExitHandler);

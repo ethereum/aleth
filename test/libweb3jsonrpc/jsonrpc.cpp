@@ -222,7 +222,7 @@ BOOST_AUTO_TEST_CASE(jsonrpc_transact)
 	
 	auto txAmount = balance / 2u;
 	auto gasPrice = 10 * dev::eth::szabo;
-	auto gas = dev::eth::c_txGas;
+	auto gas = EVMSchedule().txGas;
 	
 	Json::Value t;
 	t["from"] = toJS(address);
