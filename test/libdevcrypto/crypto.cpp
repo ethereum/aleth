@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 		BOOST_REQUIRE(verifier.VerifyMessage(m.data(), m.size(), seclibsig.data(), 64));
 //		BOOST_REQUIRE(crypto::verify(key.pub(), seclibsig, bytesConstRef(&m)));
 		BOOST_REQUIRE(dev::verify(key.pub(), seclibsig, hm));
-		BOOST_REQUIRE(dev::recover(seclibsig, hm) == key.pub(), true);
+		BOOST_REQUIRE(dev::recover(seclibsig, hm) == key.pub());
 
 		// sign with cryptopp (w/hash filter?), verify with cryptopp
 		bytes sigppb(signer.MaxSignatureLength());
