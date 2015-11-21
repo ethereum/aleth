@@ -83,9 +83,15 @@ EVMSchedule Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
 	EVMSchedule ret;
 	if (_envInfo.number() >= 666000)
+	{
+		ret.exceptionalFailedCodeDeposit = true;
 		ret.txGas = 53000;
+	}
 	else
+	{
+		ret.exceptionalFailedCodeDeposit = false;
 		ret.txGas = 21000;
+	}
 	return ret;
 }
 

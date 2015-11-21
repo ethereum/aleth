@@ -358,9 +358,14 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				else
 				{
-					if (m_res)
-						m_res->codeDeposit = CodeDeposit::Failed;
-					out.clear();
+					if (m_ext->evmSchedule().exceptionalFailedCodeDeposit)
+						BOOST_THROW_EXCEPTION(OutOfGas());
+					else
+					{
+						if (m_res)
+							m_res->codeDeposit = CodeDeposit::Failed;
+						out.clear();
+					}
 				}
 				if (m_res)
 					m_res->output = out; // copy output to execution result

@@ -49,6 +49,7 @@ private:
 
 struct EVMSchedule
 {
+	bool exceptionalFailedCodeDeposit = true;
 	u256 stackLimit = 1024;
 	std::array<u256, 8> tierStepGas = {{0, 2, 3, 5, 8, 10, 20, 0}};
 	u256 expGas = 10;
