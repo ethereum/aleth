@@ -82,7 +82,7 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 EVMSchedule Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
 	EVMSchedule ret;
-	if (_envInfo.number() >= 666000)
+	if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
 	{
 		ret.exceptionalFailedCodeDeposit = true;
 		ret.txGas = 53000;
@@ -176,7 +176,15 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	auto minimumDifficulty = chainParams().u256Param("minimumDifficulty");
 	auto difficultyBoundDivisor = chainParams().u256Param("difficultyBoundDivisor");
 	auto durationLimit = chainParams().u256Param("durationLimit");
-	u256 o = max<u256>(minimumDifficulty, _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor)));
+
+	bigint target;	// stick to a bigint for the target. Don't want to risk going negative.
+	if (_bi.number() < chainParams().u256Param("frontierCompatibilityModeLimit"))
+		// Frontier-era difficulty adjustment
+		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
+	else
+		// Homestead-era difficulty adjustment
+		target = _parent.difficulty() + _parent.difficulty() / 2048 * max<bigint>(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);
+	u256 o = (u256)max<bigint>(minimumDifficulty, target);
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
 		o = max<u256>(minimumDifficulty, o + (u256(1) << (periodCount - 2)));	// latter will eventually become huge, so ensure it's a bigint.

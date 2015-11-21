@@ -30,6 +30,7 @@ R"ETHEREUM(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x00",
+		"frontierCompatibilityModeLimit": "0xffffffff",
 		"maximumExtraDataSize": "0x0400",
 		"minGasLimit": "125000",
 		"gasLimitBoundDivisor": "0x0400",
@@ -74,6 +75,7 @@ R"ETHEREUM(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x0100000",
+		"frontierCompatibilityModeLimit": "0xa2990",
 		"maximumExtraDataSize": "0x20",
 		"minGasLimit": "0x1388",
 		"gasLimitBoundDivisor": "0x0400",
@@ -111,6 +113,7 @@ R"E(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x00",
+		"frontierCompatibilityModeLimit": "0xa2990",
 		"maximumExtraDataSize": "0x20",
 		"minGasLimit": "0x1388",
 		"gasLimitBoundDivisor": "0x0400",
@@ -147,6 +150,7 @@ R"E(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x00",
+		"frontierCompatibilityModeLimit": "0xa2990",
 		"maximumExtraDataSize": "0x20",
 		"minGasLimit": "0x1388",
 		"gasLimitBoundDivisor": "0x0400",
