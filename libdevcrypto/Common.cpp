@@ -198,13 +198,10 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 }
 
 static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
-static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
 
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	Public ret;
-	if (SignatureStruct(_sig).s > c_secp256k1n)
-		return Public();
 #ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
@@ -219,6 +216,8 @@ Public dev::recover(Signature const& _sig, h256 const& _message)
 	return ret;
 }
 
+static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
+
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
 #ifdef ETH_HAVE_SECP256K1
@@ -226,7 +225,14 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 	int v;
 	if (!secp256k1_ecdsa_sign_compact(Secp256k1Context::get(), _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
 		return Signature();
-	s[64] = v;
+	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
+	ss.v = v;
+	if (ss.s > c_secp256k1n / 2)
+	{
+		ss.v = ss.v ^ 1;
+		ss.s = h256(c_secp256k1n - u256(ss.s));
+	}
+
 	return s;
 #else
 	return Secp256k1PP::get()->sign(_k, _hash);
