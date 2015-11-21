@@ -30,6 +30,7 @@
 #include <libevmcore/Instruction.h>
 #include <libethcore/Common.h>
 #include <libethcore/BlockHeader.h>
+#include <libethcore/ChainOperationParams.h>
 
 namespace dev
 {
@@ -274,6 +275,9 @@ public:
 
 	/// Get the execution environment information.
 	EnvInfo const& envInfo() const { return m_envInfo; }
+
+	/// Return the EVM gas-price schedule for this execution context.
+	virtual EVMSchedule evmSchedule() const { return EVMSchedule(); }
 
 private:
 	EnvInfo const& m_envInfo;

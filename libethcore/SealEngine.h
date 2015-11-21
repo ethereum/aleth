@@ -39,6 +39,7 @@ class BlockHeader;
 struct ChainOperationParams;
 class Interface;
 class PrecompiledFace;
+class EnvInfo;
 
 class SealEngineFace
 {
@@ -62,6 +63,8 @@ public:
 	virtual strings sealers() const { return { "default" }; }
 	virtual std::string sealer() const { return "default"; }
 	virtual void setSealer(std::string const&) {}
+
+	virtual bool shouldSeal(Interface*) { return true; }
 	virtual void generateSeal(BlockHeader const& _bi) = 0;
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;
 	virtual void cancelGeneration() {}
@@ -69,8 +72,7 @@ public:
 	ChainOperationParams const& chainParams() const { return m_params; }
 	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
 	SealEngineFace* withChainParams(ChainOperationParams const& _params) { setChainParams(_params); return this; }
-
-	virtual bool shouldSeal(Interface*) { return true; }
+	virtual EVMSchedule evmSchedule(EnvInfo const&) const { return m_params.evmSchedule; }
 
 	virtual bool isPrecompiled(Address const& _a) const { return m_params.precompiled.count(_a); }
 	virtual bigint costOfPrecompiled(Address const& _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).cost(_in); }

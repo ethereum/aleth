@@ -76,7 +76,7 @@ struct WorkChannel: public LogChannel { static const char* name(); static const 
 class ClientBase: public Interface
 {
 public:
-	ClientBase() {}
+	ClientBase(TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}): m_tq(_l) {}
 	virtual ~ClientBase() {}
 
 	/// Submits the given transaction.

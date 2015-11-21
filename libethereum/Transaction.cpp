@@ -101,9 +101,17 @@ Transaction::Transaction(bytesConstRef _rlpData, CheckTransaction _checkSig):
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError(gasRequired(), (bigint)gas()));
 }
 
+bigint Transaction::gasRequired(bytesConstRef _data, u256 _gas, EVMSchedule const& _es)
+{
+	bigint ret = _es.txGas + _gas;
+	for (auto i: _data)
+		ret += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+	return ret;
+}
+
 bigint Transaction::gasRequired() const
 {
 	if (!m_gasRequired)
-		m_gasRequired = Transaction::gasRequired(m_data);
+		m_gasRequired = Transaction::gasRequired(&m_data);
 	return m_gasRequired;
 }

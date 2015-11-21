@@ -1,5 +1,6 @@
 #pragma once
 
+#include <libethcore/ChainOperationParams.h>
 #include "CompilerHelper.h"
 #include "Instruction.h"
 
@@ -11,6 +12,8 @@ namespace jit
 {
 class RuntimeManager;
 using namespace evmjit;
+
+// TODO: FIXME: HOMESTEAD: XXX: @chfast populate m_schedule from an ExtVMFace instance via ExtVMFace::evmSchedule.
 
 class GasMeter : public CompilerHelper // TODO: Use RuntimeHelper
 {
@@ -56,6 +59,8 @@ private:
 	llvm::Function* m_gasCheckFunc = nullptr;
 
 	RuntimeManager& m_runtimeManager;
+
+	EVMSchedule m_schedule;
 };
 
 }

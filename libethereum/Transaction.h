@@ -25,7 +25,7 @@
 #include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
 #include <libethcore/Transaction.h>
-#include <libevmcore/Params.h>
+#include <libethcore/ChainOperationParams.h>
 
 namespace dev
 {
@@ -121,7 +121,8 @@ public:
 	bigint gasRequired() const;
 
 	/// Get the fee associated for a transaction with the given data.
-	template <class T> static bigint gasRequired(T const& _data, u256 _gas = 0) { bigint ret = c_txGas + _gas; for (auto i: _data) ret += i ? c_txDataNonZeroGas : c_txDataZeroGas; return ret; }
+	// TODO: HOMESTEAD remove optionality of last two arguments.
+	static bigint gasRequired(bytesConstRef _data, u256 _gas = 0, EVMSchedule const& es = EVMSchedule());
 
 private:
 	mutable bigint m_gasRequired = 0;	///< Memoised amount required for the transaction to run.

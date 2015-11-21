@@ -20,7 +20,7 @@
  */
 
 #include "ExtVMFace.h"
-
+#include <libethcore/SealEngine.h>
 using namespace dev;
 using namespace dev::eth;
 

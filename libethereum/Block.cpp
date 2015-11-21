@@ -810,20 +810,9 @@ bool Block::sealBlock(bytesConstRef _header)
 		m_currentBlock.parentHash().abridged()
 	);
 
-	// Quickly reset the transactions.
-	// TODO: Leave this in a better state than this limbo, or at least record that it's in limbo.
-	/*m_transactions.clear();
-	m_receipts.clear();
-	m_transactionSet.clear();
-	m_precommit = m_state = fromPending(0);*/
 	m_state = m_precommit;
 
-	// Commenting out the above probably broke something else:
-	// TODO: Figure out what.
-	// TODO: figure out what state a Block should be in after it is mined.
-	// - Reset to "next" block?
-	// - Leave as-is, ready for more transactions?
-	// - Reset to clean state?
+	// m_currentBytes is now non-empty; we're in a sealed state so no more transactions can be added.
 
 	return true;
 }

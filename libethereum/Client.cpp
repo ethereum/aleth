@@ -66,8 +66,10 @@ Client::Client(
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
 	std::string const& _dbPath,
-	WithExisting _forceAction
+	WithExisting _forceAction,
+	TransactionQueue::Limits const& _l
 ):
+	ClientBase(_l),
 	Worker("eth", 0),
 	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
 	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),

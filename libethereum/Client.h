@@ -80,7 +80,8 @@ public:
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),
-		WithExisting _forceAction = WithExisting::Trust
+		WithExisting _forceAction = WithExisting::Trust,
+		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
 	/// Destructor.
 	virtual ~Client();

@@ -356,7 +356,6 @@ void TransactionQueue::dropGood(Transaction const& _t)
 	makeCurrent_WITH_LOCK(_t);
 	if (!m_known.count(_t.sha3()))
 		return;
-//	m_dropped.insert(_t.sha3());
 	remove_WITH_LOCK(_t.sha3());
 }
 

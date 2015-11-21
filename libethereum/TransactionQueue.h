@@ -48,10 +48,13 @@ struct TransactionQueueTraceChannel: public LogChannel { static const char* name
 class TransactionQueue
 {
 public:
+	struct Limits { size_t current; size_t future; };
+
 	/// @brief TransactionQueue
 	/// @param _limit Maximum number of pending transactions in the queue.
 	/// @param _futureLimit Maximum number of future nonce transactions.
 	TransactionQueue(unsigned _limit = 1024, unsigned _futureLimit = 1024);
+	TransactionQueue(Limits const& _l): TransactionQueue(_l.current, _l.future) {}
 	~TransactionQueue();
 	/// Add transaction to the queue to be verified and imported.
 	/// @param _data RLP encoded transaction data.
@@ -110,7 +113,6 @@ public:
 	/// @returns the status of the transaction queue.
 	Status status() const { Status ret; DEV_GUARDED(x_queue) { ret.unverified = m_unverified.size(); } ReadGuard l(m_lock); ret.dropped = m_dropped.size(); ret.current = m_currentByHash.size(); ret.future = m_future.size(); return ret; }
 
-	struct Limits { size_t current; size_t future; };
 	/// @returns the transacrtion limits on current/future.
 	Limits limits() const { return Limits{m_limit, m_futureLimit}; }
 

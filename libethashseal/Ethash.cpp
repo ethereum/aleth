@@ -79,6 +79,16 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 	return { { "nonce", toJS(nonce(_bi)) }, { "seedHash", toJS(seedHash(_bi)) }, { "mixHash", toJS(mixHash(_bi)) }, { "boundary", toJS(boundary(_bi)) }, { "difficulty", toJS(_bi.difficulty()) } };
 }
 
+EVMSchedule Ethash::evmSchedule(EnvInfo const& _envInfo) const
+{
+	EVMSchedule ret;
+	if (_envInfo.number() >= 666000)
+		ret.txGas = 53000;
+	else
+		ret.txGas = 21000;
+	return ret;
+}
+
 void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	SealEngineFace::verify(_s, _bi, _parent, _block);

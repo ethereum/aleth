@@ -145,21 +145,24 @@ Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
 	m_envInfo(_s.info(), _bc.lastHashes(_s.info().parentHash())),
 	m_depth(_level),
 	m_sealEngine(_bc.sealEngine())
-{}
+{
+}
 
 Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 	m_s(_s.mutableState()),
 	m_envInfo(_s.info(), _lh),
 	m_depth(_level),
 	m_sealEngine(_s.sealEngine())
-{}
+{
+}
 
 Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
 	m_s(_s = _block.fromPending(_txIndex)),
 	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level),
 	m_sealEngine(_bc.sealEngine())
-{}
+{
+}
 
 u256 Executive::gasUsed() const
 {
@@ -347,11 +350,11 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->gasForDeposit = m_gas;
 					m_res->depositSize = out.size();
 				}
-				if (out.size() * c_createDataGas <= m_gas)
+				if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
 				{
 					if (m_res)
 						m_res->codeDeposit = CodeDeposit::Success;
-					m_gas -= out.size() * c_createDataGas;
+					m_gas -= out.size() * m_ext->evmSchedule().createDataGas;
 				}
 				else
 				{
@@ -405,7 +408,7 @@ void Executive::finalize()
 {
 	// Accumulate refunds for suicides.
 	if (m_ext)
-		m_ext->sub.refunds += c_suicideRefundGas * m_ext->sub.suicides.size();
+		m_ext->sub.refunds += m_ext->evmSchedule().suicideRefundGas * m_ext->sub.suicides.size();
 
 	// SSTORE refunds...
 	// must be done before the miner gets the fees.
