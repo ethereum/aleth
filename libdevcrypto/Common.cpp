@@ -198,10 +198,13 @@ bytesSec dev::decryptAES128CTR(bytesConstRef _k, h128 const& _iv, bytesConstRef 
 }
 
 static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
+static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
 
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	Public ret;
+	if (SignatureStruct(_sig).s > c_secp256k1n)
+		return Public();
 #ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
