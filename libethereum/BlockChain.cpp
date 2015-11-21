@@ -1531,7 +1531,9 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			bytesConstRef d = tr.data();
 			try
 			{
-				res.transactions.push_back(Transaction(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None));
+				Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
+				m_sealEngine->verifyTransaction(_ir, t, h);
+				res.transactions.push_back(t);
 			}
 			catch (Exception& ex)
 			{

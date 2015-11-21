@@ -129,3 +129,11 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig) const
 	if (_sig)
 		_s << (m_vrs.v + 27) << (u256)m_vrs.r << (u256)m_vrs.s;
 }
+
+static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
+
+void TransactionBase::checkLowS() const
+{
+	if (m_vrs.s > c_secp256k1n / 2)
+		BOOST_THROW_EXCEPTION(InvalidSignature());
+}

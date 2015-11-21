@@ -151,6 +151,12 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	}
 }
 
+void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
+{
+	if (_ir & ImportRequirements::TransactionSignatures && _bi.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
+		_t.checkLowS();
+}
+
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
 {
 	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
