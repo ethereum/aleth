@@ -105,33 +105,78 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 #if ETH_JSONRPC || !ETH_TRUE
 	else if (arg == "--ipc")
 		m_ipc = true;
-	else if (arg == "--jsonrpc")
+	else if (arg == "--jsonrpc" || arg == "--allow-attach")
 		m_jsonRPCPort = 8545;
 	else if (arg == "--jsonrpc-port" && i + 1 < argc)
 		m_jsonRPCPort = atoi(argv[++i]);
 	else if (arg == "--jsonrpc-cors-domain" && i + 1 < argc)
 		m_rpcCorsDomain = argv[++i];
 #endif
-	else
+	else if (arg == "--url" && i + 1 < argc)
+		m_remoteURL = argv[++i];
+	else if (arg == "--session-key" && i + 1 < argc)
+		m_remoteSessionKey = argv[++i];
+	else if (arg == "--node" && i + 1 < argc)
 	{
-		p2p::NodeSpec ns(arg);
+		p2p::NodeSpec ns(argv[++i]);
 		if (!ns.nodeIPEndpoint())
 			return false;
 		m_preferredNodes[ns.id()] = make_pair(ns.nodeIPEndpoint(), true);
 	}
+	else if (m_mode == Mode::Execute)
+		m_toExecute.push_back(arg);
 	return true;
 }
 
 void MainCLI::execute()
 {
-	setup();
-	setupKeyManager();
 	switch (m_mode)
 	{
+	case Mode::Attach:
+	case Mode::Execute:
+	{
+		JSRemoteConsole console(m_remoteURL);
+		if (m_mode == Mode::Attach)
+		{
+			string givenURL = contentsString(m_dbPath + "/session.url");
+			if (!givenURL.empty())
+				m_remoteURL = givenURL;
+			if (m_remoteSessionKey.empty())
+				m_remoteSessionKey = contentsString(m_dbPath + "/session.key");
+			if (!m_remoteSessionKey.empty())
+				console.eval("web3.admin.setSessionKey('" + m_remoteSessionKey + "')");
+			while (true)
+				console.readAndEval();
+		}
+		else if (m_mode == Mode::Execute)
+		{
+			if (m_toExecute.empty())
+			{
+				string e;
+				while (cin)
+				{
+					string s;
+					getline(cin, s);
+					e += s;
+				}
+				console.eval(e);
+			}
+			else
+				for (auto const& i: m_toExecute)
+				{
+					string c = contentsString(i);
+					console.eval(c.empty() ? i : c);
+				}
+		}
+		break;
+	}
 	case Mode::Console:
 	case Mode::Benchmark:
 	case Mode::Dumb:
 	{
+		setup();
+		setupKeyManager();
+
 		auto nodesState = contents(m_dbPath + "/network.rlp");
 		dev::WebThreeDirect web3(
 			WebThreeDirect::composeClientVersion("flu", m_clientName),
@@ -306,7 +351,7 @@ void MainCLI::startRPC(WebThreeDirect& _web3, TrivialGasPricer& _gasPricer)
 		}
 		if (m_ipc)
 		{
-			auto ipcConnector = new IpcServer("geth");
+			auto ipcConnector = new IpcServer("flu");
 			m_rpcPrivate->jsonrpcServer->addConnector(ipcConnector);
 			ipcConnector->StartListening();
 		}
@@ -314,8 +359,8 @@ void MainCLI::startRPC(WebThreeDirect& _web3, TrivialGasPricer& _gasPricer)
 		string jsonAdmin = m_rpcPrivate->sessionManager->newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
 		cnote << "JSONRPC Admin Session Key: " << jsonAdmin;
-		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
-		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(m_jsonRPCPort));
+		writeFile(m_dbPath + "/session.key", jsonAdmin);
+		writeFile(m_dbPath + "/session.url", "http://localhost:" + toString(m_jsonRPCPort));
 	}
 #endif
 }
@@ -412,6 +457,8 @@ void MainCLI::streamHelp(ostream& _out)
 		<< "Main operation modes:" << endl
 		<< "    benchmark  Don't sleep - just launch as many transactions as possible." << endl
 		<< "    console  Launch interactive console." << endl
+		<< "    attach  Attach to existing flu process with interactive console." << endl
+		<< "    execute  Execute a JS script." << endl
 		;
 	// TODO: all the other options.
 }
