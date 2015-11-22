@@ -179,6 +179,7 @@ private:
 	unsigned m_depth = 0;				///< The context's call-depth.
 	bool m_isCreation = false;			///< True if the transaction creates a contract, or if create() is called.
 	TransactionException m_excepted = TransactionException::None;	///< Details if the VM's execution resulted in an exception.
+	bigint m_baseGasRequired;				///< The base amount of gas requried for executing this transactions.
 	u256 m_gas = 0;						///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
 	u256 m_refunded = 0;				///< The amount of gas refunded.
 

@@ -26,6 +26,9 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
+EVMSchedule const dev::eth::FrontierSchedule = EVMSchedule(false, 21000);
+EVMSchedule const dev::eth::HomesteadSchedule;
+
 PrecompiledContract::PrecompiledContract(unsigned _base, unsigned _word, std::function<void(bytesConstRef, bytesRef)> const& _exec):
 	PrecompiledContract([=](unsigned size) -> bigint
 	{
