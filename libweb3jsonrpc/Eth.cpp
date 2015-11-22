@@ -31,9 +31,9 @@
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
 #if ETH_SOLIDITY || !ETH_TRUE
-#include <libsolidity/CompilerStack.h>
-#include <libsolidity/Scanner.h>
-#include <libsolidity/SourceReferenceFormatter.h>
+#include <libsolidity/interface/CompilerStack.h>
+#include <libsolidity/parsing/Scanner.h>
+#include <libsolidity/interface/SourceReferenceFormatter.h>
 #endif
 #include "Eth.h"
 #include "AccountHolder.h"
@@ -492,10 +492,16 @@ Json::Value Eth::eth_compileSolidity(string const& _source)
 		compiler.addSource("source", _source);
 		compiler.compile();
 
-		for (string const& name: compiler.getContractNames())
+		for (string const& name: compiler.contractNames())
 		{
 			Json::Value contract(Json::objectValue);
-			contract["code"] = toJS(compiler.getBytecode(name));
+			LinkerObject const& obj = compiler.object();
+			if (!obj.linkReferences.empty())
+			{
+				cwarn << "Solidity: Compilation resulted in unlinked object.";
+				return Json::Value();
+			}
+			contract["code"] = toJS(obj.bytecode);
 
 			Json::Value info(Json::objectValue);
 			info["source"] = _source;
@@ -504,9 +510,9 @@ Json::Value Eth::eth_compileSolidity(string const& _source)
 			info["compilerVersion"] = "";
 
 			Json::Reader reader;
-			reader.parse(compiler.getInterface(name), info["abiDefinition"]);
-			reader.parse(compiler.getMetadata(name, dev::solidity::DocumentationType::NatspecUser), info["userDoc"]);
-			reader.parse(compiler.getMetadata(name, dev::solidity::DocumentationType::NatspecDev), info["developerDoc"]);
+			reader.parse(compiler.interface(name), info["abiDefinition"]);
+			reader.parse(compiler.metadata(name, dev::solidity::DocumentationType::NatspecUser), info["userDoc"]);
+			reader.parse(compiler.metadata(name, dev::solidity::DocumentationType::NatspecDev), info["developerDoc"]);
 
 			contract["info"] = info;
 			res[name] = contract;
