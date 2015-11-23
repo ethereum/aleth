@@ -50,7 +50,7 @@ private:
 struct EVMSchedule
 {
 	EVMSchedule(): tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
-	EVMSchedule(bool _efcd, u256 const& _txGas): exceptionalFailedCodeDeposit(_efcd), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txGas(_txGas) {}
+	EVMSchedule(bool _efcd, u256 const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
 	bool exceptionalFailedCodeDeposit = true;
 	u256 stackLimit = 1024;
 	std::array<u256, 8> tierStepGas;

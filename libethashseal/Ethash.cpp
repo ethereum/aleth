@@ -85,12 +85,12 @@ EVMSchedule Ethash::evmSchedule(EnvInfo const& _envInfo) const
 	if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
 	{
 		ret.exceptionalFailedCodeDeposit = true;
-		ret.txGas = 53000;
+		ret.txCreateGas = 53000;
 	}
 	else
 	{
 		ret.exceptionalFailedCodeDeposit = false;
-		ret.txGas = 21000;
+		ret.txCreateGas = 21000;
 	}
 	return ret;
 }
