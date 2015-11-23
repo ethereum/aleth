@@ -184,20 +184,20 @@ BOOST_AUTO_TEST_CASE(tqOutput)
 
 BOOST_AUTO_TEST_CASE(tqImport)
 {
-	TestTransaction testTransaction = TestTransaction::getDefaultTransaction();
+	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 	TransactionQueue tq;
 	h256Hash known = tq.knownTransactions();
 	BOOST_REQUIRE(known.size() == 0);
 
-	ImportResult ir = tq.import(testTransaction.getTransaction().rlp());
+	ImportResult ir = tq.import(testTransaction.transaction().rlp());
 	BOOST_REQUIRE(ir == ImportResult::Success);
 	known = tq.knownTransactions();
 	BOOST_REQUIRE(known.size() == 1);
 
-	ir = tq.import(testTransaction.getTransaction().rlp());
+	ir = tq.import(testTransaction.transaction().rlp());
 	BOOST_REQUIRE(ir == ImportResult::AlreadyKnown);
 
-	bytes rlp = testTransaction.getTransaction().rlp();
+	bytes rlp = testTransaction.transaction().rlp();
 	rlp.at(0) = 03;
 	ir = tq.import(rlp);
 	BOOST_REQUIRE(ir == ImportResult::Malformed);
@@ -205,13 +205,13 @@ BOOST_AUTO_TEST_CASE(tqImport)
 	known = tq.knownTransactions();
 	BOOST_REQUIRE(known.size() == 1);
 
-	TestTransaction testTransaction2 = TestTransaction::getDefaultTransaction(1, 2);
-	TestTransaction testTransaction3 = TestTransaction::getDefaultTransaction(1, 1);
-	TestTransaction testTransaction4 = TestTransaction::getDefaultTransaction(1, 4);
-	ir = tq.import(testTransaction2.getTransaction().rlp());
-	ir = tq.import(testTransaction3.getTransaction().rlp());
+	TestTransaction testTransaction2 = TestTransaction::defaultTransaction(1, 2);
+	TestTransaction testTransaction3 = TestTransaction::defaultTransaction(1, 1);
+	TestTransaction testTransaction4 = TestTransaction::defaultTransaction(1, 4);
+	ir = tq.import(testTransaction2.transaction().rlp());
+	ir = tq.import(testTransaction3.transaction().rlp());
 	BOOST_REQUIRE(ir == ImportResult::OverbidGasPrice);
-	ir = tq.import(testTransaction4.getTransaction().rlp());
+	ir = tq.import(testTransaction4.transaction().rlp());
 	known = tq.knownTransactions();
 	BOOST_REQUIRE(known.size() == 1);
 	Transactions ts = tq.topTransactions(4);
@@ -228,11 +228,11 @@ BOOST_AUTO_TEST_CASE(tqImport)
 BOOST_AUTO_TEST_CASE(tqDrop)
 {
 	TransactionQueue tq;
-	TestTransaction testTransaction = TestTransaction::getDefaultTransaction();
-	tq.dropGood(testTransaction.getTransaction());
-	tq.import(testTransaction.getTransaction().rlp());
+	TestTransaction testTransaction = TestTransaction::defaultTransaction();
+	tq.dropGood(testTransaction.transaction());
+	tq.import(testTransaction.transaction().rlp());
 	BOOST_REQUIRE(tq.topTransactions(4).size() == 1);
-	tq.dropGood(testTransaction.getTransaction());
+	tq.dropGood(testTransaction.transaction());
 	BOOST_REQUIRE(tq.topTransactions(4).size() == 0);
 }
 
@@ -242,9 +242,9 @@ BOOST_AUTO_TEST_CASE(tqLimit)
 	Address from;
 	for (size_t i = 1; i < 7; i++)
 	{
-		TestTransaction testTransaction = TestTransaction::getDefaultTransaction(i);
-		ImportResult res = tq.import(testTransaction.getTransaction());
-		from = testTransaction.getTransaction().from();
+		TestTransaction testTransaction = TestTransaction::defaultTransaction(i);
+		ImportResult res = tq.import(testTransaction.transaction());
+		from = testTransaction.transaction().from();
 		BOOST_REQUIRE(res == ImportResult::Success);
 	}
 
@@ -260,15 +260,15 @@ BOOST_AUTO_TEST_CASE(tqLimit)
 	topTr = tq.topTransactions(10);
 	BOOST_REQUIRE(topTr.size() == 0);
 
-	TestTransaction testTransaction = TestTransaction::getDefaultTransaction(7);
+	TestTransaction testTransaction = TestTransaction::defaultTransaction(7);
 	BOOST_REQUIRE(tq.waiting(from) == 5);
 
 	//Drop out of bound feauture
-	ImportResult res = tq.import(testTransaction.getTransaction());
+	ImportResult res = tq.import(testTransaction.transaction());
 	BOOST_REQUIRE(res == ImportResult::Success);
 
 	//future list size is now 3  + 1 imported transaction
-	BOOST_REQUIRE(tq.waiting(testTransaction.getTransaction().from()) == 4);
+	BOOST_REQUIRE(tq.waiting(testTransaction.transaction().from()) == 4);
 
 	topTr = tq.topTransactions(10);
 	BOOST_REQUIRE(topTr.size() == 1); // 1 imported transaction
@@ -277,9 +277,9 @@ BOOST_AUTO_TEST_CASE(tqLimit)
 BOOST_AUTO_TEST_CASE(tqEqueue)
 {
 	TransactionQueue tq;
-	TestTransaction testTransaction = TestTransaction::getDefaultTransaction();
+	TestTransaction testTransaction = TestTransaction::defaultTransaction();
 
-	bytes payloadToDecode = testTransaction.getTransaction().rlp();
+	bytes payloadToDecode = testTransaction.transaction().rlp();
 
 	RLPStream rlpStream(2);
 	rlpStream.appendRaw(payloadToDecode);
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(tqEqueue)
 
 	//check that Transaction could be recreated from the RLP
 	Transaction tRlpTransaction(payloadToDecode, CheckTransaction::Cheap);
-	BOOST_REQUIRE(tRlpTransaction.data() == testTransaction.getTransaction().data());
+	BOOST_REQUIRE(tRlpTransaction.data() == testTransaction.transaction().data());
 
 	//try to import transactions
 	string hashStr = "01020304050607080910111213141516171819202122232425262728293031320102030405060708091011121314151617181920212223242526272829303132";
