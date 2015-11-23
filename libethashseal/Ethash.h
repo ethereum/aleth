@@ -45,6 +45,7 @@ public:
 
 	StringHashMap jsInfo(BlockHeader const& _bi) const override;
 	void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const override;
+	void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const override;
 	void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const override;
 
 	strings sealers() const override;
@@ -67,6 +68,8 @@ public:
 
 	u256 calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const;
 	u256 childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
+
+	virtual EVMSchedule evmSchedule(EnvInfo const&) const;
 
 	void manuallySetWork(BlockHeader const& _work) { m_sealing = _work; }
 	void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);

@@ -46,7 +46,7 @@ namespace fs = boost::filesystem;
 
 #define ETH_TIMED_ENACTMENTS 0
 
-static const unsigned c_maxSyncTransactions = 256;
+static const unsigned c_maxSyncTransactions = 1024;
 
 const char* BlockSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
 const char* BlockDetail::name() { return EthViolet "⚙" EthWhite " ◌"; }
@@ -84,10 +84,11 @@ Block::Block(Block const& _s):
 	m_precommit(_s.m_state),
 	m_previousBlock(_s.m_previousBlock),
 	m_currentBlock(_s.m_currentBlock),
+	m_currentBytes(_s.m_currentBytes),
 	m_author(_s.m_author),
 	m_sealEngine(_s.m_sealEngine)
 {
-	m_committedToMine = false;
+	m_committedToSeal = false;
 }
 
 Block& Block::operator=(Block const& _s)
@@ -101,11 +102,12 @@ Block& Block::operator=(Block const& _s)
 	m_transactionSet = _s.m_transactionSet;
 	m_previousBlock = _s.m_previousBlock;
 	m_currentBlock = _s.m_currentBlock;
+	m_currentBytes = _s.m_currentBytes;
 	m_author = _s.m_author;
 	m_sealEngine = _s.m_sealEngine;
 
 	m_precommit = m_state;
-	m_committedToMine = false;
+	m_committedToSeal = false;
 	return *this;
 }
 
@@ -117,13 +119,14 @@ void Block::resetCurrent()
 	m_currentBlock = BlockHeader();
 	m_currentBlock.setAuthor(m_author);
 	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)utcTime()));
+	m_currentBytes.clear();
 	sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
 
 	// TODO: check.
 
 	m_state.setRoot(m_previousBlock.stateRoot());
 	m_precommit = m_state;
-	m_committedToMine = false;
+	m_committedToSeal = false;
 }
 
 SealEngineFace* Block::sealEngine() const
@@ -296,19 +299,22 @@ bool Block::sync(BlockChain const& _bc, h256 const& _block, BlockHeader const& _
 
 pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQueue& _tq, GasPricer const& _gp, unsigned msTimeout)
 {
+	if (isSealed())
+		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
+
 	noteChain(_bc);
 
 	// TRANSACTIONS
 	pair<TransactionReceipts, bool> ret;
-	ret.second = false;
 
-	auto ts = _tq.topTransactions(c_maxSyncTransactions);
+	auto ts = _tq.topTransactions(c_maxSyncTransactions, m_transactionSet);
+	ret.second = (ts.size() == c_maxSyncTransactions);	// say there's more to the caller if we hit the limit
 
 	LastHashes lh;
 
 	auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
 
-	for (int goodTxs = 1; goodTxs; )
+	for (int goodTxs = 1; goodTxs && goodTxs < (int)ts.size(); )
 	{
 		goodTxs = 0;
 		for (auto const& t: ts)
@@ -383,7 +389,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 			}
 		if (chrono::steady_clock::now() > deadline)
 		{
-			ret.second = true;
+			ret.second = true;	// say there's more to the caller if we ended up crossing the deadline.
 			break;
 		}
 	}
@@ -460,7 +466,7 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	m_currentBlock.noteDirty();
 	m_currentBlock = _block.info;
 
-//	cnote << "playback begins:" << m_state.root();
+//	cnote << "playback begins:" << m_currentBlock.hash() << "(without: " << m_currentBlock.hash(WithoutSeal) << ")";
 //	cnote << m_state;
 
 	LastHashes lh;
@@ -474,12 +480,15 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 	// All ok with the block generally. Play back the transactions now...
 	unsigned i = 0;
 	DEV_TIMED_ABOVE("txExec", 500)
-		for (auto const& tr: _block.transactions)
+		for (Transaction const& tr: _block.transactions)
 		{
 			try
 			{
 				LogOverride<ExecutiveWarnChannel> o(false);
+//				cnote << "Enacting transaction: " << tr.nonce() << tr.from() << state().transactionsFrom(tr.from()) << tr.value();
 				execute(lh, tr);
+//				cnote << "Now: " << tr.from() << state().transactionsFrom(tr.from());
+//				cnote << m_state;
 			}
 			catch (Exception& ex)
 			{
@@ -637,9 +646,12 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 
 ExecutionResult Block::execute(LastHashes const& _lh, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
 {
+	if (isSealed())
+		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
+
 	// Uncommitting is a non-trivial operation - only do it once we've verified as much of the
 	// transaction as possible.
-	uncommitToMine();
+	uncommitToSeal();
 
 	std::pair<ExecutionResult, TransactionReceipt> resultReceipt = m_state.execute(EnvInfo(info(), _lh, gasUsed()), m_sealEngine, _t, _p, _onOp);
 
@@ -667,10 +679,13 @@ void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 con
 
 void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 {
+	if (isSealed())
+		BOOST_THROW_EXCEPTION(InvalidOperationOnSealedBlock());
+
 	noteChain(_bc);
 
-	if (m_committedToMine)
-		uncommitToMine();
+	if (m_committedToSeal)
+		uncommitToSeal();
 	else
 		m_precommit = m_state;
 
@@ -720,6 +735,13 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 		transactionsMap.insert(std::make_pair(k.out(), txrlp.out()));
 
 		txs.appendRaw(txrlp.out());
+
+//#if ETH_PARANOIA
+/*		if (fromPending(i).transactionsFrom(m_transactions[i].from()) != m_transactions[i].nonce())
+		{
+			cwarn << "GAAA Something went wrong! " << fromPending(i).transactionsFrom(m_transactions[i].from()) << "!=" << m_transactions[i].nonce();
+		}*/
+//#endif
 	}
 
 	txs.swapOut(m_currentTxs);
@@ -749,21 +771,21 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 		m_currentBlock.setExtraData(ed);
 	}
 
-	m_committedToMine = true;
+	m_committedToSeal = true;
 }
 
-void Block::uncommitToMine()
+void Block::uncommitToSeal()
 {
-	if (m_committedToMine)
+	if (m_committedToSeal)
 	{
 		m_state = m_precommit;
-		m_committedToMine = false;
+		m_committedToSeal = false;
 	}
 }
 
 bool Block::sealBlock(bytesConstRef _header)
 {
-	if (!m_committedToMine)
+	if (!m_committedToSeal)
 		return false;
 
 	if (BlockHeader(_header, HeaderData).hash(WithoutSeal) != m_currentBlock.hash(WithoutSeal))
@@ -779,7 +801,7 @@ bool Block::sealBlock(bytesConstRef _header)
 	ret.appendRaw(m_currentUncles);
 	ret.swapOut(m_currentBytes);
 	m_currentBlock = BlockHeader(_header, HeaderData);
-	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
+//	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
 	// TODO: move into SealEngine
 	StructuredLogger::minedNewBlock(
 		m_currentBlock.hash().abridged(),
@@ -788,12 +810,9 @@ bool Block::sealBlock(bytesConstRef _header)
 		m_currentBlock.parentHash().abridged()
 	);
 
-	// Quickly reset the transactions.
-	// TODO: Leave this in a better state than this limbo, or at least record that it's in limbo.
-	m_transactions.clear();
-	m_receipts.clear();
-	m_transactionSet.clear();
-	m_precommit = m_state;
+	m_state = m_precommit;
+
+	// m_currentBytes is now non-empty; we're in a sealed state so no more transactions can be added.
 
 	return true;
 }

@@ -64,6 +64,7 @@ struct PopulationStatistics
 };
 
 DEV_SIMPLE_EXCEPTION(ChainOperationWithUnknownBlockChain);
+DEV_SIMPLE_EXCEPTION(InvalidOperationOnSealedBlock);
 
 /**
  * @brief Active model of a block within the block chain.
@@ -258,25 +259,29 @@ public:
 	/// This may be called multiple times and without issue.
 	void commitToSeal(BlockChain const& _bc, bytes const& _extraData = {});
 
-	/// Pass in a solution to the proof-of-work.
-	/// @returns true iff we were previously committed to mining.
+	/// Pass in a properly sealed header matching this block.
+	/// @returns true iff we were previously committed to sealing, the header is valid and it
+	/// corresponds to this block.
 	/// TODO: verify it prior to calling this.
 	/** Commit to DB and build the final block if the previous call to mine()'s result is completion.
 	 * Typically looks like:
 	 * @code
-	 * while (notYetMined)
+	 * while (!isSealed)
 	 * {
 	 * // lock
-	 * commitToSeal(_blockChain);  // will call uncommitToMine if a repeat.
-	 * completeMine();
+	 * commitToSeal(_blockChain);  // will call uncommitToSeal if a repeat.
+	 * sealBlock(sealedHeader);
 	 * // unlock
 	 * @endcode
 	 */
 	bool sealBlock(bytes const& _header) { return sealBlock(&_header); }
 	bool sealBlock(bytesConstRef _header);
 
+	/// @returns true if sealed - in this case you can no longer append transactions.
+	bool isSealed() const { return !m_currentBytes.empty(); }
+
 	/// Get the complete current block, including valid nonce.
-	/// Only valid after mine() returns true.
+	/// Only valid when isSealed() is true.
 	bytes const& blockData() const { return m_currentBytes; }
 
 	/// Get the header information on the present block.
@@ -286,7 +291,7 @@ private:
 	SealEngineFace* sealEngine() const;
 
 	/// Undo the changes to the state for committing to mine.
-	void uncommitToMine();
+	void uncommitToSeal();
 
 	/// Retrieve all information about a given address into the cache.
 	/// If _requireMemory is true, grab the full memory should it be a contract item.
@@ -316,10 +321,10 @@ private:
 	h256Hash m_transactionSet;					///< The set of transaction hashes that we've included in the state.
 	State m_precommit;							///< State at the point immediately prior to rewards.
 
-	BlockHeader m_previousBlock;					///< The previous block's information.
+	BlockHeader m_previousBlock;				///< The previous block's information.
 	BlockHeader m_currentBlock;					///< The current block's information.
-	bytes m_currentBytes;						///< The current block.
-	bool m_committedToMine = false;				///< Have we committed to mine on the present m_currentBlock?
+	bytes m_currentBytes;						///< The current block's bytes.
+	bool m_committedToSeal = false;				///< Have we committed to mine on the present m_currentBlock?
 
 	bytes m_currentTxs;							///< The RLP-encoded block of transactions.
 	bytes m_currentUncles;						///< The RLP-encoded block of uncles.

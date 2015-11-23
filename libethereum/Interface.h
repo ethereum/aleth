@@ -176,6 +176,8 @@ public:
 
 	virtual BlockHeader pendingInfo() const { return BlockHeader(); }
 	virtual BlockDetails pendingDetails() const { return BlockDetails(); }
+	/// @returns the EVMSchedule in the context of the pending block.
+	virtual EVMSchedule evmSchedule() const { return EVMSchedule(); }
 
 	BlockHeader blockInfo(BlockNumber _block) const;
 	BlockDetails blockDetails(BlockNumber _block) const;

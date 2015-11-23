@@ -97,13 +97,13 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, TransactionException cons
 Transaction::Transaction(bytesConstRef _rlpData, CheckTransaction _checkSig):
 	TransactionBase(_rlpData, _checkSig)
 {
-	if (_checkSig >= CheckTransaction::Cheap && !checkPayment())
-		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic() << RequirementError(gasRequired(), (bigint)gas()));
 }
 
-bigint Transaction::gasRequired() const
+bigint Transaction::gasRequired(bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas)
 {
-	if (!m_gasRequired)
-		m_gasRequired = Transaction::gasRequired(m_data);
-	return m_gasRequired;
+	bigint ret = _es.txGas + _gas;
+	for (auto i: _data)
+		ret += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+	return ret;
 }
+

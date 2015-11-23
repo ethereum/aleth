@@ -84,6 +84,9 @@ public:
 	/// Force the sender to a particular value. This will result in an invalid transaction RLP.
 	void forceSender(Address const& _a) { m_sender = _a; }
 
+	/// @throws InvalidSValue if the signature has an invalid S value.
+	void checkLowS() const;
+
 	/// @returns true if transaction is non-null.
 	explicit operator bool() const { return m_type != NullTransaction; }
 

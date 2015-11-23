@@ -39,6 +39,8 @@ class BlockHeader;
 struct ChainOperationParams;
 class Interface;
 class PrecompiledFace;
+class TransactionBase;
+class EnvInfo;
 
 class SealEngineFace
 {
@@ -53,6 +55,8 @@ public:
 
 	/// Don't forget to call Super::verify when subclassing & overriding.
 	virtual void verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent = BlockHeader(), bytesConstRef _block = bytesConstRef()) const;
+	/// Additional verification for transactions in blocks.
+	virtual void verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const;
 	/// Don't forget to call Super::populateFromParent when subclassing & overriding.
 	virtual void populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const;
 
@@ -62,6 +66,8 @@ public:
 	virtual strings sealers() const { return { "default" }; }
 	virtual std::string sealer() const { return "default"; }
 	virtual void setSealer(std::string const&) {}
+
+	virtual bool shouldSeal(Interface*) { return true; }
 	virtual void generateSeal(BlockHeader const& _bi) = 0;
 	virtual void onSealGenerated(std::function<void(bytes const& s)> const& _f) = 0;
 	virtual void cancelGeneration() {}
@@ -69,8 +75,7 @@ public:
 	ChainOperationParams const& chainParams() const { return m_params; }
 	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
 	SealEngineFace* withChainParams(ChainOperationParams const& _params) { setChainParams(_params); return this; }
-
-	virtual bool shouldSeal(Interface*) { return true; }
+	virtual EVMSchedule evmSchedule(EnvInfo const&) const { return m_params.evmSchedule; }
 
 	virtual bool isPrecompiled(Address const& _a) const { return m_params.precompiled.count(_a); }
 	virtual bigint costOfPrecompiled(Address const& _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).cost(_in); }

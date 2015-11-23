@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(mine_local_simple_tx)
 	//send c2 some eth from c1
 	auto txAmount = c1bal / 2u;
 	auto gasPrice = 10 * szabo;
-	auto gas = dev::eth::c_callGas;
+	auto gas = eth::EVMSchedule().callGas;
 	c1.submitTransaction(kp1.secret(), txAmount, kp2.address(), bytes(), gas, gasPrice);
 
 	//mine some more to include the transaction on chain
@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(mine_and_send_to_peer)
 	//send c2 some eth from c1
 	auto txAmount = c1bal / 2u;
 	auto gasPrice = 10 * szabo;
-	auto gas = dev::eth::c_callGas;
+	auto gas = eth::EVMSchedule().callGas;
 	c1.submitTransaction(kp1.secret(), txAmount, kp2.address(), bytes(), gas, gasPrice);
 
 	//mine some more to include the transaction on chain
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(mine_and_send_to_peer_fee_check)
 	//send c2 some eth from c1
 	auto txAmount = c1StartBalance / 2u;
 	auto gasPrice = 10 * szabo;
-	auto gas = dev::eth::c_callGas;
+	auto gas = eth::EVMSchedule().callGas;
 	c1.submitTransaction(kp1.secret(), txAmount, c2.address(), bytes(), gas, gasPrice);
 
 	//mine some more, this time with second client (so he can get fees from first client's tx)

@@ -79,6 +79,22 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 	return { { "nonce", toJS(nonce(_bi)) }, { "seedHash", toJS(seedHash(_bi)) }, { "mixHash", toJS(mixHash(_bi)) }, { "boundary", toJS(boundary(_bi)) }, { "difficulty", toJS(_bi.difficulty()) } };
 }
 
+EVMSchedule Ethash::evmSchedule(EnvInfo const& _envInfo) const
+{
+	EVMSchedule ret;
+	if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
+	{
+		ret.exceptionalFailedCodeDeposit = true;
+		ret.txGas = 53000;
+	}
+	else
+	{
+		ret.exceptionalFailedCodeDeposit = false;
+		ret.txGas = 21000;
+	}
+	return ret;
+}
+
 void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	SealEngineFace::verify(_s, _bi, _parent, _block);
@@ -135,6 +151,12 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 	}
 }
 
+void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
+{
+	if (_ir & ImportRequirements::TransactionSignatures && _bi.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
+		_t.checkLowS();
+}
+
 u256 Ethash::childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget) const
 {
 	u256 gasFloorTarget = _gasFloorTarget == Invalid256 ? 3141562 : _gasFloorTarget;
@@ -160,7 +182,15 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	auto minimumDifficulty = chainParams().u256Param("minimumDifficulty");
 	auto difficultyBoundDivisor = chainParams().u256Param("difficultyBoundDivisor");
 	auto durationLimit = chainParams().u256Param("durationLimit");
-	u256 o = max<u256>(minimumDifficulty, _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor)));
+
+	bigint target;	// stick to a bigint for the target. Don't want to risk going negative.
+	if (_bi.number() < chainParams().u256Param("frontierCompatibilityModeLimit"))
+		// Frontier-era difficulty adjustment
+		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
+	else
+		// Homestead-era difficulty adjustment
+		target = _parent.difficulty() + _parent.difficulty() / 2048 * max<bigint>(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);
+	u256 o = (u256)max<bigint>(minimumDifficulty, target);
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
 		o = max<u256>(minimumDifficulty, o + (u256(1) << (periodCount - 2)));	// latter will eventually become huge, so ensure it's a bigint.

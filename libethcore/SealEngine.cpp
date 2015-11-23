@@ -20,6 +20,7 @@
  */
 
 #include "SealEngine.h"
+#include "Transaction.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -36,6 +37,12 @@ void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader c
 void SealEngineFace::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
 {
 	_bi.populateFromParent(_parent);
+}
+
+void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const&) const
+{
+	if (_ir & ImportRequirements::TransactionSignatures)
+		_t.checkLowS();
 }
 
 SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)

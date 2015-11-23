@@ -48,10 +48,13 @@ struct TransactionQueueTraceChannel: public LogChannel { static const char* name
 class TransactionQueue
 {
 public:
+	struct Limits { size_t current; size_t future; };
+
 	/// @brief TransactionQueue
 	/// @param _limit Maximum number of pending transactions in the queue.
 	/// @param _futureLimit Maximum number of future nonce transactions.
 	TransactionQueue(unsigned _limit = 1024, unsigned _futureLimit = 1024);
+	TransactionQueue(Limits const& _l): TransactionQueue(_l.current, _l.future) {}
 	~TransactionQueue();
 	/// Add transaction to the queue to be verified and imported.
 	/// @param _data RLP encoded transaction data.
@@ -80,8 +83,9 @@ public:
 
 	/// Get top transactions from the queue. Returned transactions are not removed from the queue automatically.
 	/// @param _limit Max number of transactions to return.
+	/// @param _avoid Transactions to avoid returning.
 	/// @returns up to _limit transactions ordered by nonce and gas price.
-	Transactions topTransactions(unsigned _limit) const;
+	Transactions topTransactions(unsigned _limit, h256Hash const& _avoid = h256Hash()) const;
 
 	/// Get a hash set of transactions in the queue
 	/// @returns A hash set of all transactions in the queue
@@ -98,6 +102,19 @@ public:
 	/// Drop a trasnaction from the list if exists and move following future trasnactions to current (if any)
 	/// @param _t Transaction hash
 	void dropGood(Transaction const& _t);
+
+	struct Status
+	{
+		size_t current;
+		size_t future;
+		size_t unverified;
+		size_t dropped;
+	};
+	/// @returns the status of the transaction queue.
+	Status status() const { Status ret; DEV_GUARDED(x_queue) { ret.unverified = m_unverified.size(); } ReadGuard l(m_lock); ret.dropped = m_dropped.size(); ret.current = m_currentByHash.size(); ret.future = m_future.size(); return ret; }
+
+	/// @returns the transacrtion limits on current/future.
+	Limits limits() const { return Limits{m_limit, m_futureLimit}; }
 
 	/// Clear the queue
 	void clear();

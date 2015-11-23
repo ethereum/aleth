@@ -47,6 +47,43 @@ private:
 	std::function<void(bytesConstRef, bytesRef)> m_execute;
 };
 
+struct EVMSchedule
+{
+	EVMSchedule(): tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
+	EVMSchedule(bool _efcd, u256 const& _txGas): exceptionalFailedCodeDeposit(_efcd), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txGas(_txGas) {}
+	bool exceptionalFailedCodeDeposit = true;
+	u256 stackLimit = 1024;
+	std::array<u256, 8> tierStepGas;
+	u256 expGas = 10;
+	u256 expByteGas = 10;
+	u256 sha3Gas = 30;
+	u256 sha3WordGas = 6;
+	u256 sloadGas = 50;
+	u256 sstoreSetGas = 20000;
+	u256 sstoreResetGas = 5000;
+	u256 sstoreRefundGas = 15000;
+	u256 jumpdestGas = 1;
+	u256 logGas = 375;
+	u256 logDataGas = 8;
+	u256 logTopicGas = 375;
+	u256 createGas = 32000;
+	u256 callGas = 40;
+	u256 callStipend = 2300;
+	u256 callValueTransferGas = 9000;
+	u256 callNewAccountGas = 25000;
+	u256 suicideRefundGas = 24000;
+	u256 memoryGas = 3;
+	u256 quadCoeffDiv = 512;
+	u256 createDataGas = 200;
+	u256 txGas = 53000;
+	u256 txDataZeroGas = 4;
+	u256 txDataNonZeroGas = 68;
+	u256 copyGas = 3;
+};
+
+extern EVMSchedule const FrontierSchedule;
+extern EVMSchedule const HomesteadSchedule;
+
 struct ChainOperationParams
 {
 	ChainOperationParams();
@@ -60,6 +97,7 @@ struct ChainOperationParams
 	u256 blockReward = 0;
 	u256 maximumExtraDataSize = 1024;
 	u256 accountStartNonce = 0;
+	EVMSchedule evmSchedule;
 
 	/// Precompiled contracts as specified in the chain params.
 	std::unordered_map<Address, PrecompiledContract> precompiled;
