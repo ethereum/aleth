@@ -105,9 +105,9 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	BlockChain const& blockchain = testBlockchain.interface();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::defaultTransaction(1, 21000);
+	TestTransaction transaction1 = TestTransaction::defaultTransaction(1, 1, 21000);
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::defaultTransaction(2, 21000);
+	TestTransaction transaction2 = TestTransaction::defaultTransaction(2, 1, 21000);
 	testBlock.addTransaction(transaction2);
 
 	{
@@ -132,7 +132,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Transactions valid but exceed block gasLimit - BlockGasLimitReached
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::defaultTransaction(3, 1500000);
+		TestTransaction transaction = TestTransaction::defaultTransaction(3, 1, 1500000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Temporary no gas left in the block
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::defaultTransaction(3, 25000, importByteArray("238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749"));
+		TestTransaction transaction = TestTransaction::defaultTransaction(3, 1, 25000, importByteArray("238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749"));
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Invalid nonce - nonces ahead
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::defaultTransaction(12, 21000);
+		TestTransaction transaction = TestTransaction::defaultTransaction(12, 1, 21000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	{
 		//Invalid nonce - nonce too low
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::defaultTransaction(0, 21000);
+		TestTransaction transaction = TestTransaction::defaultTransaction(0, 1, 21000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
