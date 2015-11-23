@@ -320,7 +320,7 @@ dev::bytes TestBlock::createBlockRLPFromFields(mObject const& _tObj, h256 const&
 void TestBlock::updateNonce(TestBlockChain const& _bc)
 {
 	if (((BlockHeader)m_blockHeader).difficulty() == 0)
-		BOOST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::testName());
+		BOOST_TEST_MESSAGE("Trying to mine a block with 0 difficulty! " + TestOutputHelper::testName());
 	else
 	{
 		//do not verify blockheader for validity here
