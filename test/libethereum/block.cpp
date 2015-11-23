@@ -48,17 +48,17 @@ BOOST_AUTO_TEST_CASE(bStructures)
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
-	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock());
-	TestBlock const& genesisBlock = testBlockchain.getTestGenesis();
-	OverlayDB const& genesisDB = genesisBlock.getState().db();
-	FullBlockChain<Ethash> const& blockchain = testBlockchain.getInterface();
+	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
+	TestBlock const& genesisBlock = testBlockchain.testGenesis();
+	OverlayDB const& genesisDB = genesisBlock.state().db();
+	BlockChain const& blockchain = testBlockchain.interface();
 
-	State stateBofore = testBlockchain.getTopBlock().getState();
+	State stateBofore = testBlockchain.topBlock().state();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction(1);
+	TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::getDefaultTransaction(2);
+	TestTransaction transaction2 = TestTransaction::defaultTransaction(2);
 	testBlock.addTransaction(transaction2);
 
 	testBlock.mine(testBlockchain);
@@ -66,10 +66,10 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 	//Block2 is synced to latest blockchain block
 	Block block1 = blockchain.genesisBlock(genesisDB);
-	block1.populateFromChain(blockchain, testBlock.getBlockHeader().hash());
+	block1.populateFromChain(blockchain, testBlock.blockHeader().hash());
 
 	Block block2 = blockchain.genesisBlock(genesisDB);
-	block2.populateFromChain(blockchain, testBlock.getBlockHeader().hash());
+	block2.populateFromChain(blockchain, testBlock.blockHeader().hash());
 	State stateAfterInsert = block2.fromPending(0); //get the state of blockchain on previous block
 	BOOST_REQUIRE(ImportTest::compareStates(stateBofore, stateAfterInsert) == 0);
 
@@ -87,9 +87,9 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 	try
 	{
-		Block block;
+		Block block(Block::Null);
 		//Invalid state root exception if block not initialized by genesis root
-		block.populateFromChain(blockchain, testBlock.getBlockHeader().hash());
+		block.populateFromChain(blockchain, testBlock.blockHeader().hash());
 	}
 	catch (std::exception const& _e)
 	{
@@ -99,15 +99,15 @@ BOOST_AUTO_TEST_CASE(bStates)
 
 BOOST_AUTO_TEST_CASE(bGasPricer)
 {
-	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock(63000));
-	TestBlock const& genesisBlock = testBlockchain.getTestGenesis();
-	OverlayDB const& genesisDB = genesisBlock.getState().db();
-	FullBlockChain<Ethash> const& blockchain = testBlockchain.getInterface();
+	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock(63000));
+	TestBlock const& genesisBlock = testBlockchain.testGenesis();
+	OverlayDB const& genesisDB = genesisBlock.state().db();
+	BlockChain const& blockchain = testBlockchain.interface();
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction(1, 21000);
+	TestTransaction transaction1 = TestTransaction::defaultTransaction(1, 21000);
 	testBlock.addTransaction(transaction1);
-	TestTransaction transaction2 = TestTransaction::getDefaultTransaction(2, 21000);
+	TestTransaction transaction2 = TestTransaction::defaultTransaction(2, 21000);
 	testBlock.addTransaction(transaction2);
 
 	{
@@ -116,8 +116,8 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
 		TestBlock testBlockT = testBlock;
-		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
+		block.sync(blockchain, testBlockT.transactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
@@ -125,92 +125,89 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 		TestBlock testBlockT = testBlock;
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
-		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 0);
+		block.sync(blockchain, testBlockT.transactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 0);
 	}
 
 	{
 		//Transactions valid but exceed block gasLimit - BlockGasLimitReached
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction(3, 1500000);
+		TestTransaction transaction = TestTransaction::defaultTransaction(3, 1500000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
-		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
+		block.sync(blockchain, testBlockT.transactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
 		//Temporary no gas left in the block
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction(3, 25000, importByteArray("238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749"));
+		TestTransaction transaction = TestTransaction::defaultTransaction(3, 25000, importByteArray("238479601324597364057623047523945623847562387450234857263485723459273645345234689563486749"));
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
-		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 3);
+		block.sync(blockchain, testBlockT.transactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 3);
 	}
 
 	{
 		//Invalid nonce - nonces ahead
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction(12, 21000);
+		TestTransaction transaction = TestTransaction::defaultTransaction(12, 21000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
-		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
+		block.sync(blockchain, testBlockT.transactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{
 		//Invalid nonce - nonce too low
 		TestBlock testBlockT = testBlock;
-		TestTransaction transaction = TestTransaction::getDefaultTransaction(0, 21000);
+		TestTransaction transaction = TestTransaction::defaultTransaction(0, 21000);
 		testBlockT.addTransaction(transaction);
 
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain);
-		block.sync(blockchain, testBlockT.getTransactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.getTransactionQueue().topTransactions(4).size() == 2);
+		block.sync(blockchain, testBlockT.transactionQueue(), gp);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 }
 
-//move expect exception under checkstate option
-//try to get into transaction exception in sync
-
 BOOST_AUTO_TEST_CASE(bCopyOperator)
 {
-	TestBlockChain testBlockchain(TestBlockChain::getDefaultGenesisBlock());
-	TestBlock const& genesisBlock = testBlockchain.getTestGenesis();
+	TestBlockChain testBlockchain(TestBlockChain::defaultGenesisBlock());
+	TestBlock const& genesisBlock = testBlockchain.testGenesis();
 
-	OverlayDB const& genesisDB = genesisBlock.getState().db();
-	FullBlockChain<Ethash> const& blockchain = testBlockchain.getInterface();
+	OverlayDB const& genesisDB = genesisBlock.state().db();
+	BlockChain const& blockchain = testBlockchain.interface();
 	Block block = blockchain.genesisBlock(genesisDB);
-	block.setBeneficiary(genesisBlock.getBeneficiary());
+	block.setAuthor(genesisBlock.beneficiary());
 
 	block = block;
 	Block block2 = block;
 	BOOST_REQUIRE(ImportTest::compareStates(block.state(), block2.state()) == 0);
 	BOOST_REQUIRE(block2.pending() == block.pending());
-	BOOST_REQUIRE(block2.beneficiary() == block.beneficiary());
+	BOOST_REQUIRE(block2.author() == block.author());
 	BOOST_REQUIRE(block2.info() == block.info());
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::getDefaultTransaction();
+	TestTransaction transaction1 = TestTransaction::defaultTransaction();
 	testBlock.addTransaction(transaction1);
 	testBlock.mine(testBlockchain);
 	testBlockchain.addBlock(testBlock);
 
 	Block block3 = blockchain.genesisBlock(genesisDB);
-	block3.populateFromChain(blockchain, testBlock.getBlockHeader().hash());
-	BOOST_REQUIRE(block3.info() == (BlockInfo)testBlock.getBlockHeader());
+	block3.populateFromChain(blockchain, testBlock.blockHeader().hash());
+	BOOST_REQUIRE(block3.info() == testBlock.blockHeader());
 
 	//Genesis is populating wrong???
 	//Block block31 = blockchain.genesisBlock(genesisDB);
