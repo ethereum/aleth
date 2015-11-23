@@ -41,39 +41,6 @@ PrecompiledExecutor const& PrecompiledRegistrar::executor(std::string const& _na
 namespace
 {
 
-ETH_REGISTER_PRECOMPILED(ecrecoverOrig)(bytesConstRef _in, bytesRef _out)
-{
-	struct inType
-	{
-		h256 hash;
-		h256 v;
-		h256 r;
-		h256 s;
-	} in;
-
-	memcpy(&in, _in.data(), min(_in.size(), sizeof(in)));
-
-	h256 ret;
-	u256 v = (u256)in.v;
-	if (v >= 27 && v <= 28)
-	{
-		SignatureStruct sig(in.r, in.s, (byte)((int)v - 27));
-		if (sig.isValid())
-		{
-			try
-			{
-				if (Public rec = recover(sig, in.hash))
-				{
-					ret = dev::sha3(rec);
-					memset(ret.data(), 0, 12);
-					ret.ref().copyTo(_out);
-				}
-			}
-			catch (...) {}
-		}
-	}
-}
-
 ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, bytesRef _out)
 {
 	struct inType
