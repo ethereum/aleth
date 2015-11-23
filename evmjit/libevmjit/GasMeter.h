@@ -1,6 +1,5 @@
 #pragma once
 
-#include <libethcore/ChainOperationParams.h>
 #include "CompilerHelper.h"
 #include "Instruction.h"
 
@@ -59,8 +58,6 @@ private:
 	llvm::Function* m_gasCheckFunc = nullptr;
 
 	RuntimeManager& m_runtimeManager;
-
-	EVMSchedule m_schedule;
 };
 
 }
