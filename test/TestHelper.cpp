@@ -74,7 +74,7 @@ void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
 	s.sealBlock(sealed);
 }
 
-void mine(BlockHeader& _bi, SealEngineFace* _sealer)
+void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
 {
 	Notified<bytes> sealed;
 	_sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
@@ -83,7 +83,8 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer)
 	_sealer->onSealGenerated([](bytes const&){});
 	_bi = BlockHeader(sealed, HeaderData);
 //	cdebug << "Block mined" << Ethash::boundary(_bi).hex() << Ethash::nonce(_bi) << _bi.hash(WithoutSeal).hex();
-	_sealer->verify(JustSeal, _bi);
+	if (_verify) //sometimes it is needed to mine incorrect blockheaders for testing
+		_sealer->verify(JustSeal, _bi);
 }
 
 }

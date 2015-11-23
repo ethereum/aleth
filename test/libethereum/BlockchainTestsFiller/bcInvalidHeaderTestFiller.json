@@ -398,7 +398,7 @@
         },
         "blocks" : [
             {
-		"expectException" : "InvalidBlockNonce",
+		"expectException" : "InvalidDifficulty",
                 "blockHeader" : {
                     "difficulty" : "0"
                 },
