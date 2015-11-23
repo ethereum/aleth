@@ -95,6 +95,7 @@ LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* 
 	if ((it != s_logOverride.end() && it->second == true) || (it == s_logOverride.end() && (int)_v <= g_logVerbosity))
 	{
 		time_t rawTime = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+		unsigned ms = chrono::duration_cast<chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() % 1000;
 		char buf[24];
 		if (strftime(buf, 24, "%X", localtime(&rawTime)) == 0)
 			buf[0] = '\0'; // empty if case strftime fails
@@ -102,7 +103,8 @@ LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* 
 		static char const* c_sep1 = EthReset EthBlack "|" EthNavy;
 		static char const* c_sep2 = EthReset EthBlack "|" EthTeal;
 		static char const* c_end = EthReset "  ";
-		m_sstr << _id << c_begin << buf << c_sep1 << getThreadName() << ThreadContext::join(c_sep2) << c_end;
+		m_sstr << _id << c_begin << buf << "." << setw(3) << setfill('0') << ms;
+		m_sstr << c_sep1 << getThreadName() << ThreadContext::join(c_sep2) << c_end;
 	}
 }
 
