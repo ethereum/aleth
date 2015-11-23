@@ -212,6 +212,7 @@ void TestBlock::mine(TestBlockChain const& _bc)
 	}
 
 	m_blockHeader = BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
+	cnote << "Mined TrRoot: " << m_blockHeader.transactionsRoot();
 	copyStateFrom(block.state());
 
 	//Invalid uncles are dropped when mining. but we restore the hash to produce block with invalid uncles (for later test when importing to blockchain)
@@ -544,7 +545,7 @@ TestBlock TestBlockChain::defaultGenesisBlock(u256 const& _gasLimit)
 
 	json_spirit::mObject accountObj;
 	accountObj["balance"] = "10000000000";
-	accountObj["nonce"] = "1";					//for nonce too low exception check
+	accountObj["nonce"] = "1";					//=1for nonce too low exception check
 	accountObj["code"] = "";
 	accountObj["storage"] = json_spirit::mObject();
 

@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_CASE(BlockQueueImport)
 	TestBlockChain blockchain2(genesisBlock);
 
 	TestBlock block1;
-	TestTransaction transaction1 = TestTransaction::defaultTransaction();
+	TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
 	block1.addTransaction(transaction1);
 	block1.mine(blockchain);
 

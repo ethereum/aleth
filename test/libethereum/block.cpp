@@ -200,7 +200,7 @@ BOOST_AUTO_TEST_CASE(bCopyOperator)
 	BOOST_REQUIRE(block2.info() == block.info());
 
 	TestBlock testBlock;
-	TestTransaction transaction1 = TestTransaction::defaultTransaction();
+	TestTransaction transaction1 = TestTransaction::defaultTransaction(1);
 	testBlock.addTransaction(transaction1);
 	testBlock.mine(testBlockchain);
 	testBlockchain.addBlock(testBlock);
