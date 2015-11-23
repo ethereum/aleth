@@ -29,8 +29,8 @@ function set_repositories() {
 			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum)
 			;;
 		"webthree")
-			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers web3.js tests webthree)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree)
+			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers web3.js tests solidity webthree)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum solidity webthree)
 			;;
 		"solidity")
 			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests solidity)
