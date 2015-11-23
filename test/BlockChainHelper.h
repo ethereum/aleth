@@ -46,7 +46,7 @@ public:
 	TestTransaction(Transaction const& _tr) : m_transaction(_tr) {}
 	Transaction const& transaction() const { return m_transaction; }
 	json_spirit::mObject& jsonObject() { return m_jsonTransaction; }
-	static TestTransaction defaultTransaction();
+	static TestTransaction defaultTransaction(u256 const& _nonce = 1, u256 const& _gasLimit = 50000, bytes const& _data = bytes());
 
 private:
 	json_spirit::mObject m_jsonTransaction;
@@ -121,7 +121,7 @@ public:
 	BlockChain const& interface() const { return *m_blockChain;}
 	TestBlock const& testGenesis() const { return m_genesisBlock; }
 
-	static TestBlock defaultGenesisBlock();
+	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = 3141592);
 	static AccountMap defaultAccountMap();
 
 private:
