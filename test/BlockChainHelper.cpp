@@ -339,13 +339,9 @@ void TestBlock::verify(TestBlockChain const& _bc) const
 	{
 		_bc.interface().sealEngine()->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
 	}
-	catch (Exception const& _e)
+	catch (...)
 	{
-		BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed: " << diagnostic_information(_e));
-	}
-	catch(...)
-	{
-		BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed");
+		BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
 	}
 }
 

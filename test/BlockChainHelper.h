@@ -39,14 +39,6 @@ class TestTransaction;
 class TestBlock;
 class TestBlockChain;
 
-/*enum class RecalcBlockHeader
-{
-	Update,				//find new valid nonce and hash
-	Verify,				//check that block content is matching header
-	UpdateAndVerify,
-	SkipVerify			//recalculate bytes but not verify content
-};*/
-
 class TestTransaction
 {
 public:

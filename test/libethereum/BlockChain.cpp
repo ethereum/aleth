@@ -375,7 +375,6 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 	vector<TestBlock> const& importedBlocks = _chainBranch.importedBlocks;
 	const SealEngineFace* sealEngine = _chainBranch.blockchain.interface().sealEngine();
 
-	//RecalcBlockHeader findNewValidNonce = _verification;
 	BlockHeader tmp;
 	BlockHeader const& header = _block.blockHeader();
 	auto ho = _blObj;
