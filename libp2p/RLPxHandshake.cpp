@@ -195,23 +195,14 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 		/// it will be passed to Host which will take ownership.
 		m_io.reset(new RLPXFrameCoder(*this));
 
-		// old packet format
 		RLPStream s;
-		if (Session::isFramingAllowedForVersion(dev::p2p::c_protocolVersion))
-		{
-			s.append((unsigned)HelloPacket).appendList(5)
+		s.append((unsigned)HelloPacket).appendList(5)
 			<< dev::p2p::c_protocolVersion
 			<< m_host->m_clientVersion
 			<< m_host->caps()
 			<< m_host->listenPort()
 			<< m_host->id();
-		}
-		else
-		{
-			// todo: delete this block after switching to protocolVersion 5 (framing version)
-			s.append((unsigned)HelloPacket).appendList(5) << dev::p2p::c_protocolVersion 
-				<< m_host->m_clientVersion << m_host->caps() << m_host->listenPort() << m_host->id();
-		}
+
 		bytes packet;
 		s.swapOut(packet);
 		m_io->writeSingleFramePacket(&packet, m_handshakeOutBuffer);

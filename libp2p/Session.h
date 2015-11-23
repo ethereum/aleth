@@ -153,7 +153,7 @@ private:
 	};
 
 	std::map<uint16_t, std::shared_ptr<Framing> > m_framing;
-	std::deque<bytes> m_encframes;
+	std::deque<bytes> m_encFrames;
 
 	bool isFramingEnabled() const { return isFramingAllowedForVersion(m_info.protocolVersion); }
 	unsigned maxFrameSize() const { return 1024; }

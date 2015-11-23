@@ -274,7 +274,7 @@ void Session::send(bytes&& _msg, uint16_t _protocolID)
 	{
 		DEV_GUARDED(x_writeQueue)
 		{
-			doWrite = m_encframes.empty();
+			doWrite = m_encFrames.empty();
 			auto f = getFraming(_protocolID);
 			f->writer.enque(RLPXPacket(_protocolID, msg));
 			multiplexAll();
@@ -332,10 +332,10 @@ void Session::writeFrames()
 	bytes const* out = nullptr;
 	DEV_GUARDED(x_writeQueue)
 	{
-		if (m_encframes.empty() || m_encframes[0].empty())
+		if (m_encFrames.empty())
 			return;
 		else
-			out = &m_encframes[0];
+			out = &m_encFrames[0];
 	}
 
 	auto self(shared_from_this());
@@ -353,11 +353,11 @@ void Session::writeFrames()
 
 		DEV_GUARDED(x_writeQueue)
 		{
-			if (!m_encframes.empty())
-				m_encframes.erase(m_encframes.begin());
+			if (!m_encFrames.empty())
+				m_encFrames.pop_front();
 
 			multiplexAll();
-			if (m_encframes.empty())
+			if (m_encFrames.empty())
 				return;
 		}
 
@@ -606,5 +606,5 @@ std::shared_ptr<Session::Framing> Session::getFraming(uint16_t _protocolID)
 void Session::multiplexAll()
 {
 	for (auto& f: m_framing)
-		f.second->writer.mux(*m_io, maxFrameSize(), m_encframes);
+		f.second->writer.mux(*m_io, maxFrameSize(), m_encFrames);
 }

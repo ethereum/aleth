@@ -39,7 +39,7 @@ void RLPXFrameWriter::enque(RLPXPacket&& _p, PacketPriority _priority)
 
 void RLPXFrameWriter::enque(uint8_t _packetType, RLPStream& _payload, PacketPriority _priority)
 {
-	enque(RLPXPacket(m_protocolType, (RLPStream() << _packetType), _payload), _priority);
+	enque(RLPXPacket(m_protocolId, (RLPStream() << _packetType), _payload), _priority);
 }
 
 size_t RLPXFrameWriter::mux(RLPXFrameCoder& _coder, unsigned _size, deque<bytes>& o_toWrite)
@@ -140,11 +140,12 @@ size_t RLPXFrameWriter::mux(RLPXFrameCoder& _coder, unsigned _size, deque<bytes>
 			if (qs.multiFrame)
 				if (offset == 0)
 					// 1st frame of segmented packet writes total-size of packet
-					_coder.writeFrame(m_protocolType, qs.sequence, qs.writing->size(), &payload, payload);
+					_coder.writeFrame(m_protocolId, qs.sequence, qs.writing->size(), &payload, payload);
 				else
-					_coder.writeFrame(m_protocolType, qs.sequence, &payload, payload);
+					_coder.writeFrame(m_protocolId, qs.sequence, &payload, payload);
 			else
-				_coder.writeFrame(m_protocolType, &payload, payload);
+				_coder.writeFrame(m_protocolId, &payload, payload);
+
 			assert(frameLen >= payload.size());
 			frameLen -= payload.size();
 			o_toWrite.push_back(payload);
