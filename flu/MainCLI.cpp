@@ -70,6 +70,8 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 	string arg = argv[i];
 	if (arg == "console")
 		m_mode = Mode::Console;
+	else if (arg == "benchmark")
+		m_mode = Mode::Benchmark;
 	else if (arg == "--path" && i + 1 < argc)
 	{
 		m_dbPath = argv[++i];
@@ -100,33 +102,81 @@ bool MainCLI::interpretOption(int& i, int argc, char** argv)
 		m_authorities.push_back(Address(argv[++i]));
 	else if (arg == "--start-sealing")
 		m_startSealing = true;
+#if ETH_JSONRPC || !ETH_TRUE
 	else if (arg == "--ipc")
 		m_ipc = true;
-	else if (arg == "--jsonrpc")
+	else if (arg == "--jsonrpc" || arg == "--allow-attach")
 		m_jsonRPCPort = 8545;
 	else if (arg == "--jsonrpc-port" && i + 1 < argc)
 		m_jsonRPCPort = atoi(argv[++i]);
 	else if (arg == "--jsonrpc-cors-domain" && i + 1 < argc)
 		m_rpcCorsDomain = argv[++i];
-	else
+#endif
+	else if (arg == "--url" && i + 1 < argc)
+		m_remoteURL = argv[++i];
+	else if (arg == "--session-key" && i + 1 < argc)
+		m_remoteSessionKey = argv[++i];
+	else if (arg == "--node" && i + 1 < argc)
 	{
-		p2p::NodeSpec ns(arg);
+		p2p::NodeSpec ns(argv[++i]);
 		if (!ns.nodeIPEndpoint())
 			return false;
 		m_preferredNodes[ns.id()] = make_pair(ns.nodeIPEndpoint(), true);
 	}
+	else if (m_mode == Mode::Execute)
+		m_toExecute.push_back(arg);
 	return true;
 }
 
 void MainCLI::execute()
 {
-	setup();
-	setupKeyManager();
 	switch (m_mode)
 	{
+	case Mode::Attach:
+	case Mode::Execute:
+	{
+		JSRemoteConsole console(m_remoteURL);
+		if (m_mode == Mode::Attach)
+		{
+			string givenURL = contentsString(m_dbPath + "/session.url");
+			if (!givenURL.empty())
+				m_remoteURL = givenURL;
+			if (m_remoteSessionKey.empty())
+				m_remoteSessionKey = contentsString(m_dbPath + "/session.key");
+			if (!m_remoteSessionKey.empty())
+				console.eval("web3.admin.setSessionKey('" + m_remoteSessionKey + "')");
+			while (true)
+				console.readAndEval();
+		}
+		else if (m_mode == Mode::Execute)
+		{
+			if (m_toExecute.empty())
+			{
+				string e;
+				while (cin)
+				{
+					string s;
+					getline(cin, s);
+					e += s;
+				}
+				console.eval(e);
+			}
+			else
+				for (auto const& i: m_toExecute)
+				{
+					string c = contentsString(i);
+					console.eval(c.empty() ? i : c);
+				}
+		}
+		break;
+	}
 	case Mode::Console:
+	case Mode::Benchmark:
 	case Mode::Dumb:
 	{
+		setup();
+		setupKeyManager();
+
 		auto nodesState = contents(m_dbPath + "/network.rlp");
 		dev::WebThreeDirect web3(
 			WebThreeDirect::composeClientVersion("flu", m_clientName),
@@ -135,7 +185,8 @@ void MainCLI::execute()
 			WithExisting::Trust,
 			set<string>{"eth"},
 			m_netPrefs,
-			&nodesState);
+			&nodesState,
+			TransactionQueue::Limits{10240, 10240});
 
 		signal(SIGABRT, &MainCLI::staticExitHandler);
 		signal(SIGTERM, &MainCLI::staticExitHandler);
@@ -161,7 +212,7 @@ void MainCLI::execute()
 				if (Secret s = m_keyManager.secret(i))
 				{
 					web3.ethereum()->setSealOption("authority", rlp(s.makeInsecure()));
-					web3.ethereum()->setAuthor(i);	// BROKEN!!!
+					web3.ethereum()->setAuthor(i);
 					break;
 				}
 
@@ -203,6 +254,56 @@ void MainCLI::execute()
 			while (!m_shouldExit)
 				console.readAndEval();
 			rpcServer.StopListening();
+		}
+		else if (m_mode == Mode::Benchmark)
+		{
+			unsigned const c_pitch = 500;
+			unsigned const c_delayMS = 100;
+			bool const delayAnyway = false;
+			Timer t;
+			unsigned lastSecond = 0;
+			unsigned count = 0;
+			auto limits = web3.ethereum()->transactionQueueLimits();
+			TransactionSkeleton ts;
+			ts.to = ts.from = FluidityTreasure.address();
+			ts.gas = 1000000;
+			ts.gasPrice = 0;
+			ts.nonce = web3.ethereum()->countAt(ts.from);
+			ts.value = u256(1) << 30;
+			while (!m_shouldExit)
+			{
+				auto status = web3.ethereum()->transactionQueueStatus();
+				if (status.current + c_pitch > limits.current || status.future + c_pitch > limits.future || delayAnyway)
+				{
+					// buffer overrun - sleep for a bit.
+//					cdebug << "Buffer overrun. current:" << status.current << " future:" << status.future << " unverified:" << status.unverified;
+					this_thread::sleep_for(chrono::milliseconds(c_delayMS));
+				}
+				else
+				{
+					Timer t;
+					vector<bytes> txs;
+					for (unsigned i = 0; i < c_pitch; ++i)
+					{
+						Transaction tx(ts, FluidityTreasure.secret());
+						txs.push_back(tx.rlp());
+						ts.nonce++;
+					}
+//					cdebug << "Encoded" << c_pitch << "transactions in" << (t.elapsed() * 1000) << "ms";
+//					t.restart();
+					for (bytes const& tx: txs)
+						web3.ethereum()->injectTransaction(tx);
+					cdebug << "Submitted" << c_pitch << "transactions in" << (t.elapsed() * 1000) << "ms";
+					count += c_pitch;
+				}
+
+				if (lastSecond < (unsigned)t.elapsed())
+				{
+					cdebug << "Transactions submitted:" << count << "; tx/sec:" << (count / t.elapsed());
+					lastSecond++;
+				}
+			}
+
 		}
 		else if (m_mode == Mode::Dumb)
 			while (!m_shouldExit)
@@ -250,7 +351,7 @@ void MainCLI::startRPC(WebThreeDirect& _web3, TrivialGasPricer& _gasPricer)
 		}
 		if (m_ipc)
 		{
-			auto ipcConnector = new IpcServer("geth");
+			auto ipcConnector = new IpcServer("flu");
 			m_rpcPrivate->jsonrpcServer->addConnector(ipcConnector);
 			ipcConnector->StartListening();
 		}
@@ -258,8 +359,8 @@ void MainCLI::startRPC(WebThreeDirect& _web3, TrivialGasPricer& _gasPricer)
 		string jsonAdmin = m_rpcPrivate->sessionManager->newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
 		cnote << "JSONRPC Admin Session Key: " << jsonAdmin;
-		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
-		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(m_jsonRPCPort));
+		writeFile(m_dbPath + "/session.key", jsonAdmin);
+		writeFile(m_dbPath + "/session.url", "http://localhost:" + toString(m_jsonRPCPort));
 	}
 #endif
 }
@@ -354,8 +455,10 @@ void MainCLI::streamHelp(ostream& _out)
 {
 	_out
 		<< "Main operation modes:" << endl
-		<< "    daemon  Daemonify." << endl
+		<< "    benchmark  Don't sleep - just launch as many transactions as possible." << endl
 		<< "    console  Launch interactive console." << endl
+		<< "    attach  Attach to existing flu process with interactive console." << endl
+		<< "    execute  Execute a JS script." << endl
 		;
 	// TODO: all the other options.
 }

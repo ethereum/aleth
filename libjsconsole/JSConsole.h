@@ -81,7 +81,7 @@ public:
 					closed += std::count(cmd.begin(), cmd.end(), c);
 				openBrackets = open - closed;
 			}
-		} while (openBrackets > 0);
+		} while (openBrackets > 0 && std::cin);
 
 		if (!isEmpty)
 		{

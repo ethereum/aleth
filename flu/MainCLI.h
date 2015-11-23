@@ -55,7 +55,10 @@ public:
 	enum class Mode
 	{
 		Dumb,
-		Console
+		Benchmark,
+		Console,
+		Attach,
+		Execute
 	};
 
 	MainCLI(Mode _mode = Mode::Dumb);
@@ -91,6 +94,9 @@ private:
 	std::string m_listenIP;
 	unsigned short m_listenPort = 40404;
 	std::string m_publicIP;
+
+	/// Execution params (Mode::Execute).
+	strings m_toExecute;
 
 	bool m_ipc = false;
 	int m_jsonRPCPort = -1;
