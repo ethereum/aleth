@@ -75,7 +75,8 @@ struct EVMSchedule
 	u256 memoryGas = 3;
 	u256 quadCoeffDiv = 512;
 	u256 createDataGas = 200;
-	u256 txGas = 53000;
+	u256 txGas = 21000;
+	u256 txCreateGas = 53000;
 	u256 txDataZeroGas = 4;
 	u256 txDataNonZeroGas = 68;
 	u256 copyGas = 3;

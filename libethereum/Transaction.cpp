@@ -101,7 +101,7 @@ Transaction::Transaction(bytesConstRef _rlpData, CheckTransaction _checkSig):
 
 bigint Transaction::gasRequired(bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas)
 {
-	bigint ret = _es.txGas + _gas;
+	bigint ret = (m_type == TransactionBase::ContractCreation ? _es.txCreateGas : _es.txGas) + _gas;
 	for (auto i: _data)
 		ret += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
 	return ret;
