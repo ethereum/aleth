@@ -166,14 +166,19 @@ bool Session::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 		if (_capId == 0 && _t < UserPacket)
 			return interpret(_t, _r);
 
-		for (auto const& i: m_capabilities)
+		if (isFramingEnabled())
 		{
-			bool isValidPacketType = (_t >= (int)i.second->m_idOffset && _t - i.second->m_idOffset < i.second->hostCapability()->messageCount());
-			bool isSuitableCapability = (i.second->c_protocolID == _capId);
-			bool match = (isFramingEnabled() ? isSuitableCapability : isValidPacketType);
-			if (match)
-				return i.second->m_enabled ? i.second->interpret(_t - i.second->m_idOffset, _r) : true;
+			for (auto const& i: m_capabilities)
+				if (i.second->c_protocolID == _capId)
+					return i.second->m_enabled ? i.second->interpret(_t, _r) : true;
 		}
+		else
+		{
+			for (auto const& i: m_capabilities)
+				if (_t >= (int)i.second->m_idOffset && _t - i.second->m_idOffset < i.second->hostCapability()->messageCount())
+					return i.second->m_enabled ? i.second->interpret(_t - i.second->m_idOffset, _r) : true;
+		}
+
 		return false;
 	}
 	catch (std::exception const& _e)
@@ -574,7 +579,7 @@ void Session::doReadFrames()
 
 			for (RLPXPacket& p: px)
 			{
-				PacketType packetType = (PacketType)RLP(p.type()).toInt<unsigned>();
+				PacketType packetType = (PacketType)RLP(p.type()).toInt<unsigned>(RLP::AllowNonCanon);
 				bool ok = readPacket(header.protocolId, packetType, RLP(p.data()));
 #if ETH_DEBUG
 				if (!ok)

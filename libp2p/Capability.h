@@ -47,7 +47,7 @@ public:
 	std::shared_ptr<Session> session() const { return m_session.lock(); }
 	HostCapabilityFace* hostCapability() const { return m_hostCap; }
 	Host* host() const { return m_hostCap->host(); }
-	ReputationManager& repMan() const;	
+	ReputationManager& repMan() const;
 
 protected:
 	virtual bool interpret(unsigned _id, RLP const&) = 0;
@@ -65,7 +65,7 @@ private:
 	std::weak_ptr<Session> m_session;
 	HostCapabilityFace* m_hostCap;
 	bool m_enabled = true;
-	unsigned m_idOffset;	
+	unsigned m_idOffset;
 };
 
 }

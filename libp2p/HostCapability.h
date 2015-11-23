@@ -55,15 +55,12 @@ protected:
 	CapDesc capDesc() const { return std::make_pair(name(), version()); }
 	virtual unsigned messageCount() const = 0;
 	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID) = 0;
-	uint16_t capID() const { return m_capID; }
-	void setCapID(uint16_t _capID) { m_capID = _capID; }
 
 	virtual void onStarting() {}
 	virtual void onStopping() {}
 
 private:
 	Host* m_host = nullptr;
-	uint16_t m_capID = 0;
 };
 
 template<class PeerCap>

@@ -199,14 +199,12 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 		RLPStream s;
 		if (Session::isFramingAllowedForVersion(dev::p2p::c_protocolVersion))
 		{
-			auto const capabilities = m_host->caps();
-			s.append((unsigned)HelloPacket).appendList(6)
+			s.append((unsigned)HelloPacket).appendList(5)
 			<< dev::p2p::c_protocolVersion
 			<< m_host->m_clientVersion
-			<< capabilities
+			<< m_host->caps()
 			<< m_host->listenPort()
-			<< m_host->id()
-			<< m_host->capIDs(capabilities);
+			<< m_host->id();
 		}
 		else
 		{
