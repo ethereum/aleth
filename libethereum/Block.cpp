@@ -314,7 +314,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 
 	auto deadline =  chrono::steady_clock::now() + chrono::milliseconds(msTimeout);
 
-	for (int goodTxs = max(0, (int)ts.size() - 1); goodTxs && goodTxs < (int)ts.size(); )
+	for (int goodTxs = max(0, (int)ts.size() - 1); goodTxs < (int)ts.size(); )
 	{
 		goodTxs = 0;
 		for (auto const& t: ts)
