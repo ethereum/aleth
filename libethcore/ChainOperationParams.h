@@ -49,11 +49,11 @@ private:
 
 struct EVMSchedule
 {
-	EVMSchedule() = default;
-	EVMSchedule(bool _efcd, u256 const& _txGas): exceptionalFailedCodeDeposit(_efcd), txGas(_txGas) {}
+	EVMSchedule(): tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
+	EVMSchedule(bool _efcd, u256 const& _txGas): exceptionalFailedCodeDeposit(_efcd), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txGas(_txGas) {}
 	bool exceptionalFailedCodeDeposit = true;
 	u256 stackLimit = 1024;
-	std::array<u256, 8> tierStepGas = {{0, 2, 3, 5, 8, 10, 20, 0}};
+	std::array<u256, 8> tierStepGas;
 	u256 expGas = 10;
 	u256 expByteGas = 10;
 	u256 sha3Gas = 30;
