@@ -35,8 +35,8 @@ const size_t c_maxVerificationQueueSize = 8192;
 
 TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
 	m_current(PriorityCompare { *this }),
-	m_limit(_limit * 10),
-	m_futureLimit(_futureLimit * 10)
+	m_limit(_limit),
+	m_futureLimit(_futureLimit)
 {
 	unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
 	for (unsigned i = 0; i < verifierThreads; ++i)
