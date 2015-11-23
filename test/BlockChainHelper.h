@@ -39,22 +39,14 @@ class TestTransaction;
 class TestBlock;
 class TestBlockChain;
 
-enum class RecalcBlockHeader
-{
-	Update,				//find new valid nonce and hash
-	Verify,				//check that block content is matching header
-	UpdateAndVerify,
-	SkipVerify			//recalculate bytes but not verify content
-};
-
 class TestTransaction
 {
 public:
 	TestTransaction(json_spirit::mObject const& _o);
 	TestTransaction(Transaction const& _tr) : m_transaction(_tr) {}
-	Transaction const& getTransaction() const { return m_transaction; }
-	json_spirit::mObject& getJsonObject() { return m_jsonTransaction; }
-	static TestTransaction getDefaultTransaction();
+	Transaction const& transaction() const { return m_transaction; }
+	json_spirit::mObject& jsonObject() { return m_jsonTransaction; }
+	static TestTransaction defaultTransaction();
 
 private:
 	json_spirit::mObject m_jsonTransaction;
@@ -66,8 +58,7 @@ class TestBlock
 public:
 	TestBlock();
 	TestBlock(std::string const& _blockRlp);
-	TestBlock(mObject const& _blockObj, mObject const& _stateObj, RecalcBlockHeader _verify);
-
+	TestBlock(mObject const& _blockObj, mObject const& _stateObj);
 	TestBlock(TestBlock const& _original);
 	TestBlock& operator=(TestBlock const& _original);
 
@@ -75,62 +66,63 @@ public:
 	void addUncle(TestBlock const& _uncle);
 	void setUncles(vector<TestBlock> const& _uncles);
 	void setPremine(std::string const& _parameter) { m_premineUpdate[_parameter] = true; }
+	void noteDirty() { m_dirty = true; }
 	void mine(TestBlockChain const& _bc);
 	void updateNonce(TestBlockChain const& _bc);
+	void verify(TestBlockChain const& _bc) const;
 
-	void setBlockHeader(BlockHeader const& _header, RecalcBlockHeader _recalculate);
+	void setBlockHeader(BlockHeader const& _header);
 	void setState(State const& _state);
 	void clearState();
 
 	BlockHeader const& premineHeader() { return m_premineHeader; } //should return fields according to m_premineUpdate. this is needed to check that premine chanes was not lost during mining .
-	bytes const& getBytes() const { return m_bytes; }
+	dev::bytes const& bytes() const { return m_bytes; }
 	AccountMap const& accountMap() const { return m_accountMap; }
-	State const& getState() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
-	BlockHeader const& getBlockHeader() const { return m_blockHeader;}
-	TransactionQueue const& getTransactionQueue() const { return m_transactionQueue; }
-	TransactionQueue & getTransactionQueue() { return m_transactionQueue; }
-	vector<TestTransaction> const& getTestTransactions() const { return m_testTransactions; }
-	vector<TestBlock> const& getUncles() const { return m_uncles; }
-	Address const& getBeneficiary() const { return m_blockHeader.author(); }
-//SealEngineFace* m_sealEngine;
+	State const& state() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
+	BlockHeader const& blockHeader() const { return m_blockHeader;}
+	TransactionQueue const& transactionQueue() const { return m_transactionQueue; }
+	TransactionQueue & transactionQueue() { return m_transactionQueue; }
+	vector<TestTransaction> const& testTransactions() const { return m_testTransactions; }
+	vector<TestBlock> const& uncles() const { return m_uncles; }
+	Address const& beneficiary() const { return m_blockHeader.author(); }
 
 private:
 	BlockHeader constructBlock(mObject const& _o, h256 const& _stateRoot);
-	bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
-	void recalcBlockHeaderBytes(RecalcBlockHeader _recalculate);
+	dev::bytes createBlockRLPFromFields(mObject const& _tObj, h256 const& _stateRoot = h256{});
+	void recalcBlockHeaderBytes();
 	void copyStateFrom(State const& _state);
 	void populateFrom(TestBlock const& _original);
 	void premineUpdate(BlockHeader& info);
 
+	bool m_dirty;
 	BlockHeader m_blockHeader;
 	vector<TestBlock> m_uncles;
 	std::unique_ptr<State> m_state;
 	TransactionQueue m_transactionQueue;
 	BlockQueue m_uncleQueue;
-	bytes m_bytes;
+	dev::bytes m_bytes;
 	std::unique_ptr<TransientDirectory> m_tempDirState;
 	vector<TestTransaction> m_testTransactions;
-	std::map<std::string, bool> m_premineUpdate;			//Test Header alterate options
+	std::map<std::string, bool> m_premineUpdate;			//Test Header alterate options. TODO: Do we really need this?
 	BlockHeader m_premineHeader;
 	AccountMap m_accountMap;								//Needed for genesis state
-
 };
 
 class TestBlockChain
 {
 public:
-	TestBlockChain(bool _noProof = false): TestBlockChain(getDefaultGenesisBlock(), _noProof) {}
+	TestBlockChain(bool _noProof = false): TestBlockChain(defaultGenesisBlock(), _noProof) {}
 	TestBlockChain(TestBlock const& _genesisBlock, bool _noProof = false);
 
 	void reset(TestBlock const& _genesisBlock, bool _noProof = false);
 	void addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
-	TestBlock const& getTopBlock() { return m_lastBlock; }
-	BlockChain const& getInterface() const { return *m_blockChain.get();}
-	TestBlock const& getTestGenesis() const { return m_genesisBlock; }
+	TestBlock const& topBlock() { return m_lastBlock; }
+	BlockChain const& interface() const { return *m_blockChain;}
+	TestBlock const& testGenesis() const { return m_genesisBlock; }
 
-	static TestBlock getDefaultGenesisBlock();
-	static AccountMap getDefaultAccountMap();
+	static TestBlock defaultGenesisBlock();
+	static AccountMap defaultAccountMap();
 
 private:
 	std::unique_ptr<BlockChain> m_blockChain;
