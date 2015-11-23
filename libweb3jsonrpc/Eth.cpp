@@ -236,7 +236,17 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		return toJS(m_ethAccounts.authenticate(t));
+		TransactionNotification n = m_ethAccounts.authenticate(t);
+		switch (n.r)
+		{
+		case TransactionRepersussion::Success:
+			return toJS(n.hash);
+		case TransactionRepersussion::ProxySuccess:
+			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
+		default:
+			// TODO: provide more useful information in the exception.
+			BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		}
 	}
 	catch (...)
 	{
@@ -250,9 +260,17 @@ string Eth::eth_signTransaction(Json::Value const& _json)
 	{
 		TransactionSkeleton t = toTransactionSkeleton(_json);
 		setTransactionDefaults(t);
-		m_ethAccounts.authenticate(t);
-
-		return toJS((t.creation ? Transaction(t.value, t.gasPrice, t.gas, t.data) : Transaction(t.value, t.gasPrice, t.gas, t.to, t.data)).sha3(WithoutSignature));
+		TransactionNotification n = m_ethAccounts.authenticate(t);
+		switch (n.r)
+		{
+		case TransactionRepersussion::Success:
+			return toJS(n.hash);
+		case TransactionRepersussion::ProxySuccess:
+			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
+		default:
+			// TODO: provide more useful information in the exception.
+			BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		}
 	}
 	catch (...)
 	{

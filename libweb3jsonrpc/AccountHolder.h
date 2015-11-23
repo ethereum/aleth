@@ -39,6 +39,23 @@ namespace eth
 class KeyManager;
 class Interface;
 
+enum class TransactionRepersussion
+{
+	Unknown,
+	UnknownAccount,
+	Locked,
+	Refused,
+	ProxySuccess,
+	Success
+};
+
+struct TransactionNotification
+{
+	TransactionRepersussion r;
+	h256 hash;
+	Address created;
+};
+
 /**
  * Manages real accounts (where we know the secret key) and proxy accounts (where transactions
  * to be sent from these accounts are forwarded to a proxy on the other side).
@@ -51,7 +68,7 @@ public:
 	virtual AddressHash realAccounts() const = 0;
 	// use m_web3's submitTransaction
 	// or use AccountHolder::queueTransaction(_t) to accept
-	virtual h256 authenticate(dev::eth::TransactionSkeleton const& _t) = 0;
+	virtual TransactionNotification authenticate(dev::eth::TransactionSkeleton const& _t) = 0;
 
 	Addresses allAccounts() const;
 	bool isRealAccount(Address const& _account) const { return realAccounts().count(_account) > 0; }
@@ -86,7 +103,7 @@ public:
 	{}
 
 	AddressHash realAccounts() const override;
-	h256 authenticate(dev::eth::TransactionSkeleton const& _t) override;
+	TransactionNotification authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
 private:
 	std::function<std::string(Address)> m_getPassword;
@@ -119,7 +136,7 @@ public:
 
 	// use m_web3's submitTransaction
 	// or use AccountHolder::queueTransaction(_t) to accept
-	h256 authenticate(dev::eth::TransactionSkeleton const& _t) override;
+	TransactionNotification authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
 private:
 	std::unordered_map<dev::Address, dev::Secret> m_accounts;

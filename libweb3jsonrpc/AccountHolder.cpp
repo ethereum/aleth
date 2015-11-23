@@ -106,24 +106,52 @@ AddressHash SimpleAccountHolder::realAccounts() const
 	return m_keyManager.accountsHash();
 }
 
-h256 SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
+	TransactionNotification ret;
 	if (m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
-		return h256();
+		ret.r = TransactionRepersussion::Refused;
 	if (isRealAccount(_t.from))
-		return m_client()->submitTransaction(_t, m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); })).first;
+	{
+		if (Secret s = m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }))
+		{
+			ret.r = TransactionRepersussion::Success;
+			tie(ret.hash, ret.created) = m_client()->submitTransaction(_t, s);
+		}
+		else
+			ret.r = TransactionRepersussion::Locked;
+	}
 	else if (isProxyAccount(_t.from))
+	{
+		ret.r = TransactionRepersussion::ProxySuccess;
 		queueTransaction(_t);
-	return h256();
+	}
+	else
+		ret.r = TransactionRepersussion::UnknownAccount;
+	return ret;
 }
 
-h256 FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
+TransactionNotification FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
+	TransactionNotification ret;
 	if (isRealAccount(_t.from))
-		return m_client()->submitTransaction(_t, m_accounts[_t.from]).first;
+	{
+		if (m_accounts.count(_t.from))
+		{
+			ret.r = TransactionRepersussion::Success;
+			tie(ret.hash, ret.created) = m_client()->submitTransaction(_t, m_accounts[_t.from]);
+		}
+		else
+			ret.r = TransactionRepersussion::Locked;
+	}
 	else if (isProxyAccount(_t.from))
+	{
+		ret.r = TransactionRepersussion::ProxySuccess;
 		queueTransaction(_t);
-	return h256();
+	}
+	else
+		ret.r = TransactionRepersussion::UnknownAccount;
+	return ret;
 }
 
 
