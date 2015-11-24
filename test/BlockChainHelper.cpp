@@ -211,6 +211,14 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		return;
 	}
 
+	size_t validTransactions = m_transactionQueue.topTransactions(100).size();
+	m_receipts = RLPStream(validTransactions);
+	for (size_t i = 0; i < validTransactions; i++)
+	{
+		const dev::bytes receipt = block.receipt(i).rlp();
+		m_receipts.appendRaw(receipt);
+	}
+
 	m_blockHeader = BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
 	cnote << "Mined TrRoot: " << m_blockHeader.transactionsRoot();
 	copyStateFrom(block.state());

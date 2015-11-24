@@ -77,6 +77,7 @@ public:
 
 	BlockHeader const& premineHeader() { return m_premineHeader; } //should return fields according to m_premineUpdate. this is needed to check that premine chanes was not lost during mining .
 	dev::bytes const& bytes() const { return m_bytes; }
+	bytesConstRef receipts() const { return bytesConstRef(&m_receipts.out()[0], m_receipts.out().size()); }
 	AccountMap const& accountMap() const { return m_accountMap; }
 	State const& state() const { if (m_state.get() == 0) BOOST_THROW_EXCEPTION(BlockStateUndefined() << errinfo_comment("Block State is Nulled")); return *m_state.get(); }
 	BlockHeader const& blockHeader() const { return m_blockHeader;}
@@ -106,6 +107,7 @@ private:
 	std::map<std::string, bool> m_premineUpdate;			//Test Header alterate options. TODO: Do we really need this?
 	BlockHeader m_premineHeader;
 	AccountMap m_accountMap;								//Needed for genesis state
+	RLPStream m_receipts;
 };
 
 class TestBlockChain
@@ -119,6 +121,7 @@ public:
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& topBlock() { return m_lastBlock; }
 	BlockChain const& interface() const { return *m_blockChain;}
+	BlockChain& interfaceUnsafe() const { return *m_blockChain;}
 	TestBlock const& testGenesis() const { return m_genesisBlock; }
 
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = 3141592);
