@@ -44,7 +44,7 @@ std::vector<std::string> getTypes();
 void parseTestWithTypes(std::string& test);
 
 namespace dev { namespace test {
-int createRandomTest(int argc, char* argv[])
+int createRandomTest(std::vector<char*> const& _parameters)
 {
 	std::string testSuite;
 	std::string testFillString;
@@ -61,19 +61,19 @@ int createRandomTest(int argc, char* argv[])
 				&& testSuite != "VMTests")
 		testSuite = "";
 
-	for (int i = 0; i < argc; ++i)
+	for (size_t i = 0; i < _parameters.size(); ++i)
 	{
-		auto arg = std::string{argv[i]};
+		auto arg = std::string{_parameters.at(i)};
 
 		if (arg == "--fulloutput")
 			options.fulloutput = true;
 		else
-		if (arg == "-checktest" || arg == "-filltest")
+		if (arg == "--checktest" || arg == "--filltest")
 		{
 			std::string s = options.rCheckTest;
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Error! Content of argument is empty! (Usage -checktest textstream)");
 
-			if (arg == "-filltest")
+			if (arg == "--filltest")
 			{
 				testFillString = s;
 				filltest = true;
