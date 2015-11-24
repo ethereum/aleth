@@ -192,7 +192,10 @@ void TestBlock::mine(TestBlockChain const& _bc)
 
 		premineUpdate(blockInfo);
 
+		size_t transactionsOnImport = m_transactionQueue.topTransactions(100).size();
 		block.sync(blockchain, m_transactionQueue, gp); //!!! Invalid transactions are dropped here
+		if (transactionsOnImport >  m_transactionQueue.topTransactions(100).size())
+			cnote << "Dropped invalid Transactions when mining!";
 
 		dev::eth::mine(block, blockchain, blockchain.sealEngine());
 		blockchain.sealEngine()->verify(JustSeal, block.info());
@@ -208,7 +211,16 @@ void TestBlock::mine(TestBlockChain const& _bc)
 		return;
 	}
 
+	size_t validTransactions = m_transactionQueue.topTransactions(100).size();
+	m_receipts = RLPStream(validTransactions);
+	for (size_t i = 0; i < validTransactions; i++)
+	{
+		const dev::bytes receipt = block.receipt(i).rlp();
+		m_receipts.appendRaw(receipt);
+	}
+
 	m_blockHeader = BlockHeader(block.blockData());		// NOTE no longer checked at this point in new API. looks like it was unimportant anyway
+	cnote << "Mined TrRoot: " << m_blockHeader.transactionsRoot();
 	copyStateFrom(block.state());
 
 	//Invalid uncles are dropped when mining. but we restore the hash to produce block with invalid uncles (for later test when importing to blockchain)
@@ -499,13 +511,13 @@ vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)
 	return validUncles;
 }
 
-TestTransaction TestTransaction::defaultTransaction()
+TestTransaction TestTransaction::defaultTransaction(u256 const& _nonce, u256 const& _gasPrice, u256 const& _gasLimit, bytes const& _data)
 {
 	json_spirit::mObject txObj;
-	txObj["data"] = "";
-	txObj["gasLimit"] = "50000";
-	txObj["gasPrice"] = "1";
-	txObj["nonce"] = "0";
+	txObj["data"] = toHex(_data);
+	txObj["gasLimit"] = toString(_gasLimit);
+	txObj["gasPrice"] = toString(_gasPrice);
+	txObj["nonce"] = toString(_nonce);
 	txObj["secretKey"] = "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8";
 	txObj["to"] = "095e7baea6a6c7c4c2dfeb977efac326af552d87";
 	txObj["value"] = "100";
@@ -520,14 +532,14 @@ AccountMap TestBlockChain::defaultAccountMap()
 	return ret;
 }
 
-TestBlock TestBlockChain::defaultGenesisBlock()
+TestBlock TestBlockChain::defaultGenesisBlock(u256 const& _gasLimit)
 {
 	json_spirit::mObject blockObj;
 	blockObj["bloom"] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 	blockObj["coinbase"] = "0x8888f1f195afa192cfee860698584c030f4c9db1";
 	blockObj["difficulty"] = "131072";
 	blockObj["extraData"] = "0x42";
-	blockObj["gasLimit"] = "3141592";
+	blockObj["gasLimit"] = toString(_gasLimit);
 	blockObj["gasUsed"] = "0";
 	blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 	blockObj["nonce"] = "0x0102030405060708";
@@ -541,7 +553,7 @@ TestBlock TestBlockChain::defaultGenesisBlock()
 
 	json_spirit::mObject accountObj;
 	accountObj["balance"] = "10000000000";
-	accountObj["nonce"] = "0";
+	accountObj["nonce"] = "1";					//=1for nonce too low exception check
 	accountObj["code"] = "";
 	accountObj["storage"] = json_spirit::mObject();
 

@@ -268,6 +268,7 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 
 int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
+	bool wasError = false;
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
@@ -277,7 +278,11 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 					return 1;				\
 			}								\
 			else							\
+			{								\
 				BOOST_WARN_MESSAGE(a,b);	\
+				if (!a)						\
+					wasError = true;		\
+			}								\
 		}
 
 	for (auto const& a: _stateExpect.addresses())
@@ -326,7 +331,8 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
-	return 0;
+
+	return wasError;
 }
 
 int ImportTest::exportTest(bytes const& _output)
@@ -719,11 +725,8 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 	return rlpStream;
 }
 
-Options::Options()
-{
-	auto argc = boost::unit_test::framework::master_test_suite().argc;
-	auto argv = boost::unit_test::framework::master_test_suite().argv;
-
+Options::Options(int argc, char** argv)
+{	
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -816,6 +819,15 @@ Options::Options()
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
+		else if (arg == "-t" && i + 1 < argc)
+			rCurrentTestSuite = std::string{argv[i + 1]};
+		else if (arg == "-checktest" || arg == "-filltest")
+		{
+			//read all line to the end
+			for (int j = i+1; j < argc; ++j)
+				rCheckTest += argv[j];
+			break;
+		}
 	}
 
 	//Default option
@@ -823,9 +835,9 @@ Options::Options()
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
-Options const& Options::get()
+Options const& Options::get(int argc, char** argv)
 {
-	static Options instance;
+	static Options instance(argc, argv);
 	return instance;
 }
 
@@ -897,7 +909,7 @@ void Listener::notifyTestFinished()
 
 size_t TestOutputHelper::m_currTest = 0;
 size_t TestOutputHelper::m_maxTests = 0;
-string TestOutputHelper::m_currentTestName = "n/a";
+string TestOutputHelper::m_currentTestName = " n/a ";
 
 using namespace boost;
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
