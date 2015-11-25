@@ -261,8 +261,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	stringstream capslog;
 
 	// leave only highset mutually supported capability version
-	if (caps.size() > 1)
-		caps.erase(remove_if(caps.begin(), caps.end(), [&](CapDesc const& _r){ return !haveCapability(_r) || any_of(caps.begin(), caps.end(), [&](CapDesc const& _o){ return _r.first == _o.first && _o.second > _r.second && haveCapability(_o); }); }), caps.end());
+	caps.erase(remove_if(caps.begin(), caps.end(), [&](CapDesc const& _r){ return !haveCapability(_r) || any_of(caps.begin(), caps.end(), [&](CapDesc const& _o){ return _r.first == _o.first && _o.second > _r.second && haveCapability(_o); }); }), caps.end());
 
 	for (auto cap: caps)
 		capslog << "(" << cap.first << "," << dec << cap.second << ")";
@@ -273,6 +272,11 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
 	{
 		ps->disconnect(IncompatibleProtocol);
+		return;
+	}
+	if (caps.empty())
+	{
+		ps->disconnect(UselessPeer);
 		return;
 	}
 
