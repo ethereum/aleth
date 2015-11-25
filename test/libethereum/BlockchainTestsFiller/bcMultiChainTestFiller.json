@@ -22,7 +22,7 @@
                 "balance" : "10000000000120"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "5"
+                "nonce" : "4"
             }
         },
         "pre" : {
@@ -77,9 +77,6 @@
             {
         "chainname" : "A",
         "blocknumber" : "3",
-        "blockHeader" : {
-            "RelTimestamp" : "24"
-        },
                 "transactions" : [
                     {
                         "data" : "",
@@ -131,9 +128,6 @@
             {
         "chainname" : "B",
         "blocknumber" : "3",
-        "blockHeader" : {
-            "RelTimestamp" : "4"
-        },
                 "transactions" : [
                     {
                         "data" : "0x3453454",
@@ -151,26 +145,6 @@
                         "nonce" : "3",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "20"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-        "chainname" : "B",
-        "blocknumber" : "4",
-        "blockHeader" : {
-            "RelTimestamp" : "4"
-        },
-                "transactions" : [
-            	    {
-                        "data" : "",
-                        "gasLimit" : "310509",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "a95e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "20"
                     }
                 ],
@@ -253,7 +227,8 @@
         "chainname" : "A",
         "blocknumber" : "3",
         "blockHeader" : {
-            "RelTimestamp" : "24"
+            "RelTimestamp" : "24",
+	    "updatePoW" : "1"
         },
                 "transactions" : [
                     {
@@ -307,7 +282,8 @@
         "chainname" : "B",
         "blocknumber" : "3",
         "blockHeader" : {
-            "RelTimestamp" : "4"
+            "RelTimestamp" : "4",
+	    "updatePoW" : "1"
         },
                 "transactions" : [
                     {
@@ -358,7 +334,7 @@
                 "balance" : "320"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "3"
+                "nonce" : "4"
             }
         },
         "pre" : {
@@ -477,6 +453,14 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "20"
                     }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+        "chainname" : "B",
+        "blocknumber" : "4",
+                "transactions" : [
                 ],
                 "uncleHeaders" : [
                 ]
@@ -614,6 +598,14 @@
                 ]
             },
             {
+        "chainname" : "B",
+        "blocknumber" : "4",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
         "chainname" : "A",
         "blocknumber" : "3",
                 "transactions" : [
@@ -652,12 +644,15 @@
             "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
         },
         "expect" : {
+	    "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "10"
+            },
             "ec0e71ad0a90ffe1909d27dac207f7680abba42d" : {
                 "balance" : "2",
-        "storage" : {
-            "0x00" : "0x00",
-            "0x01" : "0x00"
-        }
+		"storage" : {
+		    "0x00" : "0x00",
+		    "0x01" : "0x00"
+		}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "nonce" : "3"
@@ -729,11 +724,18 @@
         "chainname" : "A",
         "blocknumber" : "3",
                 "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+        "chainname" : "A",
+        "blocknumber" : "4",
+                "transactions" : [
                     {
-            		"data" : "",
                         "data" : "",
                         "gasLimit" : "314159",
-                        "gasPrice" : "2",
+                        "gasPrice" : "1",
                         "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "ec0e71ad0a90ffe1909d27dac207f7680abba42d",
@@ -1604,10 +1606,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "30"
+                "balance" : "320"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "3"
+                "nonce" : "4"
             }
         },
         "pre" : {
@@ -1645,23 +1647,6 @@
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
                         "nonce" : "1",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-        "chainname" : "A",
-        "blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "10"
@@ -1746,9 +1731,9 @@
                     }
                 ],
                 "uncleHeaders" : [
-            {
-            "chainname" : "A",
-            "populateFromBlock" : "2"
+           	    {
+            		"chainname" : "A",
+            		"populateFromBlock" : "2"
                     }
                 ]
             }

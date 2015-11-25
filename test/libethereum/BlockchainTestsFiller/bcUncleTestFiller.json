@@ -142,7 +142,8 @@
             {
 		"expectException" : "UncleIsBrother",
                 "blockHeader" : {
-                    "populateFromBlock" : "2"
+                    "populateFromBlock" : "2",
+	    	    "updatePoW" : "1"
                 },
 
                 "transactions" : [

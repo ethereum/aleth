@@ -54,7 +54,8 @@
             },
             {
                 "blockHeader" : {
-                    "RelTimestamp" : "12"
+                    "RelTimestamp" : "12",
+	    	    "updatePoW" : "1"
                 },
                 "transactions" : [
                     {
@@ -128,7 +129,8 @@
             },
             {
                 "blockHeader" : {
-                    "RelTimestamp" : "13"
+                    "RelTimestamp" : "13",
+	    	    "updatePoW" : "1"
                 },
                 "transactions" : [
                     {
@@ -202,7 +204,8 @@
             },
             {
                 "blockHeader" : {
-                    "RelTimestamp" : "14"
+                    "RelTimestamp" : "14",
+	    	    "updatePoW" : "1"
                 },
                 "transactions" : [
                     {
@@ -277,7 +280,8 @@
             {
 		"expectException" : "InvalidTimestamp",
                 "blockHeader" : {
-                    "RelTimestamp" : "0"
+                    "RelTimestamp" : "0",
+	    	    "updatePoW" : "1"
                 },
                 "transactions" : [
                     {
@@ -561,7 +565,8 @@
         "blocks" : [
             {
                 "blockHeader" : {
-                    "gasLimit" : "3141592"
+                    "gasLimit" : "3141592",
+	   	    "updatePoW" : "1"
                 },
                 "transactions" : [
                     {
