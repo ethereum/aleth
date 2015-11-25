@@ -29,6 +29,7 @@ SHALLOW_FETCH=""
 UPSTREAM=upstream
 ORIGIN=origin
 REQUESTED_BRANCH=develop
+WEB3JS_BRANCH=master
 REQUESTED_ARG=""
 REQUESTED_PROJECT=""
 REPO_URL=""
@@ -291,12 +292,15 @@ do
 		BRANCH="(unnamed branch)"     # detached HEAD
 	BRANCH=${BRANCH##refs/heads/}
 
+	get_repo_branch $repository
 	# if the "none" value was given then checkout and pull requested branch
 	if [[ $BUILD_PR == "none" ]]; then
-		git checkout -f develop
+		git checkout -f $REQUESTED_BRANCH
 		if [[ $? -ne 0 ]]; then
-			echo "ETHUPDATE - ERROR: Could not checkout develop for ${repository}."
+			echo "ETHUPDATE - ERROR: Could not checkout \"${REQUESTED_BRANCH}\" for ${repository}."
 			exit 1
+		else
+			echo "ETHUPDATE - INFO: Checked out branch ${REQUESTED_BRANCH} for repository ${repository}."
 		fi
 	else
 		get_repo_branch $repository
