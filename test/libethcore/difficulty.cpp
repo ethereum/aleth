@@ -23,6 +23,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
+#include <test/fuzzTesting/fuzzHelper.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
@@ -31,23 +32,72 @@ using namespace dev;
 using namespace dev::eth;
 
 namespace js = json_spirit;
+std::string const c_testDifficulty = R"(
+ "DifficultyTest[N]" : {
+		"parentTimestamp" : "[PSTAMP]",
+		"parentDifficulty" : "[PDIFF]",
+		"currentTimestamp" : "[СSTAMP]",
+		"currentBlockNumber" : "[CNUM]",
+		"currentDifficulty" : "[CDIFF]"
+	},
+)";
 
-BOOST_AUTO_TEST_SUITE(DifficultyTests)
-
-BOOST_AUTO_TEST_CASE(difficultyTests)
+void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 {
-	test::TestOutputHelper::initTest();
-	string testPath = test::getTestPath();
-	testPath += "/BasicTests";
+	int testN = 0;
+	ostringstream finalTest;
+	finalTest << "{" << std::endl;
+	for (int stampDelta = 0; stampDelta < 15; stampDelta++)
+	{
+		for (u256 blockNumber = 10000; blockNumber < 1000000; blockNumber += 25000)
+		{
+			testN++;
+			u256 pStamp = dev::test::RandomCode::randomUniInt();
+			u256 pDiff = dev::test::RandomCode::randomUniInt();
+			u256 cStamp = pStamp + stampDelta;
+			u256 cNum = blockNumber;
 
+			BlockHeader parent;
+			parent.setTimestamp(pStamp);
+			parent.setDifficulty(pDiff);
+			parent.setNumber(cNum - 1);
+
+			BlockHeader current;
+			current.setTimestamp(cStamp);
+			current.setNumber(cNum);
+
+			string tmptest = c_testDifficulty;
+			std::map<string, string> replaceMap;
+			replaceMap["[N]"] = toString(testN);
+			replaceMap["[PDIFF]"] = toCompactHex(pDiff, HexPrefix::Add);
+			replaceMap["[PSTAMP]"] = toCompactHex(pStamp, HexPrefix::Add);
+			replaceMap["[СSTAMP]"] = toCompactHex(cStamp, HexPrefix::Add);
+			replaceMap["[CNUM]"] = toCompactHex(cNum, HexPrefix::Add);
+			replaceMap["[CDIFF]"] = toCompactHex(_sealEngine.calculateDifficulty(current, parent), HexPrefix::Add);
+
+			dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
+			finalTest << tmptest;
+		}
+	}
+
+	finalTest << std::endl << "}";
+	writeFile(_testFileFullName, asBytes(finalTest.str()));
+}
+
+void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
+{
+	//Test File
 	js::mValue v;
-	string s = contentsString(testPath + "/difficulty.json");
+	string s = contentsString(_testFileFullName);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'difficulty.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 
+<<<<<<< HEAD
+=======
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));
 
+>>>>>>> 0fa50373a605f28b17bdd3ecf2313ecf83557c37
 	for (auto& i: v.get_obj())
 	{
 		js::mObject o = i.second.get_obj();
@@ -61,8 +111,82 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 		current.setTimestamp(test::toInt(o["currentTimestamp"]));
 		current.setNumber(test::toInt(o["currentBlockNumber"]));
 
-		BOOST_CHECK_EQUAL(sealEngine.calculateDifficulty(current, parent), test::toInt(o["currentDifficulty"]));
+		BOOST_CHECK_EQUAL(_sealEngine.calculateDifficulty(current, parent), test::toInt(o["currentDifficulty"]));
 	}
+}
+
+BOOST_AUTO_TEST_SUITE(DifficultyTests)
+
+BOOST_AUTO_TEST_CASE(difficultyTestsOlympic)
+{
+	test::TestOutputHelper::initTest();
+	string testFileFullName = test::getTestPath();
+	testFileFullName += "/BasicTests/difficultyOlimpic.json";
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Olympic)));
+
+	if (dev::test::Options::get().fillTests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
+{
+	test::TestOutputHelper::initTest();
+	string testFileFullName = test::getTestPath();
+	testFileFullName += "/BasicTests/difficultyFrontier.json";
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Frontier)));
+
+	if (dev::test::Options::get().fillTests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyTestsMorden)
+{
+	test::TestOutputHelper::initTest();
+	string testFileFullName = test::getTestPath();
+	testFileFullName += "/BasicTests/difficultyMorden.json";
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Morden)));
+
+	if (dev::test::Options::get().fillTests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
+{
+	test::TestOutputHelper::initTest();
+	string testFileFullName = test::getTestPath();
+	testFileFullName += "/BasicTests/difficultyHomestead.json";
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::HomesteadTest)));
+
+	if (dev::test::Options::get().fillTests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine);
+}
+
+BOOST_AUTO_TEST_CASE(basicDifficultyTest)
+{
+	test::TestOutputHelper::initTest();
+	string testPath = test::getTestPath();
+	testPath += "/BasicTests/difficulty.json";
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::::Olympic)));
+
+	testDifficulty(testPath, sealEngine);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

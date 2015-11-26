@@ -78,6 +78,9 @@ public:
 	/// Generate random vm code
 	static std::string generate(int _maxOpNumber = 1, RandomCodeOptions _options = RandomCodeOptions());
 
+	/// Replace keywords in given string with values
+	static void parseTestWithTypes(std::string& test, std::map<std::string, std::string> const& _varMap = {});
+
 	/// Generate random byte string of a given length
 	static std::string rndByteSequence(int _length = 1, SizeStrictness _sizeType = SizeStrictness::Strict);
 
@@ -93,7 +96,7 @@ public:
 
 	/// Generate random int64
 	static std::string randomUniIntHex(u256 _maxVal = 0);
-	static int randomUniInt();
+	static u256 randomUniInt(u256 _maxVal = 0);
 
 private:
 	static std::string fillArguments(dev::eth::Instruction _opcode, RandomCodeOptions const& _options);
@@ -101,6 +104,7 @@ private:
 	static std::string getPushCode(std::string const& _hex);
 	static int recursiveRLP(std::string& _result, int _depth, std::string& _debug);
 	static void refreshSeed();
+	static std::vector<std::string> getTypes();
 
 	static boost::random::mt19937 gen;			///< Random generator
 	static boostIntDistrib opCodeDist;			///< 0..255 opcodes
