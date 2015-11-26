@@ -283,9 +283,7 @@ void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std:
 					_test.replace(pos, 3, "0x" + dev::test::RandomCode::rndByteSequence(1));
 			}
 			else
-			{
 				_test.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));
-			}
 
 			pos = _test.find(types.at(i));
 		}
