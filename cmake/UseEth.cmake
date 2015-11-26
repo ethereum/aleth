@@ -20,7 +20,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		eth_use(${TARGET} OPTIONAL Cryptopp)
 		target_link_libraries(${TARGET} ${Eth_ETHASH_LIBRARIES})
 		# even if ethash is required, ethash-cl and cpuid are optional
-		eth_use(${TARGET} OPTIONAL Eth::ethash-cl Cpuid)
 
 		# workaround for https://github.com/ethereum/alethzero/issues/69
 		# force linking to libOpenCL as early as possible
@@ -81,6 +80,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "ethashseal")
 		eth_use(${TARGET} ${REQUIRED} Eth::ethereum Eth::ethash)
+		eth_use(${TARGET} OPTIONAL Eth::ethash-cl Cpuid)
 		target_link_libraries(${TARGET} ${Eth_ETHASHSEAL_LIBRARIES})
 	endif()
 
