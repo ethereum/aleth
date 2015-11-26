@@ -19,6 +19,8 @@ aux_source_directory(. SRC_LIST)
 file(GLOB OUR_HEADERS "*.h")
 set(HEADERS ${OUR_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/ethash_cl_miner_kernel.h)
 
+# TODO: Should fix properly. Cmake >= 3.4.0 detects a self linking of ethash-cl library here.
+cmake_policy(SET CMP0038 OLD)
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 eth_use(${EXECUTABLE} REQUIRED Eth::ethash OpenCL)
 target_include_directories(${EXECUTABLE} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
