@@ -909,13 +909,22 @@ void Listener::notifyTestFinished()
 
 size_t TestOutputHelper::m_currTest = 0;
 size_t TestOutputHelper::m_maxTests = 0;
-string TestOutputHelper::m_currentTestName = " n/a ";
+string TestOutputHelper::m_currentTestName = "n/a";
+string TestOutputHelper::m_currentTestCaseName = "n/a";
 
 using namespace boost;
+void TestOutputHelper::initTest()
+{
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+	m_maxTests = 1;
+	m_currTest = 0;
+}
+
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
 {
-	std::string testCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + testCaseName + "\": " << std::endl;
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _v.get_obj().size();
 	m_currTest = 0;	
 }

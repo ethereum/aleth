@@ -32,18 +32,15 @@ namespace dev {  namespace test {
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
-	string testname;
+	TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
-		mObject& o = i.second.get_obj();
-		if (test::Options::get().singleTest && test::Options::get().singleTestName != i.first)
-		{
-			o.clear();
-			continue;
-		}
+		string testname = i.first;
+		json_spirit::mObject& o = i.second.get_obj();
 
-		testname = "(" + i.first + ") ";
-		cnote << testname;
+		if (!TestOutputHelper::passTest(o, testname))
+			continue;
+
 		if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);

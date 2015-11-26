@@ -76,7 +76,7 @@ public:
 	void sealAndImport(Block& _block)
 	{
 		seal(_block);
-		cout << "Importing sealed: " << sha3(sealed) << endl;
+		cnote << "Importing sealed: " << sha3(sealed);
 		cdebug << "importing..." << RLP(_block.blockData());
 		m_bc.import(_block.blockData(), m_stateDB);
 //		cdebug << "done.";
@@ -126,7 +126,7 @@ h256s subs(bytesConstRef _node)
 void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& _dbDest)
 {
 	BlockHeader bi(_block);
-	cout << "Root is " << bi.stateRoot() << endl;
+	cnote << "Root is " << bi.stateRoot();
 
 	h256s todo = {bi.stateRoot()};
 	vector<bytes> data;
@@ -135,23 +135,24 @@ void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& 
 		h256 h = todo.back();
 		todo.pop_back();
 		bytes d = asBytes(_dbSource.lookup(h));
-		cout << h << ": " << RLP(&d) << endl;
+		cnote << h << ": " << RLP(&d);
 		auto s = subs(&d);
-		cout << "   More: " << s << endl;
+		cnote << "   More: " << s;
 		todo += s;
 		// push final value.
 		data.push_back(d);
 	}
 	for (auto const& d: data)
 	{
-		cout << "Inserting " << sha3(d) << endl;
+		cnote << "Inserting " << sha3(d);
 		_dbDest.insert(sha3(d), &d);
 	}
 }
 
 BOOST_AUTO_TEST_CASE(bcBasicInsert)
 {
-	g_logVerbosity = 4;
+	if (g_logVerbosity != -1)
+		g_logVerbosity = 4;
 
 	KeyPair me = Secret(sha3("Gav Wood"));
 	KeyPair myMiner = Secret(sha3("Gav's Miner"));
@@ -166,46 +167,46 @@ BOOST_AUTO_TEST_CASE(bcBasicInsert)
 	block.sync(tcFull.bc());
 
 	// Seal and import into full client.
-	cout << "First seal and import" << endl;
+	cnote << "First seal and import";
 	tcFull.sealAndImport(block);
 
 	// Insert into light client.
-	cout << "Insert into light" << endl;
+	cnote << "Insert into light";
 	tcLight.insert(block, tcFull.bc());
 
 	// Sync light client's state trie.
-	cout << "Syncing light state" << endl;
+	cnote << "Syncing light state";
 	syncStateTrie(&block.blockData(), tcFull.db(), tcLight.db());
 
 	// Mine another block. Importing into both should work now.
 
 	// Prep block for a transaction.
-	cout << "Prep block" << endl;
+	cnote << "Prep block";
 	block.sync(tcFull.bc());
-	cout << block.state() << endl;
+	cnote << block.state();
 	while (utcTime() < block.info().timestamp())
 		this_thread::sleep_for(chrono::milliseconds(100));
 
 	// Inject a transaction to transfer funds from miner to me.
 	Transaction t(1000, 10000, 100000, me.address(), bytes(), block.transactionsFrom(myMiner.address()), myMiner.secret());
 	assert(t.sender() == myMiner.address());
-	cout << "Execute transaction" << endl;
+	cnote << "Execute transaction";
 	block.execute(tcFull.bc().lastHashes(), t);
-	cout << block.state() << endl;
+	cnote << block.state();
 
 	// Seal and import into both.
-	cout << "Seal and import" << endl;
+	cnote << "Seal and import";
 	tcFull.sealAndImport(block);
-	cout << "Import into light" << endl;
+	cnote << "Import into light";
 	tcLight.import(block);
 
-	cout << tcFull.bc() << endl;
-	cout << tcLight.bc() << endl;
+	cnote << tcFull.bc();
+	cnote << tcLight.bc();
 	block.sync(tcFull.bc());
 
-	cout << block.state() << endl;
-	cout << tcFull.bc().dumpDatabase() << endl;
-	cout << tcLight.bc().dumpDatabase() << endl;
+	cnote << block.state();
+	cnote << tcFull.bc().dumpDatabase();
+	cnote << tcLight.bc().dumpDatabase();
 	BOOST_REQUIRE_EQUAL(tcFull.bc().dumpDatabase(), tcLight.bc().dumpDatabase());
 }
 
