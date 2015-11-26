@@ -117,7 +117,7 @@ public:
 	TestBlockChain(TestBlock const& _genesisBlock, bool _noProof = false);
 
 	void reset(TestBlock const& _genesisBlock, bool _noProof = false);
-	void addBlock(TestBlock const& _block);
+	bool addBlock(TestBlock const& _block);
 	vector<TestBlock> syncUncles(vector<TestBlock> const& _uncles);
 	TestBlock const& topBlock() { return m_lastBlock; }
 	BlockChain const& interface() const { return *m_blockChain;}

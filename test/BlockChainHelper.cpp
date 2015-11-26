@@ -453,7 +453,7 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 	m_lastBlock = m_genesisBlock = _genesisBlock;
 }
 
-void TestBlockChain::addBlock(TestBlock const& _block)
+bool TestBlockChain::addBlock(TestBlock const& _block)
 {
 	while (true)
 	{
@@ -466,6 +466,7 @@ void TestBlockChain::addBlock(TestBlock const& _block)
 		catch (FutureTime)
 		{
 			this_thread::sleep_for(chrono::milliseconds(100));
+			break;
 		}
 	}
 
@@ -475,12 +476,16 @@ void TestBlockChain::addBlock(TestBlock const& _block)
 		m_lastBlock = _block;
 
 		//overwrite state in case _block had no State defined (e.x. created from RLP)
-		OverlayDB const& genesisDB = m_genesisBlock.state().db();
-		BlockChain const& blockchain = interface();
-		Block block = (blockchain.genesisBlock(genesisDB));
-		block.sync(blockchain);
+		OverlayDB const& genesisDB = m_genesisBlock.state().db();		
+		Block block = (m_blockChain.get()->genesisBlock(genesisDB));
+		block.sync(*m_blockChain.get());
+
+		//BOOST_REQUIRE(m_lastBlock.blockHeader().hash() == BlockHeader(block.blockData()).hash());
 		m_lastBlock.setState(block.state());
+		return true;
 	}
+
+	return false;
 }
 
 vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)

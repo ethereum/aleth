@@ -786,7 +786,7 @@ Options::Options(int argc, char** argv)
 		{
 			singleTest = true;
 			auto name1 = std::string{argv[i + 1]};
-			if (i + 1 < argc) // two params
+			if (i + 2 < argc) // two params
 			{
 				auto name2 = std::string{argv[i + 2]};
 				if (name2[0] == '-') // not param, another option
