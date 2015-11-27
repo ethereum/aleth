@@ -20,6 +20,9 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 
 	if (${SUBMODULE} STREQUAL "web3jsonrpc")
 		eth_use(${TARGET} ${REQUIRED} Mhd Web3::webthree JsonRpc::Server)
+		if (SOLIDITY)
+			eth_use(${TARGET} ${REQUIRED} Solidity)
+		endif (SOLIDITY)
 		target_link_libraries(${TARGET} ${Web3_WEB3JSONRPC_LIBRARIES})
 	endif()
 
