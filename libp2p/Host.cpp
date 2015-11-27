@@ -320,10 +320,8 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 			if (!pcap)
 				return ps->disconnect(IncompatibleProtocol);
 
-			if (isFramingAllowed)
-				ps->m_capabilities[i] = pcap->newPeerCapability(ps, 0, i, cnt);
-			else
-				ps->m_capabilities[i] = pcap->newPeerCapability(ps, offset, i, 0);
+			shared_ptr<Capability> c = isFramingAllowed ? pcap->newPeerCapability(ps, 0, i, cnt) : pcap->newPeerCapability(ps, offset, i, 0);
+			ps->registerCapability(i, c);
 
 			offset += pcap->messageCount();
 			++cnt;

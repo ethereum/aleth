@@ -210,7 +210,7 @@ bool Session::interpret(PacketType _t, RLP const& _r)
 	}
 	case PingPacket:
 	{
-		clog(NetTriviaSummary) << "Ping" << m_server->id();
+		clog(NetTriviaSummary) << "Ping" << m_info.id;
 		RLPStream s;
 		sealAndSend(prep(s, PongPacket), 0);
 		break;
@@ -272,10 +272,13 @@ void Session::send(bytes&& _msg, uint16_t _protocolID)
 	bool doWrite = false;
 	if (isFramingEnabled())
 	{
-		DEV_GUARDED(x_writeQueue)
+		DEV_GUARDED(x_framing)
 		{
 			doWrite = m_encFrames.empty();
 			auto f = getFraming(_protocolID);
+			if (!f)
+				return;
+
 			f->writer.enque(RLPXPacket(_protocolID, msg));
 			multiplexAll();
 		}
@@ -285,7 +288,7 @@ void Session::send(bytes&& _msg, uint16_t _protocolID)
 	}
 	else
 	{
-		DEV_GUARDED(x_writeQueue)
+		DEV_GUARDED(x_framing)
 		{
 			m_writeQueue.push_back(std::move(_msg));
 			doWrite = (m_writeQueue.size() == 1);
@@ -299,7 +302,7 @@ void Session::send(bytes&& _msg, uint16_t _protocolID)
 void Session::write()
 {
 	bytes const* out;
-	DEV_GUARDED(x_writeQueue)
+	DEV_GUARDED(x_framing)
 	{
 		m_io->writeSingleFramePacket(&m_writeQueue[0], m_writeQueue[0]);
 		out = &m_writeQueue[0];
@@ -317,7 +320,7 @@ void Session::write()
 			return;
 		}
 
-		DEV_GUARDED(x_writeQueue)
+		DEV_GUARDED(x_framing)
 		{
 			m_writeQueue.pop_front();
 			if (m_writeQueue.empty())
@@ -330,7 +333,7 @@ void Session::write()
 void Session::writeFrames()
 {
 	bytes const* out = nullptr;
-	DEV_GUARDED(x_writeQueue)
+	DEV_GUARDED(x_framing)
 	{
 		if (m_encFrames.empty())
 			return;
@@ -351,7 +354,7 @@ void Session::writeFrames()
 			return;
 		}
 
-		DEV_GUARDED(x_writeQueue)
+		DEV_GUARDED(x_framing)
 		{
 			if (!m_encFrames.empty())
 				m_encFrames.pop_front();
@@ -537,7 +540,7 @@ void Session::doReadFrames()
 		if (!checkRead(h256::size, ec, length))
 			return;
 
-		DEV_GUARDED(x_writeQueue)
+		DEV_GUARDED(x_framing)
 		{
 			if (!m_io->authAndDecryptHeader(bytesRef(m_data.data(), length)))
 			{
@@ -571,9 +574,16 @@ void Session::doReadFrames()
 
 			bytesRef frame(m_data.data(), tlen);
 			vector<RLPXPacket> px;
-			DEV_GUARDED(x_writeQueue)
+			DEV_GUARDED(x_framing)
 			{
-				auto v = getFraming(header.protocolId)->reader.demux(*m_io, header, frame);
+				auto f = getFraming(header.protocolId);
+				if (!f)
+				{
+					clog(NetWarn) << "Unknown subprotocol " << header.protocolId;
+					return;
+				}
+
+				auto v = f->reader.demux(*m_io, header, frame);
 				px.swap(v);
 			}
 
@@ -595,12 +605,20 @@ void Session::doReadFrames()
 std::shared_ptr<Session::Framing> Session::getFraming(uint16_t _protocolID)
 {
 	if (m_framing.find(_protocolID) == m_framing.end())
-	{
-		std::shared_ptr<Session::Framing> p(new Session::Framing(_protocolID));
-		m_framing[_protocolID] = p;
-	}
+		return nullptr;
+	else
+		return m_framing[_protocolID];
+}
 
-	return m_framing[_protocolID];
+void Session::registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p)
+{
+	m_capabilities[_desc] = _p;
+
+	if (_p->c_protocolID != 0)
+	{
+		std::shared_ptr<Session::Framing> f(new Session::Framing(_p->c_protocolID));
+		m_framing[_p->c_protocolID] = f;
+	}
 }
 
 void Session::multiplexAll()

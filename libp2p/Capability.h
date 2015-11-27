@@ -58,7 +58,6 @@ protected:
 	void sealAndSend(RLPStream& _s);
 	void addRating(int _r);
 
-public:
 	uint16_t const c_protocolID;
 
 private:

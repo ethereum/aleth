@@ -90,6 +90,8 @@ public:
 	void ensureNodesRequested();
 	void serviceNodesRequest();
 
+	void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p);
+
 	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
 
 private:
@@ -122,7 +124,7 @@ private:
 
 	std::unique_ptr<RLPXFrameCoder> m_io;	///< Transport over which packets are sent.
 	std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
-	Mutex x_writeQueue;						///< Mutex for the write queue.
+	Mutex x_framing;						///< Mutex for the write queue.
 	std::deque<bytes> m_writeQueue;			///< The write queue.
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
