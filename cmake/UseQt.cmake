@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQURIED SUBMODULE)
 
-set(ETH_QT_VERSION 5.5)
+set(ETH_QT_VERSION 5.4)
 
 if (${SUBMODULE} STREQUAL "Core")
 	find_package(Qt5Core ${ETH_QT_VERSION} ${REQUIRED})
