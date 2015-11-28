@@ -125,6 +125,9 @@ void help()
 		<< "    --password <password>  Give a password for a private key." << endl
 		<< "    --sentinel <server>  Set the sentinel for reporting bad blocks or chain issues." << endl
 		<< endl
+		<< "Console mode:" << endl
+		<< "    --script <script>  Run the given script after startup." << endl
+		<< endl
 		<< "Client transacting:" << endl
 		/*<< "    -B,--block-fees <n>  Set the block fee profit in the reference unit, e.g. ¢ (default: 15)." << endl
 		<< "    -e,--ether-price <n>  Set the ether price in the reference unit, e.g. ¢ (default: 30.679)." << endl
@@ -322,6 +325,7 @@ int main(int argc, char** argv)
 	string dbPath;
 //	unsigned prime = 0;
 //	bool yesIReallyKnowWhatImDoing = false;
+	strings scripts;
 
 	/// When attaching.
 	string remoteURL = contentsString(getDataDir("web3") + "/session.url");
@@ -490,6 +494,8 @@ int main(int argc, char** argv)
 			sentinel = argv[++i];
 		else if (arg == "--mine-on-wrong-chain")
 			mineOnWrongChain = true;
+		else if (arg == "--script" && i + 1 < argc)
+			scripts.push_back(argv[++i]);
 		else if (arg == "--format" && i + 1 < argc)
 		{
 			string m = argv[++i];
@@ -540,6 +546,16 @@ int main(int argc, char** argv)
 		else if (arg == "--private" && i + 1 < argc)
 			try {
 				privateChain = argv[++i];
+			}
+			catch (...)
+			{
+				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				return -1;
+			}
+		else if (arg == "--independent" && i + 1 < argc)
+			try {
+				privateChain = argv[++i];
+				noPinning = enableDiscovery = true;
 			}
 			catch (...)
 			{
@@ -1231,7 +1247,7 @@ int main(int argc, char** argv)
 		else
 			web3.addNode(p.first, p.second.first);
 
-	if (bootstrap)
+	if (bootstrap && privateChain.empty())
 		for (auto const& i: Host::pocHosts())
 			web3.requirePeer(i.first, i.second);
 	if (!remoteHost.empty())
@@ -1246,7 +1262,7 @@ int main(int argc, char** argv)
 		unsigned n = c->blockChain().details().number;
 		if (mining)
 			c->startSealing();
-		if (useConsole)
+		if (useConsole || !scripts.empty())
 		{
 #if ETH_JSCONSOLE || !ETH_TRUE
 			SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator);
@@ -1265,9 +1281,16 @@ int main(int argc, char** argv)
 			rpcServer.StartListening();
 
 			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
+
+			for (auto const& s: scripts)
+			{
+				string c = contentsString(s);
+				console.eval(c.empty() ? s : c);
+			}
 			while (!eh.shouldExit())
 			{
-				console.readAndEval();
+				if (useConsole)
+					console.readAndEval();
 				stopSealingAfterXBlocks(c, n, mining);
 			}
 			rpcServer.StopListening();

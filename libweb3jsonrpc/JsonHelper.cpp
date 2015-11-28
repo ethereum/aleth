@@ -368,10 +368,10 @@ TransactionSkeleton toTransactionSkeleton(Json::Value const& _json)
 		ret.gasPrice = jsToU256(_json["gasPrice"].asString());
 
 	if (!_json["data"].empty())							// ethereum.js has preconstructed the data array
-		ret.data = jsToBytes(_json["data"].asString());
+		ret.data = jsToBytes(_json["data"].asString(), OnFailed::Throw);
 
 	if (!_json["code"].empty())
-		ret.data = jsToBytes(_json["code"].asString());
+		ret.data = jsToBytes(_json["code"].asString(), OnFailed::Throw);
 
 	if (!_json["nonce"].empty())
 		ret.nonce = jsToU256(_json["nonce"].asString());
