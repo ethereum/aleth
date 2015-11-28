@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 	js::read_string(s, v);
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Frontier)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));
 
 	for (auto& i: v.get_obj())
 	{
