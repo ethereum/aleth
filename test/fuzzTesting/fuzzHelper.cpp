@@ -406,6 +406,7 @@ BOOST_AUTO_TEST_SUITE(RandomCodeTests)
 
 BOOST_AUTO_TEST_CASE(rndCode)
 {
+	test::TestOutputHelper::initTest();
 	std::string code;
 	cnote << "Testing Random Code: ";
 	try

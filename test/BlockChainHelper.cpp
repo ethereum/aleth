@@ -438,9 +438,10 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)
 
 void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 {
+	(void)_noProof;
 	m_tempDirBlockchain.reset(new TransientDirectory);
-	ChainParams p = _noProof ? ChainParams(_genesisBlock.bytes(), _genesisBlock.accountMap())
-							 : ChainParams(genesisInfo(Network::Test), _genesisBlock.bytes(), _genesisBlock.accountMap());
+	ChainParams p = //_noProof ? ChainParams(genesisInfo(Network::FrontierTest), _genesisBlock.bytes(), _genesisBlock.accountMap()) :
+							ChainParams(genesisInfo(Network::FrontierTest), _genesisBlock.bytes(), _genesisBlock.accountMap());
 
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))
@@ -453,7 +454,7 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 	m_lastBlock = m_genesisBlock = _genesisBlock;
 }
 
-void TestBlockChain::addBlock(TestBlock const& _block)
+bool TestBlockChain::addBlock(TestBlock const& _block)
 {
 	while (true)
 	{
@@ -466,6 +467,7 @@ void TestBlockChain::addBlock(TestBlock const& _block)
 		catch (FutureTime)
 		{
 			this_thread::sleep_for(chrono::milliseconds(100));
+			break;
 		}
 	}
 
@@ -475,12 +477,16 @@ void TestBlockChain::addBlock(TestBlock const& _block)
 		m_lastBlock = _block;
 
 		//overwrite state in case _block had no State defined (e.x. created from RLP)
-		OverlayDB const& genesisDB = m_genesisBlock.state().db();
-		BlockChain const& blockchain = interface();
-		Block block = (blockchain.genesisBlock(genesisDB));
-		block.sync(blockchain);
+		OverlayDB const& genesisDB = m_genesisBlock.state().db();		
+		Block block = (m_blockChain.get()->genesisBlock(genesisDB));
+		block.sync(*m_blockChain.get());
+
+		//BOOST_REQUIRE(m_lastBlock.blockHeader().hash() == BlockHeader(block.blockData()).hash());
 		m_lastBlock.setState(block.state());
+		return true;
 	}
+
+	return false;
 }
 
 vector<TestBlock> TestBlockChain::syncUncles(vector<TestBlock> const& uncles)

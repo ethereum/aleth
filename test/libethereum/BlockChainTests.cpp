@@ -164,7 +164,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					blObj.erase("blockHeaderPremine");
 				}
 
-				cnote << "Mining block at test " << testname;
+				cnote << "Mining block" <<  importBlockNumber << "for chain" << chainname << "at test " << testname;
 				block.mine(blockchain);
 				cnote << "Block mined with...";
 				cnote << "Transactions: " << block.transactionQueue().topTransactions(100).size();
@@ -174,10 +174,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				checkBlocks(block, alterBlock, testname);
 
 				if (blObj.count("blockHeader"))
-				{
 					overwriteBlockHeaderForTest(blObj.at("blockHeader").get_obj(), alterBlock, *chainMap[chainname]);
-					alterBlock.noteDirty();
-				}
 
 				blObj["rlp"] = toHex(alterBlock.bytes(), 2, HexPrefix::Add);
 				blObj["blockHeader"] = writeBlockHeaderToJson(alterBlock.blockHeader());
@@ -194,8 +191,10 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				compareBlocks(block, alterBlock);
 				try
 				{
-					blockchain.addBlock(alterBlock);
-					testChain.addBlock(alterBlock);
+					blockchain.addBlock(alterBlock);					
+					if (testChain.addBlock(alterBlock))
+						cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testname;
+
 					if (test::Options::get().checkState == true)
 						BOOST_REQUIRE_MESSAGE(blObj.count("expectException") == 0, "block import expected exception, but no exeption was thrown!");
 					if (o.count("noBlockChainHistory") == 0)
@@ -388,7 +387,8 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 			ho.count("transactionsTrie") ? h256(ho["transactionsTrie"].get_str()) : header.transactionsRoot(),
 			ho.count("receiptTrie") ? h256(ho["receiptTrie"].get_str()) : header.receiptsRoot(),
 			ho.count("bloom") ? LogBloom(ho["bloom"].get_str()) : header.logBloom(),
-			ho.count("difficulty") ? toInt(ho["difficulty"]) : header.difficulty(),
+			ho.count("difficulty") ? toInt(ho["difficulty"]) :
+									 ho.count("relDifficulty") ? header.difficulty() + toInt(ho["relDifficulty"]) : header.difficulty(),
 			ho.count("number") ? toInt(ho["number"]) : header.number(),
 			ho.count("gasLimit") ? toInt(ho["gasLimit"]) : header.gasLimit(),
 			ho.count("gasUsed") ? toInt(ho["gasUsed"]) : header.gasUsed(),
@@ -444,8 +444,11 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 		}
 	}
 
-	if (ho.count("mixHash") || ho.count("nonce"))
+	if (ho.count("mixHash") || ho.count("nonce") || !ho.count("updatePoW"))
+	{
 		_block.setBlockHeader(tmp);
+		_block.noteDirty(); //disable integrity check in test block
+	}
 	else
 	{
 		_block.setBlockHeader(tmp);

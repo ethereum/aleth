@@ -174,7 +174,7 @@ public:
 	void setNetworkId(u256 const& _n) override;
 
 	/// Get the seal engine.
-	SealEngineFace* sealEngine() const { return bc().sealEngine(); }
+	SealEngineFace* sealEngine() const override { return bc().sealEngine(); }
 
 	// Debug stuff:
 

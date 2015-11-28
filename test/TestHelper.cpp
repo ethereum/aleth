@@ -25,6 +25,7 @@
 #include <chrono>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libethereum/Client.h>
 #include <libevm/ExtVMFace.h>
 #include <liblll/Compiler.h>
@@ -125,7 +126,7 @@ bytes ImportTest::executeTest()
 	eth::State tmpState = m_statePre;
 	try
 	{
-		unique_ptr<SealEngineFace> se(ChainParams().createSealEngine());
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Network::FrontierTest)).createSealEngine());
 		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();
@@ -786,7 +787,7 @@ Options::Options(int argc, char** argv)
 		{
 			singleTest = true;
 			auto name1 = std::string{argv[i + 1]};
-			if (i + 1 < argc) // two params
+			if (i + 2 < argc) // two params
 			{
 				auto name2 = std::string{argv[i + 2]};
 				if (name2[0] == '-') // not param, another option
@@ -909,13 +910,22 @@ void Listener::notifyTestFinished()
 
 size_t TestOutputHelper::m_currTest = 0;
 size_t TestOutputHelper::m_maxTests = 0;
-string TestOutputHelper::m_currentTestName = " n/a ";
+string TestOutputHelper::m_currentTestName = "n/a";
+string TestOutputHelper::m_currentTestCaseName = "n/a";
 
 using namespace boost;
+void TestOutputHelper::initTest()
+{
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+	m_maxTests = 1;
+	m_currTest = 0;
+}
+
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
 {
-	std::string testCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + testCaseName + "\": " << std::endl;
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _v.get_obj().size();
 	m_currTest = 0;	
 }

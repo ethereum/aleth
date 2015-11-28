@@ -39,6 +39,7 @@ BOOST_AUTO_TEST_SUITE(libethereum)
 
 BOOST_AUTO_TEST_CASE(AccountDiff)
 {
+	test::TestOutputHelper::initTest();
 	dev::eth::AccountDiff accDiff;
 
 	// Testing changeType
@@ -122,6 +123,7 @@ BOOST_AUTO_TEST_CASE(AccountDiff)
 
 BOOST_AUTO_TEST_CASE(StateDiff)
 {
+	test::TestOutputHelper::initTest();
 	dev::eth::StateDiff stateDiff;
 	dev::eth::AccountDiff accDiff;
 

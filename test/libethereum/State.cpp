@@ -40,20 +40,18 @@ using namespace dev::eth;
 
 namespace dev {  namespace test {
 
-void doStateTests(json_spirit::mValue& v, bool _fillin)
+void doStateTests(json_spirit::mValue& _v, bool _fillin)
 {
-	string testname;
-	for (auto& i: v.get_obj())
-	{
-		mObject& o = i.second.get_obj();
-		if (test::Options::get().singleTest && test::Options::get().singleTestName != i.first)
-		{
-			o.clear();
-			continue;
-		}
+	if (string(boost::unit_test::framework::current_test_case().p_name) != "stRandom")
+		TestOutputHelper::initTest(_v);
 
-		cnote << i.first;
-		testname = "(" + i.first + ") ";
+	for (auto& i: _v.get_obj())
+	{
+		string testname = i.first;
+		json_spirit::mObject& o = i.second.get_obj();
+
+		if (!TestOutputHelper::passTest(o, testname))
+			continue;
 
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
@@ -231,6 +229,9 @@ BOOST_AUTO_TEST_CASE(stRandom)
 	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
 		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
 			testFiles.push_back(iterator->path());
+
+	test::TestOutputHelper::initTest();
+	test::TestOutputHelper::setMaxTests(testFiles.size());
 
 	for (auto& path: testFiles)
 	{

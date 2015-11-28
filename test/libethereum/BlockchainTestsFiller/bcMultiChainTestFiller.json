@@ -22,7 +22,7 @@
                 "balance" : "10000000000120"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "5"
+                "nonce" : "4"
             }
         },
         "pre" : {
@@ -77,9 +77,6 @@
             {
         "chainname" : "A",
         "blocknumber" : "3",
-        "blockHeader" : {
-            "RelTimestamp" : "24"
-        },
                 "transactions" : [
                     {
                         "data" : "",
@@ -131,9 +128,6 @@
             {
         "chainname" : "B",
         "blocknumber" : "3",
-        "blockHeader" : {
-            "RelTimestamp" : "4"
-        },
                 "transactions" : [
                     {
                         "data" : "0x3453454",
@@ -151,26 +145,6 @@
                         "nonce" : "3",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "20"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-        "chainname" : "B",
-        "blocknumber" : "4",
-        "blockHeader" : {
-            "RelTimestamp" : "4"
-        },
-                "transactions" : [
-            	    {
-                        "data" : "",
-                        "gasLimit" : "310509",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "a95e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "20"
                     }
                 ],
@@ -253,7 +227,8 @@
         "chainname" : "A",
         "blocknumber" : "3",
         "blockHeader" : {
-            "RelTimestamp" : "24"
+            "RelTimestamp" : "24",
+	    "updatePoW" : "1"
         },
                 "transactions" : [
                     {
@@ -307,7 +282,8 @@
         "chainname" : "B",
         "blocknumber" : "3",
         "blockHeader" : {
-            "RelTimestamp" : "4"
+            "RelTimestamp" : "4",
+	    "updatePoW" : "1"
         },
                 "transactions" : [
                     {
@@ -355,10 +331,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "30"
+                "balance" : "320"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "3"
+                "nonce" : "4"
             }
         },
         "pre" : {
@@ -468,7 +444,7 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "100"
                     },
-            {
+           	    {
                         "data" : "",
                         "gasLimit" : "31509",
                         "gasPrice" : "1",
@@ -477,6 +453,14 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "20"
                     }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+        "chainname" : "B",
+        "blocknumber" : "4",
+                "transactions" : [
                 ],
                 "uncleHeaders" : [
                 ]
@@ -600,7 +584,7 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "100"
                     },
-            {
+            	    {
                         "data" : "",
                         "gasLimit" : "31509",
                         "gasPrice" : "1",
@@ -609,6 +593,14 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "20"
                     }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+        "chainname" : "B",
+        "blocknumber" : "4",
+                "transactions" : [
                 ],
                 "uncleHeaders" : [
                 ]
@@ -652,12 +644,15 @@
             "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
         },
         "expect" : {
+	    "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "10"
+            },
             "ec0e71ad0a90ffe1909d27dac207f7680abba42d" : {
-                "balance" : "1",
-        "storage" : {
-            "0x00" : "0x00",
-            "0x01" : "0x00"
-        }
+                "balance" : "2",
+		"storage" : {
+		    "0x00" : "0x00",
+		    "0x01" : "0x00"
+		}
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "nonce" : "3"
@@ -694,7 +689,7 @@
         "blocknumber" : "2",
                 "transactions" : [
                     {
-            "data" : "contract main { int a; function run() returns(int) { a = 5; return 5; }}",
+            		"data" : "contract main { int a; function run() returns(int) { a = 5; return 5; }}",
                         "data" : "0x6060604052606e8060106000396000f360606040526000357c010000000000000000000000000000000000000000000000000000000090048063c0406226146037576035565b005b60406004506056565b6040518082815260200191505060405180910390f35b6000600560006000508190555060059050606b565b9056",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
@@ -712,7 +707,8 @@
         "blocknumber" : "3",
                 "transactions" : [
                     {
-                        "data" : "",
+			"data" : "run()",
+                        "data" : "0xc0406226",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
                         "nonce" : "2",
@@ -728,9 +724,16 @@
         "chainname" : "A",
         "blocknumber" : "3",
                 "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+        "chainname" : "A",
+        "blocknumber" : "4",
+                "transactions" : [
                     {
-            "data" : "run()",
-                        "data" : "0xc0406226",
+                        "data" : "",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
                         "nonce" : "2",
@@ -1335,10 +1338,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "620"
+                "balance" : "621"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "7"
+                "nonce" : "8"
             }
         },
         "pre" : {
@@ -1448,7 +1451,7 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "100"
                     },
-            {
+            	    {
                         "data" : "",
                         "gasLimit" : "31509",
                         "gasPrice" : "1",
@@ -1562,6 +1565,23 @@
                 ],
                 "uncleHeaders" : [
                 ]
+            },
+            {
+        "chainname" : "B",
+        "blocknumber" : "7",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "31059",
+                        "gasPrice" : "1",
+                        "nonce" : "7",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "1"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
             }
         ]
     },
@@ -1586,10 +1606,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "30"
+                "balance" : "320"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "3"
+                "nonce" : "4"
             }
         },
         "pre" : {
@@ -1627,23 +1647,6 @@
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
                         "nonce" : "1",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-        "chainname" : "A",
-        "blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "10"
@@ -1699,7 +1702,7 @@
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "100"
                     },
-            {
+            	    {
                         "data" : "",
                         "gasLimit" : "31509",
                         "gasPrice" : "1",
@@ -1728,9 +1731,9 @@
                     }
                 ],
                 "uncleHeaders" : [
-            {
-            "chainname" : "A",
-            "populateFromBlock" : "2"
+           	    {
+            		"chainname" : "A",
+            		"populateFromBlock" : "2"
                     }
                 ]
             }

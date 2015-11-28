@@ -33,11 +33,13 @@ namespace eth
 /// The network id.
 enum class Network
 {
-	Olympic = 0,
-	Frontier = 1,
-	Morden = 2,
-	Test = 70,
-	Special = 0xff
+	Olympic = 0,			///< Normal Olympic chain.
+	Frontier = 1,			///< Normal Frontier/Homestead chain.
+	Morden = 2,				///< Normal Morden chain.
+	Test = 70,				///< Normal Frontier/Homestead chain without all the premine.
+	FrontierTest = 71,		///< Just test the Frontier-era characteristics "forever" (no Homestead portion).
+	HomesteadTest = 72,		///< Just test the Homestead-era characteristics "forever" (no Frontier portion).
+	Special = 0xff			///< Something else.
 };
 
 std::string const& genesisInfo(Network _n);

@@ -40,6 +40,7 @@ BOOST_AUTO_TEST_SUITE(BasicTests)
 
 BOOST_AUTO_TEST_CASE(emptySHA3Types)
 {
+	test::TestOutputHelper::initTest();
 	h256 emptyListSHA3(fromHex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"));
 	BOOST_REQUIRE_EQUAL(emptyListSHA3, EmptyListSHA3);
 
@@ -49,6 +50,7 @@ BOOST_AUTO_TEST_CASE(emptySHA3Types)
 
 BOOST_AUTO_TEST_CASE(genesis_tests)
 {
+	test::TestOutputHelper::initTest();
 	string testPath = test::getTestPath();
 	testPath += "/BasicTests";
 
