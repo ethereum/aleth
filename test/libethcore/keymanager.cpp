@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_SUITE(KeyManagerTests)
 
 BOOST_AUTO_TEST_CASE(KeyInfoDefaultConstructor)
 {
-	cnote << "KeyInfoDefaultConstructor";
+	test::TestOutputHelper::initTest();
 	KeyInfo kiDefault;
 	BOOST_CHECK_EQUAL(kiDefault.accountName, "");
 	BOOST_CHECK(kiDefault.passHash == h256());
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(KeyInfoDefaultConstructor)
 
 BOOST_AUTO_TEST_CASE(KeyInfoConstructor)
 {
-	cnote << "KeyInfoConstructor";
+	test::TestOutputHelper::initTest();
 	h256 passHash("0x2a");
 	string accountName = "myAccount";
 	KeyInfo ki(passHash, accountName);
@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(KeyInfoConstructor)
 
 BOOST_AUTO_TEST_CASE(KeyManagerConstructor)
 {
-	cnote << "KeyManagerConstructor";
+	test::TestOutputHelper::initTest();
 	KeyManager km;
 	BOOST_CHECK_EQUAL(km.keysFile(), km.defaultPath());
 	BOOST_CHECK_EQUAL(km.defaultPath(), getDataDir("ethereum") + "/keys.info");
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(KeyManagerConstructor)
 
 BOOST_AUTO_TEST_CASE(KeyManagerKeysFile)
 {
-	cnote << "KeyManagerKeysFile";
+	test::TestOutputHelper::initTest();
 	KeyManager km;
 	string password = "hardPassword";
 	BOOST_CHECK(!km.load(password));
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_CASE(KeyManagerKeysFile)
 
 BOOST_AUTO_TEST_CASE(KeyManagerHints)
 {
-	cnote << "KeyManagerHints";
+	test::TestOutputHelper::initTest();
 	KeyManager km;
 	string password = "hardPassword";
 
@@ -107,6 +107,7 @@ BOOST_AUTO_TEST_CASE(KeyManagerHints)
 
 BOOST_AUTO_TEST_CASE(KeyManagerAccounts)
 {
+	test::TestOutputHelper::initTest();
 	string password = "hardPassword";
 
 	TransientDirectory tmpDir;
@@ -122,6 +123,7 @@ BOOST_AUTO_TEST_CASE(KeyManagerAccounts)
 
 BOOST_AUTO_TEST_CASE(KeyManagerKill)
 {
+	test::TestOutputHelper::initTest();
 	string password = "hardPassword";
 	TransientDirectory tmpDir;
 	KeyPair kp = KeyPair::create();

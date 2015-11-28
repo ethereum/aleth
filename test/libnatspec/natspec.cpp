@@ -24,6 +24,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libnatspec/NatspecExpressionEvaluator.h>
+#include <test/TestHelper.h>
 
 using namespace std;
 
@@ -31,6 +32,7 @@ BOOST_AUTO_TEST_SUITE(natspec)
 
 BOOST_AUTO_TEST_CASE(natspec_eval_function_exists)
 {
+	dev::test::TestOutputHelper::initTest();
 	// given
 	NatspecExpressionEvaluator e;
 	// when
@@ -41,6 +43,7 @@ BOOST_AUTO_TEST_CASE(natspec_eval_function_exists)
 
 BOOST_AUTO_TEST_CASE(natspec_js_eval)
 {
+	dev::test::TestOutputHelper::initTest();
 	// given
 	NatspecExpressionEvaluator e;
 	// when
@@ -51,6 +54,7 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval)
 
 BOOST_AUTO_TEST_CASE(natspec_create_custom_function)
 {
+	dev::test::TestOutputHelper::initTest();
 	// given
 	NatspecExpressionEvaluator e;
 	// when
@@ -64,6 +68,7 @@ BOOST_AUTO_TEST_CASE(natspec_create_custom_function)
 
 BOOST_AUTO_TEST_CASE(natspec_js_eval_separated_expressions)
 {
+	dev::test::TestOutputHelper::initTest();
 	// given
 	NatspecExpressionEvaluator e;
 	// when
@@ -74,6 +79,7 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval_separated_expressions)
 
 BOOST_AUTO_TEST_CASE(natspec_js_eval_input_params)
 {
+	dev::test::TestOutputHelper::initTest();
 	// given
 	char const* abi = R"([
 	{
@@ -114,6 +120,7 @@ BOOST_AUTO_TEST_CASE(natspec_js_eval_input_params)
 
 BOOST_AUTO_TEST_CASE(natspec_js_eval_error)
 {
+	dev::test::TestOutputHelper::initTest();
 	// given
 	NatspecExpressionEvaluator e;
 	// when
