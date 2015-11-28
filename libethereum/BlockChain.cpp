@@ -807,7 +807,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	h256 common;
 	// This might be the new best block...
 	h256 last = currentHash();
-	if (td > details(last).totalDifficulty || (td == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
+	if (td > details(last).totalDifficulty || (m_sealEngine->chainParams().tieBreakingGas && td == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
 	{
 		// don't include bi.hash() in treeRoute, since it's not yet in details DB...
 		// just tack it on afterwards.
