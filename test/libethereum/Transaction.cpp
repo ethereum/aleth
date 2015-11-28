@@ -36,7 +36,8 @@ BOOST_AUTO_TEST_CASE(TransactionGasRequired)
 	BOOST_CHECK_MESSAGE(tr.gasRequired(FrontierSchedule) == 21952, "Transaction::GasRequired() has changed!");
 }
 
-BOOST_AUTO_TEST_CASE(TransactionConstructor)
+// Out of gas intrinsic no longer checked since it depends on chain params & context.
+/*BOOST_AUTO_TEST_CASE(TransactionConstructor)
 {
 	test::TestOutputHelper::initTest();
 	bool wasException = false;
@@ -54,7 +55,7 @@ BOOST_AUTO_TEST_CASE(TransactionConstructor)
 	}
 
 	BOOST_CHECK_MESSAGE(wasException, "Expected OutOfGasIntrinsic exception to be thrown at TransactionConstructor test");
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
 {

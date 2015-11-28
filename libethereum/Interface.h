@@ -244,7 +244,7 @@ public:
 	virtual void setNetworkId(u256 const&) {}
 
 	/// Get the seal engine.
-	SealEngineFace* sealEngine() const { return nullptr; }
+	virtual SealEngineFace* sealEngine() const { return nullptr; }
 
 protected:
 	int m_default = PendingBlock;

@@ -113,12 +113,6 @@ public:
 
 	/// Constructs a transaction from the given RLP.
 	explicit Transaction(bytes const& _rlp, CheckTransaction _checkSig): Transaction(&_rlp, _checkSig) {}
-
-	/// @returns true if the transaction contains enough gas for the basic payment.
-	bigint gasRequired(EVMSchedule const& _es, u256 const& _gas = 0) const { return gasRequired(m_type == TransactionBase::ContractCreation, &m_data, _es, _gas); }
-
-	/// Get the fee associated for a transaction with the given data.
-	static bigint gasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas = 0);
 };
 
 /// Nice name for vector of Transaction.

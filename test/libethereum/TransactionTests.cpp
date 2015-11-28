@@ -20,6 +20,9 @@
  * Transaction test functions.
  */
 
+#include <libethcore/SealEngine.h>
+#include <libethashseal/GenesisInfo.h>
+#include <libethereum/ChainParams.h>
 #include "../TestHelper.h"
 #include "test/fuzzTesting/fuzzHelper.h"
 
@@ -32,6 +35,10 @@ namespace dev {  namespace test {
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Network::FrontierTest)).createSealEngine());
+	BlockHeader bh;
+	bh.setNumber(0);
+
 	TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
@@ -41,7 +48,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
-		if (_fillin)
+			if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
 			mObject tObj = o["transaction"].get_obj();
@@ -55,6 +62,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
+				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
 
 				o["sender"] = toString(txFromFields.sender());				
 				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
@@ -97,6 +105,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				bytes stream = importByteArray(o["rlp"].get_str());
 				RLP rlp(stream);
 				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
+				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 			}

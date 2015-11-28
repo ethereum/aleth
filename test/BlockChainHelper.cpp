@@ -438,6 +438,7 @@ TestBlockChain::TestBlockChain(TestBlock const& _genesisBlock, bool _noProof)
 
 void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 {
+	(void)_noProof;
 	m_tempDirBlockchain.reset(new TransientDirectory);
 	ChainParams p = //_noProof ? ChainParams(genesisInfo(Network::FrontierTest), _genesisBlock.bytes(), _genesisBlock.accountMap()) :
 							ChainParams(genesisInfo(Network::FrontierTest), _genesisBlock.bytes(), _genesisBlock.accountMap());

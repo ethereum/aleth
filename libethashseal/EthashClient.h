@@ -46,7 +46,7 @@ public:
 		WithExisting _forceAction = WithExisting::Trust
 	);
 
-	Ethash* sealEngine() const;
+	Ethash* ethash() const;
 
 	/// Enable/disable precomputing of the DAG for next epoch
 	void setShouldPrecomputeDAG(bool _precompute);

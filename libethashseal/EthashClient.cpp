@@ -56,20 +56,20 @@ EthashClient::EthashClient(
 	asEthashClient(*this);
 }
 
-Ethash* EthashClient::sealEngine() const
+Ethash* EthashClient::ethash() const
 {
 	return dynamic_cast<Ethash*>(Client::sealEngine());
 }
 
 bool EthashClient::isMining() const
 {
-	return sealEngine()->farm().isMining();
+	return ethash()->farm().isMining();
 }
 
 WorkingProgress EthashClient::miningProgress() const
 {
 	if (isMining())
-		return sealEngine()->farm().miningProgress();
+		return ethash()->farm().miningProgress();
 	return WorkingProgress();
 }
 
@@ -97,13 +97,13 @@ std::tuple<h256, h256, h256> EthashClient::getEthashWork()
 	else
 		// otherwise, set this to true so that it gets prepped next time.
 		m_remoteWorking = true;
-	sealEngine()->manuallySetWork(m_sealingInfo);
+	ethash()->manuallySetWork(m_sealingInfo);
 	return std::tuple<h256, h256, h256>(m_sealingInfo.hash(WithoutSeal), Ethash::seedHash(m_sealingInfo), Ethash::boundary(m_sealingInfo));
 }
 
 bool EthashClient::submitEthashWork(h256 const& _mixHash, h64 const& _nonce)
 {
-	sealEngine()->manuallySubmitWork(_mixHash, _nonce);
+	ethash()->manuallySubmitWork(_mixHash, _nonce);
 	return true;
 }
 
