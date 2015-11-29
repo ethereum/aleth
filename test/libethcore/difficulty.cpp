@@ -92,12 +92,6 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of 'difficulty.json' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
 
-<<<<<<< HEAD
-=======
-	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));
-
->>>>>>> 0fa50373a605f28b17bdd3ecf2313ecf83557c37
 	for (auto& i: v.get_obj())
 	{
 		js::mObject o = i.second.get_obj();
@@ -184,7 +178,7 @@ BOOST_AUTO_TEST_CASE(basicDifficultyTest)
 	testPath += "/BasicTests/difficulty.json";
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::::Olympic)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Olympic)));
 
 	testDifficulty(testPath, sealEngine);
 }
