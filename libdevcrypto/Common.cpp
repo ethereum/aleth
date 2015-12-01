@@ -231,7 +231,6 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 #else
 	s = Secp256k1PP::get()->sign(_k, _hash);
 #endif
-	ss.v = v;
 	if (ss.s > c_secp256k1n / 2)
 	{
 		ss.v = ss.v ^ 1;
