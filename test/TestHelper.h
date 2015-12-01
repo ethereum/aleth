@@ -206,7 +206,7 @@ public:
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;
-	eth::Network sealEngine = eth::Network::FrontierTest; ///< set seal engine (Frontier, Homestead, ...)
+	eth::Network sealEngineNetwork = eth::Network::FrontierTest; ///< set seal engine (Frontier, Homestead, ...)
 
 	/// Test selection
 	/// @{
