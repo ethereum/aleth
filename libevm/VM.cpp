@@ -66,6 +66,10 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	static const auto c_metrics = metrics();
 	auto& metric = c_metrics[static_cast<size_t>(_inst)];
 
+	// Pre-homstead
+	if (!m_schedule.haveDelegateCall && _inst == Instruction::DELEGATECALL)
+		BOOST_THROW_EXCEPTION(BadInstruction());
+
 	if (metric.gasPriceTier == InvalidTier)
 		BOOST_THROW_EXCEPTION(BadInstruction());
 
@@ -153,14 +157,22 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
-		runGas = (bigint)m_schedule.callGas + m_stack[m_stack.size() - 1];
-		if (_inst != Instruction::CALLCODE && !_ext.exists(asAddress(m_stack[m_stack.size() - 2])))
-			runGas += m_schedule.callNewAccountGas;
-		if (m_stack[m_stack.size() - 3] > 0)
-			runGas += m_schedule.callValueTransferGas;
-		newTempSize = std::max(memNeed(m_stack[m_stack.size() - 6], m_stack[m_stack.size() - 7]), memNeed(m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]));
-		break;
+	case Instruction::DELEGATECALL:
+	{
+		runGas = (bigint)m_stack[m_stack.size() - 1];
+		if (_inst != Instruction::DELEGATECALL)
+			runGas += m_schedule.callGas;
 
+		if (_inst == Instruction::CALL && !_ext.exists(asAddress(m_stack[m_stack.size() - 2])))
+			runGas += m_schedule.callNewAccountGas;
+
+		if (_inst != Instruction::DELEGATECALL && m_stack[m_stack.size() - 3] > 0)
+			runGas += m_schedule.callValueTransferGas;
+
+		unsigned sizesOffset = _inst == Instruction::DELEGATECALL ? 3 : 4;
+		newTempSize = std::max(memNeed(m_stack[m_stack.size() - sizesOffset - 2], m_stack[m_stack.size() - sizesOffset - 3]), memNeed(m_stack[m_stack.size() - sizesOffset], m_stack[m_stack.size() - sizesOffset - 1]));
+		break;
+	}
 	case Instruction::CREATE:
 	{
 		newTempSize = memNeed(m_stack[m_stack.size() - 2], m_stack[m_stack.size() - 3]);
@@ -629,16 +641,28 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 		}
 		case Instruction::CALL:
 		case Instruction::CALLCODE:
+		case Instruction::DELEGATECALL:
 		{
 			CallParameters callParams;
+
 			callParams.gas = m_stack.back();
-			if (m_stack[m_stack.size() - 3] > 0)
+			if (inst != Instruction::DELEGATECALL && m_stack[m_stack.size() - 3] > 0)
 				callParams.gas += m_schedule.callStipend;
 			m_stack.pop_back();
+
 			callParams.codeAddress = asAddress(m_stack.back());
 			m_stack.pop_back();
-			callParams.value = m_stack.back();
-			m_stack.pop_back();
+
+			if (inst == Instruction::DELEGATECALL)
+			{
+				callParams.apparentValue = _ext.value;
+				callParams.valueTransfer = 0;
+			}
+			else
+			{
+				callParams.apparentValue = callParams.valueTransfer = m_stack.back();
+				m_stack.pop_back();
+			}
 
 			unsigned inOff = (unsigned)m_stack.back();
 			m_stack.pop_back();
@@ -649,10 +673,10 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			unsigned outSize = (unsigned)m_stack.back();
 			m_stack.pop_back();
 
-			if (_ext.balance(_ext.myAddress) >= callParams.value && _ext.depth < 1024)
+			if (_ext.balance(_ext.myAddress) >= callParams.valueTransfer && _ext.depth < 1024)
 			{
 				callParams.onOp = _onOp;
-				callParams.senderAddress = _ext.myAddress;
+				callParams.senderAddress = inst == Instruction::DELEGATECALL ? _ext.caller : _ext.myAddress;
 				callParams.receiveAddress = inst == Instruction::CALL ? callParams.codeAddress : callParams.senderAddress;
 				callParams.data = bytesConstRef(m_temp.data() + inOff, inSize);
 				callParams.out = bytesRef(m_temp.data() + outOff, outSize);

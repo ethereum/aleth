@@ -48,7 +48,7 @@ h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpF
 
 bool FakeExtVM::call(CallParameters& _p)
 {
-	Transaction t(_p.value, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
+	Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
 	callcreates.push_back(t);
 	return true;
 }
