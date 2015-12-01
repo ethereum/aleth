@@ -32,7 +32,6 @@
 #include <boost/algorithm/string/trim_all.hpp>
 
 #include <libdevcore/FileSystem.h>
-#include <libevmcore/Instruction.h>
 #include <libdevcore/StructuredLogger.h>
 #include <libethashseal/EthashAux.h>
 #include <libevm/VM.h>
@@ -80,7 +79,6 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 using namespace boost::algorithm;
-using dev::eth::Instruction;
 
 static std::atomic<bool> g_silence = {false};
 
