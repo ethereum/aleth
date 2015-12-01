@@ -233,6 +233,8 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 		ss.s = h256(c_secp256k1n - u256(ss.s));
 	}
 
+	assert(ss.s <= c_secp256k1n / 2);
+
 	return s;
 #else
 	return Secp256k1PP::get()->sign(_k, _hash);
