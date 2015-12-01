@@ -309,7 +309,6 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 			return;
 		}
 
-		bool const isFramingAllowed = Session::isFramingAllowedForVersion(protocolVersion);
 		unsigned offset = (unsigned)UserPacket;
 		uint16_t cnt = 1;
 
@@ -320,12 +319,15 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 			if (!pcap)
 				return ps->disconnect(IncompatibleProtocol);
 
-			shared_ptr<Capability> c = isFramingAllowed ? pcap->newPeerCapability(ps, 0, i, cnt) : pcap->newPeerCapability(ps, offset, i, 0);
-			ps->registerCapability(i, c);
-
-			offset += pcap->messageCount();
-			++cnt;
+			if (Session::isFramingAllowedForVersion(protocolVersion))
+				pcap->newPeerCapability(ps, 0, i, cnt++);
+			else
+			{
+				pcap->newPeerCapability(ps, offset, i, 0);
+				offset += pcap->messageCount();
+			}
 		}
+
 		ps->start();
 		m_sessions[_id] = ps;
 	}

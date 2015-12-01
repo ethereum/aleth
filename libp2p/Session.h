@@ -91,6 +91,7 @@ public:
 	void serviceNodesRequest();
 
 	void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p);
+	void registerFraming(uint16_t _id);
 
 	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
 

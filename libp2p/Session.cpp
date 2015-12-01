@@ -41,6 +41,7 @@ Session::Session(Host* _h, unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLP
 	m_info(_info),
 	m_ping(chrono::steady_clock::time_point::max())
 {
+	registerFraming(0);
 	m_peer->m_lastDisconnect = NoDisconnect;
 	m_lastReceived = m_connect = chrono::steady_clock::now();
 	DEV_GUARDED(x_info)
@@ -580,6 +581,7 @@ void Session::doReadFrames()
 				if (!f)
 				{
 					clog(NetWarn) << "Unknown subprotocol " << header.protocolId;
+					drop(BadProtocol);
 					return;
 				}
 
@@ -612,12 +614,21 @@ std::shared_ptr<Session::Framing> Session::getFraming(uint16_t _protocolID)
 
 void Session::registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p)
 {
-	m_capabilities[_desc] = _p;
-
-	if (_p->c_protocolID != 0)
+	DEV_GUARDED(x_framing)
 	{
-		std::shared_ptr<Session::Framing> f(new Session::Framing(_p->c_protocolID));
-		m_framing[_p->c_protocolID] = f;
+		m_capabilities[_desc] = _p;
+	}
+}
+
+void Session::registerFraming(uint16_t _id)
+{
+	DEV_GUARDED(x_framing)
+	{
+		if (m_framing.find(_id) == m_framing.end())
+		{
+			std::shared_ptr<Session::Framing> f(new Session::Framing(_id));
+			m_framing[_id] = f;
+		}
 	}
 }
 
