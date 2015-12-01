@@ -251,7 +251,7 @@ bool Executive::execute()
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _gas, _value, _data, {}, {}};
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _gas, _value, _value, _data, {}, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 
@@ -281,11 +281,11 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.value, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
-	m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.value);
+	m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.valueTransfer);
 
 	return !m_ext;
 }

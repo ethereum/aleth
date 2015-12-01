@@ -65,7 +65,11 @@ extern "C"
 		EVMSchedule schedule = _env->evmSchedule(); // TODO: maybe memoise?
 
 		CallParameters params;
-		params.value = jit2eth(*_value);
+
+		// TODO: HOMESTEAD: this will not work for DELEGATECALL
+		params.apparentValue = jit2eth(*_value);
+		params.valueTransfer = jit2eth(*_value);
+
 		params.senderAddress = _env->myAddress;
 		params.receiveAddress = right160(*_receiveAddress);
 		params.codeAddress = right160(*_codeAddress);
@@ -81,7 +85,7 @@ extern "C"
 		if (isCall && !_env->exists(params.receiveAddress))
 			*io_gas -= static_cast<int64_t>(schedule.callNewAccountGas); // no underflow, *io_gas non-negative before
 
-		if (params.value > 0) // value transfer
+		if (params.valueTransfer > 0) // value transfer TODO: HOMESTEAD: check this is valid against the EVM.
 		{
 			/*static*/ assert(schedule.callValueTransferGas > schedule.callStipend && "Overflow possible");
 			*io_gas -= static_cast<int64_t>(schedule.callValueTransferGas); // no underflow
@@ -93,7 +97,7 @@ extern "C"
 
 		auto ret = false;
 		params.gas = u256{_callGas};
-		if (_env->balance(_env->myAddress) >= params.value && _env->depth < 1024)
+		if (_env->balance(_env->myAddress) >= params.valueTransfer && _env->depth < 1024)
 			ret = _env->call(params);
 
 		*io_gas += static_cast<int64_t>(params.gas); // it is never more than initial _callGas
