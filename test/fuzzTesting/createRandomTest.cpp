@@ -193,7 +193,7 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 	json_spirit::mValue v;
 	try
 	{
-		std::string newTest = _testString;		
+		std::string newTest = _testString;
 		dev::test::RandomCode::parseTestWithTypes(newTest);
 		json_spirit::read_string(newTest, v);
 		_doTests(v, true);
