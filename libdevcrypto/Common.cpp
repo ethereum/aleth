@@ -220,25 +220,25 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 
 Signature dev::sign(Secret const& _k, h256 const& _hash)
 {
-#ifdef ETH_HAVE_SECP256K1
 	Signature s;
+	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
+
+#ifdef ETH_HAVE_SECP256K1
 	int v;
 	if (!secp256k1_ecdsa_sign_compact(Secp256k1Context::get(), _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
 		return Signature();
-	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
+	ss.v = v;
+#else
+	s = Secp256k1PP::get()->sign(_k, _hash);
+#endif
 	ss.v = v;
 	if (ss.s > c_secp256k1n / 2)
 	{
 		ss.v = ss.v ^ 1;
 		ss.s = h256(c_secp256k1n - u256(ss.s));
 	}
-
 	assert(ss.s <= c_secp256k1n / 2);
-
 	return s;
-#else
-	return Secp256k1PP::get()->sign(_k, _hash);
-#endif
 }
 
 bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
