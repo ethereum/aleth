@@ -35,7 +35,7 @@ namespace dev {  namespace test {
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
-	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Network::FrontierTest)).createSealEngine());
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
 	BlockHeader bh;
 	bh.setNumber(0);
 

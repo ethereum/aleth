@@ -29,6 +29,7 @@
 #include "JsonSpiritHeaders.h"
 #include <libethashseal/Ethash.h>
 #include <libethereum/State.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libevm/ExtVMFace.h>
 #include <libtestutils/Common.h>
 
@@ -205,6 +206,7 @@ public:
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;
+	eth::Network sealEngineNetwork = eth::Network::FrontierTest; ///< set seal engine (Frontier, Homestead, ...)
 
 	/// Test selection
 	/// @{

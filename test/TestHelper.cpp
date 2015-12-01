@@ -126,7 +126,7 @@ bytes ImportTest::executeTest()
 	eth::State tmpState = m_statePre;
 	try
 	{
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Network::FrontierTest)).createSealEngine());
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
 		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();
@@ -803,6 +803,16 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;
+		else if (arg == "--sealengine")
+		{
+			if (std::string{argv[i + 1]} == "Frontier")
+				sealEngineNetwork = eth::Network::FrontierTest;
+			else if (std::string{argv[i + 1]} == "Homestead")
+				sealEngineNetwork = eth::Network::HomesteadTest;
+			else
+				cout << "Invalid sealEngine"<< endl;
+			++i;
+		}
 		else if (arg == "--verbosity" && i + 1 < argc)
 		{
 			static std::ostringstream strCout; //static string to redirect logs to
