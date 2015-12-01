@@ -10,10 +10,10 @@
         },
 	"expect" : {
             "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                "balance" : "32599"
+                "balance" : "64599"
               },
 	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "67401",
+                "balance" : "35401",
                  "nonce" : "1"
               }
 	},
@@ -121,10 +121,10 @@
         },
         "expect" : {
             "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                "balance" : "40000"
+                "balance" : "72000"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000",
+                "balance" : "3000",
                 "nonce" : "1"
             }
         },
@@ -236,7 +236,7 @@
         },
         "expect" : {
             "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                "balance" : "23000"
+                "balance" : "55000"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "nonce" : "1"
