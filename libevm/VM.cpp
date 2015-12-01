@@ -66,7 +66,7 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	static const auto c_metrics = metrics();
 	auto& metric = c_metrics[static_cast<size_t>(_inst)];
 
-	// Pre-homstead
+	// Pre-homestead
 	if (!m_schedule.haveDelegateCall && _inst == Instruction::DELEGATECALL)
 		BOOST_THROW_EXCEPTION(BadInstruction());
 
@@ -170,7 +170,10 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 			runGas += m_schedule.callValueTransferGas;
 
 		unsigned sizesOffset = _inst == Instruction::DELEGATECALL ? 3 : 4;
-		newTempSize = std::max(memNeed(m_stack[m_stack.size() - sizesOffset - 2], m_stack[m_stack.size() - sizesOffset - 3]), memNeed(m_stack[m_stack.size() - sizesOffset], m_stack[m_stack.size() - sizesOffset - 1]));
+		newTempSize = std::max(
+			memNeed(m_stack[m_stack.size() - sizesOffset - 2], m_stack[m_stack.size() - sizesOffset - 3]),
+			memNeed(m_stack[m_stack.size() - sizesOffset], m_stack[m_stack.size() - sizesOffset - 1])
+		);
 		break;
 	}
 	case Instruction::CREATE:
