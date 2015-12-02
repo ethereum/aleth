@@ -42,7 +42,7 @@ std::string const c_testDifficulty = R"(
 	},
 )";
 
-void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _parent, Network _n, ChainOperationParams const& _p)
+void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _parent, Network _n, ChainOperationParams const& _p, string const& _testName = "")
 {
 	u256 difficulty = _bi.difficulty();
 	u256 frontierDiff = _p.u256Param("frontierCompatibilityModeLimit");
@@ -61,7 +61,7 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 		block_diff += u256(1) << (unsigned)c;
 		block_diff = max<bigint>(minimumDifficulty, block_diff);
 
-		BOOST_CHECK_MESSAGE(difficulty == block_diff, "Homestead Check Calculated diff = " << difficulty << " expected diff = " << block_diff);
+		BOOST_CHECK_MESSAGE(difficulty == block_diff, "Homestead Check Calculated diff = " << difficulty << " expected diff = " << block_diff << _testName);
 		return;
 	}
 
@@ -103,7 +103,8 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 	block_diff += u256(1) << (unsigned)c;
 	block_diff = max<bigint>(minimumDifficulty, block_diff);
 
-	BOOST_CHECK_MESSAGE(difficulty == block_diff, "Check Calculated diff = " << difficulty << " expected diff = " << block_diff);
+	BOOST_CHECK_MESSAGE(difficulty == block_diff, "Check Calculated diff = " << difficulty << " expected diff = " << block_diff << _testName);
+	return;
 }
 
 void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
@@ -174,7 +175,7 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 		BOOST_CHECK_EQUAL(difficulty, test::toInt(o["currentDifficulty"]));
 
 		//Manual formula test
-		checkCalculatedDifficulty(current, parent, _n, _sealEngine.chainParams());
+		checkCalculatedDifficulty(current, parent, _n, _sealEngine.chainParams(), "(" + i.first + ")");
 	}
 }
 
@@ -249,52 +250,51 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::HomesteadTest)));
 
-
 	if (dev::test::Options::get().fillTests)
 	{
-		/*homestead tests
-		for bnumber > 1000000
-			_parent.diff < = > 2048
-			deltatimestamp < = > 10
-			bnumber %100000
-			1 - timestampdelta / 10 < = > -99
-		else
-			_parent.diff < = > 2048
-			deltatimestamp < = > 13
-			bnumber %100000
-		*/
+		u256 homsteadBlockNumber = 1000000;
+		std::vector<u256> blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};
+		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
+		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
 
 		int testN = 0;
 		ostringstream finalTest;
 		finalTest << "{" << std::endl;
-		int stampDelta = 0;
-		u256 blockNumber = 1000000;
 
-		u256 pStamp = dev::test::RandomCode::randomUniInt();
-		u256 pDiff = 1000;
-		u256 cStamp = pStamp + stampDelta;
-		u256 cNum = blockNumber;
+		for (size_t bN = 0; bN < blockNumberVector.size(); bN++)
+			for (size_t pdN = 0; pdN < parentDifficultyVector.size(); pdN++)
+				for (size_t tsN = 0; tsN < timestampDeltaVector.size(); tsN++)
+				{
+					testN++;
+					int stampDelta = timestampDeltaVector.at(tsN);
+					u256 blockNumber = blockNumberVector.at(bN);
+					u256 pDiff = parentDifficultyVector.at(pdN);
 
-		BlockHeader parent;
-		parent.setTimestamp(pStamp);
-		parent.setDifficulty(pDiff);
-		parent.setNumber(cNum - 1);
+					u256 pStamp = dev::test::RandomCode::randomUniInt();
+					u256 cStamp = pStamp + stampDelta;
+					u256 cNum = blockNumber;
 
-		BlockHeader current;
-		current.setTimestamp(cStamp);
-		current.setNumber(cNum);
+					BlockHeader parent;
+					parent.setTimestamp(pStamp);
+					parent.setDifficulty(pDiff);
+					parent.setNumber(cNum - 1);
 
-		string tmptest = c_testDifficulty;
-		std::map<string, string> replaceMap;
-		replaceMap["[N]"] = toString(testN);
-		replaceMap["[PDIFF]"] = toCompactHex(pDiff, HexPrefix::Add);
-		replaceMap["[PSTAMP]"] = toCompactHex(pStamp, HexPrefix::Add);
-		replaceMap["[СSTAMP]"] = toCompactHex(cStamp, HexPrefix::Add);
-		replaceMap["[CNUM]"] = toCompactHex(cNum, HexPrefix::Add);
-		replaceMap["[CDIFF]"] = toCompactHex(sealEngine.calculateDifficulty(current, parent), HexPrefix::Add);
+					BlockHeader current;
+					current.setTimestamp(cStamp);
+					current.setNumber(cNum);
 
-		dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
-		finalTest << tmptest;
+					string tmptest = c_testDifficulty;
+					std::map<string, string> replaceMap;
+					replaceMap["[N]"] = toString(testN);
+					replaceMap["[PDIFF]"] = toCompactHex(pDiff, HexPrefix::Add);
+					replaceMap["[PSTAMP]"] = toCompactHex(pStamp, HexPrefix::Add);
+					replaceMap["[СSTAMP]"] = toCompactHex(cStamp, HexPrefix::Add);
+					replaceMap["[CNUM]"] = toCompactHex(cNum, HexPrefix::Add);
+					replaceMap["[CDIFF]"] = toCompactHex(sealEngine.calculateDifficulty(current, parent), HexPrefix::Add);
+
+					dev::test::RandomCode::parseTestWithTypes(tmptest, replaceMap);
+					finalTest << tmptest;
+				}
 
 		finalTest << std::endl << "}";
 		writeFile(testFileFullName, asBytes(finalTest.str()));
