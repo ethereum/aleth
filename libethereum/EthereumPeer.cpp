@@ -52,8 +52,8 @@ string toString(Asking _a)
 	return "?";
 }
 
-EthereumPeer::EthereumPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap):
-	Capability(_s, _h, _i),
+EthereumPeer::EthereumPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID):
+	Capability(_s, _h, _i, _capID),
 	m_sub(host()->downloadMan()),
 	m_peerCapabilityVersion(_cap.second)
 {
