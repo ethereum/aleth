@@ -22,6 +22,8 @@ endif()
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
 
+set(EXECUTABLE testeth)
+
 # search for test names and create ctest tests
 enable_testing()
 foreach(file ${SRC_LIST})
@@ -33,16 +35,16 @@ foreach(file ${SRC_LIST})
 			string(SUBSTRING ${test} 6 -1 TestSuite)
 		elseif(test MATCHES "^CASE .*")
 			string(SUBSTRING ${test} 5 -1 TestCase)
-			add_test(NAME ${TestSuite}/${TestCase} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test COMMAND testeth -t ${TestSuite}/${TestCase})
+			add_test(NAME ${TestSuite}/${TestCase} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test COMMAND ${EXECUTABLE} -t ${TestSuite}/${TestCase})
 		endif(test MATCHES "^SUITE .*")
 	endforeach(test_raw)
 endforeach(file)
 
 file(GLOB HEADERS "*.h")
-add_executable(testeth ${SRC_LIST} ${HEADERS})
+add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
-eth_use(testeth REQUIRED Eth::ethashseal Eth::ethereum Eth::testutils)
-target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+eth_use(${EXECUTABLE} REQUIRED Eth::ethashseal Eth::ethereum Eth::testutils)
+target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
