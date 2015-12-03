@@ -195,15 +195,14 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 		/// it will be passed to Host which will take ownership.
 		m_io.reset(new RLPXFrameCoder(*this));
 
-		// old packet format
-		// 5 arguments, HelloPacket
 		RLPStream s;
 		s.append((unsigned)HelloPacket).appendList(5)
-		<< dev::p2p::c_protocolVersion
-		<< m_host->m_clientVersion
-		<< m_host->caps()
-		<< m_host->listenPort()
-		<< m_host->id();
+			<< dev::p2p::c_protocolVersion
+			<< m_host->m_clientVersion
+			<< m_host->caps()
+			<< m_host->listenPort()
+			<< m_host->id();
+
 		bytes packet;
 		s.swapOut(packet);
 		m_io->writeSingleFramePacket(&packet, m_handshakeOutBuffer);

@@ -35,6 +35,8 @@
 #include "RLPXFrameCoder.h"
 #include "RLPXSocket.h"
 #include "Common.h"
+#include "RLPXFrameWriter.h"
+#include "RLPXFrameReader.h"
 
 namespace dev
 {
@@ -74,7 +76,7 @@ public:
 	std::shared_ptr<PeerCap> cap(u256 const& _version) const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), _version))); } catch (...) { return nullptr; } }
 
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
-	void sealAndSend(RLPStream& _s);
+	void sealAndSend(RLPStream& _s, uint16_t _protocolID);
 
 	ReputationManager& repMan() const;
 	int rating() const;
@@ -88,20 +90,27 @@ public:
 	void ensureNodesRequested();
 	void serviceNodesRequest();
 
+	void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p);
+	void registerFraming(uint16_t _id);
+
+	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
+
 private:
-	void send(bytes&& _msg);
+	void send(bytes&& _msg, uint16_t _protocolID);
 
 	/// Drop the connection for the reason @a _r.
 	void drop(DisconnectReason _r);
 
 	/// Perform a read on the socket.
 	void doRead();
+	void doReadFrames();
 	
 	/// Check error code after reading and drop peer if error code.
 	bool checkRead(std::size_t _expected, boost::system::error_code _ec, std::size_t _length);
 
 	/// Perform a single round of the write operation. This could end up calling itself asynchronously.
 	void write();
+	void writeFrames();
 
 	/// Deliver RLPX packet to Session or Capability for interpretation.
 	bool readPacket(uint16_t _capId, PacketType _t, RLP const& _r);
@@ -116,7 +125,7 @@ private:
 
 	std::unique_ptr<RLPXFrameCoder> m_io;	///< Transport over which packets are sent.
 	std::shared_ptr<RLPXSocket> m_socket;		///< Socket of peer's connection.
-	Mutex x_writeQueue;						///< Mutex for the write queue.
+	Mutex x_framing;						///< Mutex for the write queue.
 	std::deque<bytes> m_writeQueue;			///< The write queue.
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
@@ -136,6 +145,23 @@ private:
 	std::chrono::steady_clock::time_point m_lastReceived;	///< Time point of last message.
 
 	std::map<CapDesc, std::shared_ptr<Capability>> m_capabilities;	///< The peer's capability set.
+
+	// framing-related stuff (protected by x_writeQueue mutex)
+	struct Framing
+	{
+		Framing() = delete;
+		Framing(uint16_t _protocolID): writer(_protocolID), reader(_protocolID) {}
+		RLPXFrameWriter writer;
+		RLPXFrameReader reader;
+	};
+
+	std::map<uint16_t, std::shared_ptr<Framing> > m_framing;
+	std::deque<bytes> m_encFrames;
+
+	bool isFramingEnabled() const { return isFramingAllowedForVersion(m_info.protocolVersion); }
+	unsigned maxFrameSize() const { return 1024; }
+	std::shared_ptr<Framing> getFraming(uint16_t _protocolID);
+	void multiplexAll();
 };
 
 }

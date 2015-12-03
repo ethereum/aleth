@@ -57,7 +57,7 @@ private:
 	RLPXFrameCoder& m_coder;		///< Encoder/decoder of frame payloads.
 	bi::tcp::socket& m_socket;
 
-	std::vector<bytes> m_toSend;	///< Reusable byte buffer for pending socket writes.
+	std::deque<bytes> m_toSend;	///< Reusable byte buffer for pending socket writes.
 	
 	std::vector<RLPXFrameWriter> m_writers;			///< Write queues for each protocol. TODO: map to bytes (of capability)
 	std::unique_ptr<ba::deadline_timer> m_congestion;	///< Scheduled when writes are deferred due to congestion.
