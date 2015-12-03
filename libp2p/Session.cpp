@@ -598,6 +598,7 @@ void Session::doReadFrames()
 					clog(NetWarn) << "Couldn't interpret packet." << RLP(p.data());
 #endif
 				ok = true;
+				(void)ok;
 			}
 			doReadFrames();
 		});
