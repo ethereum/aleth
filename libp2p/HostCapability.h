@@ -26,6 +26,7 @@
 #include <memory>
 #include "Peer.h"
 #include "Common.h"
+#include "Session.h"
 
 namespace dev
 {
@@ -54,7 +55,7 @@ protected:
 	virtual u256 version() const = 0;
 	CapDesc capDesc() const { return std::make_pair(name(), version()); }
 	virtual unsigned messageCount() const = 0;
-	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap) = 0;
+	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID) = 0;
 
 	virtual void onStarting() {}
 	virtual void onStopping() {}
@@ -78,7 +79,14 @@ protected:
 	virtual std::string name() const { return PeerCap::name(); }
 	virtual u256 version() const { return PeerCap::version(); }
 	virtual unsigned messageCount() const { return PeerCap::messageCount(); }
-	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap) { return std::make_shared<PeerCap>(_s, this, _idOffset, _cap); }
+
+	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID)
+	{
+		_s->registerFraming(_capID);
+		auto p = std::make_shared<PeerCap>(_s, this, _idOffset, _cap, _capID);
+		_s->registerCapability(_cap, p);
+		return p;
+	}
 };
 
 }
