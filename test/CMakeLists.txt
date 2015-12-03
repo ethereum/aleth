@@ -15,9 +15,11 @@ add_subdirectory(libp2p)
 set(SRC_LIST ${SRC_LIST} ${SRCTEST})
 MESSAGE(${SRC_LIST})
 
-file(GLOB HEADERS "*.h")
-add_executable(testweb3core ${SRC_LIST} ${HEADERS})
-eth_use(testweb3core REQUIRED Dev::devcrypto Dev::devcore Dev::p2p)
+set(EXECUTABLE testweb3core)
 
-target_link_libraries(testweb3core ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
-target_link_libraries(testweb3core ${Boost_REGEX_LIBRARIES})
+file(GLOB HEADERS "*.h")
+add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+eth_use(${EXECUTABLE} REQUIRED Dev::devcrypto Dev::devcore Dev::p2p)
+
+target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_REGEX_LIBRARIES})
