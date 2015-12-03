@@ -10,7 +10,7 @@ function(eth_apply TARGET REQUIRED )
 
 	target_include_directories(${TARGET} PUBLIC ${SOLIDITY_INCLUDE_DIRS})
 
-	eth_use(${TARGET} ${REQUIRED} Eth::evmcore Eth::evmasm)
+	eth_use(${TARGET} ${REQUIRED} Dev::devcore Eth::evmcore Eth::evmasm )
 	target_compile_definitions(${TARGET} PUBLIC ETH_SOLIDITY)
 	target_link_libraries(${TARGET} ${SOLIDITY_LIBRARIES})
 endfunction()

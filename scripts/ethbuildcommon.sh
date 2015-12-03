@@ -6,7 +6,7 @@
 PROJECTS_HELP="    --project NAME            Will only clone/update/build repos for the requested project. Valid values are: [\"all\", \"webthree-helpers\", \"libweb3core\", \"libethereum\", \"\webthree\", \"solidity\", \"alethzero\", \"mix\"]."
 
 ALL_CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests web3.js webthree solidity alethzero mix)
-ALL_BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero mix)
+ALL_BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum solidity webthree alethzero mix)
 
 function set_repositories() {
 	if [[ $1 == "" || $2 == "" ]]; then
