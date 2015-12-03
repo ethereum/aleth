@@ -150,7 +150,13 @@
                 ],
                 "uncleHeaders" : [
                 ]
-            }
+            },
+	    {
+		"chainname" : "B",
+		"blocknumber" : "4",
+		"transactions" : [],
+		"uncleHeaders" : []
+	    }
         ]
     },
 
