@@ -159,9 +159,7 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	{
-		runGas = (bigint)m_stack[m_stack.size() - 1];
-		if (_inst != Instruction::DELEGATECALL)
-			runGas += m_schedule.callGas;
+		runGas = (bigint)m_stack[m_stack.size() - 1] + m_schedule.callGas;
 
 		if (_inst == Instruction::CALL && !_ext.exists(asAddress(m_stack[m_stack.size() - 2])))
 			runGas += m_schedule.callNewAccountGas;
