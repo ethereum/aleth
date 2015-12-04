@@ -252,7 +252,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 
 	if (dev::test::Options::get().fillTests)
 	{
-		u256 homsteadBlockNumber = 1000000;
+		u256 homsteadBlockNumber = 720000;
 		std::vector<u256> blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
