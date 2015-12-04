@@ -28,7 +28,8 @@ using namespace dev;
 using namespace dev::p2p;
 using namespace dev::shh;
 
-WhisperPeer::WhisperPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const&): Capability(_s, _h, _i)
+WhisperPeer::WhisperPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const&, uint16_t _capID): 
+	Capability(_s, _h, _i, _capID)
 {
 	RLPStream s;
 	sealAndSend(prep(s, StatusPacket, 1) << version());
