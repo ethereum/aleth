@@ -880,17 +880,17 @@ int main(int argc, char** argv)
 		}
 	}
 
-#if ETH_JSCONSOLE || !ETH_TRUE
 	if (mode == OperationMode::Attach)
 	{
+#if ETH_JSCONSOLE || !ETH_TRUE
 		JSRemoteConsole console(remoteURL);
 		if (!remoteSessionKey.empty())
 			console.eval("web3.admin.setSessionKey('" + remoteSessionKey + "')");
 		while (true)
 			console.readAndEval();
+#endif
 		return 0;
 	}
-#endif
 
 	// Set up all the chain config stuff.
 	if (!paramsJSON.empty())
