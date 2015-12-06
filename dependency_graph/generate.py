@@ -93,7 +93,7 @@ def processSubmodule(root, submodule):
     # Hard-coded dependency edge for "soljson" which is within
     # an EMSCRIPTEN conditional.   It's not worth bothering with
     # complicating the parsing to cope with conditionals for this
-	# single misplaced dependency edge.   We'll just hard-code it.
+    # single misplaced dependency edge.   We'll just hard-code it.
     if "solidity" in submodule:
         print '    "soljson" -> "solidity"'
 
@@ -134,12 +134,12 @@ print '    node  [ fontname = "Courier", fontsize = 10 ]'
 print ''
 print '    compound = true'
 
- # Hard-coded cluster for webthree-helpers, which does contain any
- # of the Ethereum libraries or executables, but does define CMake
- # rules which introduce implicit dependencies.   Parsing those would
- # be way too much work.   Easier to hard-code them.   This script is
- # not attempting to be a general CMake-dependencies graph generator,
- # after all.   It's specific to webthree-umbrella.
+# Hard-coded cluster for webthree-helpers, which does contain any
+# of the Ethereum libraries or executables, but does define CMake
+# rules which introduce implicit dependencies.   Parsing those would
+# be way too much work.   Easier to hard-code them.   This script is
+# not attempting to be a general CMake-dependencies graph generator,
+# after all.   It's specific to webthree-umbrella.
 print "    subgraph cluster_webthree_helpers {"
 print '        label = <webthree-helpers dependencies>'
 print '        bgcolor = LemonChiffon'
