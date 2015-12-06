@@ -880,6 +880,7 @@ int main(int argc, char** argv)
 		}
 	}
 
+#if ETH_JSCONSOLE || !ETH_TRUE
 	if (mode == OperationMode::Attach)
 	{
 		JSRemoteConsole console(remoteURL);
@@ -889,6 +890,7 @@ int main(int argc, char** argv)
 			console.readAndEval();
 		return 0;
 	}
+#endif
 
 	// Set up all the chain config stuff.
 	if (!paramsJSON.empty())

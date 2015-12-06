@@ -135,6 +135,7 @@ void MainCLI::execute()
 	case Mode::Attach:
 	case Mode::Execute:
 	{
+#if ETH_JSCONSOLE || !ETH_TRUE
 		JSRemoteConsole console(m_remoteURL);
 		if (m_mode == Mode::Attach)
 		{
@@ -168,6 +169,7 @@ void MainCLI::execute()
 					console.eval(c.empty() ? i : c);
 				}
 		}
+#endif
 		break;
 	}
 	case Mode::Console:
