@@ -20,7 +20,6 @@
  * difficulty calculation tests.
  */
 
-
 #include <boost/test/unit_test.hpp>
 #include <test/TestHelper.h>
 #include <test/fuzzTesting/fuzzHelper.h>
