@@ -20,57 +20,47 @@
  */
 
 #include "IPFS.h"
-#include <cstdio>
-#include <system_error>
-/*#include <boost/process.hpp>
-#include <boost/iostreams/device/back_inserter.hpp>
-#include <boost/iostreams/device/file_descriptor.hpp>
-#include <boost/iostreams/stream.hpp>*/
 #include <libdevcore/Hash.h>
 #include <libdevcore/Base58.h>
 using namespace std;
 using namespace dev;
-/*namespace bp = boost::process;
-namespace bi = boost::iostreams;*/
+#include "libexecstream/exec-stream.h"
 
-#if WIN32
-#define POPEN_R(X) _popen(X, "rb")
-#define POPEN_W(X) _popen(X, "wb")
-#define PCLOSE _pclose
-#else
-#define POPEN_R(X) popen(X, "r")
-#define POPEN_W(X) popen(X, "w")
-#define PCLOSE pclose
-#endif
-
-static bytes exec(std::string const& _cmd)
+static bytes exec(string const& _args)
 {
-	FILE* pipe = POPEN_R(_cmd.c_str());
-	if (!pipe)
-		throw IPFSExecutableNotFound();
-	bytes ret;
-	while (!feof(pipe))
+	string output;
+	try
 	{
-		ret.resize(ret.size() + 1024);
-		auto read = fread(ret.data() + ret.size() - 1024, 1, 1024, pipe);
-		ret.resize(ret.size() - 1024 + read);
+		exec_stream_t es("ipfs", _args);
+		do
+		{
+			string s;
+			getline(es.out(), s);
+			output += s;
+		} while(es.out().good());
 	}
-	PCLOSE(pipe);
-	return ret;
+	catch (exception const &e)
+	{
+		throw IPFSCommunicationError(e.what());
+	}
+	return bytes(output.begin(), output.end());
 }
-
-static void exec(std::string const& _cmd, bytesConstRef _in)
+static void exec(string const& _args, bytesConstRef _in)
 {
-	FILE* pipe = POPEN_W(_cmd.c_str());
-	if (!pipe)
-		throw IPFSExecutableNotFound();
-	fwrite(_in.data(), 1, _in.size(), pipe);
-	PCLOSE(pipe);
+	try
+	{
+		exec_stream_t es("ipfs", _args);
+		es.in() << string(_in.begin(), _in.end());
+	}
+	catch (exception const &e)
+	{
+		throw IPFSCommunicationError(e.what());
+	}
 }
 
 h256 IPFS::putBlockForSHA256(bytesConstRef _data)
 {
-	exec("ipfs block put", _data);
+	exec("block put", _data);
 	return sha256(_data);
 }
 
@@ -87,5 +77,5 @@ bytes IPFS::getBlockForSHA256(h256 const& _sha256)
 
 bytes IPFS::getBlock(bytesConstRef _multihash)
 {
-	return exec("ipfs block get " + toBase58(_multihash));
+	return exec("block get " + toBase58(_multihash));
 }

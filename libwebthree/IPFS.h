@@ -29,6 +29,7 @@ namespace dev
 {
 
 DEV_SIMPLE_EXCEPTION(IPFSExecutableNotFound);
+struct IPFSCommunicationError: virtual Exception { public: IPFSCommunicationError(std::string _s): Exception("Communication with ipfs executable failed:  " + _s + ".") {} };
 
 class IPFS
 {
