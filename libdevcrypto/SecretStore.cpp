@@ -75,6 +75,11 @@ static js::mValue upgraded(string const& _s)
 		ret["crypto"] = c;
 		version = 2;
 	}
+	if (ret.count("Crypto") && !ret.count("crypto"))
+	{
+		ret["crypto"] = ret["Crypto"];
+		ret.erase("Crypto");
+	}
 	if (version == 2)
 	{
 		ret["crypto"].get_obj()["cipher"] = "aes-128-ctr";
@@ -115,10 +120,17 @@ bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass,
 
 bytesSec SecretStore::secret(string const& _content, string const& _pass)
 {
-	js::mValue u = upgraded(_content);
-	if (u.type() != js::obj_type)
+	try
+	{
+		js::mValue u = upgraded(_content);
+		if (u.type() != js::obj_type)
+			return bytesSec();
+		return decrypt(js::write_string(u.get_obj()["crypto"], false), _pass);
+	}
+	catch (...)
+	{
 		return bytesSec();
-	return decrypt(js::write_string(u.get_obj()["crypto"], false), _pass);
+	}
 }
 
 h128 SecretStore::importSecret(bytesSec const& _s, string const& _pass)
@@ -200,17 +212,24 @@ h128 SecretStore::readKey(string const& _file, bool _takeFileOwnership)
 
 h128 SecretStore::readKeyContent(string const& _content, string const& _file)
 {
-	js::mValue u = upgraded(_content);
-	if (u.type() == js::obj_type)
+	try
 	{
-		js::mObject& o = u.get_obj();
-		auto uuid = fromUUID(o["id"].get_str());
-		m_keys[uuid] = EncryptedKey{js::write_string(o["crypto"], false), _file};
-		return uuid;
+		js::mValue u = upgraded(_content);
+		if (u.type() == js::obj_type)
+		{
+			js::mObject& o = u.get_obj();
+			auto uuid = fromUUID(o["id"].get_str());
+			m_keys[uuid] = EncryptedKey{js::write_string(o["crypto"], false), _file};
+			return uuid;
+		}
+		else
+			cwarn << "Invalid JSON in key file" << _file;
+		return h128();
 	}
-	else
-		cwarn << "Invalid JSON in key file" << _file;
-	return h128();
+	catch (...)
+	{
+		return h128();
+	}
 }
 
 bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
