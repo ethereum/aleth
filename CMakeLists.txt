@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(dev VERSION "1.1.0")
+project(dev VERSION "1.1.1")
 
 include(EthCompilerSettings)
 
@@ -28,6 +28,7 @@ if (NOT EMSCRIPTEN)
 
 	if (TOOLS)
 		add_subdirectory(rlp)
+		add_subdirectory(bench)
 	endif()
 endif()
 
