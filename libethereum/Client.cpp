@@ -66,8 +66,10 @@ Client::Client(
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
 	std::string const& _dbPath,
-	WithExisting _forceAction
+	WithExisting _forceAction,
+	TransactionQueue::Limits const& _l
 ):
+	ClientBase(_l),
 	Worker("eth", 0),
 	m_bc(_params, _dbPath, _forceAction, [](unsigned d, unsigned t){ std::cerr << "REVISING BLOCKCHAIN: Processed " << d << " of " << t << "...\r"; }),
 	m_gp(_gpForAdoption ? _gpForAdoption : make_shared<TrivialGasPricer>()),
@@ -487,7 +489,8 @@ double static const c_targetDuration = 1;
 
 void Client::syncBlockQueue()
 {
-	cwork << "BQ ==> CHAIN ==> STATE";
+//	cdebug << "syncBlockQueue()";
+
 	ImportRoute ir;
 	unsigned count;
 	Timer t;
@@ -495,7 +498,9 @@ void Client::syncBlockQueue()
 	double elapsed = t.elapsed();
 
 	if (count)
-		clog(ClientNote) << count << "blocks imported in" << unsigned(elapsed * 1000) << "ms (" << (count / elapsed) << "blocks/s)";
+	{
+		clog(ClientNote) << count << "blocks imported in" << unsigned(elapsed * 1000) << "ms (" << (count / elapsed) << "blocks/s) in #" << bc().number();
+	}
 
 	if (elapsed > c_targetDuration * 1.1 && count > c_syncMin)
 		m_syncAmount = max(c_syncMin, count * 9 / 10);
@@ -508,17 +513,28 @@ void Client::syncBlockQueue()
 
 void Client::syncTransactionQueue()
 {
-	// returns TransactionReceipts, once for each transaction.
-	cwork << "postSTATE <== TQ";
+	Timer timer;
 
 	h256Hash changeds;
 	TransactionReceipts newPendingReceipts;
 
 	DEV_WRITE_GUARDED(x_working)
+	{
+		if (m_working.isSealed())
+		{
+			ctrace << "Skipping txq sync for a sealed block.";
+			return;
+		}
+
 		tie(newPendingReceipts, m_syncTransactionQueue) = m_working.sync(bc(), m_tq, *m_gp);
+	}
 
 	if (newPendingReceipts.empty())
+	{
+		auto s = m_tq.status();
+		ctrace << "No transactions to process. " << m_working.pending().size() << " pending, " << s.current << " queued, " << s.future << " future, " << s.unverified << " unverified";
 		return;
+	}
 
 	DEV_READ_GUARDED(x_working)
 		DEV_WRITE_GUARDED(x_postSeal)
@@ -537,6 +553,8 @@ void Client::syncTransactionQueue()
 	// Tell network about the new transactions.
 	if (auto h = m_host.lock())
 		h->noteNewTransactions();
+
+	ctrace << "Processed " << newPendingReceipts.size() << " transactions in" << (timer.elapsed() * 1000) << "(" << (bool)m_syncTransactionQueue << ")";
 }
 
 void Client::onDeadBlocks(h256s const& _blocks, h256Hash& io_changed)
@@ -548,6 +566,7 @@ void Client::onDeadBlocks(h256s const& _blocks, h256Hash& io_changed)
 		for (auto const& t: bc().transactions(h))
 		{
 			clog(ClientTrace) << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
+			ctrace << "Resubmitting dead-block transaction " << Transaction(t, CheckTransaction::None);
 			m_tq.import(t, IfDropped::Retry);
 		}
 	}
@@ -573,6 +592,8 @@ void Client::resyncStateFromChain()
 {
 	// RESTART MINING
 
+//	ctrace << "resyncStateFromChain()";
+
 	if (!isMajorSyncing())
 	{
 		bool preChanged = false;
@@ -590,13 +611,15 @@ void Client::resyncStateFromChain()
 			DEV_WRITE_GUARDED(x_working)
 				m_working = newPreMine;
 			DEV_READ_GUARDED(x_postSeal)
-				for (auto const& t: m_postSeal.pending())
-				{
-					clog(ClientTrace) << "Resubmitting post-seal transaction " << t;
-					auto ir = m_tq.import(t, IfDropped::Retry);
-					if (ir != ImportResult::Success)
-						onTransactionQueueReady();
-				}
+				if (!m_postSeal.isSealed() || m_postSeal.info().hash() != newPreMine.info().parentHash())
+					for (auto const& t: m_postSeal.pending())
+					{
+						clog(ClientTrace) << "Resubmitting post-seal transaction " << t;
+//						ctrace << "Resubmitting post-seal transaction " << t;
+						auto ir = m_tq.import(t, IfDropped::Retry);
+						if (ir != ImportResult::Success)
+							onTransactionQueueReady();
+					}
 			DEV_READ_GUARDED(x_working) DEV_WRITE_GUARDED(x_postSeal)
 				m_postSeal = m_working;
 
@@ -626,6 +649,7 @@ void Client::resetState()
 
 void Client::onChainChanged(ImportRoute const& _ir)
 {
+//	ctrace << "onChainChanged()";
 	h256Hash changeds;
 	onDeadBlocks(_ir.deadBlocks, changeds);
 	for (auto const& t: _ir.goodTranactions)
@@ -664,25 +688,33 @@ void Client::startSealing()
 
 void Client::rejigSealing()
 {
-	if ((wouldSeal() || remoteActive()) && !isMajorSyncing() && sealEngine()->shouldSeal(this))
+	if ((wouldSeal() || remoteActive()) && !isMajorSyncing())
 	{
-		clog(ClientTrace) << "Rejigging seal engine...";
-		DEV_WRITE_GUARDED(x_working)
-			m_working.commitToSeal(bc(), m_extraData);
-		DEV_READ_GUARDED(x_working)
+		if (sealEngine()->shouldSeal(this))
 		{
-			DEV_WRITE_GUARDED(x_postSeal)
-				m_postSeal = m_working;
-			m_sealingInfo = m_postSeal.info();
-		}
+			m_wouldButShouldnot = false;
 
-		if (m_wouldSeal)
-		{
-			sealEngine()->onSealGenerated([=](bytes const& header){
-				this->submitSealed(header);
-			});
-			sealEngine()->generateSeal(m_sealingInfo);
+			clog(ClientTrace) << "Rejigging seal engine...";
+			DEV_WRITE_GUARDED(x_working)
+				m_working.commitToSeal(bc(), m_extraData);
+			DEV_READ_GUARDED(x_working)
+			{
+				DEV_WRITE_GUARDED(x_postSeal)
+					m_postSeal = m_working;
+				m_sealingInfo = m_working.info();
+			}
+
+			if (wouldSeal())
+			{
+				sealEngine()->onSealGenerated([=](bytes const& header){
+					this->submitSealed(header);
+				});
+				ctrace << "Generating seal on" << m_sealingInfo.hash(WithoutSeal) << "#" << m_sealingInfo.number();
+				sealEngine()->generateSeal(m_sealingInfo);
+			}
 		}
+		else
+			m_wouldButShouldnot = true;
 	}
 	if (!m_wouldSeal)
 		sealEngine()->cancelGeneration();
@@ -729,7 +761,10 @@ void Client::doWork(bool _doWait)
 	}
 
 	t = true;
-	if (!isSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
+	bool isSealed;
+	DEV_READ_GUARDED(x_working)
+		isSealed = m_working.isSealed();
+	if (!isSealed && !isSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))
 		syncTransactionQueue();
 
 	tick();
@@ -751,6 +786,9 @@ void Client::tick()
 		m_lastTick = chrono::system_clock::now();
 		if (m_report.ticks == 15)
 			clog(ClientTrace) << activityReport();
+
+		if (m_wouldButShouldnot)
+			rejigSealing();
 	}
 }
 
@@ -839,13 +877,14 @@ SyncStatus Client::syncStatus() const
 
 bool Client::submitSealed(bytes const& _header)
 {
-	DEV_WRITE_GUARDED(x_working)
-		if (!m_working.sealBlock(_header))
-			return false;
-
 	bytes newBlock;
-	DEV_READ_GUARDED(x_working)
 	{
+		UpgradableGuard l(x_working);
+		{
+			UpgradeGuard l2(l);
+			if (!m_working.sealBlock(_header))
+				return false;
+		}
 		DEV_WRITE_GUARDED(x_postSeal)
 			m_postSeal = m_working;
 		newBlock = m_working.blockData();

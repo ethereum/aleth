@@ -145,21 +145,24 @@ Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
 	m_envInfo(_s.info(), _bc.lastHashes(_s.info().parentHash())),
 	m_depth(_level),
 	m_sealEngine(_bc.sealEngine())
-{}
+{
+}
 
 Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 	m_s(_s.mutableState()),
 	m_envInfo(_s.info(), _lh),
 	m_depth(_level),
 	m_sealEngine(_s.sealEngine())
-{}
+{
+}
 
 Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level):
 	m_s(_s = _block.fromPending(_txIndex)),
 	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level),
 	m_sealEngine(_bc.sealEngine())
-{}
+{
+}
 
 u256 Executive::gasUsed() const
 {
@@ -191,11 +194,12 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Check gas cost is enough.
-	if (!m_t.checkPayment())
+	m_baseGasRequired = m_t.gasRequired(m_sealEngine->evmSchedule(m_envInfo));
+	if (m_baseGasRequired > m_t.gas())
 	{
-		clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_t.gasRequired() << " Got" << m_t.gas();
+		clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_baseGasRequired << " Got" << m_t.gas();
 		m_excepted = TransactionException::OutOfGasBase;
-		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_t.gasRequired(), (bigint)m_t.gas()));
+		BOOST_THROW_EXCEPTION(OutOfGasBase() << RequirementError(m_baseGasRequired, (bigint)m_t.gas()));
 	}
 
 	// Avoid invalid transactions.
@@ -240,14 +244,14 @@ bool Executive::execute()
 	m_s.subBalance(m_t.sender(), m_gasCost);
 
 	if (m_t.isCreation())
-		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_t.gasRequired(), &m_t.data(), m_t.sender());
+		return create(m_t.sender(), m_t.value(), m_t.gasPrice(), m_t.gas() - (u256)m_baseGasRequired, &m_t.data(), m_t.sender());
 	else
-		return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_t.gasRequired());
+		return call(m_t.receiveAddress(), m_t.sender(), m_t.value(), m_t.gasPrice(), bytesConstRef(&m_t.data()), m_t.gas() - (u256)m_baseGasRequired);
 }
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _gas, _value, _data, {}, {}};
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 
@@ -277,11 +281,11 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.value, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
-	m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.value);
+	m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.valueTransfer);
 
 	return !m_ext;
 }
@@ -347,17 +351,22 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->gasForDeposit = m_gas;
 					m_res->depositSize = out.size();
 				}
-				if (out.size() * c_createDataGas <= m_gas)
+				if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
 				{
 					if (m_res)
 						m_res->codeDeposit = CodeDeposit::Success;
-					m_gas -= out.size() * c_createDataGas;
+					m_gas -= out.size() * m_ext->evmSchedule().createDataGas;
 				}
 				else
 				{
-					if (m_res)
-						m_res->codeDeposit = CodeDeposit::Failed;
-					out.clear();
+					if (m_ext->evmSchedule().exceptionalFailedCodeDeposit)
+						BOOST_THROW_EXCEPTION(OutOfGas());
+					else
+					{
+						if (m_res)
+							m_res->codeDeposit = CodeDeposit::Failed;
+						out.clear();
+					}
 				}
 				if (m_res)
 					m_res->output = out; // copy output to execution result
@@ -405,7 +414,7 @@ void Executive::finalize()
 {
 	// Accumulate refunds for suicides.
 	if (m_ext)
-		m_ext->sub.refunds += c_suicideRefundGas * m_ext->sub.suicides.size();
+		m_ext->sub.refunds += m_ext->evmSchedule().suicideRefundGas * m_ext->sub.suicides.size();
 
 	// SSTORE refunds...
 	// must be done before the miner gets the fees.

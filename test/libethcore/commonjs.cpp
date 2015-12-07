@@ -22,6 +22,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Log.h>
 #include <libethcore/CommonJS.h>
+#include <test/TestHelper.h>
 
 BOOST_AUTO_TEST_SUITE(commonjs)
 using namespace std;
@@ -30,7 +31,7 @@ using namespace dev::eth;
 
 BOOST_AUTO_TEST_CASE(jsToPublic)
 {
-	cnote << "Testing jsToPublic...";
+	test::TestOutputHelper::initTest();
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.pub());
 	Public pub = dev::jsToPublic(s);
@@ -39,7 +40,7 @@ BOOST_AUTO_TEST_CASE(jsToPublic)
 
 BOOST_AUTO_TEST_CASE(jsToAddress)
 {
-	cnote << "Testing jsToPublic...";
+	test::TestOutputHelper::initTest();
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.address());
 	Address address = dev::jsToAddress(s);
@@ -48,7 +49,7 @@ BOOST_AUTO_TEST_CASE(jsToAddress)
 
 BOOST_AUTO_TEST_CASE(jsToSecret)
 {
-	cnote << "Testing jsToPublic...";
+	test::TestOutputHelper::initTest();
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.secret().makeInsecure());
 	Secret secret = dev::jsToSecret(s);

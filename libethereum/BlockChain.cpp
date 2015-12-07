@@ -807,7 +807,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	h256 common;
 	// This might be the new best block...
 	h256 last = currentHash();
-	if (td > details(last).totalDifficulty)
+	if (td > details(last).totalDifficulty || (m_sealEngine->chainParams().tieBreakingGas && td == details(last).totalDifficulty && _block.info.gasUsed() > info(last).gasUsed()))
 	{
 		// don't include bi.hash() in treeRoute, since it's not yet in details DB...
 		// just tack it on afterwards.
@@ -894,7 +894,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 	else
 	{
-		clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << td << ")";
+		clog(BlockChainChat) << "   Imported but not best (oTD:" << details(last).totalDifficulty << " > TD:" << td << "; " << details(last).number << ".." << _block.info.number() << ")";
 	}
 
 	ldb::Status o = m_blocksDB->Write(m_writeOptions, &blocksBatch);
@@ -1033,7 +1033,7 @@ void BlockChain::clearBlockBlooms(unsigned _begin, unsigned _end)
 	}
 }
 
-void BlockChain::rescue(OverlayDB& _db)
+void BlockChain::rescue(OverlayDB const& _db)
 {
 	cout << "Rescuing database..." << endl;
 
@@ -1443,6 +1443,13 @@ Block BlockChain::genesisBlock(OverlayDB const& _db) const
 	ret.noteChain(*this);
 	dev::eth::commit(m_params.genesisState, ret.mutableState().m_state);	// bit horrible. maybe consider a better way of constructing it?
 	ret.mutableState().db().commit();										// have to use this db() since it's the one that has been altered with the above commit.
+	if (ret.mutableState().rootHash() != r)
+	{
+		cwarn << "Hinted genesis block's state root hash is incorrect!";
+		cwarn << "Hinted" << r << ", computed" << ret.mutableState().rootHash();
+		// TODO: maybe try to fix it by altering the m_params's genesis block?
+		exit(-1);
+	}
 	ret.m_previousBlock = BlockHeader(m_params.genesisBlock());
 	ret.resetCurrent();
 	return ret;
@@ -1524,7 +1531,9 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			bytesConstRef d = tr.data();
 			try
 			{
-				res.transactions.push_back(Transaction(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None));
+				Transaction t(d, (_ir & ImportRequirements::TransactionSignatures) ? CheckTransaction::Everything : CheckTransaction::None);
+				m_sealEngine->verifyTransaction(_ir, t, h);
+				res.transactions.push_back(t);
 			}
 			catch (Exception& ex)
 			{

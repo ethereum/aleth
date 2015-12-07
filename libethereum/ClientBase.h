@@ -76,7 +76,7 @@ struct WorkChannel: public LogChannel { static const char* name(); static const 
 class ClientBase: public Interface
 {
 public:
-	ClientBase() {}
+	ClientBase(TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}): m_tq(_l) {}
 	virtual ~ClientBase() {}
 
 	/// Submits the given transaction.
@@ -146,6 +146,8 @@ public:
 	virtual h256s pendingHashes() const override;
 	virtual BlockHeader pendingInfo() const override;
 	virtual BlockDetails pendingDetails() const override;
+
+	EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(EnvInfo(pendingInfo())); }
 
 	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
 	virtual ImportResult injectBlock(bytes const& _block) override;

@@ -60,9 +60,10 @@ ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
 	{
 		accountStartNonce = u256(fromBigEndian<u256>(fromHex(params["accountStartNonce"].get_str())));
 		maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
+		tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
 		blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
 		for (auto i: params)
-			if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward")
+			if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
 				otherParams[i.first] = i.second.get_str();
 	}
 

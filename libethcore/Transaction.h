@@ -30,6 +30,8 @@ namespace dev
 namespace eth
 {
 
+struct EVMSchedule;
+
 /// Named-boolean type to encode whether a signature be included in the serialisation process.
 enum IncludeSignature
 {
@@ -83,6 +85,9 @@ public:
 	Address const& safeSender() const noexcept;
 	/// Force the sender to a particular value. This will result in an invalid transaction RLP.
 	void forceSender(Address const& _a) { m_sender = _a; }
+
+	/// @throws InvalidSValue if the signature has an invalid S value.
+	void checkLowS() const;
 
 	/// @returns true if transaction is non-null.
 	explicit operator bool() const { return m_type != NullTransaction; }
@@ -140,6 +145,12 @@ public:
 	SignatureStruct const& signature() const { return m_vrs; }
 
 	void sign(Secret const& _priv);			///< Sign the transaction.
+
+	/// @returns true if the transaction contains enough gas for the basic payment.
+	bigint gasRequired(EVMSchedule const& _es, u256 const& _gas = 0) const { return gasRequired(m_type == TransactionBase::ContractCreation, &m_data, _es, _gas); }
+
+	/// Get the fee associated for a transaction with the given data.
+	static bigint gasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas = 0);
 
 protected:
 	/// Type of transaction.

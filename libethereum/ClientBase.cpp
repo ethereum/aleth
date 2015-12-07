@@ -63,7 +63,7 @@ pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t,
 	Transaction t(ts, _secret);
 	m_tq.import(t.rlp());
 	StructuredLogger::transactionReceived(t.sha3().abridged(), t.sender().abridged());
-	cnote << "New transaction " << t;
+//	cnote << "New transaction " << t;
 	
 	return make_pair(t.sha3(), toAddress(ts.from, ts.nonce));
 }
@@ -119,7 +119,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 		u256 upperBound = _maxGas;
 		if (upperBound == Invalid256 || upperBound > c_maxGasEstimate)
 			upperBound = c_maxGasEstimate;
-		u256 lowerBound = (u256)Transaction::gasRequired(_data, 0);
+		u256 lowerBound = (u256)Transaction::gasRequired(!_dest, &_data, EVMSchedule(), 0);
 		Block block = asOf(_blockNumber);
 		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
 		ExecutionResult er;

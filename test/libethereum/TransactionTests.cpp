@@ -20,6 +20,9 @@
  * Transaction test functions.
  */
 
+#include <libethcore/SealEngine.h>
+#include <libethashseal/GenesisInfo.h>
+#include <libethereum/ChainParams.h>
 #include "../TestHelper.h"
 #include "test/fuzzTesting/fuzzHelper.h"
 
@@ -32,19 +35,20 @@ namespace dev {  namespace test {
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
-	string testname;
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
+	BlockHeader bh;
+	bh.setNumber(0);
+
+	TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
-		mObject& o = i.second.get_obj();
-		if (test::Options::get().singleTest && test::Options::get().singleTestName != i.first)
-		{
-			o.clear();
-			continue;
-		}
+		string testname = i.first;
+		json_spirit::mObject& o = i.second.get_obj();
 
-		testname = "(" + i.first + ") ";
-		cnote << testname;
-		if (_fillin)
+		if (!TestOutputHelper::passTest(o, testname))
+			continue;
+
+			if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
 			mObject tObj = o["transaction"].get_obj();
@@ -58,6 +62,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				Transaction txFromFields(rlpStream.out(), CheckTransaction::Everything);
 				if (!txFromFields.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
+				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
 
 				o["sender"] = toString(txFromFields.sender());				
 				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
@@ -100,6 +105,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				bytes stream = importByteArray(o["rlp"].get_str());
 				RLP rlp(stream);
 				txFromRlp = Transaction(rlp.data(), CheckTransaction::Everything);
+				se->verifyTransaction(ImportRequirements::Everything, txFromRlp, bh);
 				if (!txFromRlp.signature().isValid())
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 			}

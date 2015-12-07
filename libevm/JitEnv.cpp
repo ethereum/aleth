@@ -1,7 +1,6 @@
 
 #pragma GCC diagnostic ignored "-Wconversion"
 #include <libdevcore/SHA3.h>
-#include <libevmcore/Params.h>
 #include <libevm/ExtVMFace.h>
 
 #include "JitUtils.h"
@@ -31,7 +30,7 @@ extern "C"
 		auto value = jit2eth(*_value);
 
 		if (value == 0 && _env->store(index) != 0)	// If delete
-			_env->sub.refunds += c_sstoreRefundGas;	// Increase refund counter
+			_env->sub.refunds += _env->evmSchedule().sstoreRefundGas;	// Increase refund counter
 
 		_env->setStore(index, value);	// Interface uses native endianness
 	}
@@ -63,8 +62,14 @@ extern "C"
 
 	EXPORT bool env_call(ExtVMFace* _env, int64_t* io_gas, int64_t _callGas, h256* _receiveAddress, i256* _value, byte* _inBeg, uint64_t _inSize, byte* _outBeg, uint64_t _outSize, h256* _codeAddress)
 	{
+		EVMSchedule schedule = _env->evmSchedule(); // TODO: maybe memoise?
+
 		CallParameters params;
-		params.value = jit2eth(*_value);
+
+		// TODO: HOMESTEAD: this will not work for DELEGATECALL
+		params.apparentValue = jit2eth(*_value);
+		params.valueTransfer = jit2eth(*_value);
+
 		params.senderAddress = _env->myAddress;
 		params.receiveAddress = right160(*_receiveAddress);
 		params.codeAddress = right160(*_codeAddress);
@@ -78,13 +83,13 @@ extern "C"
 			return false;
 
 		if (isCall && !_env->exists(params.receiveAddress))
-			*io_gas -= static_cast<int64_t>(c_callNewAccountGas); // no underflow, *io_gas non-negative before
+			*io_gas -= static_cast<int64_t>(schedule.callNewAccountGas); // no underflow, *io_gas non-negative before
 
-		if (params.value > 0) // value transfer
+		if (params.valueTransfer > 0) // value transfer TODO: HOMESTEAD: check this is valid against the EVM.
 		{
-			/*static*/ assert(c_callValueTransferGas > c_callStipend && "Overflow possible");
-			*io_gas -= static_cast<int64_t>(c_callValueTransferGas); // no underflow
-			_callGas += static_cast<int64_t>(c_callStipend); // overflow possibility, but in the same time *io_gas < 0
+			/*static*/ assert(schedule.callValueTransferGas > schedule.callStipend && "Overflow possible");
+			*io_gas -= static_cast<int64_t>(schedule.callValueTransferGas); // no underflow
+			_callGas += static_cast<int64_t>(schedule.callStipend); // overflow possibility, but in the same time *io_gas < 0
 		}
 
 		if (*io_gas < 0)
@@ -92,7 +97,7 @@ extern "C"
 
 		auto ret = false;
 		params.gas = u256{_callGas};
-		if (_env->balance(_env->myAddress) >= params.value && _env->depth < 1024)
+		if (_env->balance(_env->myAddress) >= params.valueTransfer && _env->depth < 1024)
 			ret = _env->call(params);
 
 		*io_gas += static_cast<int64_t>(params.gas); // it is never more than initial _callGas

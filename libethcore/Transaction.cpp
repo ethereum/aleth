@@ -23,6 +23,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcrypto/Common.h>
+#include <libevmcore/EVMSchedule.h>
 #include <libethcore/Exceptions.h>
 #include "Transaction.h"
 using namespace std;
@@ -129,3 +130,20 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig) const
 	if (_sig)
 		_s << (m_vrs.v + 27) << (u256)m_vrs.r << (u256)m_vrs.s;
 }
+
+static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
+
+void TransactionBase::checkLowS() const
+{
+	if (m_vrs.s > c_secp256k1n / 2)
+		BOOST_THROW_EXCEPTION(InvalidSignature());
+}
+
+bigint TransactionBase::gasRequired(bool _contractCreation, bytesConstRef _data, EVMSchedule const& _es, u256 const& _gas)
+{
+	bigint ret = (_contractCreation ? _es.txCreateGas : _es.txGas) + _gas;
+	for (auto i: _data)
+		ret += i ? _es.txDataNonZeroGas : _es.txDataZeroGas;
+	return ret;
+}
+

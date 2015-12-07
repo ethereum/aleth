@@ -80,7 +80,8 @@ public:
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),
-		WithExisting _forceAction = WithExisting::Trust
+		WithExisting _forceAction = WithExisting::Trust,
+		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
 	/// Destructor.
 	virtual ~Client();
@@ -123,12 +124,15 @@ public:
 	BlockChain const& blockChain() const { return bc(); }
 	/// Get some information on the block queue.
 	BlockQueueStatus blockQueueStatus() const { return m_bq.status(); }
-	/// Get some information on the block queue.
+	/// Get some information on the block syncing.
 	SyncStatus syncStatus() const override;
 	/// Get the block queue.
 	BlockQueue const& blockQueue() const { return m_bq; }
 	/// Get the block queue.
 	OverlayDB const& stateDB() const { return m_stateDB; }
+	/// Get some information on the transaction queue.
+	TransactionQueue::Status transactionQueueStatus() const { return m_tq.status(); }
+	TransactionQueue::Limits transactionQueueLimits() const { return m_tq.limits(); }
 
 	/// Freeze worker thread and sync some of the block queue.
 	std::tuple<ImportRoute, bool, unsigned> syncQueue(unsigned _max = 1);
@@ -170,7 +174,7 @@ public:
 	void setNetworkId(u256 const& _n) override;
 
 	/// Get the seal engine.
-	SealEngineFace* sealEngine() const { return bc().sealEngine(); }
+	SealEngineFace* sealEngine() const override { return bc().sealEngine(); }
 
 	// Debug stuff:
 
@@ -310,6 +314,7 @@ protected:
 
 	bool m_wouldSeal = false;				///< True if we /should/ be sealing.
 	bool m_sealOnBadChain = false;			///< Seal even when the canary says it's a bad chain.
+	bool m_wouldButShouldnot = false;		///< True if the last time we called rejigSealing wouldSeal() was true but sealer's shouldSeal() was false.
 
 	mutable std::chrono::system_clock::time_point m_lastGarbageCollection;
 											///< When did we last both doing GC on the watches?

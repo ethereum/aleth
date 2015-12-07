@@ -25,6 +25,7 @@
 #include <functional>
 #include <libethcore/Common.h>
 #include <libevm/ExtVMFace.h>
+#include <libethcore/SealEngine.h>
 #include "State.h"
 
 namespace dev
@@ -89,6 +90,9 @@ public:
 		m_s.m_cache = m_origCache;
 		sub.clear();
 	}
+
+	/// Return the EVM gas-price schedule for this execution context.
+	EVMSchedule evmSchedule() const override final { return m_sealEngine->evmSchedule(envInfo()); }
 
 	State& state() const { return m_s; }
 

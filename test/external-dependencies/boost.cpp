@@ -22,12 +22,14 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/Common.h>
+#include <test/TestHelper.h>
 
 BOOST_AUTO_TEST_SUITE(ExtDepBoost)
 
 // test that reproduces issue https://github.com/ethereum/cpp-ethereum/issues/1977
 BOOST_AUTO_TEST_CASE(u256_overflow_test)
 {
+	dev::test::TestOutputHelper::initTest();
 	dev::u256 a = 14;
 	dev::bigint b = dev::bigint("115792089237316195423570985008687907853269984665640564039457584007913129639948");
 	// to fix cast `a` to dev::bigint

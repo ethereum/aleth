@@ -36,6 +36,7 @@ BOOST_AUTO_TEST_SUITE(DifficultyTests)
 
 BOOST_AUTO_TEST_CASE(difficultyTests)
 {
+	test::TestOutputHelper::initTest();
 	string testPath = test::getTestPath();
 	testPath += "/BasicTests";
 
@@ -45,7 +46,7 @@ BOOST_AUTO_TEST_CASE(difficultyTests)
 	js::read_string(s, v);
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Frontier)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));
 
 	for (auto& i: v.get_obj())
 	{

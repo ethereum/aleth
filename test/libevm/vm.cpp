@@ -48,7 +48,7 @@ h160 FakeExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _init, OnOpF
 
 bool FakeExtVM::call(CallParameters& _p)
 {
-	Transaction t(_p.value, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
+	Transaction t(_p.valueTransfer, gasPrice, _p.gas, _p.receiveAddress, _p.data.toVector());
 	callcreates.push_back(t);
 	return true;
 }
@@ -294,20 +294,18 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 
 namespace dev { namespace test {
 
-void doVMTests(json_spirit::mValue& v, bool _fillin)
+void doVMTests(json_spirit::mValue& _v, bool _fillin)
 {
-	string testname;
-	for (auto& i: v.get_obj())
-	{
-		mObject& o = i.second.get_obj();
-		if (test::Options::get().singleTest && test::Options::get().singleTestName != i.first)
-		{
-			o.clear();
-			continue;
-		}
+	if (string(boost::unit_test::framework::current_test_case().p_name) != "vmRandom")
+		TestOutputHelper::initTest(_v);
 
-		cnote << i.first;
-		testname = "(" + i.first + ") ";
+	for (auto& i: _v.get_obj())
+	{
+		string testname = i.first;
+		json_spirit::mObject& o = i.second.get_obj();
+
+		if (!TestOutputHelper::passTest(o, testname))
+			continue;
 
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
@@ -534,6 +532,9 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
 		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
 			testFiles.push_back(iterator->path());
+
+	test::TestOutputHelper::initTest();
+	test::TestOutputHelper::setMaxTests(testFiles.size());
 
 	for (auto& path: testFiles)
 	{

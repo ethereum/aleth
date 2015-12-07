@@ -75,6 +75,7 @@ ImportResult TransactionQueue::import(bytesConstRef _transactionRLP, IfDropped _
 			// The transaction's nonce may yet be invalid (or, it could be "valid" but we may be missing a marginally older transaction).
 			t = Transaction(_transactionRLP, CheckTransaction::Everything);
 			UpgradeGuard ul(l);
+//			cdebug << "Importing" << t;
 			ir = manageImport_WITH_LOCK(h, t);
 		}
 		catch (...)
@@ -117,14 +118,14 @@ ImportResult TransactionQueue::import(Transaction const& _transaction, IfDropped
 	return ret;
 }
 
-Transactions TransactionQueue::topTransactions(unsigned _limit) const
+Transactions TransactionQueue::topTransactions(unsigned _limit, h256Hash const& _avoid) const
 {
 	ReadGuard l(m_lock);
-	Transactions res;
-	unsigned n = _limit;
-	for (auto t = m_current.begin(); n != 0 && t != m_current.end(); ++t, --n)
-		res.push_back(t->transaction);
-	return res;
+	Transactions ret;
+	for (auto t = m_current.begin(); ret.size() < _limit && t != m_current.end(); ++t)
+		if (!_avoid.count(t->transaction.sha3()))
+			ret.push_back(t->transaction);
+	return ret;
 }
 
 h256Hash TransactionQueue::knownTransactions() const
@@ -355,7 +356,6 @@ void TransactionQueue::dropGood(Transaction const& _t)
 	makeCurrent_WITH_LOCK(_t);
 	if (!m_known.count(_t.sha3()))
 		return;
-	m_dropped.insert(_t.sha3());
 	remove_WITH_LOCK(_t.sha3());
 }
 

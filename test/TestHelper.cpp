@@ -25,6 +25,7 @@
 #include <chrono>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libethereum/Client.h>
 #include <libevm/ExtVMFace.h>
 #include <liblll/Compiler.h>
@@ -74,7 +75,7 @@ void mine(Block& s, BlockChain const& _bc, SealEngineFace* _sealer)
 	s.sealBlock(sealed);
 }
 
-void mine(BlockHeader& _bi, SealEngineFace* _sealer)
+void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify)
 {
 	Notified<bytes> sealed;
 	_sealer->onSealGenerated([&](bytes const& sealedHeader){ sealed = sealedHeader; });
@@ -83,7 +84,8 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer)
 	_sealer->onSealGenerated([](bytes const&){});
 	_bi = BlockHeader(sealed, HeaderData);
 //	cdebug << "Block mined" << Ethash::boundary(_bi).hex() << Ethash::nonce(_bi) << _bi.hash(WithoutSeal).hex();
-	_sealer->verify(JustSeal, _bi);
+	if (_verify) //sometimes it is needed to mine incorrect blockheaders for testing
+		_sealer->verify(JustSeal, _bi);
 }
 
 }
@@ -124,7 +126,7 @@ bytes ImportTest::executeTest()
 	eth::State tmpState = m_statePre;
 	try
 	{
-		unique_ptr<SealEngineFace> se(ChainParams().createSealEngine());
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
 		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();
@@ -267,6 +269,7 @@ void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 
 int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
 {
+	bool wasError = false;
 	#define CHECK(a,b)						\
 		{									\
 			if (_throw == WhenError::Throw) \
@@ -276,7 +279,11 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 					return 1;				\
 			}								\
 			else							\
+			{								\
 				BOOST_WARN_MESSAGE(a,b);	\
+				if (!a)						\
+					wasError = true;		\
+			}								\
 		}
 
 	for (auto const& a: _stateExpect.addresses())
@@ -325,7 +332,8 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect code '" << toHex(_statePost.code(a.first)) << "', expected '" << toHex(_stateExpect.code(a.first)) << "'");
 		}
 	}
-	return 0;
+
+	return wasError;
 }
 
 int ImportTest::exportTest(bytes const& _output)
@@ -718,11 +726,8 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 	return rlpStream;
 }
 
-Options::Options()
-{
-	auto argc = boost::unit_test::framework::master_test_suite().argc;
-	auto argv = boost::unit_test::framework::master_test_suite().argv;
-
+Options::Options(int argc, char** argv)
+{	
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -782,7 +787,7 @@ Options::Options()
 		{
 			singleTest = true;
 			auto name1 = std::string{argv[i + 1]};
-			if (i + 1 < argc) // two params
+			if (i + 2 < argc) // two params
 			{
 				auto name2 = std::string{argv[i + 2]};
 				if (name2[0] == '-') // not param, another option
@@ -798,6 +803,16 @@ Options::Options()
 		}
 		else if (arg == "--fulloutput")
 			fulloutput = true;
+		else if (arg == "--sealengine")
+		{
+			if (std::string{argv[i + 1]} == "Frontier")
+				sealEngineNetwork = eth::Network::FrontierTest;
+			else if (std::string{argv[i + 1]} == "Homestead")
+				sealEngineNetwork = eth::Network::HomesteadTest;
+			else
+				cout << "Invalid sealEngine"<< endl;
+			++i;
+		}
 		else if (arg == "--verbosity" && i + 1 < argc)
 		{
 			static std::ostringstream strCout; //static string to redirect logs to
@@ -815,6 +830,15 @@ Options::Options()
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
+		else if (arg == "-t" && i + 1 < argc)
+			rCurrentTestSuite = std::string{argv[i + 1]};
+		else if (arg == "-checktest" || arg == "-filltest")
+		{
+			//read all line to the end
+			for (int j = i+1; j < argc; ++j)
+				rCheckTest += argv[j];
+			break;
+		}
 	}
 
 	//Default option
@@ -822,9 +846,9 @@ Options::Options()
 		g_logVerbosity = -1;	//disable cnote but leave cerr and cout
 }
 
-Options const& Options::get()
+Options const& Options::get(int argc, char** argv)
 {
-	static Options instance;
+	static Options instance(argc, argv);
 	return instance;
 }
 
@@ -897,12 +921,21 @@ void Listener::notifyTestFinished()
 size_t TestOutputHelper::m_currTest = 0;
 size_t TestOutputHelper::m_maxTests = 0;
 string TestOutputHelper::m_currentTestName = "n/a";
+string TestOutputHelper::m_currentTestCaseName = "n/a";
 
 using namespace boost;
+void TestOutputHelper::initTest()
+{
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+	m_maxTests = 1;
+	m_currTest = 0;
+}
+
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
 {
-	std::string testCaseName = boost::unit_test::framework::current_test_case().p_name;
-	std::cout << "Test Case \"" + testCaseName + "\": " << std::endl;
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _v.get_obj().size();
 	m_currTest = 0;	
 }

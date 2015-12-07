@@ -17,6 +17,8 @@ namespace jit
 namespace // Helper functions
 {
 
+// TODO: FIXME: HOMESTEAD: XXX: @chfast populate m_schedule from an ExtVMFace instance via ExtVMFace::evmSchedule.
+
 int64_t const c_stepGas[] = {0, 2, 3, 5, 8, 10, 20};
 int64_t const c_expByteGas = 10;
 int64_t const c_sha3Gas = 30;

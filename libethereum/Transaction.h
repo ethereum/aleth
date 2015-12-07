@@ -25,7 +25,7 @@
 #include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
 #include <libethcore/Transaction.h>
-#include <libevmcore/Params.h>
+#include <libethcore/ChainOperationParams.h>
 
 namespace dev
 {
@@ -113,18 +113,6 @@ public:
 
 	/// Constructs a transaction from the given RLP.
 	explicit Transaction(bytes const& _rlp, CheckTransaction _checkSig): Transaction(&_rlp, _checkSig) {}
-
-	/// @returns true if the transaction contains enough gas for the basic payment.
-	bool checkPayment() const { return m_gas >= gasRequired(); }
-
-	/// @returns the gas required to run this transaction.
-	bigint gasRequired() const;
-
-	/// Get the fee associated for a transaction with the given data.
-	template <class T> static bigint gasRequired(T const& _data, u256 _gas = 0) { bigint ret = c_txGas + _gas; for (auto i: _data) ret += i ? c_txDataNonZeroGas : c_txDataZeroGas; return ret; }
-
-private:
-	mutable bigint m_gasRequired = 0;	///< Memoised amount required for the transaction to run.
 };
 
 /// Nice name for vector of Transaction.

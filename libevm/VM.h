@@ -27,7 +27,6 @@
 #include <libevmcore/Instruction.h>
 #include <libdevcore/SHA3.h>
 #include <libethcore/BlockHeader.h>
-#include <libevmcore/Params.h>
 #include "VMFace.h"
 
 namespace dev
@@ -61,7 +60,7 @@ public:
 
 private:
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
-	void require(u256 _n, u256 _d) { if (m_stack.size() < _n) { if (m_onFail) m_onFail(); BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_n, (bigint)m_stack.size())); } if (m_stack.size() - _n + _d > c_stackLimit) { if (m_onFail) m_onFail(); BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)m_stack.size())); } }
+	void require(u256 _n, u256 _d);
 	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
 
 	uint64_t m_curPC = 0;
@@ -70,6 +69,7 @@ private:
 	u256s m_stack;
 	std::vector<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
+	EVMSchedule m_schedule;
 };
 
 }
