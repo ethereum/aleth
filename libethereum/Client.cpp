@@ -893,3 +893,11 @@ bool Client::submitSealed(bytes const& _header)
 	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postSeal that contains all trie changes.
 	return m_bq.import(&newBlock, true) == ImportResult::Success;
 }
+
+void Client::rewind(unsigned _n)
+{
+	bc().rewind(_n);
+	auto h = m_host.lock();
+	if (h)
+		h->reset();
+}

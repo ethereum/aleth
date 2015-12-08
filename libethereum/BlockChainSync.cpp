@@ -128,7 +128,8 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 
 BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_host(_host),
-	m_startingBlock(_host.chain().number())
+	m_startingBlock(_host.chain().number()),
+	m_lastImportedBlock(m_startingBlock)
 {
 	m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
 	{
@@ -267,9 +268,10 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 		if (!m_haveCommonHeader)
 		{
 			// download backwards until common block is found 1 header at a time
-			start = m_host.chain().number();
-			if (!m_headers.empty() != 0)
+			start = m_lastImportedBlock;
+			if (!m_headers.empty())
 				start = std::min(start, m_headers.begin()->first - 1);
+			m_lastImportedBlock = start;
 
 			if (start <= 1)
 				m_haveCommonHeader = true; //reached genesis
@@ -396,7 +398,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 			clog(NetMessageSummary) << "Skipping header " << blockNumber;
 			continue;
 		}
-		if (blockNumber <= m_lastImportedBlock)
+		if (blockNumber <= m_lastImportedBlock && m_haveCommonHeader)
 		{
 			clog(NetMessageSummary) << "Skipping header " << blockNumber;
 			continue;
@@ -404,7 +406,8 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		if (blockNumber > m_highestBlock)
 			m_highestBlock = blockNumber;
 
-		if (host().chain().isKnown(info.hash()))
+		auto status = host().bq().blockStatus(info.hash());
+		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(info.hash()))
 		{
 			m_haveCommonHeader = true;
 			m_lastImportedBlock = (unsigned)info.number();
@@ -498,7 +501,7 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 		h256 uncles = sha3(body[1].data());
 		HeaderId id { transactionRoot, uncles };
 		auto iter = m_headerIdToNumber.find(id);
-		if (iter == m_headerIdToNumber.end())
+		if (iter == m_headerIdToNumber.end() || !haveItem(m_headers, iter->second))
 		{
 			clog(NetAllDetail) << "Ignored unknown block body";
 			continue;
@@ -540,7 +543,7 @@ void BlockChainSync::collectBlocks()
 		{
 		case ImportResult::Success:
 			success++;
-			m_lastImportedBlock = headers.first + i;
+			m_lastImportedBlock = max(m_lastImportedBlock, headers.first + (unsigned)i);
 			break;
 		case ImportResult::Malformed:
 		case ImportResult::BadChain:
@@ -551,21 +554,16 @@ void BlockChainSync::collectBlocks()
 			future++;
 			break;
 		case ImportResult::AlreadyInChain:
+			break;
 		case ImportResult::AlreadyKnown:
-			m_lastImportedBlock = headers.first + i;
-			got++;
-			break;
-
 		case ImportResult::FutureTimeUnknown:
-			assert(false);
-			future++; //Fall through
-
 		case ImportResult::UnknownParent:
-		{
-			assert(false);
-			unknown++;
-			break;
-		}
+			if (headers.first + i > m_lastImportedBlock)
+			{
+				resetSync();
+				m_haveCommonHeader = false; // fork detected, search for common header again
+			}
+			return;
 
 		default:;
 		}
@@ -605,56 +603,74 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
-	auto h = BlockHeader::headerHashFromBlock(_r[0].data());
+
 
 	if (_r.itemCount() != 2)
-		_peer->disable("NewBlock without 2 data fields.");
-	else
 	{
-		switch (host().bq().import(_r[0].data()))
+		_peer->disable("NewBlock without 2 data fields.");
+		return;
+	}
+	BlockHeader info(_r[0][0].data(), HeaderData);
+	auto h = info.hash();
+	DEV_GUARDED(_peer->x_knownBlocks)
+		_peer->m_knownBlocks.insert(h);
+	unsigned blockNumber = static_cast<unsigned>(info.number());
+	if (blockNumber > (m_lastImportedBlock + 1))
+	{
+		clog(NetAllDetail) << "Received unknown new block";
+		syncPeer(_peer, true);
+		return;
+	}
+	switch (host().bq().import(_r[0].data()))
+	{
+	case ImportResult::Success:
+		_peer->addRating(100);
+		logNewBlock(h);
+		m_lastImportedBlock = max(m_lastImportedBlock, blockNumber);
+		m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
+		m_downloadingBodies.erase(blockNumber);
+		m_downloadingHeaders.erase(blockNumber);
+		removeItem(m_headers, blockNumber);
+		removeItem(m_bodies, blockNumber);
+		if (m_headers.empty())
 		{
-		case ImportResult::Success:
-			_peer->addRating(100);
-			logNewBlock(h);
-			break;
-		case ImportResult::FutureTimeKnown:
-			//TODO: Rating dependent on how far in future it is.
-			break;
+			assert(m_bodies.empty());
+			completeSync();
+		}
+		break;
+	case ImportResult::FutureTimeKnown:
+		//TODO: Rating dependent on how far in future it is.
+		break;
 
-		case ImportResult::Malformed:
-		case ImportResult::BadChain:
-			logNewBlock(h);
-			_peer->disable("Malformed block received.");
-			return;
+	case ImportResult::Malformed:
+	case ImportResult::BadChain:
+		logNewBlock(h);
+		_peer->disable("Malformed block received.");
+		return;
 
-		case ImportResult::AlreadyInChain:
-		case ImportResult::AlreadyKnown:
-			break;
+	case ImportResult::AlreadyInChain:
+	case ImportResult::AlreadyKnown:
+		break;
 
-		case ImportResult::FutureTimeUnknown:
-		case ImportResult::UnknownParent:
+	case ImportResult::FutureTimeUnknown:
+	case ImportResult::UnknownParent:
+	{
+		_peer->m_unknownNewBlocks++;
+		if (_peer->m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
 		{
-			_peer->m_unknownNewBlocks++;
-			if (_peer->m_unknownNewBlocks > c_maxPeerUknownNewBlocks)
-			{
-				_peer->disable("Too many uknown new blocks");
-				if (m_state == SyncState::Idle)
-					host().bq().clear();
-			}
-			logNewBlock(h);
-			u256 totalDifficulty = _r[1].toInt<u256>();
-			if (totalDifficulty > _peer->m_totalDifficulty)
-			{
-				clog(NetMessageDetail) << "Received block with no known parent. Peer needs syncing...";
-				syncPeer(_peer, true);
-			}
-			break;
+			_peer->disable("Too many uknown new blocks");
+			restartSync();
 		}
-		default:;
+		logNewBlock(h);
+		u256 totalDifficulty = _r[1].toInt<u256>();
+		if (totalDifficulty > _peer->m_totalDifficulty)
+		{
+			clog(NetMessageDetail) << "Received block with no known parent. Peer needs syncing...";
+			syncPeer(_peer, true);
 		}
-
-		DEV_GUARDED(_peer->x_knownBlocks)
-			_peer->m_knownBlocks.insert(h);
+		break;
+	}
+	default:;
 	}
 }
 
@@ -688,12 +704,11 @@ void BlockChainSync::resetSync()
 void BlockChainSync::restartSync()
 {
 	resetSync();
-	m_lastImportedBlock = 0;
-	m_startingBlock = 0;
 	m_highestBlock = 0;
 	m_haveCommonHeader = false;
 	host().bq().clear();
 	m_startingBlock = host().chain().number();
+	m_lastImportedBlock = m_startingBlock;
 	m_state = SyncState::NotSynced;
 }
 
@@ -775,7 +790,7 @@ bool BlockChainSync::invariants() const
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got headers while not syncing"));
 	if (!isSyncing() && !m_bodies.empty())
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Got bodies while not syncing"));
-	if (isSyncing() && m_haveCommonHeader && m_lastImportedBlock == 0)
+	if (isSyncing() && m_host.chain().number() > 0 && m_haveCommonHeader && m_lastImportedBlock == 0)
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Common block not found"));
 	if (isSyncing() && !m_headers.empty() &&  m_lastImportedBlock >= m_headers.begin()->first)
 		BOOST_THROW_EXCEPTION(FailedInvariant() << errinfo_comment("Header is too old"));
