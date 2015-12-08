@@ -76,19 +76,19 @@ struct Setup
 			NetworkPreferences nprefs("127.0.0.1", 0, false);
 			web3 = new WebThreeDirect(c_version, "", ChainParams(), WithExisting::Trust, {"shh"}, nprefs);
 			web3->setIdealPeerCount(9);
-			auto server = new jsonrpc::HttpServer(8080);
+			//auto server = new jsonrpc::HttpServer(8080);
 			KeyManager keyMan;
 			TrivialGasPricer gp;
 			accountHolder.reset(new FixedAccountHolder([&](){return web3->ethereum();}, {}));
 			whisperFace = new rpc::Whisper(*web3, {});
-			ethFace = new rpc::Eth(*web3->ethereum(), *accountHolder.get());
+			//ethFace = new rpc::Eth(*web3->ethereum(), *accountHolder.get());
 			netFace = new rpc::Net(*web3);
 			w3Face = new rpc::Web3(web3->clientVersion());
 			adminNetFace = new rpc::AdminNet(*web3, sm);
 			adminUtilsFace = new rpc::AdminUtils(sm);
-			modularServer.reset(new ModularServer<rpc::EthFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, whisperFace, netFace, w3Face, adminNetFace, adminUtilsFace));
-			modularServer->addConnector(server);
-			modularServer->StartListening();
+			//modularServer.reset(new ModularServer<rpc::EthFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, whisperFace, netFace, w3Face, adminNetFace, adminUtilsFace));
+			//modularServer->addConnector(server);
+			//modularServer->StartListening();
 			auto client = new jsonrpc::HttpClient("http://localhost:8080");
 			jsonrpcClient = unique_ptr<WebThreeStubClient>(new WebThreeStubClient(*client));
 		}
