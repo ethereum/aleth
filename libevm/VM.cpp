@@ -678,7 +678,7 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			{
 				callParams.onOp = _onOp;
 				callParams.senderAddress = inst == Instruction::DELEGATECALL ? _ext.caller : _ext.myAddress;
-				callParams.receiveAddress = inst == Instruction::CALL ? callParams.codeAddress : callParams.senderAddress;
+				callParams.receiveAddress = inst == Instruction::CALL ? callParams.codeAddress : _ext.myAddress;
 				callParams.data = bytesConstRef(m_temp.data() + inOff, inSize);
 				callParams.out = bytesRef(m_temp.data() + outOff, outSize);
 				m_stack.push_back(_ext.call(callParams));
