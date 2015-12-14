@@ -25,6 +25,8 @@
 #include <thread>
 #include <libp2p/Host.h>
 #include <test/test.h>
+#include <libp2p/Capability.h>
+#include <libp2p/HostCapability.h>
 
 using namespace std;
 using namespace dev;
@@ -35,6 +37,27 @@ struct P2PFixture
 	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
+
+class TestCap: public Capability
+{
+public:
+	TestCap(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset, CapDesc const&, uint16_t _capID): Capability(_s, _h, _idOffset, _capID) {}
+	virtual ~TestCap() {}
+	static std::string name() { return "p2pTestCapability"; }
+	static u256 version() { return 2; }
+	static unsigned messageCount() { return UserPacket + 1; }
+
+protected:
+	virtual bool interpret(unsigned _id, RLP const& _r) override { return _id > 0 || _r.size() > 0; }
+};
+
+class TestHostCap: public HostCapability<TestCap>, public Worker
+{
+public:
+	TestHostCap(): Worker("test") {}
+	virtual ~TestHostCap() {}
+};
+
 
 BOOST_FIXTURE_TEST_SUITE(p2p, P2PFixture)
 
@@ -56,6 +79,9 @@ BOOST_AUTO_TEST_CASE(host)
 	BOOST_REQUIRE(host2port);
 	
 	BOOST_REQUIRE_NE(host1port, host2port);
+
+	host1.registerCapability(make_shared<TestHostCap>());
+	host2.registerCapability(make_shared<TestHostCap>());
 	
 	auto node2 = host2.id();
 	int const step = 10;
@@ -114,6 +140,7 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 		BOOST_REQUIRE(h->listenPort());
 		bool inserted = ports.insert(h->listenPort()).second;
 		BOOST_REQUIRE(inserted);
+		h->registerCapability(make_shared<TestHostCap>());
 		hosts.push_back(h);
 	}
 	
@@ -179,6 +206,9 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	BOOST_REQUIRE(port1);
 	BOOST_REQUIRE(port2);
 	BOOST_REQUIRE_NE(port1, port2);
+
+	host1.registerCapability(make_shared<TestHostCap>());
+	host2.registerCapability(make_shared<TestHostCap>());
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
