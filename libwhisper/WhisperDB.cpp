@@ -157,32 +157,3 @@ void WhisperMessagesDB::saveSingleMessage(h256 const& _key, Envelope const& _e)
 		cwarn << boost::diagnostic_information(ex);
 	}
 }
-
-vector<unsigned> WhisperFiltersDB::restoreTopicsFromDB(WhisperHost* _host, h256 const& _id)
-{
-	vector<unsigned> ret;
-	string raw = lookup(_id);
-	if (!raw.empty())
-	{
-		RLP rlp(raw);
-		auto sz = rlp.itemCountStrict();
-
-		for (unsigned i = 0; i < sz; ++i)
-		{
-			RLP r = rlp[i];
-			bytesConstRef ref(r.toBytesConstRef());
-			Topics topics;
-			unsigned num = ref.size() / h256::size;
-			for (unsigned j = 0; j < num; ++j)
-			{
-				h256 topic(ref.data() + j * h256::size, h256::ConstructFromPointerType());
-				topics.push_back(topic);
-			}
-
-			unsigned w = _host->installWatch(topics);
-			ret.push_back(w);
-		}
-	}
-
-	return ret;
-}
