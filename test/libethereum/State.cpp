@@ -102,6 +102,11 @@ BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)
 		dev::test::executeTests("stHomeSteadSpecific", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stCallDelegateCodes)
+{
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stCallCodes)
 {
 	dev::test::executeTests("stCallCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
