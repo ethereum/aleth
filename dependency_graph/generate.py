@@ -39,10 +39,15 @@ def getDependencyEdges(submodulePath, library):
                         fromNode = executable
                     toNodes = result.group(3).split()
                     for toNode in toNodes:
-                        if ("::" in toNode) \
-                            and not (toNode.startswith("Qt::")) \
-                                and not (toNode.startswith("JsonRpc::")):
-                                    toNode = toNode.split("::")[1]
+                        # Merge all Qt::* and JsonRpc::* nodes
+                        # to simplify the output graph.   Not much
+                        # value in the details there.
+                        if toNode.startswith("Qt::"):
+                            toNode = "Qt*"
+                        elif toNode.startswith("JsonRpc::"):
+                            toNode = "JsonRpc*"
+                        elif "::" in toNode:
+                            toNode = toNode.split("::")[1]
                         edgeText = '"' + fromNode + '" -> "' + toNode + '"'
                         if "OPTIONAL" in line:
                             edgeText = edgeText + " [style=dotted]"
@@ -85,6 +90,13 @@ def processSubmodule(root, submodule):
     print "    subgraph cluster_" + cleanName + " {"
     print "        label = <" + submodule + " dependencies>"
 
+    # Hard-coded dependency edge for "soljson" which is within
+    # an EMSCRIPTEN conditional.   It's not worth bothering with
+    # complicating the parsing to cope with conditionals for this
+    # single misplaced dependency edge.   We'll just hard-code it.
+    if "solidity" in submodule:
+        print '    "soljson" -> "solidity"'
+
     print getLibraryAndApplicationNames(submodulePath)
 
     if (submodule == "libethereum"):
@@ -122,5 +134,23 @@ print '    node  [ fontname = "Courier", fontsize = 10 ]'
 print ''
 print '    compound = true'
 
+# Hard-coded cluster for webthree-helpers, which does contain any
+# of the Ethereum libraries or executables, but does define CMake
+# rules which introduce implicit dependencies.   Parsing those would
+# be way too much work.   Easier to hard-code them.   This script is
+# not attempting to be a general CMake-dependencies graph generator,
+# after all.   It's specific to webthree-umbrella.
+print "    subgraph cluster_webthree_helpers {"
+print '        label = <webthree-helpers dependencies>'
+print '        bgcolor = LemonChiffon'
+print '        "buildinfo"'
+print '        "base"'
+print "    }"
+print '    "base" -> "boost"'
+print '    "base" -> "Jsoncpp"'
+print '    "base" -> "LevelDB"'
+print '    "base" -> "pthreads"'
+
 processUmbrella('..')
+
 print "}"
