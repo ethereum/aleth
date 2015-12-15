@@ -213,7 +213,7 @@ public:
 		m_hasNonce(_all),
 		m_hasCode(_all),
 		m_hasStorage(_all)
-	{ m_shouldNotExist = false; }
+	{}
 
 	AccountMask(
 		bool _hasBalance,
@@ -241,7 +241,7 @@ private:
 	bool m_hasNonce;
 	bool m_hasCode;
 	bool m_hasStorage;
-	bool m_shouldNotExist;
+	bool m_shouldNotExist = false;
 };
 
 using AccountMap = std::unordered_map<Address, Account>;

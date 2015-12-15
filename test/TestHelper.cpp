@@ -324,7 +324,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 		}
 
 	for (auto const& a: _stateExpect.addresses())
-	{		
+	{
 		AccountMask addressOptions(true);
 		if(_expectedStateOptions.size())
 		{
