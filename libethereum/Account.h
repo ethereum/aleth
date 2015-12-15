@@ -213,18 +213,20 @@ public:
 		m_hasNonce(_all),
 		m_hasCode(_all),
 		m_hasStorage(_all)
-	{}
+	{ m_shouldNotExist = false; }
 
 	AccountMask(
 		bool _hasBalance,
 		bool _hasNonce,
 		bool _hasCode,
-		bool _hasStorage
+		bool _hasStorage,
+		bool _shouldNotExist = false
 	):
 		m_hasBalance(_hasBalance),
 		m_hasNonce(_hasNonce),
 		m_hasCode(_hasCode),
-		m_hasStorage(_hasStorage)
+		m_hasStorage(_hasStorage),
+		m_shouldNotExist(_shouldNotExist)
 	{}
 
 	bool allSet() const { return m_hasBalance && m_hasNonce && m_hasCode && m_hasStorage; }
@@ -232,12 +234,14 @@ public:
 	bool hasNonce() const { return m_hasNonce; }
 	bool hasCode() const { return m_hasCode; }
 	bool hasStorage() const { return m_hasStorage; }
+	bool shouldExist() const { return !m_shouldNotExist; }
 
 private:
 	bool m_hasBalance;
 	bool m_hasNonce;
 	bool m_hasCode;
 	bool m_hasStorage;
+	bool m_shouldNotExist;
 };
 
 using AccountMap = std::unordered_map<Address, Account>;
