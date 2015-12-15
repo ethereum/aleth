@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 	string incoming = "--";
 
 	Mode mode = Mode::Statistics;
-	State state(Invalid256);
+	State state(0);
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
