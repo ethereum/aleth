@@ -827,6 +827,10 @@ Options::Options(int argc, char** argv)
 				logVerbosity = Verbosity::NiceReport;
 			else
 				logVerbosity = Verbosity::Full;
+
+			int indentLevelInt = atoi(argv[i + 1]);
+			if (indentLevelInt > g_logVerbosity)
+				g_logVerbosity = indentLevelInt;
 		}
 		else if (arg == "--createRandomTest")
 			createRandomTest = true;
