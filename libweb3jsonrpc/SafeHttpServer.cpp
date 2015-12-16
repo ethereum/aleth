@@ -39,7 +39,11 @@ struct mhd_coninfo
 bool SafeHttpServer::SendResponse(string const& _response, void* _addInfo)
 {
 	struct mhd_coninfo* client_connection = static_cast<struct mhd_coninfo*>(_addInfo);
-	struct MHD_Response *result = MHD_create_response_from_data(_response.size(),(void *) _response.c_str(), 0, 1);
+	struct MHD_Response *result = MHD_create_response_from_buffer(
+		_response.size(),
+		static_cast<void *>(const_cast<char *>(_response.c_str())),
+		MHD_RESPMEM_MUST_COPY
+	);
 
 	MHD_add_response_header(result, "Content-Type", "application/json");
 	MHD_add_response_header(result, "Access-Control-Allow-Origin", m_allowedOrigin.c_str());
@@ -52,7 +56,7 @@ bool SafeHttpServer::SendResponse(string const& _response, void* _addInfo)
 bool SafeHttpServer::SendOptionsResponse(void* _addInfo)
 {
 	struct mhd_coninfo* client_connection = static_cast<struct mhd_coninfo*>(_addInfo);
-	struct MHD_Response *result = MHD_create_response_from_data(0, NULL, 0, 1);
+	struct MHD_Response *result = MHD_create_response_from_buffer(0, nullptr, MHD_RESPMEM_MUST_COPY);
 
 	MHD_add_response_header(result, "Allow", "POST, OPTIONS");
 	MHD_add_response_header(result, "Access-Control-Allow-Origin", m_allowedOrigin.c_str());
