@@ -100,6 +100,11 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(StateTests)
 
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCode)
+{
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stCallDelegateCodes)
 {
 	dev::test::executeTests("stCallDelegateCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
