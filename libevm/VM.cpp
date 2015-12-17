@@ -211,6 +211,32 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 		m_temp.resize((size_t)newTempSize);
 }
 
+uint64_t VM::verifyJumpDest(u256 const& _dest, vector<uint64_t> const& _validDests)
+{
+	auto nextPC = static_cast<uint64_t>(_dest);
+	if (!std::binary_search(_validDests.begin(), _validDests.end(), nextPC) || _dest > std::numeric_limits<uint64_t>::max())
+		BOOST_THROW_EXCEPTION(BadJumpDestination());
+	return nextPC;
+}
+
+void VM::copyDataToMemory(bytesConstRef _data)
+{
+	auto offset = static_cast<size_t>(m_stack.back());
+	m_stack.pop_back();
+	bigint bigIndex = m_stack.back();
+	auto index = static_cast<size_t>(bigIndex);
+	m_stack.pop_back();
+	auto size = static_cast<size_t>(m_stack.back());
+	m_stack.pop_back();
+
+	size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
+
+	if (sizeToBeCopied > 0)
+		std::memcpy(m_temp.data() + offset, _data.data() + index, sizeToBeCopied);
+	if (size > sizeToBeCopied)
+		std::memset(m_temp.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
+}
+
 template <class S> S divWorkaround(S const& _a, S const& _b)
 {
 	return (S)(bigint(_a) / bigint(_b));
@@ -232,32 +258,6 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 		else if (_ext.code[i] >= (byte)Instruction::PUSH1 && _ext.code[i] <= (byte)Instruction::PUSH32)
 			i += _ext.code[i] - (size_t)Instruction::PUSH1 + 1;
 	}
-
-	auto verifyJumpDest = [](u256 const& _dest, std::vector<uint64_t> const& _validDests)
-	{
-		auto nextPC = static_cast<uint64_t>(_dest);
-		if (!std::binary_search(_validDests.begin(), _validDests.end(), nextPC) || _dest > std::numeric_limits<uint64_t>::max())
-			BOOST_THROW_EXCEPTION(BadJumpDestination());
-		return nextPC;
-	};
-
-	auto copyDataToMemory = [](bytesConstRef _data, decltype(m_stack)& _stack, decltype(m_temp)& _memory)
-	{
-		auto offset = static_cast<size_t>(_stack.back());
-		_stack.pop_back();
-		bigint bigIndex = _stack.back();
-		auto index = static_cast<size_t>(bigIndex);
-		_stack.pop_back();
-		auto size = static_cast<size_t>(_stack.back());
-		_stack.pop_back();
-
-		size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
-
-		if (sizeToBeCopied > 0)
-			std::memcpy(_memory.data() + offset, _data.data() + index, sizeToBeCopied);
-		if (size > sizeToBeCopied)
-			std::memset(_memory.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
-	};
 
 	m_schedule = _ext.evmSchedule();
 	m_steps = 0;
@@ -422,16 +422,16 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			m_stack.back() = _ext.codeAt(asAddress(m_stack.back())).size();
 			break;
 		case Instruction::CALLDATACOPY:
-			copyDataToMemory(_ext.data, m_stack, m_temp);
+			copyDataToMemory(_ext.data);
 			break;
 		case Instruction::CODECOPY:
-			copyDataToMemory(&_ext.code, m_stack, m_temp);
+			copyDataToMemory(&_ext.code);
 			break;
 		case Instruction::EXTCODECOPY:
 		{
 			auto a = asAddress(m_stack.back());
 			m_stack.pop_back();
-			copyDataToMemory(&_ext.codeAt(a), m_stack, m_temp);
+			copyDataToMemory(&_ext.codeAt(a));
 			break;
 		}
 		case Instruction::GASPRICE:
