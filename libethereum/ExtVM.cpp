@@ -35,9 +35,9 @@ static unsigned const c_depthLimit = 1024;
 /// Upper bound of stack space needed by single CALL/CREATE execution. Set experimentally.
 static size_t const c_singleExecutionStackSize =
 #ifdef NDEBUG
-	10 * 1024;
+	14 * 1024;
 #else
-	16 * 1024;
+	17 * 1024;
 #endif
 
 /// Standard thread stack size.
