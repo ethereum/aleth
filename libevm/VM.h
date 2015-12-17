@@ -64,6 +64,7 @@ private:
 	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
 	static uint64_t verifyJumpDest(u256 const& _dest, std::vector<uint64_t> const& _validDests);
 	void copyDataToMemory(bytesConstRef _data);
+	uint64_t execOrdinaryOpcode(Instruction _inst, u256& io_gas, ExtVMFace& _ext);
 
 	uint64_t m_curPC = 0;
 	uint64_t m_steps = 0;
