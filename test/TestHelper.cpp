@@ -40,6 +40,43 @@ namespace dev
 namespace eth
 {
 
+void printHelp()
+{
+	cout << "Usage: " << std::endl;
+	cout << std::left;
+	cout << std::endl << "Setting test suite" << std::endl;
+	cout << setw(30) <<	"-t <TestSuite>" << setw(25) << "Execute test operations" << std::endl;
+	cout << setw(30) << "-t <TestSuite>/<TestCase>" << std::endl;
+
+	cout << std::endl << "Debugging" << std::endl;
+	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test" << std::endl;
+	cout << setw(30) << "--singletest <TestFile> <TestName>" << std::endl;
+	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed" << std::endl;
+	cout << setw(30) << "--vm <interpreter|jit|smart>" << setw(25) << "Set VM type for VMTests suite" << std::endl;
+	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for VMTests suite. Requires verbosity level >= 12" << std::endl;
+	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file" << std::endl;
+	cout << setw(30) << "--filltest <FileData>" << setw(25) << "Try fill tests from the given json stream" << std::endl;
+	cout << setw(30) << "--checktest <FileData>" << setw(25) << "Try run tests from the given json stream" << std::endl;
+
+	cout << std::endl << "Additional Tests" << std::endl;
+	cout << setw(30) << "--performance" << setw(25) << "Enable perfomance tests" << std::endl;
+	cout << setw(30) << "--quadratic" << setw(25) << "Enable quadratic complexity tests" << std::endl;
+	cout << setw(30) << "--memory" << setw(25) << "Enable memory consuming tests" << std::endl;
+	cout << setw(30) << "--inputLimits" << setw(25) << "Enable inputLimits tests" << std::endl;
+	cout << setw(30) << "--bigdata" << setw(25) << "Enable bigdata tests" << std::endl;
+	cout << setw(30) << "--wallet" << setw(25) << "Enable wallet tests" << std::endl;
+	cout << setw(30) << "--all" << setw(25) << "Enable all tests" << std::endl;
+
+	cout << std::endl << "Test Creation" << std::endl;
+	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers" << std::endl;
+	cout << setw(30) << "--checkstate" << setw(25) << "Enable expect section state checks" << std::endl;
+	cout << setw(30) << "--sealengine <Frontier|Homestead>" << setw(25) << "Set internal seal engine" << std::endl;
+	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console" << std::endl;
+	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field" << std::endl;
+
+	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments" << std::endl;
+}
+
 void mine(Client& c, int numBlocks)
 {
 	auto startBlock = c.blockChain().details().number;
@@ -731,6 +768,12 @@ Options::Options(int argc, char** argv)
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
+		if (arg == "--help")
+		{
+			printHelp();
+			exit(0);
+		}
+		else
 		if (arg == "--vm" && i + 1 < argc)
 		{
 			string vmKind = argv[++i];
@@ -768,12 +811,6 @@ Options::Options(int argc, char** argv)
 			checkState = true;
 		else if (arg == "--wallet")
 			wallet = true;
-		else if (arg == "--nonetwork")
-			nonetwork = true;
-		else if (arg == "--network")
-			nonetwork = false;
-		else if (arg == "--nodag")
-			nodag = true;
 		else if (arg == "--all")
 		{
 			performance = true;
@@ -832,7 +869,7 @@ Options::Options(int argc, char** argv)
 			createRandomTest = true;
 		else if (arg == "-t" && i + 1 < argc)
 			rCurrentTestSuite = std::string{argv[i + 1]};
-		else if (arg == "-checktest" || arg == "-filltest")
+		else if (arg == "--checktest" || arg == "--filltest")
 		{
 			//read all line to the end
 			for (int j = i+1; j < argc; ++j)
