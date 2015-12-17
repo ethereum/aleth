@@ -33,12 +33,7 @@ namespace
 static unsigned const c_depthLimit = 1024;
 
 /// Upper bound of stack space needed by single CALL/CREATE execution. Set experimentally.
-static size_t const c_singleExecutionStackSize =
-#ifdef NDEBUG
-	14 * 1024;
-#else
-	17 * 1024;
-#endif
+static size_t const c_singleExecutionStackSize = 6 * 1024;
 
 /// Standard thread stack size.
 static size_t const c_defaultStackSize =
@@ -47,7 +42,7 @@ static size_t const c_defaultStackSize =
 #elif defined(_WIN32)
 	16 * 1024 * 1024;
 #else
-	      512 * 1024; // OSX and other OSs
+	512 * 1024; // OSX and other OSs
 #endif
 
 /// Stack overhead prior to allocation.
