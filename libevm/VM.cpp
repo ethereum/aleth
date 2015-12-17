@@ -644,24 +644,24 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 		case Instruction::CALLCODE:
 		case Instruction::DELEGATECALL:
 		{
-			CallParameters callParams;
+			unique_ptr<CallParameters> callParams(new CallParameters());
 
-			callParams.gas = m_stack.back();
+			callParams->gas = m_stack.back();
 			if (inst != Instruction::DELEGATECALL && m_stack[m_stack.size() - 3] > 0)
-				callParams.gas += m_schedule.callStipend;
+				callParams->gas += m_schedule.callStipend;
 			m_stack.pop_back();
 
-			callParams.codeAddress = asAddress(m_stack.back());
+			callParams->codeAddress = asAddress(m_stack.back());
 			m_stack.pop_back();
 
 			if (inst == Instruction::DELEGATECALL)
 			{
-				callParams.apparentValue = _ext.value;
-				callParams.valueTransfer = 0;
+				callParams->apparentValue = _ext.value;
+				callParams->valueTransfer = 0;
 			}
 			else
 			{
-				callParams.apparentValue = callParams.valueTransfer = m_stack.back();
+				callParams->apparentValue = callParams->valueTransfer = m_stack.back();
 				m_stack.pop_back();
 			}
 
@@ -674,19 +674,19 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			unsigned outSize = (unsigned)m_stack.back();
 			m_stack.pop_back();
 
-			if (_ext.balance(_ext.myAddress) >= callParams.valueTransfer && _ext.depth < 1024)
+			if (_ext.balance(_ext.myAddress) >= callParams->valueTransfer && _ext.depth < 1024)
 			{
-				callParams.onOp = _onOp;
-				callParams.senderAddress = inst == Instruction::DELEGATECALL ? _ext.caller : _ext.myAddress;
-				callParams.receiveAddress = inst == Instruction::CALL ? callParams.codeAddress : _ext.myAddress;
-				callParams.data = bytesConstRef(m_temp.data() + inOff, inSize);
-				callParams.out = bytesRef(m_temp.data() + outOff, outSize);
-				m_stack.push_back(_ext.call(callParams));
+				callParams->onOp = _onOp;
+				callParams->senderAddress = inst == Instruction::DELEGATECALL ? _ext.caller : _ext.myAddress;
+				callParams->receiveAddress = inst == Instruction::CALL ? callParams->codeAddress : _ext.myAddress;
+				callParams->data = bytesConstRef(m_temp.data() + inOff, inSize);
+				callParams->out = bytesRef(m_temp.data() + outOff, outSize);
+				m_stack.push_back(_ext.call(*callParams));
 			}
 			else
 				m_stack.push_back(0);
 
-			io_gas += callParams.gas;
+			io_gas += callParams->gas;
 			break;
 		}
 		case Instruction::RETURN:
