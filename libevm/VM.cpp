@@ -718,6 +718,14 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
+	case Instruction::CREATE:
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+	case Instruction::RETURN:
+	case Instruction::SUICIDE:
+	case Instruction::STOP:
+		break; // These are handled above
 	}
 	return nextPC;
 }

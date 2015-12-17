@@ -139,6 +139,7 @@ int64_t getStepCost(Instruction inst)
 
 	case Instruction::CALL:
 	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
 		return c_callGas;
 
 	case Instruction::CREATE:
