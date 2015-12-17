@@ -53,7 +53,7 @@ void VM::require(u256 _n, u256 _d)
 			m_onFail();
 		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_n, (bigint)m_stack.size()));
 	}
-	if (m_stack.size() - _n + _d > m_schedule.stackLimit)
+	if (m_stack.size() - _n + _d > m_schedule->stackLimit)
 	{
 		if (m_onFail)
 			m_onFail();
@@ -67,14 +67,14 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	auto& metric = c_metrics[static_cast<size_t>(_inst)];
 
 	// Pre-homestead
-	if (!m_schedule.haveDelegateCall && _inst == Instruction::DELEGATECALL)
+	if (!m_schedule->haveDelegateCall && _inst == Instruction::DELEGATECALL)
 		BOOST_THROW_EXCEPTION(BadInstruction());
 
 	if (metric.gasPriceTier == InvalidTier)
 		BOOST_THROW_EXCEPTION(BadInstruction());
 
 	// FEES...
-	bigint runGas = m_schedule.tierStepGas[metric.gasPriceTier];
+	bigint runGas = m_schedule->tierStepGas[metric.gasPriceTier];
 	bigint newTempSize = m_temp.size();
 	bigint copySize = 0;
 
@@ -95,18 +95,18 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	{
 	case Instruction::SSTORE:
 		if (!_ext.store(m_stack.back()) && m_stack[m_stack.size() - 2])
-			runGas = m_schedule.sstoreSetGas;
+			runGas = m_schedule->sstoreSetGas;
 		else if (_ext.store(m_stack.back()) && !m_stack[m_stack.size() - 2])
 		{
-			runGas = m_schedule.sstoreResetGas;
-			_ext.sub.refunds += m_schedule.sstoreRefundGas;
+			runGas = m_schedule->sstoreResetGas;
+			_ext.sub.refunds += m_schedule->sstoreRefundGas;
 		}
 		else
-			runGas = m_schedule.sstoreResetGas;
+			runGas = m_schedule->sstoreResetGas;
 		break;
 
 	case Instruction::SLOAD:
-		runGas = m_schedule.sloadGas;
+		runGas = m_schedule->sloadGas;
 		break;
 
 	// These all operate on memory and therefore potentially expand it:
@@ -123,7 +123,7 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 		newTempSize = memNeed(m_stack.back(), m_stack[m_stack.size() - 2]);
 		break;
 	case Instruction::SHA3:
-		runGas = m_schedule.sha3Gas + ((bigint)m_stack[m_stack.size() - 2] + 31) / 32 * m_schedule.sha3WordGas;
+		runGas = m_schedule->sha3Gas + ((bigint)m_stack[m_stack.size() - 2] + 31) / 32 * m_schedule->sha3WordGas;
 		newTempSize = memNeed(m_stack.back(), m_stack[m_stack.size() - 2]);
 		break;
 	case Instruction::CALLDATACOPY:
@@ -150,7 +150,7 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	case Instruction::LOG4:
 	{
 		unsigned n = (unsigned)_inst - (unsigned)Instruction::LOG0;
-		runGas = m_schedule.logGas + m_schedule.logTopicGas * n + (bigint)m_schedule.logDataGas * m_stack[m_stack.size() - 2];
+		runGas = m_schedule->logGas + m_schedule->logTopicGas * n + (bigint)m_schedule->logDataGas * m_stack[m_stack.size() - 2];
 		newTempSize = memNeed(m_stack[m_stack.size() - 1], m_stack[m_stack.size() - 2]);
 		break;
 	}
@@ -159,13 +159,13 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	{
-		runGas = (bigint)m_stack[m_stack.size() - 1] + m_schedule.callGas;
+		runGas = (bigint)m_stack[m_stack.size() - 1] + m_schedule->callGas;
 
 		if (_inst == Instruction::CALL && !_ext.exists(asAddress(m_stack[m_stack.size() - 2])))
-			runGas += m_schedule.callNewAccountGas;
+			runGas += m_schedule->callNewAccountGas;
 
 		if (_inst != Instruction::DELEGATECALL && m_stack[m_stack.size() - 3] > 0)
-			runGas += m_schedule.callValueTransferGas;
+			runGas += m_schedule->callValueTransferGas;
 
 		unsigned sizesOffset = _inst == Instruction::DELEGATECALL ? 3 : 4;
 		newTempSize = std::max(
@@ -177,13 +177,13 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	case Instruction::CREATE:
 	{
 		newTempSize = memNeed(m_stack[m_stack.size() - 2], m_stack[m_stack.size() - 3]);
-		runGas = m_schedule.createGas;
+		runGas = m_schedule->createGas;
 		break;
 	}
 	case Instruction::EXP:
 	{
 		auto expon = m_stack[m_stack.size() - 2];
-		runGas = m_schedule.expGas + m_schedule.expByteGas * (32 - (h256(expon).firstBitSet() / 8));
+		runGas = m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8));
 		break;
 	}
 	default:;
@@ -192,13 +192,13 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	auto gasForMem = [=](bigint _size) -> bigint
 	{
 		bigint s = _size / 32;
-		return (bigint)m_schedule.memoryGas * s + s * s / m_schedule.quadCoeffDiv;
+		return (bigint)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv;
 	};
 
 	newTempSize = (newTempSize + 31) / 32 * 32;
 	if (newTempSize > m_temp.size())
 		runGas += gasForMem(newTempSize) - gasForMem(m_temp.size());
-	runGas += m_schedule.copyGas * ((copySize + 31) / 32);
+	runGas += m_schedule->copyGas * ((copySize + 31) / 32);
 
 	onOperation();
 
@@ -249,7 +249,8 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	m_stack.reserve((unsigned)m_schedule.stackLimit);
+	m_schedule = &_ext.evmSchedule();
+	m_stack.reserve((size_t)m_schedule->stackLimit);
 
 	for (size_t i = 0; i < _ext.code.size(); ++i)
 	{
@@ -259,7 +260,6 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 			i += _ext.code[i] - (size_t)Instruction::PUSH1 + 1;
 	}
 
-	m_schedule = _ext.evmSchedule();
 	m_steps = 0;
 	for (auto nextPC = m_curPC + 1; true; m_curPC = nextPC, nextPC = m_curPC + 1, ++m_steps)
 	{
@@ -648,7 +648,7 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 
 			callParams->gas = m_stack.back();
 			if (inst != Instruction::DELEGATECALL && m_stack[m_stack.size() - 3] > 0)
-				callParams->gas += m_schedule.callStipend;
+				callParams->gas += m_schedule->callStipend;
 			m_stack.pop_back();
 
 			callParams->codeAddress = asAddress(m_stack.back());

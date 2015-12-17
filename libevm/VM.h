@@ -71,7 +71,7 @@ private:
 	u256s m_stack;
 	std::vector<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
-	EVMSchedule m_schedule;
+	EVMSchedule const* m_schedule = nullptr;
 };
 
 }
