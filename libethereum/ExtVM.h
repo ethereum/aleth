@@ -92,7 +92,7 @@ public:
 	}
 
 	/// Return the EVM gas-price schedule for this execution context.
-	EVMSchedule evmSchedule() const override final { return m_sealEngine->evmSchedule(envInfo()); }
+	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine->evmSchedule(envInfo()); }
 
 	State& state() const { return m_s; }
 

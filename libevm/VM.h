@@ -62,6 +62,9 @@ private:
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
 	void require(u256 _n, u256 _d);
 	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
+	static uint64_t verifyJumpDest(u256 const& _dest, std::vector<uint64_t> const& _validDests);
+	void copyDataToMemory(bytesConstRef _data);
+	uint64_t execOrdinaryOpcode(Instruction _inst, u256& io_gas, ExtVMFace& _ext);
 
 	uint64_t m_curPC = 0;
 	uint64_t m_steps = 0;
@@ -69,7 +72,7 @@ private:
 	u256s m_stack;
 	std::vector<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
-	EVMSchedule m_schedule;
+	EVMSchedule const* m_schedule = nullptr;
 };
 
 }

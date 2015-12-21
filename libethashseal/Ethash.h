@@ -69,7 +69,7 @@ public:
 	u256 calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const;
 	u256 childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
 
-	virtual EVMSchedule evmSchedule(EnvInfo const&) const override;
+	virtual EVMSchedule const& evmSchedule(EnvInfo const&) const override;
 
 	void manuallySetWork(BlockHeader const& _work) { m_sealing = _work; }
 	void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);

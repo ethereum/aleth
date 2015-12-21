@@ -215,7 +215,7 @@ int main(int argc, char** argv)
 		cout << total << " operations in " << execTime << " seconds." << endl;
 		cout << "Maximum memory usage: " << memTotal * 32 << " bytes" << endl;
 		cout << "Expensive operations:" << endl;
-		for (auto const& c: {Instruction::SSTORE, Instruction::SLOAD, Instruction::CALL, Instruction::CREATE, Instruction::CALLCODE, Instruction::MSTORE8, Instruction::MSTORE, Instruction::MLOAD, Instruction::SHA3})
+		for (auto const& c: {Instruction::SSTORE, Instruction::SLOAD, Instruction::CALL, Instruction::CREATE, Instruction::CALLCODE, Instruction::DELEGATECALL, Instruction::MSTORE8, Instruction::MSTORE, Instruction::MLOAD, Instruction::SHA3})
 			if (!!counts[(byte)c].first)
 				cout << "  " << instructionInfo(c).name << " x " << counts[(byte)c].first << " (" << counts[(byte)c].second << " gas)" << endl;
 	}
