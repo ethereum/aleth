@@ -154,17 +154,17 @@ function get_repo_branch() {
 function print_help {
 	echo "Usage: ethupdate.sh [options]"
 	echo "Arguments:"
-	echo "    --help                    Will print this help message."
+	echo "    --help                  Will print this help message."
 	echo "${PROJECTS_HELP}"
-	echo "    --branch NAME             Will update to the specified branch. Default is ${REQUESTED_BRANCH}."
-	echo "    --origin NAME             Will send the updates back to origin NAME if specified."
-	echo "    --upstream NAME           The name of the remote to pull from. Default is ${UPSTREAM}."
-	echo "    --no-push                 Don't push anything back to origin."
-	echo "    --use-ssh                 Use ssh to clone the repos instead of https."
-	echo "    --shallow-fetch           Perform git clone and git fetch with --depth=1."
-	echo "    --simple-pull             If a branch is given but can't be checked out, then give this argument to attemt a simple git pull"
-	echo "    --build-pr HEX            Will make sure that the main repository for the project has the commit of a particular PR checked out. You can also give the value of none to disable this argument."
-	echo "    --all                     In addition to cloning the repositores needed to build this project, also clone all projects that depend on it"
+	echo "    --branch NAME           Will update to the specified branch. Default is ${REQUESTED_BRANCH}."
+	echo "    --origin NAME           Will send the updates back to origin NAME if specified."
+	echo "    --upstream NAME         The name of the remote to pull from. Default is ${UPSTREAM}."
+	echo "    --no-push               Don't push anything back to origin."
+	echo "    --use-ssh               Use ssh to clone the repos instead of https."
+	echo "    --shallow-fetch         Perform git clone and git fetch with --depth=1."
+	echo "    --simple-pull           If a branch is given but can't be checked out, then give this argument to attemt a simple git pull"
+	echo "    --build-pr HEX          Will make sure that the main repository for the project has the commit of a particular PR checked out. You can also give the value of none to disable this argument."
+	echo "    --all                   In addition to cloning the repositores needed to build this project, also clone all projects that depend on it"
 }
 
 for arg in ${@:1}
