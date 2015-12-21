@@ -69,7 +69,7 @@ function print_help {
 	echo "    --branch NAME           The branch requested to build. Default is ${REQUESTED_BRANCH}."
 	echo "    --build-type BUILDTYPE  If given then this is gonna be the value of -DCMAKE_BUILD_TYPE. Default is ${BUILD_TYPE} "
 	echo "    --cores NUMBER          The value to the cores argument of make. e.g.: make -j4. Default is ${MAKE_CORES}."
-	echo "    --all                     In addition to building the repositores needed for this project, also try to build all projects that depend on it"
+	echo "    --all                   In addition to building the repositores needed for this project, also try to build all projects that depend on it"
 }
 
 for arg in ${@:1}
