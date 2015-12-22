@@ -726,10 +726,20 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 
 		case Instruction::CALL:
 		case Instruction::CALLCODE:
+		case Instruction::DELEGATECALL:
 		{
 			auto callGas = stack.pop();
 			auto codeAddress = stack.pop();
-			auto value = stack.pop();
+			llvm::Value* apparentValue = nullptr;
+			llvm::Value* valueTransfer = nullptr;
+			// @TODO depending on block size
+			if (inst == Instruction::DELEGATECALL)
+			{
+				apparentValue = _runtimeManager.get(RuntimeData::ApparentCallValue);
+				valueTransfer = Constant::get(0);
+			}
+			else
+				valueTransfer = apparentValue = stack.pop();
 			auto inOff = stack.pop();
 			auto inSize = stack.pop();
 			auto outOff = stack.pop();
@@ -742,10 +752,13 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 			_memory.require(inOff, inSize);
 
 			auto receiveAddress = codeAddress;
-			if (inst == Instruction::CALLCODE)
+			auto senderAddress = _runtimeManager.get(RuntimeData::Address);
+			if (inst == Instruction::CALLCODE || inst == Instruction::DELEGATECALL)
 				receiveAddress = _runtimeManager.get(RuntimeData::Address);
+			if (inst == Instruction::DELEGATECALL)
+				senderAddress = _runtimeManager.get(RuntimeData::Caller);
 
-			auto ret = _ext.call(callGas, receiveAddress, value, inOff, inSize, outOff, outSize, codeAddress);
+			auto ret = _ext.call(callGas, senderAddress, receiveAddress, codeAddress, valueTransfer, apparentValue, inOff, inSize, outOff, outSize);
 			_gasMeter.count(m_builder.getInt64(0), _runtimeManager.getJmpBuf(), _runtimeManager.getGasPtr());
 			stack.push(ret);
 			break;

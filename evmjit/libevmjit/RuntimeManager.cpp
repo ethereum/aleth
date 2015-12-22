@@ -29,7 +29,8 @@ llvm::StructType* RuntimeManager::getRuntimeDataType()
 			Type::Word,		// address
 			Type::Word,		// caller
 			Type::Word,		// origin
-			Type::Word,		// callValue
+			Type::Word,		// transferredValue
+			Type::Word,		// apparentValue
 			Type::Word,		// coinBase
 			Type::Word,		// difficulty
 			Type::Word,		// gasLimit
@@ -73,7 +74,8 @@ llvm::Twine getName(RuntimeData::Index _index)
 	case RuntimeData::Address:		return "this.address";
 	case RuntimeData::Caller:		return "msg.caller";
 	case RuntimeData::Origin:		return "tx.origin";
-	case RuntimeData::CallValue:	return "msg.value";
+	case RuntimeData::TransferredCallValue:	return "msg.valuetxed";
+	case RuntimeData::ApparentCallValue:	return "msg.value";
 	case RuntimeData::CoinBase:		return "block.coinbase";
 	case RuntimeData::Difficulty:	return "block.difficulty";
 	case RuntimeData::GasLimit:		return "block.gaslimit";
@@ -215,7 +217,7 @@ llvm::Value* RuntimeManager::get(Instruction _inst)
 	case Instruction::ADDRESS:		return get(RuntimeData::Address);
 	case Instruction::CALLER:		return get(RuntimeData::Caller);
 	case Instruction::ORIGIN:		return get(RuntimeData::Origin);
-	case Instruction::CALLVALUE:	return get(RuntimeData::CallValue);
+	case Instruction::CALLVALUE:	return get(RuntimeData::ApparentCallValue);
 	case Instruction::GASPRICE:		return get(RuntimeData::GasPrice);
 	case Instruction::COINBASE:		return get(RuntimeData::CoinBase);
 	case Instruction::DIFFICULTY:	return get(RuntimeData::Difficulty);

@@ -32,7 +32,8 @@ typedef struct evmjit_runtime_data
 	evmjit_i256 address;
 	evmjit_i256 caller;
 	evmjit_i256 origin;
-	evmjit_i256 callValue;
+	evmjit_i256 transferredValue;
+	evmjit_i256 apparentValue;
 	evmjit_i256 coinBase;
 	evmjit_i256 difficulty;
 	evmjit_i256 gasLimit;

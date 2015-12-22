@@ -60,7 +60,8 @@ struct RuntimeData
 		Address,
 		Caller,
 		Origin,
-		CallValue,
+		TransferredCallValue,	// actual ether amount transferred
+		ApparentCallValue,		// value of msg.value - different during DELEGATECALL
 		CoinBase,
 		Difficulty,
 		GasLimit,
@@ -83,7 +84,8 @@ struct RuntimeData
 	i256 		address;
 	i256 		caller;
 	i256 		origin;
-	i256 		callValue;
+	i256 		transferredValue;
+	i256 		apparentValue;
 	i256 		coinBase;
 	i256 		difficulty;
 	i256 		gasLimit;

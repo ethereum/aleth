@@ -60,22 +60,23 @@ extern "C"
 			*o_address = {};
 	}
 
-	EXPORT bool env_call(ExtVMFace* _env, int64_t* io_gas, int64_t _callGas, h256* _receiveAddress, i256* _value, byte* _inBeg, uint64_t _inSize, byte* _outBeg, uint64_t _outSize, h256* _codeAddress)
+	EXPORT bool env_call(ExtVMFace* _env, int64_t* io_gas, int64_t _callGas, h256* _senderAddress, h256* _receiveAddress, h256* _codeAddress, i256* _valueTransfer, i256* _apparentValue, byte* _inBeg, uint64_t _inSize, byte* _outBeg, uint64_t _outSize)
 	{
 		EVMSchedule const& schedule = _env->evmSchedule();
 
 		CallParameters params;
 
-		// TODO: HOMESTEAD: this will not work for DELEGATECALL
-		params.apparentValue = jit2eth(*_value);
-		params.valueTransfer = jit2eth(*_value);
+		params.apparentValue = jit2eth(*_apparentValue);
+		params.valueTransfer = jit2eth(*_valueTransfer);
 
-		params.senderAddress = _env->myAddress;
+		params.senderAddress = right160(*_senderAddress);
 		params.receiveAddress = right160(*_receiveAddress);
 		params.codeAddress = right160(*_codeAddress);
 		params.data = {_inBeg, (size_t)_inSize};
 		params.out = {_outBeg, (size_t)_outSize};
 		params.onOp = {};
+		// We can have params.receiveAddress == params.codeAddress although it is not a call,
+		// but in this case, the results are the same (see usage of isCall below).
 		const auto isCall = params.receiveAddress == params.codeAddress; // OPT: The same address pointer can be used if not CODECALL
 
 		*io_gas -= _callGas;
@@ -85,7 +86,7 @@ extern "C"
 		if (isCall && !_env->exists(params.receiveAddress))
 			*io_gas -= static_cast<int64_t>(schedule.callNewAccountGas); // no underflow, *io_gas non-negative before
 
-		if (params.valueTransfer > 0) // value transfer TODO: HOMESTEAD: check this is valid against the EVM.
+		if (params.valueTransfer > 0)
 		{
 			/*static*/ assert(schedule.callValueTransferGas > schedule.callStipend && "Overflow possible");
 			*io_gas -= static_cast<int64_t>(schedule.callValueTransferGas); // no underflow

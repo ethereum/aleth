@@ -41,7 +41,7 @@ std::array<FuncDesc, sizeOf<EnvFunc>::value> const& getEnvFuncDescs()
 		FuncDesc{"env_sha3", getFunctionType(Type::Void, {Type::BytePtr, Type::Size, Type::WordPtr})},
 		FuncDesc{"env_balance", getFunctionType(Type::Void, {Type::EnvPtr, Type::WordPtr, Type::WordPtr})},
 		FuncDesc{"env_create", getFunctionType(Type::Void, {Type::EnvPtr, Type::GasPtr, Type::WordPtr, Type::BytePtr, Type::Size, Type::WordPtr})},
-		FuncDesc{"env_call", getFunctionType(Type::Bool, {Type::EnvPtr, Type::GasPtr, Type::Gas, Type::WordPtr, Type::WordPtr, Type::BytePtr, Type::Size, Type::BytePtr, Type::Size, Type::WordPtr})},
+		FuncDesc{"env_call", getFunctionType(Type::Bool, {Type::EnvPtr, Type::GasPtr, Type::Gas, Type::WordPtr, Type::WordPtr, Type::WordPtr, Type::WordPtr, Type::WordPtr, Type::BytePtr, Type::Size, Type::BytePtr, Type::Size})},
 		FuncDesc{"env_log", getFunctionType(Type::Void, {Type::EnvPtr, Type::BytePtr, Type::Size, Type::WordPtr, Type::WordPtr, Type::WordPtr, Type::WordPtr})},
 		FuncDesc{"env_blockhash", getFunctionType(Type::Void, {Type::EnvPtr, Type::WordPtr, Type::WordPtr})},
 		FuncDesc{"env_extcode", getFunctionType(Type::BytePtr, {Type::EnvPtr, Type::WordPtr, Type::Size->getPointerTo()})},
@@ -150,8 +150,9 @@ llvm::Value* Ext::create(llvm::Value* _endowment, llvm::Value* _initOff, llvm::V
 	return address;
 }
 
-llvm::Value* Ext::call(llvm::Value* _callGas, llvm::Value* _receiveAddress, llvm::Value* _value, llvm::Value* _inOff, llvm::Value* _inSize, llvm::Value* _outOff, llvm::Value* _outSize, llvm::Value* _codeAddress)
+llvm::Value* Ext::call(llvm::Value* _callGas, llvm::Value* _senderAddress, llvm::Value* _receiveAddress, llvm::Value* _codeAddress, llvm::Value* _valueTransfer, llvm::Value* _apparentValue, llvm::Value* _inOff, llvm::Value* _inSize, llvm::Value* _outOff, llvm::Value* _outSize)
 {
+	auto senderAddress = Endianness::toBE(m_builder, _senderAddress);
 	auto receiveAddress = Endianness::toBE(m_builder, _receiveAddress);
 	auto inBeg = m_memoryMan.getBytePtr(_inOff);
 	auto inSize = m_builder.CreateTrunc(_inSize, Type::Size, "in.size");
@@ -162,7 +163,7 @@ llvm::Value* Ext::call(llvm::Value* _callGas, llvm::Value* _receiveAddress, llvm
 			m_builder.CreateICmpULE(_callGas, m_builder.CreateZExt(Constant::gasMax, Type::Word)),
 			m_builder.CreateTrunc(_callGas, Type::Gas),
 			Constant::gasMax);
-	auto ret = createCall(EnvFunc::call, {getRuntimeManager().getEnvPtr(), getRuntimeManager().getGasPtr(), callGas, byPtr(receiveAddress), byPtr(_value), inBeg, inSize, outBeg, outSize, byPtr(codeAddress)});
+	auto ret = createCall(EnvFunc::call, {getRuntimeManager().getEnvPtr(), getRuntimeManager().getGasPtr(), callGas, byPtr(senderAddress), byPtr(receiveAddress), byPtr(codeAddress), byPtr(_valueTransfer), byPtr(_apparentValue), inBeg, inSize, outBeg, outSize});
 	return m_builder.CreateZExt(ret, Type::Word, "ret");
 }
 
