@@ -62,7 +62,11 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		bytes output;
 
 		Listener::ExecTimeGuard guard{i.first};
-		output = importer.executeTest();
+
+		if (importer.m_envInfo.number() >= c_testHomesteadBlock)
+			output = importer.executeTest(eth::Network::HomesteadTest);
+		else
+			output = importer.executeTest(eth::Network::FrontierTest);
 
 		if (_fillin)
 		{

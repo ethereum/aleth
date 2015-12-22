@@ -50,6 +50,8 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify = true);
 namespace test
 {
 
+const int c_HomesteadBlock = 1000000;
+
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
 /// @param _statenent    The statement for which to make sure no exceptions are thrown
@@ -122,7 +124,7 @@ public:
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
-	bytes executeTest();
+	bytes executeTest(eth::Network _sealEngineNetwork);
 	int exportTest(bytes const& _output);
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 
