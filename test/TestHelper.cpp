@@ -325,22 +325,31 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 	for (auto const& a: _stateExpect.addresses())
 	{
-		CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " missing expected address!");
-		if (_statePost.addressInUse(a.first))
+		AccountMask addressOptions(true);
+		if(_expectedStateOptions.size())
 		{
-			AccountMask addressOptions(true);
-			if(_expectedStateOptions.size())
+			try
 			{
-				try
-				{
-					addressOptions = _expectedStateOptions.at(a.first);
-				}
-				catch(std::out_of_range const&)
-				{
-					BOOST_ERROR(TestOutputHelper::testName() + "expectedStateOptions map does not match expectedState in checkExpectedState!");
-					break;
-				}
+				addressOptions = _expectedStateOptions.at(a.first);
 			}
+			catch(std::out_of_range const&)
+			{
+				BOOST_ERROR(TestOutputHelper::testName() + "expectedStateOptions map does not match expectedState in checkExpectedState!");
+				break;
+			}
+		}
+
+		if (addressOptions.shouldExist())
+		{
+			CHECK(_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " missing expected address!");
+		}
+		else
+		{
+			CHECK(!_statePost.addressInUse(a.first), TestOutputHelper::testName() +  "Compare States: " << a.first << " address not expected to exist!");
+		}
+
+		if (_statePost.addressInUse(a.first))
+		{			
 
 			if (addressOptions.hasBalance())
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
