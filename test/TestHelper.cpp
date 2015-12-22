@@ -157,13 +157,13 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTem
 }
 
 //executes an imported transacton on preState
-bytes ImportTest::executeTest()
+bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 {
 	ExecutionResult res;
 	eth::State tmpState = m_statePre;
 	try
 	{
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
 		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();

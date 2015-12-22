@@ -63,7 +63,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 
 		Listener::ExecTimeGuard guard{i.first};
 
-		if (importer.m_envInfo.number() >= c_testHomesteadBlock)
+		if (importer.m_envInfo.number() >= dev::test::c_testHomesteadBlock)
 			output = importer.executeTest(eth::Network::HomesteadTest);
 		else
 			output = importer.executeTest(eth::Network::FrontierTest);
@@ -98,22 +98,40 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 }
 } }// Namespace Close
 
+//todo: restore Original Frontier Fillers
 BOOST_AUTO_TEST_SUITE(StateTests)
 
 BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)
 {
 	if (test::Options::get().sealEngineNetwork == eth::Network::HomesteadTest)
-		dev::test::executeTests("stHomeSteadSpecific", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+		dev::test::executeTests("stHomeSteadSpecific", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCode)
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead)
 {
-	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stCallDelegateCodes)
+//DELEGATECALL does not exist in frontier?
+//BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCode)
+//{
+//	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+//}
+
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead)
 {
-	dev::test::executeTests("stCallDelegateCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
+//DELEGATECALL does not exist in frontier?
+//BOOST_AUTO_TEST_CASE(stCallDelegateCodes)
+//{
+//	dev::test::executeTests("stCallDelegateCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+//}
+
+BOOST_AUTO_TEST_CASE(stCallCodesHomestead)
+{
+	dev::test::executeTests("stCallCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallCodes)
@@ -247,6 +265,7 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 	}
 }
 
+//todo: Force stRandom to be tested on Homestead Seal Engine ?
 BOOST_AUTO_TEST_CASE(stRandom)
 {
 	test::Options::get(); // parse command line options, e.g. to enable JIT
