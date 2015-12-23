@@ -152,6 +152,7 @@ byte toByte(json_spirit::mValue const& _v);
 bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
+void copyFile(std::string const& _source, std::string const& _destination);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
 void checkOutput(bytes const& _output, json_spirit::mObject& _o);

@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <chrono>
+#include <fstream>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
@@ -726,6 +727,13 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + "Failed test with Exception: " << _e.what());
 	}
+}
+
+void copyFile(std::string const& _source, std::string const& _destination)
+{
+	std::ifstream  src(_source, std::ios::binary);
+	std::ofstream  dst(_destination,   std::ios::binary);
+	dst << src.rdbuf();
 }
 
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj)
