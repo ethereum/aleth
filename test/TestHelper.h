@@ -236,7 +236,7 @@ private:
 class TestOutputHelper
 {
 public:
-	static void initTest();
+	static void initTest(int _maxTests = 1);
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
 	static void setMaxTests(int _count) { m_maxTests = _count; }

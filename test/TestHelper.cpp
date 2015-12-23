@@ -985,11 +985,11 @@ string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
 
 using namespace boost;
-void TestOutputHelper::initTest()
+void TestOutputHelper::initTest(int _maxTests)
 {
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
-	m_maxTests = 1;
+	m_maxTests = _maxTests;
 	m_currTest = 0;
 }
 
