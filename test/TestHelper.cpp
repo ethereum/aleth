@@ -53,7 +53,7 @@ void printHelp()
 	cout << setw(30) << "--singletest <TestFile> <TestName>" << std::endl;
 	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed" << std::endl;
 	cout << setw(30) << "--vm <interpreter|jit|smart>" << setw(25) << "Set VM type for VMTests suite" << std::endl;
-	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for VMTests suite. Requires verbosity level >= 12" << std::endl;
+	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test." << std::endl;
 	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file" << std::endl;
 	cout << setw(30) << "--filltest <FileData>" << setw(25) << "Try fill tests from the given json stream" << std::endl;
 	cout << setw(30) << "--checktest <FileData>" << setw(25) << "Try run tests from the given json stream" << std::endl;
@@ -798,7 +798,10 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
 			VMFactory::setKind(VMKind::JIT);
 		else if (arg == "--vmtrace")
+		{
 			vmtrace = true;
+			g_logVerbosity = 13;
+		}
 		else if (arg == "--filltests")
 			fillTests = true;
 		else if (arg == "--stats" && i + 1 < argc)
