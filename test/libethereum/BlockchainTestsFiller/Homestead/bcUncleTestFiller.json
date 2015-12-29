@@ -1,5 +1,5 @@
 {
-    "newChainFrom4Block" : {
+    "uncleHeaderAtBlock2" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -19,10 +19,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "830"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "11"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -35,7 +35,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -51,7 +50,10 @@
                 ]
             },
             {
-		"blocknumber" : "2",
+		"blockHeader" : {
+                    "stateRoot" : "6ff22555fde6fe93e5b412a8691287a5be5708246adfd0c599604849925fcc34",
+		    "updatePoW" : "1"
+                },
                 "transactions" : [
                     {
                         "data" : "",
@@ -64,268 +66,15 @@
                     }
                 ],
                 "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
                     {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
+			"populateFromBlock" : "0"
                     }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "6",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "5",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "7",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "6",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "8",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "7",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "9",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "8",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "10",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "9",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-	    {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-	    {
-		"blocknumber" : "6",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "5",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "7",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "6",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "8",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "7",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "9",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "8",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "10",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "9",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "11",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "10",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-    "newChainFrom6Block" : {
+    "UncleIsBrother" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -345,10 +94,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "650"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "11"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -361,7 +110,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -377,7 +125,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -393,233 +140,24 @@
                 ]
             },
             {
-		"blocknumber" : "3",
+		"expectException" : "UncleIsBrother",
+                "blockHeader" : {
+                    "populateFromBlock" : "2",
+	    	    "updatePoW" : "1"
+                },
+
                 "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
                 ],
                 "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
                     {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
+                        "populateFromBlock" : "2"
                     }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "6",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "5",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "7",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "6",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "8",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "7",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "9",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "8",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "10",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "9",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "6",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "5",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "7",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "6",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "8",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "7",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "9",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "8",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "10",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "9",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "11",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "10",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-    "newChainFrom5Block" : {
+    "uncleHeaderWithGeneration0" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -639,10 +177,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "740"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "11"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -655,7 +193,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -671,7 +208,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -687,7 +223,7 @@
                 ]
             },
             {
-		"blocknumber" : "3",
+		"expectException" : "InvalidUncleParentHash",
                 "transactions" : [
                     {
                         "data" : "",
@@ -700,236 +236,15 @@
                     }
                 ],
                 "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
                     {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
+			"sameAsBlock" : "0"
                     }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "6",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "5",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "7",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "6",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "8",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "7",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "9",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "8",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "10",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "9",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "6",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "5",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "7",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "6",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "8",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "7",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "9",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "8",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "10",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "9",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "11",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "10",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-    "sideChainWithMoreTransactions" : {
+    "oneUncle" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -949,10 +264,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "40"
+                "balance" : "30"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "4"
+                "nonce" : "3"
             }
         },
         "pre" : {
@@ -965,7 +280,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -981,7 +295,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -997,7 +310,6 @@
                 ]
             },
             {
-		"blocknumber" : "3",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1010,16 +322,56 @@
                     }
                 ],
                 "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1"
+                    }
                 ]
+            }
+        ]
+    },
+
+    "uncleWithSameBlockNumber" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "20"
             },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "2"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
             {
-		"blocknumber" : "4",
                 "transactions" : [
                     {
                         "data" : "",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
-                        "nonce" : "3",
+                        "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
                         "value" : "10"
@@ -1029,50 +381,136 @@
                 ]
             },
             {
-		"blocknumber" : "3",
                 "transactions" : [
                     {
                         "data" : "",
-                        "gasLimit" : "31059",
+                        "gasLimit" : "314159",
                         "gasPrice" : "1",
-                        "nonce" : "2",
+                        "nonce" : "1",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "4",
+		"expectException" : "InvalidNumber",
                 "transactions" : [
                     {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
+                        "data" : "",
+                        "gasLimit" : "314159",
                         "gasPrice" : "1",
-                        "nonce" : "3",
+                        "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+			"number" : "3",
+                        "populateFromBlock" : "1",
+			"overwriteAndRedoPoW" : "number"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "InChainUncle" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "20"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "2"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+		"expectException" : "UncleInChain",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1"
                     },
-		    {
-                        "data" : "",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "195e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
+                    {
+                        "sameAsBlock" : "1"
                     }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-    "lotsOfBranchesOverrideAtTheEnd" : {
+
+    "InChainUncleFather" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -1092,10 +530,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "1220"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "5"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -1108,7 +546,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1124,7 +561,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1140,7 +576,7 @@
                 ]
             },
             {
-		"blocknumber" : "3",
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1153,195 +589,15 @@
                     }
                 ],
                 "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
                     {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
+                        "sameAsBlock" : "2"
                     }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314134359",
-                        "gasPrice" : "1343",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x34235435346",
-                        "gasLimit" : "314143359",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "3331",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x44634634",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "795e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "1000"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31400",
-                        "gasPrice" : "100000000",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "10",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },            
-	    {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "0x44634634",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
-                    }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-   "lotsOfBranchesOverrideAtTheMiddle" : {
+    "InChainUncleGrandPa" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -1361,10 +617,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "620"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "5"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -1377,7 +633,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1393,7 +648,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1409,7 +663,7 @@
                 ]
             },
             {
-		"blocknumber" : "3",
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1422,195 +676,118 @@
                     }
                 ],
                 "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
                     {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
+                        "sameAsBlock" : "1"
                     }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314134359",
-                        "gasPrice" : "1343",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x34235435346",
-                        "gasLimit" : "314143359",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "3331",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x44634634",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },            
-	    {
-		"blocknumber" : "5",
-                "transactions" : [
-                    {
-                        "data" : "0x44634634",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "4",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "795e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "1000"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31400",
-                        "gasPrice" : "100000000",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "10",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
-                    }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-    "lotsOfBranches" : {
+
+    "InChainUncleGreatGrandPa" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "30"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "3"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+		"expectException" : "UncleInChain",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "sameAsBlock" : "1"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "InChainUncleGreatGreatGrandPa" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -1646,7 +823,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1662,7 +838,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1678,7 +853,6 @@
                 ]
             },
             {
-		"blocknumber" : "3",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1694,7 +868,6 @@
                 ]
             },
             {
-		"blocknumber" : "4",
                 "transactions" : [
                     {
                         "data" : "",
@@ -1710,160 +883,28 @@
                 ]
             },
             {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314134359",
-                        "gasPrice" : "1343",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x34235435346",
-                        "gasLimit" : "314143359",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "3331",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x44634634",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "200"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "300"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "795e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "1000"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31400",
-                        "gasPrice" : "100000000",
-                        "nonce" : "2",
+                        "nonce" : "4",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
                     {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "10",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "400"
+                        "sameAsBlock" : "1"
                     }
-                ],
-                "uncleHeaders" : [
                 ]
             }
         ]
     },
 
-    "lotsOfLeafs" : {
+    "InChainUncleGreatGreatGreatGrandPa" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -1883,244 +924,7 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "1"
-            },
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "3"
-            }
-        },
-        "pre" : {
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10000000000000",
-                "nonce" : "0",
-                "code" : "",
-                "storage": {}
-            }
-        },
-        "blocks" : [
-            {
-		"blocknumber" : "1",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "0",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "0"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "2",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "1",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "0"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "1"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314134359",
-                        "gasPrice" : "1343",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "2"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "0x34235435346",
-                        "gasLimit" : "314143359",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "3"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "3331",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "4"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "0x44634634",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31059",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "6"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "0x3453454",
-                        "gasLimit" : "31509",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "7"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "795e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "9"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "31400",
-                        "gasPrice" : "100000000000",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "10"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "10",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "11"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            }
-        ]
-    },
-
-    "sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4" : {
-        "genesisBlockHeader" : {
-            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
-            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
-            "difficulty" : "131072",
-            "extraData" : "0x42",
-            "gasLimit" : "3141592",
-            "gasUsed" : "0",
-            "number" : "0",
-            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
-            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
-            "timestamp" : "0x54c98c81",
-            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "nonce" : "0x0102030405060708",
-            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
-            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
-        },
-        "expect" : {
-            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "320"
+                "balance" : "50"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "nonce" : "5"
@@ -2136,7 +940,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2152,7 +955,6 @@
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2168,7 +970,6 @@
                 ]
             },
             {
-		"blocknumber" : "3",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2184,7 +985,6 @@
                 ]
             },
             {
-		"blocknumber" : "4",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2200,42 +1000,6 @@
                 ]
             },
             {
-		"blocknumber" : "3",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "2",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                    {
-			"populateFromBlock" : "1"
-                    }
-                ]
-            },
-            {
-		"blocknumber" : "4",
-                "transactions" : [
-                    {
-                        "data" : "",
-                        "gasLimit" : "314159",
-                        "gasPrice" : "1",
-                        "nonce" : "3",
-                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
-                    }
-                ],
-                "uncleHeaders" : [
-                ]
-            },
-            {
-		"blocknumber" : "5",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2244,16 +1008,35 @@
                         "nonce" : "4",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "100"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
+                ]
+            },
+            {
+		"expectException" : "UncleInChain",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "5",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "sameAsBlock" : "1"
+                    }
                 ]
             }
         ]
     },
 
-    "uncleBlockAtBlock3afterBlock4" : {
+    "InChainUncleGreatGreatGreatGreatGrandPa" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -2273,10 +1056,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "16"
+                "balance" : "60"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "4"
+                "nonce" : "6"
             }
         },
         "pre" : {
@@ -2289,7 +1072,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2298,14 +1080,13 @@
                         "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "1"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2314,14 +1095,13 @@
                         "nonce" : "1",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "3"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "3",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2330,14 +1110,13 @@
                         "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "4",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2346,35 +1125,65 @@
                         "nonce" : "3",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "7"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "3",
                 "transactions" : [
                     {
                         "data" : "",
                         "gasLimit" : "314159",
                         "gasPrice" : "1",
-                        "nonce" : "2",
+                        "nonce" : "4",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "11"
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "5",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+		"expectException" : "UncleInChain",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "6",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                     {
-			"populateFromBlock" : "1"
+                        "sameAsBlock" : "1"
                     }
                 ]
             }
         ]
     },
 
-    "uncleBlockAtBlock3AfterBlock3" : {
+    "twoEqualUncle" : {
         "genesisBlockHeader" : {
             "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
             "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
@@ -2394,10 +1203,10 @@
         },
         "expect" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
-                "balance" : "9"
+                "balance" : "20"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "nonce" : "3"
+                "nonce" : "2"
             }
         },
         "pre" : {
@@ -2410,7 +1219,6 @@
         },
         "blocks" : [
             {
-		"blocknumber" : "1",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2419,14 +1227,13 @@
                         "nonce" : "0",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "1"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "2",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2435,14 +1242,14 @@
                         "nonce" : "1",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "3"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "3",
+		"expectException" : "UncleInChain",
                 "transactions" : [
                     {
                         "data" : "",
@@ -2451,14 +1258,93 @@
                         "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "5"
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1"
+                    },
+                    {
+                        "sameAsPreviousSibling" : "1"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "twoUncle" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "30"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "3"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "4375000000000000000"
+            },
+            "ccde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "4375000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                 ]
             },
             {
-		"blocknumber" : "3",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
                 "transactions" : [
                     {
                         "data" : "",
@@ -2467,12 +1353,1085 @@
                         "nonce" : "2",
                         "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
                         "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-                        "value" : "7"
+                        "value" : "10"
                     }
                 ],
                 "uncleHeaders" : [
                     {
-			"populateFromBlock" : "1"
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    },
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "ccde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "threeUncle" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "20"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "2"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+		"expectException" : "TooManyUncles",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1"
+                    },
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    },
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "ccde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "oneUncleGeneration2" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "40"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "4"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "3750000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "oneUncleGeneration3" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "50"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "5"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "3125000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "4",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "oneUncleGeneration4" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "60"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "6"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "2500000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "4",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "5",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "oneUncleGeneration5" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "70"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "7"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1875000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "4",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "5",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "6",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "oneUncleGeneration6" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "80"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "8"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1250000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "4",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "5",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "6",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "7",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "oneUncleGeneration7" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "80"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "8"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "4",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "5",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "6",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "7",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+		"expectException" : "UncleTooOld",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "8",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            }
+        ]
+    },
+
+    "EqualUncleInTwoDifferentBlocks" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "3141592",
+            "gasUsed" : "0",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                "balance" : "30"
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce" : "3"
+            },
+            "bcde5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "4375000000000000000"
+            }
+        },
+        "pre" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "10000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            }
+        },
+        "blocks" : [
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "0",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "1",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+            {
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "2",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "populateFromBlock" : "1",
+			"coinbase" : "bcde5374fce5edbc8e2a8697c15331677e6ebf0b",
+			"overwriteAndRedoPoW" : "coinbase"
+                    }
+                ]
+            },
+            {
+		"expectException" : "UncleInChain",
+                "transactions" : [
+                    {
+                        "data" : "",
+                        "gasLimit" : "314159",
+                        "gasPrice" : "1",
+                        "nonce" : "3",
+                        "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+                        "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
+                        "value" : "10"
+                    }
+                ],
+                "uncleHeaders" : [
+                    {
+                        "sameAsPreviousBlockUncle" : "3"
                     }
                 ]
             }

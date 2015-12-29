@@ -175,7 +175,10 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", fillersPath, dev::test::doTransactionTests);
 	else
+	{
+		dev::test::TestOutputHelper::initTest();
 		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/Homestead/ttWrongRLPTransaction.json");
+	}
 }
 
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
@@ -185,7 +188,10 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", fillersPath, dev::test::doTransactionTests);
 	else
+	{
+		dev::test::TestOutputHelper::initTest();
 		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/ttWrongRLPTransaction.json");
+	}
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
