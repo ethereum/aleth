@@ -234,6 +234,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				State stateExpect(State::Null);
 				ImportTest::importState(o["expect"].get_obj(), stateExpect, expectStateMap);
 				if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow))
+					if (Options::get().checkState)
 					cerr << testname << endl;
 				o.erase(o.find("expect"));
 			}
