@@ -24,7 +24,7 @@ else()
 	find_library(SOLIDITY_LIBRARY
 		NAMES ${l}
 		PATHS ${CMAKE_LIBRARY_PATH}
-		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
+		PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Debug" "lib${l}/Release"
 		NO_DEFAULT_PATH
 	)
 
