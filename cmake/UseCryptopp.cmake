@@ -1,5 +1,5 @@
 function(eth_apply TARGET REQUIRED)	
-	find_package (CryptoPP 5.6.2 EXACT REQUIRED)
+	find_package (CryptoPP 5.6.2 REQUIRED)
 	eth_show_dependency(CRYPTOPP CryptoPP)
 	if (CRYPTOPP_FOUND)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${CRYPTOPP_INCLUDE_DIRS})
