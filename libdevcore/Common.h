@@ -82,7 +82,7 @@ class secure_vector
 {
 public:
 	secure_vector() {}
-	secure_vector(secure_vector<T> const& _c) = default;
+	secure_vector(secure_vector<T> const& /*_c*/) = default;  // See https://github.com/ethereum/libweb3core/pull/44
 	explicit secure_vector(unsigned _size): m_data(_size) {}
 	explicit secure_vector(unsigned _size, T _item): m_data(_size, _item) {}
 	explicit secure_vector(std::vector<T> const& _c): m_data(_c) {}
