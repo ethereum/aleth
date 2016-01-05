@@ -4,7 +4,7 @@ set(EXECUTABLE devcrypto)
 
 file(GLOB HEADERS "*.h")
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
 eth_use(${EXECUTABLE} REQUIRED Dev::devcore Utils::scrypt Cryptopp)
 
 if (NOT EMSCRIPTEN)
