@@ -1742,6 +1742,14 @@
             		"populateFromBlock" : "2"
                     }
                 ]
+            },
+            {
+        "chainname" : "B",
+        "blocknumber" : "4",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
             }
         ]
     }
