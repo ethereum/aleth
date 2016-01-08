@@ -145,11 +145,15 @@ print '        label = <webthree-helpers dependencies>'
 print '        bgcolor = LemonChiffon'
 print '        "buildinfo"'
 print '        "base"'
+print '        "json_spirit"'
+print '        "scrypt"'
+print '        "secp256k1"'
 print "    }"
 print '    "base" -> "boost"'
 print '    "base" -> "Jsoncpp"'
 print '    "base" -> "LevelDB"'
 print '    "base" -> "pthreads"'
+print '    "secp256k1" -> "gmp"'
 
 processUmbrella('..')
 
