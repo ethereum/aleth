@@ -57,6 +57,7 @@ EXTRA_BUILD_ARGS=""
 MAKE_CORES=1
 NOGIT=0
 NOCMAKECLEAN=0
+USEXCODE=0
 
 function print_help {
 	echo "Usage: ethbuild.sh [extra-options]"
@@ -70,6 +71,9 @@ function print_help {
 	echo "    --build-type BUILDTYPE  If given then this is gonna be the value of -DCMAKE_BUILD_TYPE. Default is ${BUILD_TYPE} "
 	echo "    --cores NUMBER          The value to the cores argument of make. e.g.: make -j4. Default is ${MAKE_CORES}."
 	echo "    --all                   In addition to building the repositores needed for this project, also try to build all projects that depend on it"
+	if [[ $OSTYPE == "darwin"* ]]; then
+		echo "    --xcode                 If given it will generate Xcode project instead of Makefile."
+	fi
 }
 
 for arg in ${@:1}
@@ -145,6 +149,17 @@ do
 	if [[ $arg == "--all" ]]; then
 		USE_ALL=1
 		continue
+	fi
+
+	if [[ $arg == "--xcode" ]]; then
+		if [[ $OSTYPE == "darwin"* ]]; then
+			USEXCODE=1
+			EXTRA_BUILD_ARGS+="-G Xcode "
+			continue
+		else
+			echo "ERROR: \"--xcode\" is only available on Mac OSX platform."
+			exit 1
+		fi
 	fi
 
 	# all other arguments will just be given as they are to cmake
@@ -223,7 +238,12 @@ do
 			exit 1
 		fi
 
-		make -j${MAKE_CORES}
+		if [[ $USEXCODE -eq 0 ]]; then
+			make -j${MAKE_CORES}
+		else
+			xcodebuild
+		fi
+
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBUILD - ERROR: Building repository \"$repository\" failed.";
 			exit 1

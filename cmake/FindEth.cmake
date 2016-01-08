@@ -29,7 +29,7 @@ else()
 		find_library(Eth_${L}_LIBRARY
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release"
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Debug" "lib${l}/Release"
 			# libevmjit is nested...
 			"evmjit/libevmjit" "evmjit/libevmjit/Release"
 			NO_DEFAULT_PATH

@@ -28,7 +28,7 @@ else()
 		find_library(Utils_${L}_LIBRARY
 			NAMES ${l}
 			PATHS ${CMAKE_LIBRARY_PATH}
-			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Release" "${l}/Release" 
+			PATH_SUFFIXES "lib${l}" "${l}" "lib${l}/Debug" "${l}/Debug" "lib${l}/Release" "${l}/Release" 
 			NO_DEFAULT_PATH
 		)
 
