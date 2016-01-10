@@ -72,9 +72,6 @@ public:
 	/// Abort sync and reset fetch
 	void setIdle();
 
-	/// Request hashes by number. v61+ protocol version only
-	void requestHashes(u256 _number, unsigned _count);
-
 	/// Request hashes for given parent hash.
 	void requestHashes(h256 const& _lastHash);
 
@@ -157,7 +154,7 @@ private:
 	Mutex x_knownTransactions;
 	h256Hash m_knownTransactions;			///< Transactions that the peer already knows of.
 	unsigned m_unknownNewBlocks;			///< Number of unknown NewBlocks received from this peer
-	unsigned m_lastAskedHashes;				///< Number of hashes asked
+	unsigned m_lastAskedHeaders;			///< Number of hashes asked
 };
 
 }

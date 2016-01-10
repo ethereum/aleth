@@ -37,15 +37,15 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-const unsigned c_maxIncomingNewHashes = 1024;
-const unsigned c_maxHashesToSend = 65536;
+static const unsigned c_maxIncomingNewHashes = 1024;
+static const unsigned c_maxHeadersToSend = 1024;
 
 string toString(Asking _a)
 {
 	switch (_a)
 	{
 	case Asking::Blocks: return "Blocks";
-	case Asking::Hashes: return "Hashes";
+	case Asking::Headers: return "Headers";
 	case Asking::Nothing: return "Nothing";
 	case Asking::State: return "State";
 	}
@@ -139,34 +139,20 @@ void EthereumPeer::requestStatus()
 	sealAndSend(s);
 }
 
-void EthereumPeer::requestHashes(u256 _number, unsigned _count)
-{
-	assert(m_asking == Asking::Nothing);
-	assert(m_protocolVersion == host()->protocolVersion());
-	m_syncHashNumber = _number;
-	m_syncHash = h256();
-	setAsking(Asking::Hashes);
-	RLPStream s;
-	prep(s, GetBlockHashesByNumberPacket, 2) << m_syncHashNumber << _count;
-	clog(NetMessageDetail) << "Requesting block hashes for numbers " << m_syncHashNumber << "-" << m_syncHashNumber + _count - 1;
-	m_lastAskedHashes = _count;
-	sealAndSend(s);
-}
-
 void EthereumPeer::requestHashes(h256 const& _lastHash)
 {
 	if (m_asking != Asking::Nothing)
 	{
-		clog(NetWarn) << "Asking hashes while requesting " << (m_asking == Asking::Nothing ? "nothing" : m_asking == Asking::State ? "state" : m_asking == Asking::Hashes ? "hashes" : m_asking == Asking::Blocks ? "blocks" : "?");
+		clog(NetWarn) << "Asking hashes while requesting " << (m_asking == Asking::Nothing ? "nothing" : m_asking == Asking::State ? "state" : m_asking == Asking::Headers ? "hashes" : m_asking == Asking::Blocks ? "blocks" : "?");
 		// TODO: fix.
 	}
-	setAsking(Asking::Hashes);
+	setAsking(Asking::Headers);
 	RLPStream s;
-	prep(s, GetBlockHashesPacket, 2) << _lastHash << c_maxHashesAsk;
+	prep(s, GetBlockHeadersPacket, 2) << _lastHash << c_maxHeadersAsk;
 	clog(NetMessageDetail) << "Requesting block hashes staring from " << _lastHash;
 	m_syncHash = _lastHash;
 	m_syncHashNumber = 0;
-	m_lastAskedHashes = c_maxHashesAsk;
+	m_lastAskedHeaders = c_maxHeadersAsk;
 	sealAndSend(s);
 }
 
@@ -176,7 +162,7 @@ void EthereumPeer::requestBlocks(h256s const& _blocks)
 	if (_blocks.size())
 	{
 		RLPStream s;
-		prep(s, GetBlocksPacket, _blocks.size());
+		prep(s, GetBlockBodiesPacket, _blocks.size());
 		for (auto const& i: _blocks)
 			s << i;
 		sealAndSend(s);
@@ -192,7 +178,7 @@ void EthereumPeer::requestBlocks()
 	if (blocks.size())
 	{
 		RLPStream s;
-		prep(s, GetBlocksPacket, blocks.size());
+		prep(s, GetBlockBodiesPacket, blocks.size());
 		for (auto const& i: blocks)
 			s << i;
 		sealAndSend(s);
@@ -209,7 +195,8 @@ void EthereumPeer::setAsking(Asking _a)
 	auto s = session();
 	if (s)
 	{
-		s->addNote("ask", _a == Asking::Nothing ? "nothing" : _a == Asking::State ? "state" : _a == Asking::Hashes ? "hashes" : _a == Asking::Blocks ? "blocks" : "?");
+		s->addNote("ask", _a == Asking::Nothing ? "nothing" : _a == Asking::State ? "state" : _a == Asking::Headers
+																							  ? "hashes" : _a == Asking::Blocks ? "blocks" : "?");
 		s->addNote("sync", string(isCriticalSyncing() ? "ONGOING" : "holding") + (needsSyncing() ? " & needed" : ""));
 	}
 }
@@ -230,7 +217,7 @@ bool EthereumPeer::isConversing() const
 
 bool EthereumPeer::isCriticalSyncing() const
 {
-	return m_asking == Asking::Hashes || m_asking == Asking::State || (m_asking == Asking::Blocks && m_protocolVersion == 60);
+	return m_asking == Asking::Headers || m_asking == Asking::State || (m_asking == Asking::Blocks && m_protocolVersion == 60);
 }
 
 bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
@@ -260,105 +247,202 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		host()->onPeerTransactions(dynamic_pointer_cast<EthereumPeer>(dynamic_pointer_cast<EthereumPeer>(shared_from_this())), _r);
 		break;
 	}
-	case GetBlockHashesPacket:
+	case GetBlockHeadersPacket:
 	{
-		h256 later = _r[0].toHash<h256>();
-		unsigned limit = _r[1].toInt<unsigned>();
-		clog(NetMessageSummary) << "GetBlockHashes (" << limit << "entries," << later << ")";
-		unsigned c = min<unsigned>(host()->chain().number(later), min(limit, c_maxHashesToSend));
-		RLPStream s;
-		prep(s, BlockHashesPacket, c);
-		h256 p = host()->chain().details(later).parent;
-		for (unsigned i = 0; i < c && p; ++i, p = host()->chain().details(p).parent)
-			s << p;
-		sealAndSend(s);
-		addRating(0);
-		break;
-	}
-	case GetBlockHashesByNumberPacket:
-	{
-		u256 number256 = _r[0].toInt<u256>();
-		unsigned number = (unsigned) number256;
-		unsigned limit = _r[1].toInt<unsigned>();
-		clog(NetMessageSummary) << "GetBlockHashesByNumber (" << number << "-" << number + limit - 1 << ")";
-		RLPStream s;
-		if (number <= host()->chain().number())
+		/// Packet layout:
+		/// [ block: { P , B_32 }, maxHeaders: P, skip: P, reverse: P in { 0 , 1 } ]
+		const auto blockId = _r[0];
+		const auto maxHeaders = _r[1].toInt<u256>();
+		const auto skip = _r[2].toInt<u256>();
+		const auto reverse = _r[3].toInt<bool>();
+
+		auto& bc = host()->chain();
+
+		auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ? static_cast<unsigned>(maxHeaders) : c_maxHeadersToSend;
+
+		if (skip > std::numeric_limits<unsigned>::max() - 1)
 		{
-			unsigned c = min<unsigned>(host()->chain().number() - number + 1, min(limit, c_maxHashesToSend));
-			prep(s, BlockHashesPacket, c);
-			for (unsigned n = number; n < number + c; n++)
-			{
-				h256 p = host()->chain().numberHash(n);
-				s << p;
-			}
+			clog(NetAllDetail) << "Requested block skip is too big: " << skip;
+			break;
 		}
-		else
-			prep(s, BlockHashesPacket, 0);
+
+		auto step = static_cast<unsigned>(skip) + 1;
+		assert(step > 0 && "step must not be 0");
+
+		h256 blockHash;
+		if (blockId.size() == 32) // block id is a hash
+		{
+			blockHash = blockId.toHash<h256>();
+			//blockNumber = host()->chain().number(blockHash);
+			clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
+			<< ", maxHeaders: " << maxHeaders
+			<< ", skip: " << skip << ", reverse: " << reverse << ")";
+
+			if (!reverse)
+			{
+				auto n = bc.number(blockHash);
+				if (n != 0 || blockHash == bc.genesisHash())
+				{
+					auto top = n + uint64_t(step) * numHeadersToSend;
+					auto lastBlock = bc.number();
+					if (top > lastBlock)
+					{
+						numHeadersToSend = (lastBlock - n) / step;
+						top = n + step * numHeadersToSend;
+					}
+					assert(top <= lastBlock && "invalid top block calculated");
+					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+				}
+				else
+					blockHash = {};
+			}
+			else if (!bc.isKnown(blockHash))
+				blockHash = {};
+		}
+		else // block id is a number
+		{
+			auto n = blockId.toInt<bigint>();
+			clog(NetMessageSummary) << "GetBlockHeaders (block (number): " << n
+			<< ", maxHeaders: " << maxHeaders
+			<< ", skip: " << skip << ", reverse: " << reverse << ")";
+
+			if (!reverse)
+			{
+				auto lastBlock = bc.number();
+				if (n > lastBlock)
+					blockHash = {};
+				else
+				{
+					bigint top = n + uint64_t(step) * numHeadersToSend;
+					if (top > lastBlock)
+					{
+						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step;
+						top = n + step * numHeadersToSend;
+					}
+					assert(top <= lastBlock && "invalid top block calculated");
+					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+				}
+			}
+			else if (n <= std::numeric_limits<unsigned>::max())
+				blockHash = bc.numberHash(static_cast<unsigned>(n));
+			else
+				blockHash = {};
+		}
+
+		auto nextHash = [&bc](h256 _h, unsigned _step)
+		{
+			static const unsigned c_blockNumberUsageLimit = 1000;
+
+			const auto lastBlock = bc.number();
+			const auto limitBlock = lastBlock > c_blockNumberUsageLimit ? lastBlock - c_blockNumberUsageLimit : 0; // find the number of the block below which we don't expect BC changes.
+
+			while (_step) // parent hash traversal
+			{
+				auto details = bc.details(_h);
+				if (details.number < limitBlock)
+					break; // stop using parent hash traversal, fallback to using block numbers
+				_h = details.parent;
+				--_step;
+			}
+
+			if (_step) // still need lower block
+			{
+				auto n = bc.number(_h);
+				if (n >= _step)
+					_h = bc.numberHash(n - _step);
+				else
+					_h = {};
+			}
+
+
+			return _h;
+		};
+
+		bytes rlp;
+		unsigned itemCount = 0;
+		for (unsigned i = 0; i != numHeadersToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			if (!blockHash || !bc.isKnown(blockHash))
+				break;
+
+			rlp += bc.headerData(blockHash);
+			++itemCount;
+
+			blockHash = nextHash(blockHash, step);
+		}
+
+		RLPStream s;
+		prep(s, BlockHeadersPacket, itemCount).appendRaw(rlp, itemCount);
 		sealAndSend(s);
 		addRating(0);
 		break;
 	}
-	case BlockHashesPacket:
+	case BlockHeadersPacket:
 	{
 		unsigned itemCount = _r.itemCount();
-		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHashes");
+		clog(NetMessageSummary) << "BlockHashes (" << dec << itemCount << "entries)";
 
-		if (m_asking != Asking::Hashes)
+		if (m_asking != Asking::Headers)
 		{
-			clog(NetAllDetail) << "Peer giving us hashes when we didn't ask for them.";
+			clog(NetAllDetail) << "Peer giving us headers when we didn't ask for them.";
 			break;
 		}
 		setIdle();
-		if (itemCount > m_lastAskedHashes)
+		if (itemCount > m_lastAskedHeaders)
 		{
-			disable("Too many hashes");
+			disable("Too many headers");
 			break;
 		}
-		h256s hashes(itemCount);
-		for (unsigned i = 0; i < itemCount; ++i)
-			hashes[i] = _r[i].toHash<h256>();
 
-		host()->onPeerHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
+		host()->onPeerHeaders(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
 		break;
 	}
-	case GetBlocksPacket:
+	case GetBlockBodiesPacket:
 	{
-		unsigned count = _r.itemCount();
-		clog(NetMessageSummary) << "GetBlocks (" << dec << count << "entries)";
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		clog(NetMessageSummary) << "GetBlockBodies (" << dec << count << "entries)";
 
 		if (!count)
 		{
-			clog(NetImpolite) << "Zero-entry GetBlocks: Not replying.";
+			clog(NetImpolite) << "Zero-entry GetBlockBodies: Not replying.";
 			addRating(-10);
 			break;
 		}
 		// return the requested blocks.
 		bytes rlp;
 		unsigned n = 0;
-		for (unsigned i = 0; i < min(count, c_maxBlocks) && rlp.size() < c_maxPayload; ++i)
+		auto numBodiesToSend = std::min(count, c_maxBlocks);
+		for (unsigned i = 0; i < numBodiesToSend && rlp.size() < c_maxPayload; ++i)
 		{
 			auto h = _r[i].toHash<h256>();
 			if (host()->chain().isKnown(h))
 			{
-				rlp += host()->chain().block(_r[i].toHash<h256>());
+				bytes blockBytes = host()->chain().block(h);
+				RLP block{blockBytes};
+				RLPStream body;
+				body.appendList(2);
+				body.appendRaw(block[1].data()); // transactions
+				body.appendRaw(block[2].data()); // uncles
+				auto bodyBytes = body.out();
+				rlp.insert(rlp.end(), bodyBytes.begin(), bodyBytes.end());
 				++n;
 			}
 		}
 		if (count > 20 && n == 0)
 			clog(NetWarn) << "all" << count << "unknown blocks requested; peer on different chain?";
 		else
-			clog(NetMessageSummary) << n << "blocks known and returned;" << (min(count, c_maxBlocks) - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+			clog(NetMessageSummary) << n << "blocks known and returned;" << (numBodiesToSend - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
 
 		addRating(0);
 		RLPStream s;
-		prep(s, BlocksPacket, n).appendRaw(rlp, n);
+		prep(s, BlockBodiesPacket, n).appendRaw(rlp, n);
 		sealAndSend(s);
 		break;
 	}
-	case BlocksPacket:
+	case BlockBodiesPacket:
 	{
 		if (m_asking != Asking::Blocks)
-			clog(NetImpolite) << "Peer giving us blocks when we didn't ask for them.";
+			clog(NetImpolite) << "Peer giving us block bodies when we didn't ask for them.";
 		else
 		{
 			setIdle();
@@ -388,6 +472,73 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			hashes[i] = _r[i].toHash<h256>();
 
 		host()->onPeerNewHashes(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), hashes);
+		break;
+	}
+	case GetNodeDataPacket:
+	{
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		if (!count)
+		{
+			clog(NetImpolite) << "Zero-entry GetNodeData: Not replying.";
+			addRating(-10);
+			break;
+		}
+		clog(NetMessageSummary) << "GetNodeData (" << dec << count << " entries)";
+
+		// return the requested nodes.
+		bytes rlp;
+		unsigned n = 0;
+		auto numItemsToSend = std::min(count, c_maxNodes);
+		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			auto h = _r[i].toHash<h256>();
+			auto node = host()->db().lookup(h);
+			if (!node.empty())
+			{
+				rlp.insert(rlp.end(), node.begin(), node.end());
+				++n;
+			}
+		}
+		clog(NetMessageSummary) << n << " nodes known and returned;" << (numItemsToSend - n) << " unknown;" << (count > c_maxNodes ? count - c_maxNodes : 0) << " ignored";
+
+		addRating(0);
+		RLPStream s;
+		prep(s, NodeDataPacket, n).appendRaw(rlp, n);
+		sealAndSend(s);
+		break;
+	}
+	case GetReceiptsPacket:
+	{
+		unsigned count = static_cast<unsigned>(_r.itemCount());
+		if (!count)
+		{
+			clog(NetImpolite) << "Zero-entry GetReceipts: Not replying.";
+			addRating(-10);
+			break;
+		}
+		clog(NetMessageSummary) << "GetReceipts (" << dec << count << " entries)";
+
+		// return the requested receipts.
+		bytes rlp;
+		unsigned n = 0;
+		auto numItemsToSend = std::min(count, c_maxReceipts);
+		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			auto h = _r[i].toHash<h256>();
+			if (host()->chain().isKnown(h))
+			{
+				auto const receipts = host()->chain().receipts(h);
+				auto receiptsRlpList = receipts.rlp();
+				rlp.insert(rlp.end(), receiptsRlpList.begin(), receiptsRlpList.end());
+				++n;
+			}
+		}
+		clog(NetMessageSummary) << n << " receipt lists known and returned;" << (numItemsToSend - n) << " unknown;" << (count > c_maxReceipts ? count - c_maxReceipts : 0) << " ignored";
+
+		addRating(0);
+		RLPStream s;
+		prep(s, ReceiptsPacket, n).appendRaw(rlp, n);
+		sealAndSend(s);
 		break;
 	}
 	default:

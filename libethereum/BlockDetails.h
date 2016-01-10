@@ -83,7 +83,7 @@ struct BlockReceipts
 	bytes rlp() const { RLPStream s(receipts.size()); for (TransactionReceipt const& i: receipts) i.streamRLP(s); size = s.out().size(); return s.out(); }
 
 	TransactionReceipts receipts;
-	mutable unsigned size;
+	mutable unsigned size = 0;
 };
 
 struct BlockHash
