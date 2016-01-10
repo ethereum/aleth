@@ -31,7 +31,6 @@
 #include <libethcore/Common.h>
 #include <libp2p/Capability.h>
 #include "CommonNet.h"
-#include "DownloadMan.h"
 
 namespace dev
 {
@@ -47,8 +46,6 @@ class EthereumPeer: public p2p::Capability
 {
 	friend class EthereumHost; //TODO: remove this
 	friend class BlockChainSync; //TODO: remove this
-	friend class PV60Sync; //TODO: remove this
-	friend class PV61Sync; //TODO: remove this
 
 public:
 	/// Basic constructor.
@@ -73,19 +70,20 @@ public:
 	void setIdle();
 
 	/// Request hashes for given parent hash.
-	void requestHashes(h256 const& _lastHash);
-
-	/// Request blocks. Uses block download manager.
-	void requestBlocks();
+	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
+	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
 
 	/// Request specified blocks from peer.
-	void requestBlocks(h256s const& _blocks);
+	void requestBlockBodies(h256s const& _blocks);
 
 	/// Check if this node is rude.
 	bool isRude() const;
 
 	/// Set that it's a rude node.
 	void setRude();
+
+	/// Abort the sync operation.
+	void abortSync();
 
 private:
 	using p2p::Capability::sealAndSend;
@@ -99,8 +97,6 @@ private:
 	/// Request status. Called from constructor
 	void requestStatus();
 
-	/// Abort the sync operation.
-	void abortSync();
 
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
@@ -138,12 +134,9 @@ private:
 
 	/// This is built as we ask for hashes. Once no more hashes are given, we present this to the
 	/// host who initialises the DownloadMan and m_sub becomes active for us to begin asking for blocks.
-	unsigned m_expectedHashes = 0;			///< Estimated upper bound of hashes to expect from this peer.
 	u256 m_syncHashNumber = 0;				///< Number of latest hash we sync to (PV61+)
+	u256 m_height = 0;						///< Chain height
 	h256 m_syncHash;						///< Latest hash we sync to (PV60)
-
-	/// Once we're asking for blocks, this becomes in use.
-	DownloadSub m_sub;
 
 	u256 m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?
@@ -153,8 +146,8 @@ private:
 	h256Hash m_knownBlocks;					///< Blocks that the peer already knows about (that don't need to be sent to them).
 	Mutex x_knownTransactions;
 	h256Hash m_knownTransactions;			///< Transactions that the peer already knows of.
-	unsigned m_unknownNewBlocks;			///< Number of unknown NewBlocks received from this peer
-	unsigned m_lastAskedHeaders;			///< Number of hashes asked
+	unsigned m_unknownNewBlocks = 0;		///< Number of unknown NewBlocks received from this peer
+	unsigned m_lastAskedHeaders = 0;		///< Number of hashes asked
 };
 
 }

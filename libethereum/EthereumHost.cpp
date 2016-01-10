@@ -31,7 +31,6 @@
 #include "TransactionQueue.h"
 #include "BlockQueue.h"
 #include "EthereumPeer.h"
-#include "DownloadMan.h"
 #include "BlockChainSync.h"
 
 using namespace std;
@@ -39,10 +38,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-unsigned const EthereumHost::c_oldProtocolVersion = 60; //TODO: remove this once v61+ is common
+unsigned const EthereumHost::c_oldProtocolVersion = 62; //TODO: remove this once v63+ is common
 static unsigned const c_maxSendTransactions = 256;
 
-char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"Idle", "Waiting", "Headers", "Blocks", "NewBlocks" };
+char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State", "NewBlocks" };
 
 #ifdef _WIN32
 const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
@@ -129,7 +128,7 @@ void EthereumHost::doWork()
 				time_t now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
 				if (now - m_syncStart > 10)
 				{
-					m_sync.reset(new PV60Sync(*this));
+					m_sync.reset(new BlockChainSync(*this));
 					m_syncStart = 0;
 					m_sync->restartSync();
 				}
@@ -266,7 +265,11 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 				RLPStream ts;
 				p->prep(ts, NewBlockHashesPacket, blocks.size());
 				for (auto const& b: blocks)
+				{
+					ts.appendList(2);
 					ts.append(b);
+					ts.append(m_chain.number(b));
+				}
 
 				Guard l(p->x_knownBlocks);
 				p->sealAndSend(ts);
@@ -282,17 +285,17 @@ BlockChainSync* EthereumHost::sync()
 	if (m_sync)
 		return m_sync.get(); // We only chose sync strategy once
 
-	bool pv61 = false;
+	bool pv63 = false;
 	foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
 	{
 		if (_p->m_protocolVersion == protocolVersion())
-			pv61 = true;
-		return !pv61;
+			pv63 = true;
+		return !pv63;
 	});
-	if (pv61)
+	if (pv63)
 	{
 		m_syncStart = 0;
-		m_sync.reset(new PV60Sync(*this));
+		m_sync.reset(new BlockChainSync(*this));
 	}
 	else if (!m_syncStart)
 		m_syncStart = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
@@ -307,21 +310,21 @@ void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		sync()->onPeerStatus(_peer);
 }
 
-void EthereumHost::onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
+void EthereumHost::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerHeaders(_peer, _headers);
+		sync()->onPeerBlockHeaders(_peer, _headers);
 }
 
-void EthereumHost::onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+void EthereumHost::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerBlocks(_peer, _r);
+		sync()->onPeerBlockBodies(_peer, _r);
 }
 
-void EthereumHost::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes)
+void EthereumHost::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
@@ -358,7 +361,6 @@ void EthereumHost::onPeerAborting()
 
 bool EthereumHost::isSyncing() const
 {
-	RecursiveGuard l(x_sync);
 	if (!m_sync)
 		return false;
 	return m_sync->isSyncing();

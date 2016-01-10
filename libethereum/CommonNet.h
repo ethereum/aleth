@@ -79,17 +79,21 @@ enum: byte
 enum class Asking
 {
 	State,
-	Headers,
-	Blocks,
+	BlockHeaders,
+	BlockBodies,
+	NodeData,
+	Receipts,
 	Nothing
 };
 
 enum class SyncState
 {
+	NotSynced,			///< Initial chain sync has not started yet
 	Idle,				///< Initial chain sync complete. Waiting for new packets
+	//Seeking,            ///< Gettting subchain headers
 	Waiting,			///< Block downloading paused. Waiting for block queue to process blocks and free space
-	Hashes,				///< Downloading hashes from multiple peers over
 	Blocks,				///< Downloading blocks
+	State,				///< Downloading state
 	NewBlocks,			///< Downloading blocks learned from NewHashes packet
 
 	Size		/// Must be kept last
@@ -99,14 +103,11 @@ struct SyncStatus
 {
 	SyncState state = SyncState::Idle;
 	unsigned protocolVersion = 0;
-	unsigned hashesTotal = 0;
-	unsigned hashesReceived = 0;
-	bool hashesEstimated = false;
-	unsigned blocksTotal = 0;
-	unsigned blocksReceived = 0;
 	unsigned startBlockNumber;
 	unsigned currentBlockNumber;
 	unsigned highestBlockNumber;
+	unsigned blocksTotal = 0;
+	unsigned blocksReceived = 0;
 	bool majorSyncing = false;
 };
 

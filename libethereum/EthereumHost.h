@@ -36,7 +36,6 @@
 #include <libdevcrypto/OverlayDB.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
-#include "DownloadMan.h"
 
 namespace dev
 {
@@ -72,8 +71,6 @@ public:
 
 	void reset();
 
-	DownloadMan const& downloadMan() const { return m_man; }
-	DownloadMan& downloadMan() { return m_man; }
 	bool isSyncing() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
@@ -92,9 +89,9 @@ public:
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
-	void onPeerHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers);
-	void onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
-	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes);
+	void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers);
+	void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
 	void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerAborting();
@@ -139,7 +136,6 @@ private:
 
 	mutable RecursiveMutex x_sync;
 	mutable Mutex x_transactions;
-	DownloadMan m_man;
 	std::unique_ptr<BlockChainSync> m_sync;
 	std::atomic<time_t> m_syncStart = { 0 };
 	std::atomic<time_t> m_lastTick = { 0 };

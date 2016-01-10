@@ -283,13 +283,6 @@ void Client::setNetworkId(u256 const& _n)
 		h->setNetworkId(_n);
 }
 
-DownloadMan const* Client::downloadMan() const
-{
-	if (auto h = m_host.lock())
-		return &(h->downloadMan());
-	return nullptr;
-}
-
 bool Client::isSyncing() const
 {
 	if (auto h = m_host.lock())
@@ -899,4 +892,12 @@ bool Client::submitSealed(bytes const& _header)
 
 	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postSeal that contains all trie changes.
 	return m_bq.import(&newBlock, true) == ImportResult::Success;
+}
+
+void Client::rewind(unsigned _n)
+{
+	bc().rewind(_n);
+	auto h = m_host.lock();
+	if (h)
+		h->reset();
 }
