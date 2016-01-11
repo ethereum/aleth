@@ -110,7 +110,11 @@ int main( int argc, char* argv[] )
 	try
 	{
 		framework::init(fake_init_func, argc, argv);
-#if BOOST_VERSION >= 105900
+#if BOOST_VERSION >= 106000
+			if (true)
+			{
+				test_case_counter filter;
+#elif BOOST_VERSION >= 105900
 		if(!runtime_config::test_to_run().empty())
 		{
 			test_case_counter filter;
@@ -126,10 +130,13 @@ int main( int argc, char* argv[] )
 
 		results_reporter::make_report();
 
+#if BOOST_VERSION >= 106000
+		return results_collector.results(framework::master_test_suite().p_id).result_code();
+#else
 		return runtime_config::no_result_code()
 					? boost::exit_success
 					: results_collector.results(framework::master_test_suite().p_id).result_code();
-
+#endif
 	}
 	catch (framework::nothing_to_test const&)
 	{

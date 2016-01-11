@@ -116,7 +116,12 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		if (gasLimit < chainParams().u256Param("minGasLimit") ||
 			gasLimit <= parentGasLimit - parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor") ||
 			gasLimit >= parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor"))
-			BOOST_THROW_EXCEPTION(InvalidGasLimit() << errinfo_min((bigint)parentGasLimit - parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor")) << errinfo_got((bigint)gasLimit) << errinfo_max((bigint)parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor")));
+			BOOST_THROW_EXCEPTION(
+				InvalidGasLimit()
+				<< errinfo_min((bigint)((bigint)parentGasLimit - (bigint)(parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor"))))
+				<< errinfo_got((bigint)gasLimit)
+				<< errinfo_max((bigint)((bigint)parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor")))
+			);
 	}
 
 	// check it hashes according to proof of work or that it's the genesis block.
