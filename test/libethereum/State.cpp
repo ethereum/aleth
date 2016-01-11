@@ -116,6 +116,11 @@ BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
 	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stTransitionTest)
+{
+	dev::test::executeTests("stTransitionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stDelegatecallTest)
 {
 	dev::test::executeTests("stDelegatecallTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
