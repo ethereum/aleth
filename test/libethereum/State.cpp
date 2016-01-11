@@ -274,11 +274,6 @@ BOOST_AUTO_TEST_CASE(stWalletTest)
 	dev::test::executeTests("stWalletTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stTransitionTestHomestead)
-{
-	dev::test::executeTests("stTransitionTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
-}
-
 BOOST_AUTO_TEST_CASE(stTransitionTest)
 {
 	dev::test::executeTests("stTransitionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
