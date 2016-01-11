@@ -67,6 +67,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 		bool haveNonce = o.count("nonce");
 		bool haveCode = o.count("code");
 		bool haveStorage = o.count("storage");
+		bool shouldNotExists = o.count("shouldnotexist");
 
 		if (haveStorage || haveCode || haveNonce || haveBalance)
 		{
@@ -102,7 +103,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 		}
 
 		if (o_mask)
-			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage);
+			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage, shouldNotExists);
 
 		if (o_precompiled && o.count("precompiled"))
 		{

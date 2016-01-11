@@ -96,6 +96,22 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(StateTests)
 
+BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)
+{
+	if (test::Options::get().sealEngineNetwork == eth::Network::HomesteadTest)
+		dev::test::executeTests("stHomeSteadSpecific", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCode)
+{
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stCallDelegateCodes)
+{
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stCallCodes)
 {
 	dev::test::executeTests("stCallCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);

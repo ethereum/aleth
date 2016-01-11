@@ -192,7 +192,7 @@ std::string RandomCode::rndByteSequence(int _length, SizeStrictness _sizeType)
 {
 	refreshSeed();
 	std::string hash = "";
-	_length = (_sizeType == SizeStrictness::Strict) ? std::max(0, _length) : randomUniInt() % _length;
+	_length = (_sizeType == SizeStrictness::Strict) ? std::max(0, _length) : (int)randomUniInt() % _length;
 	for (auto i = 0; i < _length; i++)
 	{
 		uint8_t byte = randOpCodeGen();
@@ -256,10 +256,12 @@ std::string RandomCode::randomUniIntHex(u256 _maxVal)
 	return "0x" + toCompactHex((u256)randUInt64Gen() % _maxVal);
 }
 
-int RandomCode::randomUniInt()
+u256 RandomCode::randomUniInt(u256 _maxVal)
 {
+	if (_maxVal == 0)
+		_maxVal = std::numeric_limits<uint64_t>::max();
 	refreshSeed();
-	return (int)randUniIntGen();
+	return (u256)randUInt64Gen() % _maxVal;
 }
 
 void RandomCode::refreshSeed()
@@ -388,7 +390,7 @@ dev::Address RandomCodeOptions::getRandomAddress() const
 {
 	if (addressList.size() > 0)
 	{
-		int index = RandomCode::randomUniInt() % addressList.size();
+		int index = (int)RandomCode::randomUniInt() % addressList.size();
 		return addressList[index];
 	}
 	return Address(RandomCode::rndByteSequence(20));

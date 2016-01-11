@@ -147,7 +147,7 @@ public:
 	virtual BlockHeader pendingInfo() const override;
 	virtual BlockDetails pendingDetails() const override;
 
-	EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(EnvInfo(pendingInfo())); }
+	virtual EVMSchedule evmSchedule() const override { return sealEngine()->evmSchedule(EnvInfo(pendingInfo())); }
 
 	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
 	virtual ImportResult injectBlock(bytes const& _block) override;

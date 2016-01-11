@@ -153,6 +153,7 @@ enum class Instruction: uint8_t
 	CALL,				///< message-call into an account
 	CALLCODE,			///< message-call with another account's code only
 	RETURN,				///< halt execution returning output data
+	DELEGATECALL,		///< like CALLCODE but keeps caller's value and sender (only from homestead on)
 	SUICIDE = 0xff		///< halt execution and register account for later deletion
 };
 

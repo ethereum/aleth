@@ -62,7 +62,7 @@ extern "C"
 
 	EXPORT bool env_call(ExtVMFace* _env, int64_t* io_gas, int64_t _callGas, h256* _receiveAddress, i256* _value, byte* _inBeg, uint64_t _inSize, byte* _outBeg, uint64_t _outSize, h256* _codeAddress)
 	{
-		EVMSchedule schedule = _env->evmSchedule(); // TODO: maybe memoise?
+		EVMSchedule const& schedule = _env->evmSchedule();
 
 		CallParameters params;
 

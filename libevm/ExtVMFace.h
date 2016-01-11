@@ -278,7 +278,7 @@ public:
 	EnvInfo const& envInfo() const { return m_envInfo; }
 
 	/// Return the EVM gas-price schedule for this execution context.
-	virtual EVMSchedule evmSchedule() const { return EVMSchedule(); }
+	virtual EVMSchedule const& evmSchedule() const { return DefaultSchedule; }
 
 private:
 	EnvInfo const& m_envInfo;

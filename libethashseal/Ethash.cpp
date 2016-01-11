@@ -79,20 +79,12 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 	return { { "nonce", toJS(nonce(_bi)) }, { "seedHash", toJS(seedHash(_bi)) }, { "mixHash", toJS(mixHash(_bi)) }, { "boundary", toJS(boundary(_bi)) }, { "difficulty", toJS(_bi.difficulty()) } };
 }
 
-EVMSchedule Ethash::evmSchedule(EnvInfo const& _envInfo) const
+EVMSchedule const& Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
-	EVMSchedule ret;
 	if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
-	{
-		ret.exceptionalFailedCodeDeposit = ret.haveDelegateCall = true;
-		ret.txCreateGas = 53000;
-	}
+		return HomesteadSchedule;
 	else
-	{
-		ret.exceptionalFailedCodeDeposit = ret.haveDelegateCall = false;
-		ret.txCreateGas = 21000;
-	}
-	return ret;
+		return FrontierSchedule;
 }
 
 void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const

@@ -39,10 +39,6 @@ extern std::string const c_testExampleRLPTest;
 void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, std::string const& _testString, bool _debug = false);
 int checkRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, json_spirit::mValue& _value, bool _debug = false);
 
-//Helper Functions
-std::vector<std::string> getTypes();
-void parseTestWithTypes(std::string& test);
-
 namespace dev { namespace test {
 int createRandomTest(std::vector<char*> const& _parameters)
 {
@@ -198,7 +194,7 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 	try
 	{
 		std::string newTest = _testString;
-		parseTestWithTypes(newTest);
+		dev::test::RandomCode::parseTestWithTypes(newTest);
 		json_spirit::read_string(newTest, v);
 		_doTests(v, true);
 	}
@@ -217,7 +213,7 @@ void fillRandomTest(std::function<void(json_spirit::mValue&, bool)> _doTests, st
 }
 
 /// Parse Test string replacing keywords to fuzzed values
-void parseTestWithTypes(std::string& _test)
+void dev::test::RandomCode::parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap)
 {
 	dev::test::RandomCodeOptions options;
 	options.setWeight(dev::eth::Instruction::STOP, 10);		//default 50
@@ -237,6 +233,10 @@ void parseTestWithTypes(std::string& _test)
 	options.smartCodeProbability = 60;
 
 	std::vector<std::string> types = getTypes();
+
+	for (std::map<std::string, std::string>::const_iterator it = _varMap.begin(); it != _varMap.end(); it++)
+		types.push_back(it->first);
+
 	for (unsigned i = 0; i < types.size(); i++)
 	{
 		std::size_t pos = _test.find(types.at(i));
@@ -245,7 +245,7 @@ void parseTestWithTypes(std::string& _test)
 			if (types.at(i) == "[RLP]")
 			{
 				std::string debug;
-				int randomDepth = 1 + dev::test::RandomCode::randomUniInt() % 10;
+				int randomDepth = 1 + (int)dev::test::RandomCode::randomUniInt() % 10;
 				_test.replace(pos, 5, dev::test::RandomCode::rndRLPSequence(randomDepth, debug));
 				cnote << debug;
 			}
@@ -273,7 +273,7 @@ void parseTestWithTypes(std::string& _test)
 			else
 			if (types.at(i) == "[V]")
 			{
-				int random = dev::test::RandomCode::randomUniInt() % 100;
+				int random = (int)dev::test::RandomCode::randomUniInt() % 100;
 				if (random < 30)
 					_test.replace(pos, 3, "0x1c");
 				else
@@ -282,13 +282,15 @@ void parseTestWithTypes(std::string& _test)
 				else
 					_test.replace(pos, 3, "0x" + dev::test::RandomCode::rndByteSequence(1));
 			}
+			else
+				_test.replace(pos, types.at(i).size(), _varMap.at(types.at(i)));
 
 			pos = _test.find(types.at(i));
 		}
 	}
 }
 
-std::vector<std::string> getTypes()
+std::vector<std::string> dev::test::RandomCode::getTypes()
 {
 	return {"[RLP]", "[CODE]", "[HEX]", "[HEX32]", "[HASH20]", "[HASH32]", "[0xHASH32]", "[V]", "[GASLIMIT]"};
 }
