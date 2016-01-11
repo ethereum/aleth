@@ -856,7 +856,7 @@ Options::Options(int argc, char** argv)
 			else if (std::string{argv[i + 1]} == "Homestead")
 				sealEngineNetwork = eth::Network::HomesteadTest;
 			else
-				cout << "Invalid sealEngine"<< endl;
+				sealEngineNetwork = eth::Network::Test;
 			++i;
 		}
 		else if (arg == "--verbosity" && i + 1 < argc)
