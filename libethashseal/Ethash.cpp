@@ -196,7 +196,7 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	if (periodCount > 1)
 		o += (u256(1) << (periodCount - 2));	// latter will eventually become huge, so ensure it's a bigint.
 
-	o = max<bigint>(minimumDifficulty, o);
+	o = max<u256>(minimumDifficulty, (u256)o);
 	return (u256)o;
 }
 
