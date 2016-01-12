@@ -2,7 +2,7 @@
     "mload32bitBound": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "900000",
+            "currentNumber" : "1000000",
             "currentGasLimit" : "17592320524892",
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
@@ -42,7 +42,7 @@
     "mload32bitBound_return": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "900000",
+            "currentNumber" : "1000000",
             "currentGasLimit" : "175923205248920000",
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
@@ -82,7 +82,7 @@
     "mload32bitBound_return2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "900000",
+            "currentNumber" : "1000000",
             "currentGasLimit" : "175923205248920000",
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
@@ -122,7 +122,7 @@
     "mload32bitBound_Msize": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "900000",
+            "currentNumber" : "1000000",
             "currentGasLimit" : "175923205248920000",
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
@@ -163,7 +163,7 @@
     "mload32bitBound2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "900000",
+            "currentNumber" : "1000000",
             "currentGasLimit" : "37791080412587",
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
@@ -205,7 +205,7 @@
             "currentCoinbase" : "945304eb96065b2a98b57a48a06ae28d285a71b5",
             "currentDifficulty" : "5623894562375",
             "currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
-            "currentNumber" : "900000",
+            "currentNumber" : "1000000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },

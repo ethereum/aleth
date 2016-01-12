@@ -731,8 +731,8 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 
 void copyFile(std::string const& _source, std::string const& _destination)
 {
-	std::ifstream  src(_source, std::ios::binary);
-	std::ofstream  dst(_destination,   std::ios::binary);
+	std::ifstream src(_source, std::ios::binary);
+	std::ofstream dst(_destination, std::ios::binary);
 	dst << src.rdbuf();
 }
 
