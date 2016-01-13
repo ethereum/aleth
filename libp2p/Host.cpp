@@ -536,7 +536,7 @@ void Host::requirePeer(NodeID const& _n, NodeIPEndpoint const& _endpoint)
 			}
 		// required for discovery
 		if (m_nodeTable)
-			m_nodeTable->addNode(*p, NodeTable::NodeRelation::Known);
+			m_nodeTable->addNode(*p, NodeTable::NodeRelation::Unknown);
 	}
 	else if (m_nodeTable)
 	{
