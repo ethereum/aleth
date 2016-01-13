@@ -194,6 +194,13 @@ public:
 	operator bool() const { return !address.is_unspecified() && udpPort > 0 && tcpPort > 0; }
 	
 	bool isAllowed() const { return NodeIPEndpoint::test_allowLocal ? !address.is_unspecified() : isPublicAddress(address); }
+
+	bool operator==(NodeIPEndpoint const& _cmp) const {
+		return address == _cmp.address && udpPort == _cmp.udpPort && tcpPort == _cmp.tcpPort;
+ 	}
+	bool operator!=(NodeIPEndpoint const& _cmp) const {
+		return !operator==(_cmp);
+ 	}
 	
 	void streamRLP(RLPStream& _s, RLPAppend _append = StreamList) const;
 	void interpretRLP(RLP const& _r);
