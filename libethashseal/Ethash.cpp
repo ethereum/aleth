@@ -190,11 +190,14 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	else
 		// Homestead-era difficulty adjustment
 		target = _parent.difficulty() + _parent.difficulty() / 2048 * max<bigint>(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);
-	u256 o = (u256)max<bigint>(minimumDifficulty, target);
+
+	bigint o = target;
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
-		o = max<u256>(minimumDifficulty, o + (u256(1) << (periodCount - 2)));	// latter will eventually become huge, so ensure it's a bigint.
-	return o;
+		o += (u256(1) << (periodCount - 2));	// latter will eventually become huge, so ensure it's a bigint.
+
+	o = max<u256>(minimumDifficulty, (u256)o);
+	return (u256)o;
 }
 
 void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
