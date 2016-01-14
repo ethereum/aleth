@@ -142,6 +142,14 @@ public:
 		bytesConstRef _restoreNetwork = bytesConstRef()
 	);
 
+	/// Alternative constructor that allows providing the node key directly
+	/// without restoring the network.
+	Host(
+		std::string const& _clientVersion,
+		KeyPair const& _alias,
+		NetworkPreferences const& _n = NetworkPreferences()
+	);
+
 	/// Will block on network process events.
 	virtual ~Host();
 
