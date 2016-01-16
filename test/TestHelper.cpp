@@ -23,6 +23,7 @@
 
 #include <thread>
 #include <chrono>
+#include <fstream>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
@@ -53,7 +54,7 @@ void printHelp()
 	cout << setw(30) << "--singletest <TestFile> <TestName>" << std::endl;
 	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed" << std::endl;
 	cout << setw(30) << "--vm <interpreter|jit|smart>" << setw(25) << "Set VM type for VMTests suite" << std::endl;
-	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for VMTests suite. Requires verbosity level >= 12" << std::endl;
+	cout << setw(30) << "--vmtrace" << setw(25) << "Enable VM trace for the test." << std::endl;
 	cout << setw(30) << "--stats <OutFile>" << setw(25) << "Output debug stats to the file" << std::endl;
 	cout << setw(30) << "--filltest <FileData>" << setw(25) << "Try fill tests from the given json stream" << std::endl;
 	cout << setw(30) << "--checktest <FileData>" << setw(25) << "Try run tests from the given json stream" << std::endl;
@@ -157,13 +158,13 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTem
 }
 
 //executes an imported transacton on preState
-bytes ImportTest::executeTest()
+bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 {
 	ExecutionResult res;
 	eth::State tmpState = m_statePre;
 	try
 	{
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
 		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();
@@ -728,6 +729,13 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	}
 }
 
+void copyFile(std::string const& _source, std::string const& _destination)
+{
+	std::ifstream src(_source, std::ios::binary);
+	std::ofstream dst(_destination, std::ios::binary);
+	dst << src.rdbuf();
+}
+
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj)
 {
 	//Construct Rlp of the given transaction
@@ -798,7 +806,10 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--jit") // TODO: Remove deprecated option "--jit"
 			VMFactory::setKind(VMKind::JIT);
 		else if (arg == "--vmtrace")
+		{
 			vmtrace = true;
+			g_logVerbosity = 13;
+		}
 		else if (arg == "--filltests")
 			fillTests = true;
 		else if (arg == "--stats" && i + 1 < argc)
@@ -974,11 +985,11 @@ string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
 
 using namespace boost;
-void TestOutputHelper::initTest()
+void TestOutputHelper::initTest(int _maxTests)
 {
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
-	m_maxTests = 1;
+	m_maxTests = _maxTests;
 	m_currTest = 0;
 }
 

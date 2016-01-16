@@ -24,6 +24,7 @@
 #include <libethereum/BlockChain.h>
 #include <libethereum/TransactionQueue.h>
 #include <libdevcore/TransientDirectory.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libethashseal/Ethash.h>
 
 using namespace std;
@@ -126,8 +127,9 @@ public:
 
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = 3141592);
 	static AccountMap defaultAccountMap();
-
+	static eth::Network sealEngineNetwork;
 private:
+
 	std::unique_ptr<BlockChain> m_blockChain;
 	TestBlock m_genesisBlock;
 	TestBlock m_lastBlock;

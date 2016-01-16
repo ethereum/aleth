@@ -62,7 +62,11 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		bytes output;
 
 		Listener::ExecTimeGuard guard{i.first};
-		output = importer.executeTest();
+
+		if (importer.m_envInfo.number() >= dev::test::c_testHomesteadBlock)
+			output = importer.executeTest(eth::Network::HomesteadTest);
+		else
+			output = importer.executeTest(eth::Network::FrontierTest);
 
 		if (_fillin)
 		{
@@ -98,18 +102,22 @@ BOOST_AUTO_TEST_SUITE(StateTests)
 
 BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)
 {
-	if (test::Options::get().sealEngineNetwork == eth::Network::HomesteadTest)
-		dev::test::executeTests("stHomeSteadSpecific", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCode)
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead)
 {
-	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stCallDelegateCodes)
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead)
 {
-	dev::test::executeTests("stCallDelegateCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stCallCodesHomestead)
+{
+	dev::test::executeTests("stCallCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallCodes)
@@ -122,9 +130,19 @@ BOOST_AUTO_TEST_CASE(stExample)
 	dev::test::executeTests("stExample", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stSystemOperationsTestHomestead)
+{
+	dev::test::executeTests("stSystemOperationsTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 {
 	dev::test::executeTests("stSystemOperationsTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestHomestead)
+{
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
@@ -132,14 +150,9 @@ BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
 	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stTransitionTest)
+BOOST_AUTO_TEST_CASE(stPreCompiledContractsHomestead)
 {
-	dev::test::executeTests("stTransitionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
-}
-
-BOOST_AUTO_TEST_CASE(stDelegatecallTest)
-{
-	dev::test::executeTests("stDelegatecallTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stPreCompiledContracts", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
@@ -147,9 +160,19 @@ BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 	dev::test::executeTests("stPreCompiledContracts", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stLogTestsHomestead)
+{
+	dev::test::executeTests("stLogTests", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stLogTests)
 {
 	dev::test::executeTests("stLogTests", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stRecursiveCreateHomestead)
+{
+	dev::test::executeTests("stRecursiveCreate", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stRecursiveCreate)
@@ -157,9 +180,19 @@ BOOST_AUTO_TEST_CASE(stRecursiveCreate)
 	dev::test::executeTests("stRecursiveCreate", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stInitCodeTestHomestead)
+{
+	dev::test::executeTests("stInitCodeTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stInitCodeTest)
 {
 	dev::test::executeTests("stInitCodeTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stTransactionTestHomestead)
+{
+	dev::test::executeTests("stTransactionTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stTransactionTest)
@@ -167,9 +200,19 @@ BOOST_AUTO_TEST_CASE(stTransactionTest)
 	dev::test::executeTests("stTransactionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stSpecialTestHomestead)
+{
+	dev::test::executeTests("stSpecialTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stSpecialTest)
 {
 	dev::test::executeTests("stSpecialTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stRefundTestHomestead)
+{
+	dev::test::executeTests("stRefundTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stRefundTest)
@@ -182,10 +225,22 @@ BOOST_AUTO_TEST_CASE(stBlockHashTest)
 	dev::test::executeTests("stBlockHashTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestHomestead)
+{
+	if (test::Options::get().quadratic)
+		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
 {
 	if (test::Options::get().quadratic)
 		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stMemoryStressTestHomestead)
+{
+	if (test::Options::get().memory)
+		dev::test::executeTests("stMemoryStressTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryStressTest)
@@ -199,14 +254,29 @@ BOOST_AUTO_TEST_CASE(stSolidityTest)
 	dev::test::executeTests("stSolidityTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stMemoryTestHomestead)
+{
+	dev::test::executeTests("stMemoryTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stMemoryTest)
 {
 	dev::test::executeTests("stMemoryTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stWalletTestHomestead)
+{
+	dev::test::executeTests("stWalletTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stWalletTest)
 {
 	dev::test::executeTests("stWalletTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+}
+
+BOOST_AUTO_TEST_CASE(stTransitionTest)
+{
+	dev::test::executeTests("stTransitionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCreateTest)
@@ -243,6 +313,7 @@ BOOST_AUTO_TEST_CASE(stCreateTest)
 	}
 }
 
+//todo: Force stRandom to be tested on Homestead Seal Engine ?
 BOOST_AUTO_TEST_CASE(stRandom)
 {
 	test::Options::get(); // parse command line options, e.g. to enable JIT

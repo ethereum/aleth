@@ -441,7 +441,7 @@ void TestBlockChain::reset(TestBlock const& _genesisBlock, bool _noProof)
 	(void)_noProof;
 	m_tempDirBlockchain.reset(new TransientDirectory);
 	ChainParams p = //_noProof ? ChainParams(genesisInfo(Network::FrontierTest), _genesisBlock.bytes(), _genesisBlock.accountMap()) :
-							ChainParams(genesisInfo(Options::get().sealEngineNetwork), _genesisBlock.bytes(), _genesisBlock.accountMap());
+							ChainParams(genesisInfo(TestBlockChain::sealEngineNetwork), _genesisBlock.bytes(), _genesisBlock.accountMap());
 
 	m_blockChain.reset(new BlockChain(p, m_tempDirBlockchain.get()->path(), WithExisting::Kill));
 	if (!m_blockChain->isKnown(BlockHeader::headerHashFromBlock(_genesisBlock.bytes())))

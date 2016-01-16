@@ -90,13 +90,13 @@
         },
 	"expect" : {
             "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                "balance" : "53000"
+                "balance" : "21000"
             },
             "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
                 "code" : "0x"
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "47000",
+                "balance" : "79000",
                 "nonce" : "1"
             }
         },
