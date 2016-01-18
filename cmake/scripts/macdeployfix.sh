@@ -58,8 +58,8 @@ for i in "${BROKEN_FRAMEWORKS[@]}"; do
 	# This is due to a known bug in QT5, and we have to fix up the linked libraries if we're going to have a distributable
 	# result of building. When https://bugreports.qt.io/browse/QTBUG-50155 is fixed, this should be able
 	# to be removed.
-	for j in $(find $i/ -name "*.app"); do
-		EXEC_NAME=$j/Contents/MacOS/$(basename -s ".app" $j)
+	for j in $(find $i/ -name *.app); do
+		EXEC_NAME=$j/Contents/MacOS/$(basename -s .app $j)
 		otool -L $EXEC_NAME | grep -o /usr/local.*dylib | while read -a innerlibs ; do
 			install_name_tool -change ${innerlibs[0]} @loader_path/../Frameworks/`basename ${innerlibs[0]}` $EXEC_NAME
 		done
