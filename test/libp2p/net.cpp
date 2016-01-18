@@ -223,20 +223,6 @@ BOOST_AUTO_TEST_CASE(isIPAddressType)
 	BOOST_REQUIRE(!isLocalHostAddress(privateAddress10));
 }
 
-BOOST_AUTO_TEST_CASE(v2PingNodePacket)
-{
-	if (test::Options::get().nonetwork)
-		return;
-
-	// test old versino of pingNode packet w/new
-	RLPStream s;
-	s.appendList(3); s << "1.1.1.1" << 30303 << std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now() + chrono::seconds(60)).time_since_epoch()).count();
-
-	PingNode p((bi::udp::endpoint()));
-	BOOST_REQUIRE_NO_THROW(p = PingNode::fromBytesConstRef(bi::udp::endpoint(), bytesConstRef(&s.out())));
-	BOOST_REQUIRE(p.version == 0);
-}
-
 BOOST_AUTO_TEST_CASE(neighboursPacketLength)
 {
 	if (test::Options::get().nonetwork)
@@ -284,10 +270,9 @@ BOOST_AUTO_TEST_CASE(neighboursPacket)
 	out.sign(k.sec());
 
 	bytesConstRef packet(out.data.data(), out.data.size());
-	bytesConstRef rlpBytes(packet.cropped(h256::size + Signature::size + 1));
-	Neighbours in = Neighbours::fromBytesConstRef(to, rlpBytes);
+	auto in = DiscoveryDatagram::interpretUDP(to, packet);
 	int count = 0;
-	for (auto n: in.neighbours)
+	for (auto n: dynamic_cast<Neighbours&>(*in).neighbours)
 	{
 		BOOST_REQUIRE_EQUAL(testNodes[count].second, n.endpoint.udpPort);
 		BOOST_REQUIRE_EQUAL(testNodes[count].first.pub(), n.node);

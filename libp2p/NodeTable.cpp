@@ -396,49 +396,27 @@ NodeTable::NodeBucket& NodeTable::bucket_UNSAFE(NodeEntry const* _n)
 
 void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytesConstRef _packet)
 {
-	// h256 + Signature + type + RLP (smallest possible packet is empty neighbours packet which is 3 bytes)
-	if (_packet.size() < h256::size + Signature::size + 1 + 3)
-	{
-		clog(NodeTableTriviaSummary) << "Invalid message size from " << _from.address().to_string() << ":" << _from.port();
-		return;
-	}
-	
-	bytesConstRef hashedBytes(_packet.cropped(h256::size, _packet.size() - h256::size));
-	h256 hashSigned(sha3(hashedBytes));
-	if (!_packet.cropped(0, h256::size).contentsEqual(hashSigned.asBytes()))
-	{
-		clog(NodeTableTriviaSummary) << "Invalid message hash from " << _from.address().to_string() << ":" << _from.port();
-		return;
-	}
-	
-	bytesConstRef signedBytes(hashedBytes.cropped(Signature::size, hashedBytes.size() - Signature::size));
-
-	// todo: verify sig via known-nodeid and MDC
-	
-	bytesConstRef sigBytes(_packet.cropped(h256::size, Signature::size));
-	Public nodeid(dev::recover(*(Signature const*)sigBytes.data(), sha3(signedBytes)));
-	if (!nodeid)
-	{
-		clog(NodeTableTriviaSummary) << "Invalid message signature from " << _from.address().to_string() << ":" << _from.port();
-		return;
-	}
-	
-	unsigned packetType = signedBytes[0];
-	bytesConstRef rlpBytes(_packet.cropped(h256::size + Signature::size + 1));
 	try {
-		RLP rlp(rlpBytes);
-		switch (packetType)
+		unique_ptr<DiscoveryDatagram> packet = DiscoveryDatagram::interpretUDP(_from, _packet);
+		if (!packet)
+			return;
+		if (packet->isExpired())
+		{
+			clog(NodeTableWarn) << "Invalid packet (timestamp in the past) from " << _from.address().to_string() << ":" << _from.port();
+			return;
+		}
+
+		switch (packet->packetType())
 		{
 			case Pong::type:
 			{
-				Pong in = Pong::fromBytesConstRef(_from, rlpBytes);
-				
+				auto in = dynamic_cast<Pong const&>(*packet);
 				// whenever a pong is received, check if it's in m_evictions
 				bool found = false;
 				EvictionTimeout evictionEntry;
 				DEV_GUARDED(x_evictions)
 					for (auto it = m_evictions.begin(); it != m_evictions.end(); ++it)
-						if (it->first.first == nodeid && it->first.second > std::chrono::steady_clock::now())
+						if (it->first.first == in.sourceid && it->first.second > std::chrono::steady_clock::now())
 						{
 							found = true;
 							evictionEntry = *it;
@@ -455,7 +433,7 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 				else
 				{
 					// if not, check if it's known/pending or a pubk discovery ping
-					if (auto n = nodeEntry(nodeid))
+					if (auto n = nodeEntry(in.sourceid))
 						n->pending = false;
 					else
 					{
@@ -465,8 +443,8 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 								return; // unsolicited pong; don't note node as active
 							m_pubkDiscoverPings.erase(_from.address());
 						}
-						if (!haveNode(nodeid))
-							addNode(Node(nodeid, NodeIPEndpoint(_from.address(), _from.port(), _from.port())));
+						if (!haveNode(in.sourceid))
+							addNode(Node(in.sourceid, NodeIPEndpoint(_from.address(), _from.port(), _from.port())));
 					}
 				}
 				
@@ -478,31 +456,30 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 					m_node.endpoint.udpPort = in.destination.udpPort;
 				}
 				
-				clog(NodeTableConnect) << "PONG from " << nodeid << _from;
+				clog(NodeTableConnect) << "PONG from " << in.sourceid << _from;
 				break;
 			}
 				
 			case Neighbours::type:
 			{
+				auto in = dynamic_cast<Neighbours const&>(*packet);
 				bool expected = false;
 				auto now = chrono::steady_clock::now();
 				DEV_GUARDED(x_findNodeTimeout)
 					m_findNodeTimeout.remove_if([&](NodeIdTimePoint const& t)
 					{
-						if (t.first == nodeid && now - t.second < c_reqTimeout)
+						if (t.first == in.sourceid && now - t.second < c_reqTimeout)
 							expected = true;
-						else if (t.first == nodeid)
+						else if (t.first == in.sourceid)
 							return true;
 						return false;
 					});
-				
 				if (!expected)
 				{
 					clog(NetConnect) << "Dropping unsolicited neighbours packet from " << _from.address();
 					break;
 				}
-				
-				Neighbours in = Neighbours::fromBytesConstRef(_from, rlpBytes);
+
 				for (auto n: in.neighbours)
 					addNode(Node(n.node, n.endpoint));
 				break;
@@ -510,13 +487,7 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 
 			case FindNode::type:
 			{
-				FindNode in = FindNode::fromBytesConstRef(_from, rlpBytes);
-				if (RLPXDatagramFace::secondsSinceEpoch() > in.ts)
-				{
-					clog(NodeTableTriviaSummary) << "Received expired FindNode from " << _from.address().to_string() << ":" << _from.port();
-					return;
-				}
-
+				auto in = dynamic_cast<FindNode const&>(*packet);
 				vector<shared_ptr<NodeEntry>> nearest = nearestNodeEntries(in.target);
 				static unsigned const nlimit = (m_socketPointer->maxDatagramSize - 109) / 90;
 				for (unsigned offset = 0; offset < nearest.size(); offset += nlimit)
@@ -532,42 +503,24 @@ void NodeTable::onReceived(UDPSocketFace*, bi::udp::endpoint const& _from, bytes
 
 			case PingNode::type:
 			{
-				PingNode in = PingNode::fromBytesConstRef(_from, rlpBytes);
-				if (in.version < dev::p2p::c_protocolVersion)
-				{
-					if (in.version == 3)
-					{
-						compat::Pong p(in.source);
-						p.echo = sha3(rlpBytes);
-						p.sign(m_secret);
-						m_socketPointer->send(p);
-					}
-					else
-						return;
-				}
-				
-				if (RLPXDatagramFace::secondsSinceEpoch() > in.ts)
-				{
-					clog(NodeTableTriviaSummary) << "Received expired PingNode from " << _from.address().to_string() << ":" << _from.port();
-					return;
-				}
-				
+				auto in = dynamic_cast<PingNode const&>(*packet);
 				in.source.address = _from.address();
 				in.source.udpPort = _from.port();
-				addNode(Node(nodeid, in.source));
+				addNode(Node(in.sourceid, in.source));
+				
 				Pong p(in.source);
-				p.echo = sha3(rlpBytes);
+				p.echo = sha3(in.echo);
 				p.sign(m_secret);
 				m_socketPointer->send(p);
 				break;
 			}
-				
-			default:
-				clog(NodeTableWarn) << "Invalid message, " << hex << packetType << ", received from " << _from.address().to_string() << ":" << dec << _from.port();
-				return;
 		}
 
-		noteActiveNode(nodeid, _from);
+		noteActiveNode(packet->sourceid, _from);
+	}
+	catch (std::exception const& _e)
+	{
+		clog(NodeTableWarn) << "Exception processing message from " << _from.address().to_string() << ":" << _from.port() << ": " << _e.what();
 	}
 	catch (...)
 	{
@@ -624,47 +577,50 @@ void NodeTable::doDiscovery()
 	});
 }
 
-void PingNode::streamRLP(RLPStream& _s) const
+unique_ptr<DiscoveryDatagram> DiscoveryDatagram::interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet)
 {
-	_s.appendList(4);
-	_s << dev::p2p::c_protocolVersion;
-	source.streamRLP(_s);
-	destination.streamRLP(_s);
-	_s << ts;
-}
-
-void PingNode::interpretRLP(bytesConstRef _bytes)
-{
-	RLP r(_bytes);
-	if (r.itemCountStrict() == 4 && r[0].isInt() && r[0].toInt<unsigned>(RLP::Strict) == dev::p2p::c_protocolVersion)
+	unique_ptr<DiscoveryDatagram> decoded;
+	// h256 + Signature + type + RLP (smallest possible packet is empty neighbours packet which is 3 bytes)
+	if (_packet.size() < h256::size + Signature::size + 1 + 3)
 	{
-		version = dev::p2p::c_protocolVersion;
-		source.interpretRLP(r[1]);
-		destination.interpretRLP(r[2]);
-		ts = r[3].toInt<uint32_t>(RLP::Strict);
+		clog(NodeTableWarn) << "Invalid packet (too small) from " << _from.address().to_string() << ":" << _from.port();
+		return decoded;
 	}
-	else
-		version = r[0].toInt<unsigned>(RLP::Strict);
-}
+	bytesConstRef hashedBytes(_packet.cropped(h256::size, _packet.size() - h256::size));
+	bytesConstRef signedBytes(hashedBytes.cropped(Signature::size, hashedBytes.size() - Signature::size));
+	bytesConstRef signatureBytes(_packet.cropped(h256::size, Signature::size));
+	bytesConstRef bodyBytes(_packet.cropped(h256::size + Signature::size + 1));
 
-void Pong::streamRLP(RLPStream& _s) const
-{
-	_s.appendList(3);
-	destination.streamRLP(_s);
-	_s << echo << ts;
-}
-
-void Pong::interpretRLP(bytesConstRef _bytes)
-{
-	RLP r(_bytes);
-	destination.interpretRLP(r[0]);
-	echo = (h256)r[1];
-	ts = r[2].toInt<uint32_t>();
-}
-
-void compat::Pong::interpretRLP(bytesConstRef _bytes)
-{
-	RLP r(_bytes);
-	echo = (h256)r[0];
-	ts = r[1].toInt<uint32_t>();
+	h256 echo(sha3(hashedBytes));
+	if (!_packet.cropped(0, h256::size).contentsEqual(echo.asBytes()))
+	{
+		clog(NodeTableWarn) << "Invalid packet (bad hash) from " << _from.address().to_string() << ":" << _from.port();
+		return decoded;
+	}
+	Public sourceid(dev::recover(*(Signature const*)signatureBytes.data(), sha3(signedBytes)));
+	if (!sourceid)
+	{
+		clog(NodeTableWarn) << "Invalid packet (bad signature) from " << _from.address().to_string() << ":" << _from.port();
+		return decoded;
+	}
+	switch (signedBytes[0])
+	{
+	case PingNode::type:
+		decoded.reset(new PingNode(_from, sourceid, echo));
+		break;
+	case Pong::type:
+		decoded.reset(new Pong(_from, sourceid, echo));
+		break;
+	case FindNode::type:
+		decoded.reset(new FindNode(_from, sourceid, echo));
+		break;
+	case Neighbours::type:
+		decoded.reset(new Neighbours(_from, sourceid, echo));
+		break;
+	default:
+		clog(NodeTableWarn) << "Invalid packet (unknown packet type) from " << _from.address().to_string() << ":" << _from.port();
+		return decoded;
+	}
+	decoded->interpretRLP(bodyBytes);
+	return decoded;
 }

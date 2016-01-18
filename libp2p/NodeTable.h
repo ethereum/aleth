@@ -276,7 +276,26 @@ inline std::ostream& operator<<(std::ostream& _out, NodeTable const& _nodeTable)
 	return _out;
 }
 
-struct InvalidRLP: public Exception {};
+struct DiscoveryDatagram: public RLPXDatagramFace
+{
+	/// Constructor used for sending.
+	DiscoveryDatagram(bi::udp::endpoint const& _to): RLPXDatagramFace(_to), ts(futureFromEpoch(std::chrono::seconds(60))) {}
+
+	/// Constructor used for parsing inbound packets.
+	DiscoveryDatagram(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): RLPXDatagramFace(_from), sourceid(_fromid), echo(_echo) {}
+
+	// These two are set for inbound packets only.
+	NodeID sourceid; // sender public key (from signature)
+	h256 echo;       // hash of encoded packet, for reply tracking
+
+	// All discovery packets carry a timestamp, which must be greater
+	// than the current local time. This prevents replay attacks.
+	uint32_t ts = 0;
+	bool isExpired() const { return secondsSinceEpoch() > ts; }
+
+	/// Decodes UDP packets.
+	static std::unique_ptr<DiscoveryDatagram> interpretUDP(bi::udp::endpoint const& _from, bytesConstRef _packet);
+};
 
 /**
  * Ping packet: Sent to check if node is alive.
@@ -287,41 +306,64 @@ struct InvalidRLP: public Exception {};
  * If the pinged node doesn't respond, then it is removed and the new
  * node is inserted.
  */
-struct PingNode: RLPXDatagram<PingNode>
+struct PingNode: DiscoveryDatagram
 {
-	/// Constructor used for sending PingNode.
-	PingNode(NodeIPEndpoint _src, NodeIPEndpoint _dest): RLPXDatagram<PingNode>(_dest), source(_src), destination(_dest), ts(futureFromEpoch(std::chrono::seconds(60))) {}
-	
-	/// Constructor used to create empty PingNode for parsing inbound packets.
-	PingNode(bi::udp::endpoint _ep): RLPXDatagram<PingNode>(_ep), source(UnspecifiedNodeIPEndpoint), destination(UnspecifiedNodeIPEndpoint) {}
+	using DiscoveryDatagram::DiscoveryDatagram;
+	PingNode(NodeIPEndpoint const& _src, NodeIPEndpoint const& _dest): DiscoveryDatagram(_dest), source(_src), destination(_dest) {}
+	PingNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
 	static const uint8_t type = 1;
+	uint8_t packetType() const { return type; }
 
 	unsigned version = 0;
 	NodeIPEndpoint source;
 	NodeIPEndpoint destination;
-	uint32_t ts = 0;
 
-	void streamRLP(RLPStream& _s) const override;
-	void interpretRLP(bytesConstRef _bytes) override;
+	void streamRLP(RLPStream& _s) const
+	{
+		_s.appendList(4);
+		_s << dev::p2p::c_protocolVersion;
+		source.streamRLP(_s);
+		destination.streamRLP(_s);
+		_s << ts;
+	}
+	void interpretRLP(bytesConstRef _bytes)
+	{
+		RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
+		version = r[0].toInt<unsigned>();
+		source.interpretRLP(r[1]);
+		destination.interpretRLP(r[2]);
+		ts = r[3].toInt<uint32_t>();
+	}
 };
 
 /**
  * Pong packet: Sent in response to ping
  */
-struct Pong: RLPXDatagram<Pong>
+struct Pong: DiscoveryDatagram
 {
-	Pong(bi::udp::endpoint const& _ep): RLPXDatagram<Pong>(_ep), destination(UnspecifiedNodeIPEndpoint) {}
-	Pong(NodeIPEndpoint const& _dest): RLPXDatagram<Pong>((bi::udp::endpoint)_dest), destination(_dest), ts(futureFromEpoch(std::chrono::seconds(60))) {}
+	Pong(NodeIPEndpoint const& _dest): DiscoveryDatagram((bi::udp::endpoint)_dest), destination(_dest) {}
+	Pong(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
 	static const uint8_t type = 2;
+	uint8_t packetType() const { return type; }
 
 	NodeIPEndpoint destination;
-	h256 echo;				///< MCD of PingNode
-	uint32_t ts = 0;
 
-	void streamRLP(RLPStream& _s) const;
-	void interpretRLP(bytesConstRef _bytes);
+	void streamRLP(RLPStream& _s) const
+	{
+		_s.appendList(3);
+		destination.streamRLP(_s);
+		_s << echo;
+		_s << ts;
+	}
+	void interpretRLP(bytesConstRef _bytes)
+	{
+		RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
+		destination.interpretRLP(r[0]);
+		echo = (h256)r[1];
+		ts = r[2].toInt<uint32_t>();
+	}
 };
 
 /**
@@ -336,25 +378,42 @@ struct Pong: RLPXDatagram<Pong>
  * target: NodeID of node. The responding node will send back nodes closest to the target.
  *
  */
-struct FindNode: RLPXDatagram<FindNode>
+struct FindNode: DiscoveryDatagram
 {
-	FindNode(bi::udp::endpoint _ep): RLPXDatagram<FindNode>(_ep) {}
-	FindNode(bi::udp::endpoint _ep, NodeID _target): RLPXDatagram<FindNode>(_ep), target(_target), ts(futureFromEpoch(std::chrono::seconds(60))) {}
+	FindNode(bi::udp::endpoint _to, h512 _target): DiscoveryDatagram(_to), target(_target) {}
+	FindNode(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
 
 	static const uint8_t type = 3;
+	uint8_t packetType() const { return type; }
 
 	h512 target;
-	uint32_t ts = 0;
 
-	void streamRLP(RLPStream& _s) const { _s.appendList(2); _s << target << ts; }
-	void interpretRLP(bytesConstRef _bytes) { RLP r(_bytes); target = r[0].toHash<h512>(); ts = r[1].toInt<uint32_t>(); }
+	void streamRLP(RLPStream& _s) const
+	{
+		_s.appendList(2); _s << target << ts;
+	}
+	void interpretRLP(bytesConstRef _bytes)
+	{
+		RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
+		target = r[0].toHash<h512>();
+		ts = r[1].toInt<uint32_t>();
+	}
 };
 
 /**
  * Node Packet: One or more node packets are sent in response to FindNode.
  */
-struct Neighbours: RLPXDatagram<Neighbours>
+struct Neighbours: DiscoveryDatagram
 {
+	Neighbours(bi::udp::endpoint _to, std::vector<std::shared_ptr<NodeEntry>> const& _nearest, unsigned _offset = 0, unsigned _limit = 0): DiscoveryDatagram(_to)
+	{
+		auto limit = _limit ? std::min(_nearest.size(), (size_t)(_offset + _limit)) : _nearest.size();
+		for (auto i = _offset; i < limit; i++)
+			neighbours.push_back(Neighbour(*_nearest[i]));
+	}
+	Neighbours(bi::udp::endpoint const& _to): DiscoveryDatagram(_to) {}
+	Neighbours(bi::udp::endpoint const& _from, NodeID const& _fromid, h256 const& _echo): DiscoveryDatagram(_from, _fromid, _echo) {}
+
 	struct Neighbour
 	{
 		Neighbour(Node const& _node): endpoint(_node.endpoint), node(_node.id) {}
@@ -364,38 +423,27 @@ struct Neighbours: RLPXDatagram<Neighbours>
 		void streamRLP(RLPStream& _s) const { _s.appendList(4); endpoint.streamRLP(_s, NodeIPEndpoint::StreamInline); _s << node; }
 	};
 
-	Neighbours(bi::udp::endpoint _ep): RLPXDatagram<Neighbours>(_ep), ts(secondsSinceEpoch()) {}
-	Neighbours(bi::udp::endpoint _to, std::vector<std::shared_ptr<NodeEntry>> const& _nearest, unsigned _offset = 0, unsigned _limit = 0): RLPXDatagram<Neighbours>(_to), ts(futureFromEpoch(std::chrono::seconds(60)))
-	{
-		auto limit = _limit ? std::min(_nearest.size(), (size_t)(_offset + _limit)) : _nearest.size();
-		for (auto i = _offset; i < limit; i++)
-			neighbours.push_back(Neighbour(*_nearest[i]));
-	}
-
 	static const uint8_t type = 4;
-	std::vector<Neighbour> neighbours;
-	uint32_t ts = 0;
+	uint8_t packetType() const { return type; }
 
-	void streamRLP(RLPStream& _s) const { _s.appendList(2); _s.appendList(neighbours.size()); for (auto& n: neighbours) n.streamRLP(_s); _s << ts; }
-	void interpretRLP(bytesConstRef _bytes) { RLP r(_bytes); for (auto n: r[0]) neighbours.push_back(Neighbour(n)); ts = r[1].toInt<uint32_t>(); }
-};
-	
-namespace compat
-{
-	/**
-	 * Pong packet [compatability]: Sent in response to ping
-	 */
-	struct Pong: RLPXDatagram<Pong>
+	std::vector<Neighbour> neighbours;
+
+	void streamRLP(RLPStream& _s) const
 	{
-		Pong(bi::udp::endpoint const& _ep): RLPXDatagram<Pong>(_ep) {}
-		Pong(NodeIPEndpoint const& _dest): RLPXDatagram<Pong>((bi::udp::endpoint)_dest), ts(futureFromEpoch(std::chrono::seconds(60))) {}
-		static const uint8_t type = 2;
-		h256 echo;
-		uint32_t ts = 0;
-		void streamRLP(RLPStream& _s) const {	_s.appendList(2); _s << echo << ts; }
-		void interpretRLP(bytesConstRef _bytes);
-	};
-}
+		_s.appendList(2);
+		_s.appendList(neighbours.size());
+		for (auto const& n: neighbours)
+			n.streamRLP(_s);
+		_s << ts;
+	}
+	void interpretRLP(bytesConstRef _bytes)
+	{
+		RLP r(_bytes, RLP::AllowNonCanon|RLP::ThrowOnFail);
+		for (auto const& n: r[0])
+			neighbours.emplace_back(n);
+		ts = r[1].toInt<uint32_t>();
+	}
+};
 
 struct NodeTableWarn: public LogChannel { static const char* name(); static const int verbosity = 0; };
 struct NodeTableNote: public LogChannel { static const char* name(); static const int verbosity = 1; };
