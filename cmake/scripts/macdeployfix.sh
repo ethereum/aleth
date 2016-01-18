@@ -53,8 +53,11 @@ for i in "${BROKEN_FRAMEWORKS[@]}"; do
 	otool -L $FRAMEWORK_FILE | grep -o /usr/.*Qt.*framework/\\w* | while read -a libs ; do
 	       	install_name_tool -change ${libs[0]} @loader_path/../../../`basename ${libs[0]}`.framework/`basename ${libs[0]}` $FRAMEWORK_FILE
 	done
-	#Also fix apps included *inside* these frameworks in the same way. Currently, only QtWebEngineProcess.app inside QtWebEngineCore
-	#is affected, but trying to keep this general...
+	# This next loop also fixes apps included *inside* these frameworks in the same way. Currently, only QtWebEngineProcess.app inside QtWebEngineCore
+	# is affected, but trying to keep this general in case more slip through in the future.
+	# This is due to a known bug in QT5, and we have to fix up the linked libraries if we're going to have a distributable
+	# result of building. When https://bugreports.qt.io/browse/QTBUG-50155 is fixed, this should be able
+	# to be removed.
 	for j in $(find $i/ -name "*.app"); do
 		EXEC_NAME=$j/Contents/MacOS/$(basename -s ".app" $j)
 		otool -L $EXEC_NAME | grep -o /usr/local.*dylib | while read -a innerlibs ; do
