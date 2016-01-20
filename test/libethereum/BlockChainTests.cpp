@@ -736,8 +736,14 @@ BOOST_AUTO_TEST_CASE(bcMultiChainTestHomestead)
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTestHomestead)
 {
 	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::HomesteadTest;
+	std::string fillersPath = dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead";
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests/Homestead",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
+	else
+	{
+		dev::test::TestOutputHelper::initTest();
+		dev::test::copyFile(fillersPath + "/bcInvalidRLPTest.json", dev::test::getTestPath() + "/BlockchainTests/Homestead/bcInvalidRLPTest.json");
+	}
 }
 
 BOOST_AUTO_TEST_CASE(bcRPC_API_TestHomestead)
@@ -803,6 +809,7 @@ BOOST_AUTO_TEST_SUITE(BlockChainTests)
 
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
+	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::FrontierTest;
 	std::string fillersPath = dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller";
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("bcForkBlockTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
@@ -815,6 +822,7 @@ BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 
 BOOST_AUTO_TEST_CASE(bcForkUncleTest)
 {
+	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::FrontierTest;
 	std::string fillersPath = dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller";
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("bcForkUncle", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
@@ -846,8 +854,14 @@ BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest)
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
 	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::FrontierTest;
+	std::string fillersPath = dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller";
 	if (!dev::test::Options::get().fillTests)
 		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller", dev::test::doBlockchainTests);
+	else
+	{
+		dev::test::TestOutputHelper::initTest();
+		dev::test::copyFile(fillersPath + "/bcInvalidRLPTest.json", dev::test::getTestPath() + "/BlockchainTests/bcInvalidRLPTest.json");
+	}
 }
 
 BOOST_AUTO_TEST_CASE(bcRPC_API_Test)

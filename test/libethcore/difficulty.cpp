@@ -113,7 +113,7 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 	finalTest << "{" << std::endl;
 	dev::test::TestOutputHelper::initTest(900);
 
-	for (int stampDelta = 0; stampDelta < 15; stampDelta++)
+	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
 		for (u256 blockNumber = 1; blockNumber < 1500000; blockNumber += 25000)
 		{
@@ -257,7 +257,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 
 	if (dev::test::Options::get().fillTests)
 	{
-		u256 homsteadBlockNumber = 720000;
+		u256 homsteadBlockNumber = 1000000;
 		std::vector<u256> blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
