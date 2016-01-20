@@ -194,10 +194,10 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	bigint o = target;
 	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
-		o += (u256(1) << (periodCount - 2));	// latter will eventually become huge, so ensure it's a bigint.
+		o += (bigint(1) << (periodCount - 2));	// latter will eventually become huge, so ensure it's a bigint.
 
-	o = max<u256>(minimumDifficulty, (u256)o);
-	return (u256)o;
+	o = max<bigint>(minimumDifficulty, o);
+	return u256(min<bigint>(o, std::numeric_limits<u256>::max()));
 }
 
 void Ethash::populateFromParent(BlockHeader& _bi, BlockHeader const& _parent) const
