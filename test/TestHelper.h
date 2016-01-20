@@ -50,6 +50,8 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify = true);
 namespace test
 {
 
+const int c_testHomesteadBlock = 1000000;
+
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
 /// @param _statenent    The statement for which to make sure no exceptions are thrown
@@ -122,7 +124,7 @@ public:
 	void importTransaction(json_spirit::mObject const& _o);
 	static json_spirit::mObject& makeAllFieldsHex(json_spirit::mObject& _o);
 
-	bytes executeTest();
+	bytes executeTest(eth::Network _sealEngineNetwork);
 	int exportTest(bytes const& _output);
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
 
@@ -150,6 +152,7 @@ byte toByte(json_spirit::mValue const& _v);
 bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject const& _o);
 bytes importByteArray(std::string const& _str);
+void copyFile(std::string const& _source, std::string const& _destination);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
 void checkOutput(bytes const& _output, json_spirit::mObject& _o);
@@ -206,7 +209,7 @@ public:
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;
-	eth::Network sealEngineNetwork = eth::Network::FrontierTest; ///< set seal engine (Frontier, Homestead, ...)
+	eth::Network sealEngineNetwork = eth::Network::Test; ///< set seal engine (Frontier, Homestead, ...)
 
 	/// Test selection
 	/// @{
@@ -233,7 +236,7 @@ private:
 class TestOutputHelper
 {
 public:
-	static void initTest();
+	static void initTest(int _maxTests = 1);
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
 	static void setMaxTests(int _count) { m_maxTests = _count; }

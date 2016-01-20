@@ -38,6 +38,7 @@ BOOST_AUTO_TEST_SUITE(BlockChainSuite)
 
 BOOST_AUTO_TEST_CASE(output)
 {
+	TestOutputHelper::initTest();
 	BOOST_REQUIRE(string(BlockChainDebug::name()) == string(EthBlue "☍" EthWhite " ◇"));
 	BOOST_REQUIRE(string(BlockChainWarn::name()) == string(EthBlue "☍" EthOnRed EthBlackBold " ✘"));
 	BOOST_REQUIRE(string(BlockChainNote::name()) == string(EthBlue "☍" EthBlue " ℹ"));
@@ -58,6 +59,7 @@ BOOST_AUTO_TEST_CASE(output)
 
 BOOST_AUTO_TEST_CASE(opendb)
 {
+	TestOutputHelper::initTest();
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 
 	TransientDirectory tempDirBlockchain;
@@ -110,6 +112,8 @@ BOOST_AUTO_TEST_CASE(rebuild)
 
 BOOST_AUTO_TEST_CASE(sync)
 {
+	TestOutputHelper::initTest();
+	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::FrontierTest;
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	//1 block
@@ -216,6 +220,7 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 	//FutureTimeKnown
 	//Malformed
 
+	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	TestTransaction tr = TestTransaction::defaultTransaction();
@@ -242,6 +247,7 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 
 BOOST_AUTO_TEST_CASE(insert)
 {
+	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
@@ -281,6 +287,7 @@ BOOST_AUTO_TEST_CASE(insert)
 
 BOOST_AUTO_TEST_CASE(insertException)
 {
+	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -296,6 +303,7 @@ BOOST_AUTO_TEST_CASE(insertException)
 
 BOOST_AUTO_TEST_CASE(rescue)
 {
+	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -335,6 +343,7 @@ BOOST_AUTO_TEST_CASE(rescue)
 
 BOOST_AUTO_TEST_CASE(updateStats)
 {
+	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 

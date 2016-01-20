@@ -544,7 +544,7 @@
         },
         "expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "99940878"
+                "balance" : "99972878"
             },
 	    "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
                 "balance" : "0x0a",

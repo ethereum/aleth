@@ -53,10 +53,10 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 		bigint block_diff = _parent.difficulty();
 
 		bigint a = (_parent.difficulty() / 2048);
-		bigint b = 1 - (_bi.timestamp() - _parent.timestamp()) / 10;
+		int b = 1 - int(_bi.timestamp() - _parent.timestamp()) / 10;
 		bigint c = (_bi.number() / 100000) - 2;
 
-		block_diff += a * max<bigint>(b, -99);
+		block_diff += a * max<int>(b, -99);
 		block_diff += u256(1) << (unsigned)c;
 		block_diff = max<bigint>(minimumDifficulty, block_diff);
 
@@ -111,11 +111,18 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 	int testN = 0;
 	ostringstream finalTest;
 	finalTest << "{" << std::endl;
-	for (int stampDelta = 0; stampDelta < 15; stampDelta++)
+	dev::test::TestOutputHelper::initTest(900);
+
+	for (int stampDelta = 0; stampDelta < 45; stampDelta+=2)
 	{
 		for (u256 blockNumber = 1; blockNumber < 1500000; blockNumber += 25000)
 		{
 			testN++;
+			json_spirit::mObject m;
+			string testName = "DifficultyTest"+toString(testN);
+			if (!dev::test::TestOutputHelper::passTest(m, testName))
+				continue;
+
 			u256 pStamp = dev::test::RandomCode::randomUniInt();
 			u256 pDiff = dev::test::RandomCode::randomUniInt();
 			u256 cStamp = pStamp + stampDelta;
@@ -155,11 +162,15 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 	string s = contentsString(_testFileFullName);
 	BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of '" << _testFileFullName << "' is empty. Have you cloned the 'tests' repo branch develop?");
 	js::read_string(s, v);
+	dev::test::TestOutputHelper::initTest(v);
 
 	for (auto& i: v.get_obj())
 	{
 		js::mObject o = i.second.get_obj();
-		cnote << "Difficulty test: " << i.first;
+		string testname = i.first;
+		if (!dev::test::TestOutputHelper::passTest(o, testname))
+			continue;
+
 		BlockHeader parent;
 		parent.setTimestamp(test::toInt(o["parentTimestamp"]));
 		parent.setDifficulty(test::toInt(o["parentDifficulty"]));
@@ -181,8 +192,7 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 BOOST_AUTO_TEST_SUITE(DifficultyTests)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsOlympic)
-{
-	test::TestOutputHelper::initTest();
+{	
 	string testFileFullName = test::getTestPath();
 	testFileFullName += "/BasicTests/difficultyOlimpic.json";
 
@@ -197,7 +207,6 @@ BOOST_AUTO_TEST_CASE(difficultyTestsOlympic)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 {
-	test::TestOutputHelper::initTest();
 	string testFileFullName = test::getTestPath();
 	testFileFullName += "/BasicTests/difficultyFrontier.json";
 
@@ -212,7 +221,6 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsMorden)
 {
-	test::TestOutputHelper::initTest();
 	string testFileFullName = test::getTestPath();
 	testFileFullName += "/BasicTests/difficultyMorden.json";
 
@@ -227,7 +235,6 @@ BOOST_AUTO_TEST_CASE(difficultyTestsMorden)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 {
-	test::TestOutputHelper::initTest();
 	string testFileFullName = test::getTestPath();
 	testFileFullName += "/BasicTests/difficultyHomestead.json";
 
@@ -242,7 +249,6 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 
 BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 {
-	test::TestOutputHelper::initTest();
 	string testFileFullName = test::getTestPath();
 	testFileFullName += "/BasicTests/difficultyCustomHomestead.json";
 
@@ -251,7 +257,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 
 	if (dev::test::Options::get().fillTests)
 	{
-		u256 homsteadBlockNumber = 720000;
+		u256 homsteadBlockNumber = 1000000;
 		std::vector<u256> blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};
 		std::vector<u256> parentDifficultyVector = {1000, 2048, 4000, 1000000};
 		std::vector<int> timestampDeltaVector = {0, 1, 8, 10, 13, 20, 100, 800, 1000, 1500};
@@ -304,7 +310,6 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 
 BOOST_AUTO_TEST_CASE(basicDifficultyTest)
 {
-	test::TestOutputHelper::initTest();
 	string testPath = test::getTestPath();
 	testPath += "/BasicTests/difficulty.json";
 

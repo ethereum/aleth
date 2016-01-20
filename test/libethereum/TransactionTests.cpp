@@ -23,7 +23,8 @@
 #include <libethcore/SealEngine.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
-#include "../TestHelper.h"
+#include <libtestutils/Common.h>
+#include "test/TestHelper.h"
 #include "test/fuzzTesting/fuzzHelper.h"
 
 using namespace std;
@@ -35,10 +36,6 @@ namespace dev {  namespace test {
 
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
-	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(Options::get().sealEngineNetwork)).createSealEngine());
-	BlockHeader bh;
-	bh.setNumber(0);
-
 	TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
@@ -48,7 +45,19 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
-			if (_fillin)
+		eth::Network sealEngineNet;
+		BOOST_REQUIRE(o.count("blocknumber") > 0);
+		u256 transactionBlock = toInt(o["blocknumber"].get_str());
+		if (transactionBlock >= dev::test::c_testHomesteadBlock)
+			sealEngineNet = eth::Network::HomesteadTest;
+		else
+			sealEngineNet = eth::Network::FrontierTest;
+
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(sealEngineNet)).createSealEngine());
+		BlockHeader bh;
+		bh.setNumber(transactionBlock);
+
+		if (_fillin)
 		{
 			BOOST_REQUIRE(o.count("transaction") > 0);
 			mObject tObj = o["transaction"].get_obj();
@@ -149,15 +158,54 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
 
+BOOST_AUTO_TEST_CASE(ttTransactionTestHomestead)
+{
+	dev::test::executeTests("ttTransactionTest", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
+}
+
 BOOST_AUTO_TEST_CASE(ttTransactionTest)
 {
 	dev::test::executeTests("ttTransactionTest", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
 }
 
+BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
+{
+	std::string fillersPath = dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead";
+
+	if (!dev::test::Options::get().fillTests)
+		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", fillersPath, dev::test::doTransactionTests);
+	else
+	{
+		dev::test::TestOutputHelper::initTest();
+		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/Homestead/ttWrongRLPTransaction.json");
+	}
+}
+
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 {
+	std::string fillersPath = dev::test::getFolder(__FILE__) + "/TransactionTestsFiller";
+
 	if (!dev::test::Options::get().fillTests)
-		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
+		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", fillersPath, dev::test::doTransactionTests);
+	else
+	{
+		dev::test::TestOutputHelper::initTest();
+		dev::test::copyFile(fillersPath + "/ttWrongRLPTransaction.json", dev::test::getTestPath() + "/TransactionTests/ttWrongRLPTransaction.json");
+	}
+}
+
+BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
+{
+	if (test::Options::get().bigData)
+	{
+		auto start = chrono::steady_clock::now();
+
+		dev::test::executeTests("tt10mbDataField", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
+
+		auto end = chrono::steady_clock::now();
+		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+		cnote << "test duration: " << duration.count() << " milliseconds.\n";
+	}
 }
 
 BOOST_AUTO_TEST_CASE(tt10mbDataField)

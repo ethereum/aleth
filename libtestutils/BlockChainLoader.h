@@ -25,6 +25,7 @@
 #include <libdevcore/TransientDirectory.h>
 #include <libethereum/BlockChain.h>
 #include <libethereum/Block.h>
+#include <libethashseal/GenesisInfo.h>
 
 namespace dev
 {
@@ -38,7 +39,7 @@ namespace test
 class BlockChainLoader
 {
 public:
-	BlockChainLoader(Json::Value const& _json);
+	BlockChainLoader(Json::Value const& _json, eth::Network _sealEngineNetwork = eth::Network::Test);
 	eth::BlockChain const& bc() const { return *m_bc; }
 	eth::State const& state() const { return m_block.state(); }	// TODO remove?
 	eth::Block const& block() const { return m_block; }
