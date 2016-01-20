@@ -713,6 +713,18 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 }
 }
 
+BOOST_AUTO_TEST_SUITE(BlockChainTestsTransition)
+
+BOOST_AUTO_TEST_CASE(bcSimpleTransition)
+{
+	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::Test;
+	dev::test::executeTests("bcSimpleTransitionTest", "/BlockchainTests/TestNetwork",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_SUITE_END()
+
+///
+
 BOOST_AUTO_TEST_SUITE(BlockChainTestsHomestead)
 
 BOOST_AUTO_TEST_CASE(bcForkStressTestHomestead)
