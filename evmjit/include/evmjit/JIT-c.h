@@ -63,7 +63,7 @@ typedef struct evmjit_context evmjit_context;
 
 EVMJIT_API evmjit_context* evmjit_create(evmjit_runtime_data* _data, void* _env);
 
-EVMJIT_API evmjit_return_code evmjit_exec(evmjit_context* _context);
+EVMJIT_API evmjit_return_code evmjit_exec(evmjit_context* _context, void* _schedule);
 
 EVMJIT_API void evmjit_destroy(evmjit_context* _context);
 

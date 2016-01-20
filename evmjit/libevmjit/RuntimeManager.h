@@ -52,6 +52,7 @@ public:
 	static llvm::StructType* getRuntimeType();
 	static llvm::StructType* getRuntimeDataType();
 
+	//TODO Move to schedule
 	static const size_t stackSizeLimit = 1024;
 
 private:

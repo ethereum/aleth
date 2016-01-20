@@ -25,6 +25,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	rejected |= _ext.gasPrice > std::numeric_limits<decltype(m_data.gasPrice)>::max();
 	rejected |= _ext.envInfo().number() > std::numeric_limits<decltype(m_data.number)>::max();
 	rejected |= _ext.envInfo().timestamp() > std::numeric_limits<decltype(m_data.timestamp)>::max();
+	rejected |= !toJITSchedule(_ext.evmSchedule(), m_schedule);
 
 	if (rejected)
 	{
@@ -54,7 +55,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	// Pass pointer to ExtVMFace casted to evmjit::Env* opaque type.
 	// JIT will do nothing with the pointer, just pass it to Env callback functions implemented in Env.cpp.
 	m_context.init(m_data, reinterpret_cast<evmjit::Env*>(&_ext));
-	auto exitCode = evmjit::JIT::exec(m_context);
+	auto exitCode = evmjit::JIT::exec(m_context, m_schedule);
 	switch (exitCode)
 	{
 	case evmjit::ReturnCode::Suicide:

@@ -12,6 +12,7 @@
 #include <llvm/IR/IntrinsicInst.h>
 #include "preprocessor/llvm_includes_end.h"
 
+#include "evmjit/JIT.h"
 #include "Instruction.h"
 #include "Type.h"
 #include "Memory.h"
@@ -31,8 +32,9 @@ namespace jit
 
 static const auto c_destIdxLabel = "destIdx";
 
-Compiler::Compiler(Options const& _options):
+Compiler::Compiler(Options const& _options, JITSchedule const& _schedule):
 	m_options(_options),
+	m_schedule(_schedule),
 	m_builder(llvm::getGlobalContext())
 {
 	Type::init(m_builder.getContext());
@@ -170,7 +172,7 @@ std::unique_ptr<llvm::Module> Compiler::compile(code_iterator _begin, code_itera
 
 	// Init runtime structures.
 	RuntimeManager runtimeManager(m_builder, _begin, _end);
-	GasMeter gasMeter(m_builder, runtimeManager);
+	GasMeter gasMeter(m_builder, runtimeManager, m_schedule);
 	Memory memory(runtimeManager, gasMeter);
 	Ext ext(runtimeManager, memory);
 	Arith256 arith(m_builder);
@@ -724,15 +726,22 @@ void Compiler::compileBasicBlock(BasicBlock& _basicBlock, RuntimeManager& _runti
 			break;
 		}
 
+		case Instruction::DELEGATECALL:
+			if (!m_schedule.haveDelegateCall)
+			{
+				// invalid opcode
+				_runtimeManager.exit(ReturnCode::OutOfGas);
+				it = _basicBlock.end() - 1; // finish block compilation
+				break;
+			}
+			// else, fall-through
 		case Instruction::CALL:
 		case Instruction::CALLCODE:
-		case Instruction::DELEGATECALL:
 		{
 			auto callGas = stack.pop();
 			auto codeAddress = stack.pop();
 			llvm::Value* apparentValue = nullptr;
 			llvm::Value* valueTransfer = nullptr;
-			// @TODO depending on block size
 			if (inst == Instruction::DELEGATECALL)
 			{
 				apparentValue = _runtimeManager.get(RuntimeData::ApparentCallValue);

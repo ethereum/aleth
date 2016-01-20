@@ -34,7 +34,7 @@ namespace
 {
 	struct JitInfo: LogChannel { static const char* name() { return "JIT"; }; static const int verbosity = 11; };
 
-	using HitMap = std::unordered_map<h256, uint64_t>;
+	using HitMap = std::unordered_map<std::string, uint64_t>;
 
 	HitMap& getHitMap()
 	{
@@ -45,13 +45,14 @@ namespace
 	struct JitTask
 	{
 		bytes code;
-		h256 codeHash;
+		std::string codeIdentifier;
+		evmjit::JITSchedule schedule;
 
 		static JitTask createStopSentinel() { return JitTask(); }
 
 		bool isStopSentinel()
 		{
-			assert((!code.empty() || !codeHash) && "'empty code => empty hash' invariant failed");
+			assert((!code.empty() || codeIdentifier.empty()) && "'empty code => empty hash' invariant failed");
 			return code.empty();
 		}
 	};
@@ -67,9 +68,9 @@ namespace
 			JitTask task;
 			while (!(task = m_queue.pop()).isStopSentinel())
 			{
-				clog(JitInfo) << "Compilation... " << task.codeHash;
-				evmjit::JIT::compile(task.code.data(), task.code.size(), eth2jit(task.codeHash));
-				clog(JitInfo) << "   ...finished " << task.codeHash;
+				clog(JitInfo) << "Compilation... " << task.codeIdentifier;
+				evmjit::JIT::compile(task.code.data(), task.code.size(), task.codeIdentifier, task.schedule);
+				clog(JitInfo) << "   ...finished " << task.codeIdentifier;
 			}
 			clog(JitInfo) << "JIT worker finished.";
 		}
@@ -90,30 +91,35 @@ namespace
 
 bytesConstRef SmartVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	auto codeHash = _ext.codeHash;
 	auto vmKind = VMKind::Interpreter; // default VM
-
-	// Jitted EVM code already in memory?
-	if (evmjit::JIT::isCodeReady(eth2jit(codeHash)))
+	evmjit::JITSchedule schedule;
+	if (toJITSchedule(_ext.evmSchedule(), schedule))
 	{
-		clog(JitInfo) << "JIT:           " << codeHash;
-		vmKind = VMKind::JIT;
-	}
-	else if (!_ext.code.empty()) // This check is needed for VM tests
-	{
-		static JitWorker s_worker;
-
-		// Check EVM code hit count
-		static const uint64_t c_hitTreshold = 2;
-		auto& hits = getHitMap()[codeHash];
-		++hits;
-		if (hits == c_hitTreshold)
+		std::string codeIdentifier = schedule.codeIdentifier(eth2jit(_ext.codeHash));
+		// Jitted EVM code already in memory?
+		if (evmjit::JIT::isCodeReady(codeIdentifier))
 		{
-			clog(JitInfo) << "Schedule:      " << codeHash;
-			s_worker.push({_ext.code, codeHash});
+			clog(JitInfo) << "JIT:           " << codeIdentifier;
+			vmKind = VMKind::JIT;
 		}
-		clog(JitInfo) << "Interpreter:   " << codeHash;
+		else if (!_ext.code.empty()) // This check is needed for VM tests
+		{
+			static JitWorker s_worker;
+
+			// Check EVM code hit count
+			static const uint64_t c_hitTreshold = 2;
+			auto& hits = getHitMap()[codeIdentifier];
+			++hits;
+			if (hits == c_hitTreshold)
+			{
+				clog(JitInfo) << "Schedule:      " << codeIdentifier;
+				s_worker.push({_ext.code, codeIdentifier, schedule});
+			}
+			clog(JitInfo) << "Interpreter:   " << codeIdentifier;
+		}
 	}
+	else
+		clog(JitInfo) << "Interpreter:   " << _ext.codeHash;
 
 	// TODO: Selected VM must be kept only because it returns reference to its internal memory.
 	//       VM implementations should be stateless, without escaping memory reference.

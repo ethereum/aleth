@@ -4,6 +4,7 @@
 #include <llvm/IR/IntrinsicInst.h>
 #include "preprocessor/llvm_includes_end.h"
 
+#include <evmjit/JIT.h>
 #include "Ext.h"
 #include "RuntimeManager.h"
 
@@ -14,146 +15,10 @@ namespace eth
 namespace jit
 {
 
-namespace // Helper functions
-{
-
-// TODO: FIXME: HOMESTEAD: XXX: @chfast populate m_schedule from an ExtVMFace instance via ExtVMFace::evmSchedule.
-
-int64_t const c_stepGas[] = {0, 2, 3, 5, 8, 10, 20};
-int64_t const c_expByteGas = 10;
-int64_t const c_sha3Gas = 30;
-int64_t const c_sha3WordGas = 6;
-int64_t const c_sloadGas = 50;
-int64_t const c_sstoreSetGas = 20000;
-int64_t const c_sstoreResetGas = 5000;
-int64_t const c_sstoreClearGas = 5000;
-int64_t const c_jumpdestGas = 1;
-int64_t const c_logGas = 375;
-int64_t const c_logTopicGas = 375;
-int64_t const c_logDataGas = 8;
-int64_t const c_callGas = 40;
-int64_t const c_createGas = 32000;
-int64_t const c_memoryGas = 3;
-int64_t const c_copyGas = 3;
-
-int64_t getStepCost(Instruction inst)
-{
-	switch (inst)
-	{
-	// Tier 0
-	case Instruction::STOP:
-	case Instruction::RETURN:
-	case Instruction::SUICIDE:
-	case Instruction::SSTORE: // Handle cost of SSTORE separately in GasMeter::countSStore()
-		return c_stepGas[0];
-
-	// Tier 1
-	case Instruction::ADDRESS:
-	case Instruction::ORIGIN:
-	case Instruction::CALLER:
-	case Instruction::CALLVALUE:
-	case Instruction::CALLDATASIZE:
-	case Instruction::CODESIZE:
-	case Instruction::GASPRICE:
-	case Instruction::COINBASE:
-	case Instruction::TIMESTAMP:
-	case Instruction::NUMBER:
-	case Instruction::DIFFICULTY:
-	case Instruction::GASLIMIT:
-	case Instruction::POP:
-	case Instruction::PC:
-	case Instruction::MSIZE:
-	case Instruction::GAS:
-		return c_stepGas[1];
-
-	// Tier 2
-	case Instruction::ADD:
-	case Instruction::SUB:
-	case Instruction::LT:
-	case Instruction::GT:
-	case Instruction::SLT:
-	case Instruction::SGT:
-	case Instruction::EQ:
-	case Instruction::ISZERO:
-	case Instruction::AND:
-	case Instruction::OR:
-	case Instruction::XOR:
-	case Instruction::NOT:
-	case Instruction::BYTE:
-	case Instruction::CALLDATALOAD:
-	case Instruction::CALLDATACOPY:
-	case Instruction::CODECOPY:
-	case Instruction::MLOAD:
-	case Instruction::MSTORE:
-	case Instruction::MSTORE8:
-	case Instruction::ANY_PUSH:
-	case Instruction::ANY_DUP:
-	case Instruction::ANY_SWAP:
-		return c_stepGas[2];
-
-	// Tier 3
-	case Instruction::MUL:
-	case Instruction::DIV:
-	case Instruction::SDIV:
-	case Instruction::MOD:
-	case Instruction::SMOD:
-	case Instruction::SIGNEXTEND:
-		return c_stepGas[3];
-
-	// Tier 4
-	case Instruction::ADDMOD:
-	case Instruction::MULMOD:
-	case Instruction::JUMP:
-		return c_stepGas[4];
-
-	// Tier 5
-	case Instruction::EXP:
-	case Instruction::JUMPI:
-		return c_stepGas[5];
-
-	// Tier 6
-	case Instruction::BALANCE:
-	case Instruction::EXTCODESIZE:
-	case Instruction::EXTCODECOPY:
-	case Instruction::BLOCKHASH:
-		return c_stepGas[6];
-
-	case Instruction::SHA3:
-		return c_sha3Gas;
-
-	case Instruction::SLOAD:
-		return c_sloadGas;
-
-	case Instruction::JUMPDEST:
-		return c_jumpdestGas;
-
-	case Instruction::LOG0:
-	case Instruction::LOG1:
-	case Instruction::LOG2:
-	case Instruction::LOG3:
-	case Instruction::LOG4:
-	{
-		auto numTopics = static_cast<int64_t>(inst) - static_cast<int64_t>(Instruction::LOG0);
-		return c_logGas + numTopics * c_logTopicGas;
-	}
-
-	case Instruction::CALL:
-	case Instruction::CALLCODE:
-	case Instruction::DELEGATECALL:
-		return c_callGas;
-
-	case Instruction::CREATE:
-		return c_createGas;
-	}
-
-	return 0; // TODO: Add UNREACHABLE macro
-}
-
-}
-
-GasMeter::GasMeter(IRBuilder& _builder, RuntimeManager& _runtimeManager) :
+GasMeter::GasMeter(IRBuilder& _builder, RuntimeManager& _runtimeManager, JITSchedule const& _schedule):
 	CompilerHelper(_builder),
-	m_runtimeManager(_runtimeManager)
+	m_runtimeManager(_runtimeManager),
+	m_schedule(_schedule)
 {
 	llvm::Type* gasCheckArgs[] = {Type::Gas->getPointerTo(), Type::Gas, Type::BytePtr};
 	m_gasCheckFunc = llvm::Function::Create(llvm::FunctionType::get(Type::Void, gasCheckArgs, false), llvm::Function::PrivateLinkage, "gas.check", getModule());
@@ -224,7 +89,7 @@ void GasMeter::countExp(llvm::Value* _exponent)
 	auto lz = m_builder.CreateTrunc(lz256, Type::Gas, "lz");
 	auto sigBits = m_builder.CreateSub(m_builder.getInt64(256), lz, "sigBits");
 	auto sigBytes = m_builder.CreateUDiv(m_builder.CreateAdd(sigBits, m_builder.getInt64(7)), m_builder.getInt64(8));
-	count(m_builder.CreateNUWMul(sigBytes, m_builder.getInt64(c_expByteGas)));
+	count(m_builder.CreateNUWMul(sigBytes, m_builder.getInt64(m_schedule.expByteGas)));
 }
 
 void GasMeter::countSStore(Ext& _ext, llvm::Value* _index, llvm::Value* _newValue)
@@ -233,8 +98,8 @@ void GasMeter::countSStore(Ext& _ext, llvm::Value* _index, llvm::Value* _newValu
 	auto oldValueIsZero = m_builder.CreateICmpEQ(oldValue, Constant::get(0), "oldValueIsZero");
 	auto newValueIsntZero = m_builder.CreateICmpNE(_newValue, Constant::get(0), "newValueIsntZero");
 	auto isInsert = m_builder.CreateAnd(oldValueIsZero, newValueIsntZero, "isInsert");
-	static_assert(c_sstoreResetGas == c_sstoreClearGas, "Update SSTORE gas cost");
-	auto cost = m_builder.CreateSelect(isInsert, m_builder.getInt64(c_sstoreSetGas), m_builder.getInt64(c_sstoreResetGas), "cost");
+	assert(m_schedule.sstoreResetGas == m_schedule.sstoreClearGas && "Update SSTORE gas cost");
+	auto cost = m_builder.CreateSelect(isInsert, m_builder.getInt64(m_schedule.sstoreSetGas), m_builder.getInt64(m_schedule.sstoreResetGas), "cost");
 	count(cost);
 }
 
@@ -242,8 +107,8 @@ void GasMeter::countLogData(llvm::Value* _dataLength)
 {
 	assert(m_checkCall);
 	assert(m_blockCost > 0); // LOGn instruction is already counted
-	static_assert(c_logDataGas != 1, "Log data gas cost has changed. Update GasMeter.");
-	count(m_builder.CreateNUWMul(_dataLength, Constant::get(c_logDataGas))); // TODO: Use i64
+	assert(m_schedule.logDataGas != 1 && "Log data gas cost has changed. Update GasMeter.");
+	count(m_builder.CreateNUWMul(_dataLength, Constant::get(m_schedule.logDataGas))); // TODO: Use i64
 }
 
 void GasMeter::countSha3Data(llvm::Value* _dataLength)
@@ -252,10 +117,10 @@ void GasMeter::countSha3Data(llvm::Value* _dataLength)
 	assert(m_blockCost > 0); // SHA3 instruction is already counted
 
 	// TODO: This round ups to 32 happens in many places
-	static_assert(c_sha3WordGas != 1, "SHA3 data cost has changed. Update GasMeter");
+	assert(m_schedule.sha3WordGas != 1 && "SHA3 data cost has changed. Update GasMeter");
 	auto dataLength64 = m_builder.CreateTrunc(_dataLength, Type::Gas);
 	auto words64 = m_builder.CreateUDiv(m_builder.CreateNUWAdd(dataLength64, m_builder.getInt64(31)), m_builder.getInt64(32));
-	auto cost64 = m_builder.CreateNUWMul(m_builder.getInt64(c_sha3WordGas), words64);
+	auto cost64 = m_builder.CreateNUWMul(m_builder.getInt64(m_schedule.sha3WordGas), words64);
 	count(cost64);
 }
 
@@ -286,14 +151,127 @@ void GasMeter::commitCostBlock()
 
 void GasMeter::countMemory(llvm::Value* _additionalMemoryInWords, llvm::Value* _jmpBuf, llvm::Value* _gasPtr)
 {
-	static_assert(c_memoryGas != 1, "Memory gas cost has changed. Update GasMeter.");
+	assert(m_schedule.memoryGas != 1 && "Memory gas cost has changed. Update GasMeter.");
 	count(_additionalMemoryInWords, _jmpBuf, _gasPtr);
 }
 
 void GasMeter::countCopy(llvm::Value* _copyWords)
 {
-	static_assert(c_copyGas != 1, "Copy gas cost has changed. Update GasMeter.");
-	count(m_builder.CreateNUWMul(_copyWords, m_builder.getInt64(c_copyGas)));
+	assert(m_schedule.copyGas != 1 && "Copy gas cost has changed. Update GasMeter.");
+	count(m_builder.CreateNUWMul(_copyWords, m_builder.getInt64(m_schedule.copyGas)));
+}
+
+int64_t GasMeter::getStepCost(Instruction inst) const
+{
+	switch (inst)
+	{
+	// Tier 0
+	case Instruction::STOP:
+	case Instruction::RETURN:
+	case Instruction::SUICIDE:
+	case Instruction::SSTORE: // Handle cost of SSTORE separately in GasMeter::countSStore()
+		return m_schedule.stepGas[0];
+
+	// Tier 1
+	case Instruction::ADDRESS:
+	case Instruction::ORIGIN:
+	case Instruction::CALLER:
+	case Instruction::CALLVALUE:
+	case Instruction::CALLDATASIZE:
+	case Instruction::CODESIZE:
+	case Instruction::GASPRICE:
+	case Instruction::COINBASE:
+	case Instruction::TIMESTAMP:
+	case Instruction::NUMBER:
+	case Instruction::DIFFICULTY:
+	case Instruction::GASLIMIT:
+	case Instruction::POP:
+	case Instruction::PC:
+	case Instruction::MSIZE:
+	case Instruction::GAS:
+		return m_schedule.stepGas[1];
+
+	// Tier 2
+	case Instruction::ADD:
+	case Instruction::SUB:
+	case Instruction::LT:
+	case Instruction::GT:
+	case Instruction::SLT:
+	case Instruction::SGT:
+	case Instruction::EQ:
+	case Instruction::ISZERO:
+	case Instruction::AND:
+	case Instruction::OR:
+	case Instruction::XOR:
+	case Instruction::NOT:
+	case Instruction::BYTE:
+	case Instruction::CALLDATALOAD:
+	case Instruction::CALLDATACOPY:
+	case Instruction::CODECOPY:
+	case Instruction::MLOAD:
+	case Instruction::MSTORE:
+	case Instruction::MSTORE8:
+	case Instruction::ANY_PUSH:
+	case Instruction::ANY_DUP:
+	case Instruction::ANY_SWAP:
+		return m_schedule.stepGas[2];
+
+	// Tier 3
+	case Instruction::MUL:
+	case Instruction::DIV:
+	case Instruction::SDIV:
+	case Instruction::MOD:
+	case Instruction::SMOD:
+	case Instruction::SIGNEXTEND:
+		return m_schedule.stepGas[3];
+
+	// Tier 4
+	case Instruction::ADDMOD:
+	case Instruction::MULMOD:
+	case Instruction::JUMP:
+		return m_schedule.stepGas[4];
+
+	// Tier 5
+	case Instruction::EXP:
+	case Instruction::JUMPI:
+		return m_schedule.stepGas[5];
+
+	// Tier 6
+	case Instruction::BALANCE:
+	case Instruction::EXTCODESIZE:
+	case Instruction::EXTCODECOPY:
+	case Instruction::BLOCKHASH:
+		return m_schedule.stepGas[6];
+
+	case Instruction::SHA3:
+		return m_schedule.sha3Gas;
+
+	case Instruction::SLOAD:
+		return m_schedule.sloadGas;
+
+	case Instruction::JUMPDEST:
+		return m_schedule.jumpdestGas;
+
+	case Instruction::LOG0:
+	case Instruction::LOG1:
+	case Instruction::LOG2:
+	case Instruction::LOG3:
+	case Instruction::LOG4:
+	{
+		auto numTopics = static_cast<int64_t>(inst) - static_cast<int64_t>(Instruction::LOG0);
+		return m_schedule.logGas + numTopics * m_schedule.logTopicGas;
+	}
+
+	case Instruction::CALL:
+	case Instruction::CALLCODE:
+	case Instruction::DELEGATECALL:
+		return m_schedule.callGas;
+
+	case Instruction::CREATE:
+		return m_schedule.createGas;
+	}
+
+	return 0; // TODO: Add UNREACHABLE macro
 }
 
 }
