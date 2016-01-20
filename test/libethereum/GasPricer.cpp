@@ -45,8 +45,8 @@ void executeGasPricerTest(string const& name, double _etherPrice, double _blockF
 	BlockChain const& bc = bcLoader.bc();
 
 	gp.update(bc);
-	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), _expectedAsk);
-	BOOST_CHECK_EQUAL(gp.bid(_txPrio), _expectedBid);
+	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)) / 100000000, _expectedAsk / 100000000);
+	BOOST_CHECK_EQUAL(gp.bid(_txPrio) / 100000000, _expectedBid / 100000000);
 }
 } }
 
@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
 BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test_Frontier)
 {
 	u256 _expectedAsk = 155632494086;
-	u256 _expectedBid = 1;
+	u256 _expectedBid = 155633980282; //!!! it was = 1
 	dev::test::executeGasPricerTest("RPC_API_Test", 30.679, 15.0, "/BlockchainTests/bcRPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::FrontierTest);
 }
 
