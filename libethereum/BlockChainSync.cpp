@@ -37,10 +37,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
 
-unsigned const c_chainReorgSize = 30000; /// Added to estimated hashes to account for potential chain reorganiation
 unsigned const c_maxPeerUknownNewBlocks = 1024; /// Max number of unknown new blocks peer can give us
-unsigned const c_subChainSize = 8192; /// PV62 subchain size
-unsigned const c_subChainHeaders = 20; /// Number of subchain headers to request at once
+unsigned const c_maxRequestHeaders = 1024;
+unsigned const c_maxRequestBodies = 1024;
+
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 {
@@ -238,7 +238,7 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 	unsigned index = 0;
 	if (m_haveCommonHeader && !m_headers.empty() && m_headers.begin()->first == m_lastImportedBlock + 1)
 	{
-		while (header != m_headers.end() && neededBodies.size() < 1024 && index < header->second.size())
+		while (header != m_headers.end() && neededBodies.size() < c_maxRequestBodies && index < header->second.size())
 		{
 			unsigned block = header->first + index;
 			if (m_downloadingBodies.count(block) == 0 && !haveItem(m_bodies, block))
@@ -289,7 +289,7 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 
 			while (count == 0 && next != m_headers.end())
 			{
-				count = std::min(1024u, next->first - start);
+				count = std::min(c_maxRequestHeaders, next->first - start);
 				while(count > 0 && m_downloadingHeaders.count(start) != 0)
 				{
 					start++;
@@ -506,8 +506,8 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 			clog(NetAllDetail) << "Ignored unknown block body";
 			continue;
 		}
-		m_headerIdToNumber.erase(id);
 		unsigned blockNumber = iter->second;
+		m_headerIdToNumber.erase(id);
 		mergeInto(m_bodies, blockNumber, body.data().toBytes());
 	}
 	collectBlocks();
