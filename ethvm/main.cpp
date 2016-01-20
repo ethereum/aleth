@@ -43,6 +43,7 @@ void help()
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
 		<< "    --gas <n>  Transaction should be given <n> gas (default: block gas limit)." << endl
+		<< "    --gas-limit <n>  Block gas limit (default: 3141592)." << endl
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
@@ -91,6 +92,7 @@ int main(int argc, char** argv)
 	bool styledJson = true;
 	StandardTrace st;
 	EnvInfo envInfo;
+	envInfo.setGasLimit(gas);
 
 	for (int i = 1; i < argc; ++i)
 	{
