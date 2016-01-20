@@ -58,8 +58,10 @@ template<typename T> bool haveItem(std::map<unsigned, T>& _container, unsigned _
 	auto lower = _container.lower_bound(_number);
 	if (lower != _container.end() && lower->first == _number)
 		return true;
+	if (lower ==  _container.begin())
+		return false;
 	--lower;
-	return lower != _container.end() && lower->first <= _number && (lower->first + lower->second.size()) > _number;
+	return lower->first <= _number && (lower->first + lower->second.size()) > _number;
 }
 
 template<typename T> T const* findItem(std::map<unsigned, std::vector<T>>& _container, unsigned _number)
@@ -69,8 +71,10 @@ template<typename T> T const* findItem(std::map<unsigned, std::vector<T>>& _cont
 	auto lower = _container.lower_bound(_number);
 	if (lower != _container.end() && lower->first == _number)
 		return &(*lower->second.begin());
+	if (lower ==  _container.begin())
+		return nullptr;
 	--lower;
-	if (lower != _container.end() && lower->first <= _number && (lower->first + lower->second.size()) > _number)
+	if (lower->first <= _number && (lower->first + lower->second.size()) > _number)
 		return &lower->second.at(_number - lower->first);
 	return nullptr;
 }
@@ -85,8 +89,10 @@ template<typename T> void removeItem(std::map<unsigned, std::vector<T>>& _contai
 		_container.erase(lower);
 		return;
 	}
+	if (lower ==  _container.begin())
+		return;
 	--lower;
-	if (lower != _container.end() && lower->first <= _number && (lower->first + lower->second.size()) > _number)
+	if (lower->first <= _number && (lower->first + lower->second.size()) > _number)
 		lower->second.erase(lower->second.begin() + (_number - lower->first), lower->second.end());
 }
 
@@ -94,7 +100,7 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 {
 	assert(!haveItem(_container, _number));
 	auto lower = _container.lower_bound(_number);
-	if (!_container.empty())
+	if (!_container.empty() && lower != _container.begin())
 		--lower;
 	if (lower != _container.end() && (lower->first + lower->second.size() == _number))
 	{
