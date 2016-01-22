@@ -60,8 +60,29 @@ struct ChainBranch
 			importedBlocks.pop_back();
 	}
 	TestBlockChain blockchain;
-	vector<TestBlock> importedBlocks;
+	vector<TestBlock> importedBlocks;	
+
+	static void forceBlockchain(string const& chainname)
+	{
+		tempBlockchainNetwork = dev::test::TestBlockChain::sealEngineNetwork;
+		if (chainname == "Frontier")
+			dev::test::TestBlockChain::sealEngineNetwork = eth::Network::FrontierTest;
+		if (chainname == "Homestead")
+			dev::test::TestBlockChain::sealEngineNetwork = eth::Network::HomesteadTest;
+		if (chainname == "TestFtoH5")
+			dev::test::TestBlockChain::sealEngineNetwork = eth::Network::Test;
+	}
+
+	static void resetBlockchain()
+	{
+		dev::test::TestBlockChain::sealEngineNetwork = tempBlockchainNetwork;
+	}
+
+private:
+	static eth::Network tempBlockchainNetwork;
 };
+
+eth::Network ChainBranch::tempBlockchainNetwork = eth::Network::Test;
 
 //Functions that working with test json
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);
@@ -105,6 +126,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			mArray blArray;
 			size_t importBlockNumber = 0;
 			string chainname = "default";
+			string chainnetwork = "default";
 			std::map<string, ChainBranch*> chainMap = { {chainname , new ChainBranch(genesisBlock)}};
 
 			for (auto const& bl: o["blocks"].get_array())
@@ -120,16 +142,27 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				else
 					chainname = "default";
 
+				if (blObj.count("chainnetwork") > 0)
+					chainnetwork = blObj["chainnetwork"].get_str();
+				else
+					chainnetwork = "default";
+
 				if (chainMap.count(chainname) > 0)
 				{
 					if (o.count("noBlockChainHistory") == 0)
 					{
+						ChainBranch::forceBlockchain(chainnetwork);
 						chainMap[chainname]->reset();
+						ChainBranch::resetBlockchain();
 						chainMap[chainname]->restoreFromHistory(importBlockNumber);
 					}
 				}
 				else
+				{
+					ChainBranch::forceBlockchain(chainnetwork);
 					chainMap[chainname] = new ChainBranch(genesisBlock);
+					ChainBranch::resetBlockchain();
+				}
 
 				TestBlock block;
 				TestBlockChain& blockchain = chainMap[chainname]->blockchain;
