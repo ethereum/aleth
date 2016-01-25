@@ -362,16 +362,20 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		bytes rlp;
 		unsigned itemCount = 0;
-		for (unsigned i = 0; i != numHeadersToSend && rlp.size() < c_maxPayload; ++i)
+		vector<h256> hashes;
+		for (unsigned i = 0; i != numHeadersToSend; ++i)
 		{
 			if (!blockHash || !bc.isKnown(blockHash))
 				break;
 
-			rlp += bc.headerData(blockHash);
+			hashes.push_back(blockHash);
 			++itemCount;
 
 			blockHash = nextHash(blockHash, step);
 		}
+
+		for (unsigned i = 0; i < hashes.size() && rlp.size() < c_maxPayload; ++i)
+			rlp += bc.headerData(hashes[reverse ? i : hashes.size() - 1 - i]);
 
 		RLPStream s;
 		prep(s, BlockHeadersPacket, itemCount).appendRaw(rlp, itemCount);
