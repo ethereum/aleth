@@ -4,7 +4,7 @@ set(EXECUTABLE ethvm)
 
 add_executable(${EXECUTABLE} ${SRC_LIST})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::ethereum)
+eth_use(${EXECUTABLE} REQUIRED Eth::ethereum Eth::ethashseal)
 
 if (APPLE)
 	install(TARGETS ${EXECUTABLE} DESTINATION bin)

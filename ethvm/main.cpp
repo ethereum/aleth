@@ -30,6 +30,7 @@
 #include <libethereum/Block.h>
 #include <libethereum/Executive.h>
 #include <libethereum/ChainParams.h>
+#include <libethashseal/GenesisInfo.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 using namespace std;
@@ -43,6 +44,7 @@ void help()
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
 		<< "    --gas <n>  Transaction should be given <n> gas (default: block gas limit)." << endl
+		<< "    --gas-limit <n>  Block gas limit (default: 3141592)." << endl
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
@@ -51,6 +53,8 @@ void help()
 		<< "VM options:" << endl
 		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)" << endl
 #endif
+		<< "Network options:" << endl
+		<< "    --network Olympic|Frontier|Morden|Homestead" << endl
 		<< endl
 		<< "Options for trace:" << endl
 		<< "    --flat  Minimal whitespace in the JSON." << endl
@@ -91,6 +95,8 @@ int main(int argc, char** argv)
 	bool styledJson = true;
 	StandardTrace st;
 	EnvInfo envInfo;
+	Network networkName = Network::HomesteadTest;
+	envInfo.setGasLimit(gas);
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -146,6 +152,23 @@ int main(int argc, char** argv)
 			envInfo.setGasLimit(u256(argv[++i]));
 		else if (arg == "--value" && i + 1 < argc)
 			value = u256(argv[++i]);
+		else if (arg == "--network" && i + 1 < argc)
+		{
+			string network = argv[++i];
+			if (network == "Olympic")
+				networkName = Network::Olympic;
+			else if (network == "Frontier")
+				networkName = Network::FrontierTest;
+			else if (network == "Morden")
+				networkName = Network::Morden;
+			else if (network == "Homestead")
+				networkName = Network::HomesteadTest;
+			else
+			{
+				cerr << "Unknown network type: " << network << endl;
+				return -1;
+			}
+		}
 		else if (arg == "stats")
 			mode = Mode::Statistics;
 		else if (arg == "output")
@@ -168,7 +191,7 @@ int main(int argc, char** argv)
 
 	state.addBalance(sender, value);
 
-	unique_ptr<SealEngineFace> se(ChainParams().createSealEngine());
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
 	Executive executive(state, envInfo, se.get());
 	ExecutionResult res;
 	executive.setResultRecipient(res);
@@ -194,7 +217,10 @@ int main(int argc, char** argv)
 	executive.initialize(t);
 	executive.create(sender, value, gasPrice, gas, &data, origin);
 	Timer timer;
-	executive.go(onOp);
+	if (mode == Mode::Statistics || mode == Mode::Trace)
+		executive.go(onOp);
+	else
+		executive.go();
 	double execTime = timer.elapsed();
 	executive.finalize();
 	bytes output = std::move(res.output);
