@@ -54,8 +54,8 @@ const char* BlockTrace::name() { return EthViolet "⚙" EthGray " ◎"; }
 const char* BlockChat::name() { return EthViolet "⚙" EthWhite " ◌"; }
 
 Block::Block(BlockChain const& _bc, OverlayDB const& _db, BaseState _bs, Address const& _author):
-	m_state(0, _db, _bs),
-	m_precommit(0),
+	m_state(_bc.chainParams().accountStartNonce, _db, _bs),
+	m_precommit(_bc.chainParams().accountStartNonce),
 	m_author(_author)
 {
 	noteChain(_bc);
@@ -65,8 +65,8 @@ Block::Block(BlockChain const& _bc, OverlayDB const& _db, BaseState _bs, Address
 }
 
 Block::Block(BlockChain const& _bc, OverlayDB const& _db, h256 const& _root, Address const& _author):
-	m_state(0, _db, BaseState::PreExisting),
-	m_precommit(0),
+	m_state(_bc.chainParams().accountStartNonce, _db, BaseState::PreExisting),
+	m_precommit(_bc.chainParams().accountStartNonce),
 	m_author(_author)
 {
 	noteChain(_bc);
