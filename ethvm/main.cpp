@@ -191,7 +191,7 @@ int main(int argc, char** argv)
 
 	state.addBalance(sender, value);
 
-	unique_ptr<SealEngineFace> se(ChainParams().createSealEngine());
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(networkName)).createSealEngine());
 	Executive executive(state, envInfo, se.get());
 	ExecutionResult res;
 	executive.setResultRecipient(res);
