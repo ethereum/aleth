@@ -115,6 +115,11 @@ BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead)
 	dev::test::executeTests("stCallDelegateCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
+BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead)
+{
+	dev::test::executeTests("stDelegatecallTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
+
 BOOST_AUTO_TEST_CASE(stCallCodesHomestead)
 {
 	dev::test::executeTests("stCallCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);

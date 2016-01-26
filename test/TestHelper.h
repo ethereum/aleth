@@ -199,7 +199,7 @@ enum class Verbosity
 class Options
 {
 public:
-	bool vmtrace = false;	///< Create EVM execution tracer // TODO: Link with log verbosity?
+	bool vmtrace = false;	///< Create EVM execution tracer
 	bool fillTests = false; ///< Create JSON test files from execution results
 	bool stats = false;		///< Execution time stats
 	std::string statsOutFile; ///< Stats output file. "out" for standard output

@@ -103,7 +103,11 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 		}
 
 		if (o_mask)
+		{
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage, shouldNotExists);
+			if (!haveStorage && !haveCode && !haveNonce && !haveBalance && shouldNotExists) //defined only shouldNotExists field
+				ret[a] = Account(0, 0, Account::NormalCreation);
+		}
 
 		if (o_precompiled && o.count("precompiled"))
 		{
