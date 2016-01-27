@@ -283,14 +283,16 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			if (!reverse)
 			{
 				auto n = bc.number(blockHash);
-				if (n != 0 || blockHash == bc.genesisHash())
+				if (numHeadersToSend == 0)
+					blockHash = {};
+				else if (n != 0 || blockHash == bc.genesisHash())
 				{
 					auto top = n + uint64_t(step) * numHeadersToSend - 1;
 					auto lastBlock = bc.number();
 					if (top > lastBlock)
 					{
-						numHeadersToSend = (lastBlock - n) / step;
-						top = n + step * numHeadersToSend;
+						numHeadersToSend = (lastBlock - n) / step + 1;
+						top = n + step * (numHeadersToSend - 1);
 					}
 					assert(top <= lastBlock && "invalid top block calculated");
 					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
@@ -311,15 +313,15 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			if (!reverse)
 			{
 				auto lastBlock = bc.number();
-				if (n > lastBlock)
+				if (n > lastBlock || numHeadersToSend == 0)
 					blockHash = {};
 				else
 				{
-					bigint top = n + uint64_t(step) * numHeadersToSend - 1;
+					bigint top = n + uint64_t(step) * (numHeadersToSend - 1);
 					if (top > lastBlock)
 					{
-						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step;
-						top = n + step * numHeadersToSend;
+						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step + 1;
+						top = n + step * (numHeadersToSend - 1);
 					}
 					assert(top <= lastBlock && "invalid top block calculated");
 					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
@@ -483,16 +485,18 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		clog(NetMessageSummary) << "GetNodeData (" << dec << count << " entries)";
 
 		// return the requested nodes.
-		bytes rlp;
+		strings data;
 		unsigned n = 0;
+		size_t payloadSize = 0;
 		auto numItemsToSend = std::min(count, c_maxNodes);
-		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
+		for (unsigned i = 0; i < numItemsToSend && payloadSize < c_maxPayload; ++i)
 		{
 			auto h = _r[i].toHash<h256>();
 			auto node = host()->db().lookup(h);
 			if (!node.empty())
 			{
-				rlp.insert(rlp.end(), node.begin(), node.end());
+				payloadSize += node.length();
+				data.push_back(move(node));
 				++n;
 			}
 		}
@@ -500,7 +504,9 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		addRating(0);
 		RLPStream s;
-		prep(s, NodeDataPacket, n).appendRaw(rlp, n);
+		prep(s, NodeDataPacket, n);
+		for (auto const& element: data)
+			s.append(element);
 		sealAndSend(s);
 		break;
 	}
