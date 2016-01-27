@@ -127,7 +127,7 @@ public:
 
 	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = 3141592);
 	static AccountMap defaultAccountMap();
-	static eth::Network sealEngineNetwork;
+	static eth::Network s_sealEngineNetwork;
 private:
 
 	std::unique_ptr<BlockChain> m_blockChain;
