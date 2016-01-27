@@ -153,7 +153,7 @@ R"E(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x00",
-		"frontierCompatibilityModeLimit": "0xdbba0",
+		"frontierCompatibilityModeLimit": "0x05",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",

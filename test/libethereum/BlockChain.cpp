@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(rebuild)
 BOOST_AUTO_TEST_CASE(sync)
 {
 	TestOutputHelper::initTest();
-	dev::test::TestBlockChain::sealEngineNetwork = eth::Network::FrontierTest;
+	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	//1 block
