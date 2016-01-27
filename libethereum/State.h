@@ -114,7 +114,7 @@ class State
 
 public:
 	/// Default constructor; creates with a blank database prepopulated with the genesis block.
-	State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
+	explicit State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
 
 	/// Basic state object from database.
 	/// Use the default when you already have a database and you just want to make a State object
