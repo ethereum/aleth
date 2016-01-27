@@ -110,21 +110,6 @@ int main( int argc, char* argv[] )
 	try
 	{
 		framework::init(fake_init_func, argc, argv);
-#if BOOST_VERSION >= 106000
-			if (true)
-			{
-				test_case_counter filter;
-#elif BOOST_VERSION >= 105900
-		if(!runtime_config::test_to_run().empty())
-		{
-			test_case_counter filter;
-#else
-		if( !runtime_config::test_to_run().is_empty() )
-		{
-			test_case_filter filter(runtime_config::test_to_run());
-#endif
-			traverse_test_tree(framework::master_test_suite().p_id, filter);
-		}
 
 		framework::run();
 
