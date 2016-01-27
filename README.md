@@ -9,8 +9,6 @@ By Gav Wood et al*, 2013, 2014, 2015.
 develop   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-develop)](http://52.28.164.97/job/ethbinaries-develop/)
 release   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-release)](http://52.28.164.97/job/ethbinaries-release/)
 
-[![Stories in Ready](https://badge.waffle.io/ethereum/cpp-ethereum.png?label=ready&title=Ready)](http://waffle.io/ethereum/cpp-ethereum)
-
 Ethereum is based on a design in an original whitepaper by Vitalik Buterin. This implementation is based on the formal specification of a refinement of that idea detailed in the 'yellow paper' by Gavin Wood. Contributors, builders and testers include:
 
 - *arkpar* (**Arkadiy Paronyan**) Mix, PV61/BlockQueue
@@ -34,12 +32,8 @@ See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build ins
 
 ### Testing
 
-To run the tests, make sure you clone the tests repository from github.com/ethereum to tests as a sibling to cpp-ethereum.
-
-### License
-
-All new contributions are under the [MIT license](http://opensource.org/licenses/MIT).
-See [LICENSE](LICENSE). Some old contributions are under the [GPLv3 license](http://www.gnu.org/licenses/gpl-3.0.en.html). See [GPLV3_LICENSE](GPLV3_LICENSE).
+To run the tests, make sure you clone github.com/ethereum/tests and point the environment variable
+`ETHEREUM_TEST_PATH` to that path.
 
 ### Contributing
 
@@ -47,15 +41,21 @@ External contributions are more than welcome! We try to keep a list of tasks tha
 newcomers under the tag [good first task](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
 If you have any questions, please ask in our [gitter channel](https://gitter.im/ethereum/cpp-ethereum).
 
+Please refer to the file [CONTRIBUTING.md] for some guidelines.
+
 All new contributions are added under the MIT License. Please refer to the `LICENSE` file in the root directory.
 To state that you accept this fact for all of your contributions please add yourself to the list of external contributors like in the example below.
 
+### License
+
+All new contributions are under the [MIT license](http://opensource.org/licenses/MIT).
+See [LICENSE](LICENSE). Some old contributions are under the [GPLv3 license](http://www.gnu.org/licenses/gpl-3.0.en.html). See [GPLV3_LICENSE](GPLV3_LICENSE).
+
 #### External Contributors
+
 I hereby place all my contributions in this codebase under an MIT
 licence, as specified [here](http://opensource.org/licenses/MIT).
 - *Name Surname* (**email@domain**)
-
-#### Contribution guideline
 
 Please add yourself in the `@author` doxygen  section of the file your are adding/editing
 with the same wording as the one you listed yourself in the external contributors section above,
