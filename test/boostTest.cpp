@@ -107,41 +107,6 @@ int main( int argc, char* argv[] )
 	for (int i = 0; i < argc; i++)
 		parameters.push_back(argv[i]);
 
-	try
-	{
-		framework::init(fake_init_func, argc, argv);
+	unit_test_main(fake_init_func, argc, argv);
 
-		framework::run();
-
-		results_reporter::make_report();
-
-#if BOOST_VERSION >= 106000
-		return results_collector.results(framework::master_test_suite().p_id).result_code();
-#else
-		return runtime_config::no_result_code()
-					? boost::exit_success
-					: results_collector.results(framework::master_test_suite().p_id).result_code();
-#endif
-	}
-	catch (framework::nothing_to_test const&)
-	{
-		return boost::exit_success;
-	}
-	catch (framework::internal_error const& ex)
-	{
-		results_reporter::get_stream() << "Boost.Test framework internal error: " << ex.what() << std::endl;
-
-		return boost::exit_exception_failure;
-	}
-	catch (framework::setup_error const& ex)
-	{
-		results_reporter::get_stream() << "Test setup error: " << ex.what() << std::endl;
-
-		return boost::exit_exception_failure;
-	}
-	catch (...)
-	{
-		results_reporter::get_stream() << "Boost.Test framework internal error: unknown reason" << std::endl;
-		return boost::exit_exception_failure;
-	}
 }
