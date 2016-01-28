@@ -97,6 +97,7 @@ void help()
 		<< "Client mode (default):" << endl
 		<< "    --olympic  Use the Olympic (0.9) protocol." << endl
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
+		<< "    --morden  Use the Morden testnet." << endl
 		<< "    --private <name>  Use a private chain." << endl
 		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
 		<< endl
@@ -646,7 +647,7 @@ int main(int argc, char** argv)
 		else if (arg == "--olympic")
 			chainParams = ChainParams(genesisInfo(eth::Network::Olympic));
 		else if (arg == "--morden" || arg == "--testnet")
-			chainParams = ChainParams(genesisInfo(eth::Network::Morden));
+			chainParams = ChainParams(genesisInfo(eth::Network::Morden), genesisStateRoot(eth::Network::Morden));
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
 		{
 			try
