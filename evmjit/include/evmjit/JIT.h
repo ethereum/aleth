@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <type_traits>
 
 #ifdef _MSC_VER
 #ifdef evmjit_EXPORTS
@@ -98,23 +99,31 @@ struct RuntimeData
 
 struct JITSchedule
 {
-	int64_t stackLimit = 1024;
-	int64_t stepGas[7] = {0, 2, 3, 5, 8, 10, 20};
-	int64_t expByteGas = 10;
-	int64_t sha3Gas = 30;
-	int64_t sha3WordGas = 6;
-	int64_t sloadGas = 50;
-	int64_t sstoreSetGas = 20000;
-	int64_t sstoreResetGas = 5000;
-	int64_t sstoreClearGas = 5000;
-	int64_t jumpdestGas = 1;
-	int64_t logGas = 375;
-	int64_t logDataGas = 8;
-	int64_t logTopicGas = 375;
-	int64_t createGas = 32000;
-	int64_t callGas = 40;
-	int64_t memoryGas = 3;
-	int64_t copyGas = 3;
+	// Move to constexpr once all our target compilers support it.
+	typedef std::integral_constant<uint64_t, 1024> stackLimit;
+	typedef std::integral_constant<uint64_t, 0> stepGas0;
+	typedef std::integral_constant<uint64_t, 2> stepGas1;
+	typedef std::integral_constant<uint64_t, 3> stepGas2;
+	typedef std::integral_constant<uint64_t, 5> stepGas3;
+	typedef std::integral_constant<uint64_t, 8> stepGas4;
+	typedef std::integral_constant<uint64_t, 10> stepGas5;
+	typedef std::integral_constant<uint64_t, 20> stepGas6;
+	typedef std::integral_constant<uint64_t, 0> stepGas7;
+	typedef std::integral_constant<uint64_t, 10> expByteGas;
+	typedef std::integral_constant<uint64_t, 30> sha3Gas;
+	typedef std::integral_constant<uint64_t, 6> sha3WordGas;
+	typedef std::integral_constant<uint64_t, 50> sloadGas;
+	typedef std::integral_constant<uint64_t, 20000> sstoreSetGas;
+	typedef std::integral_constant<uint64_t, 5000> sstoreResetGas;
+	typedef std::integral_constant<uint64_t, 5000> sstoreClearGas;
+	typedef std::integral_constant<uint64_t, 1> jumpdestGas;
+	typedef std::integral_constant<uint64_t, 375> logGas;
+	typedef std::integral_constant<uint64_t, 8> logDataGas;
+	typedef std::integral_constant<uint64_t, 375> logTopicGas;
+	typedef std::integral_constant<uint64_t, 32000> createGas;
+	typedef std::integral_constant<uint64_t, 40> callGas;
+	typedef std::integral_constant<uint64_t, 3> memoryGas;
+	typedef std::integral_constant<uint64_t, 3> copyGas;
 	bool haveDelegateCall = true;
 
 	/// Computes a hash of the schedule.

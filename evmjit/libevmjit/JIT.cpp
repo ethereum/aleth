@@ -251,24 +251,30 @@ bytes_ref ExecutionContext::getReturnData() const
 int64_t JITSchedule::id() const
 {
 	int64_t hash = 0;
-	for (size_t i = 0; i < 8; i ++)
-		hash = hash * 37 + stepGas[i];
-	hash = hash * 37 + stackLimit;
-	hash = hash * 37 + expByteGas;
-	hash = hash * 37 + sha3Gas;
-	hash = hash * 37 + sha3WordGas;
-	hash = hash * 37 + sloadGas;
-	hash = hash * 37 + sstoreSetGas;
-	hash = hash * 37 + sstoreResetGas;
-	hash = hash * 37 + sstoreClearGas;
-	hash = hash * 37 + jumpdestGas;
-	hash = hash * 37 + logGas;
-	hash = hash * 37 + logDataGas;
-	hash = hash * 37 + logTopicGas;
-	hash = hash * 37 + createGas;
-	hash = hash * 37 + callGas;
-	hash = hash * 37 + memoryGas;
-	hash = hash * 37 + copyGas;
+	hash = hash * 37 + stepGas0::value;
+	hash = hash * 37 + stepGas1::value;
+	hash = hash * 37 + stepGas2::value;
+	hash = hash * 37 + stepGas3::value;
+	hash = hash * 37 + stepGas4::value;
+	hash = hash * 37 + stepGas5::value;
+	hash = hash * 37 + stepGas6::value;
+	hash = hash * 37 + stepGas7::value;
+	hash = hash * 37 + stackLimit::value;
+	hash = hash * 37 + expByteGas::value;
+	hash = hash * 37 + sha3Gas::value;
+	hash = hash * 37 + sha3WordGas::value;
+	hash = hash * 37 + sloadGas::value;
+	hash = hash * 37 + sstoreSetGas::value;
+	hash = hash * 37 + sstoreResetGas::value;
+	hash = hash * 37 + sstoreClearGas::value;
+	hash = hash * 37 + jumpdestGas::value;
+	hash = hash * 37 + logGas::value;
+	hash = hash * 37 + logDataGas::value;
+	hash = hash * 37 + logTopicGas::value;
+	hash = hash * 37 + createGas::value;
+	hash = hash * 37 + callGas::value;
+	hash = hash * 37 + memoryGas::value;
+	hash = hash * 37 + copyGas::value;
 	hash = hash * 37 + (haveDelegateCall ? 7 : 11);
 	return hash;
 }

@@ -25,8 +25,11 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	rejected |= _ext.gasPrice > std::numeric_limits<decltype(m_data.gasPrice)>::max();
 	rejected |= _ext.envInfo().number() > std::numeric_limits<decltype(m_data.number)>::max();
 	rejected |= _ext.envInfo().timestamp() > std::numeric_limits<decltype(m_data.timestamp)>::max();
-	rejected |= !toJITSchedule(_ext.evmSchedule(), m_schedule);
-
+	if (!toJITSchedule(_ext.evmSchedule(), m_schedule))
+	{
+		cwarn << "Schedule changed, not suitable for JIT!";
+		rejected = true;
+	}
 	if (rejected)
 	{
 		cwarn << "Execution rejected by EVM JIT (gas limit: " << io_gas << "), executing with interpreter";
