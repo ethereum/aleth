@@ -18,6 +18,10 @@ We keep backlogs of tasks in different sites, depending on the subproject:
  * [Mix Backlog](https://github.com/ethereum/mix/issues)
  * [Eth Backlog](https://www.pivotaltracker.com/n/projects/1510366)
 
+Finally, there is a [waffle board](https://waffle.io/ethereum/webthree-umbrella) containing all issues from all subrepositories.
+This is especially useful to keep track of pull requests pending reviews
+(if you switch the filter on the top right to "pull requests only").
+
 
 ### How to Report Issues
 
