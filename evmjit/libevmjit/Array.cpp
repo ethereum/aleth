@@ -32,9 +32,10 @@ llvm::Function* Array::createArrayPushFunc()
 	func->setDoesNotThrow();
 	func->setDoesNotCapture(1);
 
-	auto arrayPtr = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* arrayPtr = &(*iter++);
 	arrayPtr->setName("arrayPtr");
-	auto value = arrayPtr->getNextNode();
+	llvm::Argument* value = &(*iter);
 	value->setName("value");
 
 	InsertPointGuard guard{m_builder};
@@ -82,11 +83,12 @@ llvm::Function* Array::createArraySetFunc()
 	func->setDoesNotThrow();
 	func->setDoesNotCapture(1);
 
-	auto arrayPtr = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* arrayPtr = &(*iter++);
 	arrayPtr->setName("arrayPtr");
-	auto index = arrayPtr->getNextNode();
+	llvm::Argument* index = &(*iter++);
 	index->setName("index");
-	auto value = index->getNextNode();
+	llvm::Argument* value = &(*iter);
 	value->setName("value");
 
 	InsertPointGuard guard{m_builder};
@@ -106,9 +108,10 @@ llvm::Function* Array::createArrayGetFunc()
 	func->setDoesNotThrow();
 	func->setDoesNotCapture(1);
 
-	auto arrayPtr = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* arrayPtr = &(*iter++);
 	arrayPtr->setName("arrayPtr");
-	auto index = arrayPtr->getNextNode();
+	llvm::Argument* index = &(*iter++);
 	index->setName("index");
 
 	InsertPointGuard guard{m_builder};
@@ -128,9 +131,10 @@ llvm::Function* Array::createGetPtrFunc()
 	func->setDoesNotThrow();
 	func->setDoesNotCapture(1);
 
-	auto arrayPtr = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* arrayPtr = &(*iter++);
 	arrayPtr->setName("arrayPtr");
-	auto index = arrayPtr->getNextNode();
+	llvm::Argument* index = &(*iter++);
 	index->setName("index");
 
 	InsertPointGuard guard{m_builder};
@@ -186,9 +190,10 @@ llvm::Function* Array::createExtendFunc()
 	func->setDoesNotThrow();
 	func->setDoesNotCapture(1);
 
-	auto arrayPtr = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* arrayPtr = &(*iter++);
 	arrayPtr->setName("arrayPtr");
-	auto newSize = arrayPtr->getNextNode();
+	llvm::Argument* newSize = &(*iter++);
 	newSize->setName("newSize");
 
 	InsertPointGuard guard{m_builder};
