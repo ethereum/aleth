@@ -4,6 +4,10 @@
 
 namespace dev
 {
+namespace evmjit
+{
+struct JITSchedule;
+}
 namespace eth
 {
 namespace jit
@@ -22,7 +26,7 @@ public:
 		bool dumpCFG = false;
 	};
 
-	Compiler(Options const& _options);
+	Compiler(Options const& _options, JITSchedule const& _schedule);
 
 	std::unique_ptr<llvm::Module> compile(code_iterator _begin, code_iterator _end, std::string const& _id);
 
@@ -36,6 +40,8 @@ private:
 
 	/// Compiler options
 	Options const& m_options;
+
+	JITSchedule const& m_schedule;
 
 	/// Helper class for generating IR
 	IRBuilder m_builder;

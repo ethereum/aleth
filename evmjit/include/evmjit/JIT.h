@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <functional>
+#include <type_traits>
 
 #ifdef _MSC_VER
 #ifdef evmjit_EXPORTS
@@ -60,7 +61,8 @@ struct RuntimeData
 		Address,
 		Caller,
 		Origin,
-		CallValue,
+		TransferredCallValue,	// actual ether amount transferred
+		ApparentCallValue,		// value of msg.value - different during DELEGATECALL
 		CoinBase,
 		Difficulty,
 		GasLimit,
@@ -83,7 +85,8 @@ struct RuntimeData
 	i256 		address;
 	i256 		caller;
 	i256 		origin;
-	i256 		callValue;
+	i256 		transferredValue;
+	i256 		apparentValue;
 	i256 		coinBase;
 	i256 		difficulty;
 	i256 		gasLimit;
@@ -92,6 +95,42 @@ struct RuntimeData
 	byte const* code = nullptr;
 	uint64_t 	codeSize = 0;
 	h256		codeHash;
+};
+
+struct JITSchedule
+{
+	// Move to constexpr once all our target compilers support it.
+	typedef std::integral_constant<uint64_t, 1024> stackLimit;
+	typedef std::integral_constant<uint64_t, 0> stepGas0;
+	typedef std::integral_constant<uint64_t, 2> stepGas1;
+	typedef std::integral_constant<uint64_t, 3> stepGas2;
+	typedef std::integral_constant<uint64_t, 5> stepGas3;
+	typedef std::integral_constant<uint64_t, 8> stepGas4;
+	typedef std::integral_constant<uint64_t, 10> stepGas5;
+	typedef std::integral_constant<uint64_t, 20> stepGas6;
+	typedef std::integral_constant<uint64_t, 0> stepGas7;
+	typedef std::integral_constant<uint64_t, 10> expByteGas;
+	typedef std::integral_constant<uint64_t, 30> sha3Gas;
+	typedef std::integral_constant<uint64_t, 6> sha3WordGas;
+	typedef std::integral_constant<uint64_t, 50> sloadGas;
+	typedef std::integral_constant<uint64_t, 20000> sstoreSetGas;
+	typedef std::integral_constant<uint64_t, 5000> sstoreResetGas;
+	typedef std::integral_constant<uint64_t, 5000> sstoreClearGas;
+	typedef std::integral_constant<uint64_t, 1> jumpdestGas;
+	typedef std::integral_constant<uint64_t, 375> logGas;
+	typedef std::integral_constant<uint64_t, 8> logDataGas;
+	typedef std::integral_constant<uint64_t, 375> logTopicGas;
+	typedef std::integral_constant<uint64_t, 32000> createGas;
+	typedef std::integral_constant<uint64_t, 40> callGas;
+	typedef std::integral_constant<uint64_t, 3> memoryGas;
+	typedef std::integral_constant<uint64_t, 3> copyGas;
+	bool haveDelegateCall = true;
+
+	/// Computes a hash of the schedule.
+	EVMJIT_API int64_t id() const;
+
+	/// @returns an identifier for the code that is built from the code and the schedule data.
+	EVMJIT_API std::string codeIdentifier(h256 const& _codeHash) const;
 };
 
 /// VM Environment (ExtVM) opaque type
@@ -151,13 +190,19 @@ public:
 	/// Ask JIT if the EVM code is ready for execution.
 	/// Returns `true` if the EVM code has been compiled and loaded into memory.
 	/// In this case the code can be executed without overhead.
-	/// \param _codeHash	The Keccak hash of the EVM code.
-	EVMJIT_API static bool isCodeReady(h256 const& _codeHash);
+	/// \param _codeIdentifier	the identifier of the code consisting of a hash of the code and the schedule.
+	EVMJIT_API static bool isCodeReady(std::string const& _codeIdentifier);
 
 	/// Compile the given EVM code to machine code and make available for execution.
-	EVMJIT_API static void compile(byte const* _code, uint64_t _codeSize, h256 const& _codeHash);
+	EVMJIT_API static void compile(
+		byte const* _code,
+		uint64_t _codeSize,
+		std::string const& _codeIdentifier,
+		JITSchedule const& _schedule
+	);
 
-	EVMJIT_API static ReturnCode exec(ExecutionContext& _context);
+	/// Execude the code given in @a _context and compile it if necessary.
+	EVMJIT_API static ReturnCode exec(ExecutionContext& _context, JITSchedule const& _schedule);
 };
 
 }

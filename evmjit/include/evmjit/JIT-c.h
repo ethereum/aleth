@@ -32,7 +32,8 @@ typedef struct evmjit_runtime_data
 	evmjit_i256 address;
 	evmjit_i256 caller;
 	evmjit_i256 origin;
-	evmjit_i256 callValue;
+	evmjit_i256 transferredValue;
+	evmjit_i256 apparentValue;
 	evmjit_i256 coinBase;
 	evmjit_i256 difficulty;
 	evmjit_i256 gasLimit;
@@ -62,7 +63,7 @@ typedef struct evmjit_context evmjit_context;
 
 EVMJIT_API evmjit_context* evmjit_create(evmjit_runtime_data* _data, void* _env);
 
-EVMJIT_API evmjit_return_code evmjit_exec(evmjit_context* _context);
+EVMJIT_API evmjit_return_code evmjit_exec(evmjit_context* _context, void* _schedule);
 
 EVMJIT_API void evmjit_destroy(evmjit_context* _context);
 

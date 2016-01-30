@@ -25,7 +25,11 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	rejected |= _ext.gasPrice > std::numeric_limits<decltype(m_data.gasPrice)>::max();
 	rejected |= _ext.envInfo().number() > std::numeric_limits<decltype(m_data.number)>::max();
 	rejected |= _ext.envInfo().timestamp() > std::numeric_limits<decltype(m_data.timestamp)>::max();
-
+	if (!toJITSchedule(_ext.evmSchedule(), m_schedule))
+	{
+		cwarn << "Schedule changed, not suitable for JIT!";
+		rejected = true;
+	}
 	if (rejected)
 	{
 		cwarn << "Execution rejected by EVM JIT (gas limit: " << io_gas << "), executing with interpreter";
@@ -40,7 +44,8 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	m_data.address      = eth2jit(fromAddress(_ext.myAddress));
 	m_data.caller       = eth2jit(fromAddress(_ext.caller));
 	m_data.origin       = eth2jit(fromAddress(_ext.origin));
-	m_data.callValue    = eth2jit(_ext.value);
+	m_data.transferredValue = eth2jit(_ext.value);
+	m_data.apparentValue = eth2jit(_ext.value);
 	m_data.coinBase     = eth2jit(fromAddress(_ext.envInfo().author()));
 	m_data.difficulty   = eth2jit(_ext.envInfo().difficulty());
 	m_data.gasLimit     = eth2jit(_ext.envInfo().gasLimit());
@@ -53,7 +58,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	// Pass pointer to ExtVMFace casted to evmjit::Env* opaque type.
 	// JIT will do nothing with the pointer, just pass it to Env callback functions implemented in Env.cpp.
 	m_context.init(m_data, reinterpret_cast<evmjit::Env*>(&_ext));
-	auto exitCode = evmjit::JIT::exec(m_context);
+	auto exitCode = evmjit::JIT::exec(m_context, m_schedule);
 	switch (exitCode)
 	{
 	case evmjit::ReturnCode::Suicide:

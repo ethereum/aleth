@@ -30,15 +30,14 @@ namespace
 {
 using ExecFunc = ReturnCode(*)(ExecutionContext*);
 
-std::string hash2str(i256 const& _hash)
+template <size_t _size>
+std::string toHex(std::array<byte, _size> const& _data)
 {
-	static const auto size = sizeof(_hash);
 	static const auto hexChars = "0123456789abcdef";
 	std::string str;
-	str.resize(size * 2);
+	str.resize(_size * 2);
 	auto outIt = str.rbegin(); // reverse for BE
-	auto& arr = *(std::array<byte, size>*)&_hash;
-	for (auto b : arr)
+	for (auto b: _data)
 	{
 		*(outIt++) = hexChars[b & 0xf];
 		*(outIt++) = hexChars[b >> 4];
@@ -84,11 +83,13 @@ class JITImpl
 {
 	std::unique_ptr<llvm::ExecutionEngine> m_engine;
 	mutable std::mutex x_codeMap;
-	std::unordered_map<h256, ExecFunc> m_codeMap;
+	std::unordered_map<std::string, ExecFunc> m_codeMap;
 
 public:
 	static JITImpl& instance()
 	{
+		// We need to keep this a singleton.
+		// so we only call changeVersion on it.
 		static JITImpl s_instance;
 		return s_instance;
 	}
@@ -97,10 +98,10 @@ public:
 
 	llvm::ExecutionEngine& engine() { return *m_engine; }
 
-	ExecFunc getExecFunc(h256 const& _codeHash) const;
-	void mapExecFunc(h256 _codeHash, ExecFunc _funcAddr);
+	ExecFunc getExecFunc(std::string const& _codeIdentifier) const;
+	void mapExecFunc(std::string const& _codeIdentifier, ExecFunc _funcAddr);
 
-	ExecFunc compile(byte const* _code, uint64_t _codeSize, h256 const& _codeHash);
+	ExecFunc compile(byte const* _code, uint64_t _codeSize, std::string const& _codeIdentifier, JITSchedule const& _schedule);
 };
 
 JITImpl::JITImpl()
@@ -136,31 +137,30 @@ JITImpl::JITImpl()
 	//	Cache::preload(*m_engine, funcCache);
 }
 
-ExecFunc JITImpl::getExecFunc(h256 const& _codeHash) const
+ExecFunc JITImpl::getExecFunc(std::string const& _codeIdentifier) const
 {
 	std::lock_guard<std::mutex> lock{x_codeMap};
-	auto it = m_codeMap.find(_codeHash);
+	auto it = m_codeMap.find(_codeIdentifier);
 	if (it != m_codeMap.end())
 		return it->second;
 	return nullptr;
 }
 
-void JITImpl::mapExecFunc(h256 _codeHash, ExecFunc _funcAddr)
+void JITImpl::mapExecFunc(std::string const& _codeIdentifier, ExecFunc _funcAddr)
 {
 	std::lock_guard<std::mutex> lock{x_codeMap};
-	m_codeMap.emplace(std::move(_codeHash), _funcAddr);
+	m_codeMap.emplace(_codeIdentifier, _funcAddr);
 }
 
-ExecFunc JITImpl::compile(byte const* _code, uint64_t _codeSize, h256 const& _codeHash)
+ExecFunc JITImpl::compile(byte const* _code, uint64_t _codeSize, std::string const& _codeIdentifier, JITSchedule const& _schedule)
 {
-	auto name = hash2str(_codeHash);
-	auto module = Cache::getObject(name);
+	auto module = Cache::getObject(_codeIdentifier);
 	if (!module)
 	{
 		// TODO: Listener support must be redesigned. These should be a feature of JITImpl
 		//listener->stateChanged(ExecState::Compilation);
 		assert(_code || !_codeSize);
-		module = Compiler{{}}.compile(_code, _code + _codeSize, name);
+		module = Compiler({}, _schedule).compile(_code, _code + _codeSize, _codeIdentifier);
 
 		if (g_optimize)
 		{
@@ -175,39 +175,39 @@ ExecFunc JITImpl::compile(byte const* _code, uint64_t _codeSize, h256 const& _co
 
 	m_engine->addModule(std::move(module));
 	//listener->stateChanged(ExecState::CodeGen);
-	return (ExecFunc)m_engine->getFunctionAddress(name);
+	return (ExecFunc)m_engine->getFunctionAddress(_codeIdentifier);
 }
 
 } // anonymous namespace
 
-bool JIT::isCodeReady(h256 const& _codeHash)
+bool JIT::isCodeReady(std::string const& _codeIdentifier)
 {
-	return JITImpl::instance().getExecFunc(_codeHash) != nullptr;
+	return JITImpl::instance().getExecFunc(_codeIdentifier) != nullptr;
 }
 
-void JIT::compile(byte const* _code, uint64_t _codeSize, h256 const& _codeHash)
+void JIT::compile(byte const* _code, uint64_t _codeSize, std::string const& _codeIdentifier, JITSchedule const& _schedule)
 {
 	auto& jit = JITImpl::instance();
-	auto execFunc = jit.compile(_code, _codeSize, _codeHash);
+	auto execFunc = jit.compile(_code, _codeSize, _codeIdentifier, _schedule);
 	if (execFunc) // FIXME: What with error?
-		jit.mapExecFunc(_codeHash, execFunc);
+		jit.mapExecFunc(_codeIdentifier, execFunc);
 }
 
-ReturnCode JIT::exec(ExecutionContext& _context)
+ReturnCode JIT::exec(ExecutionContext& _context, JITSchedule const& _schedule)
 {
 	//std::unique_ptr<ExecStats> listener{new ExecStats};
 	//listener->stateChanged(ExecState::Started);
 	//static StatsCollector statsCollector;
 
 	auto& jit = JITImpl::instance();
-	auto codeHash = _context.codeHash();
-	auto execFunc = jit.getExecFunc(codeHash);
+	auto codeIdentifier = _schedule.codeIdentifier(_context.codeHash());
+	auto execFunc = jit.getExecFunc(codeIdentifier);
 	if (!execFunc)
 	{
-		execFunc = jit.compile(_context.code(), _context.codeSize(), codeHash);
+		execFunc = jit.compile(_context.code(), _context.codeSize(), codeIdentifier, _schedule);
 		if (!execFunc)
 			return ReturnCode::LLVMError;
-		jit.mapExecFunc(codeHash, execFunc);
+		jit.mapExecFunc(codeIdentifier, execFunc);
 	}
 
 	//listener->stateChanged(ExecState::Execution);
@@ -247,6 +247,47 @@ bytes_ref ExecutionContext::getReturnData() const
 
 	return bytes_ref{data, size};
 }
+
+int64_t JITSchedule::id() const
+{
+	int64_t hash = 0;
+	hash = hash * 37 + stepGas0::value;
+	hash = hash * 37 + stepGas1::value;
+	hash = hash * 37 + stepGas2::value;
+	hash = hash * 37 + stepGas3::value;
+	hash = hash * 37 + stepGas4::value;
+	hash = hash * 37 + stepGas5::value;
+	hash = hash * 37 + stepGas6::value;
+	hash = hash * 37 + stepGas7::value;
+	hash = hash * 37 + stackLimit::value;
+	hash = hash * 37 + expByteGas::value;
+	hash = hash * 37 + sha3Gas::value;
+	hash = hash * 37 + sha3WordGas::value;
+	hash = hash * 37 + sloadGas::value;
+	hash = hash * 37 + sstoreSetGas::value;
+	hash = hash * 37 + sstoreResetGas::value;
+	hash = hash * 37 + sstoreClearGas::value;
+	hash = hash * 37 + jumpdestGas::value;
+	hash = hash * 37 + logGas::value;
+	hash = hash * 37 + logDataGas::value;
+	hash = hash * 37 + logTopicGas::value;
+	hash = hash * 37 + createGas::value;
+	hash = hash * 37 + callGas::value;
+	hash = hash * 37 + memoryGas::value;
+	hash = hash * 37 + copyGas::value;
+	hash = hash * 37 + (haveDelegateCall ? 7 : 11);
+	return hash;
+}
+
+std::string JITSchedule::codeIdentifier(h256 const& _codeHash) const
+{
+	int64_t scheduleId = id();
+	return
+		toHex(*(std::array<byte, 32>*)&_codeHash) +
+		"-" +
+		toHex(*(std::array<byte, 8>*)&scheduleId);
+}
+
 
 }
 }
