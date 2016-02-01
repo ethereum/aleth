@@ -190,7 +190,7 @@ private:
 	void verifierBody();
 
 	mutable SharedMutex m_lock;													///< General lock.
-	h256Hash m_known;															///< Hashes of transactions in both sets.
+	h256Hash m_known;															///< Headers of transactions in both sets.
 
 	std::unordered_map<h256, std::function<void(ImportResult)>> m_callbacks;	///< Called once.
 	h256Hash m_dropped;															///< Transactions that have previously been dropped

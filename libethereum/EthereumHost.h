@@ -33,9 +33,9 @@
 #include <libdevcore/Worker.h>
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
+#include <libdevcrypto/OverlayDB.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
-#include "DownloadMan.h"
 
 namespace dev
 {
@@ -60,7 +60,7 @@ class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 public:
 	/// Start server, but don't listen.
-	EthereumHost(BlockChain const& _ch, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+	EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
 
 	/// Will block on network process events.
 	virtual ~EthereumHost();
@@ -71,8 +71,6 @@ public:
 
 	void reset();
 
-	DownloadMan const& downloadMan() const { return m_man; }
-	DownloadMan& downloadMan() { return m_man; }
 	bool isSyncing() const;
 	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
@@ -80,6 +78,7 @@ public:
 	void noteNewBlocks() { m_newBlocks = true; }
 
 	BlockChain const& chain() const { return m_chain; }
+	OverlayDB const& db() const { return m_db; }
 	BlockQueue& bq() { return m_bq; }
 	BlockQueue const& bq() const { return m_bq; }
 	SyncStatus status() const;
@@ -90,9 +89,9 @@ public:
 	void foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)> const& _f) const;
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
-	void onPeerHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes);
-	void onPeerBlocks(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
-	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, h256s const& _hashes);
+	void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers);
+	void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
 	void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerAborting();
@@ -121,6 +120,7 @@ private:
 	BlockChainSync* sync();
 
 	BlockChain const& m_chain;
+	OverlayDB const& m_db;					///< References to DB, needed for some of the Ethereum Protocol responses.
 	TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
 	BlockQueue& m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 
@@ -136,7 +136,6 @@ private:
 
 	mutable RecursiveMutex x_sync;
 	mutable Mutex x_transactions;
-	DownloadMan m_man;
 	std::unique_ptr<BlockChainSync> m_sync;
 	std::atomic<time_t> m_syncStart = { 0 };
 	std::atomic<time_t> m_lastTick = { 0 };

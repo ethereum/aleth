@@ -197,7 +197,7 @@ public:
 	/// Set the extra data that goes into sealed blocks.
 	void setExtraData(bytes const& _extraData) { m_extraData = _extraData; }
 	/// Rewind to a prior head.
-	void rewind(unsigned _n) { bc().rewind(_n); }
+	void rewind(unsigned _n);
 	/// Rescue the chain.
 	void rescue() { bc().rescue(m_stateDB); }
 

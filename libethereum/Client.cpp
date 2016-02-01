@@ -111,7 +111,7 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 
 	m_gp->update(bc());
 
-	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_tq, m_bq, _networkId));
+	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
 	m_host = host;
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
 
@@ -281,13 +281,6 @@ void Client::setNetworkId(u256 const& _n)
 {
 	if (auto h = m_host.lock())
 		h->setNetworkId(_n);
-}
-
-DownloadMan const* Client::downloadMan() const
-{
-	if (auto h = m_host.lock())
-		return &(h->downloadMan());
-	return nullptr;
 }
 
 bool Client::isSyncing() const
@@ -899,4 +892,12 @@ bool Client::submitSealed(bytes const& _header)
 
 	// OPTIMISE: very inefficient to not utilise the existing OverlayDB in m_postSeal that contains all trie changes.
 	return m_bq.import(&newBlock, true) == ImportResult::Success;
+}
+
+void Client::rewind(unsigned _n)
+{
+	bc().rewind(_n);
+	auto h = m_host.lock();
+	if (h)
+		h->reset();
 }
