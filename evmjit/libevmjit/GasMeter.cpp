@@ -29,11 +29,12 @@ GasMeter::GasMeter(IRBuilder& _builder, RuntimeManager& _runtimeManager, JITSche
 	auto updateBB = llvm::BasicBlock::Create(_builder.getContext(), "Update", m_gasCheckFunc);
 	auto outOfGasBB = llvm::BasicBlock::Create(_builder.getContext(), "OutOfGas", m_gasCheckFunc);
 
-	auto gasPtr = &m_gasCheckFunc->getArgumentList().front();
+	auto iter = m_gasCheckFunc->arg_begin();
+	llvm::Argument* gasPtr = &(*iter++);
 	gasPtr->setName("gasPtr");
-	auto cost = gasPtr->getNextNode();
+	llvm::Argument* cost = &(*iter++);
 	cost->setName("cost");
-	auto jmpBuf = cost->getNextNode();
+	llvm::Argument* jmpBuf = &(*iter);
 	jmpBuf->setName("jmpBuf");
 
 	InsertPointGuard guard(m_builder);

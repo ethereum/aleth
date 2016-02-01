@@ -111,12 +111,16 @@ void Compiler::resolveJumps()
 	// Iterate through all EVM instructions blocks (skip first one and last 4 - special blocks).
 	for (auto it = std::next(m_mainFunc->begin()), end = std::prev(m_mainFunc->end(), 4); it != end; ++it)
 	{
-		auto nextBlock = it->getNextNode(); // If the last code block, that will be "stop" block.
+		auto nextBlockIter = it;
+		++nextBlockIter; // If the last code block, that will be "stop" block.
+		auto currentBlockPtr = &(*it);
+		auto nextBlockPtr = &(*nextBlockIter);
+		
 		auto term = it->getTerminator();
 		llvm::BranchInst* jump = nullptr;
 
 		if (!term) // Block may have no terminator if the next instruction is a jump destination.
-			IRBuilder{it}.CreateBr(nextBlock);
+			IRBuilder{currentBlockPtr}.CreateBr(nextBlockPtr);
 		else if ((jump = llvm::dyn_cast<llvm::BranchInst>(term)) && jump->getSuccessor(0) == m_jumpTableBB)
 		{
 			auto destIdx = llvm::cast<llvm::ValueAsMetadata>(jump->getMetadata(c_destIdxLabel)->getOperand(0))->getValue();
@@ -127,10 +131,10 @@ void Compiler::resolveJumps()
 				jump->setSuccessor(0, bb);
 			}
 			else
-				jumpTableInput->addIncoming(destIdx, it); // Fill up PHI node
+				jumpTableInput->addIncoming(destIdx, currentBlockPtr); // Fill up PHI node
 
 			if (jump->isConditional())
-				jump->setSuccessor(1, nextBlock); // Set next block for conditional jumps
+				jump->setSuccessor(1, &(*nextBlockIter)); // Set next block for conditional jumps
 		}
 	}
 

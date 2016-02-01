@@ -57,7 +57,8 @@ bool LongJmpEliminationPass::runOnFunction(llvm::Function& _func)
 		{
 			auto longjmp = term->getPrevNode();
 			assert(llvm::isa<llvm::CallInst>(longjmp));
-			retPhi->addIncoming(abortCode, bbIt);
+			auto bbPtr = &(*bbIt);
+			retPhi->addIncoming(abortCode, bbPtr);
 			llvm::ReplaceInstWithInst(term, llvm::BranchInst::Create(&exitBB));
 			longjmp->eraseFromParent();
 			modified = true;

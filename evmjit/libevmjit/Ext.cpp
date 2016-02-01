@@ -63,8 +63,9 @@ llvm::Value* Ext::getArgAlloca()
 	{
 		InsertPointGuard g{m_builder};
 		auto allocaIt = getMainFunction()->front().begin();
+		auto allocaPtr = &(*allocaIt);
 		std::advance(allocaIt, m_argCounter); // Skip already created allocas
-		m_builder.SetInsertPoint(allocaIt);
+		m_builder.SetInsertPoint(allocaPtr);
 		a = m_builder.CreateAlloca(Type::Word, nullptr, {"a.", std::to_string(m_argCounter)});
 	}
 	++m_argCounter;

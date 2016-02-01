@@ -31,15 +31,16 @@ llvm::Function* Memory::getRequireFunc()
 		func = llvm::Function::Create(llvm::FunctionType::get(Type::Void, argTypes, false), llvm::Function::PrivateLinkage, "mem.require", getModule());
 		func->setDoesNotThrow();
 
-		auto mem = &func->getArgumentList().front();
+		auto iter = func->arg_begin();
+		llvm::Argument* mem = &(*iter++);
 		mem->setName("mem");
-		auto blkOffset = mem->getNextNode();
+		llvm::Argument* blkOffset = &(*iter++);
 		blkOffset->setName("blkOffset");
-		auto blkSize = blkOffset->getNextNode();
+		llvm::Argument* blkSize = &(*iter++);
 		blkSize->setName("blkSize");
-		auto jmpBuf = blkSize->getNextNode();
+		llvm::Argument* jmpBuf = &(*iter++);
 		jmpBuf->setName("jmpBuf");
-		auto gas = jmpBuf->getNextNode();
+		llvm::Argument* gas = &(*iter);
 		gas->setName("gas");
 
 		auto preBB = llvm::BasicBlock::Create(func->getContext(), "Pre", func);
@@ -105,14 +106,16 @@ llvm::Function* Memory::createFunc(bool _isStore, llvm::Type* _valueType)
 	InsertPointGuard guard(m_builder); // Restores insert point at function exit
 
 	m_builder.SetInsertPoint(llvm::BasicBlock::Create(func->getContext(), {}, func));
-	auto mem = &func->getArgumentList().front();
+	
+	auto iter = func->arg_begin();
+	llvm::Argument* mem = &(*iter++);
 	mem->setName("mem");
-	auto index = mem->getNextNode();
+	llvm::Argument* index = &(*iter++);
 	index->setName("index");
 
 	if (_isStore)
 	{
-		auto valueArg = index->getNextNode();
+		llvm::Argument* valueArg = &(*iter);
 		valueArg->setName("value");
 		auto value = isWord ? Endianness::toBE(m_builder, valueArg) : valueArg;
 		auto memPtr = m_memory.getPtr(mem, m_builder.CreateTrunc(index, Type::Size));

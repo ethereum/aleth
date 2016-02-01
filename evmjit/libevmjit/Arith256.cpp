@@ -81,9 +81,10 @@ llvm::Function* generateLongMulFunc(char const* _funcName, llvm::IntegerType* _t
 	func->setDoesNotAccessMemory();
 	func->setDoesNotThrow();
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto y = x->getNextNode();
+	llvm::Argument* y = &(*iter);
 	y->setName("y");
 
 	auto entryBB = llvm::BasicBlock::Create(func->getContext(), "Entry", func);
@@ -198,10 +199,11 @@ llvm::Function* createUDivRemFunc(llvm::Type* _type, llvm::Module& _module, char
 	auto zero = llvm::ConstantInt::get(_type, 0);
 	auto one = llvm::ConstantInt::get(_type, 1);
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto yArg = x->getNextNode();
-	yArg->setName("y");
+	llvm::Argument* y = &(*iter);
+	y->setName("y");
 
 	auto entryBB = llvm::BasicBlock::Create(_module.getContext(), "Entry", func);
 	auto mainBB = llvm::BasicBlock::Create(_module.getContext(), "Main", func);
@@ -210,17 +212,17 @@ llvm::Function* createUDivRemFunc(llvm::Type* _type, llvm::Module& _module, char
 	auto returnBB = llvm::BasicBlock::Create(_module.getContext(), "Return", func);
 
 	auto builder = IRBuilder{entryBB};
-	auto yLEx = builder.CreateICmpULE(yArg, x);
+	auto yLEx = builder.CreateICmpULE(y, x);
 	auto r0 = x;
 	builder.CreateCondBr(yLEx, mainBB, returnBB);
 
 	builder.SetInsertPoint(mainBB);
 	auto ctlzIntr = llvm::Intrinsic::getDeclaration(&_module, llvm::Intrinsic::ctlz, _type);
 	// both y and r are non-zero
-	auto yLz = builder.CreateCall(ctlzIntr, {yArg, builder.getInt1(true)}, "y.lz");
+	auto yLz = builder.CreateCall(ctlzIntr, {y, builder.getInt1(true)}, "y.lz");
 	auto rLz = builder.CreateCall(ctlzIntr, {r0, builder.getInt1(true)}, "r.lz");
 	auto i0 = builder.CreateNUWSub(yLz, rLz, "i0");
-	auto y0 = builder.CreateShl(yArg, i0);
+	auto y0 = builder.CreateShl(y, i0);
 	builder.CreateBr(loopBB);
 
 	builder.SetInsertPoint(loopBB);
@@ -296,9 +298,10 @@ llvm::Function* Arith256::getUDiv256Func(llvm::Module& _module)
 	func->setDoesNotThrow();
 	func->setDoesNotAccessMemory();
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto y = x->getNextNode();
+	llvm::Argument* y = &(*iter);
 	y->setName("y");
 
 	auto bb = llvm::BasicBlock::Create(_module.getContext(), {}, func);
@@ -320,9 +323,10 @@ llvm::Function* createURemFunc(llvm::Type* _type, llvm::Module& _module, char co
 	func->setDoesNotThrow();
 	func->setDoesNotAccessMemory();
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto y = x->getNextNode();
+	llvm::Argument* y = &(*iter);
 	y->setName("y");
 
 	auto bb = llvm::BasicBlock::Create(_module.getContext(), {}, func);
@@ -364,9 +368,10 @@ llvm::Function* Arith256::getSDivRem256Func(llvm::Module& _module)
 	func->setDoesNotThrow();
 	func->setDoesNotAccessMemory();
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto y = x->getNextNode();
+	llvm::Argument* y = &(*iter);
 	y->setName("y");
 
 	auto bb = llvm::BasicBlock::Create(_module.getContext(), "", func);
@@ -410,9 +415,10 @@ llvm::Function* Arith256::getSDiv256Func(llvm::Module& _module)
 	func->setDoesNotThrow();
 	func->setDoesNotAccessMemory();
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto y = x->getNextNode();
+	llvm::Argument* y = &(*iter);
 	y->setName("y");
 
 	auto bb = llvm::BasicBlock::Create(_module.getContext(), {}, func);
@@ -436,9 +442,10 @@ llvm::Function* Arith256::getSRem256Func(llvm::Module& _module)
 	func->setDoesNotThrow();
 	func->setDoesNotAccessMemory();
 
-	auto x = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* x = &(*iter++);
 	x->setName("x");
-	auto y = x->getNextNode();
+	llvm::Argument* y = &(*iter);
 	y->setName("y");
 
 	auto bb = llvm::BasicBlock::Create(_module.getContext(), {}, func);
@@ -459,9 +466,10 @@ llvm::Function* Arith256::getExpFunc()
 		m_exp->setDoesNotThrow();
 		m_exp->setDoesNotAccessMemory();
 
-		auto base = &m_exp->getArgumentList().front();
+		auto iter = m_exp->arg_begin();
+		llvm::Argument* base = &(*iter++);
 		base->setName("base");
-		auto exponent = base->getNextNode();
+		llvm::Argument* exponent = &(*iter);
 		exponent->setName("exponent");
 
 		InsertPointGuard guard{m_builder};

@@ -165,17 +165,18 @@ llvm::Function* LocalStack::getStackPrepareFunc()
 	auto updateBB = llvm::BasicBlock::Create(func->getContext(), "Update", func);
 	auto outOfStackBB = llvm::BasicBlock::Create(func->getContext(), "OutOfStack", func);
 
-	auto base = &func->getArgumentList().front();
+	auto iter = func->arg_begin();
+	llvm::Argument* base = &(*iter++);
 	base->setName("base");
-	auto sizePtr = base->getNextNode();
+	llvm::Argument* sizePtr = &(*iter++);
 	sizePtr->setName("size.ptr");
-	auto min = sizePtr->getNextNode();
+	llvm::Argument* min = &(*iter++);
 	min->setName("min");
-	auto max = min->getNextNode();
+	llvm::Argument* max = &(*iter++);
 	max->setName("max");
-	auto diff = max->getNextNode();
+	llvm::Argument* diff = &(*iter++);
 	diff->setName("diff");
-	auto jmpBuf = diff->getNextNode();
+	llvm::Argument* jmpBuf = &(*iter);
 	jmpBuf->setName("jmpBuf");
 
 	InsertPointGuard guard{m_builder};
