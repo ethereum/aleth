@@ -883,6 +883,11 @@ int main(int argc, char** argv)
 
 	if (mode == OperationMode::Attach)
 	{
+		if (remoteURL.find_last_of("-1") == remoteURL.size() - 1)
+		{
+			cerr << "Invalid remote url: " + remoteURL;
+			return 0;
+		}
 #if ETH_JSCONSOLE || !ETH_TRUE
 		JSRemoteConsole console(remoteURL);
 		if (!remoteSessionKey.empty())
