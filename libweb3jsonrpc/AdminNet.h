@@ -24,6 +24,7 @@ public:
 	virtual bool admin_net_connect(std::string const& _node, std::string const& _session) override;
 	virtual Json::Value admin_net_peers(std::string const& _session) override;
 	virtual Json::Value admin_net_nodeInfo(std::string const& _session) override;
+	virtual Json::Value admin_nodeInfo() override;
 
 private:
 	NetworkFace& m_network;

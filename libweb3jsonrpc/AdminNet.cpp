@@ -55,3 +55,21 @@ Json::Value AdminNet::admin_net_nodeInfo(std::string const& _session)
 	ret["enode"] = i.enode();
 	return ret;
 }
+
+Json::Value AdminNet::admin_nodeInfo()
+{
+	Json::Value ret;
+	p2p::NodeInfo i = m_network.nodeInfo();
+	ret["name"] = i.version;
+	ret["ports"] = Json::objectValue;
+	// Both ports are equal as of 2016-02-04, migt change later
+	ret["ports"]["discovery"] = i.port;
+	ret["ports"]["listener"] = i.port;
+	ret["ip"] = i.address;
+	ret["listenAddr"] = i.address + ":" + toString(i.port);
+	ret["id"] = i.id.hex();
+	ret["enode"] = i.enode();
+	ret["protocols"] = Json::objectValue;
+	ret["protocols"]["eth"] = Json::objectValue; //@todo fill with information
+	return ret;
+}
