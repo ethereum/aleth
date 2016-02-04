@@ -885,7 +885,7 @@ int main(int argc, char** argv)
 	{
 		if (remoteURL.find_last_of("-1") == remoteURL.size() - 1)
 		{
-			cerr << "Invalid remote url: " + remoteURL;
+			cerr << "json-rpc server not found, please start eth with the --json-rpc option (note that this might make it accessible from the network)";
 			return 0;
 		}
 #if ETH_JSCONSOLE || !ETH_TRUE
