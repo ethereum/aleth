@@ -66,6 +66,11 @@ class Eth: public dev::rpc::EthFace
 public:
 	Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts);
 
+	virtual std::pair<std::string, std::string> implementedModule() const override
+	{
+		return std::make_pair(std::string("eth"), std::string("1.0"));
+	}
+
 	eth::AccountHolder const& ethAccounts() const { return m_ethAccounts; }
 
 	virtual std::string eth_protocolVersion() override;

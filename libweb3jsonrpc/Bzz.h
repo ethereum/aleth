@@ -39,6 +39,10 @@ class Bzz: public BzzFace
 {
 public:
 	Bzz(dev::bzz::Interface& _bzz);
+	virtual std::pair<std::string, std::string> implementedModule() const override
+	{
+		return std::make_pair(std::string("bzz"), std::string("1.0"));
+	}
 	virtual std::string bzz_put(std::string const& _data) override;
 	virtual std::string bzz_get(std::string const& _hash) override;
 

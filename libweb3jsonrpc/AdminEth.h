@@ -21,6 +21,11 @@ class AdminEth: public AdminEthFace
 public:
 	AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm);
 
+	virtual std::pair<std::string, std::string> implementedModule() const override
+	{
+		return std::make_pair(std::string("admin"), std::string("1.0"));
+	}
+
 	virtual bool admin_eth_setMining(bool _on, std::string const& _session) override;
 	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) override;
 	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) override;

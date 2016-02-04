@@ -43,7 +43,11 @@ class Whisper: public WhisperFace
 public:
 	// TODO: init with whisper interface instead of webthreedirect
 	Whisper(WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts);
-	
+	virtual std::pair<std::string, std::string> implementedModule() const override
+	{
+		return std::make_pair(std::string("shh"), std::string("1.0"));
+	}
+
 	virtual void setIdentities(std::vector<dev::KeyPair> const& _ids);
 	std::map<dev::Public, dev::Secret> const& ids() const { return m_ids; }
 

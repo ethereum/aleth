@@ -50,6 +50,8 @@ public:
 	virtual ~ServerInterface() {}
 	Methods const& methods() const { return m_methods; }
 	Notifications const& notifications() const { return m_notifications; }
+	/// @returns which interface (eth, admin, db, ...) this class implements in which version.
+	virtual std::pair<std::string, std::string> implementedModule() const = 0;
 
 protected:
 	void bindAndAddMethod(jsonrpc::Procedure const& _proc, MethodPointer _pointer) { m_methods.emplace_back(_proc, _pointer); }
@@ -65,7 +67,16 @@ class ModularServer: public jsonrpc::IProcedureInvokationHandler
 {
 public:
 	ModularServer()
-	: m_handler(jsonrpc::RequestHandlerFactory::createProtocolHandler(jsonrpc::JSONRPC_SERVER_V2, *this)) {}
+	: m_handler(jsonrpc::RequestHandlerFactory::createProtocolHandler(jsonrpc::JSONRPC_SERVER_V2, *this))
+	{
+		m_handler->AddProcedure(jsonrpc::Procedure("rpc_modules", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, NULL));
+		m_implementedModules = Json::objectValue;
+	}
+	inline virtual void modules(const Json::Value &request, Json::Value &response)
+	{
+		(void)request;
+		response = m_implementedModules;
+	}
 
 	virtual ~ModularServer() { StopListening(); }
 
@@ -83,9 +94,8 @@ public:
 
 	virtual void HandleMethodCall(jsonrpc::Procedure& _proc, Json::Value const& _input, Json::Value& _output) override
 	{
-		(void)_proc;
-		(void)_input;
-		(void)_output;
+		if (_proc.GetProcedureName() == "rpc_modules")
+			modules(_input, _output);
 	}
 
 	virtual void HandleNotificationCall(jsonrpc::Procedure& _proc, Json::Value const& _input) override
@@ -110,6 +120,8 @@ public:
 protected:
 	std::vector<std::unique_ptr<jsonrpc::AbstractServerConnector>> m_connectors;
 	std::unique_ptr<jsonrpc::IProtocolHandler> m_handler;
+	/// Mapping for implemented modules, to be filled by subclasses during construction.
+	Json::Value m_implementedModules;
 };
 
 template <class I, class... Is>
@@ -132,6 +144,10 @@ public:
 			m_notifications[std::get<0>(notification).GetProcedureName()] = std::get<1>(notification);
 			this->m_handler->AddProcedure(std::get<0>(notification));
 		}
+		// Store module with version.
+		auto module = m_interface->implementedModule();
+		if (!module.first.empty())
+			this->m_implementedModules[module.first] = module.second;
 	}
 
 	virtual void HandleMethodCall(jsonrpc::Procedure& _proc, Json::Value const& _input, Json::Value& _output) override

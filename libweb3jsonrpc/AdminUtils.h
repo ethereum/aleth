@@ -13,6 +13,10 @@ class AdminUtils: public dev::rpc::AdminUtilsFace
 {
 public:
 	AdminUtils(SessionManager& _sm, SystemManager* _systemManager = nullptr);
+	virtual std::pair<std::string, std::string> implementedModule() const override
+	{
+		return std::make_pair(std::string("admin"), std::string("1.0"));
+	}
 	virtual bool admin_setVerbosity(int _v, std::string const& _session) override;
 	virtual bool admin_exit(std::string const& _session) override;
 
