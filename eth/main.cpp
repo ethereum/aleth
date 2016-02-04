@@ -106,6 +106,7 @@ void help()
 #if ETH_JSONRPC || !ETH_TRUE
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --ipc  Enable IPC server (default: on)." << endl
+		<< "    --admin-via-http  Expose admin interface via http - UNSAFE! (default: off)." << endl
 		<< "    --no-ipc  Disable IPC server." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
 		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
@@ -345,6 +346,7 @@ int main(int argc, char** argv)
 	bool interactive = false;
 #if ETH_JSONRPC || !ETH_TRUE
 	int jsonRPCURL = -1;
+	bool adminViaHttp = false;
 	bool ipc = true;
 	std::string rpcCorsDomain = "";
 #endif
@@ -755,6 +757,8 @@ int main(int argc, char** argv)
 #if ETH_JSONRPC || !ETH_TRUE
 		else if ((arg == "-j" || arg == "--json-rpc"))
 			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
+		else if (arg == "--admin-via-http")
+			adminViaHttp = true;
 		else if (arg == "--json-rpc-port" && i + 1 < argc)
 			jsonRPCURL = atoi(argv[++i]);
 		else if (arg == "--rpccorsdomain" && i + 1 < argc)
@@ -1177,9 +1181,8 @@ int main(int argc, char** argv)
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
 #if ETH_JSONRPC || !ETH_TRUE
-	unique_ptr<ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-	rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-	rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>> jsonrpcServer;
+	unique_ptr<ModularServer<>> jsonrpcHttpServer;
+	unique_ptr<ModularServer<>> jsonrpcIpcServer;
 	unique_ptr<rpc::SessionManager> sessionManager;
 	unique_ptr<SimpleAccountHolder> accountHolder;
 
@@ -1213,28 +1216,45 @@ int main(int argc, char** argv)
 		accountHolder.reset(new SimpleAccountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator));
 		auto ethFace = new rpc::Eth(*web3.ethereum(), *accountHolder.get());
 		auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
-		jsonrpcServer.reset(new ModularServer<
-			rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-			rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
-		>(
-			ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-			new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-			adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()),
-			new rpc::AdminUtils(*sessionManager.get(), &exitHandler)
-		));
-		if (jsonRPCURL > -1)
+		if (jsonRPCURL >= 0)
 		{
+			if (adminViaHttp)
+				jsonrpcHttpServer.reset(new ModularServer<
+					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+					rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+				>(
+					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
+					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
+					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())
+				));
+			else
+				jsonrpcHttpServer.reset(new ModularServer<
+					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+					rpc::NetFace, rpc::Web3Face
+				>(
+					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
+					new rpc::Net(web3), new rpc::Web3(web3.clientVersion())
+				));
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 			httpConnector->setAllowedOrigin(rpcCorsDomain);
-			jsonrpcServer->addConnector(httpConnector);
-			jsonrpcServer->StartListening();
+			jsonrpcHttpServer->addConnector(httpConnector);
+			jsonrpcHttpServer->StartListening();
 		}
-
 		if (ipc)
 		{
+			jsonrpcIpcServer.reset(new ModularServer<
+				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+			>(
+				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
+				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
+				adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()),
+				new rpc::AdminUtils(*sessionManager.get())
+			));
 			auto ipcConnector = new IpcServer("geth");
-			jsonrpcServer->addConnector(ipcConnector);
+			jsonrpcIpcServer->addConnector(ipcConnector);
 			ipcConnector->StartListening();
 		}
 
@@ -1321,8 +1341,10 @@ int main(int argc, char** argv)
 			this_thread::sleep_for(chrono::milliseconds(1000));
 
 #if ETH_JSONRPC
-	if (jsonrpcServer.get())
-		jsonrpcServer->StopListening();
+	if (jsonrpcHttpServer.get())
+		jsonrpcHttpServer->StopListening();
+	if (jsonrpcIpcServer.get())
+		jsonrpcIpcServer->StopListening();
 #endif
 
 	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("++eth", clientName), dev::Version);
