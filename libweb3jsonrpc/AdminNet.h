@@ -25,6 +25,7 @@ public:
 	virtual Json::Value admin_net_peers(std::string const& _session) override;
 	virtual Json::Value admin_net_nodeInfo(std::string const& _session) override;
 	virtual Json::Value admin_nodeInfo() override;
+	virtual Json::Value admin_peers() override;
 
 private:
 	NetworkFace& m_network;

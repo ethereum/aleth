@@ -36,10 +36,7 @@ bool AdminNet::admin_net_connect(std::string const& _node, std::string const& _s
 Json::Value AdminNet::admin_net_peers(std::string const& _session)
 {
 	RPC_ADMIN;
-	Json::Value ret;
-	for (p2p::PeerSessionInfo const& i: m_network.peers())
-		ret.append(toJson(i));
-	return ret;
+	return admin_peers();
 }
 
 Json::Value AdminNet::admin_net_nodeInfo(std::string const& _session)
@@ -71,5 +68,13 @@ Json::Value AdminNet::admin_nodeInfo()
 	ret["enode"] = i.enode();
 	ret["protocols"] = Json::objectValue;
 	ret["protocols"]["eth"] = Json::objectValue; //@todo fill with information
+	return ret;
+}
+
+Json::Value AdminNet::admin_peers()
+{
+	Json::Value ret;
+	for (p2p::PeerSessionInfo const& peer: m_network.peers())
+		ret.append(toJson(peer));
 	return ret;
 }
