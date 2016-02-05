@@ -438,24 +438,18 @@ int main(int argc, char** argv)
 			remoteSessionKey = argv[++i];
 		else if (arg == "--listen-ip" && i + 1 < argc)
 			listenIP = argv[++i];
-		else if ((arg == "-l" || arg == "--listen" || arg == "--listen-port") && i + 1 < argc)
+		else if ((arg == "--listen" || arg == "--listen-port") && i + 1 < argc)
 		{
-			if (arg == "-l")
-				cerr << "-l is DEPRECATED. It will be removed for the Frontier. Use --listen-port instead." << endl;
 			listenPort = (short)atoi(argv[++i]);
 		}
-		else if ((arg == "-u" || arg == "--public-ip" || arg == "--public") && i + 1 < argc)
+		else if ((arg == "--public-ip" || arg == "--public") && i + 1 < argc)
 		{
-			if (arg == "-u")
-				cerr << "-u is DEPRECATED. It will be removed for the Frontier. Use --public-ip instead." << endl;
 			publicIP = argv[++i];
 		}
 		else if ((arg == "-r" || arg == "--remote") && i + 1 < argc)
 			remoteHost = argv[++i];
-		else if ((arg == "-p" || arg == "--port") && i + 1 < argc)
+		else if (arg == "--port" && i + 1 < argc)
 		{
-			if (arg == "-p")
-				cerr << "-p is DEPRECATED. It will be removed for the Frontier. Use --port instead (or place directly as host:port)." << endl;
 			remotePort = (short)atoi(argv[++i]);
 		}
 		else if (arg == "--password" && i + 1 < argc)
@@ -477,19 +471,7 @@ int main(int argc, char** argv)
 			mode = OperationMode::Export;
 			filename = argv[++i];
 		}
-/*		else if (arg == "--prime" && i + 1 < argc)
-			try
-			{
-				prime = stoi(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				return -1;
-			}
-		else if (arg == "--yes-i-really-know-what-im-doing")
-			yesIReallyKnowWhatImDoing = true;
-*/		else if (arg == "--sentinel" && i + 1 < argc)
+		else if (arg == "--sentinel" && i + 1 < argc)
 			sentinel = argv[++i];
 		else if (arg == "--mine-on-wrong-chain")
 			mineOnWrongChain = true;
@@ -518,10 +500,8 @@ int main(int argc, char** argv)
 			exportFrom = argv[++i];
 		else if (arg == "--only" && i + 1 < argc)
 			exportTo = exportFrom = argv[++i];
-		else if ((arg == "-n" || arg == "-u" || arg == "--upnp") && i + 1 < argc)
+		else if (arg == "--upnp" && i + 1 < argc)
 		{
-			if (arg == "-n")
-				cerr << "-n is DEPRECATED. It will be removed for the Frontier. Use --upnp instead." << endl;
 			string m = argv[++i];
 			if (isTrue(m))
 				upnp = true;
@@ -567,12 +547,8 @@ int main(int argc, char** argv)
 			withExisting = WithExisting::Verify;
 		else if (arg == "-R" || arg == "--rescue")
 			withExisting = WithExisting::Rescue;
-		else if ((arg == "-c" || arg == "--client-name") && i + 1 < argc)
-		{
-			if (arg == "-c")
-				cerr << "-c is DEPRECATED. It will be removed for the Frontier. Use --client-name instead." << endl;
+		else if (arg == "--client-name" && i + 1 < argc)
 			clientName = argv[++i];
-		}
 		else if ((arg == "-a" || arg == "--address" || arg == "--author") && i + 1 < argc)
 			try {
 				author = h160(fromHex(argv[++i], WhenError::Throw));
@@ -616,8 +592,6 @@ int main(int argc, char** argv)
 			dbPath = argv[++i];
 		else if ((arg == "--genesis-json" || arg == "--genesis" || arg == "--config") && i + 1 < argc)
 		{
-			if (arg == "-genesis-json" || arg == "-genesis")
-				cerr << arg << " is DEPRECATED. It will be removed for the Frontier. Use --config instead." << endl;
 			try
 			{
 				paramsJSON = contentsString(argv[++i]);
@@ -648,6 +622,23 @@ int main(int argc, char** argv)
 			chainParams = ChainParams(genesisInfo(eth::Network::Olympic));
 		else if (arg == "--morden" || arg == "--testnet")
 			chainParams = ChainParams(genesisInfo(eth::Network::Morden), genesisStateRoot(eth::Network::Morden));
+		else if (arg == "--bob")
+		{
+			cout << "Asking Bob for blocks (this should work in theoreum)..." << endl;
+			while (true)
+			{
+				u256 x(h256::random());
+				u256 c;
+				for (; x != 1; ++c)
+				{
+					x = (x & 1) == 0 ? x / 2 : 3 * x + 1;
+					cout << toHex(x) << endl;
+					this_thread::sleep_for(chrono::seconds(1));
+				}
+				cout << "Block number: " << hex << c << endl;
+				exit(0);
+			}
+		}
 /*		else if ((arg == "-B" || arg == "--block-fees") && i + 1 < argc)
 		{
 			try
@@ -753,8 +744,6 @@ int main(int argc, char** argv)
 			alwaysConfirm = false;
 		else if (arg == "--import-presale" && i + 1 < argc)
 			presaleImports.push_back(argv[++i]);
-		else if (arg == "-f" || arg == "--force-mining")
-			cout << "WARNING: Deprecated option " << arg << "; ignoring." << endl;
 		else if (arg == "--old-interactive")
 			interactive = true;
 #if ETH_JSONRPC || !ETH_TRUE
