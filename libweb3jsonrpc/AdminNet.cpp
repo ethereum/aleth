@@ -29,8 +29,7 @@ bool AdminNet::admin_net_stop(std::string const& _session)
 bool AdminNet::admin_net_connect(std::string const& _node, std::string const& _session)
 {
 	RPC_ADMIN;
-	m_network.addPeer(p2p::NodeSpec(_node), p2p::PeerType::Required);
-	return true;
+	return admin_addPeer(_node);
 }
 
 Json::Value AdminNet::admin_net_peers(std::string const& _session)
@@ -77,4 +76,10 @@ Json::Value AdminNet::admin_peers()
 	for (p2p::PeerSessionInfo const& peer: m_network.peers())
 		ret.append(toJson(peer));
 	return ret;
+}
+
+bool AdminNet::admin_addPeer(string const& _node)
+{
+	m_network.addPeer(p2p::NodeSpec(_node), p2p::PeerType::Required);
+	return true;
 }

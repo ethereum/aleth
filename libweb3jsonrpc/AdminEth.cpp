@@ -147,20 +147,7 @@ Json::Value AdminEth::admin_eth_newAccount(const Json::Value& _info, std::string
 bool AdminEth::admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, std::string const& _session)
 {
 	RPC_ADMIN;
-	Address a;
-	h128 uuid = fromUUID(_uuidOrAddress);
-	if (uuid)
-		a = m_keyManager.address(uuid);
-	else if (isHash<Address>(_uuidOrAddress))
-		a = Address(_uuidOrAddress);
-	else
-		throw jsonrpc::JsonRpcException("Invalid UUID or address");
-
-	if (m_setMiningBenefactor)
-		m_setMiningBenefactor(a);
-	else
-		m_eth.setAuthor(a);
-	return true;
+	return miner_setEtherbase(_uuidOrAddress);
 }
 
 Json::Value AdminEth::admin_eth_inspect(std::string const& _address, std::string const& _session)
@@ -249,4 +236,34 @@ Json::Value AdminEth::admin_eth_getReceiptByHashAndIndex(std::string const& _blo
 	if ((unsigned)_txIndex >= rs.receipts.size())
 		throw jsonrpc::JsonRpcException("Index too large.");
 	return toJson(rs.receipts[_txIndex]);
+}
+
+bool AdminEth::miner_start(int)
+{
+	m_eth.startSealing();
+	return true;
+}
+
+bool AdminEth::miner_stop()
+{
+	m_eth.stopSealing();
+	return true;
+}
+
+bool AdminEth::miner_setEtherbase(std::string const& _uuidOrAddress)
+{
+	Address a;
+	h128 uuid = fromUUID(_uuidOrAddress);
+	if (uuid)
+		a = m_keyManager.address(uuid);
+	else if (isHash<Address>(_uuidOrAddress))
+		a = Address(_uuidOrAddress);
+	else
+		throw jsonrpc::JsonRpcException("Invalid UUID or address");
+
+	if (m_setMiningBenefactor)
+		m_setMiningBenefactor(a);
+	else
+		m_eth.setAuthor(a);
+	return true;
 }

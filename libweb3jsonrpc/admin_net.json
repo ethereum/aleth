@@ -5,5 +5,6 @@
 { "name": "admin_net_peers", "params": [""], "returns": [] },
 { "name": "admin_net_nodeInfo", "params": [""], "returns": {}},
 { "name": "admin_nodeInfo", "params": [], "returns": {}},
-{ "name": "admin_peers", "params": [], "returns": {}}
+{ "name": "admin_peers", "params": [], "returns": {}},
+{ "name": "admin_addPeer", "params": [""], "returns": true}
 ]

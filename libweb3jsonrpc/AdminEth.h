@@ -40,6 +40,9 @@ public:
 	virtual Json::Value admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session) override;
 	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
+	virtual bool miner_start(int _threads) override;
+	virtual bool miner_stop() override;
+	virtual bool miner_setEtherbase(std::string const& _uuidOrAddress) override;
 
 	virtual void setMiningBenefactorChanger(std::function<void(Address const&)> const& _f) { m_setMiningBenefactor = _f; }
 private:

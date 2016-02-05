@@ -21,6 +21,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_net_nodeInfo", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminNetFace::admin_net_nodeInfoI);
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_nodeInfo", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &dev::rpc::AdminNetFace::admin_nodeInfoI);
                     this->bindAndAddMethod(jsonrpc::Procedure("admin_peers", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT,  NULL), &dev::rpc::AdminNetFace::admin_peersI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("admin_addPeer", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminNetFace::admin_addPeerI);
                 }
 
                 inline virtual void admin_net_startI(const Json::Value &request, Json::Value &response)
@@ -53,6 +54,10 @@ namespace dev {
                     (void)request;
                     response = this->admin_peers();
                 }
+                inline virtual void admin_addPeerI(const Json::Value &request, Json::Value &response)
+                {
+                    response = this->admin_addPeer(request[0u].asString());
+                }
                 virtual bool admin_net_start(const std::string& param1) = 0;
                 virtual bool admin_net_stop(const std::string& param1) = 0;
                 virtual bool admin_net_connect(const std::string& param1, const std::string& param2) = 0;
@@ -60,6 +65,7 @@ namespace dev {
                 virtual Json::Value admin_net_nodeInfo(const std::string& param1) = 0;
                 virtual Json::Value admin_nodeInfo() = 0;
                 virtual Json::Value admin_peers() = 0;
+                virtual bool admin_addPeer(const std::string& param1) = 0;
         };
 
     }
