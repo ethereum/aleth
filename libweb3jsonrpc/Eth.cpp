@@ -30,6 +30,7 @@
 #include <libethashseal/EthashClient.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
+#include <libweb3jsonrpc/JsonHelper.h>
 #if ETH_SOLIDITY || !ETH_TRUE
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/parsing/Scanner.h>
@@ -100,10 +101,7 @@ string Eth::eth_gasPrice()
 
 Json::Value Eth::eth_accounts()
 {
-	Json::Value ret(Json::arrayValue);
-	for (auto const& i: m_ethAccounts.allAccounts())
-		ret.append(toJS(i));
-	return ret;
+	return toJson(m_ethAccounts.allAccounts());
 }
 
 string Eth::eth_blockNumber()
