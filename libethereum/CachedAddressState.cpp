@@ -22,7 +22,7 @@
 #include "CachedAddressState.h"
 #include <libdevcore/TrieDB.h>
 #include <libdevcrypto/Common.h>
-#include <libdevcrypto/OverlayDB.h>
+#include <libdevcore/OverlayDB.h>
 #include "Account.h"
 #include "State.h"
 using namespace std;

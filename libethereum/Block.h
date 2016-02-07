@@ -26,7 +26,7 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieDB.h>
-#include <libdevcrypto/OverlayDB.h>
+#include <libdevcore/OverlayDB.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
 #include <libethcore/ChainOperationParams.h>
