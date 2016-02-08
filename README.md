@@ -4,13 +4,10 @@
 
 By Gav Wood et al*, 2013, 2014, 2015.
 
-          | Linux   | OSX | Windows
-----------|---------|-----|--------
-develop   | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Linux%20C%2B%2B%20develop%20branch)](https://build.ethdev.com/builders/Linux%20C%2B%2B%20develop%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=OSX%20C%2B%2B%20develop%20branch)](https://build.ethdev.com/builders/OSX%20C%2B%2B%20develop%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Windows%20C%2B%2B%20develop%20branch)](https://build.ethdev.com/builders/Windows%20C%2B%2B%20develop%20branch/builds/-1)
-master    | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Linux%20C%2B%2B%20master%20branch)](https://build.ethdev.com/builders/Linux%20C%2B%2B%20master%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=OSX%20C%2B%2B%20master%20branch)](https://build.ethdev.com/builders/OSX%20C%2B%2B%20master%20branch/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Windows%20C%2B%2B%20master%20branch)](https://build.ethdev.com/builders/Windows%20C%2B%2B%20master%20branch/builds/-1)
-evmjit    | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=Linux%20C%2B%2B%20develop%20evmjit)](https://build.ethdev.com/builders/Linux%20C%2B%2B%20develop%20evmjit/builds/-1) | [![Build+Status](https://build.ethdev.com/buildstatusimage?builder=OSX%20C%2B%2B%20develop%20evmjit)](https://build.ethdev.com/builders/OSX%20C%2B%2B%20develop%20evmjit/builds/-1) | N/A
-
-[![Stories in Ready](https://badge.waffle.io/ethereum/cpp-ethereum.png?label=ready&title=Ready)](http://waffle.io/ethereum/cpp-ethereum)
+          | Status
+----------|-----------
+develop   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-develop)](http://52.28.164.97/job/ethbinaries-develop/)
+release   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-release)](http://52.28.164.97/job/ethbinaries-release/)
 
 Ethereum is based on a design in an original whitepaper by Vitalik Buterin. This implementation is based on the formal specification of a refinement of that idea detailed in the 'yellow paper' by Gavin Wood. Contributors, builders and testers include:
 
@@ -31,32 +28,34 @@ And let's not forget: Caktux (neth, ongoing CI), Eric Lombrozo (original MinGW32
 
 ### Building
 
-See the [Wiki](https://github.com/ethereum/cpp-ethereum/wiki) for build instructions, compatibility information and build tips. 
+See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build instructions, compatibility information and build tips. 
 
 ### Testing
 
-To run the tests, make sure you clone the tests repository from github.com/ethereum to tests as a sibling to cpp-ethereum.
+To run the tests, make sure you clone github.com/ethereum/tests and point the environment variable
+`ETHEREUM_TEST_PATH` to that path.
 
-### Yet To Do
+### Contributing
 
-See [TODO](https://github.com/ethereum/cpp-ethereum/wiki/TODO)
+External contributions are more than welcome! We try to keep a list of tasks that are suitable for
+newcomers under the tag [good first task](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
+If you have any questions, please ask in our [gitter channel](https://gitter.im/ethereum/cpp-ethereum).
+
+Please refer to the file [CONTRIBUTING.md] for some guidelines.
+
+All new contributions are added under the MIT License. Please refer to the `LICENSE` file in the root directory.
+To state that you accept this fact for all of your contributions please add yourself to the list of external contributors like in the example below.
 
 ### License
 
 All new contributions are under the [MIT license](http://opensource.org/licenses/MIT).
 See [LICENSE](LICENSE). Some old contributions are under the [GPLv3 license](http://www.gnu.org/licenses/gpl-3.0.en.html). See [GPLV3_LICENSE](GPLV3_LICENSE).
 
-### Contributing
-
-All new contributions are added under the MIT License. Please refer to the `LICENSE` file in the root directory.
-To state that you accept this fact for all of your contributions please add yourself to the list of external contributors like in the example below.
-
 #### External Contributors
+
 I hereby place all my contributions in this codebase under an MIT
 licence, as specified [here](http://opensource.org/licenses/MIT).
 - *Name Surname* (**email@domain**)
-
-#### Contribution guideline
 
 Please add yourself in the `@author` doxygen  section of the file your are adding/editing
 with the same wording as the one you listed yourself in the external contributors section above,

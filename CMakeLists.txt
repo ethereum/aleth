@@ -14,7 +14,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(cpp-ethereum VERSION "1.0.1")
+project(cpp-ethereum VERSION "1.1.2")
 
 include(EthCompilerSettings)
 
@@ -39,7 +39,9 @@ endif()
 
 if (GUI)
 	add_subdirectory(alethzero)
-	add_subdirectory(mix)
+	if (SOLIDITY)
+		add_subdirectory(mix)
+	endif()
 	eth_appdmg()
 	eth_nsis()
 endif()
