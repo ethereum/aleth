@@ -33,7 +33,7 @@
 #include <libdevcore/Worker.h>
 #include <libethcore/Common.h>
 #include <libp2p/Common.h>
-#include <libdevcrypto/OverlayDB.h>
+#include <libdevcore/OverlayDB.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
 
