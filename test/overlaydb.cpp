@@ -22,7 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/TransientDirectory.h>
-#include <libdevcrypto/OverlayDB.h>
+#include <libdevcore/OverlayDB.h>
 
 using namespace std;
 using namespace dev;
