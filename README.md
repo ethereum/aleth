@@ -41,7 +41,7 @@ External contributions are more than welcome! We try to keep a list of tasks tha
 newcomers under the tag [good first task](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
 If you have any questions, please ask in our [gitter channel](https://gitter.im/ethereum/cpp-ethereum).
 
-Please refer to the file [CONTRIBUTING.md] for some guidelines.
+Please refer to the file [CONTRIBUTING.md](CONTRIBUTING.md) for some guidelines.
 
 All new contributions are added under the MIT License. Please refer to the `LICENSE` file in the root directory.
 To state that you accept this fact for all of your contributions please add yourself to the list of external contributors like in the example below.
