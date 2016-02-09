@@ -130,7 +130,7 @@ public:
 			for (auto const& i: m_miners)
 				p.hashes += i->hashCount();
 		}
-		ReadGuard l(x_progress);
+		WriteGuard l(x_progress);
 		m_progress = p;
 		return m_progress;
 	}

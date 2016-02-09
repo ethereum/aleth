@@ -43,7 +43,8 @@ public:
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),
-		WithExisting _forceAction = WithExisting::Trust
+		WithExisting _forceAction = WithExisting::Trust,
+		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
 
 	Ethash* ethash() const;
@@ -81,6 +82,7 @@ protected:
 
 	// external hashrate
 	mutable std::unordered_map<h256, std::pair<u256, std::chrono::steady_clock::time_point>> m_externalRates;
+	mutable SharedMutex x_externalRates;
 };
 
 EthashClient& asEthashClient(Interface& _c);

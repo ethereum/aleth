@@ -29,14 +29,14 @@ using namespace p2p;
 EthashClient& dev::eth::asEthashClient(Interface& _c)
 {
 	if (dynamic_cast<Ethash*>(_c.sealEngine()))
-		return reinterpret_cast<EthashClient&>(_c);
+		return dynamic_cast<EthashClient&>(_c);
 	throw InvalidSealEngine();
 }
 
 EthashClient* dev::eth::asEthashClient(Interface* _c)
 {
 	if (dynamic_cast<Ethash*>(_c->sealEngine()))
-		return reinterpret_cast<EthashClient*>(_c);
+		return &dynamic_cast<EthashClient&>(*_c);
 	throw InvalidSealEngine();
 }
 
@@ -48,9 +48,10 @@ EthashClient::EthashClient(
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
 	std::string const& _dbPath,
-	WithExisting _forceAction
+	WithExisting _forceAction,
+	TransactionQueue::Limits const& _limits
 ):
-	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction)
+	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
 {
 	// will throw if we're not an Ethash seal engine.
 	asEthashClient(*this);
@@ -116,12 +117,14 @@ void EthashClient::setShouldPrecomputeDAG(bool _precompute)
 
 void EthashClient::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 {
+	WriteGuard(x_externalRates);
 	m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
 }
 
 u256 EthashClient::externalHashrate() const
 {
 	u256 ret = 0;
+	WriteGuard(x_externalRates);
 	for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
 		if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
 			i = m_externalRates.erase(i);
