@@ -28,6 +28,7 @@
 #include <libethereum/Defaults.h>
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
+#include <libethashseal/EthashClient.h>
 #include <ethereum/BuildInfo.h>
 #include "Swarm.h"
 #include "Support.h"
@@ -54,7 +55,10 @@ WebThreeDirect::WebThreeDirect(
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
 	{
-		m_ethereum.reset(new eth::Client(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we, _l));
+		if (_params.sealEngineName == "Ethash")
+			m_ethereum.reset(new eth::EthashClient(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
+		else
+			m_ethereum.reset(new eth::Client(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we, _l));
 		string bp = DEV_QUOTED(ETH_BUILD_PLATFORM);
 		vector<string> bps;
 		boost::split(bps, bp, boost::is_any_of("/"));
