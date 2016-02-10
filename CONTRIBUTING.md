@@ -12,14 +12,11 @@ If you know C++, you can help by submitting pull requests (see below).
 We try to keep a list of [good tasks to start with](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
 Please get in contact on gitter if you have any questions or suggestions.
 
-We keep backlogs of tasks in different sites, depending on the subproject:
+The backlog is kept in github issues with an overview in our
+[waffle board](https://waffle.io/ethereum/webthree-umbrella),
+with the exception of Solidity, which has its own [backlog](https://www.pivotaltracker.com/n/projects/1189488).
 
- * [Solidity Backlog](https://www.pivotaltracker.com/n/projects/1189488)
- * [Mix Backlog](https://github.com/ethereum/mix/issues)
- * [Eth Backlog](https://www.pivotaltracker.com/n/projects/1510366)
-
-Finally, there is a [waffle board](https://waffle.io/ethereum/webthree-umbrella) containing all issues from all subrepositories.
-This is especially useful to keep track of pull requests pending reviews
+The waffle board is also useful to keep track of pull requests pending reviews
 (if you switch the filter on the top right to "pull requests only").
 
 
