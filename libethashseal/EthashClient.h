@@ -46,10 +46,6 @@ public:
 		WithExisting _forceAction = WithExisting::Trust
 	);
 
-	~EthashClient(){
-		if(m_externalRates)	delete m_externalRates;
-	}
-
 	Ethash* ethash() const;
 
 	/// Enable/disable precomputing of the DAG for next epoch
@@ -84,13 +80,7 @@ protected:
 	u256 externalHashrate() const;
 
 	// external hashrate
-	typedef std::unordered_map<h256, std::pair<u256, std::chrono::steady_clock::time_point>> ExternalRatesType;
-
-	// TODO: m_externalRates bypased initializing by asEthashClient() casting.
-	// which cause "eth attach" crash.
-	// this is only a temparory fix!
-	// Please looking for a better solution!
-	mutable ExternalRatesType* m_externalRates;
+	mutable std::unordered_map<h256, std::pair<u256, std::chrono::steady_clock::time_point>> m_externalRates;
 };
 
 EthashClient& asEthashClient(Interface& _c);
