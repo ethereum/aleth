@@ -54,7 +54,6 @@ EthashClient::EthashClient(
 {
 	// will throw if we're not an Ethash seal engine.
 	asEthashClient(*this);
-	m_externalRates = new ExternalRatesType();
 }
 
 Ethash* EthashClient::ethash() const
@@ -117,18 +116,15 @@ void EthashClient::setShouldPrecomputeDAG(bool _precompute)
 
 void EthashClient::submitExternalHashrate(u256 const& _rate, h256 const& _id)
 {
-	(*m_externalRates)[_id] = make_pair(_rate, chrono::steady_clock::now());
+	m_externalRates[_id] = make_pair(_rate, chrono::steady_clock::now());
 }
 
 u256 EthashClient::externalHashrate() const
 {
-	if(m_externalRates){
-		m_externalRates= new ExternalRatesType();
-	}
 	u256 ret = 0;
-	for (auto i = (*m_externalRates).begin(); i != (*m_externalRates).end();)
+	for (auto i = m_externalRates.begin(); i != m_externalRates.end();)
 		if (chrono::steady_clock::now() - i->second.second > chrono::seconds(5))
-			i = (*m_externalRates).erase(i);
+			i = m_externalRates.erase(i);
 		else
 			ret += i++->second.first;
 	return ret;
