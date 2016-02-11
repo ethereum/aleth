@@ -332,6 +332,27 @@ BOOST_AUTO_TEST_CASE(ecies_standard)
 	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
 }
 
+BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
+{
+	KeyPair k = KeyPair::create();
+
+	string message("Now is the time for all good persons to come to the aid of humanity.");
+	string original = message;
+	bytes b = asBytes(message);
+
+	bytesConstRef shared("shared MAC data");
+	bytesConstRef wrongShared("wrong shared MAC data");
+
+	s_secp256k1->encryptECIES(k.pub(), shared, b);
+	BOOST_REQUIRE(b != asBytes(original));
+	BOOST_REQUIRE(b.size() > 0 && b[0] == 0x04);
+
+	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.sec(), wrongShared, b));
+
+	s_secp256k1->decryptECIES(k.sec(), shared, b);
+	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
+}
+
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 {
 	KeyPair k = KeyPair::create();

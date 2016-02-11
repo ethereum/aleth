@@ -125,15 +125,25 @@ bool dev::decrypt(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 
 void dev::encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher)
 {
+	encryptECIES(_k, bytesConstRef(), _plain, o_cipher);
+}
+
+void dev::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytesConstRef _plain, bytes& o_cipher)
+{
 	bytes io = _plain.toBytes();
-	Secp256k1PP::get()->encryptECIES(_k, io);
+	Secp256k1PP::get()->encryptECIES(_k, _sharedMacData, io);
 	o_cipher = std::move(io);
 }
 
 bool dev::decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext)
 {
+	return decryptECIES(_k, bytesConstRef(),  _cipher, o_plaintext);
+}
+
+bool dev::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes& o_plaintext)
+{
 	bytes io = _cipher.toBytes();
-	if (!Secp256k1PP::get()->decryptECIES(_k, io))
+	if (!Secp256k1PP::get()->decryptECIES(_k, _sharedMacData, io))
 		return false;
 	o_plaintext = std::move(io);
 	return true;

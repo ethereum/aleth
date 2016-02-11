@@ -105,8 +105,16 @@ bool decryptSym(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
 /// Encrypt payload using ECIES standard with AES128-CTR.
 void encryptECIES(Public const& _k, bytesConstRef _plain, bytes& o_cipher);
 
+/// Encrypt payload using ECIES standard with AES128-CTR.
+/// @a _sharedMacData is shared authenticated data.
+void encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytesConstRef _plain, bytes& o_cipher);
+
 /// Decrypt payload using ECIES standard with AES128-CTR.
 bool decryptECIES(Secret const& _k, bytesConstRef _cipher, bytes& o_plaintext);
+
+/// Decrypt payload using ECIES standard with AES128-CTR.
+/// @a _sharedMacData is shared authenticated data.
+bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytesConstRef _cipher, bytes& o_plaintext);
 
 /// Encrypts payload with random IV/ctr using AES128-CTR.
 std::pair<bytes, h128> encryptSymNoAuth(SecureFixedHash<16> const& _k, bytesConstRef _plain);
