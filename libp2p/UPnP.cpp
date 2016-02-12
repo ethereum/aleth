@@ -71,7 +71,10 @@ UPnP::UPnP()
 			dev = devlist; /* defaulting to first device */
 
 		cnote << "UPnP device:" << dev->descURL << "[st:" << dev->st << "]";
-#if MINIUPNPC_API_VERSION >= 9
+#if MINIUPNPC_API_VERSION >= 16
+		int responsecode = 200;
+		descXML = (char*)miniwget(dev->descURL, &descXMLsize, 0, &responsecode);
+#elif MINIUPNPC_API_VERSION >= 9
 		descXML = (char*)miniwget(dev->descURL, &descXMLsize, 0);
 #else
 		descXML = (char*)miniwget(dev->descURL, &descXMLsize);
