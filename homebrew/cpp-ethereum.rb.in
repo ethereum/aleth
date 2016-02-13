@@ -29,18 +29,6 @@ class CppEthereum < Formula
     end
   end
 
-  depends_on 'cmake' => :build
-  depends_on 'boost'
-  depends_on 'qt5' if build.with? 'gui'
-  depends_on 'readline'
-  depends_on 'cryptopp'
-  depends_on 'miniupnpc'
-  depends_on 'leveldb'
-  depends_on 'gmp'
-  depends_on 'curl'
-  depends_on 'libjson-rpc-cpp'
-  depends_on 'homebrew/versions/v8-315'
-
   option "with-gui", "Build with GUI (AlethZero)"
   option "with-evmjit", "Build with LLVM and enable EVMJIT"
   option "without-v8-console", "Build without V8 JavaScript console"
@@ -49,6 +37,18 @@ class CppEthereum < Formula
   option "with-vmtrace", "Build with VMTRACE"
   option "with-paranoia", "Build with -DPARANOID=1"
   option "successful", "Last successful build with --devel only"
+
+  depends_on 'cmake' => :build
+  depends_on 'boost'
+  depends_on 'qt5' => ["with-d-bus"] if build.with? 'gui'
+  depends_on 'readline'
+  depends_on 'cryptopp'
+  depends_on 'miniupnpc'
+  depends_on 'leveldb'
+  depends_on 'gmp'
+  depends_on 'curl'
+  depends_on 'libjson-rpc-cpp'
+  depends_on 'homebrew/versions/v8-315'
 
   def install
     args = *std_cmake_args
