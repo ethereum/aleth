@@ -164,7 +164,7 @@ void help()
 		<< "    --peerset <list>  Space delimited list of peers; element format: type:publickey@ipAddress[:port]." << endl
 		<< "        Types:" << endl
 		<< "        default		Attempt connection when no other peers are available and pinning is disabled." << endl
-		<< "        require		Keep connected at all times." << endl
+		<< "        required		Keep connected at all times." << endl
 // TODO:
 //		<< "	--trust-peers <filename>  Space delimited list of publickeys." << endl
 	
@@ -803,7 +803,7 @@ int main(int argc, char** argv)
 				if (keyAndHost.size() != 2)
 					continue;
 				pubk = keyAndHost[0];
-				if (pubk.size() != 40)
+				if (pubk.size() != 128)
 					continue;
 				hostIP = keyAndHost[1];
 				
