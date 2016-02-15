@@ -97,7 +97,11 @@ def processSubmodule(root, submodule):
     if "solidity" in submodule:
         print '    "soljson" -> "solidity"'
 
-    print getLibraryAndApplicationNames(submodulePath)
+    # Mix doesn't have the same sub-module structure as everything else
+    if (submodule == "mix"):
+        print 'Mix\n'
+    else:
+        print getLibraryAndApplicationNames(submodulePath)
 
     if (submodule == "libethereum"):
         print "        bgcolor = LavenderBlush"
@@ -126,6 +130,9 @@ def processUmbrella(root):
                 and not ("dependency_graph" in absPath) \
                     and not ("webthree-helpers" in absPath):
                         processSubmodule(root, submodule)
+
+    # Mix doesn't have the same sub-module structure as everything else
+    print getDependencyEdges(root, "mix")
 
 
 print 'digraph webthree {'
