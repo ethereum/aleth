@@ -52,10 +52,8 @@
         },
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
-                "nonce" : "2",
-                "storage" : {
-                    "0xebcce5f60530275ee9318ce1eff9e4bfee810172" : "0x02"
-                }
+                "nonce" : "0",
+		"balance" : "0x0de0b6b3a7640000"
             }
         },
         "pre" : {
