@@ -122,7 +122,6 @@ void help()
 		<< "    --session-sign-key <address>  Sign all transactions with the key of the given address for this session only." << endl
 		<< "    --master <password>  Give the master password for the key store." << endl
 		<< "    --password <password>  Give a password for a private key." << endl
-		<< "    --sentinel <server>  Set the sentinel for reporting bad blocks or chain issues." << endl
 		<< endl
 		<< "Console mode:" << endl
 		<< "    --script <script>  Run the given script after startup." << endl
@@ -357,7 +356,6 @@ int main(int argc, char** argv)
 
 	bool upnp = true;
 	WithExisting withExisting = WithExisting::Trust;
-	string sentinel;
 
 	/// Networking params.
 	string clientName;
@@ -471,8 +469,6 @@ int main(int argc, char** argv)
 			mode = OperationMode::Export;
 			filename = argv[++i];
 		}
-		else if (arg == "--sentinel" && i + 1 < argc)
-			sentinel = argv[++i];
 		else if (arg == "--mine-on-wrong-chain")
 			mineOnWrongChain = true;
 		else if (arg == "--script" && i + 1 < argc)
@@ -982,7 +978,6 @@ int main(int argc, char** argv)
 		netPrefs,
 		&nodesState);
 	web3.ethereum()->setSealOption("sealOnBadChain", rlp(mineOnWrongChain));
-	web3.ethereum()->setSentinel(sentinel);
 	if (!extraData.empty())
 		web3.ethereum()->setExtraData(extraData);
 
