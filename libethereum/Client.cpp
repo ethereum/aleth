@@ -45,7 +45,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 	return _out;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 const char* ClientNote::name() { return EthTeal "^" EthBlue " i"; }
 const char* ClientChat::name() { return EthTeal "^" EthWhite " o"; }
 const char* ClientTrace::name() { return EthTeal "^" EthGray " O"; }

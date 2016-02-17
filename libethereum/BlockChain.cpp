@@ -51,7 +51,7 @@ namespace fs = boost::filesystem;
 #define ETH_CATCH 1
 #define ETH_TIMED_IMPORTS 1
 
-#ifdef _WIN32
+#if defined(_WIN32)
 const char* BlockChainDebug::name() { return EthBlue "8" EthWhite " <>"; }
 const char* BlockChainWarn::name() { return EthBlue "8" EthOnRed EthBlackBold " X"; }
 const char* BlockChainNote::name() { return EthBlue "8" EthBlue " i"; }

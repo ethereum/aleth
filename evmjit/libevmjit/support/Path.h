@@ -20,7 +20,7 @@
 	#define UTILS_OS_POSIX 0
 #endif
 
-#if _WIN32
+#if defined(_WIN32)
 	#define UTILS_OS_WINDOWS 1
 #else
 	#define UTILS_OS_WINDOWS 0
