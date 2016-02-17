@@ -137,6 +137,7 @@ BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_startingBlock(_host.chain().number()),
 	m_lastImportedBlock(m_startingBlock)
 {
+	m_state = SyncState::Idle;
 	m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
 	{
 		RecursiveGuard l(x_sync);
