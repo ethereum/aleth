@@ -1,4 +1,5 @@
 #include <libethcore/KeyManager.h>
+#include <libweb3jsonrpc/AccountHolder.h>
 #include <libethcore/CommonJS.h>
 #include "Personal.h"
 
@@ -7,7 +8,11 @@ using namespace dev;
 using namespace dev::rpc;
 using namespace dev::eth;
 
-Personal::Personal(dev::eth::KeyManager& _keyManager): m_keyManager(_keyManager) {}
+Personal::Personal(KeyManager& _keyManager, AccountHolder& _accountHolder):
+	m_keyManager(_keyManager),
+	m_accountHolder(_accountHolder)
+{
+}
 
 std::string Personal::personal_newAccount(std::string const& _password)
 {
@@ -18,22 +23,5 @@ std::string Personal::personal_newAccount(std::string const& _password)
 
 bool Personal::personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration)
 {
-	(void)_duration;
-	Address address(fromHex(_address));
-
-	if (!m_keyManager.hasAccount(address))
-		return false;
-
-	m_keyManager.notePassword(_password);
-
-	try
-	{
-		m_keyManager.secret(address);
-	}
-	catch (PasswordUnknown const&)
-	{
-		return false;
-	}
-
-	return true;
+	return m_accountHolder.unlockAccount(Address(fromHex(_address, WhenError::Throw)), _password, _duration);
 }

@@ -7,6 +7,7 @@ namespace dev
 namespace eth
 {
 class KeyManager;
+class AccountHolder;
 }
 
 namespace rpc
@@ -15,12 +16,13 @@ namespace rpc
 class Personal: public dev::rpc::PersonalFace
 {
 public:
-	Personal(dev::eth::KeyManager& _keyManager);
+	Personal(dev::eth::KeyManager& _keyManager, dev::eth::AccountHolder& _accountHolder);
 	virtual std::string personal_newAccount(std::string const& _password) override;
 	virtual bool personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration) override;
 
 private:
 	dev::eth::KeyManager& m_keyManager;
+	dev::eth::AccountHolder& m_accountHolder;
 };
 
 }

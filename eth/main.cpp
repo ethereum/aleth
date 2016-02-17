@@ -1186,6 +1186,7 @@ int main(int argc, char** argv)
 	AddressHash allowedDestinations;
 
 	auto authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
+		// "unlockAccount" functionality is done in the AccountHolder.
 		if (!alwaysConfirm || allowedDestinations.count(_t.to))
 			return true;
 
@@ -1214,7 +1215,7 @@ int main(int argc, char** argv)
 		auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 		jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get(), &exitHandler)));
+							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get(), &exitHandler)));
 		if (jsonRPCURL > -1)
 		{
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
@@ -1274,7 +1275,7 @@ int main(int argc, char** argv)
 			auto adminNetFace = new rpc::AdminNet(web3, sessionManager);
 			auto adminUtilsFace = new rpc::AdminUtils(sessionManager);
 			
-			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, adminNetFace, adminUtilsFace);
+			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, accountHolder), adminEthFace, adminNetFace, adminUtilsFace);
 
 			JSLocalConsole console;
 			rpcServer.addConnector(console.createConnector());

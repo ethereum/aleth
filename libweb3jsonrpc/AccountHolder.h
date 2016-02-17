@@ -75,6 +75,18 @@ public:
 	bool isProxyAccount(Address const& _account) const { return m_proxyAccounts.count(_account) > 0; }
 	Address const& defaultTransactAccount() const;
 
+	/// Automatically authenticate all transactions for the given account for the next @a _duration
+	/// seconds. Decrypt the key with @a _password if needed. @returns true on success.
+	/// Only works for direct accounts.
+	virtual bool unlockAccount(
+		Address const& /*_account*/,
+		std::string const& /*_password*/,
+		unsigned /*_duration*/
+	)
+	{
+		return false;
+	}
+
 	int addProxyAccount(Address const& _account);
 	bool removeProxyAccount(unsigned _id);
 	void queueTransaction(eth::TransactionSkeleton const& _transaction);
@@ -105,10 +117,13 @@ public:
 	AddressHash realAccounts() const override;
 	TransactionNotification authenticate(dev::eth::TransactionSkeleton const& _t) override;
 
+	virtual bool unlockAccount(Address const& _account, std::string const& _password, unsigned _duration) override;
+
 private:
 	std::function<std::string(Address)> m_getPassword;
 	std::function<bool(TransactionSkeleton const&, bool)> m_getAuthorisation;
 	KeyManager& m_keyManager;
+	std::map<Address, std::pair<time_t, unsigned>> m_unlockedAccounts;
 };
 
 class FixedAccountHolder: public AccountHolder
