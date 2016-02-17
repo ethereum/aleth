@@ -63,6 +63,9 @@ inline ECP::Point publicToPoint(Public const& _p) { Integer x(_p.data(), 32); In
 
 inline Integer secretToExponent(Secret const& _s) { return std::move(Integer(_s.data(), Secret::size)); }
 
+/// Amount of bytes added when encrypting with encryptECIES.
+static const unsigned c_eciesOverhead = 113;
+
 /**
  * CryptoPP secp256k1 algorithms.
  * @todo Collect ECIES methods into class.
@@ -82,9 +85,15 @@ public:
 	
 	/// Encrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	void encryptECIES(Public const& _k, bytes& io_cipher);
-
+	
+	/// Encrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
+	void encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytes& io_cipher);
+	
 	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
 	bool decryptECIES(Secret const& _k, bytes& io_text);
+	
+	/// Decrypts text (replace input). (ECIES w/AES128-CTR-SHA256)
+	bool decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text);
 	
 	/// Key derivation function used by encryptECIES and decryptECIES.
 	bytes eciesKDF(Secret const& _z, bytes _s1, unsigned kdBitLen = 256);

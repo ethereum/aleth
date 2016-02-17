@@ -67,6 +67,11 @@ bytes Secp256k1PP::eciesKDF(Secret const& _z, bytes _s1, unsigned kdByteLen)
 
 void Secp256k1PP::encryptECIES(Public const& _k, bytes& io_cipher)
 {
+	encryptECIES(_k, bytesConstRef(), io_cipher);
+}
+
+void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, bytes& io_cipher)
+{
 	// interop w/go ecies implementation
 	auto r = KeyPair::create();
 	Secret z;
@@ -93,6 +98,7 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytes& io_cipher)
 	CryptoPP::HMAC<SHA256> hmacctx(mKey.data(), mKey.size());
 	bytesConstRef cipherWithIV = bytesRef(&msg).cropped(1 + Public::size, h128::size + cipherText.size());
 	hmacctx.Update(cipherWithIV.data(), cipherWithIV.size());
+	hmacctx.Update(_sharedMacData.data(), _sharedMacData.size());
 	hmacctx.Final(msg.data() + 1 + Public::size + cipherWithIV.size());
 	
 	io_cipher.resize(msg.size());
@@ -101,6 +107,12 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytes& io_cipher)
 
 bool Secp256k1PP::decryptECIES(Secret const& _k, bytes& io_text)
 {
+	return decryptECIES(_k, bytesConstRef(), io_text);
+}
+
+bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, bytes& io_text)
+{
+
 	// interop w/go ecies implementation
 	
 	// io_cipher[0] must be 2, 3, or 4, else invalidpublickey
@@ -133,6 +145,7 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytes& io_text)
 	// verify tag
 	CryptoPP::HMAC<SHA256> hmacctx(mKey.data(), mKey.size());
 	hmacctx.Update(cipherWithIV.data(), cipherWithIV.size());
+	hmacctx.Update(_sharedMacData.data(), _sharedMacData.size());
 	h256 mac;
 	hmacctx.Final(mac.data());
 	for (unsigned i = 0; i < h256::size; i++)

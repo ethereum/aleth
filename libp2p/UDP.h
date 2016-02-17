@@ -69,20 +69,13 @@ struct RLPXDatagramFace: public UDPDatagram
 	static uint32_t secondsSinceEpoch() { return static_cast<uint32_t>(std::chrono::duration_cast<std::chrono::seconds>((std::chrono::system_clock::now()).time_since_epoch()).count()); }
 	static Public authenticate(bytesConstRef _sig, bytesConstRef _rlp);
 
-	virtual uint8_t packetType() = 0;
 	RLPXDatagramFace(bi::udp::endpoint const& _ep): UDPDatagram(_ep) {}
+
 	virtual h256 sign(Secret const& _from);
+	virtual uint8_t packetType() const = 0;
 
 	virtual void streamRLP(RLPStream&) const = 0;
 	virtual void interpretRLP(bytesConstRef _bytes) = 0;
-};
-
-template <class T>
-struct RLPXDatagram: public RLPXDatagramFace
-{
-	RLPXDatagram(bi::udp::endpoint const& _ep): RLPXDatagramFace(_ep) {}
-	static T fromBytesConstRef(bi::udp::endpoint const& _ep, bytesConstRef _bytes) { try { T t(_ep); t.interpretRLP(_bytes); return t; } catch(...) { return T{_ep}; } }
-	uint8_t packetType() { return T::type; }
 };
 
 /**
