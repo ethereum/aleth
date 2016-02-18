@@ -110,24 +110,24 @@ TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionS
 {
 	TransactionNotification ret;
 	if (m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
-		ret.r = TransactionRepersussion::Refused;
+		ret.r = TransactionRepercussion::Refused;
 	if (isRealAccount(_t.from))
 	{
 		if (Secret s = m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }))
 		{
-			ret.r = TransactionRepersussion::Success;
+			ret.r = TransactionRepercussion::Success;
 			tie(ret.hash, ret.created) = m_client()->submitTransaction(_t, s);
 		}
 		else
-			ret.r = TransactionRepersussion::Locked;
+			ret.r = TransactionRepercussion::Locked;
 	}
 	else if (isProxyAccount(_t.from))
 	{
-		ret.r = TransactionRepersussion::ProxySuccess;
+		ret.r = TransactionRepercussion::ProxySuccess;
 		queueTransaction(_t);
 	}
 	else
-		ret.r = TransactionRepersussion::UnknownAccount;
+		ret.r = TransactionRepercussion::UnknownAccount;
 	return ret;
 }
 
@@ -138,19 +138,19 @@ TransactionNotification FixedAccountHolder::authenticate(dev::eth::TransactionSk
 	{
 		if (m_accounts.count(_t.from))
 		{
-			ret.r = TransactionRepersussion::Success;
+			ret.r = TransactionRepercussion::Success;
 			tie(ret.hash, ret.created) = m_client()->submitTransaction(_t, m_accounts[_t.from]);
 		}
 		else
-			ret.r = TransactionRepersussion::Locked;
+			ret.r = TransactionRepercussion::Locked;
 	}
 	else if (isProxyAccount(_t.from))
 	{
-		ret.r = TransactionRepersussion::ProxySuccess;
+		ret.r = TransactionRepercussion::ProxySuccess;
 		queueTransaction(_t);
 	}
 	else
-		ret.r = TransactionRepersussion::UnknownAccount;
+		ret.r = TransactionRepercussion::UnknownAccount;
 	return ret;
 }
 
