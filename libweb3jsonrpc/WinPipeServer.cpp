@@ -19,7 +19,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 *   Arkadiy Paronyan <arkadiy@ethdev.com>
 * @date 2015
 */
-#ifdef WIN32
+#if defined(_WIN32)
 
 #include "WinPipeServer.h"
 #include <windows.h>
