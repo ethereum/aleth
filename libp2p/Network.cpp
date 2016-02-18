@@ -45,7 +45,7 @@ std::set<bi::address> Network::getInterfaceAddresses()
 {
 	std::set<bi::address> addresses;
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	WSAData wsaData;
 	if (WSAStartup(MAKEWORD(1, 1), &wsaData) != 0)
 		BOOST_THROW_EXCEPTION(NoNetworking());
@@ -141,7 +141,7 @@ int Network::tcp4Listen(bi::tcp::acceptor& _acceptor, NetworkPreferences const& 
 		bi::tcp::endpoint endpoint(listenIP, requirePort ? _netPrefs.listenPort : (i ? 0 : c_defaultListenPort));
 		try
 		{
-#ifdef _WIN32
+#if defined(_WIN32)
 			bool reuse = false;
 #else
 			bool reuse = true;

@@ -41,7 +41,7 @@ std::string dev::getDataDir(std::string _prefix)
 {
 	if (_prefix.empty())
 		_prefix = "ethereum";
-#ifdef _WIN32
+#if defined(_WIN32)
 	_prefix[0] = toupper(_prefix[0]);
 	char path[1024] = "";
 	if (SHGetSpecialFolderPathA(NULL, path, CSIDL_APPDATA, true))
