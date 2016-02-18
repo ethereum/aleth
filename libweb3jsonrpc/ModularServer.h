@@ -46,12 +46,14 @@ public:
 	using NotificationBinding = std::tuple<jsonrpc::Procedure, AbstractNotificationPointer<I>>;
 	using Methods = std::vector<MethodBinding>;
 	using Notifications = std::vector<NotificationBinding>;
+	struct RPCModule { std::string name; std::string version; };
+	using RPCModules = std::vector<RPCModule>;
 
 	virtual ~ServerInterface() {}
 	Methods const& methods() const { return m_methods; }
 	Notifications const& notifications() const { return m_notifications; }
-	/// @returns which interface (eth, admin, db, ...) this class implements in which version.
-	virtual std::pair<std::string, std::string> implementedModule() const = 0;
+	/// @returns which interfaces (eth, admin, db, ...) this class implements in which version.
+	virtual RPCModules implementedModules() const = 0;
 
 protected:
 	void bindAndAddMethod(jsonrpc::Procedure const& _proc, MethodPointer _pointer) { m_methods.emplace_back(_proc, _pointer); }
@@ -145,9 +147,8 @@ public:
 			this->m_handler->AddProcedure(std::get<0>(notification));
 		}
 		// Store module with version.
-		auto module = m_interface->implementedModule();
-		if (!module.first.empty())
-			this->m_implementedModules[module.first] = module.second;
+		for (auto const& module: m_interface->implementedModules())
+			this->m_implementedModules[module.name] = module.version;
 	}
 
 	virtual void HandleMethodCall(jsonrpc::Procedure& _proc, Json::Value const& _input, Json::Value& _output) override

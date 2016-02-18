@@ -36,9 +36,9 @@ class Net: public NetFace
 {
 public:
 	Net(NetworkFace& _network);
-	virtual std::pair<std::string, std::string> implementedModule() const override
+	virtual RPCModules implementedModules() const override
 	{
-		return std::make_pair(std::string("net"), std::string("1.0"));
+		return RPCModules{RPCModule{"net", "1.0"}};
 	}
 	virtual std::string net_version() override;
 	virtual std::string net_peerCount() override;

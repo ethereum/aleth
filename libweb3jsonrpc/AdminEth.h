@@ -21,9 +21,9 @@ class AdminEth: public AdminEthFace
 public:
 	AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm);
 
-	virtual std::pair<std::string, std::string> implementedModule() const override
+	virtual RPCModules implementedModules() const override
 	{
-		return std::make_pair(std::string("admin"), std::string("1.0"));
+		return RPCModules{RPCModule{"admin", "1.0"}, RPCModule{"miner", "1.0"}};
 	}
 
 	virtual bool admin_eth_setMining(bool _on, std::string const& _session) override;
