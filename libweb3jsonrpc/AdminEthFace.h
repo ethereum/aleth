@@ -31,6 +31,9 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("miner_start", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_INTEGER, NULL), &dev::rpc::AdminEthFace::miner_startI);
                     this->bindAndAddMethod(jsonrpc::Procedure("miner_stop", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN,  NULL), &dev::rpc::AdminEthFace::miner_stopI);
                     this->bindAndAddMethod(jsonrpc::Procedure("miner_setEtherbase", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::miner_setEtherbaseI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("miner_setExtra", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::miner_setExtraI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("miner_setGasPrice", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_BOOLEAN, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::AdminEthFace::miner_setGasPriceI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("miner_hashrate", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &dev::rpc::AdminEthFace::miner_hashrateI);
                 }
 
                 inline virtual void admin_eth_blockQueueStatusI(const Json::Value &request, Json::Value &response)
@@ -102,6 +105,19 @@ namespace dev {
                 {
                     response = this->miner_setEtherbase(request[0u].asString());
                 }
+                inline virtual void miner_setExtraI(const Json::Value &request, Json::Value &response)
+                {
+                    response = this->miner_setExtra(request[0u].asString());
+                }
+                inline virtual void miner_setGasPriceI(const Json::Value &request, Json::Value &response)
+                {
+                    response = this->miner_setGasPrice(request[0u].asString());
+                }
+                inline virtual void miner_hashrateI(const Json::Value &request, Json::Value &response)
+                {
+                    (void)request;
+                    response = this->miner_hashrate();
+                }
                 virtual Json::Value admin_eth_blockQueueStatus(const std::string& param1) = 0;
                 virtual bool admin_eth_setAskPrice(const std::string& param1, const std::string& param2) = 0;
                 virtual bool admin_eth_setBidPrice(const std::string& param1, const std::string& param2) = 0;
@@ -119,6 +135,9 @@ namespace dev {
                 virtual bool miner_start(int param1) = 0;
                 virtual bool miner_stop() = 0;
                 virtual bool miner_setEtherbase(const std::string& param1) = 0;
+                virtual bool miner_setExtra(const std::string& param1) = 0;
+                virtual bool miner_setGasPrice(const std::string& param1) = 0;
+                virtual std::string miner_hashrate() = 0;
         };
 
     }

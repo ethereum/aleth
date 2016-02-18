@@ -15,5 +15,8 @@
 { "name": "admin_eth_getReceiptByHashAndIndex", "params": ["", 0, ""], "returns": {} },
 { "name": "miner_start", "params": [0], "returns": true },
 { "name": "miner_stop", "params": [], "returns": true },
-{ "name": "miner_setEtherbase", "params": [""], "returns": true }
+{ "name": "miner_setEtherbase", "params": [""], "returns": true },
+{ "name": "miner_setExtra", "params": [""], "returns": true },
+{ "name": "miner_setGasPrice", "params": [""], "returns": true },
+{ "name": "miner_hashrate", "params": [], "returns": "" }
 ]

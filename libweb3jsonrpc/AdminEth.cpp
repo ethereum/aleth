@@ -4,6 +4,7 @@
 #include <libethcore/ICAP.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
+#include <libethashseal/EthashClient.h>
 #include "AdminEth.h"
 #include "SessionManager.h"
 #include "JsonHelper.h"
@@ -266,4 +267,30 @@ bool AdminEth::miner_setEtherbase(std::string const& _uuidOrAddress)
 	else
 		m_eth.setAuthor(a);
 	return true;
+}
+
+bool AdminEth::miner_setExtra(string const& _extraData)
+{
+	m_eth.setExtraData(asBytes(_extraData));
+	return true;
+}
+
+bool AdminEth::miner_setGasPrice(string const& _gasPrice)
+{
+	m_gp.setAsk(jsToU256(_gasPrice));
+	return true;
+}
+
+string AdminEth::miner_hashrate()
+{
+	EthashClient const* client = nullptr;
+	try
+	{
+		client = asEthashClient(&m_eth);
+	}
+	catch (...)
+	{
+		throw jsonrpc::JsonRpcException("Hashrate not available - blockchain does not support mining.");
+	}
+	return toJS(client->hashrate());
 }
