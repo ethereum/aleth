@@ -43,7 +43,7 @@ static unsigned const c_maxSendTransactions = 256;
 
 char const* const EthereumHost::s_stateNames[static_cast<int>(SyncState::Size)] = {"NotSynced", "Idle", "Waiting", "Blocks", "State", "NewBlocks" };
 
-#ifdef _WIN32
+#if defined(_WIN32)
 const char* EthereumHostTrace::name() { return EthPurple "^" EthGray "  "; }
 #else
 const char* EthereumHostTrace::name() { return EthPurple "⧫" EthGray " "; }
