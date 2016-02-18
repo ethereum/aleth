@@ -926,7 +926,7 @@ int main(int argc, char** argv)
 				cout << "\r           \r" << a << endl << additional << flush;
 
 			// helpful to use OutputDebugString on windows
-	#ifdef _WIN32
+	#if defined(_WIN32)
 			{
 				OutputDebugStringA(a.data());
 				OutputDebugStringA("\n");

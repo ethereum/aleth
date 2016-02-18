@@ -26,7 +26,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dev
 {
-#ifdef WIN32
+#if defined(_WIN32)
 	using IpcServer = WindowsPipeServer;
 #else
 	using IpcServer = UnixDomainSocketServer;
