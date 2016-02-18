@@ -239,14 +239,23 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 		TransactionNotification n = m_ethAccounts.authenticate(t);
 		switch (n.r)
 		{
-		case TransactionRepersussion::Success:
+		case TransactionRepercussion::Success:
 			return toJS(n.hash);
-		case TransactionRepersussion::ProxySuccess:
+		case TransactionRepercussion::ProxySuccess:
 			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
-		default:
-			// TODO: provide more useful information in the exception.
-			BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+		case TransactionRepercussion::UnknownAccount:
+			BOOST_THROW_EXCEPTION(JsonRpcException("Account unknown."));
+		case TransactionRepercussion::Locked:
+			BOOST_THROW_EXCEPTION(JsonRpcException("Account is locked."));
+		case TransactionRepercussion::Refused:
+			BOOST_THROW_EXCEPTION(JsonRpcException("Transaction rejected by user."));
+		case TransactionRepercussion::Unknown:
+			BOOST_THROW_EXCEPTION(JsonRpcException("Unknown reason."));
 		}
+	}
+	catch (JsonRpcException&)
+	{
+		throw;
 	}
 	catch (...)
 	{
@@ -263,9 +272,9 @@ string Eth::eth_signTransaction(Json::Value const& _json)
 		TransactionNotification n = m_ethAccounts.authenticate(t);
 		switch (n.r)
 		{
-		case TransactionRepersussion::Success:
+		case TransactionRepercussion::Success:
 			return toJS(n.hash);
-		case TransactionRepersussion::ProxySuccess:
+		case TransactionRepercussion::ProxySuccess:
 			return toJS(n.hash);// TODO: give back something more useful than an empty hash.
 		default:
 			// TODO: provide more useful information in the exception.

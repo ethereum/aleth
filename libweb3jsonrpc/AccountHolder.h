@@ -39,7 +39,7 @@ namespace eth
 class KeyManager;
 class Interface;
 
-enum class TransactionRepersussion
+enum class TransactionRepercussion
 {
 	Unknown,
 	UnknownAccount,
@@ -51,7 +51,7 @@ enum class TransactionRepersussion
 
 struct TransactionNotification
 {
-	TransactionRepersussion r;
+	TransactionRepercussion r;
 	h256 hash;
 	Address created;
 };
