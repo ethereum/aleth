@@ -23,7 +23,6 @@
 
 #include "AccountHolder.h"
 #include <random>
-#include <ctime>
 #include <libdevcore/Guards.h>
 #include <libethereum/Client.h>
 #include <libethcore/KeyManager.h>
@@ -112,9 +111,10 @@ TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionS
 	bool unlocked = false;
 	if (m_unlockedAccounts.count(_t.from))
 	{
-		time_t start = m_unlockedAccounts[_t.from].first;
-		unsigned duration = m_unlockedAccounts[_t.from].second;
-		if (duration > 0 && difftime(time(nullptr), start) < duration)
+		chrono::steady_clock::time_point start = m_unlockedAccounts[_t.from].first;
+		chrono::seconds duration(m_unlockedAccounts[_t.from].second);
+		auto end = start + duration;
+		if (start < end && chrono::steady_clock::now() < end)
 			unlocked = true;
 	}
 	if (!unlocked && m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
@@ -145,7 +145,8 @@ bool SimpleAccountHolder::unlockAccount(Address const& _account, const string& _
 		return false;
 
 	if (_duration == 0)
-		m_unlockedAccounts[_account] = make_pair(time(nullptr), 0);
+		// Lock it even if the password is wrong.
+		m_unlockedAccounts[_account].second = 0;
 
 	m_keyManager.notePassword(_password);
 
@@ -158,7 +159,7 @@ bool SimpleAccountHolder::unlockAccount(Address const& _account, const string& _
 	{
 		return false;
 	}
-	m_unlockedAccounts[_account] = make_pair(time(nullptr), _duration);
+	m_unlockedAccounts[_account] = make_pair(chrono::steady_clock::now(), _duration);
 
 	return true;
 }

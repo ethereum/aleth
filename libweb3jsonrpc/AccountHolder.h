@@ -27,6 +27,7 @@
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <chrono>
 #include <libdevcrypto/Common.h>
 #include <libethcore/CommonJS.h>
 #include <libethereum/Transaction.h>
@@ -123,7 +124,7 @@ private:
 	std::function<std::string(Address)> m_getPassword;
 	std::function<bool(TransactionSkeleton const&, bool)> m_getAuthorisation;
 	KeyManager& m_keyManager;
-	std::map<Address, std::pair<time_t, unsigned>> m_unlockedAccounts;
+	std::map<Address, std::pair<std::chrono::steady_clock::time_point, unsigned>> m_unlockedAccounts;
 };
 
 class FixedAccountHolder: public AccountHolder
