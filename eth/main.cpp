@@ -1194,7 +1194,7 @@ int main(int argc, char** argv)
 		return r == "yes" || r == "always";
 	};
 
-	ExitHandler eh;// TODO: use.
+	ExitHandler exitHandler;
 
 	if (jsonRPCURL > -1 || ipc)
 	{
@@ -1204,7 +1204,7 @@ int main(int argc, char** argv)
 		auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 		jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())));
+							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager), adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get(), &exitHandler)));
 		if (jsonRPCURL > -1)
 		{
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
@@ -1277,7 +1277,7 @@ int main(int argc, char** argv)
 				string c = contentsString(s);
 				console.eval(c.empty() ? s : c);
 			}
-			while (!eh.shouldExit())
+			while (!exitHandler.shouldExit())
 			{
 				if (useConsole)
 					console.readAndEval();
@@ -1287,11 +1287,11 @@ int main(int argc, char** argv)
 #endif
 		}
 		else
-			while (!eh.shouldExit())
+			while (!exitHandler.shouldExit())
 				stopSealingAfterXBlocks(c, n, mining);
 	}
 	else
-		while (!eh.shouldExit())
+		while (!exitHandler.shouldExit())
 			this_thread::sleep_for(chrono::milliseconds(1000));
 
 #if ETH_JSONRPC
