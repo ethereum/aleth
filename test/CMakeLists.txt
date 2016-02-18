@@ -38,5 +38,6 @@ eth_use(${EXECUTABLE} REQUIRED Dev::devcrypto Dev::devcore Dev::p2p)
 #
 add_definitions(-DBOOST_ALL_NO_LIB)
 
-target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_DATE_TIME_LIBRARIES})
 target_link_libraries(${EXECUTABLE} ${Boost_REGEX_LIBRARIES})
+target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
