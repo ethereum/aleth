@@ -135,7 +135,7 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_host(_host),
 	m_startingBlock(_host.chain().number()),
-	m_lastImportedBlock(m_startingBlock),
+	m_lastImportedBlock(m_startingBlock)
 {
 	m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
 	{
