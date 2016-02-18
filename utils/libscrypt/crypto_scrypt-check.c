@@ -7,7 +7,7 @@
 #include "slowequals.h"
 #include "libscrypt.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 /* On windows, strtok uses a thread-local static variable in strtok to
  * make strtok thread-safe.  It also neglects to provide a strtok_r. */
 #define strtok_r(str, val, saveptr) strtok((str), (val))
