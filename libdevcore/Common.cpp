@@ -44,7 +44,7 @@ void InvariantChecker::checkInvariants(HasInvariants const* _this, char const* _
 
 struct TimerChannel: public LogChannel { static const char* name(); static const int verbosity = 0; };
 
-#ifdef _WIN32
+#if defined(_WIN32)
 const char* TimerChannel::name() { return EthRed " ! "; }
 #else
 const char* TimerChannel::name() { return EthRed " ⚡ "; }

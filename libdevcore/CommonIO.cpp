@@ -24,7 +24,7 @@
 #include <cstdlib>
 #include <fstream>
 #include <stdio.h>
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <windows.h>
 #else
 #include <termios.h>
@@ -134,7 +134,7 @@ void dev::writeFile(std::string const& _file, bytesConstRef _data, bool _writeDe
 
 std::string dev::getPassword(std::string const& _prompt)
 {
-#if WIN32
+#if defined(_WIN32)
 	cout << _prompt << flush;
 	// Get current Console input flags
 	HANDLE hStdin;

@@ -88,7 +88,7 @@ template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, 
 template <class T, class U> inline std::ostream& operator<<(std::ostream& _out, std::multimap<T, U> const& _e);
 template <class _S, class _T> _S& operator<<(_S& _out, std::shared_ptr<_T> const& _p);
 
-#ifdef _WIN32
+#if defined(_WIN32)
 template <class T> inline std::string toString(std::chrono::time_point<T> const& _e, std::string _format = "%Y-%m-%d %H:%M:%S")
 #else
 template <class T> inline std::string toString(std::chrono::time_point<T> const& _e, std::string _format = "%F %T")
@@ -100,7 +100,7 @@ template <class T> inline std::string toString(std::chrono::time_point<T> const&
 
 	tm timeValue;
 	auto time = std::chrono::system_clock::to_time_t(tpAfterDuration);
-#ifdef _WIN32
+#if defined(_WIN32)
 	gmtime_s(&timeValue, &time);
 #else
 	gmtime_r(&time, &timeValue);

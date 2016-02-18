@@ -36,7 +36,7 @@ bool dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 
 //⊳⊲◀▶■▣▢□▷◁▧▨▩▲◆◉◈◇◎●◍◌○◼☑☒☎☢☣☰☀♽♥♠✩✭❓✔✓✖✕✘✓✔✅⚒⚡⦸⬌∅⁕«««»»»⚙━┅┉▬
 
-#ifdef _WIN32
+#if defined(_WIN32)
 const char* NetWarn::name() { return EthYellow "N" EthRed " X"; }
 const char* NetImpolite::name() { return EthYellow "N" EthRed " !"; }
 const char* NetNote::name() { return EthYellow "N" EthBlue " i"; }

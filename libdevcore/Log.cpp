@@ -68,7 +68,7 @@ LogOverrideAux::~LogOverrideAux()
 		s_logOverride[m_ch] = (bool)m_old;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 const char* LogChannel::name() { return EthGray "..."; }
 const char* LeftChannel::name() { return EthNavy "<--"; }
 const char* RightChannel::name() { return EthGreen "-->"; }
@@ -169,7 +169,7 @@ string dev::ThreadContext::join(string const& _prior)
 }
 
 // foward declare without all of Windows.h
-#ifdef _WIN32
+#if defined(_WIN32)
 extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* lpOutputString);
 #endif
 
@@ -204,7 +204,7 @@ void dev::simpleDebugOut(std::string const& _s, char const*)
 	cerr << _s << endl << flush;
 
 	// helpful to use OutputDebugString on windows
-	#ifdef _WIN32
+	#if defined(_WIN32)
 	{
 		OutputDebugStringA(_s.data());
 		OutputDebugStringA("\n");
