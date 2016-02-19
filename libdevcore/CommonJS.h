@@ -67,7 +67,8 @@ template<typename T> std::string toJS(T const& _i)
 
 enum class OnFailed { InterpretRaw, Empty, Throw };
 
-/// Convert string to byte array. Input parameters can be hex or dec. Returns empty array if invalid input e.g neither dec or hex.
+/// Convert string to byte array. Input parameter is hex, optionally prefixed by "0x".
+/// Returns empty array if invalid input.
 bytes jsToBytes(std::string const& _s, OnFailed _f = OnFailed::Empty);
 /// Add '0' on, or remove items from, the front of @a _b until it is of length @a _l.
 bytes padded(bytes _b, unsigned _l);

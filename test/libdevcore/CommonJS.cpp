@@ -45,11 +45,11 @@ BOOST_AUTO_TEST_CASE(test_toJS)
 BOOST_AUTO_TEST_CASE(test_jsToBytes)
 {
 	bytes a = {0xff, 0xaa, 0xbb, 0xcc};
-	bytes b = {0x9, 0x13, 0xff, 0xc2, 0x83};
+	bytes b = {0x03, 0x89, 0x90, 0x23, 0x42, 0x43};
 	BOOST_CHECK(a == jsToBytes("0xffaabbcc"));
 	BOOST_CHECK(b == jsToBytes("38990234243"));
 	BOOST_CHECK(bytes() == jsToBytes(""));
-	BOOST_CHECK(bytes() == jsToBytes("Neither decimal nor hexadecimal"));
+	BOOST_CHECK(bytes() == jsToBytes("Invalid hex chars"));
 }
 
 BOOST_AUTO_TEST_CASE(test_padded)
