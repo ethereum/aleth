@@ -445,7 +445,17 @@ int main(int argc, char** argv)
 			publicIP = argv[++i];
 		}
 		else if ((arg == "-r" || arg == "--remote") && i + 1 < argc)
-			remoteHost = argv[++i];
+		{
+			string host = argv[++i];
+			string::size_type found = host.find_first_of(':');
+			if (found != std::string::npos)
+			{
+				remoteHost = host.substr(0, found);
+				remotePort = (short)atoi(host.substr(found + 1, host.length()).c_str());
+			}
+			else
+				remoteHost = host;
+		}
 		else if (arg == "--port" && i + 1 < argc)
 		{
 			remotePort = (short)atoi(argv[++i]);
