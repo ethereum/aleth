@@ -292,7 +292,7 @@ Json::Value Eth::eth_inspectTransaction(std::string const& _rlp)
 {
 	try
 	{
-		return toJson(Transaction(jsToBytes(_rlp), CheckTransaction::Everything));
+		return toJson(Transaction(jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::Everything));
 	}
 	catch (...)
 	{
@@ -304,9 +304,9 @@ string Eth::eth_sendRawTransaction(std::string const& _rlp)
 {
 	try
 	{
-		if (client()->injectTransaction(jsToBytes(_rlp)) == ImportResult::Success)
+		if (client()->injectTransaction(jsToBytes(_rlp, OnFailed::Throw)) == ImportResult::Success)
 		{
-			Transaction tx(jsToBytes(_rlp), CheckTransaction::None);
+			Transaction tx(jsToBytes(_rlp, OnFailed::Throw), CheckTransaction::None);
 			return toJS(tx.sha3());
 		}
 		else
