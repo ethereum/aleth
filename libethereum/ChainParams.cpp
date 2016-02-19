@@ -49,44 +49,67 @@ ChainParams::ChainParams()
 
 ChainParams::ChainParams(std::string const& _json, h256 const& _stateRoot)
 {
+	try
+	{
+		loadConfig(_json, _stateRoot);
+	}
+	catch (...)
+	{
+		cerr << "Bad json file provided. Should be a config file" << endl;
+	}
+}
+
+void ChainParams::loadConfig(std::string const& _json, h256 const& _stateRoot)
+{
 	js::mValue val;
 	json_spirit::read_string(_json, val);
 	js::mObject obj = val.get_obj();
+
 	sealEngineName = obj["sealEngine"].get_str();
-	js::mObject genesis = obj["genesis"].get_obj();
-	js::mObject params = obj["params"].get_obj();
-
 	// params
-	{
-		accountStartNonce = u256(fromBigEndian<u256>(fromHex(params["accountStartNonce"].get_str())));
-		maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
-		tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
-		blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
-		for (auto i: params)
-			if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
-				otherParams[i.first] = i.second.get_str();
-	}
-
+	js::mObject params = obj["params"].get_obj();
+	accountStartNonce = u256(fromBigEndian<u256>(fromHex(params["accountStartNonce"].get_str())));
+	maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
+	tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
+	blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
+	for (auto i: params)
+		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
+			otherParams[i.first] = i.second.get_str();
 	// genesis
-	{
-		genesisState = jsonToAccountMap(_json, nullptr, &precompiled);
-		stateRoot = _stateRoot;
-		parentHash = h256(genesis["parentHash"].get_str());
-		author = genesis.count("coinbase") ? h160(genesis["coinbase"].get_str()) : h160(genesis["author"].get_str());
-		difficulty = genesis.count("difficulty") ? u256(fromBigEndian<u256>(fromHex(genesis["difficulty"].get_str()))) : 0;
-		gasLimit = u256(fromBigEndian<u256>(fromHex(genesis["gasLimit"].get_str())));
-		gasUsed = genesis.count("gasUsed") ? u256(fromBigEndian<u256>(fromHex(genesis["gasUsed"].get_str()))) : 0;
-		timestamp = u256(fromBigEndian<u256>(fromHex(genesis["timestamp"].get_str())));
-		extraData = bytes(fromHex(genesis["extraData"].get_str()));
+	string jj = obj["genesis"].get_value().get_str();
+	loadGenesis(jj, _stateRoot);
+	// genesis state
+	loadGenesisState(obj["accounts"].get_str());
+}
 
-		// magic code for handling ethash stuff:
-		if ((genesis.count("mixhash") || genesis.count("mixHash")) && genesis.count("nonce"))
-		{
-			h256 mixHash(genesis[genesis.count("mixhash") ? "mixhash" : "mixHash"].get_str());
-			h64 nonce(genesis["nonce"].get_str());
-			sealFields = 2;
-			sealRLP = rlp(mixHash) + rlp(nonce);
-		}
+void ChainParams::loadGenesisState(std::string const& _json, std::unordered_map<Address, PrecompiledContract> const& _precompiled)
+{
+	precompiled = _precompiled;
+	genesisState = jsonToAccountMap(_json, nullptr, &precompiled);
+}
+
+void ChainParams::loadGenesis(std::string const& _json, h256 const& _stateRoot)
+{
+	js::mValue val;
+	json_spirit::read_string(_json, val);
+	js::mObject genesis = val.get_obj();
+
+	stateRoot = _stateRoot;
+	parentHash = h256(genesis["parentHash"].get_str());
+	author = genesis.count("coinbase") ? h160(genesis["coinbase"].get_str()) : h160(genesis["author"].get_str());
+	difficulty = genesis.count("difficulty") ? u256(fromBigEndian<u256>(fromHex(genesis["difficulty"].get_str()))) : 0;
+	gasLimit = u256(fromBigEndian<u256>(fromHex(genesis["gasLimit"].get_str())));
+	gasUsed = genesis.count("gasUsed") ? u256(fromBigEndian<u256>(fromHex(genesis["gasUsed"].get_str()))) : 0;
+	timestamp = u256(fromBigEndian<u256>(fromHex(genesis["timestamp"].get_str())));
+	extraData = bytes(fromHex(genesis["extraData"].get_str()));
+
+	// magic code for handling ethash stuff:
+	if ((genesis.count("mixhash") || genesis.count("mixHash")) && genesis.count("nonce"))
+	{
+		h256 mixHash(genesis[genesis.count("mixhash") ? "mixhash" : "mixHash"].get_str());
+		h64 nonce(genesis["nonce"].get_str());
+		sealFields = 2;
+		sealRLP = rlp(mixHash) + rlp(nonce);
 	}
 }
 
