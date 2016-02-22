@@ -139,7 +139,7 @@ TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionS
 	return ret;
 }
 
-bool SimpleAccountHolder::unlockAccount(Address const& _account, const string& _password, unsigned _duration)
+bool SimpleAccountHolder::unlockAccount(Address const& _account, string const& _password, unsigned _duration)
 {
 	if (!m_keyManager.hasAccount(_account))
 		return false;
