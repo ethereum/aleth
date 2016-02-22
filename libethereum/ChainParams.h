@@ -37,6 +37,7 @@ class SealEngineFace;
 struct ChainParams: public ChainOperationParams
 {
 	ChainParams();
+	ChainParams(ChainParams const& _org);
 	ChainParams(std::string const& _s, h256 const& _stateRoot = h256());
 	ChainParams(bytes const& _genesisRLP, AccountMap const& _state) { populateFromGenesis(_genesisRLP, _state); }
 	ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state): ChainParams(_json) { populateFromGenesis(_genesisRLP, _state); }
@@ -62,9 +63,11 @@ struct ChainParams: public ChainOperationParams
 	/// Genesis block info.
 	bytes genesisBlock() const;
 	/// load config/genesis
-	void loadConfig(std::string const& _json, h256 const& _stateRoot = h256());
-	void loadGenesisState(std::string const& _json,  std::unordered_map<Address, PrecompiledContract> const& _precompiled = std::unordered_map<Address, PrecompiledContract>());
-	void loadGenesis(std::string const& _json, h256 const& _stateRoot = h256());
+	ChainParams loadConfig(std::string const& _json, h256 const& _stateRoot = h256()) const;
+	ChainParams loadGenesisState(std::string const& _json,  std::unordered_map<Address, PrecompiledContract> const& _precompiled = std::unordered_map<Address, PrecompiledContract>()) const;
+	ChainParams loadGenesis(std::string const& _json, h256 const& _stateRoot = h256()) const;
+	/// copy ChainParams fields
+	void copy(ChainParams const& _org);
 
 private:
 	void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);
