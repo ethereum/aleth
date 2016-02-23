@@ -63,7 +63,7 @@ struct ChainParams: public ChainOperationParams
 	/// Genesis block info.
 	bytes genesisBlock() const;
 	/// load config/genesis
-	ChainParams loadConfig(std::string const& _json, bool _importGenesis, h256 const& _stateRoot = h256()) const;
+	ChainParams loadConfig(std::string const& _json, h256 const& _stateRoot = h256()) const;
 	ChainParams loadGenesisState(std::string const& _json,  std::unordered_map<Address, PrecompiledContract> const& _precompiled = std::unordered_map<Address, PrecompiledContract>()) const;
 	ChainParams loadGenesis(std::string const& _json, h256 const& _stateRoot = h256()) const;
 
