@@ -37,7 +37,7 @@ class SealEngineFace;
 struct ChainParams: public ChainOperationParams
 {
 	ChainParams() = default;
-	ChainParams(ChainParams const& _org);
+	ChainParams(ChainParams const& _org) = default;
 	ChainParams(std::string const& _s, h256 const& _stateRoot = h256());
 	ChainParams(bytes const& _genesisRLP, AccountMap const& _state) { populateFromGenesis(_genesisRLP, _state); }
 	ChainParams(std::string const& _json, bytes const& _genesisRLP, AccountMap const& _state): ChainParams(_json) { populateFromGenesis(_genesisRLP, _state); }
@@ -69,8 +69,6 @@ struct ChainParams: public ChainOperationParams
 
 private:
 	void populateFromGenesis(bytes const& _genesisRLP, AccountMap const& _state);
-	ChainParams setGenesis(std::string const& _json, h256 const& _stateRoot, ChainParams const& _org) const;
-	ChainParams setGenesisState(std::string const& _json, std::unordered_map<Address, PrecompiledContract> const& _precompiled, ChainParams const& _org) const;
 };
 
 }

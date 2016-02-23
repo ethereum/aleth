@@ -39,30 +39,42 @@ ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
 	loadConfig(_json, _stateRoot);
 }
 
-ChainParams::ChainParams(ChainParams const& _org)
+ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
 {
-	sealEngineName = _org.sealEngineName;
-	accountStartNonce = _org.accountStartNonce;
-	maximumExtraDataSize = _org.maximumExtraDataSize;
-	tieBreakingGas = _org.tieBreakingGas;
-	blockReward = _org.blockReward;
-	for (auto i: _org.otherParams)
-		otherParams[i.first] = i.second;
-	precompiled = _org.precompiled;
-	genesisState = _org.genesisState;
-	stateRoot = _org.stateRoot;
-	parentHash = _org.parentHash;
-	author = _org.author;
-	difficulty = _org.difficulty;
-	gasLimit = _org.gasLimit;
-	gasUsed = _org.gasUsed;
-	timestamp = _org.timestamp;
-	extraData = _org.extraData;
-	sealFields = _org.sealFields;
-	sealRLP = _org.sealRLP;
+	ChainParams cp = ChainParams(*this);
+	js::mValue val;
+	json_spirit::read_string(_json, val);
+	js::mObject obj = val.get_obj();
+
+	cp.sealEngineName = obj["sealEngine"].get_str();
+	// params
+	js::mObject params = obj["params"].get_obj();
+	cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params["accountStartNonce"].get_str())));
+	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
+	cp.tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
+	cp.blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
+	for (auto i: params)
+		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
+			cp.otherParams[i.first] = i.second.get_str();
+	// genesis
+	string genesisStr = json_spirit::write_string(obj["genesis"], false);
+	cp = cp.loadGenesis(genesisStr, _stateRoot);
+	// genesis state
+	string genesisStateStr = json_spirit::write_string(obj["accounts"], false);
+	cp = cp.loadGenesisState(genesisStateStr, unordered_map<Address, PrecompiledContract>());
+	return cp;
 }
 
-ChainParams ChainParams::setGenesis(string const& _json, h256 const& _stateRoot, ChainParams const& _org) const
+ChainParams ChainParams::loadGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled) const
+{
+	ChainParams cp(_org);
+	cp.precompiled = _precompiled;
+	cp.genesisState = jsonToAccountMap(_json, nullptr, &cp.precompiled);
+	cp.stateRoot = cp.calculateStateRoot();
+	return cp;
+}
+
+ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot) const
 {
 	ChainParams cp(_org);
 
@@ -88,53 +100,6 @@ ChainParams ChainParams::setGenesis(string const& _json, h256 const& _stateRoot,
 	}
 	cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot();
 	return cp;
-}
-
-ChainParams ChainParams::setGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled, ChainParams const& _org) const
-{
-	ChainParams cp(_org);
-	cp.precompiled = _precompiled;
-	cp.genesisState = jsonToAccountMap(_json, nullptr, &cp.precompiled);
-	return cp;
-}
-
-
-ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
-{
-	ChainParams cp = ChainParams(*this);
-	js::mValue val;
-	json_spirit::read_string(_json, val);
-	js::mObject obj = val.get_obj();
-
-	cp.sealEngineName = obj["sealEngine"].get_str();
-	// params
-	js::mObject params = obj["params"].get_obj();
-	cp.accountStartNonce = u256(fromBigEndian<u256>(fromHex(params["accountStartNonce"].get_str())));
-	cp.maximumExtraDataSize = u256(fromBigEndian<u256>(fromHex(params["maximumExtraDataSize"].get_str())));
-	cp.tieBreakingGas = params.count("tieBreakingGas") ? params["tieBreakingGas"].get_bool() : true;
-	cp.blockReward = u256(fromBigEndian<u256>(fromHex(params["blockReward"].get_str())));
-	for (auto i: params)
-		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
-			cp.otherParams[i.first] = i.second.get_str();
-	// genesis
-	stringstream strGenesis;
-	string genesisStr = json_spirit::write_string(obj["genesis"], false);
-	setGenesis(genesisStr, _stateRoot, cp);
-	// genesis state
-	stringstream strGenesisState;
-	string genesisStateStr = json_spirit::write_string(obj["accounts"], false);
-	setGenesisState(genesisStateStr, unordered_map<Address, PrecompiledContract>(), cp);
-	return cp;
-}
-
-ChainParams ChainParams::loadGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled) const
-{
-	return setGenesisState(_json, _precompiled, *this);
-}
-
-ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot) const
-{
-	return setGenesis(_json, _stateRoot, *this);
 }
 
 SealEngineFace* ChainParams::createSealEngine()
