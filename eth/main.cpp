@@ -425,17 +425,8 @@ int main(int argc, char** argv)
 
 	MinerCLI m(MinerCLI::OperationMode::None);
 
-	bool genesisProvided = false;
-	for (int i = 1; i < argc; ++i)
-	{
-		string arg = argv[i];
-		if (arg == "--genesis-json" || arg == "--genesis")
-		{
-			genesisProvided = true;
-			break;
-		}
-	}
-
+	string configJSON;
+	string genesisJSON;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
@@ -610,9 +601,7 @@ int main(int argc, char** argv)
 		{
 			try
 			{
-				string paramsJSON = contentsString(argv[++i]);
-				if (!paramsJSON.empty())
-					chainParams = chainParams.loadGenesis(paramsJSON);
+				genesisJSON = contentsString(argv[++i]);
 			}
 			catch (...)
 			{
@@ -624,9 +613,7 @@ int main(int argc, char** argv)
 		{
 			try
 			{
-				string paramsJSON = contentsString(argv[++i]);
-				if (!paramsJSON.empty())
-					chainParams = chainParams.loadConfig(paramsJSON, !genesisProvided);
+				configJSON = contentsString(argv[++i]);
 			}
 			catch (...)
 			{
@@ -918,6 +905,12 @@ int main(int argc, char** argv)
 #endif
 		return 0;
 	}
+
+	if (!configJSON.empty())
+		chainParams = chainParams.loadConfig(configJSON);
+
+	if (!genesisJSON.empty())
+		chainParams = chainParams.loadGenesis(genesisJSON);
 
 	if (!privateChain.empty())
 	{
