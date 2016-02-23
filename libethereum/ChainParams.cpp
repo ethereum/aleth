@@ -34,9 +34,50 @@ using namespace dev;
 using namespace eth;
 namespace js = json_spirit;
 
-static ChainParams setGenesis(string const& _json, h256 const& _stateRoot, ChainParams const& _org)
+ChainParams::ChainParams()
 {
-	ChainParams cp = ChainParams(_org);
+	genesisState[Address(1)] = Account(0, 1);
+	genesisState[Address(2)] = Account(0, 1);
+	genesisState[Address(3)] = Account(0, 1);
+	genesisState[Address(4)] = Account(0, 1);
+	// Setup default precompiled contracts as equal to genesis of Frontier.
+	precompiled.insert(make_pair(Address(1), PrecompiledContract(3000, 0, PrecompiledRegistrar::executor("ecrecover"))));
+	precompiled.insert(make_pair(Address(2), PrecompiledContract(60, 12, PrecompiledRegistrar::executor("sha256"))));
+	precompiled.insert(make_pair(Address(3), PrecompiledContract(600, 120, PrecompiledRegistrar::executor("ripemd160"))));
+	precompiled.insert(make_pair(Address(4), PrecompiledContract(15, 3, PrecompiledRegistrar::executor("identity"))));
+}
+
+ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
+{
+	loadConfig(_json, true, _stateRoot);
+}
+
+ChainParams::ChainParams(ChainParams const& _org)
+{
+	sealEngineName = _org.sealEngineName;
+	accountStartNonce = _org.accountStartNonce;
+	maximumExtraDataSize = _org.maximumExtraDataSize;
+	tieBreakingGas = _org.tieBreakingGas;
+	blockReward = _org.blockReward;
+	for (auto i: _org.otherParams)
+		otherParams[i.first] = i.second;
+	precompiled = _org.precompiled;
+	genesisState = _org.genesisState;
+	stateRoot = _org.stateRoot;
+	parentHash = _org.parentHash;
+	author = _org.author;
+	difficulty = _org.difficulty;
+	gasLimit = _org.gasLimit;
+	gasUsed = _org.gasUsed;
+	timestamp = _org.timestamp;
+	extraData = _org.extraData;
+	sealFields = _org.sealFields;
+	sealRLP = _org.sealRLP;
+}
+
+ChainParams ChainParams::setGenesis(string const& _json, h256 const& _stateRoot, ChainParams const& _org) const
+{
+	ChainParams cp(_org);
 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
@@ -62,61 +103,16 @@ static ChainParams setGenesis(string const& _json, h256 const& _stateRoot, Chain
 	return cp;
 }
 
-static ChainParams setGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled, ChainParams const& _org)
+ChainParams ChainParams::setGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled, ChainParams const& _org) const
 {
-	ChainParams cp = ChainParams(_org);
+	ChainParams cp(_org);
 	cp.precompiled = _precompiled;
 	cp.genesisState = jsonToAccountMap(_json, nullptr, &cp.precompiled);
 	return cp;
 }
 
-ChainParams::ChainParams()
-{
-	genesisState[Address(1)] = Account(0, 1);
-	genesisState[Address(2)] = Account(0, 1);
-	genesisState[Address(3)] = Account(0, 1);
-	genesisState[Address(4)] = Account(0, 1);
-	// Setup default precompiled contracts as equal to genesis of Frontier.
-	precompiled.insert(make_pair(Address(1), PrecompiledContract(3000, 0, PrecompiledRegistrar::executor("ecrecover"))));
-	precompiled.insert(make_pair(Address(2), PrecompiledContract(60, 12, PrecompiledRegistrar::executor("sha256"))));
-	precompiled.insert(make_pair(Address(3), PrecompiledContract(600, 120, PrecompiledRegistrar::executor("ripemd160"))));
-	precompiled.insert(make_pair(Address(4), PrecompiledContract(15, 3, PrecompiledRegistrar::executor("identity"))));
-}
 
-ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
-{
-	loadConfig(_json, _stateRoot);
-}
-
-ChainParams::ChainParams(ChainParams const& _org)
-{
-	copy(_org);
-}
-
-void ChainParams::copy(ChainParams const& _org)
-{
-	sealEngineName = _org.sealEngineName;
-	accountStartNonce = _org.accountStartNonce;
-	maximumExtraDataSize = _org.maximumExtraDataSize;
-	tieBreakingGas = _org.tieBreakingGas;
-	blockReward = _org.blockReward;
-	for (auto i: _org.otherParams)
-		otherParams[i.first] = i.second;
-	precompiled = _org.precompiled;
-	genesisState = _org.genesisState;
-	stateRoot = _org.stateRoot;
-	parentHash = _org.parentHash;
-	author = _org.author;
-	difficulty = _org.difficulty;
-	gasLimit = _org.gasLimit;
-	gasUsed = _org.gasUsed;
-	timestamp = _org.timestamp;
-	extraData = _org.extraData;
-	sealFields = _org.sealFields;
-	sealRLP = _org.sealRLP;
-}
-
-ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
+ChainParams ChainParams::loadConfig(string const& _json, bool _importGenesis, h256 const& _stateRoot) const
 {
 	ChainParams cp = ChainParams(*this);
 	js::mValue val;
@@ -134,9 +130,12 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 		if (i.first != "accountStartNonce" && i.first != "maximumExtraDataSize" && i.first != "blockReward" && i.first != "tieBreakingGas")
 			cp.otherParams[i.first] = i.second.get_str();
 	// genesis
-	stringstream strGenesis;
-	string genesisStr = json_spirit::write_string(obj["genesis"], false);
-	setGenesis(genesisStr, _stateRoot, cp);
+	if (_importGenesis)
+	{
+		stringstream strGenesis;
+		string genesisStr = json_spirit::write_string(obj["genesis"], false);
+		setGenesis(genesisStr, _stateRoot, cp);
+	}
 	// genesis state
 	stringstream strGenesisState;
 	string genesisStateStr = json_spirit::write_string(obj["accounts"], false);
