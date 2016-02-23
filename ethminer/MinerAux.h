@@ -77,7 +77,7 @@ inline std::string credits()
 	std::ostringstream out;
 	out
 		<< "Ethereum (++) " << dev::Version << endl
-		<< "  Code by Gav Wood et al, (c) 2013, 2014, 2015." << endl;
+		<< "  Code by Berlin ÐΞV team, (c) 2013, 2014, 2015, 2016." << endl;
 	return out.str();
 }
 
