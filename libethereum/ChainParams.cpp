@@ -34,19 +34,6 @@ using namespace dev;
 using namespace eth;
 namespace js = json_spirit;
 
-ChainParams::ChainParams()
-{
-	genesisState[Address(1)] = Account(0, 1);
-	genesisState[Address(2)] = Account(0, 1);
-	genesisState[Address(3)] = Account(0, 1);
-	genesisState[Address(4)] = Account(0, 1);
-	// Setup default precompiled contracts as equal to genesis of Frontier.
-	precompiled.insert(make_pair(Address(1), PrecompiledContract(3000, 0, PrecompiledRegistrar::executor("ecrecover"))));
-	precompiled.insert(make_pair(Address(2), PrecompiledContract(60, 12, PrecompiledRegistrar::executor("sha256"))));
-	precompiled.insert(make_pair(Address(3), PrecompiledContract(600, 120, PrecompiledRegistrar::executor("ripemd160"))));
-	precompiled.insert(make_pair(Address(4), PrecompiledContract(15, 3, PrecompiledRegistrar::executor("identity"))));
-}
-
 ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
 {
 	loadConfig(_json, true, _stateRoot);
@@ -83,7 +70,6 @@ ChainParams ChainParams::setGenesis(string const& _json, h256 const& _stateRoot,
 	json_spirit::read_string(_json, val);
 	js::mObject genesis = val.get_obj();
 
-	cp.stateRoot = _stateRoot;
 	cp.parentHash = h256(genesis["parentHash"].get_str());
 	cp.author = genesis.count("coinbase") ? h160(genesis["coinbase"].get_str()) : h160(genesis["author"].get_str());
 	cp.difficulty = genesis.count("difficulty") ? u256(fromBigEndian<u256>(fromHex(genesis["difficulty"].get_str()))) : 0;
@@ -100,6 +86,7 @@ ChainParams ChainParams::setGenesis(string const& _json, h256 const& _stateRoot,
 		cp.sealFields = 2;
 		cp.sealRLP = rlp(mixHash) + rlp(nonce);
 	}
+	cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot();
 	return cp;
 }
 
