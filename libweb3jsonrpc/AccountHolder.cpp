@@ -23,7 +23,6 @@
 
 #include "AccountHolder.h"
 #include <random>
-#include <ctime>
 #include <libdevcore/Guards.h>
 #include <libethereum/Client.h>
 #include <libethcore/KeyManager.h>
@@ -109,7 +108,16 @@ AddressHash SimpleAccountHolder::realAccounts() const
 TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
 	TransactionNotification ret;
-	if (m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
+	bool unlocked = false;
+	if (m_unlockedAccounts.count(_t.from))
+	{
+		chrono::steady_clock::time_point start = m_unlockedAccounts[_t.from].first;
+		chrono::seconds duration(m_unlockedAccounts[_t.from].second);
+		auto end = start + duration;
+		if (start < end && chrono::steady_clock::now() < end)
+			unlocked = true;
+	}
+	if (!unlocked && m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
 		ret.r = TransactionRepercussion::Refused;
 	if (isRealAccount(_t.from))
 	{
@@ -129,6 +137,31 @@ TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionS
 	else
 		ret.r = TransactionRepercussion::UnknownAccount;
 	return ret;
+}
+
+bool SimpleAccountHolder::unlockAccount(Address const& _account, string const& _password, unsigned _duration)
+{
+	if (!m_keyManager.hasAccount(_account))
+		return false;
+
+	if (_duration == 0)
+		// Lock it even if the password is wrong.
+		m_unlockedAccounts[_account].second = 0;
+
+	m_keyManager.notePassword(_password);
+
+	try
+	{
+		if (!m_keyManager.secret(_account))
+			return false;
+	}
+	catch (PasswordUnknown const&)
+	{
+		return false;
+	}
+	m_unlockedAccounts[_account] = make_pair(chrono::steady_clock::now(), _duration);
+
+	return true;
 }
 
 TransactionNotification FixedAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)

@@ -246,7 +246,15 @@ void MainCLI::execute()
 			auto adminNetFace = new rpc::AdminNet(web3, sessionManager);
 			auto adminUtilsFace = new rpc::AdminUtils(sessionManager, this);
 
-			ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace> rpcServer(ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(m_keyManager), adminEthFace, adminNetFace, adminUtilsFace);
+			ModularServer<
+				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+			> rpcServer(
+				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
+				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(m_keyManager, accountHolder),
+				adminEthFace, adminNetFace, adminUtilsFace
+			);
 
 			JSLocalConsole console;
 			rpcServer.addConnector(console.createConnector());
@@ -323,7 +331,11 @@ namespace dev
 struct RPCPrivate
 {
 #if ETH_JSONRPC || !ETH_TRUE
-	unique_ptr<ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace, rpc::NetFace, rpc::Web3Face, rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>> jsonrpcServer;
+	unique_ptr<ModularServer<
+		rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+		rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+		rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+	>> jsonrpcServer;
 	unique_ptr<rpc::SessionManager> sessionManager;
 	unique_ptr<SimpleAccountHolder> accountHolder;
 #endif
@@ -341,9 +353,15 @@ void MainCLI::startRPC(WebThreeDirect& _web3, TrivialGasPricer& _gasPricer)
 		m_rpcPrivate->accountHolder.reset(new SimpleAccountHolder([&](){ return _web3.ethereum(); }, [](Address){ return string(); }, m_keyManager));
 		auto ethFace = new rpc::Eth(*_web3.ethereum(), *m_rpcPrivate->accountHolder);
 		auto adminEthFace = new rpc::AdminEth(*_web3.ethereum(), _gasPricer, m_keyManager, *m_rpcPrivate->sessionManager);
-		m_rpcPrivate->jsonrpcServer.reset(new ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-							rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-							rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>(ethFace, new rpc::LevelDB(), new rpc::Whisper(_web3, {}), new rpc::Net(_web3), new rpc::Web3(_web3.clientVersion()), new rpc::Personal(m_keyManager), adminEthFace, new rpc::AdminNet(_web3, *m_rpcPrivate->sessionManager), new rpc::AdminUtils(*m_rpcPrivate->sessionManager)));
+		m_rpcPrivate->jsonrpcServer.reset(new ModularServer<
+			rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+			rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+		>(
+			ethFace, new rpc::LevelDB(), new rpc::Whisper(_web3, {}),
+			new rpc::Net(_web3), new rpc::Web3(_web3.clientVersion()), new rpc::Personal(m_keyManager, *m_rpcPrivate->accountHolder),
+			adminEthFace, new rpc::AdminNet(_web3, *m_rpcPrivate->sessionManager), new rpc::AdminUtils(*m_rpcPrivate->sessionManager)
+		));
 		if (m_jsonRPCPort > -1)
 		{
 			auto httpConnector = new SafeHttpServer(m_jsonRPCPort, "", "", SensibleHttpThreads);

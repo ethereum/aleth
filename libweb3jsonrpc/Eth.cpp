@@ -262,6 +262,7 @@ string Eth::eth_sendTransaction(Json::Value const& _json)
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 	BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	return string();
 }
 
 string Eth::eth_signTransaction(Json::Value const& _json)
