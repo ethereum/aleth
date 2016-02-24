@@ -14,7 +14,7 @@
 	You should have received a copy of the GNU General Public License
 	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
-/** 
+/**
  * @file main.cpp
  * @author Gav Wood <i@gavwood.com>
  * @author Tasha Carl <tasha@carl.pro> - I here by place all my contributions in this file under MIT licence, as specified by http://opensource.org/licenses/MIT.
@@ -151,7 +151,7 @@ void help()
 		<< "    --no-bootstrap  Do not connect to the default Ethereum peer servers (default only when --no-discovery is used)." << endl
 		<< "    -x,--peers <number>  Attempt to connect to a given number of peers (default: 11)." << endl
 		<< "    --peer-stretch <number>  Give the accepted connection multiplier (default: 7)." << endl
-	
+
 		<< "    --public-ip <ip>  Force advertised public IP to the given IP (default: auto)." << endl
 		<< "    --listen-ip <ip>(:<port>)  Listen on the given IP for incoming connections (default: 0.0.0.0)." << endl
 		<< "    --listen <port>  Listen on the given port for incoming connections (default: 30303)." << endl
@@ -166,7 +166,7 @@ void help()
 		<< "        required		Keep connected at all times." << endl
 // TODO:
 //		<< "	--trust-peers <filename>  Space delimited list of publickeys." << endl
-	
+
 		<< "    --no-discovery  Disable node discovery, implies --no-bootstrap." << endl
 		<< "    --pin  Only accept or connect to trusted peers." << endl
 		<< "    --hermit  Equivalent to --no-discovery --pin." << endl
@@ -349,7 +349,6 @@ int main(int argc, char** argv)
 	std::string rpcCorsDomain = "";
 #endif
 	string jsonAdmin;
-	string paramsJSON;
 	ChainParams chainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
 	u256 gasFloor = Invalid256;
 	string privateChain;
@@ -364,7 +363,7 @@ int main(int argc, char** argv)
 	string publicIP;
 	string remoteHost;
 	unsigned short remotePort = 30303;
-	
+
 	unsigned peers = 11;
 	unsigned peerStretch = 7;
 	std::map<NodeID, pair<NodeIPEndpoint,bool>> preferredNodes;
@@ -404,7 +403,7 @@ int main(int argc, char** argv)
 	/// Wallet password stuff
 	string masterPassword;
 	bool masterSet = false;
-	
+
 	/// Whisper
 	bool useWhisper = false;
 
@@ -426,6 +425,8 @@ int main(int argc, char** argv)
 
 	MinerCLI m(MinerCLI::OperationMode::None);
 
+	string configJSON;
+	string genesisJSON;
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
@@ -596,11 +597,23 @@ int main(int argc, char** argv)
 		}
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
 			dbPath = argv[++i];
-		else if ((arg == "--genesis-json" || arg == "--genesis" || arg == "--config") && i + 1 < argc)
+		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
 		{
 			try
 			{
-				paramsJSON = contentsString(argv[++i]);
+				genesisJSON = contentsString(argv[++i]);
+			}
+			catch (...)
+			{
+				cerr << "Bad " << arg << " option: " << argv[i] << endl;
+				return -1;
+			}
+		}
+		else if (arg == "--config" && i + 1 < argc)
+		{
+			try
+			{
+				configJSON = contentsString(argv[++i]);
 			}
 			catch (...)
 			{
@@ -793,13 +806,13 @@ int main(int argc, char** argv)
 				string pubk;
 				string hostIP;
 				unsigned short port = c_defaultListenPort;
-				
+
 				// type:key@ip[:port]
 				vector<string> typeAndKeyAtHostAndPort;
 				boost::split(typeAndKeyAtHostAndPort, p, boost::is_any_of(":"));
 				if (typeAndKeyAtHostAndPort.size() < 2 || typeAndKeyAtHostAndPort.size() > 3)
 					continue;
-				
+
 				type = typeAndKeyAtHostAndPort[0];
 				if (typeAndKeyAtHostAndPort.size() == 3)
 					port = (uint16_t)atoi(typeAndKeyAtHostAndPort[2].c_str());
@@ -812,11 +825,11 @@ int main(int argc, char** argv)
 				if (pubk.size() != 128)
 					continue;
 				hostIP = keyAndHost[1];
-				
+
 				// todo: use Network::resolveHost()
 				if (hostIP.size() < 4 /* g.it */)
 					continue;
-				
+
 				bool required = type == "required";
 				if (!required && type != "default")
 					continue;
@@ -893,9 +906,12 @@ int main(int argc, char** argv)
 		return 0;
 	}
 
-	// Set up all the chain config stuff.
-	if (!paramsJSON.empty())
-		chainParams = ChainParams(paramsJSON);
+	if (!configJSON.empty())
+		chainParams = chainParams.loadConfig(configJSON);
+
+	if (!genesisJSON.empty())
+		chainParams = chainParams.loadGenesis(genesisJSON);
+
 	if (!privateChain.empty())
 	{
 		chainParams.extraData = sha3(privateChain).asBytes();
@@ -1276,12 +1292,12 @@ int main(int argc, char** argv)
 			SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator);
 			rpc::SessionManager sessionManager;
 			string sessionKey = sessionManager.newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
-			
+
 			auto ethFace = new rpc::Eth(*web3.ethereum(), accountHolder);
 			auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, sessionManager);
 			auto adminNetFace = new rpc::AdminNet(web3, sessionManager);
 			auto adminUtilsFace = new rpc::AdminUtils(sessionManager);
-			
+
 			ModularServer<
 				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
