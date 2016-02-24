@@ -36,12 +36,12 @@ namespace js = json_spirit;
 
 ChainParams::ChainParams(string const& _json, h256 const& _stateRoot)
 {
-	loadConfig(_json, _stateRoot);
+	*this = loadConfig(_json, _stateRoot);
 }
 
 ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot) const
 {
-	ChainParams cp = ChainParams(*this);
+	ChainParams cp(*this);
 	js::mValue val;
 	json_spirit::read_string(_json, val);
 	js::mObject obj = val.get_obj();
@@ -61,22 +61,22 @@ ChainParams ChainParams::loadConfig(string const& _json, h256 const& _stateRoot)
 	cp = cp.loadGenesis(genesisStr, _stateRoot);
 	// genesis state
 	string genesisStateStr = json_spirit::write_string(obj["accounts"], false);
-	cp = cp.loadGenesisState(genesisStateStr, unordered_map<Address, PrecompiledContract>());
+	cp = cp.loadGenesisState(genesisStateStr, unordered_map<Address, PrecompiledContract>(), _stateRoot);
 	return cp;
 }
 
-ChainParams ChainParams::loadGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled) const
+ChainParams ChainParams::loadGenesisState(string const& _json, unordered_map<Address, PrecompiledContract> const& _precompiled, h256 const& _stateRoot) const
 {
-	ChainParams cp(_org);
+	ChainParams cp(*this);
 	cp.precompiled = _precompiled;
 	cp.genesisState = jsonToAccountMap(_json, nullptr, &cp.precompiled);
-	cp.stateRoot = cp.calculateStateRoot();
+	cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot();
 	return cp;
 }
 
 ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot) const
 {
-	ChainParams cp(_org);
+	ChainParams cp(*this);
 
 	js::mValue val;
 	json_spirit::read_string(_json, val);
