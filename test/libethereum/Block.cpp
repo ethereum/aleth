@@ -33,6 +33,7 @@ using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelper)
 
+#ifdef __linux__
 BOOST_AUTO_TEST_CASE(bStructures)
 {
 	BlockChat chat;
@@ -45,6 +46,7 @@ BOOST_AUTO_TEST_CASE(bStructures)
 	BOOST_WARN(string(details.name()).find("◌") != string::npos);
 	BOOST_WARN(string(exeptions.name()).find("ℹ") != string::npos);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
