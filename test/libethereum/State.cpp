@@ -98,6 +98,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 }
 } }// Namespace Close
 
+
 BOOST_AUTO_TEST_SUITE(StateTests)
 
 BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)

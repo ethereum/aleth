@@ -34,15 +34,14 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(BlockChainSuite)
+BOOST_FIXTURE_TEST_SUITE(BlockChainSuite, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(output)
 {
-	TestOutputHelper::initTest();
-	BOOST_REQUIRE(string(BlockChainDebug::name()) == string(EthBlue "☍" EthWhite " ◇"));
-	BOOST_REQUIRE(string(BlockChainWarn::name()) == string(EthBlue "☍" EthOnRed EthBlackBold " ✘"));
-	BOOST_REQUIRE(string(BlockChainNote::name()) == string(EthBlue "☍" EthBlue " ℹ"));
-	BOOST_REQUIRE(string(BlockChainChat::name()) == string(EthBlue "☍" EthWhite " ◌"));
+	BOOST_WARN(string(BlockChainDebug::name()) == string(EthBlue "☍" EthWhite " ◇"));
+	BOOST_WARN(string(BlockChainWarn::name()) == string(EthBlue "☍" EthOnRed EthBlackBold " ✘"));
+	BOOST_WARN(string(BlockChainNote::name()) == string(EthBlue "☍" EthBlue " ℹ"));
+	BOOST_WARN(string(BlockChainChat::name()) == string(EthBlue "☍" EthWhite " ◌"));
 
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 	TestBlockChain bc(genesis);
@@ -59,7 +58,6 @@ BOOST_AUTO_TEST_CASE(output)
 
 BOOST_AUTO_TEST_CASE(opendb)
 {
-	TestOutputHelper::initTest();
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 
 	TransientDirectory tempDirBlockchain;
@@ -112,7 +110,6 @@ BOOST_AUTO_TEST_CASE(rebuild)
 
 BOOST_AUTO_TEST_CASE(sync)
 {
-	TestOutputHelper::initTest();
 	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
@@ -220,7 +217,6 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 	//FutureTimeKnown
 	//Malformed
 
-	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 
 	TestTransaction tr = TestTransaction::defaultTransaction();
@@ -243,11 +239,11 @@ BOOST_AUTO_TEST_CASE(attemptImport)
 	importAttempt = bcRef.attemptImport(blockBytes, bc.testGenesis().state().db());
 	BOOST_REQUIRE(importAttempt.first == ImportResult::Malformed);
 	BOOST_REQUIRE(onBadwasCalled == true);
+	cout << endl;
 }
 
 BOOST_AUTO_TEST_CASE(insert)
 {
-	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	TestTransaction tr = TestTransaction::defaultTransaction();
 	TestBlock block;
@@ -287,7 +283,6 @@ BOOST_AUTO_TEST_CASE(insert)
 
 BOOST_AUTO_TEST_CASE(insertException)
 {
-	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -303,7 +298,6 @@ BOOST_AUTO_TEST_CASE(insertException)
 
 BOOST_AUTO_TEST_CASE(rescue)
 {
-	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -343,7 +337,6 @@ BOOST_AUTO_TEST_CASE(rescue)
 
 BOOST_AUTO_TEST_CASE(updateStats)
 {
-	TestOutputHelper::initTest();
 	TestBlockChain bc(TestBlockChain::defaultGenesisBlock());
 	BlockChain& bcRef = bc.interfaceUnsafe();
 
@@ -377,4 +370,3 @@ BOOST_AUTO_TEST_CASE(updateStats)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-

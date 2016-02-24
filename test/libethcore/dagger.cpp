@@ -31,16 +31,16 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 
 namespace js = json_spirit;
 
 using dev::operator <<;
 
-BOOST_AUTO_TEST_SUITE(DashimotoTests)
+BOOST_FIXTURE_TEST_SUITE(DashimotoTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(basic_test)
 {
-	test::TestOutputHelper::initTest();
 	string testPath = test::getTestPath();
 
 	testPath += "/PoWTests";
@@ -81,5 +81,3 @@ BOOST_AUTO_TEST_CASE(basic_test)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
-

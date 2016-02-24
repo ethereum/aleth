@@ -24,14 +24,15 @@
 #include <libethcore/CommonJS.h>
 #include <test/TestHelper.h>
 
-BOOST_AUTO_TEST_SUITE(commonjs)
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
+
+BOOST_FIXTURE_TEST_SUITE(commonjs, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(jsToPublic)
 {
-	test::TestOutputHelper::initTest();
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.pub());
 	Public pub = dev::jsToPublic(s);
@@ -40,7 +41,6 @@ BOOST_AUTO_TEST_CASE(jsToPublic)
 
 BOOST_AUTO_TEST_CASE(jsToAddress)
 {
-	test::TestOutputHelper::initTest();
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.address());
 	Address address = dev::jsToAddress(s);
@@ -49,7 +49,6 @@ BOOST_AUTO_TEST_CASE(jsToAddress)
 
 BOOST_AUTO_TEST_CASE(jsToSecret)
 {
-	test::TestOutputHelper::initTest();
 	KeyPair kp = KeyPair::create();
 	string s = toJS(kp.secret().makeInsecure());
 	Secret secret = dev::jsToSecret(s);

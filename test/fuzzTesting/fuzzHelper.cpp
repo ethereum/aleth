@@ -404,11 +404,10 @@ void RandomCodeOptions::setWeights()
 	opCodeProbability = boostDescreteDistrib(weights);
 }
 
-BOOST_AUTO_TEST_SUITE(RandomCodeTests)
+BOOST_FIXTURE_TEST_SUITE(RandomCodeTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(rndCode)
 {
-	test::TestOutputHelper::initTest();
 	std::string code;
 	cnote << "Testing Random Code: ";
 	try

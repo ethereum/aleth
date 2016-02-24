@@ -26,12 +26,12 @@
 #include <libevm/VMFace.h>
 using namespace dev;
 using namespace eth;
+using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(libethereum)
+BOOST_FIXTURE_TEST_SUITE(libethereum, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(TransactionGasRequired)
 {
-	test::TestOutputHelper::initTest();
 	Transaction tr(fromHex("0xf86d800182521c94095e7baea6a6c7c4c2dfeb977efac326af552d870a8e0358ac39584bc98a7c979f984b031ba048b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353a0efffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"), CheckTransaction::None);
 	BOOST_CHECK_MESSAGE(tr.gasRequired(FrontierSchedule) == 21952, "Transaction::GasRequired() has changed!");
 }
@@ -59,7 +59,6 @@ BOOST_AUTO_TEST_CASE(TransactionGasRequired)
 
 BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
 {
-	test::TestOutputHelper::initTest();
 	std::stringstream buffer;
 	ExecutionResult exRes;
 
@@ -73,7 +72,6 @@ BOOST_AUTO_TEST_CASE(ExecutionResultOutput)
 
 BOOST_AUTO_TEST_CASE(transactionExceptionOutput)
 {
-	test::TestOutputHelper::initTest();
 	std::stringstream buffer;
 	buffer << TransactionException::BadInstruction;
 	BOOST_CHECK_MESSAGE(buffer.str() == "BadInstruction", "Error output TransactionException::BadInstruction");
@@ -142,7 +140,6 @@ BOOST_AUTO_TEST_CASE(transactionExceptionOutput)
 
 BOOST_AUTO_TEST_CASE(toTransactionExceptionConvert)
 {
-	test::TestOutputHelper::initTest();
 	RLPException rlpEx("exception");//toTransactionException(*(dynamic_cast<Exception*>
 	BOOST_CHECK_MESSAGE(toTransactionException(rlpEx) == TransactionException::BadRLP, "RLPException !=> TransactionException");
 	OutOfGasIntrinsic oogEx;

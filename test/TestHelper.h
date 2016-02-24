@@ -233,9 +233,11 @@ private:
 	Options(Options const&) = delete;
 };
 
+
 class TestOutputHelper
 {
 public:
+	TestOutputHelper() { TestOutputHelper::initTest(); }
 	static void initTest(int _maxTests = 1);
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		

@@ -31,7 +31,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(BlockSuite)
+BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(bStructures)
 {
@@ -40,10 +40,10 @@ BOOST_AUTO_TEST_CASE(bStructures)
 	BlockDetail details;
 	BlockSafeExceptions exeptions;
 
-	BOOST_REQUIRE(string(chat.name()).find("◌") != string::npos);
-	BOOST_REQUIRE(string(trace.name()).find("◎") != string::npos);
-	BOOST_REQUIRE(string(details.name()).find("◌") != string::npos);
-	BOOST_REQUIRE(string(exeptions.name()).find("ℹ") != string::npos);
+	BOOST_WARN(string(chat.name()).find("◌") != string::npos);
+	BOOST_WARN(string(trace.name()).find("◎") != string::npos);
+	BOOST_WARN(string(details.name()).find("◌") != string::npos);
+	BOOST_WARN(string(exeptions.name()).find("ℹ") != string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(bStates)

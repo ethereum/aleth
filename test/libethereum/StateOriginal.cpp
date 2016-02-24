@@ -40,7 +40,7 @@ namespace test
 
 int stateTest();
 
-BOOST_AUTO_TEST_SUITE(StateIntegration)
+BOOST_FIXTURE_TEST_SUITE(StateIntegration, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(Basic)
 {

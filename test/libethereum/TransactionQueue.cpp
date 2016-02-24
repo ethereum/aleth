@@ -29,11 +29,10 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(TransactionQueueSuite)
+BOOST_FIXTURE_TEST_SUITE(TransactionQueueSuite, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(tqMaxNonce)
 {
-	test::TestOutputHelper::initTest();
 	dev::eth::TransactionQueue txq;
 
 	// from a94f5374fce5edbc8e2a8697c15331677e6ebf0b
@@ -65,7 +64,6 @@ BOOST_AUTO_TEST_CASE(tqMaxNonce)
 
 BOOST_AUTO_TEST_CASE(tqPriority)
 {
-	test::TestOutputHelper::initTest();
 	dev::eth::TransactionQueue txq;
 
 	const u256 gasCostCheap =  10 * szabo;
@@ -123,7 +121,6 @@ BOOST_AUTO_TEST_CASE(tqPriority)
 
 BOOST_AUTO_TEST_CASE(tqFuture)
 {
-	test::TestOutputHelper::initTest();
 	dev::eth::TransactionQueue txq;
 
 	// from a94f5374fce5edbc8e2a8697c15331677e6ebf0b
@@ -155,7 +152,6 @@ BOOST_AUTO_TEST_CASE(tqFuture)
 
 BOOST_AUTO_TEST_CASE(tqLimits)
 {
-	test::TestOutputHelper::initTest();
 	dev::eth::TransactionQueue txq(3, 3);
 	const u256 gasCostMed =  20 * szabo;
 	const u256 gas = 25000;
