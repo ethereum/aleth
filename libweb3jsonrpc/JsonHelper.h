@@ -32,6 +32,7 @@ namespace dev
 
 Json::Value toJson(std::map<u256, u256> const& _storage);
 Json::Value toJson(std::unordered_map<u256, u256> const& _storage);
+Json::Value toJson(Address const& _address);
 
 namespace p2p
 {

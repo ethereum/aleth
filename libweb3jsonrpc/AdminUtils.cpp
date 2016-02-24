@@ -17,6 +17,11 @@ AdminUtils::AdminUtils(SessionManager& _sm, SystemManager* _systemManager):
 bool AdminUtils::admin_setVerbosity(int _v, std::string const& _session)
 {
 	RPC_ADMIN;
+	return admin_verbosity(_v);
+}
+
+bool AdminUtils::admin_verbosity(int _v)
+{
 	g_logVerbosity = _v;
 	return true;
 }

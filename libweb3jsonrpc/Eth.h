@@ -66,6 +66,11 @@ class Eth: public dev::rpc::EthFace
 public:
 	Eth(eth::Interface& _eth, eth::AccountHolder& _ethAccounts);
 
+	virtual RPCModules implementedModules() const override
+	{
+		return RPCModules{RPCModule{"eth", "1.0"}};
+	}
+
 	eth::AccountHolder const& ethAccounts() const { return m_ethAccounts; }
 
 	virtual std::string eth_protocolVersion() override;

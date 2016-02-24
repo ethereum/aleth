@@ -4,6 +4,7 @@
 #include <libethcore/ICAP.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
+#include <libethashseal/EthashClient.h>
 #include "AdminEth.h"
 #include "SessionManager.h"
 #include "JsonHelper.h"
@@ -19,7 +20,7 @@ AdminEth::AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManage
 	m_sm(_sm)
 {}
 
-bool AdminEth::admin_eth_setMining(bool _on, std::string const& _session)
+bool AdminEth::admin_eth_setMining(bool _on, string const& _session)
 {
 	RPC_ADMIN;
 	if (_on)
@@ -29,7 +30,7 @@ bool AdminEth::admin_eth_setMining(bool _on, std::string const& _session)
 	return true;
 }
 
-Json::Value AdminEth::admin_eth_blockQueueStatus(std::string const& _session)
+Json::Value AdminEth::admin_eth_blockQueueStatus(string const& _session)
 {
 	RPC_ADMIN;
 	Json::Value ret;
@@ -44,21 +45,21 @@ Json::Value AdminEth::admin_eth_blockQueueStatus(std::string const& _session)
 	return ret;
 }
 
-bool AdminEth::admin_eth_setAskPrice(std::string const& _wei, std::string const& _session)
+bool AdminEth::admin_eth_setAskPrice(string const& _wei, string const& _session)
 {
 	RPC_ADMIN;
 	m_gp.setAsk(jsToU256(_wei));
 	return true;
 }
 
-bool AdminEth::admin_eth_setBidPrice(std::string const& _wei, std::string const& _session)
+bool AdminEth::admin_eth_setBidPrice(string const& _wei, string const& _session)
 {
 	RPC_ADMIN;
 	m_gp.setBid(jsToU256(_wei));
 	return true;
 }
 
-Json::Value AdminEth::admin_eth_findBlock(std::string const& _blockHash, std::string const& _session)
+Json::Value AdminEth::admin_eth_findBlock(string const& _blockHash, string const& _session)
 {
 	RPC_ADMIN;
 	h256 h(_blockHash);
@@ -79,20 +80,20 @@ Json::Value AdminEth::admin_eth_findBlock(std::string const& _blockHash, std::st
 	}
 }
 
-std::string AdminEth::admin_eth_blockQueueFirstUnknown(std::string const& _session)
+string AdminEth::admin_eth_blockQueueFirstUnknown(string const& _session)
 {
 	RPC_ADMIN;
 	return m_eth.blockQueue().firstUnknown().hex();
 }
 
-bool AdminEth::admin_eth_blockQueueRetryUnknown(std::string const& _session)
+bool AdminEth::admin_eth_blockQueueRetryUnknown(string const& _session)
 {
 	RPC_ADMIN;
 	m_eth.retryUnknown();
 	return true;
 }
 
-Json::Value AdminEth::admin_eth_allAccounts(std::string const& _session)
+Json::Value AdminEth::admin_eth_allAccounts(string const& _session)
 {
 	RPC_ADMIN;
 	Json::Value ret;
@@ -122,7 +123,7 @@ Json::Value AdminEth::admin_eth_allAccounts(std::string const& _session)
 	return ret;
 }
 
-Json::Value AdminEth::admin_eth_newAccount(const Json::Value& _info, std::string const& _session)
+Json::Value AdminEth::admin_eth_newAccount(Json::Value const& _info, string const& _session)
 {
 	RPC_ADMIN;
 	if (!_info.isMember("name"))
@@ -144,26 +145,13 @@ Json::Value AdminEth::admin_eth_newAccount(const Json::Value& _info, std::string
 	return ret;
 }
 
-bool AdminEth::admin_eth_setMiningBenefactor(std::string const& _uuidOrAddress, std::string const& _session)
+bool AdminEth::admin_eth_setMiningBenefactor(string const& _uuidOrAddress, string const& _session)
 {
 	RPC_ADMIN;
-	Address a;
-	h128 uuid = fromUUID(_uuidOrAddress);
-	if (uuid)
-		a = m_keyManager.address(uuid);
-	else if (isHash<Address>(_uuidOrAddress))
-		a = Address(_uuidOrAddress);
-	else
-		throw jsonrpc::JsonRpcException("Invalid UUID or address");
-
-	if (m_setMiningBenefactor)
-		m_setMiningBenefactor(a);
-	else
-		m_eth.setAuthor(a);
-	return true;
+	return miner_setEtherbase(_uuidOrAddress);
 }
 
-Json::Value AdminEth::admin_eth_inspect(std::string const& _address, std::string const& _session)
+Json::Value AdminEth::admin_eth_inspect(string const& _address, string const& _session)
 {
 	RPC_ADMIN;
 	if (!isHash<Address>(_address))
@@ -178,7 +166,7 @@ Json::Value AdminEth::admin_eth_inspect(std::string const& _address, std::string
 	return ret;
 }
 
-h256 AdminEth::blockHash(std::string const& _blockNumberOrHash) const
+h256 AdminEth::blockHash(string const& _blockNumberOrHash) const
 {
 	if (isHash<h256>(_blockNumberOrHash))
 		return h256(_blockNumberOrHash.substr(_blockNumberOrHash.size() - 64, 64));
@@ -192,7 +180,7 @@ h256 AdminEth::blockHash(std::string const& _blockNumberOrHash) const
 	}
 }
 
-Json::Value AdminEth::admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session)
+Json::Value AdminEth::admin_eth_reprocess(string const& _blockNumberOrHash, string const& _session)
 {
 	RPC_ADMIN;
 	Json::Value ret;
@@ -204,7 +192,7 @@ Json::Value AdminEth::admin_eth_reprocess(std::string const& _blockNumberOrHash,
 	return ret;
 }
 
-Json::Value AdminEth::admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session)
+Json::Value AdminEth::admin_eth_vmTrace(string const& _blockNumberOrHash, int _txIndex, string const& _session)
 {
 	RPC_ADMIN;
 	
@@ -237,7 +225,7 @@ Json::Value AdminEth::admin_eth_vmTrace(std::string const& _blockNumberOrHash, i
 	return ret;
 }
 
-Json::Value AdminEth::admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session)
+Json::Value AdminEth::admin_eth_getReceiptByHashAndIndex(string const& _blockNumberOrHash, int _txIndex, string const& _session)
 {
 	RPC_ADMIN;
 	if (_txIndex < 0)
@@ -249,4 +237,60 @@ Json::Value AdminEth::admin_eth_getReceiptByHashAndIndex(std::string const& _blo
 	if ((unsigned)_txIndex >= rs.receipts.size())
 		throw jsonrpc::JsonRpcException("Index too large.");
 	return toJson(rs.receipts[_txIndex]);
+}
+
+bool AdminEth::miner_start(int)
+{
+	m_eth.startSealing();
+	return true;
+}
+
+bool AdminEth::miner_stop()
+{
+	m_eth.stopSealing();
+	return true;
+}
+
+bool AdminEth::miner_setEtherbase(string const& _uuidOrAddress)
+{
+	Address a;
+	h128 uuid = fromUUID(_uuidOrAddress);
+	if (uuid)
+		a = m_keyManager.address(uuid);
+	else if (isHash<Address>(_uuidOrAddress))
+		a = Address(_uuidOrAddress);
+	else
+		throw jsonrpc::JsonRpcException("Invalid UUID or address");
+
+	if (m_setMiningBenefactor)
+		m_setMiningBenefactor(a);
+	else
+		m_eth.setAuthor(a);
+	return true;
+}
+
+bool AdminEth::miner_setExtra(string const& _extraData)
+{
+	m_eth.setExtraData(asBytes(_extraData));
+	return true;
+}
+
+bool AdminEth::miner_setGasPrice(string const& _gasPrice)
+{
+	m_gp.setAsk(jsToU256(_gasPrice));
+	return true;
+}
+
+string AdminEth::miner_hashrate()
+{
+	EthashClient const* client = nullptr;
+	try
+	{
+		client = asEthashClient(&m_eth);
+	}
+	catch (...)
+	{
+		throw jsonrpc::JsonRpcException("Hashrate not available - blockchain does not support mining.");
+	}
+	return toJS(client->hashrate());
 }

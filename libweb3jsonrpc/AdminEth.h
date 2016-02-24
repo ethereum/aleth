@@ -21,6 +21,11 @@ class AdminEth: public AdminEthFace
 public:
 	AdminEth(eth::Client& _eth, eth::TrivialGasPricer& _gp, eth::KeyManager& _keyManager, SessionManager& _sm);
 
+	virtual RPCModules implementedModules() const override
+	{
+		return RPCModules{RPCModule{"admin", "1.0"}, RPCModule{"miner", "1.0"}};
+	}
+
 	virtual bool admin_eth_setMining(bool _on, std::string const& _session) override;
 	virtual Json::Value admin_eth_blockQueueStatus(std::string const& _session) override;
 	virtual bool admin_eth_setAskPrice(std::string const& _wei, std::string const& _session) override;
@@ -35,6 +40,12 @@ public:
 	virtual Json::Value admin_eth_reprocess(std::string const& _blockNumberOrHash, std::string const& _session) override;
 	virtual Json::Value admin_eth_vmTrace(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
 	virtual Json::Value admin_eth_getReceiptByHashAndIndex(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _session) override;
+	virtual bool miner_start(int _threads) override;
+	virtual bool miner_stop() override;
+	virtual bool miner_setEtherbase(std::string const& _uuidOrAddress) override;
+	virtual bool miner_setExtra(std::string const& _extraData) override;
+	virtual bool miner_setGasPrice(std::string const& _gasPrice) override;
+	virtual std::string miner_hashrate() override;
 
 	virtual void setMiningBenefactorChanger(std::function<void(Address const&)> const& _f) { m_setMiningBenefactor = _f; }
 private:
