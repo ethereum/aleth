@@ -996,7 +996,7 @@ int main(int argc, char** argv)
 	auto nodesState = contents((dbPath.size() ? dbPath : getDataDir()) + "/network.rlp");
 	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
 	dev::WebThreeDirect web3(
-		WebThreeDirect::composeClientVersion("++eth", clientName),
+		WebThreeDirect::composeClientVersion("++eth"),
 		dbPath,
 		chainParams,
 		withExisting,
@@ -1164,7 +1164,7 @@ int main(int argc, char** argv)
 //	std::shared_ptr<eth::BasicGasPricer> gasPricer = make_shared<eth::BasicGasPricer>(u256(double(ether / 1000) / etherPrice), u256(blockFees * 1000));
 	std::shared_ptr<eth::TrivialGasPricer> gasPricer = make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
 	eth::Client* c = nodeMode == NodeMode::Full ? web3.ethereum() : nullptr;
-	StructuredLogger::starting(WebThreeDirect::composeClientVersion("++eth", clientName), dev::Version);
+	StructuredLogger::starting(WebThreeDirect::composeClientVersion("++eth"), dev::Version);
 	if (c)
 	{
 		c->setGasPricer(gasPricer);
@@ -1341,7 +1341,7 @@ int main(int argc, char** argv)
 		jsonrpcServer->StopListening();
 #endif
 
-	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("++eth", clientName), dev::Version);
+	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("++eth"), dev::Version);
 	auto netData = web3.saveNetwork();
 	if (!netData.empty())
 		writeFile((dbPath.size() ? dbPath : getDataDir()) + "/network.rlp", netData);
