@@ -1,2 +1,2 @@
 # cpp-ethereum-cmake
-CMake support files for the C++ (Turbo) Ethereum projects
+CMake support files for the Ethereum C++ projects
