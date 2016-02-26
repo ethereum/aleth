@@ -26,7 +26,7 @@ if (EVMJIT)
 		if (DEFINED MSVC)
 			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
 		elseif (DEFINED APPLE)
-			set(LLVM_DIR "/usr/local/opt/llvm/share/llvm/cmake")
+			set(LLVM_DIR "/usr/local/opt/llvm/lib/cmake/llvm")
 		endif()
 	endif()
 
