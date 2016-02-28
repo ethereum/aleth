@@ -323,6 +323,14 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 				transition(ec);
 			else
 			{
+				if (!m_io)
+				{
+					clog(NetP2PWarn) << "Internal error in handshake: RLPXFrameCoder disappeared.";
+					m_nextState = Error;
+					transition();
+					return;
+
+				}
 				/// authenticate and decrypt header
 				if (!m_io->authAndDecryptHeader(bytesRef(m_handshakeInBuffer.data(), m_handshakeInBuffer.size())))
 				{
@@ -359,6 +367,14 @@ void RLPXHandshake::transition(boost::system::error_code _ech)
 						transition(ec);
 					else
 					{
+						if (!m_io)
+						{
+							clog(NetP2PWarn) << "Internal error in handshake: RLPXFrameCoder disappeared.";
+							m_nextState = Error;
+							transition();
+							return;
+
+						}
 						bytesRef frame(&m_handshakeInBuffer);
 						if (!m_io->authAndDecryptFrame(frame))
 						{
