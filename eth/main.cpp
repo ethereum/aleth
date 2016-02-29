@@ -1188,7 +1188,7 @@ int main(int argc, char** argv)
 	cout << "Mining Beneficiary: " << renderFullAddress(author) << endl;
 	cout << "Foundation: " << renderFullAddress(Address("de0b295669a9fd93d5f28d9ec85e40f4cb697bae")) << endl;
 
-	if (bootstrap || !remoteHost.empty() || disableDiscovery)
+	if (bootstrap || !remoteHost.empty() || enableDiscovery)
 	{
 		web3.startNetwork();
 		cout << "Node ID: " << web3.enode() << endl;
