@@ -415,7 +415,7 @@ int main(int argc, char** argv)
 	}
 
 	MinerCLI m(MinerCLI::OperationMode::None);
-	KeyCLI keym(KeyCLI::OperationMode::ListBare);
+	KeyCLI keym(KeyCLI::OperationMode::None);
 
 	bool accountMode = (string)argv[1] == "wallet" || (string)argv[1] == "account";
 	bool minerMode = (string)argv[1] == "miner";
