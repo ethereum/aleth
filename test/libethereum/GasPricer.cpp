@@ -31,13 +31,12 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::test;
 
 namespace dev {  namespace test {
 
 void executeGasPricerTest(string const& name, double _etherPrice, double _blockFee, string const& bcTestPath, TransactionPriority _txPrio, u256 _expectedAsk, u256 _expectedBid, eth::Network _sealEngineNetwork = eth::Network::Test)
 {
-	test::TestOutputHelper::initTest();
-	cnote << name;
 	BasicGasPricer gp(u256(double(ether / 1000) / _etherPrice), u256(_blockFee * 1000));
 
 	Json::Value vJson = test::loadJsonFromFile(test::getTestPath() + bcTestPath);
@@ -50,12 +49,10 @@ void executeGasPricerTest(string const& name, double _etherPrice, double _blockF
 }
 } }
 
-BOOST_AUTO_TEST_SUITE(GasPricer)
+BOOST_FIXTURE_TEST_SUITE(GasPricer, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(trivialGasPricer)
 {
-	test::TestOutputHelper::initTest();
-	cnote << "trivialGasPricer";
 	std::shared_ptr<dev::eth::GasPricer> gp(new TrivialGasPricer);
 	BOOST_CHECK_EQUAL(gp->ask(Block(Block::Null)), DefaultGasPrice);
 	BOOST_CHECK_EQUAL(gp->bid(), DefaultGasPrice);
@@ -67,8 +64,6 @@ BOOST_AUTO_TEST_CASE(trivialGasPricer)
 
 BOOST_AUTO_TEST_CASE(basicGasPricerNoUpdate)
 {
-	test::TestOutputHelper::initTest();
-	cnote << "basicGasPricer";
 	BasicGasPricer gp(u256(double(ether / 1000) / 30.679), u256(15.0 * 1000));
 	BOOST_CHECK_EQUAL(gp.ask(Block(Block::Null)), 155632494086);
 	BOOST_CHECK_EQUAL(gp.bid(), 155632494086);

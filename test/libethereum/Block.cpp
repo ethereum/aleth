@@ -31,8 +31,9 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(BlockSuite)
+BOOST_FIXTURE_TEST_SUITE(BlockSuite, TestOutputHelper)
 
+#if !defined(_WIN32)
 BOOST_AUTO_TEST_CASE(bStructures)
 {
 	BlockChat chat;
@@ -45,6 +46,7 @@ BOOST_AUTO_TEST_CASE(bStructures)
 	BOOST_REQUIRE(string(details.name()).find("◌") != string::npos);
 	BOOST_REQUIRE(string(exeptions.name()).find("ℹ") != string::npos);
 }
+#endif
 
 BOOST_AUTO_TEST_CASE(bStates)
 {
