@@ -453,7 +453,7 @@ public:
 		}
 		case OperationMode::Inspect:
 		{
-			keyManager();
+			keyManager(true);
 			if (m_inputs.empty())
 				m_inputs.push_back(toAddress(KeyManager::brain(getPassword("Enter brain wallet key phrase: "))).hex());
 			for (auto i: m_inputs)
@@ -467,7 +467,7 @@ public:
 				cout << "  Raw hex: " << a.hex() << endl;
 				if (m_showSecret)
 				{
-					Secret s = keyManager().secret(a);
+					Secret s = keyManager(true).secret(a);
 					cout << "  Secret: " << (m_showSecret ? toHex(s.ref()) : (toHex(s.ref().cropped(0, 8)) + "...")) << endl;
 				}
 			}
@@ -862,14 +862,14 @@ private:
 		return Address();
 	}
 
-	KeyManager& keyManager()
+	KeyManager& keyManager(bool walletLess=false)
 	{
 		if (!m_keyManager)
 		{
 			m_keyManager.reset(new KeyManager(m_walletPath, m_secretsPath));
 			if (m_keyManager->exists())
 				openWallet(*m_keyManager);
-			else
+			else if( !walletLess )
 			{
 				cerr << "Couldn't open wallet. Does it exist?" << endl;
 				exit(-1);
