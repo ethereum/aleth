@@ -181,7 +181,7 @@ void MainCLI::execute()
 
 		auto nodesState = contents(m_dbPath + "/network.rlp");
 		dev::WebThreeDirect web3(
-			WebThreeDirect::composeClientVersion("flu", m_clientName),
+			WebThreeDirect::composeClientVersion("flu"),
 			m_dbPath,
 			m_chainParams,
 			WithExisting::Trust,

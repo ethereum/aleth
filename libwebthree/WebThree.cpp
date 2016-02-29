@@ -102,9 +102,9 @@ bzz::Interface* WebThreeDirect::swarm() const
 	return m_swarm.get();
 }
 
-std::string WebThreeDirect::composeClientVersion(std::string const& _client, std::string const& _clientName)
+std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 {
-	return _client + "-" + "v" + dev::Version + "-" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + (ETH_CLEAN_REPO ? "" : "*") + "/" + _clientName + "/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
+	return _client + "/" + "v" + dev::Version + "-" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + (ETH_CLEAN_REPO ? "" : "*") + "/" DEV_QUOTED(ETH_BUILD_TYPE) "-" DEV_QUOTED(ETH_BUILD_PLATFORM);
 }
 
 p2p::NetworkPreferences const& WebThreeDirect::networkPreferences() const
