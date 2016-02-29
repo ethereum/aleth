@@ -58,7 +58,7 @@ struct ChainParams: public ChainOperationParams
 	unsigned sealFields = 0;
 	bytes sealRLP;
 
-	h256 calculateStateRoot() const;
+	h256 calculateStateRoot(bool _force = false) const;
 
 	/// Genesis block info.
 	bytes genesisBlock() const;
