@@ -50,7 +50,7 @@ void mine(BlockHeader& _bi, SealEngineFace* _sealer, bool _verify = true);
 namespace test
 {
 
-const int c_testHomesteadBlock = 1100000;
+const int c_testHomesteadBlock = 1150000;
 
 /// Make sure that no Exception is thrown during testing. If one is thrown show its info and fail the test.
 /// Our version of BOOST_REQUIRE_NO_THROW()
