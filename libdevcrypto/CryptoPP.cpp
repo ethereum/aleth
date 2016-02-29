@@ -22,6 +22,16 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/Assertions.h>
 #include "ECDHE.h"
+/*
+ * At 5.6.3 the ECIES implementation has been deprecated and a warning has
+ * been added. A new implementation will be added in 6.0. Until then and for
+ * -Werror to not fail the build we have to have this warning ignore pragma here
+ * and until the end of the file.
+ * Refer here for more information:
+ * https://www.cryptopp.com/wiki/Elliptic_Curve_Integrated_Encryption_Scheme#5.6.3_and_6.0_Changes
+ */
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #include "CryptoPP.h"
 
 using namespace std;
@@ -360,4 +370,4 @@ void Secp256k1PP::exponentToPublic(Integer const& _e, Public& o_p)
 	
 	exportPublicKey(pk, o_p);
 }
-
+#pragma GCC diagnostic pop
