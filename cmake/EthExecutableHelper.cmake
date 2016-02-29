@@ -195,7 +195,6 @@ macro(eth_nsis)
 
 		set(CPACK_COMPONENT_ALETHZERO_GROUP "Applications")
 		set(CPACK_COMPONENT_ALETHONE_GROUP "Applications")
-		set(CPACK_COMPONENT_ALETHFIVE_GROUP "Applications")
 		set(CPACK_COMPONENT_MIX_GROUP "Applications")
 		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
 		set(CPACK_COMPONENT_ETH_GROUP "CLI")
@@ -207,18 +206,16 @@ macro(eth_nsis)
 		# Make GUI components required as we creating links for them
 		set(CPACK_COMPONENT_ALETHZERO_REQUIRED TRUE)
 		set(CPACK_COMPONENT_ALETHONE_REQUIRED TRUE)
-		set(CPACK_COMPONENT_ALETHFIVE_REQUIRED TRUE)
 		set(CPACK_COMPONENT_MIX_REQUIRED TRUE)
 
 		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
 		set(CPACK_PACKAGE_EXECUTABLES
 			"AlethZero;AlethZero"
 			"AlethOne;AlethOne"
-			"AlethFive;AlethFive"
 			"Mix;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero AlethOne AlethFive Mix solc eth ethminer ethkey rlp abi)
+		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer ethkey rlp abi)
 
 		include(CPack)
 	endif ()
