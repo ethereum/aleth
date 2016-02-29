@@ -70,7 +70,7 @@ ChainParams ChainParams::loadGenesisState(string const& _json, unordered_map<Add
 	ChainParams cp(*this);
 	cp.precompiled = _precompiled;
 	cp.genesisState = jsonToAccountMap(_json, nullptr, &cp.precompiled);
-	cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot();
+	cp.stateRoot = _stateRoot ? _stateRoot : cp.calculateStateRoot(true);
 	return cp;
 }
 
@@ -131,6 +131,8 @@ void ChainParams::populateFromGenesis(bytes const& _genesisRLP, AccountMap const
 	for (unsigned i = BlockHeader::BasicFields; i < r[0].itemCount(); ++i)
 		sealRLP += r[0][i].data();
 
+	calculateStateRoot(true);
+
 	auto b = genesisBlock();
 	if (b != _genesisRLP)
 	{
@@ -142,12 +144,12 @@ void ChainParams::populateFromGenesis(bytes const& _genesisRLP, AccountMap const
 	}
 }
 
-h256 ChainParams::calculateStateRoot() const
+h256 ChainParams::calculateStateRoot(bool _force) const
 {
 	MemoryDB db;
 	SecureTrieDB<Address, MemoryDB> state(&db);
 	state.init();
-	if (!stateRoot)
+	if (!stateRoot || _force)
 	{
 		// TODO: use hash256
 		//stateRoot = hash256(toBytesMap(gs));
