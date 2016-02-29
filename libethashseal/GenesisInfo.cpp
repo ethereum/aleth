@@ -76,7 +76,7 @@ R"ETHEREUM(
 	"sealEngine": "Ethash",
 	"params": {
 		"accountStartNonce": "0x0100000",
-		"frontierCompatibilityModeLimit": "0xfffa2990",
+		"frontierCompatibilityModeLimit": "0x789b0",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
