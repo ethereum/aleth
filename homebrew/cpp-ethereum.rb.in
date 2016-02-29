@@ -70,7 +70,7 @@ class CppEthereum < Formula
     # args << "-DBUNDLE=release" if build.without? "vmtrace" and build.without? "paranoia"
 
     if build.with? "evmjit"
-      args << "-DLLVM_DIR=/usr/local/opt/llvm/share/llvm/cmake"
+      args << "-DLLVM_DIR=/usr/local/opt/llvm/lib/cmake/llvm"
       args << "-DEVMJIT=1"
       ENV["CXX"] = "/usr/local/opt/llvm/bin/clang++ -stdlib=libc++"
       ENV["CXXFLAGS"] = "#{ENV.cxxflags} -nostdinc++ -I/usr/local/opt/llvm/include/llvm"
