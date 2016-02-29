@@ -425,7 +425,7 @@ int main(int argc, char** argv)
 	{
 		string arg = argv[i];
 		if (accountMode)
-			keym.interpretOption(i, argc, argv);
+			keym.interpretLightOption(i, argc, argv);
 		else if (minerMode)
 			m.interpretOption(i, argc, argv);
 		else if (arg == "--url" && i + 1 < argc)
