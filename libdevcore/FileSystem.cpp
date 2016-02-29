@@ -37,10 +37,28 @@
 using namespace std;
 using namespace dev;
 
-std::string dev::getDataDir(std::string _prefix)
+// Should be written to only once during startup
+static string s_ethereumDatadir;
+
+void dev::setDataDir(string const& _dataDir)
+{
+	s_ethereumDatadir = _dataDir;
+}
+
+string dev::getDataDir(string _prefix)
 {
 	if (_prefix.empty())
 		_prefix = "ethereum";
+	if (_prefix == "ethereum" && !s_ethereumDatadir.empty())
+		return s_ethereumDatadir;
+	return getDefaultDataDir(_prefix);
+}
+
+string dev::getDefaultDataDir(string _prefix)
+{
+	if (_prefix.empty())
+		_prefix = "ethereum";
+
 #if defined(_WIN32)
 	_prefix[0] = toupper(_prefix[0]);
 	char path[1024] = "";
