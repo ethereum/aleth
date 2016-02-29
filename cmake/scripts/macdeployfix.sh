@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # solves problem with macdeployqt on Qt 5.4 RC and Qt 5.5
 # http://qt-project.org/forums/viewthread/50118

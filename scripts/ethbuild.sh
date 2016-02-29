@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # author: Lefteris Karapetsas <lefteris@refu.co>
 #
 # A script to build the different ethereum repositories. For usage look

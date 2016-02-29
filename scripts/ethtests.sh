@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # author: Lefteris Karapetsas <lefteris@refu.co>
 #
 # This script should get a project name from jenkins and figure out which tests to run

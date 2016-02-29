@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # author: Lefteris Karapetsas <lefteris@refu.co>
 #
 # A script to update the different ethereum repositories to latest develop
