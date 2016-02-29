@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # author: Lefteris Karapetsas <lefteris@refu.co>
 #
 # Our attempt to emulate vsvars32.bat in a bash environment for our windows bot

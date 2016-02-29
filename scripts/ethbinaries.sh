@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # author: Lefteris Karapetsas <lefteris@refu.co>
 #
 # A script to build the binaries of ethereum cpp repos

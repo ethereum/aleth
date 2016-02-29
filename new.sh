@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 type="$1"
 path="$2"
