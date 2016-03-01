@@ -76,7 +76,7 @@ inline std::string credits()
 {
 	std::ostringstream out;
 	out
-		<< "cpp-ethereum " << dev::Version << endl
+		<< "cpp-ethereum " << dev::Version << endl;
 		<< "  By cpp-ethereum contributors, (c) 2013-2016." << endl;
 		<< "  See the README for contributors and credits." << endl;
 	return out.str();
