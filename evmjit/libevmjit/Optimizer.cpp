@@ -39,7 +39,8 @@ char LongJmpEliminationPass::ID = 0;
 
 bool LongJmpEliminationPass::runOnFunction(llvm::Function& _func)
 {
-	if (&_func != _func.getParent()->begin())
+	auto iter = _func.getParent()->begin();
+	if (&_func != &(*iter))
 		return false;
 
 	auto& mainFunc = _func;
