@@ -44,7 +44,7 @@ uint64_t toUnsigned(js::mValue const& _v)
 	}
 }
 
-AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
+AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _defaultNonce, AccountMaskMap* o_mask, PrecompiledContractMap* o_precompiled)
 {
 	auto u256Safe = [](std::string const& s) -> u256 {
 		bigint ret(s);
@@ -79,7 +79,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, AccountMaskMap* 
 			else if (o.count("balance"))
 				balance = u256Safe(o["balance"].get_str());
 
-			u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : 0;
+			u256 nonce = haveNonce ? u256Safe(o["nonce"].get_str()) : _defaultNonce;
 
 			if (haveCode)
 			{

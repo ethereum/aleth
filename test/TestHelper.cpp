@@ -231,7 +231,7 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
 {		
 	std::string jsondata = json_spirit::write_string((json_spirit::mValue)_o, false);
-	_state.populateFrom(jsonToAccountMap(jsondata, &o_mask));
+	_state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }
 
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state)
