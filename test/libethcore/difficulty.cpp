@@ -152,7 +152,9 @@ void fillDifficulty(string const& _testFileFullName, Ethash& _sealEngine)
 	}
 
 	finalTest << std::endl << "}";
-	writeFile(_testFileFullName, asBytes(finalTest.str()));
+	string testFile = finalTest.str();
+	testFile = testFile.replace(testFile.find_last_of(","), 1, "");
+	writeFile(_testFileFullName, asBytes(testFile));
 }
 
 void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Network _n)
@@ -302,7 +304,9 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 				}
 
 		finalTest << std::endl << "}";
-		writeFile(testFileFullName, asBytes(finalTest.str()));
+		string testFile = finalTest.str();
+		testFile = testFile.replace(testFile.find_last_of(","), 1, "");
+		writeFile(testFileFullName, asBytes(testFile));
 	}
 
 	testDifficulty(testFileFullName, sealEngine, Network::HomesteadTest);
