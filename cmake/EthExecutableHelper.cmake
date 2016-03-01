@@ -215,7 +215,7 @@ macro(eth_nsis)
 			"Mix;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer ethkey rlp abi)
+		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer ethkey)
 
 		include(CPack)
 	endif ()
