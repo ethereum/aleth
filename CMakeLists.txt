@@ -38,8 +38,6 @@ add_subdirectory(libjsconsole)
 
 # executables
 add_subdirectory(eth)
-add_subdirectory(exp)
-add_subdirectory(flu)
 
 # test stuff
 add_subdirectory(test)
