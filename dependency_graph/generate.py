@@ -162,6 +162,12 @@ print '    "base" -> "LevelDB"'
 print '    "base" -> "pthreads"'
 print '    "secp256k1" -> "gmp"'
 
+# Hard-coded dependencies for 'libaleth', which doesn't have a UseAleth.cmake
+# to go with it, because the library is only used by the Aleth* applications,
+# and is not exposed to other applications.
+print '    "AlethZero" -> "aleth"'
+print '    "AlethOne" -> "aleth"'
+
 processUmbrella('..')
 
 print "}"
