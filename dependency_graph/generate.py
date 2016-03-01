@@ -158,6 +158,7 @@ print '        "secp256k1"'
 print "    }"
 print '    "base" -> "boost"'
 print '    "base" -> "Jsoncpp"'
+print '    "base" -> "json_spirit"'
 print '    "base" -> "LevelDB"'
 print '    "base" -> "pthreads"'
 print '    "secp256k1" -> "gmp"'
