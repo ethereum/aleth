@@ -33,11 +33,7 @@ Net::Net(NetworkFace& _network): m_network(_network) {}
 
 std::string Net::net_version()
 {
-	u256 id = -1;
-	if (auto web3direct = dynamic_cast<dev::WebThreeDirect*> (&m_network))
-		 id = web3direct->ethereum()->networkId();
-
-	return toString(id);
+	return toString(m_network.networkId());
 }
 
 std::string Net::net_peerCount()
