@@ -33,7 +33,18 @@ Net::Net(NetworkFace& _network): m_network(_network) {}
 
 std::string Net::net_version()
 {
-	return "";	// what is this?
+	std::string network;
+	u256 id = dynamic_cast<dev::WebThreeDirect*> (&m_network)->ethereum()->networkId();
+	switch (id.convert_to<int>())
+	{
+	case 0: network = " - Olympic"; break;
+	case 1: network = " - Frontier"; break;
+	case 2: network = " - Morden"; break;
+	case 45: network = " - Fluidity"; break;
+	default: network = " - Custom network"; break;
+	}
+
+	return toString(id) + network;
 }
 
 std::string Net::net_peerCount()
