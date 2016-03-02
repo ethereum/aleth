@@ -25,7 +25,6 @@
 #include <thread>
 #include <boost/filesystem.hpp>
 #include <libdevcore/Log.h>
-#include <libdevcore/StructuredLogger.h>
 #include <libp2p/Host.h>
 #include "Defaults.h"
 #include "Executive.h"

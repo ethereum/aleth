@@ -33,7 +33,6 @@
 
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
-#include <libdevcore/StructuredLogger.h>
 #include <libethcore/Exceptions.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/CommonJS.h>
