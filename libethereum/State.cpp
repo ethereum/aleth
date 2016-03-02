@@ -348,7 +348,7 @@ u256 State::transactionsFrom(Address const& _id) const
 	ensureCached(_id, false, false);
 	auto it = m_cache.find(_id);
 	if (it == m_cache.end())
-		return 0;
+		return m_accountStartNonce;
 	else
 		return it->second.nonce();
 }
