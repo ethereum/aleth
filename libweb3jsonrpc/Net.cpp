@@ -33,10 +33,15 @@ Net::Net(NetworkFace& _network): m_network(_network) {}
 
 std::string Net::net_version()
 {
+	u256 id = -1;
 	std::string network;
-	u256 id = dynamic_cast<dev::WebThreeDirect*> (&m_network)->ethereum()->networkId();
+	dev::WebThreeDirect* web3direct = dynamic_cast<dev::WebThreeDirect*> (&m_network);
+	if (web3direct)
+		 id = web3direct->ethereum()->networkId();
+
 	switch (id.convert_to<int>())
 	{
+	case -1: network = " - (error)"; break;
 	case 0: network = " - Olympic"; break;
 	case 1: network = " - Frontier"; break;
 	case 2: network = " - Morden"; break;
