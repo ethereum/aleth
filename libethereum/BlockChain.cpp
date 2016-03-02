@@ -32,7 +32,6 @@
 #include <libdevcore/Assertions.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/TrieHash.h>
-#include <libdevcore/StructuredLogger.h>
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
@@ -794,15 +793,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 #endif
 
-	StructuredLogger::chainReceivedNewBlock(
-		_block.info.hash(WithoutSeal).abridged(),
-		"",//_block.info.proof.nonce.abridged(),
-		currentHash().abridged(),
-		"", // TODO: remote id ??
-		_block.info.parentHash().abridged()
-	);
-	//	cnote << "Parent " << bi.parentHash() << " has " << details(bi.parentHash()).children.size() << " children.";
-
 	h256s route;
 	h256 common;
 	// This might be the new best block...
@@ -885,12 +875,6 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 
 		clog(BlockChainNote) << "   Imported and best" << td << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
 
-		StructuredLogger::chainNewHead(
-			_block.info.hash(WithoutSeal).abridged(),
-			"",//_block.info.proof.nonce.abridged(),
-			currentHash().abridged(),
-			_block.info.parentHash().abridged()
-		);
 	}
 	else
 	{

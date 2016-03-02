@@ -26,7 +26,6 @@
 #include <boost/timer.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Assertions.h>
-#include <libdevcore/StructuredLogger.h>
 #include <libdevcore/TrieHash.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
@@ -803,12 +802,6 @@ bool Block::sealBlock(bytesConstRef _header)
 	m_currentBlock = BlockHeader(_header, HeaderData);
 //	cnote << "Mined " << m_currentBlock.hash() << "(parent: " << m_currentBlock.parentHash() << ")";
 	// TODO: move into SealEngine
-	StructuredLogger::minedNewBlock(
-		m_currentBlock.hash().abridged(),
-		"",	// Can't give the nonce here.
-		"", //TODO: chain head hash here ??
-		m_currentBlock.parentHash().abridged()
-	);
 
 	m_state = m_precommit;
 
