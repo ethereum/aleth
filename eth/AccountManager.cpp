@@ -28,128 +28,155 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+void AccountManager::streamAccountHelp(ostream& _out)
+{
+	_out
+		<< "    account list  List all keys available in wallet." << endl
+		<< "    account new	Create a new key and add it to the wallet." << endl
+		<< "    account update [ <uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
+		<< "    account import [<uuid>|<file>|<secret-hex>]	Import keys from given source and place in wallet." << endl;
+}
+
+void AccountManager::streamWalletHelp(ostream& _out)
+{
+	_out
+		<< "    wallet import <file>	Import a presale wallet." << endl;
+}
+
 bool AccountManager::execute(int argc, char** argv)
 {
-	if ((string)argv[1] == "wallet")
+	if (string(argv[1]) == "wallet")
 	{
-		if (4 < argc && (string)argv[2] == "import")
+		if (3 < argc && string(argv[2]) == "import")
 		{
-			keyManager();
-			string file =  argv[3];
-			string name = argv[4];
-			std::string pw;
-			KeyPair k = m_keyManager->presaleSecret(contentsString(file), [&](bool){ return (pw = getPassword("Enter the passphrase for the presale key: ")); });
+			if (!openWallet())
+				return false;
+			string file = argv[3];
+			string name = "presale wallet";
+			string pw;
+			KeyPair k;
+			try
+			{
+				k = m_keyManager->presaleSecret(
+					contentsString(file),
+					[&](bool){ return (pw = getPassword("Enter the passphrase for the presale key: "));}
+				);
+			}
+			catch (Exception const& _e)
+			{
+				if (auto err = boost::get_error_info<errinfo_comment>(_e))
+					cout << "  Decryption failed: " << *err << endl;
+				else
+					cout << "  Decryption failed: Unknown reason." << endl;
+				return false;
+			}
 			m_keyManager->import(k.secret(), name, pw, "Same passphrase as used for presale key");
+			cout << "  Address: {" << k.address().hex() << "}" << endl;
 		}
 		else
-			cout
-				<< "	wallet import <file> <name>	Import a presale wallet into a key with the given name." << endl;
-
-		m_keyManager.reset();
+			streamWalletHelp(cout);
 		return true;
 	}
-	else if ((string)argv[1] == "account")
+	else if (string(argv[1]) == "account")
 	{
-		if (2 < argc && (string)argv[2] == "list")
+		if (argc < 3 || string(argv[2]) == "list")
 		{
-			keyManager();
+			openWallet();
 			if (m_keyManager->store().keys().empty())
 				cout << "No keys found." << endl;
 			else
 			{
 				vector<u128> bare;
 				AddressHash got;
+				int k = 0;
 				for (auto const& u: m_keyManager->store().keys())
+				{
 					if (Address a = m_keyManager->address(u))
 					{
 						got.insert(a);
-						cout << toUUID(u) << " " << a.abridged();
-						string s = ICAP(a).encoded();
-						cout << " " << s << string(35 - s.size(), ' ');
-						cout << " " << m_keyManager->accountName(a) << endl;
+						cout << "Account #" << k << ": {" << a.hex() << "}" << endl;
+						k++;
 					}
 					else
 						bare.push_back(u);
+				}
 				for (auto const& a: m_keyManager->accounts())
 					if (!got.count(a))
 					{
-						cout << "               (Brain)               " << a.abridged();
-						cout << " " << ICAP(a).encoded() << " ";
-						cout << " " << m_keyManager->accountName(a) << endl;
+						cout << "Account #" << k << ": {" << a.hex() << "}" << " (Brain)" << endl;
+						k++;
 					}
 				for (auto const& u: bare)
-					cout << toUUID(u) << " (Bare)" << endl;
+				{
+					cout << "Account #" << k << ": " << toUUID(u) << " (Bare)" << endl;
+					k++;
+				}
 			}
 		}
-		else if (3 < argc && (string)argv[2] == "new")
+		else if (2 < argc && string(argv[2]) == "new")
 		{
-			keyManager();
-			string name = argv[3];
+			openWallet();
+			string name;
 			string lock;
 			string lockHint;
-			tie(lock, lockHint) = createPassword("Enter a passphrase with which to secure this account (or nothing to use the master passphrase): ", lock, lockHint);
+			lock = createPassword("Enter a passphrase with which to secure this account:");
 			auto k = makeKey();
-			bool usesMaster = lock.empty();
-			h128 u = usesMaster ? m_keyManager->import(k.secret(), name) : m_keyManager->import(k.secret(), name, lock, lockHint);
+			h128 u = m_keyManager->import(k.secret(), name, lock, lockHint);
 			cout << "Created key " << toUUID(u) << endl;
-			cout << "  Name: " << name << endl;
-			if (usesMaster)
-				cout << "  Uses master passphrase." << endl;
-			else
-				cout << "  Password hint: " << lockHint << endl;
 			cout << "  ICAP: " << ICAP(k.address()).encoded() << endl;
-			cout << "  Raw hex: " << k.address().hex() << endl;
+			cout << "  Address: {" << k.address().hex() << "}" << endl;
 		}
-		else if (3 < argc && (string)argv[2] == "import")
+		else if (3 < argc && string(argv[2]) == "import")
 		{
-			keyManager();
-			for (int k = 3; k < argc; k++)
+			openWallet();
+			h128 u = m_keyManager->store().importKey(argv[3]);
+			if (!u)
 			{
-				string input = argv[k];
-				h128 u;
-				bytesSec b;
-				b.writable() = fromHex(input);
-				if (b.size() != 32)
-				{
-					std::string s = contentsString(input);
-					b.writable() = fromHex(s);
-					if (b.size() != 32)
-						u = m_keyManager->store().importKey(input);
-				}
-				if (!u && b.size() == 32)
-					u = m_keyManager->store().importSecret(b, createPassword("Enter a passphrase with which to secure account " + toAddress(Secret(b)).abridged() + ": "));
-				if (!u)
-				{
-					cerr << "Cannot import " << input << " not a file or secret." << endl;
-					continue;
-				}
-				cout << "Successfully imported " << input << " as " << toUUID(u);
+				cerr << "Error: reading key file failed" << endl;
+				return false;
+			}
+			string pw;
+			bytesSec s = m_keyManager->store().secret(u, [&](){ return (pw = getPassword("Enter the passphrase for the key: ")); });
+			if (s.empty())
+			{
+				cerr << "Error: couldn't decode key or invalid secret size." << endl;
+				return false;
+			}
+			else
+			{
+				string lockHint;
+				string name;
+				m_keyManager->importExisting(u, name, pw, lockHint);
+				auto a = m_keyManager->address(u);
+				cout << "Imported key " << toUUID(u) << endl;
+				cout << "  ICAP: " << ICAP(a).encoded() << endl;
+				cout << "  Address: {" << a.hex() << "}" << endl;
 			}
 		}
-		else if (3 < argc && (string)argv[2] == "update")
+		else if (3 < argc && string(argv[2]) == "update")
 		{
-			keyManager();
+			openWallet();
 			for (int k = 3; k < argc; k++)
 			{
 				string i = argv[k];
 				if (h128 u = fromUUID(i))
-					if (m_keyManager->store().recode(u, createPassword("Enter the new passphrase for key " + toUUID(u)), [&](){ return getPassword("Enter the current passphrase for key " + toUUID(u) + ": "); }, kdf()))
+				{
+					if (m_keyManager->store().recode(
+						u,
+						createPassword("Enter the new passphrase for key " + toUUID(u)),
+						[&](){ return getPassword("Enter the current passphrase for key " + toUUID(u) + ": "); },
+						dev::KDF::Scrypt
+					))
 						cerr << "Re-encoded " << toUUID(u) << endl;
 					else
 						cerr << "Couldn't re-encode " << toUUID(u) << "; key corrupt or incorrect passphrase supplied." << endl;
+				}
 				else
 					cerr << "Couldn't re-encode " << i << "; not found." << endl;
 			}
 		}
 		else
-		{
-			cout
-				<< "	account list  List all keys available in wallet." << endl
-				<< "	account new <name>  Create a new key with given name and add it in the wallet." << endl
-				<< "	account update [ <uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
-				<< "	account import [ <file>|<secret-hex> , ... ] Import keys from given sources." << endl;
-		}
-		m_keyManager.reset();
+			streamAccountHelp(cout);
 		return true;
 	}
 	else
@@ -170,27 +197,6 @@ string AccountManager::createPassword(string const& _prompt) const
 	return ret;
 }
 
-pair<string, string> AccountManager::createPassword(std::string const& _prompt, std::string const& _pass, std::string const& _hint) const
-{
-	string pass = _pass;
-	if (pass.empty())
-		while (true)
-		{
-			pass = getPassword(_prompt);
-			string confirm = getPassword("Please confirm the passphrase by entering it again: ");
-			if (pass == confirm)
-				break;
-			cout << "Passwords were different. Try again." << endl;
-		}
-	string hint = _hint;
-	if (hint.empty() && !pass.empty() && !m_keyManager->haveHint(pass))
-	{
-		cout << "Enter a hint to help you remember this passphrase: " << flush;
-		getline(cin, hint);
-	}
-	return make_pair(pass, hint);
-}
-
 KeyPair AccountManager::makeKey() const
 {
 	bool icap = true;
@@ -200,31 +206,24 @@ KeyPair AccountManager::makeKey() const
 	return k;
 }
 
-KeyManager& AccountManager::keyManager()
+bool AccountManager::openWallet()
 {
 	if (!m_keyManager)
 	{
 		m_keyManager.reset(new KeyManager());
 		if (m_keyManager->exists())
-			openWallet();
-		else
-			cerr << "Couldn't open wallet. Does it exist?" << endl;
-	}
-	return *m_keyManager;
-}
-
-void AccountManager::openWallet()
-{
-	string password;
-	while (true)
-	{
-		if (m_keyManager->load(password))
-			break;
-		if (!password.empty())
 		{
-			cout << "Password invalid. Try again." << endl;
-			password.clear();
+			if (!m_keyManager->load(getPassword("Please enter your MASTER passphrase: ")))
+			{
+				cerr << "Couldn't open wallet. Please check passphrase." << endl;
+				return false;
+			}
 		}
-		password = getPassword("Please enter your MASTER passphrase: ");
+		else
+		{
+			cerr << "Couldn't open wallet. Does it exist?" << endl;
+			return false;
+		}
 	}
+	return true;
 }
