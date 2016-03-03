@@ -58,11 +58,29 @@ for i in "${BROKEN_FRAMEWORKS[@]}"; do
 	# This is due to a known bug in QT5, and we have to fix up the linked libraries if we're going to have a distributable
 	# result of building. When https://bugreports.qt.io/browse/QTBUG-50155 is fixed, this should be able
 	# to be removed.
-	for j in $(find $i/ -name *.app); do
+	#
+	# Bob Summerwill added an extra hack into this loop on 2nd March specifically for
+	# libdbus, which is used by the GUI apps from within Qt5.  The hacks-on-hacks which
+	# we have make this code an absolute morass to understand.  Ideally we wouldn't
+	# need this script at all, and maybe the need for it will disappear if we can
+	# eliminate the need for "--with-d-bus" for our Qt5 usage, which then forces us
+	# to build from source.
+	#
+	# We have had open tickets in the Qt project, in the Homebrew project itself,
+	# in our brew formula and now here in this script.   It is a nightmare.  This
+	# most recent hack seems to get us working, but it is by no means a good
+	# solution.   Nothing in this whole chain-of-hacks is good.
+	#
+	# Yes - the dylib filename is specific to the D-Bus version.   We will never
+	# reuse this script.  It needs to work, and not a lot more than that.
+		
+	for j in $(find $i -name \*\.app); do
 		EXEC_NAME=$j/Contents/MacOS/$(basename -s .app $j)
 		otool -L $EXEC_NAME | grep -o /usr/local.*dylib | while read -a innerlibs ; do
-			install_name_tool -change ${innerlibs[0]} @loader_path/../Frameworks/`basename ${innerlibs[0]}` $EXEC_NAME
+			install_name_tool -change ${innerlibs[0]} @executable_path/../../../../../../../../Frameworks/`basename ${innerlibs[0]}` $EXEC_NAME
 		done
+		
+		install_name_tool -change @loader_path/../Frameworks/libdbus-1.3.dylib @executable_path/../../../../../../../../Frameworks/libdbus-1.3.dylib $EXEC_NAME
 	done
 done
 
