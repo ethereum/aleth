@@ -33,7 +33,7 @@ Net::Net(NetworkFace& _network): m_network(_network) {}
 
 std::string Net::net_version()
 {
-	return "";	// what is this?
+	return toString(m_network.networkId());
 }
 
 std::string Net::net_peerCount()
