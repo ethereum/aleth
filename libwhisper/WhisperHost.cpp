@@ -57,7 +57,7 @@ void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 	// this function processes both outgoing messages originated both by local host (_p == null)
 	// and incoming messages from remote peers (_p != null)
 
-	cnote << this << ": inject: " << _m.expiry() << _m.ttl() << _m.topic() << toHex(_m.data());
+	//cnote << this << ": inject: " << _m.expiry() << _m.ttl() << _m.topic() << toHex(_m.data());
 
 	if (_m.isExpired())
 		return;
