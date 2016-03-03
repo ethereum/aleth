@@ -191,7 +191,7 @@ void help()
 		<< "    --dont-check  Prevent checking some block aspects. Faster importing, but to apply only when the data is known to be valid." << endl
 		<< endl
 		<< "General Options:" << endl
-		<< "    -d,--db-path <path>  Load database from path (default: " << getDataDir() << ")." << endl
+		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ")." << endl
 #if ETH_EVMJIT || !ETH_TRUE
 		<< "    --vm <vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter)." << endl
 #endif
@@ -321,7 +321,6 @@ int main(int argc, char** argv)
 
 	/// Operating mode.
 	OperationMode mode = OperationMode::Node;
-	string dbPath;
 //	unsigned prime = 0;
 //	bool yesIReallyKnowWhatImDoing = false;
 	strings scripts;
@@ -597,8 +596,8 @@ int main(int argc, char** argv)
 			structuredLogging = true;
 			structuredLoggingURL = argv[++i];
 		}
-		else if ((arg == "-d" || arg == "--path" || arg == "--db-path") && i + 1 < argc)
-			dbPath = argv[++i];
+		else if ((arg == "-d" || arg == "--path" || arg == "--db-path" || arg == "--datadir") && i + 1 < argc)
+			setDataDir(argv[++i]);
 		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
 		{
 			try
@@ -997,11 +996,11 @@ int main(int argc, char** argv)
 	netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
 	netPrefs.pin = (pinning || !privateChain.empty()) && !noPinning;
 
-	auto nodesState = contents((dbPath.size() ? dbPath : getDataDir()) + "/network.rlp");
+	auto nodesState = contents(getDataDir() + "/network.rlp");
 	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
-		dbPath,
+		getDataDir(),
 		chainParams,
 		withExisting,
 		nodeMode == NodeMode::Full ? caps : set<string>(),
@@ -1366,6 +1365,6 @@ int main(int argc, char** argv)
 	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("eth"), dev::Version);
 	auto netData = web3.saveNetwork();
 	if (!netData.empty())
-		writeFile((dbPath.size() ? dbPath : getDataDir()) + "/network.rlp", netData);
+		writeFile(getDataDir() + "/network.rlp", netData);
 	return 0;
 }

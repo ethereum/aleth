@@ -37,18 +37,23 @@ using namespace dev;
 
 int const c_pathMaxSize = sizeof(sockaddr_un::sun_path)/sizeof(sockaddr_un::sun_path[0]);
 
-std::string ipcSocketPath()
+string ipcSocketPath()
 {
 #ifdef __APPLE__
-	std::string path = getenv("HOME") + std::string("/Library/Ethereum");
-	return path;
+	// A bit hacky, but backwards compatible: If we did not change the default data dir,
+	// put the socket in ~/Library/Ethereum, otherwise in the set data dir.
+	string path = getDataDir();
+	if (path == getDefaultDataDir())
+		return getenv("HOME") + string("/Library/Ethereum");
+	else
+		return path;
 #else
 	return getDataDir();
 #endif
 }
 
 UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
-	IpcServerBase(std::string(ipcSocketPath() + "/" + _appId + ".ipc").substr(0, c_pathMaxSize))
+	IpcServerBase(string(ipcSocketPath() + "/" + _appId + ".ipc").substr(0, c_pathMaxSize))
 {
 }
 
@@ -115,7 +120,7 @@ void UnixDomainSocketServer::CloseConnection(int _socket)
 	close(_socket);
 }
 
-size_t UnixDomainSocketServer::Write(int _connection, std::string const& _data)
+size_t UnixDomainSocketServer::Write(int _connection, string const& _data)
 {
 	int r = write(_connection, _data.data(), _data.size());
 	if (r > 0)
