@@ -32,7 +32,6 @@
 #include <boost/algorithm/string/trim_all.hpp>
 
 #include <libdevcore/FileSystem.h>
-#include <libdevcore/StructuredLogger.h>
 #include <libethashseal/EthashAux.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
@@ -175,11 +174,6 @@ void help()
 		<< endl;
 	MinerCLI::streamHelp(cout);
 	cout
-		<< "Client structured logging:" << endl
-		<< "    --structured-logging  Enable structured logging (default: output to stdout)." << endl
-		<< "    --structured-logging-format <format>  Set the structured logging time format." << endl
-		<< "    --structured-logging-url <URL>  Set the structured logging destination (currently only file:// supported)." << endl
-		<< endl
 		<< "Attach mode:" << endl
 		<< "    --session-key <hex>  Use the given session key when attaching to the remote eth instance." << endl
 		<< "    --url <url>  Attach to the remote eth instance with the given URL." << endl
@@ -385,11 +379,6 @@ int main(int argc, char** argv)
 	strings presaleImports;
 	bytes extraData;
 
-	/// Structured logging params
-	bool structuredLogging = false;
-	string structuredLoggingFormat = "%Y-%m-%dT%H:%M:%S";
-	string structuredLoggingURL;
-
 	/// Transaction params
 //	TransactionPriority priority = TransactionPriority::Medium;
 //	double etherPrice = 30.679;
@@ -587,15 +576,6 @@ int main(int argc, char** argv)
 			sessionKey = Address(fromHex(argv[++i]));
 		else if ((arg == "--session-sign-key") && i + 1 < argc)
 			sessionKey = Address(fromHex(argv[++i]));
-		else if (arg == "--structured-logging-format" && i + 1 < argc)
-			structuredLoggingFormat = string(argv[++i]);
-		else if (arg == "--structured-logging")
-			structuredLogging = true;
-		else if (arg == "--structured-logging-url" && i + 1 < argc)
-		{
-			structuredLogging = true;
-			structuredLoggingURL = argv[++i];
-		}
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path" || arg == "--datadir") && i + 1 < argc)
 			setDataDir(argv[++i]);
 		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
@@ -991,7 +971,6 @@ int main(int argc, char** argv)
 		return getPassword("Enter password for address " + keyManager.accountName(a) + " (" + a.abridged() + "; hint:" + keyManager.passwordHint(a) + "): ");
 	};
 
-	StructuredLogger::get().initialize(structuredLogging, structuredLoggingFormat, structuredLoggingURL);
 	auto netPrefs = publicIP.empty() ? NetworkPreferences(listenIP, listenPort, upnp) : NetworkPreferences(publicIP, listenIP ,listenPort, upnp);
 	netPrefs.discovery = (privateChain.empty() && !disableDiscovery) || enableDiscovery;
 	netPrefs.pin = (pinning || !privateChain.empty()) && !noPinning;
@@ -1167,7 +1146,6 @@ int main(int argc, char** argv)
 //	std::shared_ptr<eth::BasicGasPricer> gasPricer = make_shared<eth::BasicGasPricer>(u256(double(ether / 1000) / etherPrice), u256(blockFees * 1000));
 	std::shared_ptr<eth::TrivialGasPricer> gasPricer = make_shared<eth::TrivialGasPricer>(askPrice, bidPrice);
 	eth::Client* c = nodeMode == NodeMode::Full ? web3.ethereum() : nullptr;
-	StructuredLogger::starting(WebThreeDirect::composeClientVersion("eth"), dev::Version);
 	if (c)
 	{
 		c->setGasPricer(gasPricer);
@@ -1362,7 +1340,6 @@ int main(int argc, char** argv)
 		jsonrpcIpcServer->StopListening();
 #endif
 
-	StructuredLogger::stopping(WebThreeDirect::composeClientVersion("eth"), dev::Version);
 	auto netData = web3.saveNetwork();
 	if (!netData.empty())
 		writeFile(getDataDir() + "/network.rlp", netData);
