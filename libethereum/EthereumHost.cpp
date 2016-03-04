@@ -307,35 +307,90 @@ void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerStatus(_peer);
+	{
+		try
+		{
+			sync()->onPeerStatus(_peer);
+		}
+		catch (FailedInvariant const& _e)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			sync()->restartSync();
+		}
+	}
 }
 
 void EthereumHost::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerBlockHeaders(_peer, _headers);
+	{
+		try
+		{
+			sync()->onPeerBlockHeaders(_peer, _headers);
+		}
+		catch (FailedInvariant const& _e)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			sync()->restartSync();
+		}
+	}
 }
 
 void EthereumHost::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerBlockBodies(_peer, _r);
+	{
+		try
+		{
+			sync()->onPeerBlockBodies(_peer, _r);
+		}
+		catch (FailedInvariant const& _e)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			sync()->restartSync();
+		}
+	}
 }
 
 void EthereumHost::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerNewHashes(_peer, _hashes);
+	{
+		try
+		{
+			sync()->onPeerNewHashes(_peer, _hashes);
+		}
+		catch (FailedInvariant const& _e)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			sync()->restartSync();
+		}
+	}
 }
 
 void EthereumHost::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
 	if (sync())
-		sync()->onPeerNewBlock(_peer, _r);
+	{
+		try
+		{
+			sync()->onPeerNewBlock(_peer, _r);
+		}
+		catch (FailedInvariant const& _e)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			sync()->restartSync();
+		}
+	}
 }
 
 void EthereumHost::onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
