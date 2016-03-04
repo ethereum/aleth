@@ -29,7 +29,6 @@
 #include <libdevcore/Common.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/CommonIO.h>
-#include <libdevcore/StructuredLogger.h>
 #include <libdevcore/Exceptions.h>
 #include <libdevcore/FileSystem.h>
 #include "Session.h"
@@ -342,7 +341,6 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	}
 	
 	clog(NetP2PNote) << "p2p.host.peer.register" << _id;
-	StructuredLogger::p2pConnected(_id.abridged(), ps->m_peer->endpoint, ps->m_peer->m_lastConnected, clientVersion, peerCount());
 }
 
 void Host::onNodeTableEvent(NodeID const& _n, NodeTableEventType const& _e)
