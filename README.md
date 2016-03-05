@@ -10,4 +10,4 @@ There is a [plan to re-consolidate]([https://github.com/ethereum/webthree-umbrel
 
 Significant effort was put into new [Ethereum Documentation](http://docs.ethereum.org/) for Homestead in March 2016.
 
-There is also an [Ethereum C++ Wiki](https://github.com/ethereum/webthree-umbrella/wiki).  The Wiki is likely to be consolidated into the main documentation in the near future.
+There is also an [Ethereum C++ Wiki](https://github.com/ethereum/webthree-umbrella/wiki), which will probably be consolidated into the main documentation in the near future.
