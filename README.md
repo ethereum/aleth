@@ -1,5 +1,9 @@
-# MOVED!
+# FORMER HOME OF ETHEREUM C++ CLIENT
 
-Repository moved to [webthree-umbrella](https://github.com/ethereum/webthree-umbrella/).
+The C++ codebase was split into multiple repositories in October 2015.
 
-Here is the [new Wiki](https://github.com/ethereum/webthree-umbrella/wiki).
+They are all gathered as git sub-modules under the [webthree-umbrella](https://github.com/ethereum/webthree-umbrella/).
+
+Ethereum Homestead Documentation can be found at http://docs.ethereum.org/.
+
+The Ethereum C++ Wiki can be found at https://github.com/ethereum/webthree-umbrella/wiki.
