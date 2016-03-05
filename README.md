@@ -8,4 +8,6 @@ They are all gathered as git sub-modules under [the webthree-umbrella repo](http
 
 There is a [plan to re-consolidate]([https://github.com/ethereum/webthree-umbrella/issues/251) the repositories following Homestead, which should make the structure of the codebase much easier to understand.
 
-Significant effort was put into new [Ethereum Documentation](http://docs.ethereum.org/) for Homestead in March 2016.  There is also an [Ethereum C++ Wiki](https://github.com/ethereum/webthree-umbrella/wiki).  The Wiki is likely to be consolidated into the main documentation in the near future.
+Significant effort was put into new [Ethereum Documentation](http://docs.ethereum.org/) for Homestead in March 2016.
+
+There is also an [Ethereum C++ Wiki](https://github.com/ethereum/webthree-umbrella/wiki).  The Wiki is likely to be consolidated into the main documentation in the near future.
