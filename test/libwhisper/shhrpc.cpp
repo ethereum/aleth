@@ -315,237 +315,233 @@ BOOST_AUTO_TEST_CASE(receive)
 
 BOOST_AUTO_TEST_CASE(serverBasic)
 {
-	/*
-	cnote << "Testing basic jsonrpc server...";
+//	cnote << "Testing basic jsonrpc server...";
 
-	string s = w3Face->web3_clientVersion();
-	BOOST_REQUIRE_EQUAL(s, c_version);
+//	string s = w3Face->web3_clientVersion();
+//	BOOST_REQUIRE_EQUAL(s, c_version);
 
-	s = netFace->net_version();
-	BOOST_REQUIRE(s.empty());
+//	s = netFace->net_version();
+//	BOOST_REQUIRE(s.empty());
 
-	s = w3Face->web3_sha3("some pseudo-random string here");
-	BOOST_REQUIRE_EQUAL(s.size(), h256::size * 2 + 2);
-	BOOST_REQUIRE('0' == s[0] && 'x' == s[1]);
+//	s = w3Face->web3_sha3("some pseudo-random string here");
+//	BOOST_REQUIRE_EQUAL(s.size(), h256::size * 2 + 2);
+//	BOOST_REQUIRE('0' == s[0] && 'x' == s[1]);
 
-	s = netFace->net_peerCount();
-	BOOST_REQUIRE(!s.empty());
+//	s = netFace->net_peerCount();
+//	BOOST_REQUIRE(!s.empty());
 
-	KeyPair src = KeyPair::create();
-	KeyPair dst = KeyPair::create();
-	Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
-	bool b = whisperFace->shh_post(t1);
-	BOOST_REQUIRE(b);
+//	KeyPair src = KeyPair::create();
+//	KeyPair dst = KeyPair::create();
+//	Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
+//	bool b = whisperFace->shh_post(t1);
+//	BOOST_REQUIRE(b);
 
-	string const id = whisperFace->shh_newIdentity();
-	BOOST_REQUIRE_EQUAL(id.size(), 130);
-	BOOST_REQUIRE('0' == id[0] && 'x' == id[1]);
+//	string const id = whisperFace->shh_newIdentity();
+//	BOOST_REQUIRE_EQUAL(id.size(), 130);
+//	BOOST_REQUIRE('0' == id[0] && 'x' == id[1]);
 
-	b = whisperFace->shh_hasIdentity(id);
-	BOOST_REQUIRE(b);
+//	b = whisperFace->shh_hasIdentity(id);
+//	BOOST_REQUIRE(b);
 
-	Json::Value t2 = createMessage(id, id);
-	b = whisperFace->shh_post(t2);
-	BOOST_REQUIRE(b);
-	*/
+//	Json::Value t2 = createMessage(id, id);
+//	b = whisperFace->shh_post(t2);
+//	BOOST_REQUIRE(b);
 }
 
 BOOST_AUTO_TEST_CASE(server)
 {
-	/*
-	cnote << "Testing server functionality...";
+//	cnote << "Testing server functionality...";
 
-	bool b;
-	string s;
-	Json::Value j;
-	rpc::SessionPermissions permissions;
-	permissions.privileges.insert(rpc::Privilege::Admin);
-	string const text = string("0x") + h256::random().hex(); // message must be in raw form
+//	bool b;
+//	string s;
+//	Json::Value j;
+//	rpc::SessionPermissions permissions;
+//	permissions.privileges.insert(rpc::Privilege::Admin);
+//	string const text = string("0x") + h256::random().hex(); // message must be in raw form
 
-	string sess1 = sm.newSession(permissions);
-	string sess2("session number two");
-	sm.addSession(sess2, permissions);
+//	string sess1 = sm.newSession(permissions);
+//	string sess2("session number two");
+//	sm.addSession(sess2, permissions);
 	
-	int newVerbosity = 10;
-	int oldVerbosity = g_logVerbosity;
-	b = adminUtilsFace->admin_setVerbosity(newVerbosity, sess1);
-	BOOST_REQUIRE(b);
-	BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
+//	int newVerbosity = 10;
+//	int oldVerbosity = g_logVerbosity;
+//	b = adminUtilsFace->admin_setVerbosity(newVerbosity, sess1);
+//	BOOST_REQUIRE(b);
+//	BOOST_REQUIRE_EQUAL(g_logVerbosity, newVerbosity);
 
-	b = adminUtilsFace->admin_setVerbosity(oldVerbosity, sess1);
-	BOOST_REQUIRE(b);
-	BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
+//	b = adminUtilsFace->admin_setVerbosity(oldVerbosity, sess1);
+//	BOOST_REQUIRE(b);
+//	BOOST_REQUIRE_EQUAL(g_logVerbosity, oldVerbosity);
 
-	b = adminNetFace->admin_net_start(sess1);
-	BOOST_REQUIRE(b);
+//	b = adminNetFace->admin_net_start(sess1);
+//	BOOST_REQUIRE(b);
 
-	unsigned const step = 10;
-	for (unsigned i = 0; i < 3000 && !netFace->net_listening(); i += step)
-		this_thread::sleep_for(chrono::milliseconds(step));
+//	unsigned const step = 10;
+//	for (unsigned i = 0; i < 3000 && !netFace->net_listening(); i += step)
+//		this_thread::sleep_for(chrono::milliseconds(step));
 
-	b = netFace->net_listening();
-	BOOST_REQUIRE(b);
+//	b = netFace->net_listening();
+//	BOOST_REQUIRE(b);
 	
-	b = adminNetFace->admin_net_stop(sess1);
-	BOOST_REQUIRE(b);
+//	b = adminNetFace->admin_net_stop(sess1);
+//	BOOST_REQUIRE(b);
 
-	b = netFace->net_listening();
-	BOOST_REQUIRE(!b);
+//	b = netFace->net_listening();
+//	BOOST_REQUIRE(!b);
 
-	j = adminNetFace->admin_net_peers(sess1);
-	BOOST_REQUIRE(j.empty());
+//	j = adminNetFace->admin_net_peers(sess1);
+//	BOOST_REQUIRE(j.empty());
 
-	j = adminNetFace->admin_net_nodeInfo(sess2);
-	BOOST_REQUIRE_EQUAL(j["id"].asString(), web3->id().hex());
-	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), web3->nodeInfo().port);
+//	j = adminNetFace->admin_net_nodeInfo(sess2);
+//	BOOST_REQUIRE_EQUAL(j["id"].asString(), web3->id().hex());
+//	BOOST_REQUIRE_EQUAL(j["port"].asUInt(), web3->nodeInfo().port);
 
-	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
-	host2.setIdealPeerCount(9);
-	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
-	host2.start();
-	auto port2 = host2.listenPort();
-	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
+//	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
+//	host2.setIdealPeerCount(9);
+//	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
+//	host2.start();
+//	auto port2 = host2.listenPort();
+//	BOOST_REQUIRE(port2);
+//	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
-	b = adminNetFace->admin_net_start(sess2);
-	BOOST_REQUIRE(b);
+//	b = adminNetFace->admin_net_start(sess2);
+//	BOOST_REQUIRE(b);
 	
-	for (unsigned i = 0; i < 2000 && !host2.haveNetwork(); i += step)
-		this_thread::sleep_for(chrono::milliseconds(step));
+//	for (unsigned i = 0; i < 2000 && !host2.haveNetwork(); i += step)
+//		this_thread::sleep_for(chrono::milliseconds(step));
 
-	for (unsigned i = 0; i < 2000 && !netFace->net_listening(); i += step)
-		this_thread::sleep_for(chrono::milliseconds(step));
+//	for (unsigned i = 0; i < 2000 && !netFace->net_listening(); i += step)
+//		this_thread::sleep_for(chrono::milliseconds(step));
 
-	BOOST_REQUIRE(host2.haveNetwork());
-	BOOST_REQUIRE(netFace->net_listening());
+//	BOOST_REQUIRE(host2.haveNetwork());
+//	BOOST_REQUIRE(netFace->net_listening());
 
-	string node("enode://");
-	node += host2.id().hex();
-	node += "@127.0.0.1:";
-	node += toString(port2);
-	b = adminNetFace->admin_net_connect(node, sess2);
+//	string node("enode://");
+//	node += host2.id().hex();
+//	node += "@127.0.0.1:";
+//	node += toString(port2);
+//	b = adminNetFace->admin_net_connect(node, sess2);
 
-	for (unsigned i = 0; i < 3000 && !host2.peerCount(); i += step)
-		this_thread::sleep_for(chrono::milliseconds(step));
+//	for (unsigned i = 0; i < 3000 && !host2.peerCount(); i += step)
+//		this_thread::sleep_for(chrono::milliseconds(step));
 
-	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
-	this_thread::sleep_for(chrono::milliseconds(step));
+//	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+//	this_thread::sleep_for(chrono::milliseconds(step));
 
-	j = adminNetFace->admin_net_peers(sess2);
-	BOOST_REQUIRE_EQUAL(j.size(), 1);
-	Json::Value peer = j[0];
-	s = peer["id"].asString();
-	BOOST_REQUIRE_EQUAL(s, host2.id().hex());
-	BOOST_REQUIRE_EQUAL(peer["port"].asUInt(), port2);
+//	j = adminNetFace->admin_net_peers(sess2);
+//	BOOST_REQUIRE_EQUAL(j.size(), 1);
+//	Json::Value peer = j[0];
+//	s = peer["id"].asString();
+//	BOOST_REQUIRE_EQUAL(s, host2.id().hex());
+//	BOOST_REQUIRE_EQUAL(peer["port"].asUInt(), port2);
 
-	s = netFace->net_peerCount();
-	BOOST_REQUIRE_EQUAL(s, "0x1");
+//	s = netFace->net_peerCount();
+//	BOOST_REQUIRE_EQUAL(s, "0x1");
 
-	KeyPair src = KeyPair::create();
-	KeyPair dst = KeyPair::create();
+//	KeyPair src = KeyPair::create();
+//	KeyPair dst = KeyPair::create();
 
-	Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
-	b = whisperFace->shh_post(t1);
-	BOOST_REQUIRE(b);
+//	Json::Value t1 = createMessage(toJS(src.address()), toJS(dst.address()));
+//	b = whisperFace->shh_post(t1);
+//	BOOST_REQUIRE(b);
 
-	string const id = whisperFace->shh_newIdentity();
-	BOOST_REQUIRE_EQUAL(id.size(), 130);
-	BOOST_REQUIRE(whisperFace->shh_hasIdentity(id));
+//	string const id = whisperFace->shh_newIdentity();
+//	BOOST_REQUIRE_EQUAL(id.size(), 130);
+//	BOOST_REQUIRE(whisperFace->shh_hasIdentity(id));
 
-	Json::Value t2 = createMessage(id, id);
-	b = whisperFace->shh_post(t2);
-	BOOST_REQUIRE(b);
+//	Json::Value t2 = createMessage(id, id);
+//	b = whisperFace->shh_post(t2);
+//	BOOST_REQUIRE(b);
 
-	string const nonexistent = "123456789";
-	b = whisperFace->shh_uninstallFilter(nonexistent);
-	BOOST_REQUIRE(b);
+//	string const nonexistent = "123456789";
+//	b = whisperFace->shh_uninstallFilter(nonexistent);
+//	BOOST_REQUIRE(b);
 
-	j = whisperFace->shh_getMessages(nonexistent);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getMessages(nonexistent);
+//	BOOST_REQUIRE(j.empty());
 
-	string const topic = "unicorns";
-	Json::Value t(Json::arrayValue);
-	t.append(topic);
-	Json::Value f;
-	f["to"] = id;
-	f["topics"] = t;
-	string const filter = whisperFace->shh_newFilter(f);
+//	string const topic = "unicorns";
+//	Json::Value t(Json::arrayValue);
+//	t.append(topic);
+//	Json::Value f;
+//	f["to"] = id;
+//	f["topics"] = t;
+//	string const filter = whisperFace->shh_newFilter(f);
 
-	j = whisperFace->shh_getFilterChanges(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getFilterChanges(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	j = whisperFace->shh_getMessages(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getMessages(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	Json::Value msg = createMessage(id, id, topic, text);
-	b = whisperFace->shh_post(msg);
-	BOOST_REQUIRE(b);
-	this_thread::sleep_for(chrono::milliseconds(50));
+//	Json::Value msg = createMessage(id, id, topic, text);
+//	b = whisperFace->shh_post(msg);
+//	BOOST_REQUIRE(b);
+//	this_thread::sleep_for(chrono::milliseconds(50));
 
-	j = whisperFace->shh_getFilterChanges(filter);
-	BOOST_REQUIRE(!j.empty());
-	Json::Value m1 = j[0];
-	BOOST_REQUIRE_EQUAL(m1["ttl"], toJS(c_ttl));
-	BOOST_REQUIRE_EQUAL(m1["from"], id);
-	BOOST_REQUIRE_EQUAL(m1["to"], id);
-	BOOST_REQUIRE_EQUAL(m1["payload"], text);
+//	j = whisperFace->shh_getFilterChanges(filter);
+//	BOOST_REQUIRE(!j.empty());
+//	Json::Value m1 = j[0];
+//	BOOST_REQUIRE_EQUAL(m1["ttl"], toJS(c_ttl));
+//	BOOST_REQUIRE_EQUAL(m1["from"], id);
+//	BOOST_REQUIRE_EQUAL(m1["to"], id);
+//	BOOST_REQUIRE_EQUAL(m1["payload"], text);
 
-	j = whisperFace->shh_getMessages(filter);	
-	BOOST_REQUIRE(!j.empty());
-	Json::Value m2 = j[0];
-	BOOST_REQUIRE_EQUAL(m2["ttl"], toJS(c_ttl));
-	BOOST_REQUIRE_EQUAL(m2["from"], id);
-	BOOST_REQUIRE_EQUAL(m2["to"], id);
-	BOOST_REQUIRE_EQUAL(m2["payload"], text);
+//	j = whisperFace->shh_getMessages(filter);
+//	BOOST_REQUIRE(!j.empty());
+//	Json::Value m2 = j[0];
+//	BOOST_REQUIRE_EQUAL(m2["ttl"], toJS(c_ttl));
+//	BOOST_REQUIRE_EQUAL(m2["from"], id);
+//	BOOST_REQUIRE_EQUAL(m2["to"], id);
+//	BOOST_REQUIRE_EQUAL(m2["payload"], text);
 
-	j = whisperFace->shh_getFilterChanges(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getFilterChanges(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	j = whisperFace->shh_getMessages(filter);
-	BOOST_REQUIRE(!j.empty());
-	m1 = j[0];
-	BOOST_REQUIRE_EQUAL(m1["ttl"], toJS(c_ttl));
-	BOOST_REQUIRE_EQUAL(m1["from"], id);
-	BOOST_REQUIRE_EQUAL(m1["to"], id);
-	BOOST_REQUIRE_EQUAL(m1["payload"], text);
+//	j = whisperFace->shh_getMessages(filter);
+//	BOOST_REQUIRE(!j.empty());
+//	m1 = j[0];
+//	BOOST_REQUIRE_EQUAL(m1["ttl"], toJS(c_ttl));
+//	BOOST_REQUIRE_EQUAL(m1["from"], id);
+//	BOOST_REQUIRE_EQUAL(m1["to"], id);
+//	BOOST_REQUIRE_EQUAL(m1["payload"], text);
 
-	msg = createMessage(id, id, topic);
-	b = whisperFace->shh_post(msg);
-	BOOST_REQUIRE(b);
-	this_thread::sleep_for(chrono::milliseconds(50));
+//	msg = createMessage(id, id, topic);
+//	b = whisperFace->shh_post(msg);
+//	BOOST_REQUIRE(b);
+//	this_thread::sleep_for(chrono::milliseconds(50));
 
-	j = whisperFace->shh_getFilterChanges(filter);
-	BOOST_REQUIRE_EQUAL(j.size(), 1);
+//	j = whisperFace->shh_getFilterChanges(filter);
+//	BOOST_REQUIRE_EQUAL(j.size(), 1);
 
-	j = whisperFace->shh_getMessages(filter);
-	BOOST_REQUIRE_EQUAL(j.size(), 2);
+//	j = whisperFace->shh_getMessages(filter);
+//	BOOST_REQUIRE_EQUAL(j.size(), 2);
 
-	b = whisperFace->shh_uninstallFilter(filter);
-	BOOST_REQUIRE(b);
+//	b = whisperFace->shh_uninstallFilter(filter);
+//	BOOST_REQUIRE(b);
 
-	j = whisperFace->shh_getFilterChanges(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getFilterChanges(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	j = whisperFace->shh_getMessages(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getMessages(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	msg = createMessage(id, id, topic);
-	b = whisperFace->shh_post(msg);
-	BOOST_REQUIRE(b);
-	this_thread::sleep_for(chrono::milliseconds(50));
+//	msg = createMessage(id, id, topic);
+//	b = whisperFace->shh_post(msg);
+//	BOOST_REQUIRE(b);
+//	this_thread::sleep_for(chrono::milliseconds(50));
 
-	j = whisperFace->shh_getFilterChanges(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getFilterChanges(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	j = whisperFace->shh_getMessages(filter);
-	BOOST_REQUIRE(j.empty());
+//	j = whisperFace->shh_getMessages(filter);
+//	BOOST_REQUIRE(j.empty());
 
-	b = adminNetFace->admin_net_stop(sess2);
-	BOOST_REQUIRE(b);
+//	b = adminNetFace->admin_net_stop(sess2);
+//	BOOST_REQUIRE(b);
 
-	b = netFace->net_listening();
-	BOOST_REQUIRE(!b);
-	*/
+//	b = netFace->net_listening();
+//	BOOST_REQUIRE(!b);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
