@@ -73,6 +73,7 @@
 #include "Farm.h"
 #endif
 #include <ethminer/MinerAux.h>
+#include "AccountManager.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -86,13 +87,22 @@ void help()
 	cout
 		<< "Usage eth [OPTIONS]" << endl
 		<< "Options:" << endl << endl
-		<< "Operating mode (default is non-interactive node):" << endl
+		<< "Operating mode (default is non-interactive node):" << endl;
 #if ETH_JSCONSOLE || !ETH_TRUE
+	cout
 		<< "    console  Enter interactive console mode (default: non-interactive)." << endl
 		<< "    attach  Ether interactive console mode of already-running eth." << endl
 		<< "    import <file>  Import file as a concatenated series of blocks." << endl
-		<< "    export <file>  Export file as a concatenated series of blocks." << endl
+		<< "    export <file>  Export file as a concatenated series of blocks." << endl;
+
 #endif
+	cout
+		<< endl;
+	AccountManager::streamAccountHelp(cout);
+	AccountManager::streamWalletHelp(cout);
+	cout
+		<< endl;
+	cout
 		<< "Client mode (default):" << endl
 		<< "    --olympic  Use the Olympic (0.9) protocol." << endl
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
@@ -412,6 +422,13 @@ int main(int argc, char** argv)
 		}
 		catch (...) {}
 	}
+
+	if (argc > 1 && (string(argv[1]) == "wallet" || string(argv[1]) == "account"))
+	{
+		AccountManager accountm;
+		return !accountm.execute(argc, argv);
+	}
+
 
 	MinerCLI m(MinerCLI::OperationMode::None);
 
