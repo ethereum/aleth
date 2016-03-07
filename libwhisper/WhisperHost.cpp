@@ -47,7 +47,7 @@ void WhisperHost::streamMessage(h256 _m, RLPStream& _s) const
 	{
 		UpgradeGuard ll(l);
 		auto const& m = m_messages.at(_m);
-		cnote << "streamRLP: " << m.expiry() << m.ttl() << m.topic() << toHex(m.data());
+//		cnote << "streamRLP: " << m.expiry() << m.ttl() << m.topic() << toHex(m.data());
 		m.streamRLP(_s);
 	}
 }
