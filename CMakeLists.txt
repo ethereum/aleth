@@ -40,4 +40,6 @@ add_subdirectory(libjsconsole)
 add_subdirectory(eth)
 
 # test stuff
-add_subdirectory(test)
+if (TESTS)
+	add_subdirectory(test)
+endif()
