@@ -46,6 +46,13 @@ enum class KDF {
 class SecretStore
 {
 public:
+	struct EncryptedKey
+	{
+		std::string encryptedKey;
+		std::string filename;
+		std::string address;
+	};
+
 	/// Construct a new SecretStore but don't read any keys yet.
 	/// Call setPath in
 	SecretStore() = default;
@@ -101,17 +108,16 @@ public:
 	void save(std::string const& _keysPath);
 	/// Store all keys in the managed directory.
 	void save() { save(m_path); }
+	/// Save the given key
+	void saveKey(h128 _uuid, EncryptedKey _key);
 
 	/// @returns the default path for the managed directory.
 	static std::string defaultPath() { return getDataDir("web3") + "/keys"; }
 
-private:
-	struct EncryptedKey
-	{
-		std::string encryptedKey;
-		std::string filename;
-	};
+	/// @returns the stored key using the given @a _uuid.
+	EncryptedKey key(h128 const& _uuid) { if (m_keys.find(_uuid) != m_keys.end()) { return m_keys.at(_uuid); } else { return EncryptedKey{ std::string(), std::string(), std::string() }; } }
 
+private:
 	/// Loads all keys in the given directory.
 	void load(std::string const& _keysPath);
 	void load() { load(m_path); }

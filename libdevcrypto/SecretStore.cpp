@@ -136,7 +136,7 @@ bytesSec SecretStore::secret(string const& _content, string const& _pass)
 h128 SecretStore::importSecret(bytesSec const& _s, string const& _pass)
 {
 	h128 r;
-	EncryptedKey key{encrypt(_s.ref(), _pass), string()};
+	EncryptedKey key{encrypt(_s.ref(), _pass), string(), KeyPair(Secret(_s)).address().hex()};
 	r = h128::random();
 	m_cached[r] = _s;
 	m_keys[r] = move(key);
@@ -147,7 +147,7 @@ h128 SecretStore::importSecret(bytesSec const& _s, string const& _pass)
 h128 SecretStore::importSecret(bytesConstRef _s, string const& _pass)
 {
 	h128 r;
-	EncryptedKey key{encrypt(_s, _pass), string()};
+	EncryptedKey key{encrypt(_s, _pass), string(), KeyPair(Secret(_s)).address().hex()};
 	r = h128::random();
 	m_cached[r] = bytesSec(_s);
 	m_keys[r] = move(key);
@@ -182,6 +182,7 @@ void SecretStore::save(string const& _keysPath)
 		js::mObject v;
 		js::mValue crypto;
 		js::read_string(k.second.encryptedKey, crypto);
+		v["address"] = k.second.address;
 		v["crypto"] = crypto;
 		v["id"] = uuid;
 		v["version"] = c_keyFileVersion;
@@ -190,6 +191,12 @@ void SecretStore::save(string const& _keysPath)
 		if (!filename.empty() && !fs::equivalent(filename, k.second.filename))
 			fs::remove(filename);
 	}
+}
+
+void SecretStore::saveKey(h128 _uuid, EncryptedKey _key)
+{
+	m_keys[_uuid] = move(_key);
+	save();
 }
 
 void SecretStore::load(string const& _keysPath)
@@ -219,7 +226,10 @@ h128 SecretStore::readKeyContent(string const& _content, string const& _file)
 		{
 			js::mObject& o = u.get_obj();
 			auto uuid = fromUUID(o["id"].get_str());
-			m_keys[uuid] = EncryptedKey{js::write_string(o["crypto"], false), _file};
+			string address;
+			if (o.find("address") != o.end())
+				address = js::write_string(o["address"], false);
+			m_keys[uuid] = EncryptedKey{js::write_string(o["crypto"], false), _file, address};
 			return uuid;
 		}
 		else
