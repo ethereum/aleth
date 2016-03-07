@@ -103,6 +103,12 @@ bool KeyManager::load(string const& _pass)
 						m_addrLookup[addr] = uuid;
 						m_uuidLookup[uuid] = addr;
 						m_keyInfo[addr] = KeyInfo(h256(i[2]), string(i[3]), i.itemCount() > 4 ? string(i[4]) : "");
+						SecretStore::EncryptedKey key = m_store.key(uuid);
+						if (!key.encryptedKey.empty() && key.address.empty())
+						{
+							key.address = addr.hex();
+							m_store.saveKey(uuid, key);
+						}
 					}
 					else
 						cwarn << "Missing key:" << uuid << addr;
