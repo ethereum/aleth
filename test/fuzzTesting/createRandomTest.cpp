@@ -409,7 +409,7 @@ std::string const c_testExampleBlockchainTest = R"(
 			 "coinbase" : "[HASH20]",
 			 "difficulty" : "131072",
 			 "extraData" : "[CODE]",
-			 "gasLimit" : "3141592",
+			 "gasLimit" : "4712388",
 			 "gasUsed" : "0",
 			 "mixHash" : "[0xHASH32]",
 			 "nonce" : "0x0102030405060708",

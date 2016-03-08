@@ -125,7 +125,7 @@ public:
 	BlockChain& interfaceUnsafe() const { return *m_blockChain;}
 	TestBlock const& testGenesis() const { return m_genesisBlock; }
 
-	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = 3141592);
+	static TestBlock defaultGenesisBlock(u256 const& _gasLimit = DefaultBlockGasLimit);
 	static AccountMap defaultAccountMap();
 	static eth::Network s_sealEngineNetwork;
 private:

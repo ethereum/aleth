@@ -44,7 +44,7 @@ void help()
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
 		<< "    --gas <n>  Transaction should be given <n> gas (default: block gas limit)." << endl
-		<< "    --gas-limit <n>  Block gas limit (default: 3141592)." << endl
+		<< "    --gas-limit <n>  Block gas limit (default: " << DefaultBlockGasLimit << "." << endl
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = 3141592;
+	u256 gas = DefaultBlockGasLimit;
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;

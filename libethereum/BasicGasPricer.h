@@ -45,7 +45,7 @@ public:
 private:
 	u256 m_weiPerRef;
 	u256 m_refsPerBlock;
-	u256 m_gasPerBlock = 3141592;
+	u256 m_gasPerBlock = DefaultBlockGasLimit;
 	std::array<u256, 9> m_octiles;
 };
 
