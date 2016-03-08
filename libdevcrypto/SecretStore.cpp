@@ -135,9 +135,8 @@ bytesSec SecretStore::secret(string const& _content, string const& _pass)
 
 h128 SecretStore::importSecret(bytesSec const& _s, string const& _pass)
 {
-	h128 r;
-	EncryptedKey key{encrypt(_s.ref(), _pass), string(), KeyPair(Secret(_s)).address().hex()};
-	r = h128::random();
+	h128 r = h128::random();
+	EncryptedKey key{encrypt(_s.ref(), _pass), toUUID(r), KeyPair(Secret(_s)).address()};
 	m_cached[r] = _s;
 	m_keys[r] = move(key);
 	save();
@@ -146,9 +145,8 @@ h128 SecretStore::importSecret(bytesSec const& _s, string const& _pass)
 
 h128 SecretStore::importSecret(bytesConstRef _s, string const& _pass)
 {
-	h128 r;
-	EncryptedKey key{encrypt(_s, _pass), string(), KeyPair(Secret(_s)).address().hex()};
-	r = h128::random();
+	h128 r = h128::random();
+	EncryptedKey key{encrypt(_s, _pass), toUUID(r), KeyPair(Secret(_s)).address()};
 	m_cached[r] = bytesSec(_s);
 	m_keys[r] = move(key);
 	save();
@@ -182,7 +180,7 @@ void SecretStore::save(string const& _keysPath)
 		js::mObject v;
 		js::mValue crypto;
 		js::read_string(k.second.encryptedKey, crypto);
-		v["address"] = k.second.address;
+		v["address"] = k.second.address.hex();
 		v["crypto"] = crypto;
 		v["id"] = uuid;
 		v["version"] = c_keyFileVersion;
@@ -193,7 +191,7 @@ void SecretStore::save(string const& _keysPath)
 	}
 }
 
-void SecretStore::saveKey(h128 _uuid, EncryptedKey _key)
+void SecretStore::saveKey(h128 const& _uuid, EncryptedKey const& _key)
 {
 	m_keys[_uuid] = move(_key);
 	save();
@@ -226,9 +224,11 @@ h128 SecretStore::readKeyContent(string const& _content, string const& _file)
 		{
 			js::mObject& o = u.get_obj();
 			auto uuid = fromUUID(o["id"].get_str());
-			string address;
-			if (o.find("address") != o.end())
-				address = js::write_string(o["address"], false);
+			Address address = ZeroAddress;
+			if (o.find("address") != o.end() && isHex(o["address"].get_str()))
+				address = Address(o["address"].get_str());
+			else
+				cwarn << "Account address is either not defined or not in hex format" << _file;
 			m_keys[uuid] = EncryptedKey{js::write_string(o["crypto"], false), _file, address};
 			return uuid;
 		}

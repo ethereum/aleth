@@ -50,7 +50,7 @@ public:
 	{
 		std::string encryptedKey;
 		std::string filename;
-		std::string address;
+		Address address;
 	};
 
 	/// Construct a new SecretStore but don't read any keys yet.
@@ -109,13 +109,13 @@ public:
 	/// Store all keys in the managed directory.
 	void save() { save(m_path); }
 	/// Save the given key
-	void saveKey(h128 _uuid, EncryptedKey _key);
+	void saveKey(h128 const& _uuid, EncryptedKey const& _key);
 
 	/// @returns the default path for the managed directory.
 	static std::string defaultPath() { return getDataDir("web3") + "/keys"; }
 
 	/// @returns the stored key using the given @a _uuid.
-	EncryptedKey key(h128 const& _uuid) { if (m_keys.find(_uuid) != m_keys.end()) { return m_keys.at(_uuid); } else { return EncryptedKey{ std::string(), std::string(), std::string() }; } }
+	EncryptedKey key(h128 const& _uuid) { if (m_keys.find(_uuid) != m_keys.end()) { return m_keys.at(_uuid); } else { return EncryptedKey{ std::string(), std::string(), ZeroAddress }; } }
 
 private:
 	/// Loads all keys in the given directory.
