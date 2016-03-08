@@ -907,10 +907,47 @@ int main(int argc, char** argv)
 	}
 
 	if (!configJSON.empty())
-		chainParams = chainParams.loadConfig(configJSON);
+	{
+		try
+		{
+			chainParams = chainParams.loadConfig(configJSON);
+		}
+		catch (...)
+		{
+			cerr << "provided configuration is not well formatted" << endl;
+			cerr << "sample: " << endl << genesisInfo(eth::Network::Olympic) << endl;
+			return 0;
+		}
+	}
+
 
 	if (!genesisJSON.empty())
-		chainParams = chainParams.loadGenesis(genesisJSON);
+	{
+		try
+		{
+			chainParams = chainParams.loadGenesis(genesisJSON);
+		}
+		catch (...)
+		{
+			cerr << "provided genesis block description is not well formatted" << endl;
+			string genesisSample =
+			R"E(
+			{
+				"nonce": "0x0000000000000042",
+				"difficulty": "0x400000000",
+				"mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+				"author": "0x0000000000000000000000000000000000000000",
+				"timestamp": "0x00",
+				"parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+				"extraData": "0x11bbe8db4e347b4e8c937c1c8370e4b5ed33adb3db69cbdb7a38e1e50b1b82fa",
+				"gasLimit": "0x1388"
+			}
+			)E";
+			cerr << "sample: " << endl << genesisSample << endl;
+			return 0;
+		}
+	}
+
 
 	if (!privateChain.empty())
 	{
