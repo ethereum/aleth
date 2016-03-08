@@ -505,72 +505,72 @@ BOOST_AUTO_TEST_CASE(server)
 //	BOOST_REQUIRE_EQUAL(m1["from"], id);
 //	BOOST_REQUIRE_EQUAL(m1["to"], id);
 //	BOOST_REQUIRE_EQUAL(m1["payload"], text);
-	cnote << "Testing web3 receive...";
+//	cnote << "Testing web3 receive...";
 
-	bool sent = false;
-	bool ready = false;
-	unsigned result = 0;
-	unsigned const messageCount = 6;
-	unsigned const step = 10;
-	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
-	host2.setIdealPeerCount(1);
-	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
-	host2.start();
-	web3->startNetwork();
-	auto port2 = host2.listenPort();
-	BOOST_REQUIRE(port2);
-	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
+//	bool sent = false;
+//	bool ready = false;
+//	unsigned result = 0;
+//	unsigned const messageCount = 6;
+//	unsigned const step = 10;
+//	Host host2("shhrpc-host2", NetworkPreferences("127.0.0.1", 0, false));
+//	host2.setIdealPeerCount(1);
+//	auto whost2 = host2.registerCapability(make_shared<WhisperHost>());
+//	host2.start();
+//	web3->startNetwork();
+//	auto port2 = host2.listenPort();
+//	BOOST_REQUIRE(port2);
+//	BOOST_REQUIRE_NE(port2, web3->nodeInfo().port);
 
-	std::thread listener([&]()
-	{
-		setThreadName("listener");
-		ready = true;
-		auto w = web3->whisper()->installWatch(BuildTopicMask("odd"));
+//	std::thread listener([&]()
+//	{
+//		setThreadName("listener");
+//		ready = true;
+//		auto w = web3->whisper()->installWatch(BuildTopicMask("odd"));
 
-		set<unsigned> received;
-		for (unsigned x = 0; x < 7000 && !sent; x += step)
-			this_thread::sleep_for(chrono::milliseconds(step));
+//		set<unsigned> received;
+//		for (unsigned x = 0; x < 7000 && !sent; x += step)
+//			this_thread::sleep_for(chrono::milliseconds(step));
 
-		for (unsigned x = 0, last = 0; x < 100 && received.size() < messageCount; ++x)
-		{
-			this_thread::sleep_for(chrono::milliseconds(50));
-			for (auto i: web3->whisper()->checkWatch(w))
-			{
-				Message msg = web3->whisper()->envelope(i).open(web3->whisper()->fullTopics(w));
-				last = RLP(msg.payload()).toInt<unsigned>();
-				if (received.insert(last).second)
-					result += last;
-			}
-		}
+//		for (unsigned x = 0, last = 0; x < 100 && received.size() < messageCount; ++x)
+//		{
+//			this_thread::sleep_for(chrono::milliseconds(50));
+//			for (auto i: web3->whisper()->checkWatch(w))
+//			{
+//				Message msg = web3->whisper()->envelope(i).open(web3->whisper()->fullTopics(w));
+//				last = RLP(msg.payload()).toInt<unsigned>();
+//				if (received.insert(last).second)
+//					result += last;
+//			}
+//		}
 
-		web3->whisper()->uninstallWatch(w);
-	});
+//		web3->whisper()->uninstallWatch(w);
+//	});
 
-	for (unsigned i = 0; i < 2000 && (!host2.haveNetwork() || !web3->haveNetwork()); i += step)
-		this_thread::sleep_for(chrono::milliseconds(step));
+//	for (unsigned i = 0; i < 2000 && (!host2.haveNetwork() || !web3->haveNetwork()); i += step)
+//		this_thread::sleep_for(chrono::milliseconds(step));
 
-	BOOST_REQUIRE(host2.haveNetwork());
-	BOOST_REQUIRE(web3->haveNetwork());
+//	BOOST_REQUIRE(host2.haveNetwork());
+//	BOOST_REQUIRE(web3->haveNetwork());
 
-	auto port1 = web3->nodeInfo().port;
-	host2.addNode(web3->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), port1, port1));
+//	auto port1 = web3->nodeInfo().port;
+//	host2.addNode(web3->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), port1, port1));
 
-	for (unsigned i = 0; i < 3000 && (!web3->peerCount() || !host2.peerCount()); i += step)
-		this_thread::sleep_for(chrono::milliseconds(step));
+//	for (unsigned i = 0; i < 3000 && (!web3->peerCount() || !host2.peerCount()); i += step)
+//		this_thread::sleep_for(chrono::milliseconds(step));
 
-	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
-	BOOST_REQUIRE_EQUAL(web3->peerCount(), 1);
+//	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
+//	BOOST_REQUIRE_EQUAL(web3->peerCount(), 1);
 
-	KeyPair us = KeyPair::create();
-	for (unsigned i = 0; i < messageCount; ++i)
-	{
-		web3->whisper()->post(us.sec(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), c_ttl, 1);
-		this_thread::sleep_for(chrono::milliseconds(50));
-	}
+//	KeyPair us = KeyPair::create();
+//	for (unsigned i = 0; i < messageCount; ++i)
+//	{
+//		web3->whisper()->post(us.sec(), RLPStream().append(i * i * i).out(), BuildTopic(i)(i % 2 ? "odd" : "even"), c_ttl, 1);
+//		this_thread::sleep_for(chrono::milliseconds(50));
+//	}
 
-	sent = true;
-	listener.join();
-	BOOST_REQUIRE_EQUAL(result, 1 + 27 + 125);
+//	sent = true;
+//	listener.join();
+//	BOOST_REQUIRE_EQUAL(result, 1 + 27 + 125);
 //	msg = createMessage(id, id, topic);
 //	b = whisperFace->shh_post(msg);
 //	BOOST_REQUIRE(b);
