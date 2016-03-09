@@ -96,6 +96,34 @@ template<typename T> void removeItem(std::map<unsigned, std::vector<T>>& _contai
 		lower->second.erase(lower->second.begin() + (_number - lower->first), lower->second.end());
 }
 
+template<typename T> void removeAllStartingWith(std::map<unsigned, std::vector<T>>& _container, unsigned _number)
+{
+	if (_container.empty())
+		return;
+	auto lower = _container.lower_bound(_number);
+	if (lower != _container.end() && lower->first == _number)
+	{
+		_container.erase(lower, _container.end());
+		return;
+	}
+	if (lower == _container.begin()) 
+	{
+		_container.clear();
+		return;
+	}
+	--lower;
+	if (lower->first <= _number && (lower->first + lower->second.size()) > _number) {
+		lower->second.erase(lower->second.begin() + (_number - lower->first), lower->second.end());
+		++lower;
+		_container.erase(lower, _container.end());
+	}
+	else
+	{
+		++lower;
+		_container.erase(lower, _container.end());
+	}
+}
+
 template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _container, unsigned _number, T&& _data)
 {
 	assert(!haveItem(_container, _number));
@@ -135,7 +163,8 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_host(_host),
 	m_startingBlock(_host.chain().number()),
-	m_lastImportedBlock(m_startingBlock)
+	m_lastImportedBlock(m_startingBlock),
+	m_lastImportedBlockHash(_host.chain().currentHash())
 {
 	m_bqRoomAvailable = host().bq().onRoomAvailable([this]()
 	{
@@ -256,10 +285,7 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 
 			++index;
 			if (index >= header->second.size())
-			{
-				index = 0;
-				++header;
-			}
+				break; // Download bodies only for validated header chain
 		}
 	}
 	if (neededBodies.size() > 0)
@@ -278,6 +304,7 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 			if (!m_headers.empty())
 				start = std::min(start, m_headers.begin()->first - 1);
 			m_lastImportedBlock = start;
+            m_lastImportedBlockHash = host().chain().numberHash(start);
 
 			if (start <= 1)
 				m_haveCommonHeader = true; //reached genesis
@@ -417,23 +444,23 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		{
 			m_haveCommonHeader = true;
 			m_lastImportedBlock = (unsigned)info.number();
+			m_lastImportedBlockHash = info.hash();
 		}
 		else
 		{
 			Header hdr { _r[i].data().toBytes(), info.hash(), info.parentHash() };
 
 			// validate chain
+			HeaderId headerId { info.transactionsRoot(), info.sha3Uncles() };
 			if (m_haveCommonHeader)
 			{
 				Header const* prevBlock = findItem(m_headers, blockNumber - 1);
-				if (prevBlock && prevBlock->hash != info.parentHash())
+				if ((prevBlock && prevBlock->hash != info.parentHash()) || (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash))
 				{
 					// mismatching parent id, delete the previous block and don't add this one
 					clog(NetImpolite) << "Unknown block header " << blockNumber << " " << info.hash();
 					_peer->addRating(-1);
-					BlockHeader deletingInfo(prevBlock->data, HeaderData);
-					HeaderId id { deletingInfo.transactionsRoot(), deletingInfo.sha3Uncles() };
-					m_headerIdToNumber.erase(id);
+					m_headerIdToNumber.erase(headerId);
 					m_downloadingBodies.erase(blockNumber - 1);
 					m_downloadingHeaders.erase(blockNumber - 1);
 					removeItem(m_headers, blockNumber - 1);
@@ -451,20 +478,18 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 					for (auto const& h : headers)
 					{
 						BlockHeader deletingInfo(h.data, HeaderData);
-						HeaderId id { deletingInfo.transactionsRoot(), deletingInfo.sha3Uncles() };
-						m_headerIdToNumber.erase(id);
+						m_headerIdToNumber.erase(headerId);
 						m_downloadingBodies.erase(n);
 						m_downloadingHeaders.erase(n);
 						++n;
 					}
-					removeItem(m_headers, blockNumber + 1);
-					removeItem(m_bodies, blockNumber + 1);
+					removeAllStartingWith(m_headers, blockNumber + 1);
+					removeAllStartingWith(m_bodies, blockNumber + 1);
 				}
 			}
 
 			mergeInto(m_headers, blockNumber, std::move(hdr));
-			HeaderId id { info.transactionsRoot(), info.sha3Uncles() };
-			if (id.transactionsRoot == EmptyTrie && id.uncles ==  EmptyListSHA3)
+			if (headerId.transactionsRoot == EmptyTrie && headerId.uncles ==  EmptyListSHA3)
 			{
 				//empty body, just mark as downloaded
 				RLPStream r(2);
@@ -475,7 +500,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 				mergeInto(m_bodies, blockNumber, std::move(body));
 			}
 			else
-				m_headerIdToNumber[id] = blockNumber;
+				m_headerIdToNumber[headerId] = blockNumber;
 		}
 	}
 	collectBlocks();
@@ -549,7 +574,11 @@ void BlockChainSync::collectBlocks()
 		{
 		case ImportResult::Success:
 			success++;
-			m_lastImportedBlock = max(m_lastImportedBlock, headers.first + (unsigned)i);
+			if (headers.first + i > m_lastImportedBlock) 
+			{
+				m_lastImportedBlock = headers.first + (unsigned)i;
+				m_lastImportedBlockHash = headers.second[i].hash;
+			}
 			break;
 		case ImportResult::Malformed:
 		case ImportResult::BadChain:
@@ -632,7 +661,11 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	case ImportResult::Success:
 		_peer->addRating(100);
 		logNewBlock(h);
-		m_lastImportedBlock = max(m_lastImportedBlock, blockNumber);
+		if (blockNumber > m_lastImportedBlock) 
+		{
+			m_lastImportedBlock = max(m_lastImportedBlock, blockNumber);
+			m_lastImportedBlockHash = h;
+		}
 		m_highestBlock = max(m_lastImportedBlock, m_highestBlock);
 		m_downloadingBodies.erase(blockNumber);
 		m_downloadingHeaders.erase(blockNumber);
@@ -715,6 +748,7 @@ void BlockChainSync::restartSync()
 	host().bq().clear();
 	m_startingBlock = host().chain().number();
 	m_lastImportedBlock = m_startingBlock;
+	m_lastImportedBlockHash = host().chain().currentHash();
 	m_state = SyncState::NotSynced;
 }
 

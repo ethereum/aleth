@@ -148,6 +148,7 @@ private:
 	std::unordered_map<HeaderId, unsigned, HeaderIdHash> m_headerIdToNumber;
 	bool m_haveCommonHeader = false;			///< True if common block for our and remote chain has been found
 	unsigned m_lastImportedBlock = 0; 			///< Last imported block number
+	h256 m_lastImportedBlockHash; 			///< Last imported block hash
 	u256 m_syncingTotalDifficulty;				///< Highest peer difficulty
 
 private:
