@@ -425,7 +425,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	if (itemCount == 0)
 	{
 		clog(NetAllDetail) << "Peer does not have the blocks requested";
-		return;
+		_peer->addRating(-1);
 	}
 	for (unsigned i = 0; i < itemCount; i++)
 	{
@@ -527,6 +527,11 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 	{
 		clog(NetAllDetail) << "Ignored blocks while waiting";
 		return;
+	}
+	if (itemCount == 0)
+	{
+		clog(NetAllDetail) << "Peer does not have the blocks requested";
+		_peer->addRating(-1);
 	}
 	for (unsigned i = 0; i < itemCount; i++)
 	{
