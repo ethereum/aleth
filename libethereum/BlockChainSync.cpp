@@ -422,6 +422,11 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		clog(NetAllDetail) << "Ignored blocks while waiting";
 		return;
 	}
+	if (itemCount == 0)
+	{
+		clog(NetAllDetail) << "Peer does not have the blocks requested";
+		return;
+	}
 	for (unsigned i = 0; i < itemCount; i++)
 	{
 		BlockHeader info(_r[i].data(), HeaderData);
@@ -512,7 +517,7 @@ void BlockChainSync::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP 
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
 	size_t itemCount = _r.itemCount();
-	clog(NetMessageSummary) << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreHeaders");
+	clog(NetMessageSummary) << "BlocksBodies (" << dec << itemCount << "entries)" << (itemCount ? "" : ": NoMoreBodies");
 	clearPeerDownload(_peer);
 	if (m_state != SyncState::Blocks && m_state != SyncState::NewBlocks && m_state != SyncState::Waiting) {
 		clog(NetMessageSummary) << "Ignoring unexpected blocks";
