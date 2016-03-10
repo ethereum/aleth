@@ -112,16 +112,9 @@ template<typename T> void removeAllStartingWith(std::map<unsigned, std::vector<T
 		return;
 	}
 	--lower;
-	if (lower->first <= _number && (lower->first + lower->second.size()) > _number) {
+	if (lower->first <= _number && (lower->first + lower->second.size()) > _number)
 		lower->second.erase(lower->second.begin() + (_number - lower->first), lower->second.end());
-		++lower;
-		_container.erase(lower, _container.end());
-	}
-	else
-	{
-		++lower;
-		_container.erase(lower, _container.end());
-	}
+	_container.erase(++lower, _container.end());
 }
 
 template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _container, unsigned _number, T&& _data)
@@ -304,7 +297,7 @@ void BlockChainSync::requestBlocks(std::shared_ptr<EthereumPeer> _peer)
 			if (!m_headers.empty())
 				start = std::min(start, m_headers.begin()->first - 1);
 			m_lastImportedBlock = start;
-            m_lastImportedBlockHash = host().chain().numberHash(start);
+			m_lastImportedBlockHash = host().chain().numberHash(start);
 
 			if (start <= 1)
 				m_haveCommonHeader = true; //reached genesis
@@ -494,7 +487,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 			}
 
 			mergeInto(m_headers, blockNumber, std::move(hdr));
-			if (headerId.transactionsRoot == EmptyTrie && headerId.uncles ==  EmptyListSHA3)
+			if (headerId.transactionsRoot == EmptyTrie && headerId.uncles == EmptyListSHA3)
 			{
 				//empty body, just mark as downloaded
 				RLPStream r(2);
