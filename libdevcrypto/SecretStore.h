@@ -114,9 +114,6 @@ public:
 	/// @returns the default path for the managed directory.
 	static std::string defaultPath() { return getDataDir("web3") + "/keys"; }
 
-	/// @returns the stored key using the given @a _uuid.
-	EncryptedKey key(h128 const& _uuid);
-
 private:
 	/// Loads all keys in the given directory.
 	void load(std::string const& _keysPath);

@@ -412,11 +412,3 @@ bytesSec SecretStore::decrypt(string const& _v, string const& _pass)
 		return bytesSec();
 	}
 }
-
-SecretStore::EncryptedKey SecretStore::key(h128 const& _uuid)
-{
-	if (m_keys.find(_uuid) != m_keys.end())
-		return m_keys.at(_uuid);
-	else
-		return EncryptedKey();
-}
