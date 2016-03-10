@@ -271,11 +271,11 @@ bool SecretStore::recode(Address const& _address, string const& _newPass, functi
 		if (k.second.address == _address)
 		{
 			k.second.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
-			break;
+			save();
+			return true;
 		}
 	}
-	save();
-	return true;
+	return false;
 }
 
 bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
