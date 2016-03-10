@@ -92,6 +92,7 @@ bool KeyManager::load(string const& _pass)
 		unsigned version = unsigned(s[0]);
 		if (version == 1)
 		{
+			bool noteAddress = false;
 			for (auto const& i: s[1])
 			{
 				h128 uuid(i[1]);
@@ -103,12 +104,8 @@ bool KeyManager::load(string const& _pass)
 						m_addrLookup[addr] = uuid;
 						m_uuidLookup[uuid] = addr;
 						m_keyInfo[addr] = KeyInfo(h256(i[2]), string(i[3]), i.itemCount() > 4 ? string(i[4]) : "");
-						SecretStore::EncryptedKey key = m_store.key(uuid);
-						if (!key.encryptedKey.empty() && key.address == ZeroAddress)
-						{
-							key.address = addr;
-							m_store.saveKey(uuid, key);
-						}
+						if (m_store.noteAddress(uuid, addr))
+							noteAddress = true;
 					}
 					else
 						cwarn << "Missing key:" << uuid << addr;
@@ -120,6 +117,8 @@ bool KeyManager::load(string const& _pass)
 				}
 //				cdebug << toString(addr) << toString(uuid) << toString((h256)i[2]) << (string)i[3];
 			}
+			if (noteAddress)
+				m_store.save();
 
 			for (auto const& i: s[2])
 				m_passwordHint[h256(i[0])] = string(i[1]);
