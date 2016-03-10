@@ -1156,16 +1156,10 @@ int main(int argc, char** argv)
 		}
 		else
 		{
-			if (!masterSet)
-				while (true)
-				{
-					masterPassword = getPassword("Please enter a MASTER password to protect your key store (make it strong!): ");
-					string confirm = getPassword("Please confirm the password by entering it again: ");
-					if (masterPassword == confirm)
-						break;
-					cout << "Passwords were different. Try again." << endl;
-				}
-			keyManager.create(masterPassword);
+			if (masterSet)
+				keyManager.create(masterPassword);
+			else
+				keyManager.create(std::string());
 		}
 	}
 	catch(...)

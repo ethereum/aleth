@@ -159,20 +159,20 @@ bool AccountManager::execute(int argc, char** argv)
 			for (int k = 3; k < argc; k++)
 			{
 				string i = argv[k];
-				if (h128 u = fromUUID(i))
+				if (isHex(i))
 				{
 					if (m_keyManager->store().recode(
-						u,
-						createPassword("Enter the new passphrase for key " + toUUID(u)),
-						[&](){ return getPassword("Enter the current passphrase for key " + toUUID(u) + ": "); },
+						Address(i),
+						createPassword("Enter the new passphrase for address " + i),
+						[&](){ return getPassword("Enter the current passphrase for address " + i + ": "); },
 						dev::KDF::Scrypt
 					))
-						cerr << "Re-encoded " << toUUID(u) << endl;
+						cerr << "Re-encoded " << i << endl;
 					else
-						cerr << "Couldn't re-encode " << toUUID(u) << "; key corrupt or incorrect passphrase supplied." << endl;
+						cerr << "Couldn't re-encode " << i << "; key corrupt or incorrect passphrase supplied." << endl;
 				}
 				else
-					cerr << "Couldn't re-encode " << i << "; not found." << endl;
+					cerr << "Couldn't re-encode " << i << "; does not represent an address." << endl;
 			}
 		}
 		else
@@ -213,7 +213,9 @@ bool AccountManager::openWallet()
 		m_keyManager.reset(new KeyManager());
 		if (m_keyManager->exists())
 		{
-			if (!m_keyManager->load(getPassword("Please enter your MASTER passphrase: ")))
+			if (m_keyManager->load(std::string()) || m_keyManager->load(getPassword("Please enter your MASTER passphrase: ")))
+				return true;
+			else
 			{
 				cerr << "Couldn't open wallet. Please check passphrase." << endl;
 				return false;
