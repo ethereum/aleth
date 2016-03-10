@@ -70,6 +70,9 @@ public:
 	/// @returns the secret key stored by the given @a _uuid.
 	/// @param _pass function that returns the password for the key.
 	static bytesSec secret(std::string const& _content, std::string const& _pass);
+	/// @returns the secret key stored by the given @a _address.
+	/// @param _pass function that returns the password for the key.
+	bytesSec secret(Address const& _address, std::function<std::string()> const& _pass) const;
 	/// Imports the (encrypted) key stored in the file @a _file and copies it to the managed directory.
 	h128 importKey(std::string const& _file) { auto ret = readKey(_file, false); if (ret) save(); return ret; }
 	/// Imports the (encrypted) key contained in the json formatted @a _content and stores it in
@@ -80,7 +83,9 @@ public:
 	h128 importSecret(bytesSec const& _s, std::string const& _pass);
 	h128 importSecret(bytesConstRef _s, std::string const& _pass);
 	/// Decrypts and re-encrypts the key identified by @a _uuid.
-	bool recode(h128 const& _uuid, std::string const& _newPass, std::function<std::string()> const& _pass, KDF _kdf = KDF::Scrypt);
+	//bool recode(h128 const& _uuid, std::string const& _newPass, std::function<std::string()> const& _pass, KDF _kdf = KDF::Scrypt);
+	/// /// Decrypts and re-encrypts the key identified by @a _address.
+	bool recode(Address const& _address, std::string const& _newPass, std::function<std::string()> const& _pass, KDF _kdf = KDF::Scrypt);
 	/// Removes the key specified by @a _uuid from both memory and disk.
 	void kill(h128 const& _uuid);
 

@@ -118,6 +118,20 @@ bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass,
 	return key;
 }
 
+bytesSec SecretStore::secret(Address const& _address, function<string()> const& _pass) const
+{
+	bytesSec key;
+	for (auto const& k: m_keys)
+	{
+		if (k.second.address == _address)
+		{
+			key = bytesSec(decrypt(k.second.encryptedKey, _pass()));
+			break;
+		}
+	}
+	return key;
+}
+
 bytesSec SecretStore::secret(string const& _content, string const& _pass)
 {
 	try
@@ -246,7 +260,24 @@ h128 SecretStore::readKeyContent(string const& _content, string const& _file)
 	}
 }
 
-bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
+bool SecretStore::recode(Address const& _address, string const& _newPass, function<string()> const& _pass, KDF _kdf)
+{
+	bytesSec s = secret(_address, _pass);
+	if (s.empty())
+		return false;
+
+	for (auto& k: m_keys)
+	{
+		if (k.address == _address)
+		{
+			k.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
+		}
+	}
+	save();
+	return true;
+}
+
+/*bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
 {
 	bytesSec s = secret(_uuid, _pass, true);
 	if (s.empty())
@@ -255,7 +286,7 @@ bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<str
 	m_keys[_uuid].encryptedKey = encrypt(s.ref(), _newPass, _kdf);
 	save();
 	return true;
-}
+}*/
 
 static bytesSec deriveNewKey(string const& _pass, KDF _kdf, js::mObject& o_ret)
 {
