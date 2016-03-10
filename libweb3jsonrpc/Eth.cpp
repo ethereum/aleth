@@ -134,6 +134,11 @@ string Eth::eth_getStorageAt(string const& _address, string const& _position, st
 	}
 }
 
+string Eth::eth_pendingTransactions()
+{
+	return toJS(client()->pending());
+}
+
 string Eth::eth_getTransactionCount(string const& _address, string const& _blockNumber)
 {
 	try
