@@ -33,7 +33,7 @@ void AccountManager::streamAccountHelp(ostream& _out)
 	_out
 		<< "    account list  List all keys available in wallet." << endl
 		<< "    account new	Create a new key and add it to the wallet." << endl
-		<< "    account update [ <uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
+		<< "    account update [<address>]  Decrypt and re-encrypt given keys." << endl
 		<< "    account import [<uuid>|<file>|<secret-hex>]	Import keys from given source and place in wallet." << endl;
 }
 
@@ -163,8 +163,8 @@ bool AccountManager::execute(int argc, char** argv)
 				{
 					if (m_keyManager->store().recode(
 						Address(i),
-						createPassword("Enter the new passphrase for address " + i),
-						[&](){ return getPassword("Enter the current passphrase for address " + i + ": "); },
+						createPassword("Enter the new passphrase for the address " + i),
+						[&](){ return getPassword("Enter the current passphrase for the address " + i + ": "); },
 						dev::KDF::Scrypt
 					))
 						cerr << "Re-encoded " << i << endl;
