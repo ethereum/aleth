@@ -191,10 +191,14 @@ void SecretStore::save(string const& _keysPath)
 	}
 }
 
-void SecretStore::saveKey(h128 const& _uuid, EncryptedKey const& _key)
+bool SecretStore::noteAddress(h128 const& _uuid, Address const& _address)
 {
-	m_keys[_uuid] = move(_key);
-	save();
+	if (m_keys.find(_uuid) != m_keys.end() && m_keys[_uuid].address == ZeroAddress)
+	{
+		m_keys[_uuid].address =	_address;
+		return true;
+	}
+	return false;
 }
 
 void SecretStore::load(string const& _keysPath)
@@ -407,4 +411,12 @@ bytesSec SecretStore::decrypt(string const& _v, string const& _pass)
 		cwarn << "Unknown cipher" << o["cipher"].get_str() << "not supported.";
 		return bytesSec();
 	}
+}
+
+SecretStore::EncryptedKey SecretStore::key(h128 const& _uuid)
+{
+	if (m_keys.find(_uuid) != m_keys.end())
+		return m_keys.at(_uuid);
+	else
+		return EncryptedKey();
 }

@@ -108,14 +108,14 @@ public:
 	void save(std::string const& _keysPath);
 	/// Store all keys in the managed directory.
 	void save() { save(m_path); }
-	/// Save the given key
-	void saveKey(h128 const& _uuid, EncryptedKey const& _key);
+	/// @returns true if the current file @arg _uuid contains an empty address. m_keys will be updated with the given @arg _address.
+	bool noteAddress(h128 const& _uuid, Address const& _address);
 
 	/// @returns the default path for the managed directory.
 	static std::string defaultPath() { return getDataDir("web3") + "/keys"; }
 
 	/// @returns the stored key using the given @a _uuid.
-	EncryptedKey key(h128 const& _uuid) { if (m_keys.find(_uuid) != m_keys.end()) { return m_keys.at(_uuid); } else { return EncryptedKey{ std::string(), std::string(), ZeroAddress }; } }
+	EncryptedKey key(h128 const& _uuid);
 
 private:
 	/// Loads all keys in the given directory.
