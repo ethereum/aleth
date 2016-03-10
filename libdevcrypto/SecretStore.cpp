@@ -268,16 +268,17 @@ bool SecretStore::recode(Address const& _address, string const& _newPass, functi
 
 	for (auto& k: m_keys)
 	{
-		if (k.address == _address)
+		if (k.second.address == _address)
 		{
-			k.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
+			k.second.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
+			break;
 		}
 	}
 	save();
 	return true;
 }
 
-/*bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
+bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)
 {
 	bytesSec s = secret(_uuid, _pass, true);
 	if (s.empty())
@@ -286,7 +287,7 @@ bool SecretStore::recode(Address const& _address, string const& _newPass, functi
 	m_keys[_uuid].encryptedKey = encrypt(s.ref(), _newPass, _kdf);
 	save();
 	return true;
-}*/
+}
 
 static bytesSec deriveNewKey(string const& _pass, KDF _kdf, js::mObject& o_ret)
 {

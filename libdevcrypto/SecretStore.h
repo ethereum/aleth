@@ -83,8 +83,8 @@ public:
 	h128 importSecret(bytesSec const& _s, std::string const& _pass);
 	h128 importSecret(bytesConstRef _s, std::string const& _pass);
 	/// Decrypts and re-encrypts the key identified by @a _uuid.
-	//bool recode(h128 const& _uuid, std::string const& _newPass, std::function<std::string()> const& _pass, KDF _kdf = KDF::Scrypt);
-	/// /// Decrypts and re-encrypts the key identified by @a _address.
+	bool recode(h128 const& _uuid, std::string const& _newPass, std::function<std::string()> const& _pass, KDF _kdf = KDF::Scrypt);
+	/// Decrypts and re-encrypts the key identified by @a _address.
 	bool recode(Address const& _address, std::string const& _newPass, std::function<std::string()> const& _pass, KDF _kdf = KDF::Scrypt);
 	/// Removes the key specified by @a _uuid from both memory and disk.
 	void kill(h128 const& _uuid);
