@@ -120,16 +120,11 @@ bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass,
 
 bytesSec SecretStore::secret(Address const& _address, function<string()> const& _pass) const
 {
-	bytesSec key;
-	for (auto const& k: m_keys)
-	{
-		if (k.second.address == _address)
-		{
-			key = bytesSec(decrypt(k.second.encryptedKey, _pass()));
-			break;
-		}
-	}
-	return key;
+	bytesSec ret;
+	auto k = key(_address);
+	if (k)
+		ret = bytesSec(decrypt(k->second.encryptedKey, _pass()));
+	return ret;
 }
 
 bytesSec SecretStore::secret(string const& _content, string const& _pass)
@@ -262,27 +257,35 @@ h128 SecretStore::readKeyContent(string const& _content, string const& _file)
 
 bool SecretStore::recode(Address const& _address, string const& _newPass, function<string()> const& _pass, KDF _kdf)
 {
-	bytesSec s = secret(_address, _pass);
-	if (s.empty())
-		return false;
-
 	auto k = key(_address);
 	if (k)
 	{
-		k->second.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
-		save();
-		return true;
+		bytesSec s = secret(_address, _pass);
+		if (s.empty())
+			return false;
+		else
+		{
+			k->second.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
+			save();
+			return true;
+		}
 	}
 	return false;
 }
 
-std::pair<const h128, SecretStore::EncryptedKey>* SecretStore::key(Address const& _address)
+pair<h128 const, SecretStore::EncryptedKey> const* SecretStore::key(Address const& _address) const
 {
-	for (auto& k: m_keys)
-	{
+	for (auto const& k: m_keys)
 		if (k.second.address == _address)
 			return &k;
-	}
+	return nullptr;
+}
+
+pair<h128 const, SecretStore::EncryptedKey>* SecretStore::key(Address const& _address)
+{
+	for (auto& k: m_keys)
+		if (k.second.address == _address)
+			return &k;
 	return nullptr;
 }
 

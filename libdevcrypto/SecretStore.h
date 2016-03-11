@@ -128,8 +128,8 @@ private:
 	/// Decrypts @a _v with a key derived from @a _pass or the empty byte array on error.
 	static bytesSec decrypt(std::string const& _v, std::string const& _pass);
 	/// @returns the key given the @a _address.
-	std::pair<const h128, EncryptedKey>* key(Address const& _address);
-
+	std::pair<h128 const, EncryptedKey> const* key(Address const& _address) const;
+	std::pair<h128 const, EncryptedKey>* key(Address const& _address);
 	/// Stores decrypted keys by uuid.
 	mutable std::unordered_map<h128, bytesSec> m_cached;
 	/// Stores encrypted keys together with the file they were loaded from by uuid.
