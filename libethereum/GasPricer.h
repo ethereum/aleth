@@ -40,7 +40,7 @@ enum class TransactionPriority
 	Highest = 8
 };
 
-static const u256 DefaultGasPrice = 50 * shannon;
+static const u256 DefaultGasPrice = 20 * shannon;
 
 class GasPricer
 {
