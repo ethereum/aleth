@@ -121,8 +121,7 @@ bytesSec SecretStore::secret(h128 const& _uuid, function<string()> const& _pass,
 bytesSec SecretStore::secret(Address const& _address, function<string()> const& _pass) const
 {
 	bytesSec ret;
-	auto k = key(_address);
-	if (k)
+	if (auto k = key(_address))
 		ret = bytesSec(decrypt(k->second.encryptedKey, _pass()));
 	return ret;
 }
@@ -257,8 +256,7 @@ h128 SecretStore::readKeyContent(string const& _content, string const& _file)
 
 bool SecretStore::recode(Address const& _address, string const& _newPass, function<string()> const& _pass, KDF _kdf)
 {
-	auto k = key(_address);
-	if (k)
+	if (auto k = key(_address))
 	{
 		bytesSec s = secret(_address, _pass);
 		if (s.empty())
