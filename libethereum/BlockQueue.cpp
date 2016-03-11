@@ -571,7 +571,7 @@ bool BlockQueue::isActive() const
 	return true;
 }
 
-std::ostream& dev::eth::operator << (std::ostream& os, const QueueStatus& obj)
+std::ostream& dev::eth::operator<< (std::ostream& os, QueueStatus const& obj)
 {
    os << static_cast<std::underlying_type<QueueStatus>::type>(obj);
    return os;
