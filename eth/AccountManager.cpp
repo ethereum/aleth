@@ -33,7 +33,7 @@ void AccountManager::streamAccountHelp(ostream& _out)
 	_out
 		<< "    account list  List all keys available in wallet." << endl
 		<< "    account new	Create a new key and add it to the wallet." << endl
-		<< "    account update [ <uuid>|<file> , ... ]  Decrypt and re-encrypt given keys." << endl
+		<< "    account update [<uuid>|<address> , ... ]  Decrypt and re-encrypt given keys." << endl
 		<< "    account import [<uuid>|<file>|<secret-hex>]	Import keys from given source and place in wallet." << endl;
 }
 
@@ -159,20 +159,37 @@ bool AccountManager::execute(int argc, char** argv)
 			for (int k = 3; k < argc; k++)
 			{
 				string i = argv[k];
-				if (h128 u = fromUUID(i))
+				h128 u = fromUUID(i);
+				if (isHex(i) || u != h128())
 				{
-					if (m_keyManager->store().recode(
-						u,
-						createPassword("Enter the new passphrase for key " + toUUID(u)),
-						[&](){ return getPassword("Enter the current passphrase for key " + toUUID(u) + ": "); },
-						dev::KDF::Scrypt
-					))
-						cerr << "Re-encoded " << toUUID(u) << endl;
+					string newP = createPassword("Enter the new passphrase for the account " + i);
+					auto oldP = [&](){ return getPassword("Enter the current passphrase for the account " + i + ": "); };
+					bool recoded = false;
+					if (isHex(i))
+					{
+						recoded = m_keyManager->store().recode(
+							Address(i),
+							newP,
+							oldP,
+							dev::KDF::Scrypt
+						);
+					}
+					else if (u != h128())
+					{
+						recoded = m_keyManager->store().recode(
+							u,
+							newP,
+							oldP,
+							dev::KDF::Scrypt
+						);
+					}
+					if (recoded)
+						cerr << "Re-encoded " << i << endl;
 					else
-						cerr << "Couldn't re-encode " << toUUID(u) << "; key corrupt or incorrect passphrase supplied." << endl;
+						cerr << "Couldn't re-encode " << i << "; key does not exist, corrupt or incorrect passphrase supplied." << endl;
 				}
 				else
-					cerr << "Couldn't re-encode " << i << "; not found." << endl;
+					cerr << "Couldn't re-encode " << i << "; does not represent an address or uuid." << endl;
 			}
 		}
 		else
@@ -213,7 +230,9 @@ bool AccountManager::openWallet()
 		m_keyManager.reset(new KeyManager());
 		if (m_keyManager->exists())
 		{
-			if (!m_keyManager->load(getPassword("Please enter your MASTER passphrase: ")))
+			if (m_keyManager->load(std::string()) || m_keyManager->load(getPassword("Please enter your MASTER passphrase: ")))
+				return true;
+			else
 			{
 				cerr << "Couldn't open wallet. Please check passphrase." << endl;
 				return false;
