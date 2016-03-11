@@ -33,7 +33,7 @@ void AccountManager::streamAccountHelp(ostream& _out)
 	_out
 		<< "    account list  List all keys available in wallet." << endl
 		<< "    account new	Create a new key and add it to the wallet." << endl
-		<< "    account update [<uuid>|<file>|<address> , ... ]  Decrypt and re-encrypt given keys." << endl
+		<< "    account update [<uuid>|<address> , ... ]  Decrypt and re-encrypt given keys." << endl
 		<< "    account import [<uuid>|<file>|<secret-hex>]	Import keys from given source and place in wallet." << endl;
 }
 
