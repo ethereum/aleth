@@ -33,7 +33,7 @@ void AccountManager::streamAccountHelp(ostream& _out)
 	_out
 		<< "    account list  List all keys available in wallet." << endl
 		<< "    account new	Create a new key and add it to the wallet." << endl
-		<< "    account update [<address>]  Decrypt and re-encrypt given keys." << endl
+		<< "    account update [<uuid>|<file>|<address> , ... ]  Decrypt and re-encrypt given keys." << endl
 		<< "    account import [<uuid>|<file>|<secret-hex>]	Import keys from given source and place in wallet." << endl;
 }
 
@@ -159,20 +159,37 @@ bool AccountManager::execute(int argc, char** argv)
 			for (int k = 3; k < argc; k++)
 			{
 				string i = argv[k];
-				if (isHex(i))
+				h128 u = fromUUID(i);
+				if (isHex(i) || u != h128())
 				{
-					if (m_keyManager->store().recode(
-						Address(i),
-						createPassword("Enter the new passphrase for the address " + i),
-						[&](){ return getPassword("Enter the current passphrase for the address " + i + ": "); },
-						dev::KDF::Scrypt
-					))
+					string newP = createPassword("Enter the new passphrase for the account " + i);
+					auto oldP = [&](){ return getPassword("Enter the current passphrase for the account " + i + ": "); };
+					bool recoded = false;
+					if (isHex(i))
+					{
+						recoded = m_keyManager->store().recode(
+							Address(i),
+							newP,
+							oldP,
+							dev::KDF::Scrypt
+						);
+					}
+					else if (u != h128())
+					{
+						recoded = m_keyManager->store().recode(
+							u,
+							newP,
+							oldP,
+							dev::KDF::Scrypt
+						);
+					}
+					if (recoded)
 						cerr << "Re-encoded " << i << endl;
 					else
-						cerr << "Couldn't re-encode " << i << "; key corrupt or incorrect passphrase supplied." << endl;
+						cerr << "Couldn't re-encode " << i << "; key does not exist, corrupt or incorrect passphrase supplied." << endl;
 				}
 				else
-					cerr << "Couldn't re-encode " << i << "; does not represent an address." << endl;
+					cerr << "Couldn't re-encode " << i << "; does not represent an address or uuid." << endl;
 			}
 		}
 		else
