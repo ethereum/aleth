@@ -17,7 +17,7 @@ function print_help {
 DEV_TEST=0
 CLEAN_BUILD=1
 MAKE_CORES=4
-GIVEN_VERSION=1.2.1 #default - mainly for testing if no version is given
+GIVEN_VERSION=1.2.2 #default - mainly for testing if no version is given
 
 for arg in ${@:1}
 do
