@@ -266,16 +266,24 @@ bool SecretStore::recode(Address const& _address, string const& _newPass, functi
 	if (s.empty())
 		return false;
 
+	auto k = key(_address);
+	if (k)
+	{
+		k->second.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
+		save();
+		return true;
+	}
+	return false;
+}
+
+std::pair<const h128, SecretStore::EncryptedKey>* SecretStore::key(Address const& _address)
+{
 	for (auto& k: m_keys)
 	{
 		if (k.second.address == _address)
-		{
-			k.second.encryptedKey = encrypt(s.ref(), _newPass, _kdf);
-			save();
-			return true;
-		}
+			return &k;
 	}
-	return false;
+	return nullptr;
 }
 
 bool SecretStore::recode(h128 const& _uuid, string const& _newPass, function<string()> const& _pass, KDF _kdf)

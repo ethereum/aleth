@@ -127,6 +127,8 @@ private:
 	static std::string encrypt(bytesConstRef _v, std::string const& _pass, KDF _kdf = KDF::Scrypt);
 	/// Decrypts @a _v with a key derived from @a _pass or the empty byte array on error.
 	static bytesSec decrypt(std::string const& _v, std::string const& _pass);
+	/// @returns the key given the @a _address.
+	std::pair<const h128, EncryptedKey>* key(Address const& _address);
 
 	/// Stores decrypted keys by uuid.
 	mutable std::unordered_map<h128, bytesSec> m_cached;
