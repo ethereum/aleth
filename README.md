@@ -1,4 +1,4 @@
-# Former and future home of Ethereum C++ client
+# Former home of Ethereum C++ client
 
 The C++ codebase was split into multiple repositories in October 2015.
 
