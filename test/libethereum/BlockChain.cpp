@@ -107,7 +107,6 @@ BOOST_AUTO_TEST_CASE(rebuild)
 	BOOST_REQUIRE(bc.number() == 1);*/
 }
 
-
 BOOST_AUTO_TEST_CASE(sync)
 {
 	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest;
@@ -161,20 +160,25 @@ BOOST_AUTO_TEST_CASE(sync)
 
 		BlockQueue uncleBlockQueue;
 		uncleBlockQueue.setChain(bc2.interface());
-		uncleBlockQueue.import(&block2.bytes(), false);
+		ImportResult importIntoQueue = uncleBlockQueue.import(&block2.bytes(), false);
+		BOOST_REQUIRE(importIntoQueue == ImportResult::Success);
 		this_thread::sleep_for(chrono::seconds(2));
 
 		BlockChain& bcRef = bc.interfaceUnsafe();
 		bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));
 
+		//Attempt import block2 to another blockchain
 		pair<ImportResult, ImportRoute> importAttempt;
 		importAttempt = bcRef.attemptImport(block2.bytes(), bc.testGenesis().state().db());
 		BOOST_REQUIRE(importAttempt.first == ImportResult::UnknownParent);
 
+		//Insert block2 to another blockchain
 		auto is_critical = []( std::exception const& _e) { cnote << _e.what(); return true; };
 		BOOST_CHECK_EXCEPTION(bcRef.insert(block2.bytes(), block2.receipts()), UnknownParent, is_critical);
 
-		BOOST_REQUIRE(uncleBlockQueue.blockStatus(block2.blockHeader().hash()) == QueueStatus::Bad);
+		//Get status of block2 in the block queue based on block2's chain (block2 imported into queue but not imported into chain)
+		QueueStatus status = uncleBlockQueue.blockStatus(block2.blockHeader().hash());
+		BOOST_REQUIRE_MESSAGE(status == QueueStatus::Bad, "Received Queue Status: " + toString(status) + " Expected Queue Status: " + toString(QueueStatus::Bad));
 	}
 
 	//5 block with future time

@@ -65,6 +65,8 @@ enum class QueueStatus
 	Unknown
 };
 
+std::ostream& operator<< (std::ostream& os, QueueStatus const& obj);
+
 /**
  * @brief A queue of blocks. Sits between network or other I/O and the BlockChain.
  * Sorts them ready for blockchain insertion (with the BlockChain::sync() method).
