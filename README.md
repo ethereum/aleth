@@ -5,7 +5,7 @@ The C++ codebase was split into multiple repositories in October 2015.
 They are all gathered as git sub-modules under
 [the webthree-umbrella repo](https://github.com/ethereum/webthree-umbrella/).
 
-![Webthree](http://doublethinkco.github.io/webthree-umbrella-cross/images/dependency_graph.svg)
+![Webthree](http://doublethinkco.github.io/cpp-ethereum-cross/images/dependency_graph.svg)
 
 There is a [plan to re-consolidate](https://github.com/ethereum/webthree-umbrella/issues/251)
 the repositories following Homestead, which should make the structure of the codebase much
