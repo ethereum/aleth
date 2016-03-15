@@ -463,6 +463,11 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 					m_downloadingHeaders.erase(blockNumber - 1);
 					removeItem(m_headers, blockNumber - 1);
 					removeItem(m_bodies, blockNumber - 1);
+					m_lastImportedBlock--;
+					m_highestBlock = m_lastImportedBlock;
+					Header const* previousBlock = findItem(m_headers, m_lastImportedBlock);
+					if (previousBlock)
+						m_lastImportedBlockHash = previousBlock->hash;
 					continue;
 				}
 
