@@ -456,14 +456,10 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 				if ((prevBlock && prevBlock->hash != info.parentHash()) || (blockNumber == m_lastImportedBlock + 1 && info.parentHash() != m_lastImportedBlockHash))
 				{
 					// mismatching parent id, delete the previous block and don't add this one
-					clog(NetImpolite) << "Unknown block header " << blockNumber << " " << info.hash();
+					clog(NetImpolite) << "Unknown block header " << blockNumber << " " << info.hash() << " (Restart syncing)";
 					_peer->addRating(-1);
-					m_headerIdToNumber.erase(headerId);
-					m_downloadingBodies.erase(blockNumber - 1);
-					m_downloadingHeaders.erase(blockNumber - 1);
-					removeItem(m_headers, blockNumber - 1);
-					removeItem(m_bodies, blockNumber - 1);
-					continue;
+					restartSync();
+					return ;
 				}
 
 				Header const* nextBlock = findItem(m_headers, blockNumber + 1);
