@@ -20,7 +20,16 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 #include <thread>
+
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable:4535) // calling _set_se_translator requires /EHa
+#endif
 #include <boost/test/unit_test.hpp>
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+
 #include <libp2p/Host.h>
 #include <libwhisper/WhisperDB.h>
 #include <libwhisper/WhisperHost.h>
