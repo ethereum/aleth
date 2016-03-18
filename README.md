@@ -12,6 +12,6 @@ the repositories following Homestead, which should make the structure of the cod
 easier to understand.
 
 Significant effort was put into new
-[Ethereum C++ Documentation](http://docs.ethereum.org/en/latest/ethereum-clients/cpp-ethereum/)
+[Ethereum C++ Documentation](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/index.html)
 for the [Homestead release](https://blog.ethereum.org/2016/02/29/homestead-release/)
 in March 2016.
