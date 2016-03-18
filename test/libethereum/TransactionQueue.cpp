@@ -176,8 +176,7 @@ BOOST_AUTO_TEST_CASE(tqLimits)
 
 BOOST_AUTO_TEST_CASE(tqOutput)
 {
-	TransactionQueueChannel a;
-	BOOST_REQUIRE(string(a.name()) == string(EthCyan "┉┅▶"));
+	BOOST_REQUIRE(string(TransactionQueueChannel().name()) == string(EthCyan "┉┅▶"));
 }
 
 
