@@ -9,14 +9,14 @@ class CppEthereum < Formula
 
   bottle do
     revision CFG_NUMBER
-    root_url 'https://build.ethdev.com/cpp-binaries-data/brew_receipts'
+    root_url 'https://build.ethereum.org/cpp-binaries-data/brew_receipts'
     sha1 'CFG_SIGNATURE' => :yosemite
   end
 
   devel do
     bottle do
       revision CFG_NUMBER
-      root_url 'https://build.ethdev.com/cpp-binaries-data/brew_receipts'
+      root_url 'https://build.ethereum.org/cpp-binaries-data/brew_receipts'
       sha1 'CFG_SIGNATURE' => :yosemite
     end
 
