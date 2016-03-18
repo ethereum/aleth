@@ -2,7 +2,6 @@
 #include <cstdlib>
 
 #if UTILS_OS_WINDOWS
-#define _WIN32_WINNT _WIN32_WINNT_VISTA // Override minimum Windows API version. FIXME: Do it better.
 #include <ShlObj.h>
 #endif
 
