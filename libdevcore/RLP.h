@@ -258,14 +258,14 @@ public:
 	template <class T, size_t N>
 	std::array<T, N> toArray(int _flags = LaissezFaire) const
 	{
-		std::array<T, N> ret;
 		if (itemCountStrict() != N)
 		{
 			if (_flags & ThrowOnFail)
 				BOOST_THROW_EXCEPTION(BadCast());
 			else
-				return ret;
+				return std::array<T, N>();
 		}
+		std::array<T, N> ret;
 		for (size_t i = 0; i < N; ++i)
 			ret[i] = operator[](i).convert<T>(_flags);
 		return ret;
