@@ -1,2 +1,3 @@
 # webthree
-The Web3 library and tool eth. 
+
+This repository is a component of [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.
