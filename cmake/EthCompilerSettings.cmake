@@ -20,19 +20,45 @@ if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
-	set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -DSHAREDLIB -fPIC -fstack-protector-strong -Wstack-protector")
+	set(CMAKE_CXX_FLAGS -std=c++11)
+	add_compile_options(-Wall)
+	add_compile_options(-Wextra)
+	add_compile_options(-Wno-unknown-pragmas)
+	add_compile_options(-Wno-unused-function)              # Needed for sepc256k1
+	add_compile_options(-Wno-dangling-else)                # (clog, cwarn) macros
+	add_compile_options(-fPIC)
+	add_compile_options(-fstack-protector-strong)
+	add_compile_options(-fstack-protector)
+	add_definitions(-DSHAREDLIB)
+
+	# Playing it safe, by only enabling warnings-as-errors on OS X for now,
+	# not for Clang on Linux and other platforms.
+	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang")
+		add_compile_options(-Werror)
+	endif ()
+
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+		add_compile_options(-stdlib=libstdc++)
+		add_compile_options(-fcolor-diagnostics)
+		add_compile_options(-Qunused-arguments)
+		add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
+	endif()
+
 	if (EMSCRIPTEN)
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_DYNAMIC_EXECUTION=1")
+		add_compile_options(--memory-init-file 0)
+		add_compile_options(-O3)
+		add_compile_options(-s LINKABLE=1)
+		add_compile_options(-s DISABLE_EXCEPTION_CATCHING=0)
+		add_compile_options(-s NO_EXIT_RUNTIME=1)
+		add_compile_options(-s ALLOW_MEMORY_GROWTH=1)
+		add_compile_options(-s NO_DYNAMIC_EXECUTION=1)
 		add_definitions(-DETH_EMSCRIPTEN=1)
 	endif()
+
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DETH_RELEASE")
-
-	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++ -fcolor-diagnostics -Qunused-arguments -DBOOST_ASIO_HAS_CLANG_LIBCXX")
-	endif()
 
 elseif (DEFINED MSVC)
 
