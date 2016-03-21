@@ -312,7 +312,7 @@ void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 		{
 			sync()->onPeerStatus(_peer);
 		}
-		catch (FailedInvariant const& _e)
+		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
@@ -330,7 +330,7 @@ void EthereumHost::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP c
 		{
 			sync()->onPeerBlockHeaders(_peer, _headers);
 		}
-		catch (FailedInvariant const& _e)
+		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
@@ -348,7 +348,7 @@ void EthereumHost::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP co
 		{
 			sync()->onPeerBlockBodies(_peer, _r);
 		}
-		catch (FailedInvariant const& _e)
+		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
@@ -366,7 +366,7 @@ void EthereumHost::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vec
 		{
 			sync()->onPeerNewHashes(_peer, _hashes);
 		}
-		catch (FailedInvariant const& _e)
+		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
@@ -384,7 +384,7 @@ void EthereumHost::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const
 		{
 			sync()->onPeerNewBlock(_peer, _r);
 		}
-		catch (FailedInvariant const& _e)
+		catch (FailedInvariant const&)
 		{
 			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
 			clog(NetWarn) << "Failed invariant during sync, restarting sync";
