@@ -40,7 +40,6 @@ endif()
 # core libraries
 if (NOT EMSCRIPTEN)
 	add_subdirectory(libethcore)
-	add_subdirectory(liblll)
 	add_subdirectory(libevm)
 	add_subdirectory(libethereum)
 
@@ -48,7 +47,6 @@ if (NOT EMSCRIPTEN)
 	add_subdirectory(libethashseal)
 endif()
 add_subdirectory(libevmcore)
-add_subdirectory(libevmasm)
 
 if (ETHASHCL)
 	add_subdirectory(libethash-cl)
@@ -66,7 +64,6 @@ if (TOOLS)
 	add_subdirectory(ethkey)
 	add_subdirectory(ethminer)
 	add_subdirectory(ethvm)
-	add_subdirectory(lllc)
 endif()
 
 if (TESTS)
