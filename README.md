@@ -1,6 +1,9 @@
 # webthree-umbrella
 
-This repository is an umbrella repository with git sub-module references to all of the components of [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.
+This repository is an umbrella repository with git sub-module references to all of the components of [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.  The project was initiated by [Gavin Wood](http://gavwood.com/>), the [former CTO](<https://blog.ethereum.org/2016/01/11/last-blog-post/>) of the [Ethereum Foundation](http://www.ethdocs.org/en/latest/introduction/foundation.html), in December 2013.   It is the second most popular of the clients with around [5% of 'market share'](http://ethernodes.org/>), trailing a long way behind
+[go-ethereum](https://github.com/ethereum/go-ethereum).
+
+Read more about the project at **[our swanky new website](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
 
 [![Join the chat at https://gitter.im/ethereum/cpp-ethereum](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/cpp-ethereum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -8,9 +11,6 @@ This repository is an umbrella repository with git sub-module references to all 
 ----------|-----------
 develop   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-develop)](http://52.28.164.97/job/ethbinaries-develop/)
 release   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-release)](http://52.28.164.97/job/ethbinaries-release/)
-
-cpp-ethereum was initiated by [Gavin Wood](http://gavwood.com/>), the [former CTO](<https://blog.ethereum.org/2016/01/11/last-blog-post/>) of the [Ethereum Foundation](http://www.ethdocs.org/en/latest/introduction/foundation.html), in December 2013.   It is the second most popular of the clients with around [5% of 'market share'](http://ethernodes.org/>), trailing a long way behind
-[go-ethereum](https://github.com/ethereum/go-ethereum).
 
 The current codebase is the work of many, many hands, with probably close to 100 individual contributors over the course of its development.   Perhaps we will write a script to maintain a 'credits list' at some stage?   In the meantime, here are all of the per-repo contributions:
 
@@ -27,7 +27,7 @@ The current codebase is the work of many, many hands, with probably close to 100
 - [webthree-helpers](https://github.com/ethereum/webthree-helpers/graphs/contributors)
 - [webthree-umbrella](https://github.com/ethereum/webthree-umbrella/graphs/contributors)
 
-The following individuals are working on the C++ client for the Ethereum Foundation at the time of writing:
+The following individuals are currently employed or contracted by the Ethereum Foundation for C++ client work:
 
 - [Greg Colvin](https://github.com/gcolvin)
 - [Liana Husikyan](https://github.com/LianaHus)
