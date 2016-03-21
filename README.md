@@ -3,6 +3,8 @@
 This repository is an umbrella repository with git sub-module references to all of the components of [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.  The project was initiated by [Gavin Wood](http://gavwood.com/>), the [former CTO](<https://blog.ethereum.org/2016/01/11/last-blog-post/>) of the [Ethereum Foundation](http://www.ethdocs.org/en/latest/introduction/foundation.html), in December 2013.   It is the second most popular of the clients with around [5% of 'market share'](http://ethernodes.org/>), trailing a long way behind
 [go-ethereum](https://github.com/ethereum/go-ethereum).
 
+![C++](http://www.ethdocs.org/en/latest/_images/35k9.png) ![Ethereum](http://www.ethdocs.org/en/latest/_images/ETHEREUM-ICON_Black.png)
+
 Read more about the project at **[our swanky new website](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
 
 [![Join the chat at https://gitter.im/ethereum/cpp-ethereum](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/cpp-ethereum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
