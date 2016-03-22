@@ -100,10 +100,6 @@ public:
 	virtual Json::Value eth_getTransactionReceipt(std::string const& _transactionHash) override;
 	virtual Json::Value eth_getUncleByBlockHashAndIndex(std::string const& _blockHash, std::string const& _uncleIndex) override;
 	virtual Json::Value eth_getUncleByBlockNumberAndIndex(std::string const& _blockNumber, std::string const& _uncleIndex) override;
-	virtual Json::Value eth_getCompilers() override;
-	virtual std::string eth_compileLLL(std::string const& _s) override;
-	virtual std::string eth_compileSerpent(std::string const& _s) override;
-	virtual Json::Value eth_compileSolidity(std::string const& _code) override;
 	virtual std::string eth_newFilter(Json::Value const& _json) override;
 	virtual std::string eth_newFilterEx(Json::Value const& _json) override;
 	virtual std::string eth_newBlockFilter() override;
