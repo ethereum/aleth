@@ -138,9 +138,9 @@ string Eth::eth_pendingTransactions()
 {
 	//Return list of transaction that being sent by local accounts
 	Transactions ours;
-	for (Transaction pending : client()->pending())
+	for (Transaction const& pending:client()->pending())
 	{
-		for (Address account : m_ethAccounts.allAccounts())
+		for (Address const& account:m_ethAccounts.allAccounts())
 		{
 			if (pending.sender() == account)
 			{
