@@ -7,7 +7,6 @@ file(GLOB HEADERS "*.h")
 add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Web3::whisper Web3::webthree JsonRpc::Server)
-eth_use(${EXECUTABLE} OPTIONAL Solidity::solidity)
 
 jsonrpcstub_create(eth.json 
 	dev::rpc::EthFace ${CMAKE_CURRENT_SOURCE_DIR} EthFace 

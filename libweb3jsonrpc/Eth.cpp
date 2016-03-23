@@ -25,17 +25,11 @@
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonData.h>
 #include <libevmcore/Instruction.h>
-#include <liblll/Compiler.h>
 #include <libethereum/Client.h>
 #include <libethashseal/EthashClient.h>
 #include <libwebthree/WebThree.h>
 #include <libethcore/CommonJS.h>
 #include <libweb3jsonrpc/JsonHelper.h>
-#if ETH_SOLIDITY || !ETH_TRUE
-#include <libsolidity/interface/CompilerStack.h>
-#include <libsolidity/parsing/Scanner.h>
-#include <libsolidity/interface/SourceReferenceFormatter.h>
-#endif
 #include "Eth.h"
 #include "AccountHolder.h"
 #include "JsonHelper.h"
