@@ -26,7 +26,6 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcore/SHA3.h>
 #include <libethcore/Common.h>
-#include <liblll/Compiler.h>
 
 namespace dev
 {
