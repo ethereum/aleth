@@ -128,6 +128,25 @@ string Eth::eth_getStorageAt(string const& _address, string const& _position, st
 	}
 }
 
+string Eth::eth_pendingTransactions()
+{
+	//Return list of transaction that being sent by local accounts
+	Transactions ours;
+	for (Transaction const& pending:client()->pending())
+	{
+		for (Address const& account:m_ethAccounts.allAccounts())
+		{
+			if (pending.sender() == account)
+			{
+				ours.push_back(pending);
+				break;
+			}
+		}
+	}
+
+	return toJS(ours);
+}
+
 string Eth::eth_getTransactionCount(string const& _address, string const& _blockNumber)
 {
 	try
