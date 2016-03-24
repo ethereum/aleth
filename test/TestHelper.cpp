@@ -29,7 +29,6 @@
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/Client.h>
 #include <libevm/ExtVMFace.h>
-#include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
 #include "Stats.h"
 
@@ -230,7 +229,27 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
 {		
-	std::string jsondata = json_spirit::write_string((json_spirit::mValue)_o, false);
+	//Compile LLL code of the test Fillers using external call to lllc
+	json_spirit::mObject o = _o;
+	for (auto& account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
+	{
+		auto obj = account.second.get_obj();
+		if (obj.count("code"))
+		{
+			if (obj["code"].type() == json_spirit::str_type)
+			{
+				string code = obj["code"].get_str();
+				if (code == "")
+					obj["code"] = "0x";
+				else
+				if (code.find("0x") != 0)
+					obj["code"] = compileLLL(code);
+			}
+		}
+		account.second = obj;
+	}
+
+	std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }
 
@@ -526,12 +545,38 @@ bytes importData(json_spirit::mObject const& _o)
 	return data;
 }
 
+std::string compileLLL(std::string const& _code)
+{
+	FILE *fp;
+	char path[1035];
+	FILE *ft = fopen("temp.sol", "w");
+	if (ft == NULL)
+		cerr << "Error creating temp file for lllc";
+	else
+		fputs(_code.c_str(), ft);
+	fclose(ft);
+
+	fp = popen("../../solidity/lllc/lllc temp.sol", "r");
+	if (fp == NULL)
+		cerr << "Failed to run lllc";
+
+	fgets(path, sizeof(path)-1, fp);
+
+	pclose(fp);
+	if(remove("temp.sol") != 0)
+		cerr << "Error deleting temp file for lllc";
+
+	string result(path);
+	result = "0x" + result.substr(0, result.size()-1);
+	return result;
+}
+
 bytes importCode(json_spirit::mObject& _o)
 {
 	bytes code;
 	if (_o["code"].type() == json_spirit::str_type)
 		if (_o["code"].get_str().find("0x") != 0)
-			code = compileLLL(_o["code"].get_str(), false);
+			code = fromHex(compileLLL(_o["code"].get_str()));
 		else
 			code = fromHex(_o["code"].get_str().substr(2));
 	else if (_o["code"].type() == json_spirit::array_type)
