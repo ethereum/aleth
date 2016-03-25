@@ -47,7 +47,6 @@ class CppEthereum < Formula
   depends_on 'llvm37' if build.with? 'evmjit'
   depends_on 'miniupnpc'
   depends_on 'qt5' => ["with-d-bus"] if build.with? 'gui'
-  depends_on 'homebrew/versions/v8-315'
 
   def install
     args = *std_cmake_args
