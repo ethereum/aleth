@@ -24,6 +24,9 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#if !defined(_WIN32)
+#include <stdio.h>
+#endif
 #include <boost/algorithm/string/trim.hpp>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
@@ -544,25 +547,28 @@ bytes importData(json_spirit::mObject const& _o)
 	return data;
 }
 
-std::string compileLLL(std::string const& _code)
+string compileLLL(string const& _code)
 {
+#if defined(_WIN32)
+	BOOST_ERROR("LLL compilation only supported on posix systems.");
+#else
 	char input[1024];
-	boost::filesystem::path path = boost::filesystem::unique_path();
-	std::string filename = path.string() + "/code.sol";
-	std::string lllc = std::string("../../solidity/lllc/lllc ") + filename.c_str();
-	writeFile(filename, _code);
+	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
+	string cmd = string("../../solidity/lllc/lllc -o 0 ") + path.string();
+	writeFile(path.string(), _code);
 
-	FILE *fp = popen(lllc.c_str(), "r");
+	FILE *fp = popen(cmd.c_str(), "r");
 	if (fp == NULL)
 		BOOST_ERROR("Failed to run lllc");
-	if (fgets(input, sizeof(input)-1, fp) == NULL)
+	if (fgets(input, sizeof(input) - 1, fp) == NULL)
 		BOOST_ERROR("Reading empty file for lllc");
 	pclose(fp);
 
-	boost::filesystem::remove_all(path);
+	boost::filesystem::remove(path);
 	string result(input);
 	result = "0x" + boost::trim_copy(result);
 	return result;
+#endif
 }
 
 bytes importCode(json_spirit::mObject& _o)
