@@ -42,10 +42,6 @@
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
-#if ETH_JSCONSOLE || !ETH_TRUE
-#include <libjsconsole/JSLocalConsole.h>
-#include <libjsconsole/JSRemoteConsole.h>
-#endif
 #if ETH_READLINE || !ETH_TRUE
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -88,10 +84,8 @@ void help()
 		<< "Usage eth [OPTIONS]" << endl
 		<< "Options:" << endl << endl
 		<< "Operating mode (default is non-interactive node):" << endl;
-#if ETH_JSCONSOLE || !ETH_TRUE
+#if !ETH_TRUE
 	cout
-		<< "    console  Enter interactive console mode (default: non-interactive)." << endl
-		<< "    attach  Ether interactive console mode of already-running eth." << endl
 		<< "    import <file>  Import file as a concatenated series of blocks." << endl
 		<< "    export <file>  Export file as a concatenated series of blocks." << endl;
 
@@ -132,9 +126,6 @@ void help()
 		<< "    --session-sign-key <address>  Sign all transactions with the key of the given address for this session only." << endl
 		<< "    --master <password>  Give the master password for the key store." << endl
 		<< "    --password <password>  Give a password for a private key." << endl
-		<< endl
-		<< "Console mode:" << endl
-		<< "    --script <script>  Run the given script after startup." << endl
 		<< endl
 		<< "Client transacting:" << endl
 		/*<< "    -B,--block-fees <n>  Set the block fee profit in the reference unit, e.g. ¢ (default: 15)." << endl
@@ -396,9 +387,6 @@ int main(int argc, char** argv)
 	u256 askPrice = DefaultGasPrice;
 	u256 bidPrice = DefaultGasPrice;
 	bool alwaysConfirm = true;
-
-	// javascript console
-	bool useConsole = false;
 
 	/// Wallet password stuff
 	string masterPassword;
@@ -779,10 +767,6 @@ int main(int argc, char** argv)
 		else if (arg == "--no-ipc")
 			ipc = false;
 #endif
-#if ETH_JSCONSOLE || !ETH_TRUE
-		else if (arg == "-i" || arg == "--interactive" || arg == "--console" || arg == "console")
-			useConsole = true;
-#endif
 		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
 			g_logVerbosity = atoi(argv[++i]);
 		else if ((arg == "-x" || arg == "--peers") && i + 1 < argc)
@@ -896,13 +880,6 @@ int main(int argc, char** argv)
 			cerr << "json-rpc server not found, please start eth with the --json-rpc option (note that this might make it accessible from the network)";
 			return 0;
 		}
-#if ETH_JSCONSOLE || !ETH_TRUE
-		JSRemoteConsole console(remoteURL);
-		if (!remoteSessionKey.empty())
-			console.eval("web3.admin.setSessionKey('" + remoteSessionKey + "')");
-		while (true)
-			console.readAndEval();
-#endif
 		return 0;
 	}
 
@@ -1331,51 +1308,9 @@ int main(int argc, char** argv)
 		unsigned n = c->blockChain().details().number;
 		if (mining)
 			c->startSealing();
-		if (useConsole || !scripts.empty())
-		{
-#if ETH_JSCONSOLE || !ETH_TRUE
-			SimpleAccountHolder accountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator);
-			rpc::SessionManager sessionManager;
-			string sessionKey = sessionManager.newSession(rpc::SessionPermissions{{rpc::Privilege::Admin}});
 
-			auto ethFace = new rpc::Eth(*web3.ethereum(), accountHolder);
-			auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, sessionManager);
-			auto adminNetFace = new rpc::AdminNet(web3, sessionManager);
-			auto adminUtilsFace = new rpc::AdminUtils(sessionManager);
-
-			ModularServer<
-				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
-			> rpcServer(
-				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, accountHolder),
-				adminEthFace, adminNetFace, adminUtilsFace
-			);
-
-			JSLocalConsole console;
-			rpcServer.addConnector(console.createConnector());
-			rpcServer.StartListening();
-
-			console.eval("web3.admin.setSessionKey('" + sessionKey + "')");
-
-			for (auto const& s: scripts)
-			{
-				string c = contentsString(s);
-				console.eval(c.empty() ? s : c);
-			}
-			while (!exitHandler.shouldExit())
-			{
-				if (useConsole)
-					console.readAndEval();
-				stopSealingAfterXBlocks(c, n, mining);
-			}
-			rpcServer.StopListening();
-#endif
-		}
-		else
-			while (!exitHandler.shouldExit())
-				stopSealingAfterXBlocks(c, n, mining);
+		while (!exitHandler.shouldExit())
+			stopSealingAfterXBlocks(c, n, mining);
 	}
 	else
 		while (!exitHandler.shouldExit())
