@@ -39,10 +39,6 @@ macro(configure_project)
 		add_definitions(-DETH_VMTRACE)
 	endif ()
 
-	if (JSCONSOLE)
-		add_definitions(-DETH_JSCONSOLE)
-	endif()
-
 	# CI Builds should provide (for user builds this is totally optional)
 	# -DBUILD_NUMBER - A number to identify the current build with. Becomes TWEAK component of project version.
 	# -DVERSION_SUFFIX - A string to append to the end of the version string where applicable.

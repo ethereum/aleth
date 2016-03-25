@@ -26,15 +26,4 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${Web3_WEB3JSONRPC_LIBRARIES})
 	endif()
 
-	if (${SUBMODULE} STREQUAL "jsengine")
-		eth_use(${TARGET} ${REQUIRED} V8)
-		target_link_libraries(${TARGET} ${Web3_JSENGINE_LIBRARIES})
-	endif()
-
-	if (${SUBMODULE} STREQUAL "jsconsole")
-		eth_use(${EXECUTABLE} ${REQUIRED} Web3::jsengine Dev::devcore JsonRpc::Server JsonRpc::Client)
-		eth_use(${EXECUTABLE} OPTIONAL Readline)
-		target_link_libraries(${TARGET} ${Web3_JSCONSOLE_LIBRARIES})
-	endif()
-
 endfunction()
