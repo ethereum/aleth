@@ -24,6 +24,7 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#include <boost/algorithm/string/trim.hpp>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
@@ -234,17 +235,15 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state, Acco
 	for (auto& account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
 	{
 		auto obj = account.second.get_obj();
-		if (obj.count("code"))
+		if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
 		{
-			if (obj["code"].type() == json_spirit::str_type)
-			{
-				string code = obj["code"].get_str();
-				if (code == "")
-					obj["code"] = "0x";
-				else
+			string code = obj["code"].get_str();
+			if (code == "")
+				obj["code"] = "0x";
+			else
 				if (code.find("0x") != 0)
 					obj["code"] = compileLLL(code);
-			}
+
 		}
 		account.second = obj;
 	}
@@ -547,27 +546,22 @@ bytes importData(json_spirit::mObject const& _o)
 
 std::string compileLLL(std::string const& _code)
 {
-	FILE *fp;
-	char path[1035];
-	FILE *ft = fopen("temp.sol", "w");
-	if (ft == NULL)
-		cerr << "Error creating temp file for lllc";
-	else
-		fputs(_code.c_str(), ft);
-	fclose(ft);
+	char input[1024];
+	boost::filesystem::path path = boost::filesystem::unique_path();
+	std::string filename = path.string() + "/code.sol";
+	std::string lllc = std::string("../../solidity/lllc/lllc ") + filename.c_str();
+	writeFile(filename, _code);
 
-	fp = popen("../../solidity/lllc/lllc temp.sol", "r");
+	FILE *fp = popen(lllc.c_str(), "r");
 	if (fp == NULL)
-		cerr << "Failed to run lllc";
-
-	fgets(path, sizeof(path)-1, fp);
-
+		BOOST_ERROR("Failed to run lllc");
+	if (fgets(input, sizeof(input)-1, fp) == NULL)
+		BOOST_ERROR("Reading empty file for lllc");
 	pclose(fp);
-	if(remove("temp.sol") != 0)
-		cerr << "Error deleting temp file for lllc";
 
-	string result(path);
-	result = "0x" + result.substr(0, result.size()-1);
+	boost::filesystem::remove_all(path);
+	string result(input);
+	result = "0x" + boost::trim_copy(result);
 	return result;
 }
 
