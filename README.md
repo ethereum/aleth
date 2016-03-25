@@ -1,34 +1,43 @@
-## Ethereum C++ Client.
+# webthree-umbrella
+
+This repository is an umbrella repository with git sub-module references to all of the components of [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.  The project was initiated by [Gavin Wood](http://gavwood.com/>), the [former CTO](<https://blog.ethereum.org/2016/01/11/last-blog-post/>) of the [Ethereum Foundation](http://www.ethdocs.org/en/latest/introduction/foundation.html), in December 2013.   It is the second most popular of the clients with around [5% of 'market share'](http://ethernodes.org/>), trailing a long way behind
+[go-ethereum](https://github.com/ethereum/go-ethereum).
+
+![C++](http://www.ethdocs.org/en/latest/_images/cpp_35k9.png) 
+![Ethereum](http://www.ethdocs.org/en/latest/_images/ETHEREUM-ICON_Black.png)
+
+Read more about the project at **[our swanky new website](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
 
 [![Join the chat at https://gitter.im/ethereum/cpp-ethereum](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/cpp-ethereum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-By Gav Wood et al*, 2013, 2014, 2015.
 
           | Status
 ----------|-----------
 develop   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-develop)](http://52.28.164.97/job/ethbinaries-develop/)
 release   | [![Build Status](http://52.28.164.97/buildStatus/icon?job=ethbinaries-release)](http://52.28.164.97/job/ethbinaries-release/)
 
-Ethereum is based on a design in an original whitepaper by Vitalik Buterin. This implementation is based on the formal specification of a refinement of that idea detailed in the 'yellow paper' by Gavin Wood. Contributors, builders and testers include:
+The current codebase is the work of many, many hands, with probably close to 100 individual contributors over the course of its development.   Perhaps we will write a script to maintain a 'credits list' at some stage?   In the meantime, here are all of the per-repo contributions:
 
-- *arkpar* (**Arkadiy Paronyan**) Mix, PV61/BlockQueue
-- *debris* (**Marek Kotewicz**) JSONRPC, web3.js
-- *CJentzsch* (**Christoph Jentzsch**) tests, lots of tests
-- *LefterisJP* (**Lefteris Karapetsas**) Solidity, libethash
-- *chriseth* (**Christian Reitwiessner**) Solidity
-- *subtly* (**Alex Leverington**) libp2p, rlpx
-- *yann300* (**Yann Levreau**) Mix
-- *LianaHus* (**Liana Husikyan**) Solidity
-- *chfast* (**Paweł Bylica**) EVMJIT
-- *cubedro* (**Marian Oancea**) web3.js
-- *gluk256* (**Vlad Gluhovsky**) Whisper
-- *programmerTim* (**Tim Hughes**) libethash-cl
+- [alethzero](https://github.com/ethereum/alethzero/graphs/contributors)
+- [cpp-dependencies](https://github.com/ethereum/cpp-dependencies/graphs/contributors)
+- [cpp-ethereum](https://github.com/ethereum/cpp-ethereum/graphs/contributors)
+- [evmjit](https://github.com/ethereum/evmjit/graphs/contributors)
+- [homebrew-ethereum](https://github.com/ethereum/homebrew-ethereum/graphs/contributors)
+- [libethereum](https://github.com/ethereum/libethereum/graphs/contributors)
+- [libweb3core](https://github.com/ethereum/libweb3core/graphs/contributors)
+- [solidity](https://github.com/ethereum/solidity/graphs/contributors)
+- [web3.js](https://github.com/ethereum/web3.js/graphs/contributors)
+- [webthree](https://github.com/ethereum/webthree/graphs/contributors)
+- [webthree-helpers](https://github.com/ethereum/webthree-helpers/graphs/contributors)
+- [webthree-umbrella](https://github.com/ethereum/webthree-umbrella/graphs/contributors)
 
-And let's not forget: Caktux (neth, ongoing CI), Eric Lombrozo (original MinGW32 cross-compilation), Marko Simovic (original CI).
+The following individuals are currently employed or contracted by the Ethereum Foundation for C++ client work:
 
-### Building
-
-See the [Wiki](https://github.com/ethereum/webthree-umbrella/wiki) for build instructions, compatibility information and build tips. 
+- [Greg Colvin](https://github.com/gcolvin)
+- [Liana Husikyan](https://github.com/LianaHus)
+- [Dimitry Khoklov](https://github.com/winsvega)
+- [Yann Levreau](https://github.com/yann300)
+- [Christian Reitwiessner](https://github.com/chriseth) - C++ Lead
+- [Bob Summerwill](https://github.com/bobsummerwill)
 
 ### Testing
 
