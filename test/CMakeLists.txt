@@ -16,10 +16,6 @@ add_subdirectory(libevm)
 add_subdirectory(libnatspec)
 add_subdirectory(external-dependencies)
 
-if (JSCONSOLE)
-	add_subdirectory(libjsengine)
-endif()
-
 set(SRC_LIST ${SRC_LIST} ${SRC})
 
 set(EXECUTABLE testeth)
