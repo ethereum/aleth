@@ -22,19 +22,7 @@ include(EthOptions)
 configure_project(CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL EVMJIT FATDB)
 
 if (EVMJIT)
-	if (NOT DEFINED LLVM_DIR)
-		if (DEFINED MSVC)
-			set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
-		elseif (DEFINED APPLE)
-			set(LLVM_DIR "/usr/local/opt/llvm37/lib/llvm-3.7/share/llvm/cmake")
-		endif()
-	endif()
-
 	add_subdirectory(evmjit)
-	if (DEFINED MSVC)
-		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
-		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
-	endif()
 endif()
 
 # core libraries
