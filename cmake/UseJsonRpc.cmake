@@ -4,7 +4,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	find_package (json_rpc_cpp 0.4)
 	find_program(ETH_JSON_RPC_STUB jsonrpcstub)
 	eth_show_dependency(JSON_RPC_CPP json-rpc-cpp)
-	find_package (CURL)
+	find_package(curl)
 	eth_show_dependency(CURL curl)
 
 	if (${SUBMODULE} STREQUAL "Server")

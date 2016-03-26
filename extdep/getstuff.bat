@@ -16,7 +16,6 @@ call :download microhttpd 0.9.2
 call :download OpenCL_ICD 1
 call :download qt 5.4.1
 call :download miniupnpc 1.9
-call :download v8 3.15.9
 
 goto :EOF
 

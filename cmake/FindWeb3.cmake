@@ -7,7 +7,7 @@
 #  TODO: Web3_INCLUDE_DIRS
 
 include(EthUtils)
-set(LIBS whisper;webthree;web3jsonrpc;jsengine;jsconsole)
+set(LIBS whisper;webthree;web3jsonrpc)
 
 set(Web3_INCLUDE_DIRS ${WEB3_DIR})
 
