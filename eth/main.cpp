@@ -42,10 +42,6 @@
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
-#if ETH_READLINE || !ETH_TRUE
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 #if ETH_JSONRPC || !ETH_TRUE
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
