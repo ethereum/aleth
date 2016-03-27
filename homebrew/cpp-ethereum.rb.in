@@ -81,7 +81,6 @@ class CppEthereum < Formula
 
     if build.with? "gui"
       prefix.install 'alethzero/alethzero/AlethZero.app'
-      prefix.install 'alethzero/alethone/AlethOne.app'
       prefix.install 'mix/Mix.app'
     end
   end

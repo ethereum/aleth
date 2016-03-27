@@ -194,7 +194,6 @@ macro(eth_nsis)
 		endif()
 
 		set(CPACK_COMPONENT_ALETHZERO_GROUP "Applications")
-		set(CPACK_COMPONENT_ALETHONE_GROUP "Applications")
 		set(CPACK_COMPONENT_MIX_GROUP "Applications")
 		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
 		set(CPACK_COMPONENT_ETH_GROUP "CLI")
@@ -205,17 +204,15 @@ macro(eth_nsis)
 
 		# Make GUI components required as we creating links for them
 		set(CPACK_COMPONENT_ALETHZERO_REQUIRED TRUE)
-		set(CPACK_COMPONENT_ALETHONE_REQUIRED TRUE)
 		set(CPACK_COMPONENT_MIX_REQUIRED TRUE)
 
 		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
 		set(CPACK_PACKAGE_EXECUTABLES
 			"AlethZero;AlethZero"
-			"AlethOne;AlethOne"
 			"Mix;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer ethkey)
+		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer ethkey)
 
 		include(CPack)
 	endif ()
@@ -233,7 +230,6 @@ macro(eth_appdmg)
 			-DAPP_DMG_BACKGROUND="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/install-folder-bg@2x.png"
 			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
 			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:AlethZero>"
-			-DETH_ALETHONE_APP="$<TARGET_FILE_DIR:AlethOne>"
 			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix>"
 			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
 		)
