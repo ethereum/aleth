@@ -167,7 +167,6 @@ print '    "secp256k1" -> "gmp"'
 # to go with it, because the library is only used by the Aleth* applications,
 # and is not exposed to other applications.
 print '    "AlethZero" -> "aleth"'
-print '    "AlethOne" -> "aleth"'
 
 processUmbrella('..')
 
