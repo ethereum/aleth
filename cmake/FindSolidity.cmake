@@ -31,7 +31,7 @@ else()
 			NO_DEFAULT_PATH
 		)
 
-		set(Solidity_LIBRARIES ${Solidity_${L}_LIBRARY})
+		set(Solidity_${L}_LIBRARIES ${Solidity_${L}_LIBRARY})
 
 		if (DEFINED MSVC)
 			find_library(Solidity_${L}_LIBRARY_DEBUG
