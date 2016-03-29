@@ -551,6 +551,7 @@ string compileLLL(string const& _code)
 {
 #if defined(_WIN32)
 	BOOST_ERROR("LLL compilation only supported on posix systems.");
+	return "";
 #else
 	char input[1024];
 	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
