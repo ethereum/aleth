@@ -24,12 +24,15 @@
 #include <thread>
 #include <chrono>
 #include <fstream>
+#if !defined(_WIN32)
+#include <stdio.h>
+#endif
+#include <boost/algorithm/string/trim.hpp>
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/Client.h>
 #include <libevm/ExtVMFace.h>
-#include <liblll/Compiler.h>
 #include <libevm/VMFactory.h>
 #include "Stats.h"
 
@@ -230,7 +233,25 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
 {		
-	std::string jsondata = json_spirit::write_string((json_spirit::mValue)_o, false);
+	//Compile LLL code of the test Fillers using external call to lllc
+	json_spirit::mObject o = _o;
+	for (auto& account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
+	{
+		auto obj = account.second.get_obj();
+		if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
+		{
+			string code = obj["code"].get_str();
+			if (code == "")
+				obj["code"] = "0x";
+			else
+				if (code.find("0x") != 0)
+					obj["code"] = compileLLL(code);
+
+		}
+		account.second = obj;
+	}
+
+	std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }
 
@@ -526,12 +547,36 @@ bytes importData(json_spirit::mObject const& _o)
 	return data;
 }
 
+string compileLLL(string const& _code)
+{
+#if defined(_WIN32)
+	BOOST_ERROR("LLL compilation only supported on posix systems.");
+#else
+	char input[1024];
+	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
+	string cmd = string("../../solidity/lllc/lllc -o 0 ") + path.string();
+	writeFile(path.string(), _code);
+
+	FILE *fp = popen(cmd.c_str(), "r");
+	if (fp == NULL)
+		BOOST_ERROR("Failed to run lllc");
+	if (fgets(input, sizeof(input) - 1, fp) == NULL)
+		BOOST_ERROR("Reading empty file for lllc");
+	pclose(fp);
+
+	boost::filesystem::remove(path);
+	string result(input);
+	result = "0x" + boost::trim_copy(result);
+	return result;
+#endif
+}
+
 bytes importCode(json_spirit::mObject& _o)
 {
 	bytes code;
 	if (_o["code"].type() == json_spirit::str_type)
 		if (_o["code"].get_str().find("0x") != 0)
-			code = compileLLL(_o["code"].get_str(), false);
+			code = fromHex(compileLLL(_o["code"].get_str()));
 		else
 			code = fromHex(_o["code"].get_str().substr(2));
 	else if (_o["code"].type() == json_spirit::array_type)

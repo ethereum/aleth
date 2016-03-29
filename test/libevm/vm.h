@@ -35,7 +35,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <libevmcore/Instruction.h>
 #include <libevm/ExtVMFace.h>
 #include <libevm/VM.h>
-#include <liblll/Compiler.h>
 #include <libethereum/Transaction.h>
 #include <libethereum/ExtVM.h>
 #include <libethereum/State.h>

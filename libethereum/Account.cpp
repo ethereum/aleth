@@ -20,7 +20,6 @@
  */
 
 #include "Account.h"
-#include <liblll/Compiler.h>
 #include <json_spirit/JsonSpiritHeaders.h>
 #include <libethcore/Common.h>
 #include <libethcore/ChainOperationParams.h>
@@ -87,7 +86,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 				if (o["code"].type() == json_spirit::str_type)
 				{
 					if (o["code"].get_str().find("0x") != 0)
-						ret[a].setCode(compileLLL(o["code"].get_str(), false));
+						cerr << "Error importing code of account " << a << "! Code needs to be hex bytecode prefixed by \"0x\".";
 					else
 						ret[a].setCode(fromHex(o["code"].get_str().substr(2)));
 				}

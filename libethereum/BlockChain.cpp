@@ -35,7 +35,6 @@
 #include <libdevcore/FileSystem.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
-#include <liblll/Compiler.h>
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Block.h"
