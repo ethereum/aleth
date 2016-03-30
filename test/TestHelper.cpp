@@ -230,12 +230,9 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 }
 
 // import state from not fully declared json_spirit::mObject, writing to _stateOptionsMap which fields were defined in json
-
-void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
-{		
-	//Compile LLL code of the test Fillers using external call to lllc
-	json_spirit::mObject o = _o;
-	for (auto& account: o.count("alloc") ? o["alloc"].get_obj() : o.count("accounts") ? o["accounts"].get_obj() : o)
+void replaceLLLinState(json_spirit::mObject& _o)
+{
+	for (auto& account: _o.count("alloc") ? _o["alloc"].get_obj() : _o.count("accounts") ? _o["accounts"].get_obj() : _o)
 	{
 		auto obj = account.second.get_obj();
 		if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
@@ -250,7 +247,13 @@ void ImportTest::importState(json_spirit::mObject const& _o, State& _state, Acco
 		}
 		account.second = obj;
 	}
+}
 
+void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
+{		
+	//Compile LLL code of the test Fillers using external call to lllc
+	json_spirit::mObject o = _o;
+	replaceLLLinState(o);
 	std::string jsondata = json_spirit::write_string((json_spirit::mValue)o, false);
 	_state.populateFrom(jsonToAccountMap(jsondata, 0, &o_mask));
 }

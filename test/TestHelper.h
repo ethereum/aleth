@@ -149,6 +149,7 @@ protected:
 // helping functions
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
+void replaceLLLinState(json_spirit::mObject& _o);
 std::string compileLLL(std::string const& _code);
 bytes importCode(json_spirit::mObject& _o);
 bytes importData(json_spirit::mObject const& _o);
