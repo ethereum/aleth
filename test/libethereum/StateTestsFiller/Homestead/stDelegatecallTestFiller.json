@@ -1187,7 +1187,7 @@
         "pre" : {
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "1000000000000000000",
-                "code" : "{ (MSTORE 0 0x5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6) (CALLCODE 50000 0xaaae7baea6a6c7c4c2dfeb977efac326af552d87 0 0 0 32) [[ 0 ]] (MLOAD 0)}",
+                "code" : "{ (MSTORE 0 0x5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6) (CALLCODE 50000 0xaaae7baea6a6c7c4c2dfeb977efac326af552d87 0 0 0 0 32) [[ 0 ]] (MLOAD 0)}",
                 "nonce" : "0",
                 "storage" : {
                 }

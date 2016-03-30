@@ -56,7 +56,10 @@ TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj):
 	m_state = std::unique_ptr<State>(new State(0, OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
 	ImportTest::importState(_stateObj, *m_state.get());
 	m_state.get()->commit();
-	m_accountMap = jsonToAccountMap(json_spirit::write_string(json_spirit::mValue(_stateObj), false));
+
+	json_spirit::mObject state = _stateObj;
+	dev::test::replaceLLLinState(state);
+	m_accountMap = jsonToAccountMap(json_spirit::write_string(json_spirit::mValue(state), false));
 
 	m_blockHeader = constructBlock(_blockObj, _stateObj.size() ? m_state.get()->rootHash() : h256{});
 	recalcBlockHeaderBytes();
