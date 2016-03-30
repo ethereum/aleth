@@ -86,6 +86,7 @@ int main(int argc, char** argv)
 	string incoming = "--";
 
 	Mode mode = Mode::Statistics;
+	VMKind vmKind = VMKind::Interpreter;
 	State state(0);
 	Address sender = Address(69);
 	Address origin = Address(69);
@@ -105,23 +106,23 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
-#if ETH_EVMJIT
 		else if (arg == "--vm" && i + 1 < argc)
 		{
-			string vmKind = argv[++i];
-			if (vmKind == "interpreter")
-				VMFactory::setKind(VMKind::Interpreter);
-			else if (vmKind == "jit")
-				VMFactory::setKind(VMKind::JIT);
-			else if (vmKind == "smart")
-				VMFactory::setKind(VMKind::Smart);
+			string vmKindStr = argv[++i];
+			if (vmKindStr == "interpreter")
+				vmKind = VMKind::Interpreter;
+#if ETH_EVMJIT
+			else if (vmKindStr == "jit")
+				vmKind = VMKind::JIT;
+			else if (vmKindStr == "smart")
+				vmKind = VMKind::Smart;
+#endif
 			else
 			{
-				cerr << "Unknown VM kind: " << vmKind << endl;
+				cerr << "Unknown/unsupported VM kind: " << vmKindStr << endl;
 				return -1;
 			}
 		}
-#endif
 		else if (arg == "--mnemonics")
 			st.setShowMnemonics();
 		else if (arg == "--flat")
@@ -179,6 +180,8 @@ int main(int argc, char** argv)
 			incoming = arg;
 	}
 
+	VMFactory::setKind(vmKind);
+
 	bytes code;
 	if (incoming == "--" || incoming.empty())
 		for (int i = cin.get(); i != -1; i = cin.get())
@@ -217,7 +220,8 @@ int main(int argc, char** argv)
 	executive.initialize(t);
 	executive.create(sender, value, gasPrice, gas, &data, origin);
 	Timer timer;
-	if (mode == Mode::Statistics || mode == Mode::Trace)
+	if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Interpreter)
+		// If we use onOp, the factory falls back to "interpreter"
 		executive.go(onOp);
 	else
 		executive.go();
