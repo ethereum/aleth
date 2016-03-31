@@ -9,7 +9,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(webthree VERSION "1.2.2")
+project(webthree VERSION "1.3.0")
 
 # Let's find our dependencies
 include(EthDependencies)
