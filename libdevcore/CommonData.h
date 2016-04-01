@@ -204,18 +204,6 @@ unsigned commonPrefix(T const& _t, _U const& _u)
 /// Creates a random, printable, word.
 std::string randomWord();
 
-
-// General datatype convenience functions.
-
-/// Same as <maptype>::at, except it takes a default rather than throwing.
-template <class X, class I> decltype(X().cbegin()->second) const& at(X const& _container, I const& _index, decltype(X().cbegin()->second) const& _default = decltype(X().cbegin()->second)())
-{
-	auto it = _container.find(_index);
-	if (it == _container.end())
-		return _default;
-	return it->second;
-}
-
 /// Determine bytes required to encode the given integer value. @returns 0 if @a _i is zero.
 template <class T>
 inline unsigned bytesRequired(T _i)
