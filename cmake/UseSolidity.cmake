@@ -11,7 +11,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	target_include_directories(${TARGET} PUBLIC ${Solidity_INCLUDE_DIRS})
 
 	if (${SUBMODULE} STREQUAL "evmasm")
-		eth_use(${TARGET} ${REQUIRED} Eth::evmcore)
+		eth_use(${TARGET} ${REQUIRED} )
                 target_link_libraries(${TARGET} ${Solidity_EVMASM_LIBRARIES})
 	endif()
 
@@ -21,7 +21,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "solidity" OR ${SUBMODULE} STREQUAL "")
-		eth_use(${TARGET} ${REQUIRED} Dev::devcore Eth::evmcore Solidity::evmasm)
+		eth_use(${TARGET} ${REQUIRED} Dev::devcore Solidity::evmasm)
 		target_link_libraries(${TARGET} ${Solidity_SOLIDITY_LIBRARIES})
 	endif()
 
