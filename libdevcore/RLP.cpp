@@ -319,7 +319,7 @@ RLPStream& RLPStream::append(bigint _i)
 	if (!_i)
 		m_out.push_back(c_rlpDataImmLenStart);
 	else if (_i < c_rlpDataImmLenStart)
-		m_out.push_back((byte)_i);
+		m_out.push_back(_i.convert_to<byte>());
 	else
 	{
 		unsigned br = bytesRequired(_i);

@@ -33,6 +33,10 @@
 #define noexcept throw()
 #endif
 
+#ifdef __INTEL_COMPILER
+#pragma warning(disable:3682) //call through incomplete class
+#endif
+
 #include <map>
 #include <unordered_map>
 #include <vector>

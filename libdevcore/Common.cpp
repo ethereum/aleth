@@ -94,7 +94,7 @@ string inUnits(bigint const& _b, strings const& _units)
 		auto i = *it;
 		if (i != _units.front() && b >= unit)
 		{
-			ret << (double(b / (unit / 1000)) / 1000.0) << " " << i;
+			ret << (b.convert_to<double>() / (unit.convert_to<double>() / 1000.0) / 1000.0) << " " << i;
 			return ret.str();
 		}
 		else
