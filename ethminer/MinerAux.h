@@ -464,7 +464,7 @@ private:
 			PhoneHome rpc(client);
 			try
 			{
-				unsigned ranking = rpc.report_benchmark(platformInfo, (int)innerMean);
+				unsigned ranking = rpc.report_benchmark(platformInfo, innerMean.convert_to<int>());
 				cout << "Ranked: " << ranking << " of all benchmarks." << endl;
 			}
 			catch (...)

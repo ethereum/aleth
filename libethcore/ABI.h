@@ -75,8 +75,8 @@ template <> struct ABIDeserialiser<std::string>
 {
 	static std::string deserialise(bytesConstRef& io_t)
 	{
-		unsigned o = (uint16_t)u256(h256(io_t.cropped(0, 32)));
-		unsigned s = (uint16_t)u256(h256(io_t.cropped(o, 32)));
+		unsigned o = (u256(h256(io_t.cropped(0, 32)))).convert_to<uint16_t>();
+		unsigned s = (u256(h256(io_t.cropped(o, 32)))).convert_to<uint16_t>();
 		std::string ret;
 		ret.resize(s);
 		io_t.cropped(o + 32, s).populate(bytesRef((byte*)ret.data(), s));

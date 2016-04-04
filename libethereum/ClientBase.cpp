@@ -506,7 +506,7 @@ BlockDetails ClientBase::pendingDetails() const
 {
 	auto pm = postSeal().info();
 	auto li = Interface::blockDetails(LatestBlock);
-	return BlockDetails((unsigned)pm.number(), li.totalDifficulty + pm.difficulty(), pm.parentHash(), h256s{});
+	return BlockDetails(pm.number().convert_to<unsigned>(), li.totalDifficulty + pm.difficulty(), pm.parentHash(), h256s{});
 }
 
 StateDiff ClientBase::diff(unsigned _txi, h256 _block) const

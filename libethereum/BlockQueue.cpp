@@ -238,9 +238,9 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	(void)_isOurs;
 	if (bi.timestamp() > utcTime()/* && !_isOurs*/)
 	{
-		m_future.insert(make_pair((unsigned)bi.timestamp(), make_pair(h, _block.toBytes())));
+		m_future.insert(make_pair(bi.timestamp().convert_to<unsigned>(), make_pair(h, _block.toBytes())));
 		char buf[24];
-		time_t bit = (unsigned)bi.timestamp();
+		time_t bit = bi.timestamp().convert_to<unsigned>();
 		if (strftime(buf, 24, "%X", localtime(&bit)) == 0)
 			buf[0] = '\0'; // empty if case strftime fails
 		clog(BlockQueueTraceChannel) << "OK - queued for future [" << bi.timestamp() << "vs" << utcTime() << "] - will wait until" << buf;

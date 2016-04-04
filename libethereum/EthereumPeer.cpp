@@ -260,7 +260,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 
 		auto& bc = host()->chain();
 
-		auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ? static_cast<unsigned>(maxHeaders) : c_maxHeadersToSend;
+		auto numHeadersToSend = maxHeaders <= c_maxHeadersToSend ? maxHeaders.convert_to<unsigned>() : c_maxHeadersToSend;
 
 		if (skip > std::numeric_limits<unsigned>::max() - 1)
 		{
@@ -268,7 +268,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 			break;
 		}
 
-		auto step = static_cast<unsigned>(skip) + 1;
+		auto step = skip.convert_to<unsigned>() + 1;
 		assert(step > 0 && "step must not be 0");
 
 		h256 blockHash;
@@ -320,15 +320,15 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 					bigint top = n + uint64_t(step) * (numHeadersToSend - 1);
 					if (top > lastBlock)
 					{
-						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step + 1;
+						numHeadersToSend = (lastBlock - n.convert_to<unsigned>()) / step + 1;
 						top = n + step * (numHeadersToSend - 1);
 					}
 					assert(top <= lastBlock && "invalid top block calculated");
-					blockHash = bc.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+					blockHash = bc.numberHash(top.convert_to<unsigned>()); // override start block hash with the hash of the top block we have
 				}
 			}
 			else if (n <= std::numeric_limits<unsigned>::max())
-				blockHash = bc.numberHash(static_cast<unsigned>(n));
+				blockHash = bc.numberHash(n.convert_to<unsigned>());
 			else
 				blockHash = {};
 		}
