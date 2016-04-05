@@ -1,0 +1,5 @@
+[
+{ "name": "personal_newAccount", "params": [""], "returns": "" },
+{ "name": "personal_unlockAccount", "params": ["", "", 0], "returns": true },
+{ "name": "personal_listAccounts", "params": [], "returns": [] }
+]

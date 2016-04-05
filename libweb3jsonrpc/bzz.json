@@ -1,0 +1,4 @@
+[
+{ "name": "bzz_put", "params": [""], "returns": ""},
+{ "name": "bzz_get", "params": [""], "returns": ""}
+]
