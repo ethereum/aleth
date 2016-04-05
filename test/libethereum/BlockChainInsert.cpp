@@ -149,6 +149,7 @@ void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& 
 	}
 }
 
+#if !defined(_WIN32)
 BOOST_AUTO_TEST_CASE(bcBasicInsert)
 {
 	if (g_logVerbosity != -1)
@@ -209,6 +210,7 @@ BOOST_AUTO_TEST_CASE(bcBasicInsert)
 	cnote << tcLight.bc().dumpDatabase();
 	BOOST_REQUIRE_EQUAL(tcFull.bc().dumpDatabase(), tcLight.bc().dumpDatabase());
 }
+#endif
 
 BOOST_AUTO_TEST_SUITE_END()
 
