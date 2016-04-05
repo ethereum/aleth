@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WhisperPeers</class>
+   <widget class="QWidget" name="whisperPeersWidget">
+    <layout class="QVBoxLayout" name="whisperPeersLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QComboBox" name="topics">
+       <property name="editable">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="whispers">
+        <property name="verticalScrollMode">
+          <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="alternatingRowColors">
+          <bool>true</bool>
+        </property>
+        <property name="wordWrap">
+          <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+          <string>alternate-background-color: aquamarine;</string>
+        </property>
+        <property name="frameShape">
+          <enum>QFrame::StyledPanel</enum>
+        </property>
+      </widget>
+     </item>
+      <item>
+       <widget class="QWidget" name="whisperPeersWidget2">
+        <layout class="QHBoxLayout" name="whisperPeersLayout2">
+          <property name="spacing">
+            <number>4</number>
+          </property>
+          <property name="leftMargin">
+            <number>4</number>
+          </property>
+          <property name="topMargin">
+            <number>4</number>
+          </property>
+          <property name="rightMargin">
+            <number>4</number>
+          </property>
+          <property name="bottomMargin">
+            <number>4</number>
+          </property>
+          <item>
+            <widget class="QPushButton" name="clear">
+              <property name="text">
+                <string>Clear Screen</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="stop">
+              <property name="text">
+                <string>Freeze</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="forgetCurrent">
+              <property name="text">
+                <string>Forget Topic</string>
+              </property>
+            </widget>
+          </item>
+          <item>
+            <widget class="QPushButton" name="forgetAll">
+              <property name="text">
+                <string>Forget All</string>
+              </property>
+            </widget>
+          </item>
+        </layout>
+       </widget>
+      </item>
+    </layout>
+   </widget>
+ <resources/>
+ <connections/>
+</ui>
