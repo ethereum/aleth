@@ -3,6 +3,8 @@
 #
 # This script should get a project name from jenkins and figure out which tests to run
 
+set -e
+
 if [[ $# -ne 1 && $# -ne 2 ]]; then
 	echo "RUNTESTS - ERROR: Expected either 1 or 2 arguments for the run tests script but got $#!"
 	exit 1
@@ -67,6 +69,9 @@ if [[ $2 != "" ]]; then
 fi
 
 case $1 in
+	"all")
+		TEST_REPOSITORIES=(libweb3core libethereum libethereum_vmjit libethereum_vmsmart webthree solidity)
+		;;
 	"webthree-helpers")
 		echo "ETHTESTS - INFO: Not running any tests for project \"$1\"."
 		exit 0
