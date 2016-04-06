@@ -783,5 +783,55 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	BOOST_REQUIRE(string192 == plainOriginal);
 }
 
+BOOST_AUTO_TEST_CASE(recoverVgt3)
+{
+	// base secret
+	Secret secret(sha3("privacy"));
+
+	// we get ec params from signer
+	ECDSA<ECP, SHA3_256>::Signer signer;
+
+	// e := sha3(msg)
+	bytes e(fromHex("0x01"));
+	e.resize(32);
+	int tests = 2;
+	while (sha3(&e, &e), secret = sha3(secret), tests--)
+	{
+		KeyPair key(secret);
+		Public pkey = key.pub();
+		signer.AccessKey().Initialize(s_params, secretToExponent(secret));
+
+		h256 he(sha3(e));
+		Integer heInt(he.asBytes().data(), 32);
+		h256 k(crypto::kdf(secret, he));
+		Integer kInt(k.asBytes().data(), 32);
+		kInt %= s_params.GetSubgroupOrder()-1;
+
+		ECP::Point rp = s_params.ExponentiateBase(kInt);
+		Integer const& q = s_params.GetGroupOrder();
+		Integer r = s_params.ConvertElementToInteger(rp);
+
+		Integer kInv = kInt.InverseMod(q);
+		Integer s = (kInv * (Integer(secret.data(), 32) * r + heInt)) % q;
+		BOOST_REQUIRE(!!r && !!s);
+
+		//try recover function on diffrent v values (should be invalid)
+		for (size_t i = 0; i < 10; i++)
+		{
+			Signature sig;
+			sig[64] = i;
+			r.Encode(sig.data(), 32);
+			s.Encode(sig.data() + 32, 32);
+
+			Public p = dev::recover(sig, he);
+			size_t expectI = rp.y.IsOdd() ? 1 : 0;
+			if (i == expectI)
+				BOOST_REQUIRE(p == pkey);
+			else
+				BOOST_REQUIRE(p != pkey);
+		}
+	}
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
