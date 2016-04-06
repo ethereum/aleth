@@ -565,6 +565,15 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 								 (h256)fromHex("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"),
 								 uncleHeader.stateRoot()
 								 );
+
+			if (uncleHeaderObj.count("RelTimestamp"))
+			{
+				BlockHeader parentHeader = importedBlocks.at(number).blockHeader();
+				uncleHeader.setTimestamp(toInt(uncleHeaderObj["RelTimestamp"]) + parentHeader.timestamp());
+				uncleHeader.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(uncleHeader, parentHeader));
+				//this_thread::sleep_for(chrono::seconds((int)toInt(uncleHeaderObj["RelTimestamp"])));
+				uncleHeaderObj.erase("RelTimestamp");
+			}
 		}
 		else
 			cerr << TestOutputHelper::testName() + "Could not create uncle populateFromBlock: there are no block with number " << number << TestOutputHelper::testName() << endl;
