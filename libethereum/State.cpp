@@ -37,7 +37,7 @@
 #include "CachedAddressState.h"
 #include "BlockChain.h"
 #include "TransactionQueue.h"
-#include "ethereum/ConfigInfo.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;

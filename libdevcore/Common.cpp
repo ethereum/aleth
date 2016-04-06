@@ -22,14 +22,14 @@
 #include "Common.h"
 #include "Exceptions.h"
 #include "Log.h"
-#include "dev/BuildInfo.h"
+//#include "dev/BuildInfo.h"
 using namespace std;
 using namespace dev;
 
 namespace dev
 {
 
-char const* Version = ETH_PROJECT_VERSION;
+char const* Version = "1.2.3"; //ETH_PROJECT_VERSION;
 
 const u256 Invalid256 = ~(u256)0;
 
