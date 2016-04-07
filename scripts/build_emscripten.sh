@@ -165,7 +165,7 @@ done
 # Extract the new binary
 if [ -z "$SolidityBranch" ]
 then
-  cd solidity
+  cd "$WORKSPACE"/solidity
   VER=$(git describe --tag --abbrev=0)
   COMMIT=$(git rev-parse --short HEAD)
   DATE=$(date --date="$(git log -1 --date=iso --format=%ad HEAD)" --utc +%F)
