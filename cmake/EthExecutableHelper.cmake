@@ -209,10 +209,10 @@ macro(eth_nsis)
 		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
 		set(CPACK_PACKAGE_EXECUTABLES
 			"AlethZero;AlethZero"
-			"Mix;Mix"
+			"Mix;Mix-ide"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer ethkey)
+		set(CPACK_COMPONENTS_ALL AlethZero Mix-ide solc eth ethminer ethkey)
 
 		include(CPack)
 	endif ()
@@ -230,7 +230,7 @@ macro(eth_appdmg)
 			-DAPP_DMG_BACKGROUND="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/install-folder-bg@2x.png"
 			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
 			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:AlethZero>"
-			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix>"
+			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix-ide>"
 			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
 		)
 	endif()
