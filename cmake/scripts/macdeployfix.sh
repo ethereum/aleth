@@ -81,6 +81,20 @@ for i in "${BROKEN_FRAMEWORKS[@]}"; do
 		done
 		
 		install_name_tool -change @loader_path/../Frameworks/libdbus-1.3.dylib @executable_path/../../../../../../../../Frameworks/libdbus-1.3.dylib $EXEC_NAME
+
+		# 11th April 2016.  Bob Summerwill - Oh lovely, it's got even worse with Qt 5.6
+		# and we need more hacks again.    We've got to get to the bottom of this soon,
+		# because this is utterly unworkable.
+		install_name_tool -change @loader_path/../Frameworks/QtWebEngineCore.framework/Versions/5/QtWebEngineCore @executable_path/../../../../../../../../Frameworks/QtWebEngineCore.framework/Versions/5/QtWebEngineCore $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtWebEngineCore.framework/Versions/5/QtWebEngineCore @executable_path/../../../../../../../../Frameworks/QtWebEngineCore.framework/Versions/5/QtWebEngineCore $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtQuick.framework/Versions/5/QtQuick @executable_path/../../../../../../../../Frameworks/QtQuick.framework/Versions/5/QtQuick $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtGui.framework/Versions/5/QtGui @executable_path/../../../../../../../../Frameworks/QtGui.framework/Versions/5/QtGui $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtQml.framework/Versions/5/QtQml @executable_path/../../../../../../../../Frameworks/QtQml.framework/Versions/5/QtQml $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtNetwork.framework/Versions/5/QtNetwork @executable_path/../../../../../../../../Frameworks/QtNetwork.framework/Versions/5/QtNetwork $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtWebChannel.framework/Versions/5/QtWebChannel @executable_path/../../../../../../../../Frameworks/QtWebChannel.framework/Versions/5/QtWebChannel $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtPositioning.framework/Versions/5/QtPositioning @executable_path/../../../../../../../../Frameworks/QtPositioning.framework/Versions/5/QtPositioning $EXEC_NAME
+		install_name_tool -change /usr/local/Cellar/qt5/5.6.0/lib/QtCore.framework/Versions/5/QtCore @executable_path/../../../../../../../../Frameworks/QtCore.framework/Versions/5/QtCore $EXEC_NAME
+
 	done
 done
 
