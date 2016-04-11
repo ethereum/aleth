@@ -38,7 +38,7 @@
 #include <libaleth/AccountHolder.h>
 #include <libaleth/SyncView.h>
 #include "Connect.h"
-#include "alethzero/BuildInfo.h"
+#include "cpp-ethereum/BuildInfo.h"
 #include "SettingsDialog.h"
 #include "NetworkSettings.h"
 #include "ui_AlethZero.h"

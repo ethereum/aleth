@@ -27,7 +27,7 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/Log.h>
 #include <libethcore/KeyManager.h>
-//#include "ethereum/BuildInfo.h"
+#include "cpp-ethereum/BuildInfo.h"
 #include "KeyAux.h"
 using namespace std;
 using namespace dev;

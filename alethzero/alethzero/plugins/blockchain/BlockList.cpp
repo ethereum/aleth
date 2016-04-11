@@ -29,7 +29,7 @@
 #include <libaleth/Debugger.h>
 #include <libaleth/AlethFace.h>
 #include "ZeroFace.h"
-#include "ethereum/ConfigInfo.h"
+#include "cpp-ethereum/ConfigInfo.h"
 #include "ui_BlockList.h"
 using namespace std;
 using namespace dev;

@@ -29,7 +29,7 @@
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
 #include <libethashseal/EthashClient.h>
-//#include <ethereum/BuildInfo.h>
+#include "cpp-ethereum/BuildInfo.h"
 #include "Swarm.h"
 #include "Support.h"
 using namespace std;

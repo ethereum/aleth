@@ -22,7 +22,7 @@
 #include "Common.h"
 #include "Exceptions.h"
 #include "Log.h"
-//#include "dev/BuildInfo.h"
+#include "cpp-ethereum/BuildInfo.h"
 using namespace std;
 using namespace dev;
 

@@ -26,7 +26,7 @@
 #include <QSettings>
 #include <libevm/VMFactory.h>
 #include <libaleth/AlethFace.h>
-#include "ethereum/ConfigInfo.h"
+#include "cpp-ethereum/ConfigInfo.h"
 #include "ZeroFace.h"
 using namespace std;
 using namespace dev;

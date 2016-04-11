@@ -59,7 +59,7 @@
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
 #endif
-//#include "ethereum/ConfigInfo.h"
+#include "cpp-ethereum/ConfigInfo.h"
 #if ETH_JSONRPC || !ETH_TRUE
 #include "PhoneHome.h"
 #include "Farm.h"

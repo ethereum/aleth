@@ -23,7 +23,7 @@
 #include <QSettings>
 #include <libdevcore/Log.h>
 #include <libethereum/Client.h>
-#include "ethereum/ConfigInfo.h"
+#include "cpp-ethereum/ConfigInfo.h"
 #include <libaleth/AlethFace.h>
 #include "ZeroFace.h"
 using namespace std;
