@@ -29,6 +29,7 @@
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
 #include <libethashseal/EthashClient.h>
+#include <libethashseal/Ethash.h>
 #include <ethereum/BuildInfo.h>
 #include "Swarm.h"
 #include "Support.h"
@@ -55,6 +56,8 @@ WebThreeDirect::WebThreeDirect(
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
 	{
+		Ethash::init();
+		NoProof::init();
 		if (_params.sealEngineName == "Ethash")
 			m_ethereum.reset(new eth::EthashClient(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
 		else

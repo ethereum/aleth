@@ -303,6 +303,8 @@ int main(int argc, char** argv)
 {
 	// Init defaults
 	Defaults::get();
+	Ethash::init();
+	NoProof::init();
 
 #if ETH_DEBUG
 	g_logVerbosity = 4;
