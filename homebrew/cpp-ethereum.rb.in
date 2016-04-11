@@ -80,7 +80,7 @@ class CppEthereum < Formula
 
     if build.with? "gui"
       prefix.install 'alethzero/alethzero/AlethZero.app'
-      prefix.install 'mix/Mix.app'
+      prefix.install 'mix/Mix-ide.app'
     end
   end
 

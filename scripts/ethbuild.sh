@@ -26,7 +26,7 @@ REPOS_MSVC_SLN_MAP=("webthree-helpers/utils:utils.sln"
 	"webthree:webthree.sln"
 	"solidity:solidity.sln"
 	"alethzero:alethzero.sln"
-	"mix:mix.sln"
+	"mix:mix-ide.sln"
 )
 
 function get_repo_sln() {
