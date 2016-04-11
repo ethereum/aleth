@@ -209,10 +209,10 @@ macro(eth_nsis)
 		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
 		set(CPACK_PACKAGE_EXECUTABLES
 			"AlethZero;AlethZero"
-			"Mix;Mix-ide"
+			"Mix;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero Mix-ide solc eth ethminer ethkey)
+		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer ethkey)
 
 		include(CPack)
 	endif ()
