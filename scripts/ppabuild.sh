@@ -9,8 +9,8 @@
 ##              (we should switch to numbered releases at some point)
 ##
 ## The "debian" directories can be found in github.com/ethereum/ethereum-ppa
-## The develop branch will be used for anything before wily and wily for
-## anything starting from wily.
+## The develop branch will be used for anything before wily, while wily and
+## xenial have their own branches.
 ##
 ## The gnupg key for "build@ethdev.com" has to be present in order to sign
 ## the package.
@@ -34,8 +34,10 @@ mainrepo=webthree-umbrella
 now=$(date +"%Y%m%d")
 project="cpp-ethereum"
 ppabranch=develop
-if [ "${distribution}" = "wily" -o "${distribution}" = "xenial" ]; then
+if [ "${distribution}" = "wily" ]; then
 	ppabranch=wily
+elif [ "${distribution}" = "xenial" ]; then
+	ppabranch=xenial
 fi
 codebranch=${ethbranch}
 pparepo=ethereum/ethereum
