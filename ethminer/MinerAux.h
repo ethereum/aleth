@@ -34,6 +34,7 @@
 #include <libdevcore/FileSystem.h>
 #include <libevmcore/Instruction.h>
 #include <libethcore/Exceptions.h>
+#include <libethcore/BasicAuthority.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/CommonJS.h>
 #include <libethereum/GenericFarm.h>
@@ -102,7 +103,11 @@ public:
 	};
 
 
-	MinerCLI(OperationMode _mode = OperationMode::None): mode(_mode) {}
+	MinerCLI(OperationMode _mode = OperationMode::None): mode(_mode) {
+		Ethash::init();
+		NoProof::init();
+		BasicAuthority::init();
+	}
 
 	bool interpretOption(int& i, int argc, char** argv)
 	{

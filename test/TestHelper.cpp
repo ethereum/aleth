@@ -31,6 +31,7 @@
 #include <libethashseal/EthashAux.h>
 #include <libethashseal/Ethash.h>
 #include <libethashseal/GenesisInfo.h>
+#include <libethcore/BasicAuthority.h>
 #include <libethereum/Client.h>
 #include <libevm/ExtVMFace.h>
 #include <libevm/VMFactory.h>
@@ -1036,6 +1037,9 @@ string TestOutputHelper::m_currentTestCaseName = "n/a";
 using namespace boost;
 void TestOutputHelper::initTest(int _maxTests)
 {
+	Ethash::init();
+	BasicAuthority::init();
+	NoProof::init();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _maxTests;
@@ -1044,6 +1048,9 @@ void TestOutputHelper::initTest(int _maxTests)
 
 void TestOutputHelper::initTest(json_spirit::mValue& _v)
 {
+	Ethash::init();
+	BasicAuthority::init();
+	NoProof::init();
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _v.get_obj().size();

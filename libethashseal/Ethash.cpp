@@ -31,7 +31,10 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-ETH_REGISTER_SEAL_ENGINE(Ethash);
+void Ethash::init()
+{
+	ETH_REGISTER_SEAL_ENGINE(Ethash);
+}
 
 Ethash::Ethash()
 {

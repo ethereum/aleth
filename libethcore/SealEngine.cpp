@@ -27,7 +27,10 @@ using namespace eth;
 
 SealEngineRegistrar* SealEngineRegistrar::s_this = nullptr;
 
-ETH_REGISTER_SEAL_ENGINE(NoProof);
+void NoProof::init()
+{
+	ETH_REGISTER_SEAL_ENGINE(NoProof);
+}
 
 void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
