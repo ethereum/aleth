@@ -46,11 +46,15 @@ macro(configure_project)
 		add_definitions(-DETH_FRONTIER)
 	endif()
 
+	# Are we including the JIT EVM module?
+	# That pulls in a quite heavyweight LLVM dependency, which is
+	# not suitable for all platforms.
 	if (EVMJIT)
 		add_definitions(-DETH_EVMJIT)
 	endif ()
 
-	# TODO:  What does "fat DB" even mean?
+	# FATDB is an option to include the reverse hashes for the trie,
+	# i.e. it allows you to iterate over the contents of the state.
 	if (FATDB)
 		add_definitions(-DETH_FATDB)
 	endif ()
@@ -79,9 +83,6 @@ macro(configure_project)
 	if (NOT DEFINED VERSION_SUFFIX)
 		set(VERSION_SUFFIX "")
 	endif()
-
-	# TODO:  How is this used, if at all?
-	set (PROJECT_VERSION_TWEAK ${BUILD_NUMBER})
 
 	include(EthBuildInfo)
 	create_build_info(${NAME})
