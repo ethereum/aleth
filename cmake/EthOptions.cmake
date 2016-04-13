@@ -85,7 +85,6 @@ macro(configure_project)
 
 	include(EthBuildInfo)
 	create_build_info(${NAME})
-	create_config_info(${ARGN})
 	print_config(${NAME})
 endmacro()
 
