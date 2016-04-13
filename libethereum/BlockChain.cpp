@@ -737,11 +737,11 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 #if ETH_TIMED_IMPORTS
 		enactment = t.elapsed();
 		t.restart();
-#endif
+#endif // ETH_TIMED_IMPORTS
 
-#if ETH_PARANOIA || !ETH_TRUE
+#if ETH_PARANOIA
 		checkConsistency();
-#endif
+#endif // ETH_PARANOIA
 
 		// All ok - insert into DB
 
@@ -754,10 +754,10 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		DEV_WRITE_GUARDED(x_details)
 			m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
 
-#if ETH_TIMED_IMPORTS || !ETH_TRUE
+#if ETH_TIMED_IMPORTS
 		collation = t.elapsed();
 		t.restart();
-#endif
+#endif // ETH_TIMED_IMPORTS
 
 		blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
 		DEV_READ_GUARDED(x_details)
@@ -767,11 +767,12 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		extrasBatch.Put(toSlice(_block.info.hash(), ExtraLogBlooms), (ldb::Slice)dev::ref(blb.rlp()));
 		extrasBatch.Put(toSlice(_block.info.hash(), ExtraReceipts), (ldb::Slice)dev::ref(br.rlp()));
 
-#if ETH_TIMED_IMPORTS || !ETH_TRUE
+#if ETH_TIMED_IMPORTS
 		writing = t.elapsed();
 		t.restart();
-#endif
+#endif // ETH_TIMED_IMPORTS
 	}
+
 #if ETH_CATCH
 	catch (BadRoot& ex)
 	{
@@ -790,7 +791,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 			ex << errinfo_extraData(_block.info.extraData());
 		throw;
 	}
-#endif
+#endif // ETH_CATCH
 
 	h256s route;
 	h256 common;
@@ -900,7 +901,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		exit(-1);
 	}
 
-#if ETH_PARANOIA || !ETH_TRUE
+#if ETH_PARANOIA
 	if (isKnown(_block.info.hash()) && !details(_block.info.hash()))
 	{
 		clog(BlockChainDebug) << "Known block just inserted has no details.";
@@ -921,7 +922,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		clog(BlockChainDebug) << "DATABASE CORRUPTION: CRITICAL FAILURE";
 		exit(-1);
 	}
-#endif
+#endif // ETH_PARANOIA
 
 	if (m_lastBlockHash != newLastBlockHash)
 		DEV_WRITE_GUARDED(x_lastBlockHash)
@@ -938,9 +939,9 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 			}
 		}
 
-#if ETH_PARANOIA || !ETH_TRUE
+#if ETH_PARANOIA
 	checkConsistency();
-#endif
+#endif // ETH_PARANOIA
 
 #if ETH_TIMED_IMPORTS
 	checkBest = t.elapsed();
@@ -956,7 +957,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		cnote << "  " << _block.transactions.size() << " transactions";
 		cnote << "  " << _block.info.gasUsed() << " gas used";
 	}
-#endif
+#endif // ETH_TIMED_IMPORTS
 
 	if (!route.empty())
 		noteCanonChanged();

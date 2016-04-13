@@ -21,12 +21,13 @@
  * Determines the PoW algorithm.
  */
 
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 
 #include "EthashGPUMiner.h"
 #include <thread>
 #include <chrono>
 #include <libethash-cl/ethash_cl_miner.h>
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -235,4 +236,4 @@ bool EthashGPUMiner::configureGPU(
 	return true;
 }
 
-#endif
+#endif // ETH_ETHASHCL
