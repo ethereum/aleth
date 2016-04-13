@@ -55,30 +55,3 @@ function(create_build_info NAME)
 		)
 	include_directories(BEFORE ${PROJECT_BINARY_DIR})
 endfunction()
-
-function(create_config_info)
-	# Generate header file containing configuration info
-	foreach(FEATURE ${ARGN})
-		if (${FEATURE})
-			set(ETH_${FEATURE} 1)
-		else()
-			set(ETH_${FEATURE} 0)
-		endif()
-	endforeach()
-
-	set(ETH_SOURCE_DIR ${PROJECT_SOURCE_DIR})
-	set(ETH_DST_DIR "${PROJECT_BINARY_DIR}/include/${PROJECT_NAME}")
-
-	set(INFILE "${ETH_SOURCE_DIR}/ConfigInfo.h.in")
-	set(TMPFILE "${ETH_DST_DIR}/ConfigInfo.h.tmp")
-	set(OUTFILE "${ETH_DST_DIR}/ConfigInfo.h")
-
-	if (EXISTS ${INFILE})
-		configure_file("${INFILE}" "${TMPFILE}")
-
-		include("${ETH_CMAKE_DIR}/EthUtils.cmake")
-		replace_if_different("${TMPFILE}" "${OUTFILE}" CREATE)
-
-		include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
-	endif()
-endfunction()
