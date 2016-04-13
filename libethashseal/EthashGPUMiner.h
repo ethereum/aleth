@@ -22,7 +22,8 @@
  */
 
 #pragma once
-#if ETH_ETHASHCL || !ETH_TRUE
+
+#if ETH_ETHASHCL
 
 #include "libdevcore/Worker.h"
 #include <libethereum/GenericMiner.h>
@@ -83,4 +84,4 @@ private:
 }
 }
 
-#endif
+#endif // ETH_ETHASHCL

@@ -42,18 +42,23 @@
 #include <libethashseal/EthashGPUMiner.h>
 #include <libethashseal/EthashCPUMiner.h>
 #include <libethashseal/Ethash.h>
-#if ETH_ETHASHCL || !ETH_TRUE
+
+#if ETH_ETHASHCL
 #include <libethash-cl/ethash_cl_miner.h>
-#endif
-#if ETH_JSONRPC || !ETH_TRUE
+#endif // ETH_ETHASHCL
+
+#if ETH_JSONRPC
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
-#endif
+#endif // ETH_JSONRPC
+
 #include "ethereum/BuildInfo.h"
-#if ETH_JSONRPC || !ETH_TRUE
+
+#if ETH_JSONRPC
 #include "PhoneHome.h"
 #include "FarmClient.h"
-#endif
+#endif // ETH_JSONRPC
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -145,7 +150,7 @@ public:
 				cerr << "Bad " << arg << " option: " << argv[i] << endl;
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 		else if (arg == "--cl-global-work" && i + 1 < argc)
 			try {
 				m_globalWorkSizeMultiplier = stol(argv[++i]);
@@ -173,7 +178,7 @@ public:
 				cerr << "Bad " << arg << " option: " << argv[i] << endl;
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
-#endif
+#endif // ETH_ETHASHCL
 		else if (arg == "--list-devices")
 			m_shouldListDevices = true;
 		else if (arg == "--allow-opencl-cpu")
@@ -305,9 +310,10 @@ public:
 	{
 		if (m_shouldListDevices)
 		{
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 			EthashGPUMiner::listDevices();
-#endif
+#endif // ETH_ETHASHCL
+
 			exit(0);
 		}
 
@@ -315,7 +321,7 @@ public:
 			EthashCPUMiner::setNumInstances(m_miningThreads);
 		else if (m_minerType == "opencl")
 		{
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 			if (!EthashGPUMiner::configureGPU(
 					m_localWorkSize,
 					m_globalWorkSizeMultiplier,
@@ -331,7 +337,7 @@ public:
 #else
 			cerr << "Selected GPU mining without having compiled with -DETHASHCL=1" << endl;
 			exit(1);
-#endif
+#endif // ETH_ETHASHCL
 		}
 		if (mode == OperationMode::DAGInit)
 			doInitDAG(m_initDAG);
@@ -344,12 +350,12 @@ public:
 	static void streamHelp(ostream& _out)
 	{
 		_out
-#if ETH_JSONRPC || !ETH_TRUE
+#if ETH_JSONRPC
 			<< "Work farming mode:" << endl
 			<< "    -F,--farm <url>  Put into mining farm mode with the work server at URL (default: http://127.0.0.1:8545)" << endl
 			<< "    --farm-recheck <n>  Leave n ms between checks for changed work (default: 500)." << endl
 			<< "    --no-precompute  Don't precompute the next epoch's DAG." << endl
-#endif
+#endif // ETH_JSONRPC
 			<< "Ethash verify mode:" << endl
 			<< "    -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce>  Check PoW credentials for validity." << endl
 			<< endl
@@ -358,9 +364,9 @@ public:
 			<< "    --benchmark-warmup <seconds>  Set the duration of warmup for the benchmark tests (default: 3)." << endl
 			<< "    --benchmark-trial <seconds>  Set the duration for each trial for the benchmark tests (default: 3)." << endl
 			<< "    --benchmark-trials <n>  Set the number of trials for the benchmark tests (default: 5)." << endl
-#if ETH_JSONRPC || !ETH_TRUE
+#if ETH_JSONRPC
 			<< "    --phone-home <on/off>  When benchmarking, publish results (default: on)" << endl
-#endif
+#endif // ETH_JSONRPC
 			<< "DAG creation mode:" << endl
 			<< "    -D,--create-dag <number>  Create the DAG in preparation for mining on given block and exit." << endl
 			<< "Mining configuration:" << endl
@@ -373,12 +379,12 @@ public:
 			<< "    --list-devices List the detected OpenCL devices and exit." << endl
 			<< "    --current-block Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory." << endl
 			<< "    --disable-submit-hashrate  When mining, don't submit hashrate to node." << endl
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 			<< "    --cl-extragpu-mem Set the memory (in MB) you believe your GPU requires for stuff other than mining. Windows rendering e.t.c.." << endl
 			<< "    --cl-local-work Set the OpenCL local work size. Default is " << toString(ethash_cl_miner::c_defaultLocalWorkSize) << endl
 			<< "    --cl-global-work Set the OpenCL global work size as a multiple of the local work size. Default is " << toString(ethash_cl_miner::c_defaultGlobalWorkSizeMultiplier) << " * " << toString(ethash_cl_miner::c_defaultLocalWorkSize) << endl
 			<< "    --cl-ms-per-batch Set the OpenCL target milliseconds per batch (global workgroup size). Default is " << toString(ethash_cl_miner::c_defaultMSPerBatch) << ". If 0 is given then no autoadjustment of global work size will happen" << endl
-#endif
+#endif // ETH_ETHASHCL
 			;
 	}
 
@@ -411,7 +417,7 @@ private:
 		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
 #if ETH_ETHASHCL
 		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
-#endif
+#endif // ETH_ETHASHCL
 		f.setSealers(sealers);
 		f.onSolutionFound([&](EthashProofOfWork::Solution) { return false; });
 
@@ -419,7 +425,7 @@ private:
 			_m == "cpu" ? EthashCPUMiner::platformInfo() :
 #if ETH_ETHASHCL
 			_m == "opencl" ? EthashGPUMiner::platformInfo() :
-#endif
+#endif // ETH_ETHASHCL
 			"";
 		cout << "Benchmarking on platform: " << platformInfo << endl;
 
@@ -461,7 +467,7 @@ private:
 		cout << "inner mean: " << innerMean << " H/s" << endl;
 
 		(void)_phoneHome;
-#if ETH_JSONRPC || !ETH_TRUE
+#if ETH_JSONRPC
 		if (_phoneHome)
 		{
 			cout << "Phoning home to find world ranking..." << endl;
@@ -476,7 +482,7 @@ private:
 			{
 			}
 		}
-#endif
+#endif // ETH_JSONRPC
 		exit(0);
 	}
 
@@ -488,11 +494,11 @@ private:
 		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
 #if ETH_ETHASHCL
 		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
-#endif
+#endif // ETH_ETHASHCL
 		(void)_m;
 		(void)_remote;
 		(void)_recheckPeriod;
-#if ETH_JSONRPC || !ETH_TRUE
+#if ETH_JSONRPC
 		jsonrpc::HttpClient client(_remote);
 
 		h256 id = h256::random();
@@ -590,7 +596,7 @@ private:
 				this_thread::sleep_for(chrono::milliseconds(100));
 			}
 
-#endif
+#endif // ETH_JSONRPC
 		exit(0);
 	}
 
@@ -604,11 +610,11 @@ private:
 	unsigned m_miningThreads = UINT_MAX;
 	bool m_shouldListDevices = false;
 	bool m_clAllowCPU = false;
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 	unsigned m_globalWorkSizeMultiplier = ethash_cl_miner::c_defaultGlobalWorkSizeMultiplier;
 	unsigned m_localWorkSize = ethash_cl_miner::c_defaultLocalWorkSize;
 	unsigned m_msPerBatch = ethash_cl_miner::c_defaultMSPerBatch;
-#endif
+#endif // ETH_ETHASHCL
 	uint64_t m_currentBlock = 0;
 	// default value is 350MB of GPU memory for other stuff (windows system rendering, e.t.c.)
 	unsigned m_extraGPUMemory = 350000000;

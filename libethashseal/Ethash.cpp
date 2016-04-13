@@ -241,11 +241,7 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 	auto result = EthashAux::eval(seedHash(_bi), _bi.hash(WithoutSeal), nonce(_bi));
 	bool slow = result.value <= boundary(_bi) && result.mixHash == mixHash(_bi);
 
-//	cdebug << (slow ? "VERIFY" : "VERYBAD");
-//	cdebug << result.value.hex() << _header.boundary().hex();
-//	cdebug << result.mixHash.hex() << _header.mixHash.hex();
-
-#if ETH_DEBUG || !ETH_TRUE
+#if ETH_DEBUG
 	if (!pre && slow)
 	{
 		cwarn << "WARNING: evaluated result gives true whereas ethash_quick_check_difficulty gives false.";
@@ -257,7 +253,7 @@ bool Ethash::verifySeal(BlockHeader const& _bi) const
 		cwarn << "result.value:" << result.value;
 		cwarn << "result.mixHash:" << result.mixHash;
 	}
-#endif
+#endif // ETH_DEBUG
 
 	return slow;
 }

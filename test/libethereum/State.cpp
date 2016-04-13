@@ -31,7 +31,6 @@
 #include <libethereum/Defaults.h>
 #include <libevm/VM.h>
 #include <test/TestHelper.h>
-#include "ethereum/ConfigInfo.h"
 
 using namespace std;
 using namespace json_spirit;
