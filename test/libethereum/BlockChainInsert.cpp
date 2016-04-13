@@ -149,7 +149,6 @@ void syncStateTrie(bytesConstRef _block, OverlayDB const& _dbSource, OverlayDB& 
 	}
 }
 
-/*
 BOOST_AUTO_TEST_CASE(bcBasicInsert)
 {
 	BasicAuthority::init();
@@ -212,7 +211,7 @@ BOOST_AUTO_TEST_CASE(bcBasicInsert)
 	cnote << tcFull.bc().dumpDatabase();
 	cnote << tcLight.bc().dumpDatabase();
 	BOOST_REQUIRE_EQUAL(tcFull.bc().dumpDatabase(), tcLight.bc().dumpDatabase());
-}*/
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 
