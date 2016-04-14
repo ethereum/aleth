@@ -36,7 +36,7 @@ const char* VMTraceChannel::name() { return "EVM"; }
 const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }
 
 StandardTrace::StandardTrace():
-	m_trace(make_shared<Json::Value>(Json::arrayValue))
+	m_trace(Json::arrayValue), m_codes(Json::objectValue), m_codesMap(Json::objectValue)
 {}
 
 bool changesMemory(Instruction _inst)
@@ -70,6 +70,30 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	for (auto const& i: vm.stack())
 		stack.append(toHex(toCompactBigEndian(i), 1));
 	r["stack"] = stack;
+
+	if (!m_codes.isMember(ext.myAddress.hex()))
+	{
+		Json::Value code(Json::arrayValue);
+		Json::Value codes_map(Json::objectValue);
+		for (unsigned i = 0; i <= ext.code.size(); ++i)
+		{
+			byte b = i < ext.code.size() ? ext.code[i] : 0;
+			string s = instructionInfo((Instruction)b).name;
+			ostringstream out;
+			out << hex << setw(4) << setfill('0') << i;
+			int offset = i;
+			if (b >= (byte)Instruction::PUSH1 && b <= (byte)Instruction::PUSH32)
+			{
+				unsigned bc = getPushNumber((Instruction)b);
+				s = "PUSH 0x" + toHex(bytesConstRef(&ext.code[i + 1], bc));
+				i += bc;
+			}
+			codes_map[std::to_string(offset)] = code.size();
+			code.append(s);
+		}
+		m_codes[ext.myAddress.hex()] = move(code);
+		m_codesMap[ext.myAddress.hex()] = move(codes_map);
+	}
 
 	bool returned = false;
 	bool newContext = false;
@@ -132,12 +156,12 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	if (!!newMemSize)
 		r["memexpand"] = toString(newMemSize);
 
-	m_trace->append(r);
+	m_trace.append(r);
 }
 
 string StandardTrace::json(bool _styled) const
 {
-	return _styled ? Json::StyledWriter().write(*m_trace) : Json::FastWriter().write(*m_trace);
+	return _styled ? Json::StyledWriter().write(m_trace) : Json::FastWriter().write(m_trace);
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
