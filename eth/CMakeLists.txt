@@ -7,6 +7,7 @@ file(GLOB HEADERS "*.h")
 add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED Web3::web3jsonrpc JsonRpc::Client Web3::webthree Eth::ethcore Eth::p2p Eth::devcrypto Eth::ethereum Eth::ethashseal)
+eth_use(${EXECUTABLE} OPTIONAL Eth::evmjit)
 
 if (APPLE)
 	install(TARGETS ${EXECUTABLE} DESTINATION bin)
