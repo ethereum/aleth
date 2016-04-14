@@ -17,7 +17,7 @@ function print_help {
 DEV_TEST=0
 CLEAN_BUILD=1
 MAKE_CORES=4
-GIVEN_VERSION=1.2.3 #default - mainly for testing if no version is given
+GIVEN_VERSION="" # Will be extracted from CMakeLists if not explicitly given
 
 for arg in ${@:1}
 do
@@ -93,6 +93,12 @@ if [[ ! -d "webthree-umbrella" ]]; then
 	git clone --recursive https://github.com/ethereum/webthree-umbrella
 fi
 cd webthree-umbrella
+
+if [ -z "$GIVEN_VERSION" ]
+then
+	GIVEN_VERSION=$(grep -oP "[_ ]VERSION \"?\K[0-9.+-]+(?=\")"? CMakeLists.txt)
+	echo "ETHBINARIES - found version ${GIVEN_VERSION}"
+fi
 
 # Make/clean build directory depending on requested arguments
 if [[ -d "build" ]]; then
