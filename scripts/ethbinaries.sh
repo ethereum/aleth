@@ -161,6 +161,19 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 			echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
 			exit 1
 		fi
+		# create eth binaries zip
+		rm -rf ethbin
+		mkdir ethbin
+		cp ./install/lib/*.dylib ethbin/
+		cp ./install/bin/eth ethbin/
+		cd ethbin
+		../../webthree-helpers/scripts/locdep.rb eth .
+		for f in *.dylib ; do ../../webthree-helpers/scripts/locdep.rb $f . ; done
+		# run again to process dylibs copied on previous step
+		for f in *.dylib ; do ../../webthree-helpers/scripts/locdep.rb $f . ; done
+		cd ..
+		zip eth_standalone_osx.zip ethbin/*
+
 	fi
 else
 	echo "ETHBINARIES - INFO: Building for Linux ...";
