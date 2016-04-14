@@ -35,8 +35,3 @@ message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 llvm_map_components_to_libnames(LLVM_LIBS core support mcjit x86asmparser x86codegen ipo)
 
 add_subdirectory(libevmjit)
-
-if (DEFINED MSVC)
-	set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
-	set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
-endif()
