@@ -96,7 +96,7 @@ cd webthree-umbrella
 
 if [ -z "$GIVEN_VERSION" ]
 then
-	GIVEN_VERSION=$(grep -oP "[_ ]VERSION \"?\K[0-9.+-]+(?=\")"? CMakeLists.txt)
+	GIVEN_VERSION=$(grep -e "[_ ]VERSION \"" CMakeLists.txt | sed -e 's/.*VERSION "\([^"]*\)".*/\1/')
 	echo "ETHBINARIES - found version ${GIVEN_VERSION}"
 fi
 
