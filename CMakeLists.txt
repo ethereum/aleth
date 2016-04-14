@@ -23,6 +23,11 @@ configure_project(CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL EVM
 
 if (EVMJIT)
 	add_subdirectory(evmjit)
+	if (DEFINED MSVC)
+		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
+		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
+	endif()
+
 endif()
 
 # core libraries
