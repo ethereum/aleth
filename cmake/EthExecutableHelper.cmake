@@ -130,22 +130,28 @@ macro(eth_install_executable EXECUTABLE)
 			)
 		endif()
 
+		set(COMPONENT ${EXECUTABLE})
+		if (${EXECUTABLE} STREQUAL "Mix-ide")
+			# Special case because component names will be turned into cmake variables
+			# and `-` cannot be part of a cmake variable
+			set(COMPONENT Mix)
+		endif()
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Debug/"
 			DESTINATION .
 			CONFIGURATIONS Debug
-			COMPONENT ${EXECUTABLE}
+			COMPONENT ${COMPONENT}
 		)
 
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/"
 			DESTINATION .
 			CONFIGURATIONS Release
-			COMPONENT ${EXECUTABLE}
+			COMPONENT ${COMPONENT}
 		)
 
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/RelWithDebInfo/"
 			DESTINATION .
 			CONFIGURATIONS RelWithDebInfo
-			COMPONENT ${EXECUTABLE}
+			COMPONENT ${COMPONENT}
 		)
 
 	else()
