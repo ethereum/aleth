@@ -25,6 +25,19 @@ using namespace std;
 using namespace dev;
 using namespace dev::eth;
 
+
+// real machine word, virtual machine word, signed and unsigned overflow words
+//typedef uint64_t rmword;
+typedef u256 rmword;
+typedef u256 vmword;
+typedef s512 soword;
+typedef u512 uoword;
+
+template<class T> rmword to_rmword(T v) { if (rmword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return rmword(v); }
+template<class T> uoword to_uoword(T v) { if (uoword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return uoword(v); }
+template<class T> soword to_soword(T v) { if (soword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return soword(v); }
+
+
 struct InstructionMetric
 {
 	int gasPriceTier;
@@ -45,7 +58,8 @@ static array<InstructionMetric, 256> metrics()
 	return s_ret;
 }
 
-void VM::require(u256 _n, u256 _d)
+
+inline void VM::checkStack(unsigned _n, unsigned _d)
 {
 	if (m_stack.size() < _n)
 	{
@@ -61,7 +75,7 @@ void VM::require(u256 _n, u256 _d)
 	}
 }
 
-void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst)
+void VM::checkRequirements(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst)
 {
 	static const auto c_metrics = metrics();
 	auto& metric = c_metrics[static_cast<size_t>(_inst)];
@@ -73,74 +87,119 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	if (metric.gasPriceTier == InvalidTier)
 		BOOST_THROW_EXCEPTION(BadInstruction());
 
+	checkStack(metric.args, metric.ret);
+
 	// FEES...
-	bigint runGas = m_schedule->tierStepGas[metric.gasPriceTier];
-	bigint newTempSize = m_temp.size();
-	bigint copySize = 0;
-
-	// should work, but just seems to result in immediate errorless exit on initial execution. yeah. weird.
-	//m_onFail = std::function<void()>(onOperation);
-
-	require(metric.args, metric.ret);
+	rmword runGas = to_rmword(m_schedule->tierStepGas[metric.gasPriceTier]);
+	rmword newTempSize = m_temp.size();
+	rmword copySize = 0;
 
 	auto onOperation = [&]()
 	{
 		if (_onOp)
-			_onOp(m_steps, _inst, newTempSize > m_temp.size() ? (newTempSize - m_temp.size()) / 32 : bigint(0), runGas, io_gas, this, &_ext);
+			_onOp(m_steps, _inst, newTempSize > m_temp.size() ? (newTempSize - m_temp.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
+	};
+	m_onFail = std::function<void()>(onOperation);
+
+	auto memNeed = [](vmword _offset, vmword _size)
+	{
+		return to_rmword(_size ? (uoword)_offset + _size : uoword(0));
+	};
+	
+	auto gasForMem = [=](uoword _size) -> uoword
+	{
+		uoword s = _size / 32;
+		return to_rmword((uoword)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv);
 	};
 
-	auto memNeed = [](u256 _offset, dev::u256 _size) { return _size ? (bigint)_offset + _size : (bigint)0; };
-	
+	auto resetIOGas = [&]() {
+		if (io_gas < runGas)
+			BOOST_THROW_EXCEPTION(OutOfGas());
+		io_gas -= runGas;
+	};
+
+	auto resetGas = [&]() {
+		if (newTempSize > m_temp.size())
+			runGas += to_rmword(gasForMem(newTempSize) - gasForMem(m_temp.size())) ;
+		runGas += to_rmword(m_schedule->copyGas * ((copySize + 31) / 32));
+		if (io_gas < runGas)
+			BOOST_THROW_EXCEPTION(OutOfGas());
+	};
+
+	auto resetMemAndGas = [&]()
+	{
+		newTempSize = (newTempSize + 31) / 32 * 32;
+		resetGas();
+		if (newTempSize > m_temp.size())
+			m_temp.resize((size_t)newTempSize);
+		onOperation();
+		resetIOGas();
+	};
+
 	switch (_inst)
 	{
+	case Instruction::JUMPDEST:
+		runGas = 1;
+		onOperation();
+		resetIOGas();
+		break;
+
 	case Instruction::SSTORE:
 		if (!_ext.store(m_stack.back()) && m_stack[m_stack.size() - 2])
-			runGas = m_schedule->sstoreSetGas;
+			runGas = to_rmword(m_schedule->sstoreSetGas);
 		else if (_ext.store(m_stack.back()) && !m_stack[m_stack.size() - 2])
 		{
-			runGas = m_schedule->sstoreResetGas;
+			runGas = to_rmword(m_schedule->sstoreResetGas);
 			_ext.sub.refunds += m_schedule->sstoreRefundGas;
 		}
 		else
-			runGas = m_schedule->sstoreResetGas;
+			runGas = to_rmword(m_schedule->sstoreResetGas);
+		onOperation();
+		resetIOGas();
 		break;
 
 	case Instruction::SLOAD:
-		runGas = m_schedule->sloadGas;
+		runGas = to_rmword(m_schedule->sloadGas);
+		onOperation();
+		resetIOGas();
 		break;
 
 	// These all operate on memory and therefore potentially expand it:
 	case Instruction::MSTORE:
-		newTempSize = (bigint)m_stack.back() + 32;
+		newTempSize = to_rmword(m_stack.back()) + 32;
+		resetMemAndGas();
 		break;
 	case Instruction::MSTORE8:
-		newTempSize = (bigint)m_stack.back() + 1;
+		newTempSize = to_rmword(m_stack.back()) + 1;
+		resetMemAndGas();
 		break;
 	case Instruction::MLOAD:
-		newTempSize = (bigint)m_stack.back() + 32;
+		newTempSize = to_rmword(m_stack.back()) + 32;
+		resetMemAndGas();
 		break;
 	case Instruction::RETURN:
 		newTempSize = memNeed(m_stack.back(), m_stack[m_stack.size() - 2]);
+		resetMemAndGas();
 		break;
 	case Instruction::SHA3:
-		runGas = m_schedule->sha3Gas + ((bigint)m_stack[m_stack.size() - 2] + 31) / 32 * m_schedule->sha3WordGas;
+		runGas = to_rmword(m_schedule->sha3Gas + (to_uoword(m_stack[m_stack.size() - 2]) + 31) / 32 * m_schedule->sha3WordGas);
 		newTempSize = memNeed(m_stack.back(), m_stack[m_stack.size() - 2]);
+		resetMemAndGas();
 		break;
 	case Instruction::CALLDATACOPY:
-		copySize = m_stack[m_stack.size() - 3];
+		copySize = to_rmword(m_stack[m_stack.size() - 3]);
 		newTempSize = memNeed(m_stack.back(), m_stack[m_stack.size() - 3]);
+		resetMemAndGas();
 		break;
 	case Instruction::CODECOPY:
-		copySize = m_stack[m_stack.size() - 3];
+		copySize = to_rmword(m_stack[m_stack.size() - 3]);
 		newTempSize = memNeed(m_stack.back(), m_stack[m_stack.size() - 3]);
+		resetMemAndGas();
 		break;
 	case Instruction::EXTCODECOPY:
-		copySize = m_stack[m_stack.size() - 4];
+		copySize = to_rmword(m_stack[m_stack.size() - 4]);
 		newTempSize = memNeed(m_stack[m_stack.size() - 2], m_stack[m_stack.size() - 4]);
-		break;
-
-	case Instruction::JUMPDEST:
-		runGas = 1;
+		resetMemAndGas();
 		break;
 
 	case Instruction::LOG0:
@@ -150,8 +209,9 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	case Instruction::LOG4:
 	{
 		unsigned n = (unsigned)_inst - (unsigned)Instruction::LOG0;
-		runGas = m_schedule->logGas + m_schedule->logTopicGas * n + (bigint)m_schedule->logDataGas * m_stack[m_stack.size() - 2];
+		runGas = to_rmword(m_schedule->logGas + m_schedule->logTopicGas * n + to_uoword(m_schedule->logDataGas) * m_stack[m_stack.size() - 2]);
 		newTempSize = memNeed(m_stack[m_stack.size() - 1], m_stack[m_stack.size() - 2]);
+		resetMemAndGas();
 		break;
 	}
 
@@ -159,61 +219,45 @@ void VM::checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp,
 	case Instruction::CALLCODE:
 	case Instruction::DELEGATECALL:
 	{
-		runGas = (bigint)m_stack[m_stack.size() - 1] + m_schedule->callGas;
+		runGas = to_rmword(to_uoword(m_stack[m_stack.size() - 1]) + m_schedule->callGas);
 
 		if (_inst == Instruction::CALL && !_ext.exists(asAddress(m_stack[m_stack.size() - 2])))
-			runGas += m_schedule->callNewAccountGas;
+			runGas += to_rmword(m_schedule->callNewAccountGas);
 
 		if (_inst != Instruction::DELEGATECALL && m_stack[m_stack.size() - 3] > 0)
-			runGas += m_schedule->callValueTransferGas;
+			runGas += to_rmword(m_schedule->callValueTransferGas);
 
 		unsigned sizesOffset = _inst == Instruction::DELEGATECALL ? 3 : 4;
 		newTempSize = std::max(
 			memNeed(m_stack[m_stack.size() - sizesOffset - 2], m_stack[m_stack.size() - sizesOffset - 3]),
 			memNeed(m_stack[m_stack.size() - sizesOffset], m_stack[m_stack.size() - sizesOffset - 1])
 		);
+		resetMemAndGas();
 		break;
 	}
 	case Instruction::CREATE:
 	{
 		newTempSize = memNeed(m_stack[m_stack.size() - 2], m_stack[m_stack.size() - 3]);
-		runGas = m_schedule->createGas;
+		runGas = to_rmword(m_schedule->createGas);
+		resetMemAndGas();
 		break;
 	}
 	case Instruction::EXP:
 	{
 		auto expon = m_stack[m_stack.size() - 2];
-		runGas = m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8));
+		runGas = to_rmword(m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8)));
+		resetMemAndGas();
 		break;
 	}
-	default:;
+	default:
+		onOperation();
+		resetIOGas();
 	}
-
-	auto gasForMem = [=](bigint _size) -> bigint
-	{
-		bigint s = _size / 32;
-		return (bigint)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv;
-	};
-
-	newTempSize = (newTempSize + 31) / 32 * 32;
-	if (newTempSize > m_temp.size())
-		runGas += gasForMem(newTempSize) - gasForMem(m_temp.size());
-	runGas += m_schedule->copyGas * ((copySize + 31) / 32);
-
-	onOperation();
-
-	if (io_gas < runGas)
-		BOOST_THROW_EXCEPTION(OutOfGas());
-
-	io_gas -= (u256)runGas;
-
-	if (newTempSize > m_temp.size())
-		m_temp.resize(newTempSize.convert_to<size_t>());
 }
 
-uint64_t VM::verifyJumpDest(u256 const& _dest, vector<uint64_t> const& _validDests)
+uint64_t VM::verifyJumpDest(vmword const& _dest, vector<uint64_t> const& _validDests)
 {
-	auto nextPC = _dest.convert_to<uint64_t>();
+	auto nextPC = static_cast<uint64_t>(_dest);
 	if (!std::binary_search(_validDests.begin(), _validDests.end(), nextPC) || _dest > std::numeric_limits<uint64_t>::max())
 		BOOST_THROW_EXCEPTION(BadJumpDestination());
 	return nextPC;
@@ -221,12 +265,12 @@ uint64_t VM::verifyJumpDest(u256 const& _dest, vector<uint64_t> const& _validDes
 
 void VM::copyDataToMemory(bytesConstRef _data)
 {
-	auto offset = m_stack.back().convert_to<size_t>();
+	auto offset = static_cast<size_t>(m_stack.back());
 	m_stack.pop_back();
-	bigint bigIndex = m_stack.back();
-	auto index = bigIndex.convert_to<size_t>();
+	soword bigIndex = m_stack.back();
+	auto index = static_cast<size_t>(bigIndex);
 	m_stack.pop_back();
-	auto size = (m_stack.back()).convert_to<size_t>();
+	auto size = static_cast<size_t>(m_stack.back());
 	m_stack.pop_back();
 
 	size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
@@ -239,25 +283,45 @@ void VM::copyDataToMemory(bytesConstRef _data)
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
 {
-	return (S)(bigint(_a) / bigint(_b));
+	return (S)(soword(_a) / soword(_b));
 }
 
 template <class S> S modWorkaround(S const& _a, S const& _b)
 {
-	return (S)(bigint(_a) % bigint(_b));
+	return (S)(soword(_a) % soword(_b));
 }
 
-bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	m_schedule = &_ext.evmSchedule();
-	m_stack.reserve((m_schedule->stackLimit).convert_to<size_t>());
+	m_stack.reserve((size_t)m_schedule->stackLimit);
 
+	// verify jump destinations
 	for (size_t i = 0; i < _ext.code.size(); ++i)
 	{
 		if (_ext.code[i] == (byte)Instruction::JUMPDEST)
 			m_jumpDests.push_back(i);
 		else if (_ext.code[i] >= (byte)Instruction::PUSH1 && _ext.code[i] <= (byte)Instruction::PUSH32)
 			i += _ext.code[i] - (size_t)Instruction::PUSH1 + 1;
+	}
+	for (size_t i = 0; i < _ext.code.size(); ++i)
+	{
+		size_t j;
+		if (_ext.code[i] >= (byte)Instruction::PUSH1 && _ext.code[i] <= (byte)Instruction::PUSH32)
+		{
+			size_t n = _ext.code[i] - (size_t)Instruction::PUSH1 + 1;
+			j = i;
+			if (_ext.code[i+1] == (byte)Instruction::JUMP || _ext.code[i+1] == (byte)Instruction::JUMPI) 
+			{
+				uint64_t dest = static_cast<uint64_t>(m_stack.back());
+				for (n += j; j < n; ++j)
+					dest = (dest << 8) | _ext.getCode(j);
+				if (!std::binary_search(m_jumpDests.begin(), m_jumpDests.end(), dest) || dest > std::numeric_limits<uint64_t>::max())
+					BOOST_THROW_EXCEPTION(BadJumpDestination());
+			}
+			else
+				i += n;
+		}
 	}
 
 	m_steps = 0;
@@ -272,9 +336,9 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 		{
 			auto const& endowment = m_stack.back();
 			m_stack.pop_back();
-			unsigned initOff = m_stack.back().convert_to<unsigned>();
+			unsigned initOff = (unsigned)m_stack.back();
 			m_stack.pop_back();
-			unsigned initSize = m_stack.back().convert_to<unsigned>();
+			unsigned initSize = (unsigned)m_stack.back();
 			m_stack.pop_back();
 
 			if (_ext.balance(_ext.myAddress) >= endowment && _ext.depth < 1024)
@@ -308,13 +372,13 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 				m_stack.pop_back();
 			}
 
-			unsigned inOff = m_stack.back().convert_to<unsigned>();
+			unsigned inOff = (unsigned)m_stack.back();
 			m_stack.pop_back();
-			unsigned inSize = m_stack.back().convert_to<unsigned>();
+			unsigned inSize = (unsigned)m_stack.back();
 			m_stack.pop_back();
-			unsigned outOff = m_stack.back().convert_to<unsigned>();
+			unsigned outOff = (unsigned)m_stack.back();
 			m_stack.pop_back();
-			unsigned outSize = m_stack.back().convert_to<unsigned>();
+			unsigned outSize = (unsigned)m_stack.back();
 			m_stack.pop_back();
 
 			if (_ext.balance(_ext.myAddress) >= callParams->valueTransfer && _ext.depth < 1024)
@@ -334,9 +398,9 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 		}
 		case Instruction::RETURN:
 		{
-			unsigned b = m_stack.back().convert_to<unsigned>();
+			unsigned b = (unsigned)m_stack.back();
 			m_stack.pop_back();
-			unsigned s = m_stack.back().convert_to<unsigned>();
+			unsigned s = (unsigned)m_stack.back();
 			m_stack.pop_back();
 			return bytesConstRef(m_temp.data() + b, s);
 		}
@@ -356,7 +420,7 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 	return bytesConstRef();
 }
 
-uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext)
+uint64_t VM::execOrdinaryOpcode(Instruction _inst, vmword &io_gas, ExtVMFace& _ext)
 {
 	uint64_t nextPC = m_curPC + 1;
 	switch (_inst)
@@ -396,7 +460,7 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		auto base = m_stack.back();
 		auto expon = m_stack[m_stack.size() - 2];
 		m_stack.pop_back();
-		m_stack.back() = (u256)boost::multiprecision::powm((bigint)base, (bigint)expon, bigint(1) << 256);
+		m_stack.back() = (vmword)boost::multiprecision::powm((bigint)base, (bigint)expon, bigint(1) << 256);
 		break;
 	}
 	case Instruction::NOT:
@@ -438,25 +502,25 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		m_stack.pop_back();
 		break;
 	case Instruction::BYTE:
-		m_stack[m_stack.size() - 2] = m_stack.back() < 32 ? (m_stack[m_stack.size() - 2] >> (8 * (31 - m_stack.back())).convert_to<unsigned>()) & 0xff : 0;
+		m_stack[m_stack.size() - 2] = m_stack.back() < 32 ? (m_stack[m_stack.size() - 2] >> (unsigned)(8 * (31 - m_stack.back()))) & 0xff : 0;
 		m_stack.pop_back();
 		break;
 	case Instruction::ADDMOD:
-		m_stack[m_stack.size() - 3] = m_stack[m_stack.size() - 3] ? u256((bigint(m_stack.back()) + bigint(m_stack[m_stack.size() - 2])) % m_stack[m_stack.size() - 3]) : 0;
+		m_stack[m_stack.size() - 3] = m_stack[m_stack.size() - 3] ? vmword((to_uoword(m_stack.back()) + to_uoword(m_stack[m_stack.size() - 2])) % m_stack[m_stack.size() - 3]) : 0;
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
 	case Instruction::MULMOD:
-		m_stack[m_stack.size() - 3] = m_stack[m_stack.size() - 3] ? u256((bigint(m_stack.back()) * bigint(m_stack[m_stack.size() - 2])) % m_stack[m_stack.size() - 3]) : 0;
+		m_stack[m_stack.size() - 3] = m_stack[m_stack.size() - 3] ? vmword((to_uoword(m_stack.back()) * to_uoword(m_stack[m_stack.size() - 2])) % m_stack[m_stack.size() - 3]) : 0;
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
 	case Instruction::SIGNEXTEND:
 		if (m_stack.back() < 31)
 		{
-			auto testBit = m_stack.back().convert_to<unsigned>() * 8 + 7;
-			u256& number = m_stack[m_stack.size() - 2];
-			u256 mask = ((u256(1) << testBit) - 1);
+			auto testBit = static_cast<unsigned>(m_stack.back()) * 8 + 7;
+			vmword& number = m_stack[m_stack.size() - 2];
+			vmword mask = ((vmword(1) << testBit) - 1);
 			if (boost::multiprecision::bit_test(number, testBit))
 				number |= ~mask;
 			else
@@ -466,9 +530,9 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		break;
 	case Instruction::SHA3:
 	{
-		unsigned inOff = m_stack.back().convert_to<unsigned>();
+		unsigned inOff = (unsigned)m_stack.back();
 		m_stack.pop_back();
-		unsigned inSize = m_stack.back().convert_to<unsigned>();
+		unsigned inSize = (unsigned)m_stack.back();
 		m_stack.pop_back();
 		m_stack.push_back(sha3(bytesConstRef(m_temp.data() + inOff, inSize)));
 		break;
@@ -492,16 +556,16 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		break;
 	case Instruction::CALLDATALOAD:
 	{
-		if ((bigint)m_stack.back() + 31 < _ext.data.size())
-			m_stack.back() = (u256)*(h256 const*)(_ext.data.data() + m_stack.back().convert_to<size_t>());
-		else if ((bigint)m_stack.back() >= _ext.data.size())
-			m_stack.back() = u256();
+		if (to_uoword(m_stack.back()) + 31 < _ext.data.size())
+			m_stack.back() = (vmword)*(h256 const*)(_ext.data.data() + (size_t)m_stack.back());
+		else if (m_stack.back() >= _ext.data.size())
+			m_stack.back() = vmword(0);
 		else
 		{
 			h256 r;
-			for (uint64_t i = m_stack.back().convert_to<unsigned>(), e = m_stack.back().convert_to<unsigned>() + (uint64_t)32, j = 0; i < e; ++i, ++j)
+			for (uint64_t i = (unsigned)m_stack.back(), e = (unsigned)m_stack.back() + (uint64_t)32, j = 0; i < e; ++i, ++j)
 				r[j] = i < _ext.data.size() ? _ext.data[i] : 0;
-			m_stack.back() = (u256)r;
+			m_stack.back() = (vmword)r;
 		}
 		break;
 	}
@@ -531,7 +595,7 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		m_stack.push_back(_ext.gasPrice);
 		break;
 	case Instruction::BLOCKHASH:
-		m_stack.back() = (u256)_ext.blockHash(m_stack.back());
+		m_stack.back() = (vmword)_ext.blockHash(m_stack.back());
 		break;
 	case Instruction::COINBASE:
 		m_stack.push_back((u160)_ext.envInfo().author());
@@ -647,19 +711,19 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 	}
 	case Instruction::MLOAD:
 	{
-		m_stack.back() = (u256)*(h256 const*)(m_temp.data() + m_stack.back().convert_to<unsigned>());
+		m_stack.back() = (vmword)*(h256 const*)(m_temp.data() + (unsigned)m_stack.back());
 		break;
 	}
 	case Instruction::MSTORE:
 	{
-		*(h256*)&m_temp[m_stack.back().convert_to<unsigned>()] = (h256)m_stack[m_stack.size() - 2];
+		*(h256*)&m_temp[(unsigned)m_stack.back()] = (h256)m_stack[m_stack.size() - 2];
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
 	}
 	case Instruction::MSTORE8:
 	{
-		m_temp[m_stack.back().convert_to<unsigned>()] = (m_stack[m_stack.size() - 2] & 0xff).convert_to<byte>();
+		m_temp[(unsigned)m_stack.back()] = (byte)(m_stack[m_stack.size() - 2] & 0xff);
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
@@ -684,25 +748,25 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 	case Instruction::JUMPDEST:
 		break;
 	case Instruction::LOG0:
-		_ext.log({}, bytesConstRef(m_temp.data() + m_stack[m_stack.size() - 1].convert_to<unsigned>(), m_stack[m_stack.size() - 2].convert_to<unsigned>()));
+		_ext.log({}, bytesConstRef(m_temp.data() + (unsigned)m_stack[m_stack.size() - 1], (unsigned)m_stack[m_stack.size() - 2]));
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
 	case Instruction::LOG1:
-		_ext.log({m_stack[m_stack.size() - 3]}, bytesConstRef(m_temp.data() + m_stack[m_stack.size() - 1].convert_to<unsigned>(), m_stack[m_stack.size() - 2].convert_to<unsigned>()));
+		_ext.log({m_stack[m_stack.size() - 3]}, bytesConstRef(m_temp.data() + (unsigned)m_stack[m_stack.size() - 1], (unsigned)m_stack[m_stack.size() - 2]));
 		m_stack.pop_back();
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
 	case Instruction::LOG2:
-		_ext.log({m_stack[m_stack.size() - 3], m_stack[m_stack.size() - 4]}, bytesConstRef(m_temp.data() + m_stack[m_stack.size() - 1].convert_to<unsigned>(), m_stack[m_stack.size() - 2].convert_to<unsigned>()));
+		_ext.log({m_stack[m_stack.size() - 3], m_stack[m_stack.size() - 4]}, bytesConstRef(m_temp.data() + (unsigned)m_stack[m_stack.size() - 1], (unsigned)m_stack[m_stack.size() - 2]));
 		m_stack.pop_back();
 		m_stack.pop_back();
 		m_stack.pop_back();
 		m_stack.pop_back();
 		break;
 	case Instruction::LOG3:
-		_ext.log({m_stack[m_stack.size() - 3], m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]}, bytesConstRef(m_temp.data() + m_stack[m_stack.size() - 1].convert_to<unsigned>(), m_stack[m_stack.size() - 2].convert_to<unsigned>()));
+		_ext.log({m_stack[m_stack.size() - 3], m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]}, bytesConstRef(m_temp.data() + (unsigned)m_stack[m_stack.size() - 1], (unsigned)m_stack[m_stack.size() - 2]));
 		m_stack.pop_back();
 		m_stack.pop_back();
 		m_stack.pop_back();
@@ -710,7 +774,7 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 		m_stack.pop_back();
 		break;
 	case Instruction::LOG4:
-		_ext.log({m_stack[m_stack.size() - 3], m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5], m_stack[m_stack.size() - 6]}, bytesConstRef(m_temp.data() + m_stack[m_stack.size() - 1].convert_to<unsigned>(), m_stack[m_stack.size() - 2].convert_to<unsigned>()));
+		_ext.log({m_stack[m_stack.size() - 3], m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5], m_stack[m_stack.size() - 6]}, bytesConstRef(m_temp.data() + (unsigned)m_stack[m_stack.size() - 1], (unsigned)m_stack[m_stack.size() - 2]));
 		m_stack.pop_back();
 		m_stack.pop_back();
 		m_stack.pop_back();
@@ -726,6 +790,8 @@ uint64_t VM::execOrdinaryOpcode(Instruction _inst, u256 &io_gas, ExtVMFace& _ext
 	case Instruction::SUICIDE:
 	case Instruction::STOP:
 		break; // These are handled above
+	default:
+		BOOST_THROW_EXCEPTION(BadInstruction());
 	}
 	return nextPC;
 }
