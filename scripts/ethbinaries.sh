@@ -173,10 +173,10 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 		cp ./install/lib/*.dylib ethbin/
 		cp ./install/bin/eth ethbin/
 		cd ethbin
-		../../webthree-helpers/scripts/locdep.rb eth .
-		for f in *.dylib ; do ../../webthree-helpers/scripts/locdep.rb $f . ; done
+		ruby ../../webthree-helpers/scripts/locdep.rb eth .
+		for f in *.dylib ; do ruby ../../webthree-helpers/scripts/locdep.rb $f . ; done
 		# run again to process dylibs copied on previous step
-		for f in *.dylib ; do ../../webthree-helpers/scripts/locdep.rb $f . ; done
+		for f in *.dylib ; do ruby ../../webthree-helpers/scripts/locdep.rb $f . ; done
 		cd ..
 		zip eth_standalone_osx.zip ethbin/*
 
