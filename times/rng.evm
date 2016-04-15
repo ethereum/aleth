@@ -1,0 +1,122 @@
+.code:
+  PUSH 60		contract rng {...
+  PUSH 40		contract rng {...
+  MSTORE			contract rng {...
+tag1: 
+  JUMPDEST		function rng(){...
+  PUSH 0		uint256 rand1
+  PUSH 0		uint256 rand2
+  PUSH 0		uint256 rand3
+  PUSH 0		uint256 rand4
+  PUSH 0		int i
+  PUSH 3		3
+  SWAP5			uint256 rand1 = 3
+  POP			uint256 rand1 = 3
+  PUSH 5		5
+  SWAP4			uint256 rand2 = 5
+  POP			uint256 rand2 = 5
+  PUSH 7		7
+  SWAP3			uint256 rand3 = 7
+  POP			uint256 rand3 = 7
+  PUSH B		11
+  SWAP2			uint256 rand4 = 11
+  POP			uint256 rand4 = 11
+  PUSH 0		0
+  SWAP1			int i = 0
+  POP			int i = 0
+tag3: 
+  JUMPDEST		for (int i = 0; i < 100000; ++i) {...
+  PUSH 186A0		100000
+  DUP2			i
+  SLT			i < 100000
+  ISZERO			for (int i = 0; i < 100000; ++i) {...
+  PUSH [tag4]		for (int i = 0; i < 100000; ++i) {...
+  JUMPI			for (int i = 0; i < 100000; ++i) {...
+  PUSH F47ED85C4B9A6379		0xf47ed85c4b9a6379
+  DUP6			rand1
+  PUSH FFE7649D5ECA8417		0xffe7649d5eca8417
+  MUL			0xffe7649d5eca8417 * rand1
+  ADD			0xffe7649d5eca8417 * rand1 + 0xf47ed85c4b9a6379
+  SWAP5			rand1 = 0xffe7649d5eca8417 * rand1 + 0xf47ed85c4b9a6379
+  POP			rand1 = 0xffe7649d5eca8417 * rand1 + 0xf47ed85c4b9a6379
+  DUP5			rand1 = 0xffe7649d5eca8417 * rand1 + 0xf47ed85c4b9a6379
+  POP			rand1 = 0xffe7649d5eca8417 * rand1 + 0xf47ed85c4b9a6379
+  PUSH F91D87E4B8B74E55		0xf91d87e4b8b74e55
+  DUP5			rand2
+  PUSH F8E5DD9A5C994BBA		0xf8e5dd9a5c994bba
+  MUL			0xf8e5dd9a5c994bba * rand2
+  ADD			0xf8e5dd9a5c994bba * rand2 + 0xf91d87e4b8b74e55
+  SWAP4			rand2 = 0xf8e5dd9a5c994bba * rand2 + 0xf91d87e4b8b74e55
+  POP			rand2 = 0xf8e5dd9a5c994bba * rand2 + 0xf91d87e4b8b74e55
+  DUP4			rand2 = 0xf8e5dd9a5c994bba * rand2 + 0xf91d87e4b8b74e55
+  POP			rand2 = 0xf8e5dd9a5c994bba * rand2 + 0xf91d87e4b8b74e55
+  PUSH F393ADA8DD75C938		0xf393ada8dd75c938
+  DUP4			rand3
+  PUSH FF97F6F3B29CDA52		0xff97f6f3b29cda52
+  MUL			0xff97f6f3b29cda52 * rand3
+  ADD			0xff97f6f3b29cda52 * rand3 + 0xf393ada8dd75c938
+  SWAP3			rand3 = 0xff97f6f3b29cda52 * rand3 + 0xf393ada8dd75c938
+  POP			rand3 = 0xff97f6f3b29cda52 * rand3 + 0xf393ada8dd75c938
+  DUP3			rand3 = 0xff97f6f3b29cda52 * rand3 + 0xf393ada8dd75c938
+  POP			rand3 = 0xff97f6f3b29cda52 * rand3 + 0xf393ada8dd75c938
+  PUSH F47D9A7B5428FFEC		0xf47d9a7b5428ffec
+  DUP4			rand3
+  PUSH FE8D437C45BB3735		0xfe8d437c45bb3735
+  MUL			0xfe8d437c45bb3735 * rand3
+  ADD			0xfe8d437c45bb3735 * rand3 + 0xf47d9a7b5428ffec
+  SWAP2			rand4 = 0xfe8d437c45bb3735 * rand3 + 0xf47d9a7b5428ffec
+  POP			rand4 = 0xfe8d437c45bb3735 * rand3 + 0xf47d9a7b5428ffec
+  DUP2			rand4 = 0xfe8d437c45bb3735 * rand3 + 0xf47d9a7b5428ffec
+  POP			rand4 = 0xfe8d437c45bb3735 * rand3 + 0xf47d9a7b5428ffec
+tag5: 
+  JUMPDEST		for (int i = 0; i < 100000; ++i) {...
+  DUP1			++i
+  PUSH 1		++i
+  ADD			++i
+  SWAP1			++i
+  POP			++i
+  DUP1			++i
+  POP			++i
+  PUSH [tag3]		for (int i = 0; i < 100000; ++i) {...
+  JUMP			for (int i = 0; i < 100000; ++i) {...
+tag4: 
+  JUMPDEST		for (int i = 0; i < 100000; ++i) {...
+  DUP2			rand4
+  DUP4			rand3
+  DUP6			rand2
+  DUP8			rand1
+  XOR			rand1 ^ rand2
+  XOR			rand1 ^ rand2 ^ rand3
+  XOR			rand1 ^ rand2 ^ rand3 ^ rand4
+  PUSH 0		rand
+  PUSH 0		rand
+  POP			rand = rand1 ^ rand2 ^ rand3 ^ rand4
+  DUP2			rand = rand1 ^ rand2 ^ rand3 ^ rand4
+  SWAP1			rand = rand1 ^ rand2 ^ rand3 ^ rand4
+  SSTORE			rand = rand1 ^ rand2 ^ rand3 ^ rand4
+  POP			rand = rand1 ^ rand2 ^ rand3 ^ rand4
+tag2: 
+  JUMPDEST		function rng(){...
+  POP			function rng(){...
+  POP			function rng(){...
+  POP			function rng(){...
+  POP			function rng(){...
+  POP			function rng(){...
+  PUSH #[$00000000…00000000]		contract rng {...
+  DUP1			contract rng {...
+  PUSH [$00000000…00000000]		contract rng {...
+  PUSH 0		contract rng {...
+  CODECOPY			contract rng {...
+  PUSH 0		contract rng {...
+  RETURN			contract rng {...
+.data:
+  0: 
+  .code:
+    PUSH 60		contract rng {...
+    PUSH 40		contract rng {...
+    MSTORE			contract rng {...
+    PUSH [tag1]		contract rng {...
+    JUMP			contract rng {...
+  tag1: 
+    JUMPDEST		contract rng {...
+    STOP			contract rng {...
