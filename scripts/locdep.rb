@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/usr/bin/env ruby
 # Based on https://code.google.com/p/stacked-crooked/
 # Usage
 # localize_dependencies.rb input_file output_directory
