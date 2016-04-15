@@ -212,7 +212,7 @@ macro(eth_nsis)
 			"Mix-ide;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer ethkey)
+		set(CPACK_COMPONENTS_ALL AlethZero Mix-ide solc eth ethminer ethkey)
 
 		include(CPack)
 	endif ()
