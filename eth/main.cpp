@@ -79,10 +79,7 @@ void help()
 	cout
 		<< "Usage eth [OPTIONS]" << endl
 		<< "Options:" << endl << endl
-		<< "Operating mode (default is non-interactive node):" << endl
-		<< "    import <file>  Import file as a concatenated series of blocks." << endl
-		<< "    export <file>  Export file as a concatenated series of blocks." << endl
-		<< endl;
+		<< "Wallet usage:" << endl;
 	AccountManager::streamAccountHelp(cout);
 	AccountManager::streamWalletHelp(cout);
 	cout
