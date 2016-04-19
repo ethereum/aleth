@@ -38,7 +38,6 @@ REPOS_MAP=("webthree-helpers:https://github.com/ethereum/webthree-helpers"
 	   "tests:https://github.com/ethereum/tests"
 	   "libweb3core:https://github.com/ethereum/libweb3core"
 	   "libethereum:https://github.com/ethereum/libethereum"
-	   "evmjit:https://github.com/ethereum/evmjit"
 	   "libwhisper:https://github.com/ethereum/libwhisper"
 	   "webthree:https://github.com/ethereum/webthree"
 	   "web3.js:https://github.com/ethereum/web3.js"
@@ -49,7 +48,6 @@ REPOS_SSH_MAP=("webthree-helpers:git@github.com:ethereum/webthree-helpers.git"
 	   "tests:git@github.com:ethereum/tests.git"
 	   "libweb3core:git@github.com:ethereum/libweb3core.git"
 	   "libethereum:git@github.com:ethereum/libethereum.git"
-	   "evmjit:git@github.com:ethereum/evmjit.git"
 	   "libwhisper:git@github.com:ethereum/libwhisper.git"
 	   "webthree:git@github.com:ethereum/webthree.git"
 	   "web3.js:git@github.com:ethereum/web3.js.git"
@@ -105,9 +103,6 @@ function get_repo_branch() {
 			;;
 		"libethereum")
 			set_requested_branch $LIBETHEREUM_BRANCH
-			;;
-		"evmjit")
-			set_requested_branch $EVMJIT_BRANCH
 			;;
 		"webthree")
 			set_requested_branch $WEBTHREE_BRANCH
