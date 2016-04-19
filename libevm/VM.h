@@ -46,6 +46,7 @@ inline u256 fromAddress(Address _a)
 	return (u160)_a;
 }
 
+
 /**
  */
 class VM: public VMFace
@@ -55,24 +56,62 @@ public:
 
 	uint64_t curPC() const { return m_curPC; }
 
-	bytes const& memory() const { return m_temp; }
-	u256s const& stack() const { return m_stack; }
+	bytes const& memory() const { return m_mem; }
+	u256s const stack() const { return u256s(); }
+
+	// real machine word, virtual machine word, signed and unsigned overflow words
+	typedef uint64_t mw64;
+	typedef mw64 rmword;
+	typedef u256 vmword;
+	typedef s512 soword;
+	typedef u512 uoword;
+		
+	// checked generic convertions
+	template<class T> static rmword to_rmword(T v) { if (rmword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return rmword(v); }
+	template<class T> static uoword to_uoword(T v) { if (uoword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return uoword(v); }
+	template<class T> static soword to_soword(T v) { if (soword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return soword(v); }
 
 private:
+
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
-	void require(u256 _n, u256 _d);
-	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
-	static uint64_t verifyJumpDest(u256 const& _dest, std::vector<uint64_t> const& _validDests);
+	void checkStack(unsigned _n, unsigned _d);
+	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
+	uint64_t verifyJumpDest(u256 const& _dest);
 	void copyDataToMemory(bytesConstRef _data);
 	uint64_t execOrdinaryOpcode(Instruction _inst, u256& io_gas, ExtVMFace& _ext);
 
-	uint64_t m_curPC = 0;
-	uint64_t m_steps = 0;
-	bytes m_temp;
-	u256s m_stack;
-	std::vector<uint64_t> m_jumpDests;
+	std::unordered_set<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
 	EVMSchedule const* m_schedule = nullptr;
+	
+	// state of the machine
+	Instruction inst;
+	uint64_t m_curPC = 0;
+	uint64_t m_steps = 0;
+	bytes m_mem;
+	
+	// unlike vector this stack doesn't grow or check bounds - checkStack() does that
+	struct stack : std::array<u256,1024> {
+		size_t i = -1;
+		u256& back() { return (*this)[i]; }
+		const u256& back() const { return (*this)[i]; }
+		void push_back(const u256& v) {
+			(*this)[++i] = v;
+		}
+		void pop_back() {
+			--i;
+		}
+	   size_t size() const { return i+1; }
+		void reserve(size_t) {}
+	} m_stack;
+
+	//u256s m_stack;
+
+	// state of the metering and memorizing
+	rmword runGas = 0;
+	rmword newMemSize = 0;
+	rmword copySize = 0;
+	
 };
 
 }
