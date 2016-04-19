@@ -38,7 +38,6 @@ REPOS_MAP=("webthree-helpers:https://github.com/ethereum/webthree-helpers"
 	   "tests:https://github.com/ethereum/tests"
 	   "libweb3core:https://github.com/ethereum/libweb3core"
 	   "libethereum:https://github.com/ethereum/libethereum"
-	   "evmjit:https://github.com/ethereum/evmjit"
 	   "libwhisper:https://github.com/ethereum/libwhisper"
 	   "webthree:https://github.com/ethereum/webthree"
 	   "web3.js:https://github.com/ethereum/web3.js"
@@ -49,7 +48,6 @@ REPOS_SSH_MAP=("webthree-helpers:git@github.com:ethereum/webthree-helpers.git"
 	   "tests:git@github.com:ethereum/tests.git"
 	   "libweb3core:git@github.com:ethereum/libweb3core.git"
 	   "libethereum:git@github.com:ethereum/libethereum.git"
-	   "evmjit:git@github.com:ethereum/evmjit.git"
 	   "libwhisper:git@github.com:ethereum/libwhisper.git"
 	   "webthree:git@github.com:ethereum/webthree.git"
 	   "web3.js:git@github.com:ethereum/web3.js.git"
@@ -105,9 +103,6 @@ function get_repo_branch() {
 			;;
 		"libethereum")
 			set_requested_branch $LIBETHEREUM_BRANCH
-			;;
-		"evmjit")
-			set_requested_branch $EVMJIT_BRANCH
 			;;
 		"webthree")
 			set_requested_branch $WEBTHREE_BRANCH
@@ -320,6 +315,8 @@ do
 		get_repo_url $repository
 		git fetch --tags --progress $REPO_URL +refs/pull/*:refs/remotes/origin/pr/*
 		git checkout -f $BUILD_PR
+		# Init new and update submodules
+		git submodule update --init
 		cd $ROOT_DIR
 		continue
 	elif [[ $DO_SIMPLE_PULL -eq 1 ]]; then
@@ -328,7 +325,8 @@ do
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
 		fi
-		git submodule update
+		# Init new and update submodules
+		git submodule update --init
 		cd $ROOT_DIR
 		continue
 	fi
@@ -341,6 +339,8 @@ do
 		else
 			echo "ETHUPDATE - INFO: Checked out branch ${REQUESTED_BRANCH} for repository ${repository}."
 		fi
+		# Init new and update submodules
+		git submodule update --init
 		cd $ROOT_DIR
 		continue
 	fi
@@ -354,7 +354,8 @@ do
 			git checkout -f $REQUESTED_BRANCH
 		fi
 		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
-		git submodule update
+		# Init new and update submodules
+		git submodule update --init
 	else
 		# if just cloned, make a local branch tracking the origin's requested branch
 		git fetch origin $SHALLOW_FETCH
@@ -370,7 +371,8 @@ do
 			if [[ $? -ne 0 ]]; then
 				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
 			fi
-			git submodule update
+			# Init new and update submodules
+			git submodule update --init
 		else
 			echo "ETHUPDATE - ERROR: Pulling changes for repository ${repository} from ${UPSTREAM} into the ${REQUESTED_BRANCH} branch failed."
 		fi
