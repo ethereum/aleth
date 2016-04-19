@@ -315,6 +315,8 @@ do
 		get_repo_url $repository
 		git fetch --tags --progress $REPO_URL +refs/pull/*:refs/remotes/origin/pr/*
 		git checkout -f $BUILD_PR
+		# Init new and update submodules
+		git submodule update --init
 		cd $ROOT_DIR
 		continue
 	elif [[ $DO_SIMPLE_PULL -eq 1 ]]; then
@@ -323,7 +325,8 @@ do
 		if [[ $? -ne 0 ]]; then
 			echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
 		fi
-		git submodule update
+		# Init new and update submodules
+		git submodule update --init
 		cd $ROOT_DIR
 		continue
 	fi
@@ -336,6 +339,8 @@ do
 		else
 			echo "ETHUPDATE - INFO: Checked out branch ${REQUESTED_BRANCH} for repository ${repository}."
 		fi
+		# Init new and update submodules
+		git submodule update --init
 		cd $ROOT_DIR
 		continue
 	fi
@@ -349,7 +354,8 @@ do
 			git checkout -f $REQUESTED_BRANCH
 		fi
 		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
-		git submodule update
+		# Init new and update submodules
+		git submodule update --init
 	else
 		# if just cloned, make a local branch tracking the origin's requested branch
 		git fetch origin $SHALLOW_FETCH
@@ -365,7 +371,8 @@ do
 			if [[ $? -ne 0 ]]; then
 				echo "ETHUPDATE - ERROR: Doing a simple pull for ${repository} failed. Skipping this repository ..."
 			fi
-			git submodule update
+			# Init new and update submodules
+			git submodule update --init
 		else
 			echo "ETHUPDATE - ERROR: Pulling changes for repository ${repository} from ${UPSTREAM} into the ${REQUESTED_BRANCH} branch failed."
 		fi
