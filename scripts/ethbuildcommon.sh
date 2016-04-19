@@ -5,8 +5,8 @@
 
 PROJECTS_HELP="    --project NAME          Will only clone/update/build repos for the requested project. Valid values are: [\"all\", \"webthree-helpers\", \"libweb3core\", \"libethereum\", \"webthree\", \"solidity\", \"alethzero\", \"mix\"]."
 
-ALL_CLONE_REPOSITORIES=(libweb3core libethereum evmjit webthree-helpers tests web3.js webthree solidity alethzero mix)
-ALL_BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum evmjit solidity webthree alethzero mix)
+ALL_CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests web3.js webthree solidity alethzero mix)
+ALL_BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum solidity webthree alethzero mix)
 
 function set_repositories() {
 	if [[ $1 == "" || $2 == "" ]]; then
@@ -25,24 +25,24 @@ function set_repositories() {
 			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core)
 			;;
 		"libethereum")
-			CLONE_REPOSITORIES=(libweb3core libethereum evmjit webthree-helpers tests)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum evmjit)
+			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum)
 			;;
 		"webthree")
-			CLONE_REPOSITORIES=(libweb3core libethereum evmjit webthree-helpers web3.js tests solidity webthree)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum evmjit solidity webthree)
+			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers web3.js tests solidity webthree)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum solidity webthree)
 			;;
 		"solidity")
-			CLONE_REPOSITORIES=(libweb3core libethereum evmjit webthree-helpers tests solidity)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum evmjit solidity)
+			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests solidity)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum solidity)
 			;;
 		"alethzero")
-			CLONE_REPOSITORIES=(libweb3core libethereum evmjit webthree-helpers tests web3.js webthree solidity alethzero)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum evmjit webthree solidity alethzero)
+			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests web3.js webthree solidity alethzero)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity alethzero)
 			;;
 		"mix")
-			CLONE_REPOSITORIES=(libweb3core libethereum evmjit webthree-helpers tests web3.js webthree solidity mix)
-			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum evmjit webthree solidity mix)
+			CLONE_REPOSITORIES=(libweb3core libethereum webthree-helpers tests web3.js webthree solidity mix)
+			BUILD_REPOSITORIES=(webthree-helpers/utils libweb3core libethereum webthree solidity mix)
 			;;
 		*)
 			echo "${REQUESTER_SCRIPT} - ERROR: Unrecognized value \"${REQUESTED_PROJECT}\" for the --project argument."
