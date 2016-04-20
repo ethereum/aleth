@@ -61,16 +61,12 @@ public:
 
 	OnOpFunc onOp() { return [=](uint64_t _steps, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM) { (*this)(_steps, _inst, _newMemSize, _gasCost, _gas, _vm, _extVM); }; }
 
-	Json::Value codes() { return m_codes; }
-	Json::Value codesMap() { return m_codesMap; }
-
 private:
 	bool m_showMnemonics = false;
 	std::vector<Instruction> m_lastInst;
+	bytes m_lastCallData;
 	Json::Value m_trace;
-	Json::Value m_codes;
-	Json::Value m_codesMap;
-
+	Json::Value m_levels;
 };
 
 /**

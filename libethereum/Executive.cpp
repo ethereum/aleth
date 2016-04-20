@@ -23,6 +23,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libevm/VMFactory.h>
 #include <libevm/VM.h>
+#include <libethcore/CommonJS.h>
 #include "Interface.h"
 #include "State.h"
 #include "ExtVM.h"
@@ -36,7 +37,7 @@ const char* VMTraceChannel::name() { return "EVM"; }
 const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }
 
 StandardTrace::StandardTrace():
-	m_trace(Json::arrayValue), m_codes(Json::objectValue), m_codesMap(Json::objectValue)
+	m_trace(Json::arrayValue), m_levels(Json::arrayValue)
 {}
 
 bool changesMemory(Instruction _inst)
@@ -66,34 +67,16 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 
 	Json::Value r(Json::objectValue);
 
+	if (m_lastCallData != ext.data.toBytes())
+	{
+		m_lastCallData = ext.data.toBytes();
+		r["calldata"] = memDump(ext.data.toBytes(), 16);
+	}
+
 	Json::Value stack(Json::arrayValue);
 	for (auto const& i: vm.stack())
-		stack.append(toHex(toCompactBigEndian(i), 1));
+		stack.append(prettyU256(i));
 	r["stack"] = stack;
-
-	if (!m_codes.isMember(ext.myAddress.hex()))
-	{
-		Json::Value code(Json::arrayValue);
-		Json::Value codes_map(Json::objectValue);
-		for (unsigned i = 0; i <= ext.code.size(); ++i)
-		{
-			byte b = i < ext.code.size() ? ext.code[i] : 0;
-			string s = instructionInfo((Instruction)b).name;
-			ostringstream out;
-			out << hex << setw(4) << setfill('0') << i;
-			int offset = i;
-			if (b >= (byte)Instruction::PUSH1 && b <= (byte)Instruction::PUSH32)
-			{
-				unsigned bc = getPushNumber((Instruction)b);
-				s = "PUSH 0x" + toHex(bytesConstRef(&ext.code[i + 1], bc));
-				i += bc;
-			}
-			codes_map[std::to_string(offset)] = code.size();
-			code.append(s);
-		}
-		m_codes[ext.myAddress.hex()] = move(code);
-		m_codesMap[ext.myAddress.hex()] = move(codes_map);
-	}
 
 	bool returned = false;
 	bool newContext = false;
@@ -105,6 +88,8 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		assert(m_lastInst.size() == ext.depth);
 		m_lastInst.push_back(inst);
 		newContext = true;
+		m_levels.append(std::to_string(_steps));
+		r["levels"] = m_levels;
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
@@ -112,6 +97,8 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		returned = true;
 		m_lastInst.pop_back();
 		lastInst = m_lastInst.back();
+		m_levels.resize(ext.depth);
+		r["levels"] = m_levels;
 	}
 	else if (m_lastInst.size() == ext.depth + 1)
 	{
@@ -138,7 +125,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage[toHex(toCompactBigEndian(i.first), 1)] = toHex(toCompactBigEndian(i.second), 1);
+			storage[prettyU256(i.first)] = prettyU256(i.second);
 		r["storage"] = storage;
 	}
 
