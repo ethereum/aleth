@@ -18,6 +18,11 @@ jsonrpcstub_create(db.json
 	DBClient ${CMAKE_CURRENT_BINARY_DIR} DBClient
 )
 
+jsonrpcstub_create(debug.json
+	dev::rpc::DebugFace ${CMAKE_CURRENT_SOURCE_DIR} DebugFace
+	DebugClient ${CMAKE_CURRENT_BINARY_DIR} DebugClient
+)
+
 jsonrpcstub_create(whisper.json
 	dev::rpc::WhisperFace ${CMAKE_CURRENT_SOURCE_DIR} WhisperFace
 	WhisperClient ${CMAKE_CURRENT_BINARY_DIR} WhisperClient
