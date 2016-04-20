@@ -31,6 +31,7 @@
 #include <libethereum/Executive.h>
 #include <libethereum/ChainParams.h>
 #include <libethashseal/GenesisInfo.h>
+#include <libethashseal/Ethash.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 using namespace std;
@@ -98,6 +99,10 @@ int main(int argc, char** argv)
 	EnvInfo envInfo;
 	Network networkName = Network::HomesteadTest;
 	envInfo.setGasLimit(gas);
+	
+	Ethash::init();
+	NoProof::init();
+
 
 	for (int i = 1; i < argc; ++i)
 	{
