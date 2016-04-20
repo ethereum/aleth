@@ -23,6 +23,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libevm/VMFactory.h>
 #include <libevm/VM.h>
+#include <libethcore/CommonJS.h>
 #include "Interface.h"
 #include "State.h"
 #include "ExtVM.h"
@@ -36,7 +37,7 @@ const char* VMTraceChannel::name() { return "EVM"; }
 const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }
 
 StandardTrace::StandardTrace():
-	m_trace(make_shared<Json::Value>(Json::arrayValue))
+	m_trace(Json::arrayValue), m_levels(Json::arrayValue)
 {}
 
 bool changesMemory(Instruction _inst)
@@ -66,9 +67,15 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 
 	Json::Value r(Json::objectValue);
 
+	if (m_lastCallData != ext.data.toBytes())
+	{
+		m_lastCallData = ext.data.toBytes();
+		r["calldata"] = memDump(ext.data.toBytes(), 16);
+	}
+
 	Json::Value stack(Json::arrayValue);
 	for (auto const& i: vm.stack())
-		stack.append(toHex(toCompactBigEndian(i), 1));
+		stack.append(prettyU256(i));
 	r["stack"] = stack;
 
 	bool returned = false;
@@ -81,6 +88,8 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		assert(m_lastInst.size() == ext.depth);
 		m_lastInst.push_back(inst);
 		newContext = true;
+		m_levels.append(std::to_string(_steps));
+		r["levels"] = m_levels;
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
@@ -88,6 +97,8 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		returned = true;
 		m_lastInst.pop_back();
 		lastInst = m_lastInst.back();
+		m_levels.resize(ext.depth);
+		r["levels"] = m_levels;
 	}
 	else if (m_lastInst.size() == ext.depth + 1)
 	{
@@ -114,7 +125,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage[toHex(toCompactBigEndian(i.first), 1)] = toHex(toCompactBigEndian(i.second), 1);
+			storage[prettyU256(i.first)] = prettyU256(i.second);
 		r["storage"] = storage;
 	}
 
@@ -132,12 +143,12 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	if (!!newMemSize)
 		r["memexpand"] = toString(newMemSize);
 
-	m_trace->append(r);
+	m_trace.append(r);
 }
 
 string StandardTrace::json(bool _styled) const
 {
-	return _styled ? Json::StyledWriter().write(*m_trace) : Json::FastWriter().write(*m_trace);
+	return _styled ? Json::StyledWriter().write(m_trace) : Json::FastWriter().write(m_trace);
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
