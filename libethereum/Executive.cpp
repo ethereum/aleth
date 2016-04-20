@@ -52,7 +52,8 @@ bool changesMemory(Instruction _inst)
 		_inst == Instruction::SHA3 ||
 		_inst == Instruction::CALLDATACOPY ||
 		_inst == Instruction::CODECOPY ||
-		_inst == Instruction::EXTCODECOPY;
+		_inst == Instruction::EXTCODECOPY ||
+		_inst == Instruction::DELEGATECALL;
 }
 
 bool changesStorage(Instruction _inst)
@@ -62,20 +63,14 @@ bool changesStorage(Instruction _inst)
 
 void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)
 {
-	ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
+	ExtVM const& ext = dynamic_cast<ExtVM const&>(*voidExt);
 	VM& vm = *voidVM;
 
 	Json::Value r(Json::objectValue);
 
-	if (m_lastCallData != ext.data.toBytes())
-	{
-		m_lastCallData = ext.data.toBytes();
-		r["calldata"] = memDump(ext.data.toBytes(), 16);
-	}
-
 	Json::Value stack(Json::arrayValue);
 	for (auto const& i: vm.stack())
-		stack.append(prettyU256(i));
+		stack.append(toHex(toCompactBigEndian(i), 1));
 	r["stack"] = stack;
 
 	bool returned = false;
@@ -89,7 +84,8 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		m_lastInst.push_back(inst);
 		newContext = true;
 		m_levels.append(std::to_string(_steps));
-		r["levels"] = m_levels;
+		r["levels"] = m_levels; // TODO: move the processing to JavaScript.
+		r["calldata"] = memDump(ext.data.toBytes(), 16);
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
@@ -125,7 +121,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage[prettyU256(i.first)] = prettyU256(i.second);
+			storage[toHex(toCompactBigEndian(i.first), 1)] = toHex(toCompactBigEndian(i.second), 1);
 		r["storage"] = storage;
 	}
 
