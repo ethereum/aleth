@@ -37,7 +37,7 @@ const char* VMTraceChannel::name() { return "EVM"; }
 const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }
 
 StandardTrace::StandardTrace():
-	m_trace(Json::arrayValue), m_levels(Json::arrayValue)
+	m_trace(Json::arrayValue)
 {}
 
 bool changesMemory(Instruction _inst)
@@ -70,7 +70,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 
 	Json::Value stack(Json::arrayValue);
 	for (auto const& i: vm.stack())
-		stack.append(toHex(toCompactBigEndian(i), 1));
+		stack.append("0x" + toHex(toCompactBigEndian(i, 1)));
 	r["stack"] = stack;
 
 	bool returned = false;
@@ -83,8 +83,6 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		assert(m_lastInst.size() == ext.depth);
 		m_lastInst.push_back(inst);
 		newContext = true;
-		m_levels.append(std::to_string(_steps));
-		r["levels"] = m_levels; // TODO: move the processing to JavaScript.
 		r["calldata"] = memDump(ext.data.toBytes(), 16);
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
@@ -93,8 +91,6 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		returned = true;
 		m_lastInst.pop_back();
 		lastInst = m_lastInst.back();
-		m_levels.resize(ext.depth);
-		r["levels"] = m_levels;
 	}
 	else if (m_lastInst.size() == ext.depth + 1)
 	{
@@ -121,7 +117,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage[toHex(toCompactBigEndian(i.first), 1)] = toHex(toCompactBigEndian(i.second), 1);
+			storage["0x" + toHex(toCompactBigEndian(i.first, 1))] = "0x" + toHex(toCompactBigEndian(i.second, 1));
 		r["storage"] = storage;
 	}
 

@@ -66,7 +66,6 @@ private:
 	std::vector<Instruction> m_lastInst;
 	bytes m_lastCallData;
 	Json::Value m_trace;
-	Json::Value m_levels;
 };
 
 /**
