@@ -59,6 +59,7 @@
 #include <libweb3jsonrpc/AdminEth.h>
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
+#include <libweb3jsonrpc/Debug.h>
 #include "PhoneHome.h"
 #include "Farm.h"
 #endif // ETH_JSONRPC
@@ -1234,19 +1235,22 @@ int main(int argc, char** argv)
 				jsonrpcHttpServer.reset(new ModularServer<
 					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 					rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+					rpc::DebugFace
 				>(
 					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
 					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())
+					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get()),
+					new rpc::Debug(*web3.ethereum())
 				));
 			else
 				jsonrpcHttpServer.reset(new ModularServer<
 					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-					rpc::NetFace, rpc::Web3Face
+					rpc::NetFace, rpc::Web3Face, rpc::DebugFace
 				>(
 					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-					new rpc::Net(web3), new rpc::Web3(web3.clientVersion())
+					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()),
+					new rpc::Debug(*web3.ethereum())
 				));
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 			httpConnector->setAllowedOrigin(rpcCorsDomain);
@@ -1258,12 +1262,14 @@ int main(int argc, char** argv)
 			jsonrpcIpcServer.reset(new ModularServer<
 				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+				rpc::DebugFace
 			>(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
 				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
 				adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()),
-				new rpc::AdminUtils(*sessionManager.get())
+				new rpc::AdminUtils(*sessionManager.get()),
+				new rpc::Debug(*web3.ethereum())
 			));
 			auto ipcConnector = new IpcServer("geth");
 			jsonrpcIpcServer->addConnector(ipcConnector);
