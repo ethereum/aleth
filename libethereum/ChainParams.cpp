@@ -116,6 +116,7 @@ ChainParams ChainParams::loadGenesis(string const& _json, h256 const& _stateRoot
 SealEngineFace* ChainParams::createSealEngine()
 {
 	SealEngineFace* ret = SealEngineRegistrar::create(sealEngineName);
+	assert(ret && "Seal engine not found");
 	ret->setChainParams(*this);
 	if (sealRLP.empty())
 	{
