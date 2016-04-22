@@ -83,7 +83,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		assert(m_lastInst.size() == ext.depth);
 		m_lastInst.push_back(inst);
 		newContext = true;
-		r["calldata"] = memDump(ext.data.toBytes(), 16);
+		r["calldata"] = "0x" + toHex(ext.data.toBytes());
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
