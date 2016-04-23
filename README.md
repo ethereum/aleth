@@ -1,7 +1,7 @@
 # Former and future home of Ethereum C++ client
 
 Significant effort was put into new
-[Ethereum C++ Documentation](http://ethdocs/en/latest/ethereum-clients/cpp-ethereum/)
+[Ethereum C++ Documentation](http://ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)
 for the [Homestead release](https://blog.ethereum.org/2016/02/29/homestead-release/)
 in March 2016.
 
