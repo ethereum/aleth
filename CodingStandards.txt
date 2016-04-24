@@ -1,11 +1,9 @@
 0. Formatting
 
+GOLDEN RULE: Follow the style of the existing code when you make changes.
 
-GOLDEN RULE: Never *ever* use spaces for formatting.
-
-a. Use tabs for indentation!
-- tab stops are every 4 characters.
-- One indentation level -> exactly one byte (i.e. a tab character) in the source file.
+a. Prefer spaces for indentation, because they work the same for all editors and tools.
+- indent with multiples of 4 characters
 - Never use spaces to line up sequential lines: If you have run-on lines, indent as you would for a block.
 b. Line widths:
 - Don't worry about having lines of code > 80-char wide.
@@ -60,8 +58,6 @@ std::tuple<float, float> meanAndSigma(std::vector<float> const& _v);
 2. Preprocessor;
 
 a. File comment is always at top, and includes:
-- Original author, date.
-- Later maintainers (not contributors - they can be seen through VCS log).
 - Copyright.
 - License (e.g. see COPYING).
 b. Never use #ifdef/#define/#endif file guards. Prefer #pragma once as first line below file comment.
@@ -90,9 +86,7 @@ All other entities' first alpha is lower case.
 
 4. Variable prefixes:
 
-a. Leading underscore "_" to parameter names (both normal and template).
-- Exception: "o_parameterName" when it is used exclusively for output. See 6(f).
-- Exception: "io_parameterName" when it is used for both input and output. See 6(f).
+a. Parameter names should have no prefixes.
 b. Leading "c_" to const variables (unless part of an external API).
 c. Leading "g_" to global (non-const) variables.
 d. Leading "s_" to static (non-const, non-global) variables.
@@ -179,7 +173,7 @@ a. Collection conventions:
 b. Class conventions:
 - -Face means the interface of some shared concept. (e.g. FooFace might be a pure virtual class.)
 c. Avoid unpronouncable names;
-- If you need to shorten a name favour a pronouncable slice of the original to a scatterred set of consonants.
+- If you need to shorten a name favour a pronouncable slice of the original to a scattered set of consonants.
 - e.g. Manager shortens to Man rather than Mgr.
 d. Avoid prefixes of initials (e.g. DON'T use IMyInterface, CMyImplementation)
 e. Find short, memorable & (at least semi-) descriptive names for commonly used classes or name-fragments.
@@ -199,6 +193,7 @@ b. Generally avoid shortening a standard form that already includes all importan
 c. Where there are exceptions to this (due to excessive use and clear meaning), note the change prominently and use it consistently.
 - e.g. using Guard = std::lock_guard<std::mutex>; ///< Guard is used throughout the codebase since it's clear in meaning and used commonly. 
 d. In general expressions should be roughly as important/semantically meaningful as the space they occupy.
+
 
 
 11. Commenting
@@ -228,6 +223,8 @@ a. Includes should go in order of lower level (STL -> boost -> libdevcore -> lib
 
 b. The only exception to the above rule is the top of a .cpp file where its corresponding header should be located.
 
+
+
 13. Logging
 
 Logging should be performed at appropriate verbosities depending on the logging message.
@@ -239,3 +236,14 @@ Some rules to keep in mind:
  - Verbosity >= 2 -> Anything that is or might be displayed more than once every minute
  - Verbosity >= 3 -> Anything that only a developer would understand
  - Verbosity >= 4 -> Anything that is low-level (e.g. peer disconnects, timers being cancelled)
+
+
+14. Recommended reading
+
+Herb Sutter and Andrei Alexandrescu
+- "C++ Coding Standards: 101 Rules, Guidelines, and Best Practices"
+
+Scott Meyers
+- "Effective C++: 55 Specific Ways to Improve Your Programs and Designs (3rd Edition)"
+- "More Effective C++: 35 New Ways to Improve Your Programs and Designs"
+- "Effective Modern C++: 42 Specific Ways to Improve Your Use of C++11 and C++14"
