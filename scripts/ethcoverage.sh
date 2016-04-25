@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Originally written by Dimitriy <dimitry@ethdev.com>
 # Modifications by Lefteris Karapetss <lefteris@refu.co>
 #
