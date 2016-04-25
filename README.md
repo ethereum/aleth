@@ -25,8 +25,8 @@ A dry run for the reorganization is underway at
 
 Current dependencies:
 
-![webthree](http://doublethinkco.github.io/webthree-umbrella-cross/images/dependency_graph.svg)
+![webthree](http://doublethinkco.github.io/cpp-ethereum-cross/images/dependency_graph.svg)
 
 Target dependencies:
 
-![cpp-ethereum](http://doublethinkco.github.io/webthree-umbrella-cross/images/target_dependency_graph.svg)
+![cpp-ethereum](http://doublethinkco.github.io/cpp-ethereum-cross/images/target_dependency_graph.svg)
