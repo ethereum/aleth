@@ -52,7 +52,7 @@
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif // ETH_JSONRPC
 
-#include "ethereum/BuildInfo.h"
+#include "cpp-ethereum/BuildInfo.h"
 
 #if ETH_JSONRPC
 #include "PhoneHome.h"
