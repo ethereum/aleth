@@ -56,7 +56,6 @@ BOOST_AUTO_TEST_CASE(output)
 	buffer.str(std::string());
 }
 
-#if !defined(_WIN32)
 BOOST_AUTO_TEST_CASE(opendb)
 {
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
@@ -74,7 +73,6 @@ BOOST_AUTO_TEST_CASE(opendb)
 	auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("DatabaseAlreadyOpen") != string::npos; };
 	BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
 }
-#endif
 
 BOOST_AUTO_TEST_CASE(rebuild)
 {
