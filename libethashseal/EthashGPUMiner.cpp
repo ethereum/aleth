@@ -21,12 +21,13 @@
  * Determines the PoW algorithm.
  */
 
-#if ETH_ETHASHCL || !ETH_TRUE
+#if ETH_ETHASHCL
 
 #include "EthashGPUMiner.h"
 #include <thread>
 #include <chrono>
 #include <libethash-cl/ethash_cl_miner.h>
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -215,7 +216,7 @@ bool EthashGPUMiner::configureGPU(
 
 	if (_localWorkSize != 32 && _localWorkSize != 64 && _localWorkSize != 128 && _localWorkSize != 256)
 	{
-		cout << "Given localWorkSize of " << toString(_localWorkSize) << "is invalid. Must be either 32,64,128 or 256" << endl;
+		cout << "Given localWorkSize of " << toString(_localWorkSize) << " is invalid. Must be either 32, 64, 128 or 256" << endl;
 		return false;
 	}
 
@@ -235,4 +236,4 @@ bool EthashGPUMiner::configureGPU(
 	return true;
 }
 
-#endif
+#endif // ETH_ETHASHCL

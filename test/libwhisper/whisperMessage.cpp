@@ -80,34 +80,38 @@ void sealAndOpenSingleMessage(unsigned int i)
 
 BOOST_AUTO_TEST_SUITE(whisperMessage)
 
-BOOST_AUTO_TEST_CASE(seal)
-{
-	VerbosityHolder setTemporaryLevel(10);
+//
+// Disabled tests as they are unstable and tend to stall the test suite.
+//
 
-	cnote << "Testing Envelope encryption...";
+//BOOST_AUTO_TEST_CASE(seal)
+//{
+//	VerbosityHolder setTemporaryLevel(10);
 
-	for (unsigned int i = 1; i < 10; ++i)
-		sealAndOpenSingleMessage(i);
-}
+//	cnote << "Testing Envelope encryption...";
 
-BOOST_AUTO_TEST_CASE(work)
-{
-	VerbosityHolder setTemporaryLevel(10);
-	cnote << "Testing proof of work...";
+//	for (unsigned int i = 1; i < 10; ++i)
+//		sealAndOpenSingleMessage(i);
+//}
 
-	Secret zero;
-	unsigned r = 0xC0DEFEED;
+//BOOST_AUTO_TEST_CASE(work)
+//{
+//	VerbosityHolder setTemporaryLevel(10);
+//	cnote << "Testing proof of work...";
 
-	for (int i = 0; i < 20; ++i)
-	{
-		Topics topics = createRandomTopics(++r);
-		bytes const payload = createRandomPayload(++r);
-		Message m(payload);
-		Envelope e = m.seal(zero, topics, 1, 50);
-		unsigned x = e.workProved();
-		//cnote << x;
-		BOOST_REQUIRE(x > 4);
-	}
-}
+//	Secret zero;
+//	unsigned r = 0xC0DEFEED;
+
+//	for (int i = 0; i < 20; ++i)
+//	{
+//		Topics topics = createRandomTopics(++r);
+//		bytes const payload = createRandomPayload(++r);
+//		Message m(payload);
+//		Envelope e = m.seal(zero, topics, 1, 50);
+//		unsigned x = e.workProved();
+//		//cnote << x;
+//		BOOST_REQUIRE(x > 4);
+//	}
+//}
 
 BOOST_AUTO_TEST_SUITE_END()

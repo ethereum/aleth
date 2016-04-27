@@ -30,7 +30,7 @@
 #include "ICAP.h"
 #include "Exceptions.h"
 #include "BlockHeader.h"
-#include "cpp-ethereum/ConfigInfo.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;

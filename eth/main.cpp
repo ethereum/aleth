@@ -42,7 +42,8 @@
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
-#if ETH_JSONRPC || !ETH_TRUE
+
+#if ETH_JSONRPC
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
@@ -58,14 +59,14 @@
 #include <libweb3jsonrpc/AdminEth.h>
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
-#endif
-#include "cpp-ethereum/ConfigInfo.h"
-#if ETH_JSONRPC || !ETH_TRUE
+#include <libweb3jsonrpc/Debug.h>
 #include "PhoneHome.h"
 #include "Farm.h"
-#endif
+#endif // ETH_JSONRPC
+
 #include <ethminer/MinerAux.h>
 #include "AccountManager.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -79,15 +80,7 @@ void help()
 	cout
 		<< "Usage eth [OPTIONS]" << endl
 		<< "Options:" << endl << endl
-		<< "Operating mode (default is non-interactive node):" << endl;
-#if !ETH_TRUE
-	cout
-		<< "    import <file>  Import file as a concatenated series of blocks." << endl
-		<< "    export <file>  Export file as a concatenated series of blocks." << endl;
-
-#endif
-	cout
-		<< endl;
+		<< "Wallet usage:" << endl;
 	AccountManager::streamAccountHelp(cout);
 	AccountManager::streamWalletHelp(cout);
 	cout
@@ -102,7 +95,7 @@ void help()
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
 		<< endl
-#if ETH_JSONRPC || !ETH_TRUE
+#if ETH_JSONRPC
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --ipc  Enable IPC server (default: on)." << endl
 		<< "    --admin-via-http  Expose admin interface via http - UNSAFE! (default: off)." << endl
@@ -110,7 +103,7 @@ void help()
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
 		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
 		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
-#endif
+#endif // ETH_JSONRPC
 		<< "    -K,--kill  Kill the blockchain first." << endl
 		<< "    -R,--rebuild  Rebuild the blockchain from the existing database." << endl
 		<< "    --rescue  Attempt to rescue a corrupt database." << endl
@@ -183,9 +176,9 @@ void help()
 		<< endl
 		<< "General Options:" << endl
 		<< "    -d,--db-path,--datadir <path>  Load database from path (default: " << getDataDir() << ")." << endl
-#if ETH_EVMJIT || !ETH_TRUE
+#if ETH_EVMJIT
 		<< "    --vm <vm-kind>  Select VM; options are: interpreter, jit or smart (default: interpreter)." << endl
-#endif
+#endif // ETH_EVMJIT
 		<< "    -v,--verbosity <0 - 9>  Set the log verbosity from 0 to 9 (default: 8)." << endl
 		<< "    -V,--version  Show the version and exit." << endl
 		<< "    -h,--help  Show this help message and exit." << endl
@@ -303,6 +296,8 @@ int main(int argc, char** argv)
 {
 	// Init defaults
 	Defaults::get();
+	Ethash::init();
+	NoProof::init();
 
 #if ETH_DEBUG
 	g_logVerbosity = 4;
@@ -334,12 +329,14 @@ int main(int argc, char** argv)
 	/// General params for Node operation
 	NodeMode nodeMode = NodeMode::Full;
 	bool interactive = false;
-#if ETH_JSONRPC || !ETH_TRUE
+
+#if ETH_JSONRPC
 	int jsonRPCURL = -1;
 	bool adminViaHttp = false;
 	bool ipc = true;
 	std::string rpcCorsDomain = "";
-#endif
+#endif // ETH_JSONRPC
+
 	string jsonAdmin;
 	ChainParams chainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
 	u256 gasFloor = Invalid256;
@@ -747,7 +744,8 @@ int main(int argc, char** argv)
 			presaleImports.push_back(argv[++i]);
 		else if (arg == "--old-interactive")
 			interactive = true;
-#if ETH_JSONRPC || !ETH_TRUE
+
+#if ETH_JSONRPC
 		else if ((arg == "-j" || arg == "--json-rpc"))
 			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
 		else if (arg == "--admin-via-http")
@@ -762,7 +760,8 @@ int main(int argc, char** argv)
 			ipc = true;
 		else if (arg == "--no-ipc")
 			ipc = false;
-#endif
+#endif // ETH_JSONRPC
+
 		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
 			g_logVerbosity = atoi(argv[++i]);
 		else if ((arg == "-x" || arg == "--peers") && i + 1 < argc)
@@ -1194,7 +1193,7 @@ int main(int argc, char** argv)
 	else
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
-#if ETH_JSONRPC || !ETH_TRUE
+#if ETH_JSONRPC
 	unique_ptr<ModularServer<>> jsonrpcHttpServer;
 	unique_ptr<ModularServer<>> jsonrpcIpcServer;
 	unique_ptr<rpc::SessionManager> sessionManager;
@@ -1236,19 +1235,22 @@ int main(int argc, char** argv)
 				jsonrpcHttpServer.reset(new ModularServer<
 					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 					rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+					rpc::DebugFace
 				>(
 					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
 					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get())
+					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get()),
+					new rpc::Debug(*web3.ethereum())
 				));
 			else
 				jsonrpcHttpServer.reset(new ModularServer<
 					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-					rpc::NetFace, rpc::Web3Face
+					rpc::NetFace, rpc::Web3Face, rpc::DebugFace
 				>(
 					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-					new rpc::Net(web3), new rpc::Web3(web3.clientVersion())
+					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()),
+					new rpc::Debug(*web3.ethereum())
 				));
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 			httpConnector->setAllowedOrigin(rpcCorsDomain);
@@ -1260,12 +1262,14 @@ int main(int argc, char** argv)
 			jsonrpcIpcServer.reset(new ModularServer<
 				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace
+				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+				rpc::DebugFace
 			>(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
 				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
 				adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()),
-				new rpc::AdminUtils(*sessionManager.get())
+				new rpc::AdminUtils(*sessionManager.get()),
+				new rpc::Debug(*web3.ethereum())
 			));
 			auto ipcConnector = new IpcServer("geth");
 			jsonrpcIpcServer->addConnector(ipcConnector);
@@ -1281,7 +1285,7 @@ int main(int argc, char** argv)
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
 	}
-#endif
+#endif // ETH_JSONRPC
 
 	for (auto const& p: preferredNodes)
 		if (p.second.second)

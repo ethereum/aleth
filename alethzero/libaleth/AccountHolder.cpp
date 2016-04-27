@@ -25,7 +25,6 @@
 #include <libdevcore/Log.h>
 #include <libethcore/KeyManager.h>
 #include <libwebthree/WebThree.h>
-//#include "QNatspec.h"	// TODO: removed until this can be made independent of QWebEngine.
 #include "AlethFace.h"
 using namespace std;
 using namespace dev;
@@ -128,8 +127,6 @@ bool aleth::AccountHolder::validateTransaction(TransactionSkeleton const& _t, bo
 			if (contractCodeHash == EmptySHA3)
 				return make_pair(false, std::string());
 			string userNotice = m_aleth->natSpec().userNotice(contractCodeHash, _t.data);
-/*			QNatspecExpressionEvaluator evaluator;
-			userNotice = evaluator.evalExpression(userNotice);*/ // TODO: need a virtual for this to avoid linking to QWebEngine's JS engine.Z
 			return std::make_pair(true, userNotice);
 		},
 		[&](Address const& _a) -> string { return m_aleth->toReadable(_a); }

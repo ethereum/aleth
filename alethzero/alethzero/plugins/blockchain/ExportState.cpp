@@ -19,8 +19,6 @@
  * @date 2015
  */
 
-#include "cpp-ethereum/ConfigInfo.h"
-
 #if ETH_FATDB
 
 #include "ExportState.h"
@@ -31,6 +29,7 @@
 #include <libaleth/AlethFace.h>
 #include "ZeroFace.h"
 #include "ui_ExportState.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;

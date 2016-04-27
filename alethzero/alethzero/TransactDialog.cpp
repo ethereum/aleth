@@ -32,23 +32,21 @@
 #include <QtConcurrent/QtConcurrent>
 #include <liblll/Compiler.h>
 #include <liblll/CodeFragment.h>
-#if ETH_SOLIDITY || !ETH_TRUE
+
+#if ETH_SOLIDITY
 #include <libsolidity/interface/CompilerStack.h>
 #include <libsolidity/parsing/Scanner.h>
 #include <libsolidity/ast/AST.h>
 #include <libsolidity/interface/SourceReferenceFormatter.h>
-#endif
+#endif // ETH_SOLIDITY
+
 #include <libethereum/Client.h>
 #include <libethereum/Utility.h>
 #include <libethcore/ICAP.h>
 #include <libethcore/KeyManager.h>
-#if ETH_SERPENT
-#include <libserpent/funcs.h>
-#include <libserpent/util.h>
-#endif
-#include "QNatspec.h"
 #include <libaleth/Debugger.h>
 #include "ui_TransactDialog.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -263,7 +261,7 @@ static tuple<vector<string>, bytes, string> userInputToCode(string const& _user,
 		boost::replace_all_copy(u, " ", "");
 		data = fromHex(u);
 	}
-#if ETH_SOLIDITY || !ETH_TRUE
+#if ETH_SOLIDITY
 	else if (sourceIsSolidity(_user))
 	{
 		dev::solidity::CompilerStack compiler(true);
@@ -303,20 +301,7 @@ static tuple<vector<string>, bytes, string> userInputToCode(string const& _user,
 			errors.push_back("Solidity: Uncaught exception");
 		}
 	}
-#endif
-#if ETH_SERPENT
-	else if (sourceIsSerpent(_user))
-	{
-		try
-		{
-			data = dev::asBytes(::compile(_user));
-		}
-		catch (string const& err)
-		{
-			errors.push_back("Serpent " + err);
-		}
-	}
-#endif
+#endif // ETH_SOLIDITY
 	else
 	{
 		data = compileLLL(_user, _opt, &errors);
@@ -327,23 +312,6 @@ static tuple<vector<string>, bytes, string> userInputToCode(string const& _user,
 		}
 	}
 	return make_tuple(errors, data, lll + solidity);
-}
-
-string TransactDialog::natspecNotice(Address _to, bytes const& _data)
-{
-	if (ethereum()->codeAt(_to, PendingBlock).size())
-	{
-		string userNotice = m_natSpecDB->userNotice(ethereum()->postState().codeHash(_to), _data);
-		if (userNotice.empty())
-			return "Destination contract unknown.";
-		else
-		{
-			QNatspecExpressionEvaluator evaluator;
-			return evaluator.evalExpression(userNotice);
-		}
-	}
-	else
-		return "Destination not a contract.";
 }
 
 pair<Address, bytes> TransactDialog::toAccount()
@@ -498,10 +466,6 @@ void TransactDialog::rejigData()
 	}
 
 	htmlInfo += "<h4>Hex</h4>" + QString(ETH_HTML_DIV(ETH_HTML_MONO)) + QString::fromStdString(toHex(m_data)) + "</div>";
-
-	// Add Natspec information
-	if (!isCreation())
-		htmlInfo = "<div class=\"info\"><span class=\"icon\">INFO</span> " + QString::fromStdString(natspecNotice(toAccount().first, m_data)).toHtmlEscaped() + "</div>" + htmlInfo;
 
 	determineGasRequirements();
 

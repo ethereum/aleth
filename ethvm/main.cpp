@@ -31,6 +31,7 @@
 #include <libethereum/Executive.h>
 #include <libethereum/ChainParams.h>
 #include <libethashseal/GenesisInfo.h>
+#include <libethashseal/Ethash.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 using namespace std;
@@ -48,11 +49,11 @@ void help()
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
-#if ETH_EVMJIT || !ETH_TRUE
+#if ETH_EVMJIT
 		<< endl
 		<< "VM options:" << endl
 		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)" << endl
-#endif
+#endif // ETH_EVMJIT
 		<< "Network options:" << endl
 		<< "    --network Olympic|Frontier|Morden|Homestead" << endl
 		<< endl
@@ -98,6 +99,10 @@ int main(int argc, char** argv)
 	EnvInfo envInfo;
 	Network networkName = Network::HomesteadTest;
 	envInfo.setGasLimit(gas);
+	
+	Ethash::init();
+	NoProof::init();
+
 
 	for (int i = 1; i < argc; ++i)
 	{

@@ -29,7 +29,11 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-ETH_REGISTER_SEAL_ENGINE(BasicAuthority);
+
+void BasicAuthority::init()
+{
+	ETH_REGISTER_SEAL_ENGINE(BasicAuthority);
+}
 
 StringHashMap BasicAuthority::jsInfo(BlockHeader const& _bi) const
 {

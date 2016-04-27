@@ -18,23 +18,53 @@ macro(configure_project)
 	eth_default_option(EVMJIT ON)
 	eth_default_option(SOLIDITY ON)
 
+	# Resolve any clashes between incompatible options.
+	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
+		if (PARANOID)
+			message("Paranoia requires debug - disabling for release build.")
+			set(PARANOID OFF)
+		endif ()
+		if (VMTRACE)
+			message("VM Tracing requires debug - disabling for release build.")
+			set (VMTRACE OFF)
+		endif ()
+	endif ()
+
+	# Define a matching property name of each of the "features".
 	foreach(FEATURE ${ARGN})
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
 
-	# propagates CMake configuration options to the compiler
+	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
+	# Common code has no business knowing which application it is part of.
+	add_definitions(-DETH_TRUE)
+
+	# TODO:  Why do we even bother with Olympic support anymore?
 	if (OLYMPIC)
 		add_definitions(-DETH_OLYMPIC)
 	else()
 		add_definitions(-DETH_FRONTIER)
 	endif()
 
-	add_definitions(-DETH_TRUE)
+	# Are we including the JIT EVM module?
+	# That pulls in a quite heavyweight LLVM dependency, which is
+	# not suitable for all platforms.
+	if (EVMJIT)
+		add_definitions(-DETH_EVMJIT)
+	endif ()
 
+	# FATDB is an option to include the reverse hashes for the trie,
+	# i.e. it allows you to iterate over the contents of the state.
+	if (FATDB)
+		add_definitions(-DETH_FATDB)
+	endif ()
+
+	# TODO:  What does "paranoia" even mean?
 	if (PARANOID)
 		add_definitions(-DETH_PARANOIA)
 	endif ()
 
+	# TODO:  What does "VM trace" even mean?
 	if (VMTRACE)
 		add_definitions(-DETH_VMTRACE)
 	endif ()
@@ -48,27 +78,14 @@ macro(configure_project)
 		# Windows max version component number is 65535
 		set(BUILD_NUMBER 65535)
 	endif()
+
 	# Suffix like "-rc1" e.t.c. to append to versions wherever needed.
 	if (NOT DEFINED VERSION_SUFFIX)
 		set(VERSION_SUFFIX "")
 	endif()
-	set (PROJECT_VERSION_TWEAK ${BUILD_NUMBER})
-
-	# Clear invalid option
-	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
-		if (PARANOID)
-			message("Paranoia requires debug - disabling for release build.")
-			set(PARANOID OFF)
-		endif ()
-		if (VMTRACE)
-			message("VM Tracing requires debug - disabling for release build.")
-			set (VMTRACE OFF)
-		endif ()
-	endif ()
 
 	include(EthBuildInfo)
 	create_build_info(${NAME})
-	create_config_info(${ARGN})
 	print_config(${NAME})
 endmacro()
 

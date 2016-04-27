@@ -23,6 +23,7 @@
 #include <libdevcore/CommonIO.h>
 #include <libevm/VMFactory.h>
 #include <libevm/VM.h>
+#include <libethcore/CommonJS.h>
 #include "Interface.h"
 #include "State.h"
 #include "ExtVM.h"
@@ -36,7 +37,7 @@ const char* VMTraceChannel::name() { return "EVM"; }
 const char* ExecutiveWarnChannel::name() { return WarnChannel::name(); }
 
 StandardTrace::StandardTrace():
-	m_trace(make_shared<Json::Value>(Json::arrayValue))
+	m_trace(Json::arrayValue)
 {}
 
 bool changesMemory(Instruction _inst)
@@ -51,7 +52,8 @@ bool changesMemory(Instruction _inst)
 		_inst == Instruction::SHA3 ||
 		_inst == Instruction::CALLDATACOPY ||
 		_inst == Instruction::CODECOPY ||
-		_inst == Instruction::EXTCODECOPY;
+		_inst == Instruction::EXTCODECOPY ||
+		_inst == Instruction::DELEGATECALL;
 }
 
 bool changesStorage(Instruction _inst)
@@ -61,14 +63,14 @@ bool changesStorage(Instruction _inst)
 
 void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)
 {
-	ExtVM const& ext = *static_cast<ExtVM const*>(voidExt);
+	ExtVM const& ext = dynamic_cast<ExtVM const&>(*voidExt);
 	VM& vm = *voidVM;
 
 	Json::Value r(Json::objectValue);
 
 	Json::Value stack(Json::arrayValue);
 	for (auto const& i: vm.stack())
-		stack.append(toHex(toCompactBigEndian(i), 1));
+		stack.append("0x" + toHex(toCompactBigEndian(i, 1)));
 	r["stack"] = stack;
 
 	bool returned = false;
@@ -81,6 +83,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		assert(m_lastInst.size() == ext.depth);
 		m_lastInst.push_back(inst);
 		newContext = true;
+		r["calldata"] = "0x" + toHex(ext.data.toBytes());
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
@@ -114,7 +117,7 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
-			storage[toHex(toCompactBigEndian(i.first), 1)] = toHex(toCompactBigEndian(i.second), 1);
+			storage["0x" + toHex(toCompactBigEndian(i.first, 1))] = "0x" + toHex(toCompactBigEndian(i.second, 1));
 		r["storage"] = storage;
 	}
 
@@ -132,12 +135,12 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	if (!!newMemSize)
 		r["memexpand"] = toString(newMemSize);
 
-	m_trace->append(r);
+	m_trace.append(r);
 }
 
 string StandardTrace::json(bool _styled) const
 {
-	return _styled ? Json::StyledWriter().write(*m_trace) : Json::FastWriter().write(*m_trace);
+	return _styled ? Json::StyledWriter().write(m_trace) : Json::FastWriter().write(m_trace);
 }
 
 Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):

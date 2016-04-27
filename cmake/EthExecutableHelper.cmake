@@ -130,22 +130,28 @@ macro(eth_install_executable EXECUTABLE)
 			)
 		endif()
 
+		set(COMPONENT ${EXECUTABLE})
+		if (${EXECUTABLE} STREQUAL "Mix-ide")
+			# Special case because component names will be turned into cmake variables
+			# and `-` cannot be part of a cmake variable
+			set(COMPONENT Mix)
+		endif()
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Debug/"
 			DESTINATION .
 			CONFIGURATIONS Debug
-			COMPONENT ${EXECUTABLE}
+			COMPONENT ${COMPONENT}
 		)
 
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Release/"
 			DESTINATION .
 			CONFIGURATIONS Release
-			COMPONENT ${EXECUTABLE}
+			COMPONENT ${COMPONENT}
 		)
 
 		install(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/RelWithDebInfo/"
 			DESTINATION .
 			CONFIGURATIONS RelWithDebInfo
-			COMPONENT ${EXECUTABLE}
+			COMPONENT ${COMPONENT}
 		)
 
 	else()
@@ -194,7 +200,6 @@ macro(eth_nsis)
 		endif()
 
 		set(CPACK_COMPONENT_ALETHZERO_GROUP "Applications")
-		set(CPACK_COMPONENT_ALETHONE_GROUP "Applications")
 		set(CPACK_COMPONENT_MIX_GROUP "Applications")
 		set(CPACK_COMPONENT_SOLC_GROUP "CLI")
 		set(CPACK_COMPONENT_ETH_GROUP "CLI")
@@ -205,17 +210,15 @@ macro(eth_nsis)
 
 		# Make GUI components required as we creating links for them
 		set(CPACK_COMPONENT_ALETHZERO_REQUIRED TRUE)
-		set(CPACK_COMPONENT_ALETHONE_REQUIRED TRUE)
 		set(CPACK_COMPONENT_MIX_REQUIRED TRUE)
 
 		set(CPACK_NSIS_EXECUTABLES_DIRECTORY ".")
 		set(CPACK_PACKAGE_EXECUTABLES
 			"AlethZero;AlethZero"
-			"AlethOne;AlethOne"
-			"Mix;Mix"
+			"Mix-ide;Mix"
 		)
 
-		set(CPACK_COMPONENTS_ALL AlethZero AlethOne Mix solc eth ethminer ethkey)
+		set(CPACK_COMPONENTS_ALL AlethZero Mix solc eth ethminer ethkey)
 
 		include(CPack)
 	endif ()
@@ -233,8 +236,7 @@ macro(eth_appdmg)
 			-DAPP_DMG_BACKGROUND="${CMAKE_CURRENT_SOURCE_DIR}/res/mac/install-folder-bg@2x.png"
 			-DETH_BUILD_DIR="${CMAKE_BINARY_DIR}"
 			-DETH_ALETHZERO_APP="$<TARGET_FILE_DIR:AlethZero>"
-			-DETH_ALETHONE_APP="$<TARGET_FILE_DIR:AlethOne>"
-			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix>"
+			-DETH_MIX_APP="$<TARGET_FILE_DIR:Mix-ide>"
 			-P "${ETH_SCRIPTS_DIR}/appdmg.cmake"
 		)
 	endif()

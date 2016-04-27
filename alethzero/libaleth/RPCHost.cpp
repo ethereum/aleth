@@ -32,6 +32,7 @@
 #include <libweb3jsonrpc/AdminEth.h>
 #include <libweb3jsonrpc/AdminNet.h>
 #include <libweb3jsonrpc/AdminUtils.h>
+#include <libweb3jsonrpc/Debug.h>
 #include <libwebthree/WebThree.h>
 #include <libethereum/GasPricer.h>
 #include "RPCHost.h"
@@ -55,12 +56,12 @@ void RPCHost::init(AlethFace* _aleth)
 		rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 		rpc::NetFace, rpc::BzzFace, rpc::Web3Face,
 		rpc::PersonalFace, rpc::AdminEthFace, rpc::AdminNetFace,
-		rpc::AdminUtilsFace
+		rpc::AdminUtilsFace, rpc::DebugFace
 	>(
 		m_ethFace, new rpc::MemoryDB(), m_whisperFace,
 		new rpc::Net(*_aleth->web3()), new rpc::Bzz(*_aleth->web3()->swarm()), new rpc::Web3(_aleth->web3()->clientVersion()),
 		new rpc::Personal(_aleth->keyManager(), *m_accountHolder), adminEth, new rpc::AdminNet(*_aleth->web3(), *m_sm.get()),
-		new rpc::AdminUtils(*m_sm.get())
+		new rpc::AdminUtils(*m_sm.get()), new rpc::Debug(*_aleth->web3()->ethereum())
 	));
 	m_httpConnectorId = m_rpcServer->addConnector(new dev::SafeHttpServer(8545, "", "", 4));
 	m_ipcConnectorId = m_rpcServer->addConnector(new dev::IpcServer("geth"));

@@ -101,7 +101,6 @@ private:
 	dev::Address to() const;
 	void determineGasRequirements();
 
-	std::string natspecNotice(dev::Address _to, dev::bytes const& _data);
 	dev::Secret findSecret(dev::u256 _totalReq) const;
 
 

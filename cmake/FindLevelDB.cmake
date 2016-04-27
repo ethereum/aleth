@@ -2,7 +2,7 @@
 #
 # Find the leveldb includes and library
 # 
-# if you nee to add a custom library search path, do it via via CMAKE_PREFIX_PATH 
+# if you need to add a custom library search path, do it via via CMAKE_PREFIX_PATH 
 # 
 # This module defines
 #  LEVELDB_INCLUDE_DIRS, where to find header, etc.
@@ -36,8 +36,9 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 		DOC "leveldb debug library"
 	)
 	
+	list(APPEND LEVELDB_LIBRARIES "shlwapi")
+	list(APPEND LEVELDB_LIBRARY_DEBUG "shlwapi")
 	set(LEVELDB_LIBRARIES optimized ${LEVELDB_LIBRARIES} debug ${LEVELDB_LIBRARY_DEBUG})
-
 endif()
 
 # handle the QUIETLY and REQUIRED arguments and set LEVELDB_FOUND to TRUE

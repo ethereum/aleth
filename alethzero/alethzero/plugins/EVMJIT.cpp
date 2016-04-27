@@ -26,8 +26,8 @@
 #include <QSettings>
 #include <libevm/VMFactory.h>
 #include <libaleth/AlethFace.h>
-#include "cpp-ethereum/ConfigInfo.h"
 #include "ZeroFace.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -54,6 +54,7 @@ EVMJIT::EVMJIT(ZeroFace* _z):
 		a->setCheckable(true);
 		connect(a, &QAction::triggered, [=]() { VMFactory::setKind(k.second); });
 		m_group->addAction(a);
+
 #if ETH_EVMJIT
 		if (k.second == VMKind::Smart)
 		{
@@ -63,13 +64,13 @@ EVMJIT::EVMJIT(ZeroFace* _z):
 #else
 		a->setChecked(k.second == VMKind::Interpreter);
 		a->setEnabled(k.second == VMKind::Interpreter);
-#endif
+#endif // ETH_EVMJIT
 	}
 }
 
 void EVMJIT::readSettings(QSettings const& _s)
 {
-#if ETH_EVMJIT || !ETH_TRUE // We care only if JIT is enabled. Otherwise it can cause misconfiguration.
+#if ETH_EVMJIT // We care only if JIT is enabled. Otherwise it can cause misconfiguration.
 	auto vmName = _s.value("vm").toString();
 	if (!vmName.isEmpty())
 		for (QAction* a: m_group->actions())
@@ -80,7 +81,7 @@ void EVMJIT::readSettings(QSettings const& _s)
 			}
 #else
 	(void)_s;
-#endif
+#endif // ETH_EVMJIT
 }
 
 void EVMJIT::writeSettings(QSettings& _s)

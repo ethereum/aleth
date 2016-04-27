@@ -27,7 +27,10 @@ using namespace eth;
 
 SealEngineRegistrar* SealEngineRegistrar::s_this = nullptr;
 
-ETH_REGISTER_SEAL_ENGINE(NoProof);
+void NoProof::init()
+{
+	ETH_REGISTER_SEAL_ENGINE(NoProof);
+}
 
 void SealEngineFace::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
@@ -48,6 +51,8 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
 {
 	SealEngineFace* ret = create(_params.sealEngineName);
-	ret->setChainParams(_params);
+	assert(ret && "Seal engine not found.");
+	if (ret)
+		ret->setChainParams(_params);
 	return ret;
 }

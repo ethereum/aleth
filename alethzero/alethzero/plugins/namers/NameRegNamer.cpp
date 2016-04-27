@@ -23,9 +23,9 @@
 #include <QSettings>
 #include <libdevcore/Log.h>
 #include <libethereum/Client.h>
-#include "cpp-ethereum/ConfigInfo.h"
 #include <libaleth/AlethFace.h>
 #include "ZeroFace.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -86,12 +86,12 @@ void NameRegNamer::updateCache()
 //	m_forwardCache.clear();
 //	m_reverseCache.clear();
 	m_knownCache.clear();
-#if ETH_FATDB || !ETH_TRUE
+#if ETH_FATDB
 	for (auto const& r: m_registrars)
 		for (u256 const& a: keysOf(ethereum()->storageAt(r)))
 			if (a > u256(1) << 253 && a < ((u256(1) << 253) + (u256(1) << 160)))
 				m_knownCache.push_back(Address((u160)(a - (u256(1) << 253) - 1)));
-#endif
+#endif // ETH_FATDB
 }
 
 void NameRegNamer::readSettings(QSettings const& _s)

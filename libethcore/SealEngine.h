@@ -134,6 +134,7 @@ class NoProof: public eth::SealEngineBase
 {
 public:
 	std::string name() const override { return "NoProof"; }
+	static void init();
 };
 
 }

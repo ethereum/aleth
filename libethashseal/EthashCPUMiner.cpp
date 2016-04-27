@@ -26,17 +26,17 @@
 #include <chrono>
 #include <boost/algorithm/string.hpp>
 #include <random>
-#if ETH_CPUID || !ETH_TRUE
+#if ETH_CPUID
 #define HAVE_STDINT_H
 #include <libcpuid/libcpuid.h>
-#endif
+#endif // ETH_CPUID
 using namespace std;
 using namespace dev;
 using namespace eth;
 
 unsigned EthashCPUMiner::s_numInstances = 0;
 
-#if ETH_CPUID || !ETH_TRUE
+#if ETH_CPUID
 static string jsonEncode(map<string, string> const& _m)
 {
 	string ret = "{";
@@ -52,7 +52,7 @@ static string jsonEncode(map<string, string> const& _m)
 
 	return ret + "}";
 }
-#endif
+#endif // ETH_CPUID
 
 EthashCPUMiner::EthashCPUMiner(GenericMiner<EthashProofOfWork>::ConstructionInfo const& _ci):
 	GenericMiner<EthashProofOfWork>(_ci), Worker("miner" + toString(index()))
@@ -108,7 +108,8 @@ void EthashCPUMiner::workLoop()
 std::string EthashCPUMiner::platformInfo()
 {
 	string baseline = toString(std::thread::hardware_concurrency()) + "-thread CPU";
-#if ETH_CPUID || !ETH_TRUE
+
+#if ETH_CPUID
 	if (!cpuid_present())
 		return baseline;
 	struct cpu_raw_data_t raw;
@@ -138,5 +139,5 @@ std::string EthashCPUMiner::platformInfo()
 	return jsonEncode(m);
 #else
 	return baseline;
-#endif
+#endif // ETH_CPUID
 }

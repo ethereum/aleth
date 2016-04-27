@@ -45,6 +45,7 @@ class PersonalFace;
 class AdminEthFace;
 class AdminNetFace;
 class AdminUtilsFace;
+class DebugFace;
 }
 
 namespace aleth
@@ -73,7 +74,8 @@ private:
 	AlethWhisper* m_whisperFace;
 	std::shared_ptr<ModularServer<rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 	rpc::NetFace, rpc::BzzFace, rpc::Web3Face, rpc::PersonalFace,
-	rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace>> m_rpcServer;
+	rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+	rpc::DebugFace>> m_rpcServer;
 	unsigned m_httpConnectorId;
 	unsigned m_ipcConnectorId;
 	std::shared_ptr<AccountHolder> m_accountHolder;

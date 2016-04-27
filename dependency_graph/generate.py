@@ -99,7 +99,7 @@ def processSubmodule(root, submodule):
 
     # Mix doesn't have the same sub-module structure as everything else
     if (submodule == "mix"):
-        print 'Mix\n'
+        print '"Mix-ide"\n'
     else:
         print getLibraryAndApplicationNames(submodulePath)
 

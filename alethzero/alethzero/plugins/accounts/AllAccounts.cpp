@@ -29,10 +29,10 @@
 #include <libethcore/ICAP.h>
 #include <libethcore/KeyManager.h>
 #include <libethereum/Client.h>
-#include "cpp-ethereum/ConfigInfo.h"
 #include <libaleth/AlethFace.h>
 #include "ZeroFace.h"
 #include "ui_AllAccounts.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -140,10 +140,10 @@ void AllAccounts::refresh()
 	Addresses as;
 	if (onlyKnown)
 		as = aleth()->allKnownAddresses();
-#if ETH_FATDB || !ETH_TRUE
+#if ETH_FATDB
 	else
 		as = ethereum()->addresses();
-#endif
+#endif // ETH_FATDB
 
 	std::map<Address, AccountData> newAccounts;
 	for (auto const& i: as)

@@ -29,8 +29,8 @@
 #include <libaleth/Debugger.h>
 #include <libaleth/AlethFace.h>
 #include "ZeroFace.h"
-#include "cpp-ethereum/ConfigInfo.h"
 #include "ui_BlockList.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -382,7 +382,7 @@ void BlockList::debugCurrent()
 void BlockList::dumpState(bool _post)
 {
 	// TODO: abstract this top bit.
-#if ETH_FATDB || !ETH_TRUE
+#if ETH_FATDB
 	if (QListWidgetItem* item = m_ui->blocks->currentItem())
 		if (!item->data(Qt::UserRole + 1).isNull())
 		{
@@ -407,6 +407,6 @@ void BlockList::dumpState(bool _post)
 		}
 #else
 	(void)_post;
-#endif
+#endif // ETH_FATDB
 }
 

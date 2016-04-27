@@ -55,7 +55,6 @@ dev::u256 fromValueUnits(QComboBox* _units, QSpinBox* _value);
 std::vector<dev::KeyPair> keysAsVector(QList<dev::KeyPair> const& _keys);
 
 bool sourceIsSolidity(std::string const& _source);
-bool sourceIsSerpent(std::string const& _source);
 
 class NatSpecFace
 {
@@ -67,9 +66,6 @@ public:
 	virtual std::string userNotice(std::string const& json, const dev::bytes& _transactionData) = 0;
 	virtual std::string userNotice(dev::h256 const& _contractHash, dev::bytes const& _transactionDacta) = 0;
 };
-
-void initChromiumDebugTools(int& _argc, char**& _argv);
-unsigned chromiumDebugToolsPort();
 
 }
 }

@@ -17,7 +17,7 @@ function print_help {
 DEV_TEST=0
 CLEAN_BUILD=1
 MAKE_CORES=4
-GIVEN_VERSION=1.2.2 #default - mainly for testing if no version is given
+GIVEN_VERSION="" # Will be extracted from CMakeLists if not explicitly given
 
 for arg in ${@:1}
 do
@@ -94,6 +94,12 @@ if [[ ! -d "webthree-umbrella" ]]; then
 fi
 cd webthree-umbrella
 
+if [ -z "$GIVEN_VERSION" ]
+then
+	GIVEN_VERSION=$(grep -e "[_ ]VERSION \"" CMakeLists.txt | sed -e 's/.*VERSION "\([^"]*\)".*/\1/')
+	echo "ETHBINARIES - found version ${GIVEN_VERSION}"
+fi
+
 # Make/clean build directory depending on requested arguments
 if [[ -d "build" ]]; then
 	if [[ $CLEAN_BUILD -eq 1 ]]; then
@@ -161,6 +167,19 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 			echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
 			exit 1
 		fi
+		# create eth binaries zip
+		rm -rf ethbin
+		mkdir ethbin
+		cp ./install/lib/*.dylib ethbin/
+		cp ./install/bin/eth ethbin/
+		cd ethbin
+		/usr/bin/env ruby ../../webthree-helpers/scripts/locdep.rb eth .
+		for f in *.dylib ; do /usr/bin/env ruby ../../webthree-helpers/scripts/locdep.rb $f . ; done
+		# run again to process dylibs copied on previous step
+		for f in *.dylib ; do /usr/bin/env ruby ../../webthree-helpers/scripts/locdep.rb $f . ; done
+		cd ..
+		zip eth_standalone_osx.zip ethbin/*
+
 	fi
 else
 	echo "ETHBINARIES - INFO: Building for Linux ...";

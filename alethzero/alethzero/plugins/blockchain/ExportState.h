@@ -20,7 +20,6 @@
  */
 
 #pragma once
-#include "cpp-ethereum/ConfigInfo.h"
 
 #if ETH_FATDB
 

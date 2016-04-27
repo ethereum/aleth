@@ -18,7 +18,6 @@
 #include "VMFactory.h"
 #include <libdevcore/Assertions.h>
 #include "VM.h"
-#include "cpp-ethereum/ConfigInfo.h"
 
 #if ETH_EVMJIT
 #include "JitVM.h"

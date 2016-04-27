@@ -75,6 +75,7 @@ public:
 	void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);
 
 	static void ensurePrecomputed(unsigned _number);
+	static void init();
 
 private:
 	bool verifySeal(BlockHeader const& _bi) const;

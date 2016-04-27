@@ -30,6 +30,7 @@
 #include <libwhisper/WhisperHost.h>
 #include <libethashseal/EthashClient.h>
 #include "cpp-ethereum/BuildInfo.h"
+#include <libethashseal/Ethash.h>
 #include "Swarm.h"
 #include "Support.h"
 using namespace std;
@@ -55,6 +56,8 @@ WebThreeDirect::WebThreeDirect(
 		Defaults::setDBPath(_dbPath);
 	if (_interfaces.count("eth"))
 	{
+		Ethash::init();
+		NoProof::init();
 		if (_params.sealEngineName == "Ethash")
 			m_ethereum.reset(new eth::EthashClient(_params, (int)_params.u256Param("networkID"), &m_net, shared_ptr<GasPricer>(), _dbPath, _we));
 		else
@@ -65,7 +68,7 @@ WebThreeDirect::WebThreeDirect(
 		bps[0] = bps[0].substr(0, 5);
 		bps[1] = bps[1].substr(0, 3);
 		bps.back() = bps.back().substr(0, 3);
-		//m_ethereum->setExtraData(rlpList(0, string(dev::Version) + "++" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? "-" : "*") + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, "/")));
+		m_ethereum->setExtraData(rlpList(0, string(dev::Version) + "++" + string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 4) + (ETH_CLEAN_REPO ? "-" : "*") + string(DEV_QUOTED(ETH_BUILD_TYPE)).substr(0, 1) + boost::join(bps, "/")));
 	}
 
 	if (_interfaces.count("shh"))
@@ -110,8 +113,8 @@ std::string WebThreeDirect::composeClientVersion(std::string const& _client)
 		DEV_QUOTED(ETH_BUILD_COMPILER) + "/" + \
 		DEV_QUOTED(ETH_BUILD_JIT_MODE) + "/" + \
 		DEV_QUOTED(ETH_BUILD_TYPE) + "/" + \
-		string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8); //+ \
-		//(ETH_CLEAN_REPO ? "" : "*") + "/";
+		string(DEV_QUOTED(ETH_COMMIT_HASH)).substr(0, 8) + \
+		(ETH_CLEAN_REPO ? "" : "*") + "/";
 }
 
 p2p::NetworkPreferences const& WebThreeDirect::networkPreferences() const
