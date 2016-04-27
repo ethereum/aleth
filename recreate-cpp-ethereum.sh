@@ -15,9 +15,7 @@ mkdir -p  $outputDirectory
 mkdir -p  $outputDirectory/alethzero/
 mkdir -p  $outputDirectory/test/
 
-rsync -r ./alethzero/alethzero/           $outputDirectory/alethzero/alethzero/
-rsync -r ./alethzero/libaleth/            $outputDirectory/alethzero/libaleth/
-rsync    ./alethzero/CMakeLists.txt       $outputDirectory/alethzero/CMakeLists.txt
+# alethzero intentionally omitted
 rsync -r ./dependency_graph/              $outputDirectory/dependency_graph/
 rsync -r ./doc/                           $outputDirectory/doc/
 rsync -r ./docker/                        $outputDirectory/docker/
@@ -65,6 +63,10 @@ rsync -r ./libweb3core/test/memorydb.cpp  $outputDirectory/test/memorydb.cpp
 rsync -r ./libweb3core/test/overlaydb.cpp $outputDirectory/test/overlaydb.cpp
 rsync -r ./libweb3core/test/test.cpp      $outputDirectory/test/test.cpp
 rsync -r ./libweb3core/test/test.h        $outputDirectory/test/test.h
+# mix intentionally omitted
+# res intentionally omitted
+# solidity intentionally omitted
+# web3.js intentionally omitted
 rsync -r ./webthree/eth/                  $outputDirectory/eth/
 rsync -r ./webthree/libweb3jsonrpc/       $outputDirectory/libweb3jsonrpc/
 rsync -r ./webthree/libwebthree/          $outputDirectory/libwebthree/
@@ -79,6 +81,13 @@ rsync -r ./webthree-helpers/js/           $outputDirectory/js/
 rsync -r ./webthree-helpers/scripts/      $outputDirectory/scripts/
 rsync -r ./webthree-helpers/templates/    $outputDirectory/templates/
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
+# intentionally left /webthree-helpers root files behind: (LICENSE, new.sh, README.md)
+# TODO /webthree-helpers/cmake has (LICENSE, README.md), but why?
+# TODO /webthree-helpers/homebrew has (LICENSE, README.md), but why?
+# Tried unsuccessfully to delete homebrew ones.   Needed in some release flow?
+
+# Loose files in the root directory of webthree-umbrella.
+# TODO - Move all these loose scripts in the root into /scripts
 rsync -r ./astylerc                       $outputDirectory/astylerc
 rsync -r ./CodingStandards.txt            $outputDirectory/CodingStandards.txt
 rsync -r ./CONTRIBUTING.md                $outputDirectory/CONTRIBUTING.md
@@ -94,13 +103,18 @@ rsync -r ./push.sh                        $outputDirectory/push.sh
 rsync -r ./sanitizer-blacklist.txt        $outputDirectory/sanitizer-blacklist.txt
 rsync -r ./sync.sh                        $outputDirectory/sync.sh
 
-# TODO - evmjit submodule
+# These CMakeLists.txt were manually synthesized by Bob.
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/CMakeLists.txt > $outputDirectory/CMakeLists.txt
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/test/CMakeLists.txt > $outputDirectory/test/CMakeLists.txt
+
+# This README.md is going to need to be manually updated to reflect the new repo organizational reality,
+# which will need to be some kind of merger of the README.md content from cpp-ethereum and from webthree-umbrella.
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/README.md > $outputDirectory/README.md
+
+# TODO - evmjit submodule will need "hooking up", for now we'll just git clone it into a local directory to get
+# the content we need for testing.
 git clone https://github.com/ethereum/evmjit $outputDirectory/evmjit
 
 # TODO - Need to upstream my edits from https://github.com/bobsummerwill/cpp-ethereum/commits/merge_repos.
-# TODO - README.md
-# TODO - Synthesized composite CMakeList.txt files (root directory and test directory)
 # TODO - Move Contributing and coding standards to http://ethdocs.org
-# TODO - Move all these loose scripts in the root into /scripts
-# TODO - Try to get astyle working, or switch to clang-format
 # TODO - Where will qtcreator-style go?   Ditto for res folder.
