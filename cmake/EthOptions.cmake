@@ -35,6 +35,15 @@ macro(configure_project)
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
 
+	# Temporary pre-processor symbol used to indicate that we are building the
+	# codebase using the post-repo-remerge "cpp-ethereum" directory.   That just
+	# affects a handful of include paths for including the generated BuildInfo.h
+	# file, which is generated in a different location after the merger, because
+	# we have no need for multiple versions anymore.
+	#
+	# TODO - When we are "over the transition" this needs to be stripped out again.
+	add_definitions(-DETH_AFTER_REPOSITORY_MERGE)
+
 	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
 	# Common code has no business knowing which application it is part of.
 	add_definitions(-DETH_TRUE)
