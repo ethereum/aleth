@@ -12,7 +12,6 @@ outputDirectory=../cpp-ethereum-recreated
 
 rm    -rf $outputDirectory
 mkdir -p  $outputDirectory
-mkdir -p  $outputDirectory/alethzero/
 mkdir -p  $outputDirectory/test/
 
 # alethzero intentionally omitted
