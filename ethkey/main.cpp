@@ -27,7 +27,11 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/Log.h>
 #include <libethcore/KeyManager.h>
+#if ETH_AFTER_REPOSITORY_MERGE
+#include "cpp-ethereum/BuildInfo.h"
+#else
 #include "ethereum/BuildInfo.h"
+#endif // ETH_AFTER_REPOSITORY_MERGE
 #include "KeyAux.h"
 using namespace std;
 using namespace dev;
