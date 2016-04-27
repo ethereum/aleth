@@ -24,10 +24,6 @@ include(EthUtils)
 include(EthOptions)
 configure_project(CPUID CURL ETHASHCL EVMJIT FATDB GUI MINIUPNPC OLYMPIC ROCKSDB PARANOID SOLIDITY TESTS VMTRACE)
 
-if (GUI)
-#    add_subdirectory(alethzero)
-endif()
-
 add_subdirectory(eth)
 add_subdirectory(libdevcore)
 add_subdirectory(libdevcrypto)
