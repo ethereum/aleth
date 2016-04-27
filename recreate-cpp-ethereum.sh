@@ -100,21 +100,28 @@ rsync -r ./LICENSE                        $outputDirectory/LICENSE
 rsync -r ./nameeach.sh                    $outputDirectory/nameeach.sh
 rsync -r ./new.sh                         $outputDirectory/new.sh
 rsync -r ./push.sh                        $outputDirectory/push.sh
+# qtcreator-style intentionally omitted.
 rsync -r ./sanitizer-blacklist.txt        $outputDirectory/sanitizer-blacklist.txt
 rsync -r ./sync.sh                        $outputDirectory/sync.sh
 
-# These CMakeLists.txt were manually synthesized by Bob.
-curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/CMakeLists.txt > $outputDirectory/CMakeLists.txt
-curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/test/CMakeLists.txt > $outputDirectory/test/CMakeLists.txt
+# These are hacks to overwrite BuildInfo.h conditionals which haven't been upstreamed yet,
+# so instead I am just curl-ing them in directly from my own working branch.
+# TODO - Need to upstream my edits from https://github.com/bobsummerwill/cpp-ethereum/commits/merge_repos.
+curl https://raw.githubusercontent.com/bobsummerwill/libethereum/repo_merge/ethkey/main.cpp > $outputDirectory/ethkey/main.cpp
+curl https://raw.githubusercontent.com/bobsummerwill/libethereum/repo_merge/ethminer/MinerAux.h > $outputDirectory/ethminer/MinerAux.h
+curl https://raw.githubusercontent.com/bobsummerwill/libweb3core/merge_repos/libdevcore/Common.cpp > $outputDirectory/libdevcore/Common.cpp
+curl https://raw.githubusercontent.com/bobsummerwill/webthree/repo_merge/libwebthree/WebThree.cpp > $outputDirectory/libwebthree/WebThree.cpp
 
-# This README.md is going to need to be manually updated to reflect the new repo organizational reality,
-# which will need to be some kind of merger of the README.md content from cpp-ethereum and from webthree-umbrella.
+# These files cannot be upstreamed, but instead need to be manually maintained and then dropped into 'cpp-ethereum' when we merge.
+# These CMakeLists.txt were manually synthesized by Bob.
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/cmake/EthOptions.cmake > $outputDirectory/cmake/EthOptions.cmake
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/CMakeLists.txt > $outputDirectory/CMakeLists.txt
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/README.md > $outputDirectory/README.md
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/test/CMakeLists.txt > $outputDirectory/test/CMakeLists.txt
 
 # TODO - evmjit submodule will need "hooking up", for now we'll just git clone it into a local directory to get
 # the content we need for testing.
 git clone https://github.com/ethereum/evmjit $outputDirectory/evmjit
 
-# TODO - Need to upstream my edits from https://github.com/bobsummerwill/cpp-ethereum/commits/merge_repos.
 # TODO - Move Contributing and coding standards to http://ethdocs.org
 # TODO - Where will qtcreator-style go?   Ditto for res folder.
