@@ -22,7 +22,11 @@
 #include "Common.h"
 #include "Exceptions.h"
 #include "Log.h"
+#if ETH_AFTER_REPOSITORY_MERGE
+#include "cpp-ethereum/BuildInfo.h"
+#else
 #include "dev/BuildInfo.h"
+#endif // ETH_AFTER_REPOSITORY_MERGE
 using namespace std;
 using namespace dev;
 
