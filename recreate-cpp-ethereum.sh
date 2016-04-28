@@ -12,16 +12,12 @@ outputDirectory=../cpp-ethereum-recreated
 
 rm    -rf $outputDirectory
 mkdir -p  $outputDirectory
-mkdir -p  $outputDirectory/alethzero/
 mkdir -p  $outputDirectory/test/
 
-rsync -r ./alethzero/alethzero/           $outputDirectory/alethzero/alethzero/
-rsync -r ./alethzero/libaleth/            $outputDirectory/alethzero/libaleth/
-rsync    ./alethzero/CMakeLists.txt       $outputDirectory/alethzero/CMakeLists.txt
+# alethzero intentionally omitted
 rsync -r ./dependency_graph/              $outputDirectory/dependency_graph/
 rsync -r ./doc/                           $outputDirectory/doc/
 rsync -r ./docker/                        $outputDirectory/docker/
-rsync -r ./libethereum/ConfigInfo.h.in    $outputDirectory/ConfigInfo.h.in
 rsync -r ./libethereum/ethkey/            $outputDirectory/ethkey/
 rsync -r ./libethereum/ethminer/          $outputDirectory/ethminer/
 rsync -r ./libethereum/ethvm/             $outputDirectory/ethvm/
@@ -63,8 +59,11 @@ rsync -r ./libweb3core/test/libdevcrypto/ $outputDirectory/test/libdevcrypto/
 rsync -r ./libweb3core/test/libp2p/       $outputDirectory/test/libp2p/
 rsync -r ./libweb3core/test/memorydb.cpp  $outputDirectory/test/memorydb.cpp
 rsync -r ./libweb3core/test/overlaydb.cpp $outputDirectory/test/overlaydb.cpp
-rsync -r ./libweb3core/test/test.cpp      $outputDirectory/test/test.cpp
-rsync -r ./libweb3core/test/test.h        $outputDirectory/test/test.h
+# libweb3core/test/test.cpp and test.h intentionally omitted because they clash with boosttest.cpp from libethereum/test.
+# mix intentionally omitted
+# res intentionally omitted
+# solidity intentionally omitted
+# web3.js intentionally omitted
 rsync -r ./webthree/eth/                  $outputDirectory/eth/
 rsync -r ./webthree/libweb3jsonrpc/       $outputDirectory/libweb3jsonrpc/
 rsync -r ./webthree/libwebthree/          $outputDirectory/libwebthree/
@@ -79,6 +78,13 @@ rsync -r ./webthree-helpers/js/           $outputDirectory/js/
 rsync -r ./webthree-helpers/scripts/      $outputDirectory/scripts/
 rsync -r ./webthree-helpers/templates/    $outputDirectory/templates/
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
+# intentionally left /webthree-helpers root files behind: (LICENSE, new.sh, README.md)
+# TODO /webthree-helpers/cmake has (LICENSE, README.md), but why?
+# TODO /webthree-helpers/homebrew has (LICENSE, README.md), but why?
+# Tried unsuccessfully to delete homebrew ones.   Needed in some release flow?
+
+# Loose files in the root directory of webthree-umbrella.
+# TODO - Move all these loose scripts in the root into /scripts
 rsync -r ./astylerc                       $outputDirectory/astylerc
 rsync -r ./CodingStandards.txt            $outputDirectory/CodingStandards.txt
 rsync -r ./CONTRIBUTING.md                $outputDirectory/CONTRIBUTING.md
@@ -91,16 +97,20 @@ rsync -r ./LICENSE                        $outputDirectory/LICENSE
 rsync -r ./nameeach.sh                    $outputDirectory/nameeach.sh
 rsync -r ./new.sh                         $outputDirectory/new.sh
 rsync -r ./push.sh                        $outputDirectory/push.sh
+# qtcreator-style intentionally omitted.
 rsync -r ./sanitizer-blacklist.txt        $outputDirectory/sanitizer-blacklist.txt
 rsync -r ./sync.sh                        $outputDirectory/sync.sh
 
-# TODO - evmjit submodule
+# These files cannot be upstreamed, but instead need to be manually maintained and then dropped into 'cpp-ethereum' when we merge.
+# These CMakeLists.txt were manually synthesized by Bob.
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/cmake/EthOptions.cmake > $outputDirectory/cmake/EthOptions.cmake
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/CMakeLists.txt > $outputDirectory/CMakeLists.txt
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/README.md > $outputDirectory/README.md
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/test/CMakeLists.txt > $outputDirectory/test/CMakeLists.txt
+
+# TODO - evmjit submodule will need "hooking up", for now we'll just git clone it into a local directory to get
+# the content we need for testing.
 git clone https://github.com/ethereum/evmjit $outputDirectory/evmjit
 
-# TODO - Need to upstream my edits from https://github.com/bobsummerwill/cpp-ethereum/commits/merge_repos.
-# TODO - README.md
-# TODO - Synthesized composite CMakeList.txt files (root directory and test directory)
 # TODO - Move Contributing and coding standards to http://ethdocs.org
-# TODO - Move all these loose scripts in the root into /scripts
-# TODO - Try to get astyle working, or switch to clang-format
 # TODO - Where will qtcreator-style go?   Ditto for res folder.
