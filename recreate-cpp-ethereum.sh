@@ -18,7 +18,6 @@ mkdir -p  $outputDirectory/test/
 rsync -r ./dependency_graph/              $outputDirectory/dependency_graph/
 rsync -r ./doc/                           $outputDirectory/doc/
 rsync -r ./docker/                        $outputDirectory/docker/
-rsync -r ./libethereum/ConfigInfo.h.in    $outputDirectory/ConfigInfo.h.in
 rsync -r ./libethereum/ethkey/            $outputDirectory/ethkey/
 rsync -r ./libethereum/ethminer/          $outputDirectory/ethminer/
 rsync -r ./libethereum/ethvm/             $outputDirectory/ethvm/
@@ -60,8 +59,7 @@ rsync -r ./libweb3core/test/libdevcrypto/ $outputDirectory/test/libdevcrypto/
 rsync -r ./libweb3core/test/libp2p/       $outputDirectory/test/libp2p/
 rsync -r ./libweb3core/test/memorydb.cpp  $outputDirectory/test/memorydb.cpp
 rsync -r ./libweb3core/test/overlaydb.cpp $outputDirectory/test/overlaydb.cpp
-rsync -r ./libweb3core/test/test.cpp      $outputDirectory/test/test.cpp
-rsync -r ./libweb3core/test/test.h        $outputDirectory/test/test.h
+# libweb3core/test/test.cpp and test.h intentionally omitted because they clash with boosttest.cpp from libethereum/test.
 # mix intentionally omitted
 # res intentionally omitted
 # solidity intentionally omitted
@@ -102,14 +100,6 @@ rsync -r ./push.sh                        $outputDirectory/push.sh
 # qtcreator-style intentionally omitted.
 rsync -r ./sanitizer-blacklist.txt        $outputDirectory/sanitizer-blacklist.txt
 rsync -r ./sync.sh                        $outputDirectory/sync.sh
-
-# These are hacks to overwrite BuildInfo.h conditionals which haven't been upstreamed yet,
-# so instead I am just curl-ing them in directly from my own working branch.
-# TODO - Need to upstream my edits from https://github.com/bobsummerwill/cpp-ethereum/commits/merge_repos.
-curl https://raw.githubusercontent.com/bobsummerwill/libethereum/repo_merge/ethkey/main.cpp > $outputDirectory/ethkey/main.cpp
-curl https://raw.githubusercontent.com/bobsummerwill/libethereum/repo_merge/ethminer/MinerAux.h > $outputDirectory/ethminer/MinerAux.h
-curl https://raw.githubusercontent.com/bobsummerwill/libweb3core/merge_repos/libdevcore/Common.cpp > $outputDirectory/libdevcore/Common.cpp
-curl https://raw.githubusercontent.com/bobsummerwill/webthree/repo_merge/libwebthree/WebThree.cpp > $outputDirectory/libwebthree/WebThree.cpp
 
 # These files cannot be upstreamed, but instead need to be manually maintained and then dropped into 'cpp-ethereum' when we merge.
 # These CMakeLists.txt were manually synthesized by Bob.
