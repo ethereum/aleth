@@ -4,7 +4,7 @@
 # Emscripten is a way to compile C/C++ to JavaScript.
 #
 # This build script is supposed to be run on ubuntu, it might fail
-# in other systems (pull requests apprechiated!)
+# in other systems (pull requests appreciated!)
 #
 # Run this script inside a checkout of webthree-umbrella, i.e.
 # git clone --recursive -b develop https://github.com/ethereum/webthree-umbrella
