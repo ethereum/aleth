@@ -28,6 +28,6 @@ set(CPUID_LIBRARIES ${CPUID_LIBRARY})
 # handle the QUIETLY and REQUIRED arguments and set CPUID_FOUND to TRUE
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(Cpuid DEFAULT_MSG CPUID_INCLUDE_DIR CPUID_LIBRARY)
+find_package_handle_standard_args(Cpuid DEFAULT_MSG CPUID_LIBRARY CPUID_INCLUDE_DIR)
 mark_as_advanced (CPUID_INCLUDE_DIR CPUID_LIBRARY)
 

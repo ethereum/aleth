@@ -45,6 +45,6 @@ endif()
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(leveldb DEFAULT_MSG
-	LEVELDB_INCLUDE_DIR LEVELDB_LIBRARY)
+	LEVELDB_LIBRARY LEVELDB_INCLUDE_DIR)
 mark_as_advanced (LEVELDB_INCLUDE_DIR LEVELDB_LIBRARY)
 

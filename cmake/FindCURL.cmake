@@ -52,6 +52,6 @@ endif()
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(CURL DEFAULT_MSG
-	CURL_INCLUDE_DIR CURL_LIBRARY)
+	CURL_LIBRARY CURL_INCLUDE_DIR)
 mark_as_advanced (CURL_INCLUDE_DIR CURL_LIBRARY)
 

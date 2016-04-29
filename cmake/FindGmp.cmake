@@ -29,6 +29,6 @@ set(GMP_LIBRARIES ${GMP_LIBRARY})
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(gmp DEFAULT_MSG
-	GMP_INCLUDE_DIR GMP_LIBRARY)
+	GMP_LIBRARY GMP_INCLUDE_DIR)
 mark_as_advanced (GMP_INCLUDE_DIR GMP_LIBRARY)
 
