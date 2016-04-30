@@ -4,7 +4,7 @@ set(EXECUTABLE ethminer)
 
 file(GLOB HEADERS "*.h")
 
-add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+eth_simple_add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 eth_use(${EXECUTABLE} REQUIRED JsonRpc::Client Eth::ethashseal)
 
