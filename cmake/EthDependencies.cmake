@@ -70,6 +70,23 @@ elseif (UNIX)
 
 endif()
 
+set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
+
+if(STATIC_LINKING)
+	set(Boost_USE_STATIC_LIBS ON)
+	set(Boost_USE_STATIC_RUNTIME ON)
+
+	set(OpenSSL_USE_STATIC_LIBS ON)
+
+	if(MSVC)
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	else()
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a )
+	endif()
+
+	set(ETH_STATIC ON)
+endif()
+
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
 
 eth_show_dependency(Boost boost)

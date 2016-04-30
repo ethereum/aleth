@@ -43,6 +43,16 @@ macro(eth_add_executable EXECUTABLE)
 
 endmacro()
 
+macro(eth_simple_add_executable EXECUTABLE SRC_LIST HEADERS)
+	add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+
+	if (STATIC_LINKING)
+		set(CMAKE_EXE_LINKER_FLAGS "-static ${CMAKE_EXE_LINKER_FLAGS}")
+		set_target_properties(${EXECUTABLE} PROPERTIES LINK_SEARCH_START_STATIC 1)
+		set_target_properties(${EXECUTABLE} PROPERTIES LINK_SEARCH_END_STATIC 1)
+	endif()
+endmacro()
+
 macro(eth_copy_dll EXECUTABLE DLL)
 	# dlls must be unsubstitud list variable (without ${}) in format
 	# optimized;path_to_dll.dll;debug;path_to_dlld.dll
