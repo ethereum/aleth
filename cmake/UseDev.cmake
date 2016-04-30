@@ -28,7 +28,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 			target_link_libraries(${TARGET} ${Boost_DATE_TIME_LIBRARIES})
 		endif()
 
-		if (NOT DEFINED MSVC)
+		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
 			target_link_libraries(${TARGET} pthread)
 		endif()
 	endif()

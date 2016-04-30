@@ -44,6 +44,6 @@ endif()
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(RocksDB DEFAULT_MSG
-	ROCKSDB_INCLUDE_DIR ROCKSDB_LIBRARY)
+	ROCKS_DB_LIBRARY ROCKSDB_INCLUDE_DIR)
 mark_as_advanced (ROCKSDB_INCLUDE_DIR ROCKSDB_LIBRARY)
 

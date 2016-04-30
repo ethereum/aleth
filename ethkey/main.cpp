@@ -27,7 +27,11 @@
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/Log.h>
 #include <libethcore/KeyManager.h>
+#if ETH_AFTER_REPOSITORY_MERGE
 #include "cpp-ethereum/BuildInfo.h"
+#else
+#include "ethereum/BuildInfo.h"
+#endif // ETH_AFTER_REPOSITORY_MERGE
 #include "KeyAux.h"
 using namespace std;
 using namespace dev;
@@ -51,7 +55,7 @@ void help()
 void version()
 {
 	cout << "ethkey version " << dev::Version << endl;
-//	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
+	cout << "Build: " << DEV_QUOTED(ETH_BUILD_PLATFORM) << "/" << DEV_QUOTED(ETH_BUILD_TYPE) << endl;
 	exit(0);
 }
 

@@ -29,7 +29,11 @@
 #include <libethereum/EthereumHost.h>
 #include <libwhisper/WhisperHost.h>
 #include <libethashseal/EthashClient.h>
+#if ETH_AFTER_REPOSITORY_MERGE
 #include "cpp-ethereum/BuildInfo.h"
+#else
+#include <ethereum/BuildInfo.h>
+#endif // ETH_AFTER_REPOSITORY_MERGE
 #include <libethashseal/Ethash.h>
 #include "Swarm.h"
 #include "Support.h"
