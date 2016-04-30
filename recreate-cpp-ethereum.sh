@@ -85,19 +85,13 @@ rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
 
 # Loose files in the root directory of webthree-umbrella.
 # TODO - Move all these loose scripts in the root into /scripts
-rsync -r ./astylerc                       $outputDirectory/astylerc
+# CMakeLists.txt intentionally omitted.
 rsync -r ./CodingStandards.txt            $outputDirectory/CodingStandards.txt
 rsync -r ./CONTRIBUTING.md                $outputDirectory/CONTRIBUTING.md
-rsync -r ./diffscript.sh                  $outputDirectory/diffscript.sh
-rsync -r ./foreach.sh                     $outputDirectory/foreach.sh
-rsync -r ./getcoverage.sh                 $outputDirectory/getcoverage.sh
-rsync -r ./getdev.sh                      $outputDirectory/getdev.sh
 rsync -r ./GPLV3_LICENSE                  $outputDirectory/GPLV3_LICENSE
 rsync -r ./LICENSE                        $outputDirectory/LICENSE
-rsync -r ./nameeach.sh                    $outputDirectory/nameeach.sh
-rsync -r ./new.sh                         $outputDirectory/new.sh
-rsync -r ./push.sh                        $outputDirectory/push.sh
 # qtcreator-style intentionally omitted.
+# README.md intentionally omitted.
 rsync -r ./sanitizer-blacklist.txt        $outputDirectory/sanitizer-blacklist.txt
 rsync -r ./sync.sh                        $outputDirectory/sync.sh
 
