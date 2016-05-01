@@ -147,7 +147,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 		fi
 	else
 		echo "ETHBINARIES - INFO: Building MacOSX binaries.";
-		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=RelWithDebInfo
+		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBINARIES - ERROR: cmake configure phase failed.";
 			exit 1
@@ -183,7 +183,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 	fi
 else
 	echo "ETHBINARIES - INFO: Building for Linux ...";
-	cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+	cmake .. -DCMAKE_BUILD_TYPE=Release
 	make -j4
 	if [[ $? -ne 0 ]]; then
 		echo "ETHBINARIES - ERROR: Make  for Linux failed.";
