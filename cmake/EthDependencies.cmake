@@ -72,7 +72,15 @@ endif()
 
 set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
 
-if(STATIC_LINKING)
+if (STATIC_LINKING)
+
+	if (APPLE)
+		message(FATAL_ERROR "\
+Apple does not support statically linked binaries on OS X.
+See https://developer.apple.com/library/mac/qa/qa1118/_index.html for more info.
+		")
+	endif()
+
 	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_STATIC_RUNTIME ON)
 
