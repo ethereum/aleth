@@ -175,7 +175,7 @@ extern "C" __declspec(dllimport) void __stdcall OutputDebugStringA(const char* l
 
 string dev::getThreadName()
 {
-#if defined(__linux__) || defined(__APPLE__)
+#if defined(__APPLE__)
 	char buffer[128];
 	pthread_getname_np(pthread_self(), buffer, 127);
 	buffer[127] = 0;
@@ -187,9 +187,7 @@ string dev::getThreadName()
 
 void dev::setThreadName(string const& _n)
 {
-#if defined(__linux__)
-	pthread_setname_np(pthread_self(), _n.c_str());
-#elif defined(__APPLE__)
+#if defined(__APPLE__)
 	pthread_setname_np(_n.c_str());
 #else
 	g_logThreadName.m_name.reset(new std::string(_n));
