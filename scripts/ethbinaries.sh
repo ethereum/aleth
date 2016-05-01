@@ -131,7 +131,7 @@ if [[ $OSTYPE == "cygwin" ]]; then
 	exit 1
 	fi
 	# "${MSBUILD_EXECUTABLE}" cpp-ethereum.sln /p:Configuration=Release /t:PACKAGE /m:${MAKE_CORES}
-	cmake --build . --target package -- /m:${MAKE_CORES} /p:Configuration=Release
+	cmake --build . --target package -- /m:${MAKE_CORES} /p:Configuration=RelWithDebInfo
 	if [[ $? -ne 0 ]]; then
 		echo "ETHBINARIES - ERROR: Building binaries for Windows failed.";
 		exit 1
@@ -147,7 +147,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 		fi
 	else
 		echo "ETHBINARIES - INFO: Building MacOSX binaries.";
-		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Release
+		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=RelWithDebInfo
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBINARIES - ERROR: cmake configure phase failed.";
 			exit 1
@@ -183,7 +183,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 	fi
 else
 	echo "ETHBINARIES - INFO: Building for Linux ...";
-	cmake .. -DCMAKE_BUILD_TYPE=Release
+	cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
 	make -j4
 	if [[ $? -ne 0 ]]; then
 		echo "ETHBINARIES - ERROR: Make  for Linux failed.";
