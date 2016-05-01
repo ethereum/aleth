@@ -43,7 +43,7 @@ macro(eth_add_executable EXECUTABLE)
 
 endmacro()
 
-macro(eth_simple_add_executable EXECUTABLE SRC_LIST HEADERS)
+macro(eth_simple_add_executable EXECUTABLE)
 	add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 
 	if (STATIC_LINKING)
