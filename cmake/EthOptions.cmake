@@ -1,6 +1,12 @@
 macro(configure_project)
 	set(NAME ${PROJECT_NAME})
 
+	# Default to RelWithDebInfo configuration if no configuration is explicitly specified.
+	if (NOT CMAKE_BUILD_TYPE)
+		set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+	endif()
+	
 	# features
 	eth_default_option(VMTRACE OFF)
 	eth_default_option(PROFILING OFF)
