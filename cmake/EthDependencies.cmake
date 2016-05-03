@@ -74,22 +74,35 @@ set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
 
 if (STATIC_LINKING)
 
-	if (APPLE)
-		message(FATAL_ERROR "\
-Apple does not support statically linked binaries on OS X.
-See https://developer.apple.com/library/mac/qa/qa1118/_index.html for more info.
-		")
-	endif()
-
 	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_STATIC_RUNTIME ON)
 
 	set(OpenSSL_USE_STATIC_LIBS ON)
 
-	if(MSVC)
+	if (MSVC)
+		# TODO - Why would we need .a on Windows?  Maybe some Cygwin-ism.
+		# When I work through Windows static linkage, I will remove this,
+		# if that is possible.
 		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	elseif (APPLE)
+		# At the time of writing, we are still only PARTIALLY statically linked
+		# on OS X, with a mixture of statically linked external libraries where
+		# those are available, and dynamically linked where that is the only
+		# option we have.    Ultimately, the aim would be for everything except
+		# the runtime libraries to be statically linked.
+		#
+		# Still TODO:
+		# - jsoncpp
+		# - json-rpc-cpp
+		# - leveldb (which pulls in snappy, for the dylib at ;east)
+		# - miniupnp
+		# - gmp
+		#
+		# Two further libraries (curl and zlib) ship as dylibs with the platform
+		# but again we could build from source and statically link these too.
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib)
 	else()
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .a )
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
 	endif()
 
 	set(ETH_STATIC ON)
