@@ -98,6 +98,28 @@ public:
 };
 
 /// Set the current thread's log name.
+///
+/// It appears that there is not currently any cross-platform way of setting
+/// thread names either in Boost or in the C++11 runtime libraries.   What is
+/// more, the API for 'pthread_setname_np' is not even consistent across
+/// platforms which implement it.
+///
+/// A proposal to add such functionality on the Boost mailing list, which
+/// I assume never happened, but which I should follow-up and ask about.
+/// http://boost.2283326.n4.nabble.com/Adding-an-option-to-set-the-name-of-a-boost-thread-td4638283.html
+///
+/// man page for 'pthread_setname_np', including this crucial snippet of
+/// information ... "These functions are nonstandard GNU extensions."
+/// http://man7.org/linux/man-pages/man3/pthread_setname_np.3.html
+///
+/// Stack Overflow "Can I set the name of a thread in pthreads / linux?"
+/// which includes useful information on the minor API differences between
+/// Linux, BSD and OS X.
+/// http://stackoverflow.com/questions/2369738/can-i-set-the-name-of-a-thread-in-pthreads-linux/7989973#7989973
+///
+/// musl mailng list posting "pthread set name on MIPs" which includes the
+/// information that musl doesn't currently implement 'pthread_setname_np'
+/// https://marc.info/?l=musl&m=146171729013062&w=1
 void setThreadName(std::string const& _n);
 
 /// Set the current thread's log name.
