@@ -38,7 +38,7 @@ typedef u256 vmword;
 typedef s512 soword;
 typedef u512 uoword;
 	
-// checked generic convertions
+// checked generic conversions
 template<class T> static rmword to_rmword(T v) { if (rmword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return rmword(v); }
 template<class T> static uoword to_uoword(T v) { if (uoword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return uoword(v); }
 template<class T> static soword to_soword(T v) { if (soword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return soword(v); }
@@ -99,10 +99,13 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	Instruction inst;
 	uint64_t PC = 0;
 	u256* SP = m_stack - 1;
 	
+	Instruction inst;
+	static const auto c_metrics = metrics();
+	InstructionMetric metric = c_metrics[0];
+
 	m_schedule = &_ext.evmSchedule();
 	rmword runGas = 0, newTempSize = 0, copySize = 0;
 	uint64_t m_steps = 0;
@@ -158,7 +161,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		return to_rmword(_size ? (uoword)_offset + _size : uoword(0));
 	};
 	
-	auto gasForMem = [=](uoword _size) -> uoword
+	auto gasForMem = [&](uoword _size) -> uoword
 	{
 		uoword s = _size / 32;
 		return to_rmword((uoword)m_schedule->memoryGas * s + s * s / m_schedule->quadCoeffDiv);
@@ -196,13 +199,10 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 
 	auto copyDataToMemory= [&](bytesConstRef _data)
 	{
-		auto offset = static_cast<size_t>(*SP);
-		--SP;
-		soword bigIndex = *SP;
+		auto offset = static_cast<size_t>(*SP--);
+		soword bigIndex = *SP--;
 		auto index = static_cast<size_t>(bigIndex);
-		--SP;
-		auto size = static_cast<size_t>(*SP);
-		--SP;
+		auto size = static_cast<size_t>(*SP--);
 	
 		size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
 	
@@ -211,20 +211,98 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		if (size > sizeToBeCopied)
 			std::memset(m_mem.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
 	};
+	
+	//
+	// closures for some big interpreter cases
+	//
+	
+	auto case_create = [&]()
+	{
+		newTempSize = memNeed(*(SP-1), *(SP-2));
+		runGas = to_rmword(m_schedule->createGas);
+		resetMem();
+		onOperation();
+		resetIOGas();
+		
+		auto const& endowment = *SP--;
+		unsigned initOff = (unsigned)*SP--;
+		unsigned initSize = (unsigned)*SP--;
+		
+		if (_ext.balance(_ext.myAddress) >= endowment && _ext.depth < 1024)
+		*++SP = (u160)_ext.create(endowment, io_gas, bytesConstRef(m_mem.data() + initOff, initSize), _onOp);
+		else
+		*++SP = 0;
+	};
+	
+	auto case_call = [&]()
+	{
+		runGas = to_rmword(to_uoword(*SP) + m_schedule->callGas);
+	
+		if (inst == Instruction::CALL && !_ext.exists(asAddress(*(SP-1))))
+			runGas += to_rmword(m_schedule->callNewAccountGas);
+	
+		if (inst != Instruction::DELEGATECALL && *(SP-2) > 0)
+			runGas += to_rmword(m_schedule->callValueTransferGas);
+	
+		unsigned sizesOffset = inst == Instruction::DELEGATECALL ? 3 : 4;
+		newTempSize = std::max(
+			memNeed(m_stack[(1 + SP - m_stack) - sizesOffset - 2], m_stack[(1 + SP - m_stack) - sizesOffset - 3]),
+			memNeed(m_stack[(1 + SP - m_stack) - sizesOffset], m_stack[(1 + SP - m_stack) - sizesOffset - 1])
+		);
+		resetMem();
+		onOperation();
+		resetIOGas();
+
+		unique_ptr<CallParameters> callParams(new CallParameters());
+
+		callParams->gas = *SP;
+		if (inst != Instruction::DELEGATECALL && *(SP-2) > 0)
+			callParams->gas += m_schedule->callStipend;
+		--SP;
+
+		callParams->codeAddress = asAddress(*SP);
+		--SP;
+
+		if (inst == Instruction::DELEGATECALL)
+		{
+			callParams->apparentValue = _ext.value;
+			callParams->valueTransfer = 0;
+		}
+		else
+		{
+			callParams->apparentValue = callParams->valueTransfer = *SP;
+			--SP;
+		}
+
+		unsigned inOff = (unsigned)*SP--;
+		unsigned inSize = (unsigned)*SP--;
+		unsigned outOff = (unsigned)*SP--;
+		unsigned outSize = (unsigned)*SP--;
+
+		if (_ext.balance(_ext.myAddress) >= callParams->valueTransfer && _ext.depth < 1024)
+		{
+			callParams->onOp = _onOp;
+			callParams->senderAddress = inst == Instruction::DELEGATECALL ? _ext.caller : _ext.myAddress;
+			callParams->receiveAddress = inst == Instruction::CALL ? callParams->codeAddress : _ext.myAddress;
+			callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);
+			callParams->out = bytesRef(m_mem.data() + outOff, outSize);
+			*++SP = _ext.call(*callParams);
+		}
+		else
+			*++SP = 0;
+
+		io_gas += callParams->gas;
+	};
+	
 
 	//
 	// the interpreter, itself
 	//
 
-	static const auto c_metrics = metrics();
-	m_steps = 0;	
 	for (;;)
 	{
-		Instruction inst = (Instruction)_ext.getCode(PC);	
-		auto& metric = c_metrics[static_cast<size_t>(inst)];
-
-//		if (metric.gasPriceTier == InvalidTier)
-//			BOOST_THROW_EXCEPTION(BadInstruction());
+		inst = (Instruction)_ext.getCode(PC);	
+		metric = c_metrics[static_cast<size_t>(inst)];
 		
 		checkStack(metric.args, metric.ret);
 		
@@ -241,26 +319,8 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		//
 		
 		case Instruction::CREATE:
-		{
-			newTempSize = memNeed(*(SP-1), *(SP-2));
-			runGas = to_rmword(m_schedule->createGas);
-			resetMem();
-			onOperation();
-			resetIOGas();
-		
-			auto const& endowment = *SP;
-			--SP;
-			unsigned initOff = (unsigned)*SP;
-			--SP;
-			unsigned initSize = (unsigned)*SP;
-			--SP;
-
-			if (_ext.balance(_ext.myAddress) >= endowment && _ext.depth < 1024)
-				*++SP = (u160)_ext.create(endowment, io_gas, bytesConstRef(m_mem.data() + initOff, initSize), _onOp);
-			else
-				*++SP = 0;
+			case_create();
 			break;
-		}
 
 		case Instruction::DELEGATECALL:
 
@@ -271,66 +331,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		case Instruction::CALL:
 		case Instruction::CALLCODE:		
 		{
-			runGas = to_rmword(to_uoword(*SP) + m_schedule->callGas);
-		
-			if (inst == Instruction::CALL && !_ext.exists(asAddress(*(SP-1))))
-				runGas += to_rmword(m_schedule->callNewAccountGas);
-		
-			if (inst != Instruction::DELEGATECALL && *(SP-2) > 0)
-				runGas += to_rmword(m_schedule->callValueTransferGas);
-		
-			unsigned sizesOffset = inst == Instruction::DELEGATECALL ? 3 : 4;
-			newTempSize = std::max(
-				memNeed(m_stack[(1 + SP - m_stack) - sizesOffset - 2], m_stack[(1 + SP - m_stack) - sizesOffset - 3]),
-				memNeed(m_stack[(1 + SP - m_stack) - sizesOffset], m_stack[(1 + SP - m_stack) - sizesOffset - 1])
-			);
-			resetMem();
-			onOperation();
-			resetIOGas();
-
-			unique_ptr<CallParameters> callParams(new CallParameters());
-
-			callParams->gas = *SP;
-			if (inst != Instruction::DELEGATECALL && *(SP-2) > 0)
-				callParams->gas += m_schedule->callStipend;
-			--SP;
-
-			callParams->codeAddress = asAddress(*SP);
-			--SP;
-
-			if (inst == Instruction::DELEGATECALL)
-			{
-				callParams->apparentValue = _ext.value;
-				callParams->valueTransfer = 0;
-			}
-			else
-			{
-				callParams->apparentValue = callParams->valueTransfer = *SP;
-				--SP;
-			}
-
-			unsigned inOff = (unsigned)*SP;
-			--SP;
-			unsigned inSize = (unsigned)*SP;
-			--SP;
-			unsigned outOff = (unsigned)*SP;
-			--SP;
-			unsigned outSize = (unsigned)*SP;
-			--SP;
-
-			if (_ext.balance(_ext.myAddress) >= callParams->valueTransfer && _ext.depth < 1024)
-			{
-				callParams->onOp = _onOp;
-				callParams->senderAddress = inst == Instruction::DELEGATECALL ? _ext.caller : _ext.myAddress;
-				callParams->receiveAddress = inst == Instruction::CALL ? callParams->codeAddress : _ext.myAddress;
-				callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);
-				callParams->out = bytesRef(m_mem.data() + outOff, outSize);
-				*++SP = _ext.call(*callParams);
-			}
-			else
-				*++SP = 0;
-
-			io_gas += callParams->gas;
+			case_call();
 			break;
 		}
 
@@ -341,10 +342,8 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			onOperation();
 			resetIOGas();
 
-			unsigned b = (unsigned)*SP;
-			--SP;
-			unsigned s = (unsigned)*SP;
-			--SP;
+			unsigned b = (unsigned)*SP--;
+			unsigned s = (unsigned)*SP--;
 			return bytesConstRef(m_mem.data() + b, s);
 		}
 
@@ -412,10 +411,8 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			onOperation();
 			resetIOGas();
 
-			unsigned inOff = (unsigned)*SP;
-			--SP;
-			unsigned inSize = (unsigned)*SP;
-			--SP;
+			unsigned inOff = (unsigned)*SP--;
+			unsigned inSize = (unsigned)*SP--;
 			*++SP = (u256)sha3(bytesConstRef(m_mem.data() + inOff, inSize));
 			break;
 		}
@@ -472,8 +469,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			onOperation();
 			resetIOGas();
 
-			auto base = *SP;
-			--SP;
+			auto base = *SP--;
 			*SP = (vmword)boost::multiprecision::powm((bigint)base, (bigint)expon, bigint(1) << 256);
 			break;
 		}

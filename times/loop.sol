@@ -1,8 +1,8 @@
 contract loop {
-//    int N;
+    int N;
     function loop(){
-        for (int i = 0; i < 100000; ++i) {
+        for (int i = 0; i < 1000000; ++i) {
         }
-//        N = i;
+        N = i;
     }
 }
