@@ -28,8 +28,29 @@ using namespace dev::eth;
 
 // ethvm swallows exceptions
 //#undef BOOST_THROW_EXCEPTION
-//#define BOOST_THROW_EXCEPTION(X) (fprintf(stderr,"!!! %d EXCEPTION \n", __LINE__), exit(0))
+//#define BOOST_THROW_EXCEPTION(X) (fprintf(stderr,"!!! %d VM EXCEPTION %s\n", __LINE__, boost::diagnostic_information(X)), exit(0))
 
+// consolidate exception throws in hopes of not spraying their code all over interpreter
+void throwException(OutOfGas x)
+{
+	BOOST_THROW_EXCEPTION(x);
+}
+void throwException(StackUnderflow x)
+{
+	BOOST_THROW_EXCEPTION(x);
+}
+void throwException(OutOfStack x)
+{
+	BOOST_THROW_EXCEPTION(x);
+}
+void throwException(BadJumpDestination x)
+{
+	BOOST_THROW_EXCEPTION(x);
+}
+void throwException(BadInstruction x)
+{
+	BOOST_THROW_EXCEPTION(x);
+}
 
 // real machine word, virtual machine word, signed and unsigned overflow words
 typedef uint64_t mw64;
@@ -38,11 +59,13 @@ typedef u256 vmword;
 typedef s512 soword;
 typedef u512 uoword;
 	
-// checked generic conversions
-template<class T> static rmword to_rmword(T v) { if (rmword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return rmword(v); }
-template<class T> static uoword to_uoword(T v) { if (uoword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return uoword(v); }
-template<class T> static soword to_soword(T v) { if (soword(v) != v) BOOST_THROW_EXCEPTION(OutOfGas()); return soword(v); }
-
+// checked generic conversion
+template<class T> static rmword to_rmword(T v) {
+	rmword w = rmword(v); 
+	if (w != v)
+		throwException(OutOfGas());
+	return w;
+}
 
 struct InstructionMetric
 {
@@ -80,6 +103,7 @@ void VM::verifyJumpTable(ExtVMFace& _ext)
 		else if (inst >= (byte)Instruction::PUSH1 && inst <= (byte)Instruction::PUSH32)
 			i += inst - (byte)Instruction::PUSH1 + 1;
 	}
+	
 }
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
@@ -138,13 +162,13 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		{
 			if (m_onFail)
 				m_onFail();
-			BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_n, (bigint)size));
+			throwException(StackUnderflow() << RequirementError((bigint)_n, (bigint)size));
 		}
 		if ((size) - _n + _d > 1024)
 		{
 			if (m_onFail)
 				m_onFail();
-			BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)size));
+			throwException(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)size));
 		}
 	};
 	
@@ -152,13 +176,18 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	{
 		uint64_t pc = uint64_t(_dest);
 		if (!m_jumpDests.count(pc))
-			BOOST_THROW_EXCEPTION(BadJumpDestination());
+			throwException(BadJumpDestination());
 		return pc;
 	};
 
 	auto memNeed = [](vmword _offset, vmword _size)
 	{
 		return to_rmword(_size ? (uoword)_offset + _size : uoword(0));
+	};
+	
+	auto memMax = [](u256& mem) {
+		if (mem > 0x7FFFFFFFFFFFFFFF)
+			throwException(OutOfGas());
 	};
 	
 	auto gasForMem = [&](uoword _size) -> uoword
@@ -169,7 +198,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	
 	auto resetIOGas = [&]() {
 		if (io_gas < runGas)
-			BOOST_THROW_EXCEPTION(OutOfGas());
+			throwException(OutOfGas());
 		io_gas -= runGas;
 	};
 	
@@ -178,7 +207,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			runGas += to_rmword(gasForMem(newTempSize) - gasForMem(m_mem.size())) ;
 		runGas += to_rmword(m_schedule->copyGas * ((copySize + 31) / 32));
 		if (io_gas < runGas)
-			BOOST_THROW_EXCEPTION(OutOfGas());
+			throwException(OutOfGas());
 	};
 	
 	auto resetMem = [&]()
@@ -186,13 +215,13 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		newTempSize = (newTempSize + 31) / 32 * 32;
 		resetGas();
 		if (newTempSize > m_mem.size())
-			m_mem.resize((size_t)newTempSize);
+			m_mem.resize(newTempSize);
 	};
 
 	auto logGasMem = [&](Instruction inst)
 	{
 		unsigned n = (unsigned)inst - (unsigned)Instruction::LOG0;
-		runGas = to_rmword(m_schedule->logGas + m_schedule->logTopicGas * n + to_uoword(m_schedule->logDataGas) * *(SP-1));
+		runGas = to_rmword(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * *(SP-1));
 		newTempSize = memNeed(*SP, *(SP-1));
 		resetMem();
 	};
@@ -236,7 +265,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	
 	auto case_call = [&]()
 	{
-		runGas = to_rmword(to_uoword(*SP) + m_schedule->callGas);
+		runGas = to_rmword(u512(*SP) + m_schedule->callGas);
 	
 		if (inst == Instruction::CALL && !_ext.exists(asAddress(*(SP-1))))
 			runGas += to_rmword(m_schedule->callNewAccountGas);
@@ -326,7 +355,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 
 			// Pre-homestead
 			if (!m_schedule->haveDelegateCall && inst == Instruction::DELEGATECALL)
-				BOOST_THROW_EXCEPTION(BadInstruction());
+				throwException(BadInstruction());
 
 		case Instruction::CALL:
 		case Instruction::CALLCODE:		
@@ -370,6 +399,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 		
 		case Instruction::MLOAD:
 		{
+			memMax(*SP);
 			newTempSize = to_rmword(*SP) + 32;
 			resetMem();
 			onOperation();
@@ -381,6 +411,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 
 		case Instruction::MSTORE:
 		{
+			memMax(*SP);
 			newTempSize = to_rmword(*SP) + 32;
 			resetMem();
 			onOperation();
@@ -393,6 +424,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 
 		case Instruction::MSTORE8:
 		{
+			memMax(*SP);
 			newTempSize = to_rmword(*SP) + 1;
 			resetMem();
 			onOperation();
@@ -405,7 +437,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 
 		case Instruction::SHA3:
 		{
-			runGas = to_rmword(m_schedule->sha3Gas + (to_uoword(*(SP-1)) + 31) / 32 * m_schedule->sha3WordGas);
+			runGas = to_rmword(m_schedule->sha3Gas + (u512(*(SP-1)) + 31) / 32 * m_schedule->sha3WordGas);
 			newTempSize = memNeed(*SP, *(SP-1));
 			resetMem();
 			onOperation();
@@ -425,8 +457,8 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			_ext.log({}, bytesConstRef(m_mem.data() + (unsigned)*SP, (unsigned)*(SP-1)));
 			SP -= 2;
 			break;
-		case Instruction::LOG1:
 
+		case Instruction::LOG1:
 			logGasMem(inst);
 			onOperation();
 			resetIOGas();
@@ -627,7 +659,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			onOperation();
 			resetIOGas();
 
-			*(SP-2) = *(SP-2) ? vmword((to_uoword(*SP) + to_uoword(*(SP-1))) % *(SP-2)) : 0;
+			*(SP-2) = *(SP-2) ? vmword((u512(*SP) + u512(*(SP-1))) % *(SP-2)) : 0;
 			SP -= 2;
 			break;
 
@@ -635,7 +667,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			onOperation();
 			resetIOGas();
 
-			*(SP-2) = *(SP-2) ? vmword((to_uoword(*SP) * to_uoword(*(SP-1))) % *(SP-2)) : 0;
+			*(SP-2) = *(SP-2) ? vmword((u512(*SP) * u512(*(SP-1))) % *(SP-2)) : 0;
 			SP -= 2;
 			break;
 
@@ -699,7 +731,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			onOperation();
 			resetIOGas();
 
-			if (to_uoword(*SP) + 31 < _ext.data.size())
+			if (u512(*SP) + 31 < _ext.data.size())
 				*SP = (vmword)*(h256 const*)(_ext.data.data() + (size_t)*SP);
 			else if (*SP >= _ext.data.size())
 				*SP = vmword(0);
@@ -994,7 +1026,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 			break;
 
 		default:
-			BOOST_THROW_EXCEPTION(BadInstruction());
+			throwException(BadInstruction());
 		}
 		
 		++PC;
