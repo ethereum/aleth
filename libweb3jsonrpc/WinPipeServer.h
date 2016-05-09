@@ -27,6 +27,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <thread>
 #include <mutex>
 #include <unordered_set>
+#include <Windows.h>
 #include "IpcServerBase.h"
 
 namespace dev
