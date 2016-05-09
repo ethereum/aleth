@@ -28,7 +28,7 @@
 #pragma warning(disable:4244)
 #endif
 
-#ifdef _MSC_VER
+#if _MSC_VER && _MSC_VER < 1900
 #define _ALLOW_KEYWORD_MACROS
 #define noexcept throw()
 #endif
