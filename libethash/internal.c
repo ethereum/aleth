@@ -56,7 +56,7 @@ uint64_t ethash_get_cachesize(uint64_t const block_number)
 // Follows Sergio's "STRICT MEMORY HARD HASHING FUNCTIONS" (2014)
 // https://bitslog.files.wordpress.com/2013/12/memohash-v0-3.pdf
 // SeqMemoHash(s, R, N)
-bool static ethash_compute_cache_nodes(
+static bool ethash_compute_cache_nodes(
 	node* const nodes,
 	uint64_t cache_size,
 	ethash_h256_t const* seed
