@@ -59,10 +59,10 @@ typedef u256 vmword;
 typedef s512 soword;
 typedef u512 uoword;
 	
-// checked generic conversion
+// checked for too much gas or memory or failed conversion
 template<class T> static rmword to_rmword(T v) {
 	rmword w = rmword(v); 
-	if (w != v)
+	if (w > 0x7FFFFFFFFFFFFFFF || w != v)
 		throwException(OutOfGas());
 	return w;
 }
