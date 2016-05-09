@@ -70,10 +70,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
 
-		# Suppress warning "'static' is not at beginning of declaration" in ethash's internal.c(59)
-		# TODO - We should just fix the code.
-		set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-old-style-declaration")
-
 		# Check that we've got GCC 4.7 or newer.
 		execute_process(
 			COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
