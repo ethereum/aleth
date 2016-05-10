@@ -124,7 +124,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	uint64_t PC = 0;
-	u256* SP = m_stack - 1;
+	u256* SP = m_stack.data() - 1;
 	
 	Instruction inst;
 	static const auto c_metrics = metrics();
