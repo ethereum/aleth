@@ -31,9 +31,9 @@ std::string prettyU256(u256 _n, bool _abridged)
 	std::string raw;
 	std::ostringstream s;
 	if (!(_n >> 64))
-		s << " " << _n.convert_to<uint64_t>() << " (0x" << std::hex << _n.convert_to<uint64_t>() << ")";
+		s << " " << (uint64_t)_n << " (0x" << std::hex << (uint64_t)_n << ")";
 	else if (!~(_n >> 64))
-		s << " " << _n.convert_to<int64_t>() << " (0x" << std::hex << _n.convert_to<int64_t>() << ")";
+		s << " " << (int64_t)_n << " (0x" << std::hex << (int64_t)_n << ")";
 	else if ((_n >> 160) == 0)
 	{
 		Address a = right160(_n);
