@@ -77,7 +77,7 @@ private:
 	bytes m_mem;
 
 	// space for stack
-	std:array<u256, 1024> m_stack;
+	std:::array<u256, 1024> m_stack;
 
 	// state of the metering and memorizing
 	uint64_t runGas = 0;
