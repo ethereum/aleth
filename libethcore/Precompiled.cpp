@@ -57,7 +57,7 @@ ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, bytesRef _out)
 	u256 v = (u256)in.v;
 	if (v >= 27 && v <= 28)
 	{
-		SignatureStruct sig(in.r, in.s, (byte)(v.convert_to<int>() - 27));
+		SignatureStruct sig(in.r, in.s, (byte)((int)v - 27));
 		if (sig.isValid())
 		{
 			try

@@ -423,7 +423,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 	for (unsigned i = 0; i < itemCount; i++)
 	{
 		BlockHeader info(_r[i].data(), HeaderData);
-		unsigned blockNumber = info.number().convert_to<unsigned>();
+		unsigned blockNumber = static_cast<unsigned>(info.number());
 		if (haveItem(m_headers, blockNumber))
 		{
 			clog(NetMessageSummary) << "Skipping header " << blockNumber;
@@ -441,7 +441,7 @@ void BlockChainSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP
 		if (status == QueueStatus::Importing || status == QueueStatus::Ready || host().chain().isKnown(info.hash()))
 		{
 			m_haveCommonHeader = true;
-			m_lastImportedBlock = info.number().convert_to<unsigned>();
+			m_lastImportedBlock = (unsigned)info.number();
 			m_lastImportedBlockHash = info.hash();
 		}
 		else
@@ -648,7 +648,7 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 	auto h = info.hash();
 	DEV_GUARDED(_peer->x_knownBlocks)
 		_peer->m_knownBlocks.insert(h);
-	unsigned blockNumber = info.number().convert_to<unsigned>();
+	unsigned blockNumber = static_cast<unsigned>(info.number());
 	if (blockNumber > (m_lastImportedBlock + 1))
 	{
 		clog(NetAllDetail) << "Received unknown new block";
@@ -799,7 +799,7 @@ void BlockChainSync::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::v
 			unknowns++;
 			if (p.second > maxHeight)
 			{
-				maxHeight = p.second.convert_to<unsigned>();
+				maxHeight = (unsigned)p.second;
 				_peer->m_latestHash = h;
 			}
 		}

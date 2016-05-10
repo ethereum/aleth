@@ -269,10 +269,10 @@ public:
 	virtual void revert() {}
 
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
-	h256 blockHash(u256 _number) { return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ? envInfo().lastHashes()[(envInfo().number() - 1 - _number).convert_to<unsigned>()] : h256(); }
+	h256 blockHash(u256 _number) { return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ? envInfo().lastHashes()[(unsigned)(envInfo().number() - 1 - _number)] : h256(); }
 
 	/// Get the code at the given location in code ROM.
-	byte getCode(u256 _n) const { return _n < code.size() ? code[_n.convert_to<size_t>()] : 0; }
+	byte getCode(u256 _n) const { return _n < code.size() ? code[(size_t)_n] : 0; }
 
 	/// Get the execution environment information.
 	EnvInfo const& envInfo() const { return m_envInfo; }

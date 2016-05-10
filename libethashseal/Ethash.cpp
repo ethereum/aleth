@@ -74,7 +74,7 @@ strings Ethash::sealers() const
 
 h256 Ethash::seedHash(BlockHeader const& _bi)
 {
-	return EthashAux::seedHash(_bi.number().convert_to<unsigned>());
+	return EthashAux::seedHash((unsigned)_bi.number());
 }
 
 StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
@@ -195,7 +195,7 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 		target = _parent.difficulty() + _parent.difficulty() / 2048 * max<bigint>(1 - (bigint(_bi.timestamp()) - _parent.timestamp()) / 10, -99);
 
 	bigint o = target;
-	unsigned periodCount = (_parent.number() + 1).convert_to<unsigned>() / c_expDiffPeriod;
+	unsigned periodCount = unsigned(_parent.number() + 1) / c_expDiffPeriod;
 	if (periodCount > 1)
 		o += (bigint(1) << (periodCount - 2));	// latter will eventually become huge, so ensure it's a bigint.
 
@@ -221,7 +221,7 @@ bool Ethash::quickVerifySeal(BlockHeader const& _bi) const
 	auto b = boundary(_bi);
 	bool ret = !!ethash_quick_check_difficulty(
 		(ethash_h256_t const*)h.data(),
-		((u64)n).convert_to<uint64_t>(),
+		(uint64_t)(u64)n,
 		(ethash_h256_t const*)m.data(),
 		(ethash_h256_t const*)b.data());
 	return ret;
@@ -266,7 +266,7 @@ void Ethash::generateSeal(BlockHeader const& _bi)
 	m_farm.setWork(m_sealing);		// TODO: take out one before or one after...
 	bytes shouldPrecompute = option("precomputeDAG");
 	if (!shouldPrecompute.empty() && shouldPrecompute[0] == 1)
-		ensurePrecomputed(_bi.number().convert_to<unsigned>());
+		ensurePrecomputed((unsigned)_bi.number());
 }
 
 void Ethash::onSealGenerated(std::function<void(bytes const&)> const& _f)

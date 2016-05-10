@@ -46,7 +46,7 @@ string ICAP::iban(std::string _c, std::string _d)
 			tot = tot * 100 + x - 'A' + 10;
 		else
 			tot = tot * 10 + x - '0';
-	unsigned check = ((u256)(98 - tot % 97)).convert_to<unsigned>();
+	unsigned check = (unsigned)(u256)(98 - tot % 97);
 	ostringstream out;
 	out << _c << setfill('0') << setw(2) << check << _d;
 	return out.str();
