@@ -64,7 +64,7 @@ public:
 	u256s const stack() const { return u256s(); }
 	
 	VM() : m_stack(new u256[1024]) {};
-	~VM() { delete m_stack; }
+	~VM() { delete[] m_stack; }
 
 private:
 
