@@ -8,7 +8,7 @@ NUMBER=1 # jenkins build number
 # Detect whether we are running on a Yosemite or El Capitan machine, and generate
 # an appropriately named ZIP file for the Homebrew receipt to point at.
 if echo `sw_vers` | grep "10.11"; then
-    OSX_VERSION=elcapitan
+    OSX_VERSION=el_capitan
 elif echo `sw_vers` | grep "10.10"; then
     OSX_VERSION=yosemite
 else
@@ -60,5 +60,5 @@ curl https://raw.githubusercontent.com/ethereum/homebrew-ethereum/master/cpp-eth
 # prepare receipt
 sed -e s/revision\ \=\>\ \'[[:xdigit:]][[:xdigit:]]*\'/revision\ \=\>\ \'${SIGNATURE}\'/g \
     -e s/version\ \'.*\'/version\ \'${VERSION}\'/g \
-    -e s/sha1\ \'[[:xdigit:]][[:xdigit:]]*\'\ \=\>\ \:${OSX_VERSION}/sha1\ \'${HASH}\'\ \=\>\ \:${OSX_VERSION}/g \
+    -e s/sha1\ \'[[:xdigit:]][[:xdigit:]]*\'\ \=\>\ \:\yosemite/sha1\ \'${HASH}\'\ \=\>\ \:yosemite/g \
     -e s/revision[[:space:]][[:digit:]][[:digit:]]*/revision\ ${NUMBER}/g < cpp-ethereum.rb.in > "cpp-ethereum.rb"
