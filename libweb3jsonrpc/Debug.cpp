@@ -30,7 +30,6 @@ h256 Debug::blockHash(string const& _blockNumberOrHash) const
 Json::Value Debug::debug_trace(string const& _blockNumberOrHash, int _txIndex)
 {
 	Json::Value ret;
-
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
 	Block block = m_eth.block(blockHash(_blockNumberOrHash));
