@@ -58,7 +58,14 @@ SIGNATURE=`openssl sha1 ${NAME} | cut -d " " -f 2`
 curl https://raw.githubusercontent.com/ethereum/homebrew-ethereum/master/cpp-ethereum.rb > cpp-ethereum.rb.in
 
 # prepare receipt
-sed -e s/revision\ \=\>\ \'[[:xdigit:]][[:xdigit:]]*\'/revision\ \=\>\ \'${SIGNATURE}\'/g \
-    -e s/version\ \'.*\'/version\ \'${VERSION}\'/g \
-    -e s/sha1\ \'[[:xdigit:]][[:xdigit:]]*\'\ \=\>\ \:\yosemite/sha1\ \'${HASH}\'\ \=\>\ \:yosemite/g \
-    -e s/revision[[:space:]][[:digit:]][[:digit:]]*/revision\ ${NUMBER}/g < cpp-ethereum.rb.in > "cpp-ethereum.rb"
+if [ ${OSX_VERSION} == yosemite ]; then
+    sed -e s/revision\ \=\>\ \'[[:xdigit:]][[:xdigit:]]*\'/revision\ \=\>\ \'${HASH}\'/g \
+        -e s/version\ \'.*\'/version\ \'${VERSION}\'/g \
+        -e s/sha1\ \'[[:xdigit:]][[:xdigit:]]*\'\ \=\>\ \:\yosemite/sha1\ \'${SIGNATURE}\'\ \=\>\ \:yosemite/g \
+        -e s/revision[[:space:]][[:digit:]][[:digit:]]*/revision\ ${NUMBER}/g < cpp-ethereum.rb.in > "cpp-ethereum.rb"
+else
+    sed -e s/revision\ \=\>\ \'[[:xdigit:]][[:xdigit:]]*\'/revision\ \=\>\ \'${HASH}\'/g \
+        -e s/version\ \'.*\'/version\ \'${VERSION}\'/g \
+        -e s/sha1\ \'[[:xdigit:]][[:xdigit:]]*\'\ \=\>\ \:\el\_capitan/sha1\ \'${SIGNATURE}\'\ \=\>\ \:el\_capitan/g \
+        -e s/revision[[:space:]][[:digit:]][[:digit:]]*/revision\ ${NUMBER}/g < cpp-ethereum.rb.in > "cpp-ethereum.rb"
+fi
