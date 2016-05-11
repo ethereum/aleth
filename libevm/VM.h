@@ -62,12 +62,15 @@ public:
 	bytes const memory() const { return bytes(); }
 	
 	u256s const stack() const { return u256s(); }
+	
+	VM() : m_stack(new u256[1024]) {};
+	~VM() { delete m_stack; }
 
 private:
 
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
 	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
-	void verifyJumpTable(ExtVMFace& _ext);
+	void makeJumpTable(ExtVMFace& _ext);
 	
 	std::unordered_set<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
@@ -77,7 +80,7 @@ private:
 	bytes m_mem;
 
 	// space for stack
-	std:::array<u256, 1024> m_stack;
+	u256* m_stack;
 
 	// state of the metering and memorizing
 	uint64_t runGas = 0;
