@@ -30,7 +30,7 @@ h256 Debug::blockHash(string const& _blockNumberOrHash) const
 Json::Value Debug::debug_trace(string const& _blockNumberOrHash, int _txIndex)
 {
 	Json::Value ret;
-	
+
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
 	Block block = m_eth.block(blockHash(_blockNumberOrHash));
@@ -54,6 +54,21 @@ Json::Value Debug::debug_trace(string const& _blockNumberOrHash, int _txIndex)
 			cwarn << diagnostic_information(_e);
 		}
 	}
-	
+	return ret;
+}
+
+Json::Value Debug::debug_storageAt(string const& _blockNumberOrHash, int _txIndex, string const& _address)
+{
+	Json::Value ret(Json::objectValue);
+
+	if (_txIndex < 0)
+		throw jsonrpc::JsonRpcException("Negative index");
+	Block block = m_eth.block(blockHash(_blockNumberOrHash));
+	if ((unsigned)_txIndex < block.pending().size())
+	{
+		State state = block.fromPending(_txIndex);
+		for (auto const& i: state.storage(Address(_address)))
+			ret["0x" + toHex(toCompactBigEndian(i.first, 1))] = "0x" + toHex(toCompactBigEndian(i.second, 1));
+	}
 	return ret;
 }
