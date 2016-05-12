@@ -54,20 +54,16 @@ class VM: public VMFace
 public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
-// Note: directly exposing VM state constrains implementation and degrades performance,
-// so we fake what Executive.cpp actually needs to pass tests.
-
-	uint64_t curPC() const { return 0; }
-
-	bytes const memory() const { return bytes(); }
+	bytes const& memory() const { return m_mem; }
+	u256s const& stack() const { return m_stack_vector; }
 	
-	u256s const stack() const { return u256s(); }
+	VM() : m_stack_vector(1024), m_stack(m_stack_vector.data()) {};
 
 private:
 
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
 	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
-	void verifyJumpTable(ExtVMFace& _ext);
+	void makeJumpTable(ExtVMFace& _ext);
 	
 	std::unordered_set<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
@@ -77,7 +73,8 @@ private:
 	bytes m_mem;
 
 	// space for stack
-	std:::array<u256, 1024> m_stack;
+	u256s m_stack_vector;
+	u256* m_stack;
 
 	// state of the metering and memorizing
 	uint64_t runGas = 0;

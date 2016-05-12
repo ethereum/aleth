@@ -88,11 +88,7 @@ static array<InstructionMetric, 256> metrics()
 }
 
 
-// build hash table of valid JUMPDESTs
-// to verify static JUMP and JUMPI destinations
-//
-
-void VM::verifyJumpTable(ExtVMFace& _ext)
+void VM::makeJumpTable(ExtVMFace& _ext)
 {
 	// hash JUMPDESTs into table
 	for (size_t i = 0; i < _ext.code.size(); ++i)
@@ -124,35 +120,33 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	uint64_t PC = 0;
-	u256* SP = m_stack.data() - 1;
-	
+	u256* SP = &m_stack[0] - 1;	
 	Instruction inst;
 	static const auto c_metrics = metrics();
 	InstructionMetric metric = c_metrics[0];
 
 	m_schedule = &_ext.evmSchedule();
 	rmword runGas = 0, newTempSize = 0, copySize = 0;
-	uint64_t m_steps = 0;
 
-	// hash JUMPDESTs into table to verify static JUMP and JUMPI destinations
-	for (size_t i = 0; i < _ext.code.size(); ++i)
-	{
-		byte inst = _ext.code[i];
-		if (inst == (byte)Instruction::JUMPDEST)
-			m_jumpDests.insert(i);
-		else if (inst >= (byte)Instruction::PUSH1 && inst <= (byte)Instruction::PUSH32)
-			i += inst - (byte)Instruction::PUSH1 + 1;
-	}
-
+   makeJumpTable(_ext);
+	
 	//
 	// closures for tracing, checking, metering, measuring ...
 	//
 	
+#if 1
+	uint64_t m_steps = 0;
 	auto onOperation = [&]()
 	{
 		if (_onOp)
-			_onOp(++m_steps, inst, newTempSize > m_mem.size() ? (newTempSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
+			_onOp(++m_steps, PC, inst, newTempSize > m_mem.size() ? (newTempSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
 	};
+#else
+cerr << "VM::execImpl &PC=" << &PC << endl;
+	auto onOperation = [&]()
+	{
+	};
+#endif
 	m_onFail = std::function<void()>(onOperation);
 	
 	auto checkStack = [&](unsigned _n, unsigned _d)
