@@ -57,7 +57,7 @@ public:
 	bytes const& memory() const { return m_mem; }
 	u256s const& stack() const { return m_stack_vector; }
 	
-	VM(): m_stack_vector(1024), m_stack(m_stack_vector.data()) {};
+	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data()+1) {};
 
 private:
 
