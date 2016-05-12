@@ -52,10 +52,8 @@ find_program(CTEST_COMMAND ctest)
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-# TODO hanlde other msvc versions or it will fail find them
-	set(Boost_COMPILER -vc120)
 # use static boost libraries *.lib
 	set(Boost_USE_STATIC_LIBS ON)
 
