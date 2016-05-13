@@ -142,7 +142,7 @@ template <class S> void IpcServerBase<S>::GenerateResponse(S _connection)
 					std::string r = request.substr(0, i + 1);
 					request.erase(0, i + 1);
 					cipcr << r;
-					OnRequest(r, reinterpret_cast<void*>(_connection));
+					OnRequest(r, reinterpret_cast<void*>((intptr_t)_connection));
 					i = 0;
 					continue;
 				}
