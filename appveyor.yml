@@ -9,7 +9,7 @@
 #------------------------------------------------------------------------------
 
 install:
-- extdep/getstuff.bat
+- extdep/getstuff.bat > NUL
 before_build:
 - mkdir build
 - cd build
