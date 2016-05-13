@@ -46,17 +46,6 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         git \
         cmake \
         language-pack-en-base \
-        libboost-all-dev \
-        libgmp-dev \
-        libleveldb-dev \
-        libminiupnpc-dev \
-        libcurl4-openssl-dev \
-        libcryptopp-dev \
-        libmicrohttpd-dev \
-        libjsoncpp-dev \
-        libjson-rpc-cpp-dev \
-        llvm-3.7-dev \
-        libz-dev
 
         sudo dpkg-reconfigure locales
 fi
