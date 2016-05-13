@@ -23,9 +23,9 @@ before_install:
 - brew install jsoncpp
 - brew install libmicrohttpd
 - brew install libjson-rpc-cpp
-- brew install homebrew/versions/llvm38
+- brew install homebrew/versions/llvm37
 before_script:
 - mkdir build
 - cd build
 - cmake ..
-script: make
+script: make eth ethminer ethkey
