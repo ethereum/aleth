@@ -16,7 +16,7 @@ matrix:
       - xcode7.1
       - xcode7.3
 before_install:
-- ./setup.sh
+- sudo ./setup.sh
 before_script:
 - mkdir build
 - cd build
