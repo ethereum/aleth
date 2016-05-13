@@ -837,11 +837,11 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 				blockBloom.shiftBloom<3>(sha3(tbi.author().ref()));
 
 				// Pre-memoize everything we need before locking x_blocksBlooms
-				for (unsigned level = 0, index = tbi.number().convert_to<unsigned>(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
 					blocksBlooms(chunkId(level, index / c_bloomIndexSize));
 
 				WriteGuard l(x_blocksBlooms);
-				for (unsigned level = 0, index = tbi.number().convert_to<unsigned>(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
+				for (unsigned level = 0, index = (unsigned)tbi.number(); level < c_bloomIndexLevels; level++, index /= c_bloomIndexSize)
 				{
 					unsigned i = index / c_bloomIndexSize;
 					unsigned o = index % c_bloomIndexSize;
@@ -870,7 +870,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		// FINALLY! change our best hash.
 		{
 			newLastBlockHash = _block.info.hash();
-			newLastBlockNumber = _block.info.number().convert_to<unsigned>();
+			newLastBlockNumber = (unsigned)_block.info.number();
 		}
 
 		clog(BlockChainNote) << "   Imported and best" << td << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;

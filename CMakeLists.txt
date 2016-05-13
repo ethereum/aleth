@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(ethereum VERSION "1.2.3")
+project(ethereum VERSION "1.2.4")
 
 include(EthCompilerSettings)
 
@@ -22,6 +22,9 @@ include(EthOptions)
 configure_project(CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL EVMJIT FATDB)
 
 if (EVMJIT)
+	if (DEFINED MSVC AND NOT DEFINED LLVM_DIR)
+		set(LLVM_DIR "${ETH_CMAKE_DIR}/extdep/install/windows/x64/share/llvm/cmake")
+	endif()
 	add_subdirectory(evmjit)
 	if (DEFINED MSVC)
 		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
@@ -63,4 +66,3 @@ if (TESTS)
 	# test
 	add_subdirectory(test)
 endif()
-

@@ -51,6 +51,8 @@ void SealEngineFace::verifyTransaction(ImportRequirements::value _ir, Transactio
 SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
 {
 	SealEngineFace* ret = create(_params.sealEngineName);
-	ret->setChainParams(_params);
+	assert(ret && "Seal engine not found.");
+	if (ret)
+		ret->setChainParams(_params);
 	return ret;
 }
