@@ -13,6 +13,6 @@ install:
 before_build:
 - mkdir build
 - cd build
-- cmake -G "Visual Studio 12 2013 Win64" -DBoost_VERSION=105500 ..
+- cmake -G "Visual Studio 12 2013 Win64" ..
 build:
   project: build/cpp-ethereum.sln
