@@ -13,9 +13,8 @@ dependencies:
     - ./setup.sh
 test:
   override:
-    - ls -l
     - mkdir build
-    - cd build
     - cmake ..
+        pwd: build
     - make eth ethminer ethkey
-    
+        pwd: build
