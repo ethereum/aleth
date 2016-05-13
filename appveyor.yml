@@ -9,7 +9,7 @@
 #------------------------------------------------------------------------------
 
 install:
-- webthree-helpers/extdep/getstuff.bat
+- extdep/getstuff.bat
 before_build:
 - mkdir build
 - cd build
