@@ -26,9 +26,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
-    sudo apt-add-repository ppa:george-edison55/cmake-3.x
+    sudo apt-add-repository -y ppa:george-edison55/cmake-3.x
 
-    sudo add-apt-repository "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.7 main"
+    sudo add-apt-repository -y "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.7 main"
     wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
 
     sudo add-apt-repository -y ppa:ethereum/ethereum-qt
