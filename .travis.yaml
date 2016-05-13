@@ -1,0 +1,16 @@
+language: cpp
+sudo: required
+dist: trusty
+compiler:
+- clang
+os:
+- linux
+- osx
+before_install:
+- brew update
+- brew upgrade
+before_script:
+- mkdir build
+- cd build
+- cmake ..
+script: make
