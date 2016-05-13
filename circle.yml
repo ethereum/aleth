@@ -15,6 +15,8 @@ test:
   override:
     - mkdir build
     - cmake ..
-        pwd: build
+        pwd:
+            build
     - make eth ethminer ethkey
-        pwd: build
+        pwd:
+            build
