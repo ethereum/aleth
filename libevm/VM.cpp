@@ -26,7 +26,7 @@ using namespace dev;
 using namespace dev::eth;
 
 
-// ethvm swallows exceptions
+// Executive swallows exceptions in some builds
 //#undef BOOST_THROW_EXCEPTION
 //#define BOOST_THROW_EXCEPTION(X) (fprintf(stderr,"!!! %d VM EXCEPTION %s\n", __LINE__, boost::diagnostic_information(X)), exit(0))
 
@@ -87,8 +87,17 @@ static array<InstructionMetric, 256> metrics()
 	return s_ret;
 }
 
+//	returns a copy of the stack truncated to current depth - not clear if that is what is wanted
+// 	and an iterater or just a pair of pointers would be more efficient
+// unefined behavior outside of exexImpl();
+u256s const& VM::stack() const
+{
+	assert(m_stack <= *m_pSP+2);
+	u256s m_stack_copy(m_stack, *m_pSP+2);
+	return m_stack_copy;
+}
 
-void VM::makeJumpTable(ExtVMFace& _ext)
+void VM::makeJumpDestTable(ExtVMFace& _ext)
 {
 	// hash JUMPDESTs into table
 	for (size_t i = 0; i < _ext.code.size(); ++i)
@@ -99,7 +108,6 @@ void VM::makeJumpTable(ExtVMFace& _ext)
 		else if (inst >= (byte)Instruction::PUSH1 && inst <= (byte)Instruction::PUSH32)
 			i += inst - (byte)Instruction::PUSH1 + 1;
 	}
-	
 }
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
@@ -120,7 +128,8 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	uint64_t PC = 0;
-	u256* SP = m_stack_vector.data();
+	u256* SP = m_stack - 1;
+	m_pSP = &SP;
 	Instruction inst;
 	static const auto c_metrics = metrics();
 	InstructionMetric metric = c_metrics[0];
@@ -128,7 +137,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	m_schedule = &_ext.evmSchedule();
 	rmword runGas = 0, newTempSize = 0, copySize = 0;
 
-   makeJumpTable(_ext);
+   makeJumpDestTable(_ext);
 	
 	//
 	// closures for tracing, checking, metering, measuring ...

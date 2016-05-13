@@ -55,7 +55,7 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s const& stack() const { return m_stack_vector; }
+	u256s const& stack() const;
 	
 	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data()+1) {};
 
@@ -63,7 +63,7 @@ private:
 
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
 	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
-	void makeJumpTable(ExtVMFace& _ext);
+	void makeJumpDestTable(ExtVMFace& _ext);
 	
 	std::unordered_set<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
@@ -74,7 +74,9 @@ private:
 
 	// space for stack
 	u256s m_stack_vector;
+	u256s m_stack_copy;
 	u256* m_stack;
+	u256** m_pSP = 0;
 
 	// state of the metering and memorizing
 	uint64_t runGas = 0;
