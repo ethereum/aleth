@@ -26,7 +26,31 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 
 elif [[ "$OSTYPE" == "linux-gnu" ]]; then
 
-    sudo apt-get -y update
-    sudo apt-get -y upgrade
+    sudo apt-add-repository -y ppa:george-edison55/cmake-3.x
 
+    sudo add-apt-repository -y "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.7 main"
+    wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
+
+    sudo add-apt-repository -y ppa:ethereum/ethereum-qt
+    sudo add-apt-repository -y ppa:ethereum/ethereum
+    sudo add-apt-repository -y ppa:ethereum/ethereum-dev
+
+    sudo apt-get -y install \
+        build-essential \
+        git \
+        cmake \
+        language-pack-en-base \
+        libboost-all-dev \
+        libgmp-dev \
+        libleveldb-dev \
+        libminiupnpc-dev \
+        libcurl4-openssl-dev \
+        libcryptopp-dev \
+        libmicrohttpd-dev \
+        libjsoncpp-dev \
+        libjson-rpc-cpp-dev \
+        llvm-3.7-dev \
+        libz-dev
+
+        sudo dpkg-reconfigure locales
 fi
