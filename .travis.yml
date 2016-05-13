@@ -12,18 +12,7 @@ language: cpp
 os: osx
 osx_image: xcode7.3
 before_install:
-- brew update
-- brew upgrade
-- brew install boost
-- brew install cmake
-- brew install cryptopp
-- brew install miniupnpc
-- brew install leveldb
-- brew install gmp
-- brew install jsoncpp
-- brew install libmicrohttpd
-- brew install libjson-rpc-cpp
-- brew install homebrew/versions/llvm37
+- ./setup.sh
 before_script:
 - mkdir build
 - cd build
