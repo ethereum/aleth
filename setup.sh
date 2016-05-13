@@ -40,6 +40,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         git \
         cmake \
         language-pack-en-base \
+        libedit-dev
         libboost-all-dev \
         libgmp-dev \
         libleveldb-dev \
