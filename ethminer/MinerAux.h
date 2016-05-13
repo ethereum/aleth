@@ -52,7 +52,11 @@
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif // ETH_JSONRPC
 
+#if ETH_AFTER_REPOSITORY_MERGE
+#include "cpp-ethereum/BuildInfo.h"
+#else
 #include "ethereum/BuildInfo.h"
+#endif // ETH_AFTER_REPOSITORY_MERGE
 
 #if ETH_JSONRPC
 #include "PhoneHome.h"
@@ -475,7 +479,7 @@ private:
 			PhoneHome rpc(client);
 			try
 			{
-				unsigned ranking = rpc.report_benchmark(platformInfo, innerMean.convert_to<int>());
+				unsigned ranking = rpc.report_benchmark(platformInfo, (int)innerMean);
 				cout << "Ranked: " << ranking << " of all benchmarks." << endl;
 			}
 			catch (...)
