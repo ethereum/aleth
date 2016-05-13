@@ -13,6 +13,6 @@ dependencies:
     - ./setup.sh
 test:
   override:
-    - mkdir build && cd $_
-    - cmake ..
-    - make eth ethminer ethkey
+    - mkdir build
+    - cd build && cmake ..
+    - cd build && make eth ethminer ethkey
