@@ -10,7 +10,7 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
-if [ "$OSTYPE" == "darwin"* ]; then
+if [[ "$OSTYPE" == "darwin"* ]]; then
     brew update
     brew upgrade
     brew install boost
