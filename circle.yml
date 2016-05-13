@@ -13,6 +13,7 @@ dependencies:
     - ./setup.sh
 test:
   override:
+    - ls -l
     - mkdir build
     - cd build
     - cmake ..
