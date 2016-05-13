@@ -1,14 +1,29 @@
+#------------------------------------------------------------------------------
+# TravisCI configuration file for cpp-ethereum.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
 language: cpp
-sudo: required
-dist: trusty
-compiler:
-- clang
-os:
-- linux
-- osx
+os: osx
+osx_image: xcode7.3
 before_install:
 - brew update
 - brew upgrade
+- brew install boost
+- brew install cmake
+- brew install cryptopp
+- brew install miniupnpc
+- brew install leveldb
+- brew install gmp
+- brew install jsoncpp
+- brew install libmicrohttpd
+- brew install libjson-rpc-cpp
+- brew install homebrew/versions/llvm38
 before_script:
 - mkdir build
 - cd build
