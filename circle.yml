@@ -1,0 +1,19 @@
+#------------------------------------------------------------------------------
+# CircleCI configuration file for cpp-ethereum.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
+dependencies:
+  override:
+    - ./setup.sh
+test:
+  override:
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make eth ethminer ethkey
