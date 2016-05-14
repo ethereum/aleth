@@ -9,10 +9,10 @@
 #------------------------------------------------------------------------------
 
 install:
-- cd extdep && getstuff.bat > NUL
+    - cd extdep && getstuff.bat > NUL
 before_build:
-- mkdir build
-- cd build
-- cmake -G "Visual Studio 12 2013 Win64" ..
+    - mkdir build
+    - cd build
+    - cmake -G "Visual Studio 12 2013 Win64" ..
 build:
-  project: build/cpp-ethereum.sln
+    project: build/cpp-ethereum.sln

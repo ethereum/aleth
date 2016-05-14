@@ -12,14 +12,14 @@ language: cpp
 matrix:
     include:
     include:
-    - os: linux
-      dist: trusty
-      sudo: required
+        - os: linux
+          dist: trusty
+          sudo: required
 before_install:
-- sudo ./setup.sh
+    - sudo ./setup.sh
 before_script:
-- mkdir build
-- cd build
-- cmake ..
+    - mkdir build
+    - cd build
+    - cmake ..
 script:
-- make eth ethminer ethkey
+    - make eth ethminer ethkey
