@@ -23,6 +23,7 @@ before_install:
     - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     - sudo apt-get -y update
     - sudo apt-get -y install build-essential git cmake language-pack-en-base libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libjson-rpc-cpp-dev llvm-3.7-dev libz-dev opencl-headers
+    - sudo apt-get -y upgrade llvm-3.7-dev
     - sudo dpkg-reconfigure locales
 before_script:
     - mkdir build
