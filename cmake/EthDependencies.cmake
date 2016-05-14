@@ -27,10 +27,15 @@ if (DEFINED MSVC)
 	find_package(WINDOWSSDK REQUIRED)
 	message(" - WindowsSDK dirs: ${WINDOWSSDK_DIRS}")
 	set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${WINDOWSSDK_DIRS})
+	message(" - So CMAKE_PREFIX_PATH is now ${CMAKE_PREFIX_PATH}")
 endif()
 
 # homebrew install directories for few of our dependencies
-set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
+if (APPLE)
+	set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
+	message(" - Adding Qt5 path")
+	message(" - So CMAKE_PREFIX_PATH is now ${CMAKE_PREFIX_PATH}")
+endif()
 
 # setup directory for cmake generated files and include it globally
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
