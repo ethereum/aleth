@@ -23,12 +23,11 @@ dependencies:
         - sudo apt-get -y update
         - sudo apt-get -y install llvm-3.7-dev
         
-        - sudo add-apt-repository -y ppa:ethereum/ethereum-qt
         - sudo add-apt-repository -y ppa:ethereum/ethereum
         - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
         - sudo apt-get -y update
         
-        - sudo apt-get -y install build-essential git libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libjson-rpc-cpp-dev libz-dev opencl-headers
+        - sudo apt-get -y install build-essential git libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libjson-rpc-cpp libz-dev opencl-headers
 test:
     override:
         - mkdir build
