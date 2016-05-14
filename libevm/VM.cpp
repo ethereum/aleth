@@ -90,11 +90,10 @@ static array<InstructionMetric, 256> metrics()
 //	returns a copy of the stack truncated to current depth - not clear if that is what is wanted
 // 	and an iterater or just a pair of pointers would be more efficient
 // unefined behavior outside of exexImpl();
-u256s const& VM::stack() const
+u256s VM::stack() const
 {
 	assert(m_stack <= *m_pSP+2);
-	u256s m_stack_copy(m_stack, *m_pSP+2);
-	return m_stack_copy;
+	return u256s(m_stack, *m_pSP+2);
 }
 
 void VM::makeJumpDestTable(ExtVMFace& _ext)

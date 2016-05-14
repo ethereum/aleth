@@ -55,7 +55,7 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s const& stack() const;
+	u256s stack() const;
 	
 	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data()+1) {};
 
@@ -74,7 +74,6 @@ private:
 
 	// space for stack
 	u256s m_stack_vector;
-	u256s m_stack_copy;
 	u256* m_stack;
 	u256** m_pSP = 0;
 
