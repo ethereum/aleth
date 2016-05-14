@@ -13,6 +13,15 @@
 # cmake -DETH_SPEC_PATH=spec.json -DETH_SERVER_DIR=libweb3jsonrpc -DETH_CLIENT_DIR=test
 # -DETH_SERVER_NAME=AbstractWebThreeStubServer -DETH_CLIENT_NAME=WebThreeStubClient -DETH_JSON_RPC_STUB=/usr/local/bin/jsonrpcstub
 
+message("ETH_SERVER_FILENAME = ${ETH_SERVER_FILENAME}")
+message("ETH_SERVER_NAME = ${ETH_SERVER_NAME}")
+message("ETH_SERVER_DIR = ${ETH_SERVER_DIR}")
+
+message("ETH_CLIENT_FILENAME = ${ETH_CLIENT_FILENAME}")
+message("ETH_CLIENT_NAME = ${ETH_CLIENT_NAME}")
+message("ETH_CLIENT_DIR = ${ETH_CLIENT_DIR}")
+
+
 # setup names, and allow different filename from classname for namespaced classes.
 # For an example call look at libethereum/CMakeLists.txt for eth::dev::Sentinel
 if (ETH_SERVER_FILENAME)
@@ -34,12 +43,17 @@ endif ()
 
 # create tmp files
 if (NOT ETH_SERVER_DIR)
+	message("Executing process: ${ETH_JSON_RPC_STUB} ${ETH_SPEC_PATH}
+			--cpp-client=${ETH_CLIENT_NAME} --cpp-client-file=${CLIENT_TMPFILE}")
 	execute_process(
 		COMMAND ${ETH_JSON_RPC_STUB} ${ETH_SPEC_PATH}
 			--cpp-client=${ETH_CLIENT_NAME} --cpp-client-file=${CLIENT_TMPFILE}
 			OUTPUT_VARIABLE ERR ERROR_QUIET
 	)
 else ()
+	message("Executing process: ${ETH_JSON_RPC_STUB} ${ETH_SPEC_PATH}
+			--cpp-server=${ETH_SERVER_NAME} --cpp-server-file=${SERVER_TMPFILE}
+			--cpp-client=${ETH_CLIENT_NAME} --cpp-client-file=${CLIENT_TMPFILE}")
 	execute_process(
 		COMMAND ${ETH_JSON_RPC_STUB} ${ETH_SPEC_PATH}
 			--cpp-server=${ETH_SERVER_NAME} --cpp-server-file=${SERVER_TMPFILE}
@@ -70,8 +84,7 @@ endif()
 # he does not need to upgrade it if he is not working on JSON RPC
 # show him warning instead
 if (ERR)
-	message(WARNING "Your version of jsonrcpstub tool is not supported. Please upgrade it.")
-	message(WARNING "${ERR}")
+	message(FATAL_ERROR "Your version of jsonrcpstub tool is not supported. Please upgrade it. ${ERR}")
 else()
 	include("${ETH_CMAKE_DIR}/EthUtils.cmake")
 	if (ETH_SERVER_DIR)
