@@ -19,6 +19,7 @@ if (DEFINED MSVC)
 	set (ETH_DEPENDENCY_INSTALL_DIR "${ETH_CMAKE_DIR}/../extdep/install/windows/x64")
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
 	message(" - Fake Windows 'package server' dir: ${ETH_DEPENDENCY_INSTALL_DIR}")
+	message(" - So CMAKE_PREFIX_PATH is now ${CMAKE_PREFIX_PATH}")
 
 	# Qt5 requires opengl
 	# TODO it windows SDK is NOT FOUND, throw ERROR
