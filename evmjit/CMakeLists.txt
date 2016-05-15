@@ -26,7 +26,7 @@ elseif (DEFINED APPLE)
 	set(LLVM_DIR "/usr/local/opt/llvm37/lib/llvm-3.7/share/llvm/cmake")
 endif()
 
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM 3.7 REQUIRED CONFIG)
 if (${LLVM_VERSION} VERSION_LESS 3.7)
 	message(FATAL_ERROR "Incompatible LLVM version ${LLVM_VERSION}")
 endif()
