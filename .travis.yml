@@ -32,7 +32,19 @@ before_install:
     - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     - sudo apt-get -y update
     
-    - sudo apt-get -y install build-essential git libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libjson-rpc-cpp-dev libz-dev opencl-headers
+    - sudo apt-get -y install build-essential git libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libz-dev opencl-headers
+    
+    - git clone git://github.com/cinemast/libjson-rpc-cpp.git
+    - cd libjson-rpc-cpp
+    - git checkout v0.6.0
+    - mkdir build
+    - cd build
+    - cmake ..
+    - make
+    - sudo make install
+    - sudo ldconfig
+    - cd ../..
+    
 before_script:
     - mkdir build
     - cd build
