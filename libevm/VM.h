@@ -47,6 +47,21 @@ inline u256 fromAddress(Address _a)
 }
 
 
+struct InstructionMetric
+{
+	int gasPriceTier;
+	int args;
+	int ret;
+};
+
+// real machine word, virtual machine word, signed and unsigned overflow words
+typedef uint64_t mw64;
+typedef mw64 rmword;
+typedef u256 vmword;
+typedef s512 soword;
+typedef u512 uoword;
+
+
 /**
  */
 class VM: public VMFace
@@ -55,16 +70,19 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const;
+	u256s stack() const { assert(m_stack <= *m_pSP+1); return u256s(m_stack, *m_pSP+1); };
 	
 	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data()+1) {};
 
 private:
 
+	static std::array<InstructionMetric, 256> metrics();
+	void makeJumpDestTable(ExtVMFace& _ext);
+	uint64_t verifyJumpDest(u256 const& _dest);
+	void copyDataToMemory(bytesConstRef _data, u256*& SP);
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
 	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
-	void makeJumpDestTable(ExtVMFace& _ext);
-	
+
 	std::unordered_set<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
 	EVMSchedule const* m_schedule = nullptr;
@@ -81,7 +99,11 @@ private:
 	uint64_t runGas = 0;
 	uint64_t newMemSize = 0;
 	uint64_t copySize = 0;
+	
+	
 };
+
+void throwVMException(VMException);
 
 }
 }

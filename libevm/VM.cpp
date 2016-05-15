@@ -26,88 +26,36 @@ using namespace dev;
 using namespace dev::eth;
 
 
-// Executive swallows exceptions in some builds
-//#undef BOOST_THROW_EXCEPTION
-//#define BOOST_THROW_EXCEPTION(X) (fprintf(stderr,"!!! %d VM EXCEPTION %s\n", __LINE__, boost::diagnostic_information(X)), exit(0))
-
-// consolidate exception throws in hopes of not spraying their code all over interpreter
-void throwException(OutOfGas x)
-{
-	BOOST_THROW_EXCEPTION(x);
-}
-void throwException(StackUnderflow x)
-{
-	BOOST_THROW_EXCEPTION(x);
-}
-void throwException(OutOfStack x)
-{
-	BOOST_THROW_EXCEPTION(x);
-}
-void throwException(BadJumpDestination x)
-{
-	BOOST_THROW_EXCEPTION(x);
-}
-void throwException(BadInstruction x)
-{
-	BOOST_THROW_EXCEPTION(x);
-}
-
-// real machine word, virtual machine word, signed and unsigned overflow words
-typedef uint64_t mw64;
-typedef mw64 rmword;
-typedef u256 vmword;
-typedef s512 soword;
-typedef u512 uoword;
-	
 // checked for too much gas or memory or failed conversion
-template<class T> static rmword to_rmword(T v) {
+template<class T> static rmword to_rmword(T v)
+{
 	rmword w = rmword(v); 
 	if (w > 0x7FFFFFFFFFFFFFFF || w != v)
-		throwException(OutOfGas());
+		throwVMException(OutOfGas());
 	return w;
 }
 
-struct InstructionMetric
+
+uint64_t VM::verifyJumpDest(u256 const& _dest)
 {
-	int gasPriceTier;
-	int args;
-	int ret;
+	uint64_t pc = uint64_t(_dest);
+	if (!m_jumpDests.count(pc))
+		throwVMException(BadJumpDestination());
+	return pc;
 };
 
-static array<InstructionMetric, 256> metrics()
-{
-	array<InstructionMetric, 256> s_ret;
-	for (unsigned i = 0; i < 256; ++i)
-	{
-		InstructionInfo inst = instructionInfo((Instruction)i);
-		s_ret[i].gasPriceTier = inst.gasPriceTier;
-		s_ret[i].args = inst.args;
-		s_ret[i].ret = inst.ret;
-	}
-	return s_ret;
-}
 
-//	returns a copy of the stack truncated to current depth - not clear if that is what is wanted
-// 	and an iterater or just a pair of pointers would be more efficient
-// unefined behavior outside of exexImpl();
-u256s VM::stack() const
+static rmword memNeed(vmword _offset, vmword _size)
 {
-	assert(m_stack <= *m_pSP+2);
-	return u256s(m_stack, *m_pSP+2);
-}
+	return to_rmword(_size ? (uoword)_offset + _size : uoword(0));
+};
 
-void VM::makeJumpDestTable(ExtVMFace& _ext)
+static void memMax(u256& mem)
 {
-	// hash JUMPDESTs into table
-	for (size_t i = 0; i < _ext.code.size(); ++i)
-	{
-		byte inst = _ext.code[i];
-		if (inst == (byte)Instruction::JUMPDEST)
-			m_jumpDests.insert(i);
-		else if (inst >= (byte)Instruction::PUSH1 && inst <= (byte)Instruction::PUSH32)
-			i += inst - (byte)Instruction::PUSH1 + 1;
-	}
-}
+	if (mem > 0x7FFFFFFFFFFFFFFF)
+		throwVMException(OutOfGas());
+};
+
 
 template <class S> S divWorkaround(S const& _a, S const& _b)
 {
@@ -136,21 +84,21 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	m_schedule = &_ext.evmSchedule();
 	rmword runGas = 0, newTempSize = 0, copySize = 0;
 
-   makeJumpDestTable(_ext);
+	makeJumpDestTable(_ext);
 	
 	//
 	// closures for tracing, checking, metering, measuring ...
 	//
 	
+cerr << "VM::execImpl &PC=" << &PC << endl;
 #if 1
-	uint64_t m_steps = 0;
+	uint64_t nSteps = 0;
 	auto onOperation = [&]()
 	{
 		if (_onOp)
-			_onOp(++m_steps, PC, inst, newTempSize > m_mem.size() ? (newTempSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
+			_onOp(++nSteps, PC, inst, newTempSize > m_mem.size() ? (newTempSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
 	};
 #else
-cerr << "VM::execImpl &PC=" << &PC << endl;
 	auto onOperation = [&]()
 	{
 	};
@@ -164,34 +112,17 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 		{
 			if (m_onFail)
 				m_onFail();
-			throwException(StackUnderflow() << RequirementError((bigint)_n, (bigint)size));
+			throwVMException(StackUnderflow() << RequirementError((bigint)_n, (bigint)size));
 		}
 		if ((size) - _n + _d > 1024)
 		{
 			if (m_onFail)
 				m_onFail();
-			throwException(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)size));
+			throwVMException(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)size));
 		}
 	};
-	
-	auto verifyJumpDest = [&](u256 const& _dest) -> uint64_t
-	{
-		uint64_t pc = uint64_t(_dest);
-		if (!m_jumpDests.count(pc))
-			throwException(BadJumpDestination());
-		return pc;
-	};
 
-	auto memNeed = [](vmword _offset, vmword _size)
-	{
-		return to_rmword(_size ? (uoword)_offset + _size : uoword(0));
-	};
-	
-	auto memMax = [](u256& mem) {
-		if (mem > 0x7FFFFFFFFFFFFFFF)
-			throwException(OutOfGas());
-	};
-	
+
 	auto gasForMem = [&](uoword _size) -> uoword
 	{
 		uoword s = _size / 32;
@@ -200,7 +131,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 	
 	auto resetIOGas = [&]() {
 		if (io_gas < runGas)
-			throwException(OutOfGas());
+			throwVMException(OutOfGas());
 		io_gas -= runGas;
 	};
 	
@@ -209,7 +140,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 			runGas += to_rmword(gasForMem(newTempSize) - gasForMem(m_mem.size())) ;
 		runGas += to_rmword(m_schedule->copyGas * ((copySize + 31) / 32));
 		if (io_gas < runGas)
-			throwException(OutOfGas());
+			throwVMException(OutOfGas());
 	};
 	
 	auto resetMem = [&]()
@@ -228,20 +159,6 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 		resetMem();
 	};
 
-	auto copyDataToMemory= [&](bytesConstRef _data)
-	{
-		auto offset = static_cast<size_t>(*SP--);
-		soword bigIndex = *SP--;
-		auto index = static_cast<size_t>(bigIndex);
-		auto size = static_cast<size_t>(*SP--);
-	
-		size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
-	
-		if (sizeToBeCopied > 0)
-			std::memcpy(m_mem.data() + offset, _data.data() + index, sizeToBeCopied);
-		if (size > sizeToBeCopied)
-			std::memset(m_mem.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
-	};
 	
 	//
 	// closures for some big interpreter cases
@@ -260,9 +177,9 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 		unsigned initSize = (unsigned)*SP--;
 		
 		if (_ext.balance(_ext.myAddress) >= endowment && _ext.depth < 1024)
-		*++SP = (u160)_ext.create(endowment, io_gas, bytesConstRef(m_mem.data() + initOff, initSize), _onOp);
+			*++SP = (u160)_ext.create(endowment, io_gas, bytesConstRef(m_mem.data() + initOff, initSize), _onOp);
 		else
-		*++SP = 0;
+			*++SP = 0;
 	};
 	
 	auto case_call = [&]()
@@ -326,6 +243,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 	};
 	
 
+	/////////////////////////////////////////////////////////////////////////////
 	//
 	// the interpreter, itself
 	//
@@ -334,6 +252,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 	{
 		inst = (Instruction)_ext.getCode(PC);	
 		metric = c_metrics[static_cast<size_t>(inst)];
+//cerr << "VM::execImpl PC=" << PC << ": " << instructionInfo(inst).name << endl;
 		
 		checkStack(metric.args, metric.ret);
 		
@@ -357,7 +276,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 
 			// Pre-homestead
 			if (!m_schedule->haveDelegateCall && inst == Instruction::DELEGATECALL)
-				throwException(BadInstruction());
+				throwVMException(BadInstruction());
 
 		case Instruction::CALL:
 		case Instruction::CALLCODE:		
@@ -775,7 +694,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 			onOperation();
 			resetIOGas();
 
-			copyDataToMemory(_ext.data);
+			copyDataToMemory(_ext.data, SP);
 			break;
 
 		case Instruction::CODECOPY:
@@ -785,7 +704,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 			onOperation();
 			resetIOGas();
 
-			copyDataToMemory(&_ext.code);
+			copyDataToMemory(&_ext.code, SP);
 			break;
 
 		case Instruction::EXTCODECOPY:
@@ -798,7 +717,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 
 			auto a = asAddress(*SP);
 			--SP;
-			copyDataToMemory(&_ext.codeAt(a));
+			copyDataToMemory(&_ext.codeAt(a), SP);
 			break;
 		}
 
@@ -1028,7 +947,7 @@ cerr << "VM::execImpl &PC=" << &PC << endl;
 			break;
 
 		default:
-			throwException(BadInstruction());
+			throwVMException(BadInstruction());
 		}
 		
 		++PC;
