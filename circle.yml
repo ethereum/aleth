@@ -14,5 +14,5 @@ dependencies:
 test:
     override:
         - mkdir build
-        - cd build && cmake ..
-        - cd build && make eth ethminer ethkey
+        - cd build && cmake .. -DGUI=0
+        - cd build && make
