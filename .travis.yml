@@ -28,7 +28,6 @@ before_install:
     - sudo apt-get -y update
     - sudo apt-get -y install llvm-3.7-dev
     
-    - sudo add-apt-repository -y ppa:ethereum/ethereum-qt
     - sudo add-apt-repository -y ppa:ethereum/ethereum
     - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
     - sudo apt-get -y update
