@@ -131,7 +131,7 @@ if [[ $OSTYPE == "cygwin" ]]; then
 	exit 1
 	fi
 	# "${MSBUILD_EXECUTABLE}" cpp-ethereum.sln /p:Configuration=Release /t:PACKAGE /m:${MAKE_CORES}
-	cmake --build . --target package -- /m:${MAKE_CORES} /p:Configuration=Release
+	cmake --build . --target package -- /m:${MAKE_CORES} /p:Configuration=RelWithDebInfo
 	if [[ $? -ne 0 ]]; then
 		echo "ETHBINARIES - ERROR: Building binaries for Windows failed.";
 		exit 1

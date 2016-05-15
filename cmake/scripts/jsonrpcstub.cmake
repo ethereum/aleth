@@ -70,7 +70,8 @@ endif()
 # he does not need to upgrade it if he is not working on JSON RPC
 # show him warning instead
 if (ERR)
-	message(FATAL_ERROR "Your version of jsonrcpstub tool is not supported. Please upgrade it. ${ERR}")
+	message(WARNING "Your version of jsonrcpstub tool is not supported. Please upgrade it.")
+	message(WARNING "${ERR}")
 else()
 	include("${ETH_CMAKE_DIR}/EthUtils.cmake")
 	if (ETH_SERVER_DIR)

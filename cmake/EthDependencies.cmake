@@ -16,10 +16,8 @@ endfunction()
 if (DEFINED MSVC)
 	# by defining CMAKE_PREFIX_PATH variable, cmake will look for dependencies first in our own repository before looking in system paths like /usr/local/ ...
 	# this must be set to point to the same directory as $ETH_DEPENDENCY_INSTALL_DIR in /extdep directory
-	set (ETH_DEPENDENCY_INSTALL_DIR "${ETH_CMAKE_DIR}/../extdep/install/windows/x64")
+	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../extdep/install/windows/x64")
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
-	message(" - Fake Windows 'package server' dir: ${ETH_DEPENDENCY_INSTALL_DIR}")
-	message(" - So CMAKE_PREFIX_PATH is now ${CMAKE_PREFIX_PATH}")
 
 	# Qt5 requires opengl
 	# TODO it windows SDK is NOT FOUND, throw ERROR
@@ -27,15 +25,10 @@ if (DEFINED MSVC)
 	find_package(WINDOWSSDK REQUIRED)
 	message(" - WindowsSDK dirs: ${WINDOWSSDK_DIRS}")
 	set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${WINDOWSSDK_DIRS})
-	message(" - So CMAKE_PREFIX_PATH is now ${CMAKE_PREFIX_PATH}")
 endif()
 
 # homebrew install directories for few of our dependencies
-if (APPLE)
-	set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
-	message(" - Adding Qt5 path")
-	message(" - So CMAKE_PREFIX_PATH is now ${CMAKE_PREFIX_PATH}")
-endif()
+set (CMAKE_PREFIX_PATH "/usr/local/opt/qt5" ${CMAKE_PREFIX_PATH})
 
 # setup directory for cmake generated files and include it globally
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
@@ -79,16 +72,37 @@ endif()
 
 set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
 
-if(STATIC_LINKING)
+if (STATIC_LINKING)
+
 	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_STATIC_RUNTIME ON)
 
 	set(OpenSSL_USE_STATIC_LIBS ON)
 
-	if(MSVC)
+	if (MSVC)
+		# TODO - Why would we need .a on Windows?  Maybe some Cygwin-ism.
+		# When I work through Windows static linkage, I will remove this,
+		# if that is possible.
 		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
+	elseif (APPLE)
+		# At the time of writing, we are still only PARTIALLY statically linked
+		# on OS X, with a mixture of statically linked external libraries where
+		# those are available, and dynamically linked where that is the only
+		# option we have.    Ultimately, the aim would be for everything except
+		# the runtime libraries to be statically linked.
+		#
+		# Still TODO:
+		# - jsoncpp
+		# - json-rpc-cpp
+		# - leveldb (which pulls in snappy, for the dylib at ;east)
+		# - miniupnp
+		# - gmp
+		#
+		# Two further libraries (curl and zlib) ship as dylibs with the platform
+		# but again we could build from source and statically link these too.
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib)
 	else()
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .a )
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
 	endif()
 
 	set(ETH_STATIC ON)
