@@ -34,7 +34,7 @@ before_install:
     
     - sudo apt-get -y install build-essential git libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libz-dev opencl-headers
     
-    - sudo apt-get -y install libargtable
+    - sudo apt-get -y install libargtable2-dev
     - git clone git://github.com/cinemast/libjson-rpc-cpp.git
     - cd libjson-rpc-cpp
     - git checkout v0.6.0
