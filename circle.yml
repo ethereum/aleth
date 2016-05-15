@@ -10,31 +10,22 @@
 
 dependencies:
     override:
+        - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
         - sudo apt-add-repository -y ppa:george-edison55/cmake-3.x
-        - sudo apt-get -y update
-        - sudo apt-get -y install cmake
-        
-        - sudo apt-get -y install language-pack-en-base
-        - sudo dpkg-reconfigure locales
-        - sudo apt-get -y install software-properties-common
-        
         - sudo add-apt-repository -y "deb http://llvm.org/apt/trusty/ llvm-toolchain-trusty-3.7 main"
         - wget -O - http://llvm.org/apt/llvm-snapshot.gpg.key | sudo apt-key add -
         - sudo apt-get -y update
-        - sudo apt-get -y install llvm-3.7-dev
         
-        - sudo add-apt-repository -y ppa:ethereum/ethereum
-        - sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-        - sudo apt-get -y update
+        - sudo apt-get -y install build-essential cmake git language-pack-en-base libboost-all-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libz-dev llvm-3.7-dev opencl-headers
         
-        - sudo apt-get -y install build-essential git libboost-all-dev libedit-dev libgmp-dev libleveldb-dev libminiupnpc-dev libcurl4-openssl-dev libcryptopp-dev libmicrohttpd-dev libjsoncpp-dev libz-dev opencl-headers
-        
-        - sudo apt-get -y install libargtable2-dev
+        - sudo apt-get -y install libargtable2-dev libedit-dev
         - git clone git://github.com/cinemast/libjson-rpc-cpp.git
         - cd libjson-rpc-cpp && git checkout v0.6.0
         - mkdir libjson-rpc-cpp/build
         - cd libjson-rpc-cpp/build && cmake .. && make && sudo make install
         - sudo ldconfig
+
+        - sudo dpkg-reconfigure locales
 
 test:
     override:
