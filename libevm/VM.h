@@ -76,6 +76,18 @@ public:
 
 private:
 
+	struct InnerState
+	{
+		InnerState(byte* p=0, unsigned n=0, Instruction i=Instruction::STOP, uint64_t pc=0, u256* sp=0)
+			: p(p), n(n), i(i), pc(pc), sp(sp) {};
+		byte* p;
+		unsigned n;
+		Instruction i;
+		uint64_t pc;
+		u256* sp;
+	};
+	InnerState execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, InnerState _in);
+
 	static std::array<InstructionMetric, 256> metrics();
 	void makeJumpDestTable(ExtVMFace& _ext);
 	uint64_t verifyJumpDest(u256 const& _dest);
