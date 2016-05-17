@@ -22,7 +22,8 @@
  ******************************************************************************/
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-
+#pragma GCC diagnostic ignored "-Wignored-attributes"
+ 
 /*! \file
  *
  *   \brief C++ bindings for OpenCL 1.0 (rev 48) and OpenCL 1.1 (rev 33)    
