@@ -11,9 +11,9 @@
 language: cpp
 matrix:
     include:
-        - os: osx
-          osx_image:
-          - xcode7.3
+        - os: linux
+          dist: trusty
+          sudo: required
 before_install:
     - sudo ./setup.sh
 before_script:
