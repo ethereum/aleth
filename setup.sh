@@ -58,15 +58,13 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
         cmake \
         git \
         libboost-all-dev \
-        libedit-dev \
-        libgmp-dev \
-        libleveldb-dev \
-        libminiupnpc-dev \
         libcurl4-openssl-dev \
         libcryptopp-dev \
-        libmicrohttpd-dev \
+        libgmp-dev \
         libjsoncpp-dev \
-        libjson-rpc-cpp-dev \
+        libleveldb-dev \
+        libmicrohttpd-dev \
+        libminiupnpc-dev \
         libz-dev \
         llvm-3.7-dev \
         opencl-headers
