@@ -22,7 +22,10 @@
  ******************************************************************************/
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma GCC diagnostic ignored "-Wignored-attributes"
+
+#if __GNUC__ >= 6
+    #pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
  
 /*! \file
  *
