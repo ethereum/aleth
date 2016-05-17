@@ -10,7 +10,7 @@
 
 dependencies:
     override:
-        - sudo ./setup.sh
+        - ./setup.sh
 test:
     override:
         - mkdir build
