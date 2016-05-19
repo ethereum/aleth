@@ -40,6 +40,7 @@ ChainOperationParams::ChainOperationParams()
 {
 	otherParams = std::unordered_map<std::string, std::string>{
 		{"minGasLimit", "0x1388"},
+		{"maxGasLimit", "0x7fffffffffffffff"},
 		{"gasLimitBoundDivisor", "0x0400"},
 		{"minimumDifficulty", "0x020000"},
 		{"difficultyBoundDivisor", "0x0800"},
