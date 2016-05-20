@@ -77,7 +77,7 @@ bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onO
 	uint64_t io_gas64 = uint64_t(io_gas);
 	m_schedule = &_ext.evmSchedule();
 	makeJumpDestTable(_ext);
-cerr << "VM::execImpl stack="<< &io_gas64 << endl;
+//cerr << "VM::execImpl stack="<< &io_gas64 << endl;
 	VM::InnerState out;
 	try
 	{
