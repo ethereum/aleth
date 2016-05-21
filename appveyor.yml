@@ -8,6 +8,7 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+os: Visual Studio 2015
 install:
     - cd extdep && getstuff.bat > NUL
 before_build:
