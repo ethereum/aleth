@@ -9,6 +9,9 @@
 #------------------------------------------------------------------------------
 
 os: Visual Studio 2015
+configuration:
+    - Debug
+    - RelWithDebInfo
 install:
     - cd extdep && getstuff.bat > NUL
 before_build:
