@@ -75,7 +75,14 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     # so instead we build the latest release label (v0.6.0) from source, which works just
     # fine.   We should update our PPA.
     #
-    # See https://github.com/ethereum/webthree-umbrella/issues/513.
+    # See https://github.com/ethereum/webthree-umbrella/issues/513
+    #
+    # Hmm.   Arachnid is still getting this issue on OS X, which already has v0.6.0, so
+    # it isn't as simple as just updating all our builds to that version, though that is
+    # sufficient for us to get CircleCI and TravisCI working.   We still haven't got to
+    # the bottom of this issue, and are going to need to debug it in some scenario where
+    # we can reproduce it 100%, which MIGHT end up being within our automation here, but
+    # against a build-from-source-with-extra-printfs() of v0.4.2.
     sudo apt-get -y install libargtable2-dev libedit-dev
     git clone git://github.com/cinemast/libjson-rpc-cpp.git
     cd libjson-rpc-cpp
