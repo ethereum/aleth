@@ -102,6 +102,12 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/CM
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/README.md > $outputDirectory/README.md
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/test/CMakeLists.txt > $outputDirectory/test/CMakeLists.txt
 
+# These files could be upstreamed, but it isn't worth doing so, because they can only be used after the repo reorganization.
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.travis.yml > $outputDirectory/.travis.yml
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/appveyor.yml > $outputDirectory/appveyor.yml
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/circle.yml > $outputDirectory/circle.yml
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/setup.sh > $outputDirectory/setup.sh
+
 # TODO - evmjit submodule will need "hooking up", for now we'll just git clone it into a local directory to get
 # the content we need for testing.
 git clone https://github.com/ethereum/evmjit $outputDirectory/evmjit
