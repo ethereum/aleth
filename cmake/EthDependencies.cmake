@@ -16,7 +16,17 @@ endfunction()
 if (DEFINED MSVC)
 	# by defining CMAKE_PREFIX_PATH variable, cmake will look for dependencies first in our own repository before looking in system paths like /usr/local/ ...
 	# this must be set to point to the same directory as $ETH_DEPENDENCY_INSTALL_DIR in /extdep directory
-	set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../extdep/install/windows/x64")
+
+	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
+		set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../extdep/install/windows/x64")
+	else()
+		get_filename_component(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/install" ABSOLUTE)
+		set(ETH_DEPENDENCY_INSTALL_DIR
+			"${DEPS_DIR}/x64"					# Old location for deps.
+			"${DEPS_DIR}/win64"					# New location for deps.
+			"${DEPS_DIR}/win64/Release/share"	# LLVM shared cmake files.
+		)
+	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
 
 	# Qt5 requires opengl
@@ -52,10 +62,8 @@ find_program(CTEST_COMMAND ctest)
 ## use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
-# TODO hanlde other msvc versions or it will fail find them
-	set(Boost_COMPILER -vc120)
 # use static boost libraries *.lib
 	set(Boost_USE_STATIC_LIBS ON)
 

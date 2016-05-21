@@ -23,6 +23,10 @@
 
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 
+#if __GNUC__ >= 6
+    #pragma GCC diagnostic ignored "-Wignored-attributes"
+#endif
+ 
 /*! \file
  *
  *   \brief C++ bindings for OpenCL 1.0 (rev 48) and OpenCL 1.1 (rev 33)    

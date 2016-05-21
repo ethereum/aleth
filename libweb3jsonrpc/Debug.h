@@ -25,10 +25,12 @@ public:
 	}
 
 	virtual Json::Value debug_trace(std::string const& _blockNumberOrHash, int _txIndex) override;
+	virtual Json::Value debug_storageAt(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _address) override;
 
 private:
 	eth::Client& m_eth;
 	h256 blockHash(std::string const& _blockNumberOrHash) const;
+
 };
 
 }

@@ -122,6 +122,7 @@ cd "$WORKSPACE/$component"
 mkdir build || true
 cd build
 emcmake cmake \
+  -DCMAKE_BUILD_TYPE=Release \
   -DEMSCRIPTEN=1 \
   -DCMAKE_CXX_COMPILER=em++ \
   -DCMAKE_C_COMPILER=emcc \
