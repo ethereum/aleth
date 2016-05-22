@@ -8,6 +8,10 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+checkout:
+    post:
+        - git submodule sync
+        - git submodule update --init
 dependencies:
     override:
         - ./setup.sh

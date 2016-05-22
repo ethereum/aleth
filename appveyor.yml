@@ -12,6 +12,7 @@ os: Visual Studio 2015
 configuration:
     - Debug
     - RelWithDebInfo
+clone_depth: 2
 install:
     - cd deps && main.bat
 before_build:
