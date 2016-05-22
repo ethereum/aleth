@@ -6,3 +6,6 @@
 	path = webthree
 	url = https://github.com/ethereum/webthree
 	branch = develop
+[submodule "deps"]
+	path = deps
+	url = https://github.com/ethereum/cpp-dependencies
