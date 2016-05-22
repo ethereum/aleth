@@ -8,4 +8,4 @@
 	branch = develop
 [submodule "deps"]
 	path = deps
-	url = https://github.com/ethereum/cpp-dependencies
+	url = https://github.com/bobsummerwill/cpp-dependencies
