@@ -13,7 +13,7 @@ configuration:
     - Debug
     - RelWithDebInfo
 install:
-    - cd extdep && getstuff.bat > NUL
+    - cd deps && main.bat
 before_build:
     - mkdir build
     - cd build
