@@ -12,9 +12,9 @@ os: Visual Studio 2015
 configuration:
     - Debug
     - RelWithDebInfo
-clone_depth: 2
 install:
-    - cd deps && dir
+    - git submodule update --init --recursive
+    - cd deps && dir && main.bat
 before_build:
     - mkdir build
     - cd build
