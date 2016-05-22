@@ -14,7 +14,7 @@ configuration:
     - RelWithDebInfo
 clone_depth: 2
 install:
-    - cd deps && main.bat
+    - cd deps && dir
 before_build:
     - mkdir build
     - cd build
