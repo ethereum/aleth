@@ -70,43 +70,21 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// interpreter entry points
+// interpreter entry point
 
 bytesConstRef VM::execImpl(vmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	uint64_t io_gas64 = uint64_t(io_gas);
-	m_schedule = &_ext.evmSchedule();
-	makeJumpDestTable(_ext);
-//cerr << "VM::execImpl stack="<< &io_gas64 << endl;
-	VM::InnerState out;
-	try
-	{
-		do
-		{
-			out = execInner(io_gas64, _ext, _onOp, out);
-			
-			// do the actual create or call
-			// ...
-			// then reenter the interpreter and pick where we left off
-		}
-		while (0);
-	}
-	catch(...)
-	{
-		io_gas = io_gas64;
-		throw;
-	}
-	io_gas = io_gas64;
-	return bytesConstRef(out.p, out.n);
-}
-
-VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, VM::InnerState _in)
-{
-	Instruction inst = _in.i;
-	static const auto c_metrics = metrics();
-	uint64_t PC = _in.pc;
-	u256* SP = _in.pc ? _in.sp : m_stack - 1;
+	uint64_t PC = 0;
+	u256* SP = m_stack - 1;
 	m_pSP = &SP;
+	Instruction inst;
+	static const auto c_metrics = metrics();
+	InstructionMetric metric = c_metrics[0];
+
+	m_schedule = &_ext.evmSchedule();
+	rmword runGas = 0, newTempSize = 0, copySize = 0;
+
+	makeJumpDestTable(_ext);
 	
 	//
 	// closures for tracing, checking, metering, measuring ...
@@ -117,7 +95,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 	auto onOperation = [&]()
 	{
 		if (_onOp)
-			_onOp(++nSteps, PC, inst, newMemSize > m_mem.size() ? (newMemSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
+			_onOp(++nSteps, PC, inst, newTempSize > m_mem.size() ? (newTempSize - m_mem.size()) / 32 : rmword(0), runGas, io_gas, this, &_ext);
 	};
 #else
 	auto onOperation = [&]()
@@ -157,8 +135,8 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 	};
 	
 	auto resetGas = [&]() {
-		if (newMemSize > m_mem.size())
-			runGas += to_rmword(gasForMem(newMemSize) - gasForMem(m_mem.size())) ;
+		if (newTempSize > m_mem.size())
+			runGas += to_rmword(gasForMem(newTempSize) - gasForMem(m_mem.size())) ;
 		runGas += to_rmword(m_schedule->copyGas * ((copySize + 31) / 32));
 		if (io_gas < runGas)
 			throwVMException(OutOfGas());
@@ -166,17 +144,17 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 	
 	auto resetMem = [&]()
 	{
-		newMemSize = (newMemSize + 31) / 32 * 32;
+		newTempSize = (newTempSize + 31) / 32 * 32;
 		resetGas();
-		if (newMemSize > m_mem.size())
-			m_mem.resize(newMemSize);
+		if (newTempSize > m_mem.size())
+			m_mem.resize(newTempSize);
 	};
 
 	auto logGasMem = [&](Instruction inst)
 	{
 		unsigned n = (unsigned)inst - (unsigned)Instruction::LOG0;
 		runGas = to_rmword(m_schedule->logGas + m_schedule->logTopicGas * n + u512(m_schedule->logDataGas) * *(SP-1));
-		newMemSize = memNeed(*SP, *(SP-1));
+		newTempSize = memNeed(*SP, *(SP-1));
 		resetMem();
 	};
 
@@ -187,7 +165,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 	
 	auto case_create = [&]()
 	{
-		newMemSize = memNeed(*(SP-1), *(SP-2));
+		newTempSize = memNeed(*(SP-1), *(SP-2));
 		runGas = to_rmword(m_schedule->createGas);
 		resetMem();
 		onOperation();
@@ -198,11 +176,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		unsigned initSize = (unsigned)*SP--;
 		
 		if (_ext.balance(_ext.myAddress) >= endowment && _ext.depth < 1024)
-		{
-			vmword gas = vmword(io_gas);
-			*++SP = (u160)_ext.create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), _onOp);
-			io_gas = rmword(gas);
-		}
+			*++SP = (u160)_ext.create(endowment, io_gas, bytesConstRef(m_mem.data() + initOff, initSize), _onOp);
 		else
 			*++SP = 0;
 	};
@@ -218,7 +192,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 			runGas += to_rmword(m_schedule->callValueTransferGas);
 	
 		unsigned sizesOffset = inst == Instruction::DELEGATECALL ? 3 : 4;
-		newMemSize = std::max(
+		newTempSize = std::max(
 			memNeed(m_stack[(1 + SP - m_stack) - sizesOffset - 2], m_stack[(1 + SP - m_stack) - sizesOffset - 3]),
 			memNeed(m_stack[(1 + SP - m_stack) - sizesOffset], m_stack[(1 + SP - m_stack) - sizesOffset - 1])
 		);
@@ -264,7 +238,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		else
 			*++SP = 0;
 
-		io_gas += to_rmword(callParams->gas);
+		io_gas += callParams->gas;
 	};
 	
 
@@ -276,14 +250,14 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 	for (;;)
 	{
 		inst = (Instruction)_ext.getCode(PC);	
-		InstructionMetric metric = c_metrics[static_cast<size_t>(inst)];
+		metric = c_metrics[static_cast<size_t>(inst)];
 //cerr << "VM::execImpl PC=" << PC << ": " << instructionInfo(inst).name << endl;
 		
 		checkStack(metric.args, metric.ret);
 		
 		// FEES...
 		runGas = to_rmword(m_schedule->tierStepGas[metric.gasPriceTier]);
-		newMemSize = m_mem.size();
+		newTempSize = m_mem.size();
 		copySize = 0;
 		
 		switch (inst)
@@ -312,14 +286,14 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 
 		case Instruction::RETURN:
 		{
-			newMemSize = memNeed(*SP, *(SP-1));
+			newTempSize = memNeed(*SP, *(SP-1));
 			resetMem();
 			onOperation();
 			resetIOGas();
 
 			unsigned b = (unsigned)*SP--;
 			unsigned s = (unsigned)*SP--;
-			return InnerState(m_mem.data() + b, s);
+			return bytesConstRef(m_mem.data() + b, s);
 		}
 
 		case Instruction::SUICIDE:
@@ -329,14 +303,14 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 
 			Address dest = asAddress(*SP);
 			_ext.suicide(dest);
-			return InnerState(0, 0, Instruction::SUICIDE);
+			return bytesConstRef();
 		}
 
 		case Instruction::STOP:
 			onOperation();
 			resetIOGas();
 
-			return InnerState(0, 0, Instruction::STOP);
+			return bytesConstRef();
 			
 			
 		//
@@ -346,7 +320,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		case Instruction::MLOAD:
 		{
 			memMax(*SP);
-			newMemSize = to_rmword(*SP) + 32;
+			newTempSize = to_rmword(*SP) + 32;
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -358,7 +332,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		case Instruction::MSTORE:
 		{
 			memMax(*SP);
-			newMemSize = to_rmword(*SP) + 32;
+			newTempSize = to_rmword(*SP) + 32;
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -371,7 +345,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		case Instruction::MSTORE8:
 		{
 			memMax(*SP);
-			newMemSize = to_rmword(*SP) + 1;
+			newTempSize = to_rmword(*SP) + 1;
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -384,7 +358,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		case Instruction::SHA3:
 		{
 			runGas = to_rmword(m_schedule->sha3Gas + (u512(*(SP-1)) + 31) / 32 * m_schedule->sha3WordGas);
-			newMemSize = memNeed(*SP, *(SP-1));
+			newTempSize = memNeed(*SP, *(SP-1));
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -714,7 +688,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 
 		case Instruction::CALLDATACOPY:
 			copySize = to_rmword(*(SP-2));
-			newMemSize = memNeed(*SP, *(SP-2));
+			newTempSize = memNeed(*SP, *(SP-2));
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -724,7 +698,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 
 		case Instruction::CODECOPY:
 			copySize = to_rmword(*(SP-2));
-			newMemSize = memNeed(*SP, *(SP-2));
+			newTempSize = memNeed(*SP, *(SP-2));
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -735,7 +709,7 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		case Instruction::EXTCODECOPY:
 		{
 			copySize = to_rmword(*(SP-3));
-			newMemSize = memNeed(*(SP-1), *(SP-3));
+			newTempSize = memNeed(*(SP-1), *(SP-3));
 			resetMem();
 			onOperation();
 			resetIOGas();
@@ -978,5 +952,5 @@ VM::InnerState VM::execInner(rmword& io_gas, ExtVMFace& _ext, OnOpFunc const& _o
 		++PC;
 	}
 
-	return InnerState(0, 0, Instruction::STOP);
+	return bytesConstRef();
 }
