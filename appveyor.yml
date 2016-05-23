@@ -14,7 +14,7 @@ configuration:
     - RelWithDebInfo
 install:
     - git submodule update --init --recursive
-    - cmake -P deps/scripts/install_deps.cmake
+    - cmake -P deps\install_deps.cmake
 before_build:
     - mkdir build
     - cd build
