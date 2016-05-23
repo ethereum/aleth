@@ -128,7 +128,6 @@ void help()
 		<< "    -a,--address <addr>  Set the author (mining payout) address to given address (default: auto)." << endl
 		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off)." << endl
 		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off)." << endl
-		<< "    --mine-on-wrong-chain  Mine even when we know that it is the wrong chain (default: off)." << endl
 		<< "    -C,--cpu  When mining, use the CPU." << endl
 		<< "    -G,--opencl  When mining, use the GPU via OpenCL." << endl
 		<< "    --opencl-platform <n>  When mining using -G/--opencl, use OpenCL platform n (default: 0)." << endl
@@ -366,7 +365,6 @@ int main(int argc, char** argv)
 
 	/// Mining params
 	unsigned mining = 0;
-	bool mineOnWrongChain = false;
 	Address signingKey;
 	Address sessionKey;
 	Address author = signingKey;
@@ -468,8 +466,6 @@ int main(int argc, char** argv)
 			mode = OperationMode::Export;
 			filename = argv[++i];
 		}
-		else if (arg == "--mine-on-wrong-chain")
-			mineOnWrongChain = true;
 		else if (arg == "--script" && i + 1 < argc)
 			scripts.push_back(argv[++i]);
 		else if (arg == "--format" && i + 1 < argc)
@@ -1011,7 +1007,7 @@ int main(int argc, char** argv)
 		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
 		&nodesState);
-	web3.ethereum()->setSealOption("sealOnBadChain", rlp(mineOnWrongChain));
+
 	if (!extraData.empty())
 		web3.ethereum()->setExtraData(extraData);
 
