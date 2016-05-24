@@ -740,7 +740,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
-                    "0x" : "0x80"
+                    "0x" : "0x00"
                 }
             }
         },
@@ -775,7 +775,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
-                    "0x" : "0x80"
+                    "0x" : "0x01"
                 }
             }
         },
@@ -809,7 +809,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
-                    "0x" : "0x80"
+                    "0x" : "0x00"
                 }
             }
         },
@@ -1466,7 +1466,7 @@
 	"expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
-                    "0x" : "0x01"
+                    "0x" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
                 }
             }
         },
@@ -1474,7 +1474,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000000000",
             "nonce" : "0",
-            "code" : "{ [[ 0 ]] (NOT 0 )}",
+            "code" : "{ [[ 0 ]] (NOT 0)}",
             "storage": {}
         }
         },
@@ -1501,6 +1501,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
+		    "0x00" : "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffd"
                 }
             }
         },
@@ -1508,7 +1509,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000000000",
             "nonce" : "0",
-            "code" : "{ [[ 0 ]] (NOT 2 )}",
+            "code" : "{ [[ 0 ]] (NOT 2) }",
             "storage": {}
         }
         },
@@ -1569,6 +1570,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
+		    "0x00" : "0x01"
                 }
             }
         },
@@ -1603,6 +1605,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
+		    "0x00" : "0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe"
                 }
             }
         },
@@ -1637,7 +1640,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
-                    "0x" : "0x01"
+		    "0x00" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
                 }
             }
         },

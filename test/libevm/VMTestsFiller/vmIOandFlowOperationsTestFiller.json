@@ -338,6 +338,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
+			"0x01" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
                 }
             }
         },
@@ -345,7 +346,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "{ (MSTORE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff23 ) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff ) [[ 1 ]] (MLOAD 1) } ",
             "storage": {}
         }
         },
@@ -595,6 +596,7 @@
         "expect" : {
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "storage" : {
+			"0x01" : "0xff00000000000000000000000000000000000000000000000000000000000000"
                 }
             }
         },
@@ -602,7 +604,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "{ (MSTORE8 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff23 ) [[ 1 ]] (MLOAD 1) } ",
+            "code" : "{ (MSTORE8 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) [[ 1 ]] (MLOAD 1) } ",
             "storage": {}
         }
         },

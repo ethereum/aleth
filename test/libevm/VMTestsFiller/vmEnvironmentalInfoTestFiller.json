@@ -1641,7 +1641,7 @@
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
                 "nonce" : "0",
-                "code" : "{ (EXTCODECOPY (ADDRESS) 0 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa 8 ) [[ 0 ]] @0}",
+                "code" : "{ (EXTCODECOPY (ADDRESS) 0 0xfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffa 8 ) [[ 0 ]] @0 }",
                 "storage": {}
             }
         },
@@ -1679,13 +1679,13 @@
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
                 "nonce" : "0",
-                "code" : "{ (EXTCODECOPY (CALLER) 0 0 0 ) ) [[ 0 ]] @0   }",
+                "code" : "{ (EXTCODECOPY (CALLER) 0 0 0) [[ 0 ]] @0 }",
                 "storage": {}
             },
             "cd1722f3947def4cf144679da39c4c32bdc35681" : {
                 "balance" : "100000000000000000000000",
                 "nonce" : "0",
-                "code" : "{ [[ 0 ]] 5 }",
+                "code" : "{ [[0]] 5 }",
                 "storage": {}
             }
         },

@@ -1249,7 +1249,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "{ (MSTORE8 0 0xff) (LOG3 0 32 0 0 0 (CALLER) ) }",
+            "code" : "{ (MSTORE8 0 0xff) (LOG4 0 32 0 0 0 (CALLER) ) }",
             "storage": {}
         }
         },
@@ -1277,7 +1277,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "{ (MSTORE8 0 0xff) (LOG3 0 32 (PC) (PC) (PC) (PC) ) }",
+            "code" : "{ (MSTORE8 0 0xff) (LOG4 0 32 (PC) (PC) (PC) (PC) ) }",
             "storage": {}
         }
         },
