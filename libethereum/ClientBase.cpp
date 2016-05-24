@@ -593,5 +593,5 @@ bool ClientBase::isKnownTransaction(h256 const& _transactionHash) const
 
 bool ClientBase::isKnownTransaction(h256 const& _blockHash, unsigned _i) const
 {
-	return isKnown(_blockHash) && bc().transactions().size() > _i;
+	return isKnown(_blockHash) && asOf(_blockHash).pending().size() > _i;
 }

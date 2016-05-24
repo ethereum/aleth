@@ -239,12 +239,7 @@ void replaceLLLinState(json_spirit::mObject& _o)
 		if (obj.count("code") && obj["code"].type() == json_spirit::str_type)
 		{
 			string code = obj["code"].get_str();
-			if (code == "")
-				obj["code"] = "0x";
-			else
-				if (code.find("0x") != 0)
-					obj["code"] = compileLLL(code);
-
+			obj["code"] = compileLLL(code);
 		}
 		account.second = obj;
 	}
@@ -557,6 +552,11 @@ string compileLLL(string const& _code)
 	BOOST_ERROR("LLL compilation only supported on posix systems.");
 	return "";
 #else
+	if (_code == "")
+		return "0x";
+	if (_code.substr(0,2) == "0x" && _code.size() >= 2)
+		return _code;
+
 	char input[1024];
 	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
 	string cmd = string("../../solidity/lllc/lllc -o 0 ") + path.string();
