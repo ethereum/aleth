@@ -26,7 +26,15 @@ elseif (DEFINED APPLE)
 	set(LLVM_DIR "/usr/local/opt/llvm37/lib/llvm-3.7/share/llvm/cmake")
 endif()
 
-find_package(LLVM 3.7 REQUIRED CONFIG)
+# Double-hack!  Hardcoding of LLVM 3.8 for Windows and LLVM 3.7 on other platforms,
+# where we really don't need or want to be so specific.   This will need resolving
+# upstream before this repository can go live.
+if (DEFINED MSVC)
+	find_package(LLVM 3.8 REQUIRED CONFIG)
+else()
+	find_package(LLVM 3.7 REQUIRED CONFIG)
+endif()
+
 if (${LLVM_VERSION} VERSION_LESS 3.7)
 	message(FATAL_ERROR "Incompatible LLVM version ${LLVM_VERSION}")
 endif()
