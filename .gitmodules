@@ -9,3 +9,6 @@
 [submodule "deps"]
 	path = deps
 	url = https://github.com/bobsummerwill/cpp-dependencies
+[submodule "evmjit"]
+	path = evmjit
+	url = https://github.com/ethereum/evmjit.git
