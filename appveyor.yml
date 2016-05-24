@@ -20,4 +20,4 @@ before_build:
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" .. -DGUI=0
 build:
-    project: cpp-ethereum.sln
+    project: cpp-ethereum\build\cpp-ethereum.sln
