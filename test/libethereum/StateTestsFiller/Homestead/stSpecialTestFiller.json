@@ -54,7 +54,7 @@
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
-			"currentGasLimit" : "2^63-1",
+	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,

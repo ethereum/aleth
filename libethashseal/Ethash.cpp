@@ -102,6 +102,9 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		if (_bi.gasLimit() < chainParams().u256Param("minGasLimit"))
 			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().u256Param("minGasLimit")), bigint(_bi.gasLimit())) );
 
+		if (_bi.gasLimit() > u256("9223372036854775807"))
+			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint("9223372036854775807"), bigint(_bi.gasLimit())) );
+
 		if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
 			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 	}
