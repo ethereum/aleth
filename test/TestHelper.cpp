@@ -554,7 +554,7 @@ string compileLLL(string const& _code)
 #else
 	if (_code == "")
 		return "0x";
-	if (_code.substr(0,2) == "0x" && _code.size() > 2)
+	if (_code.substr(0,2) == "0x" && _code.size() >= 2)
 		return _code;
 
 	char input[1024];
