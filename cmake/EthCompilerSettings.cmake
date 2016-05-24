@@ -147,6 +147,35 @@ elseif (DEFINED MSVC)
 	add_compile_options(-DNOMINMAX)					# undefine windows.h MAX && MIN macros cause it cause conflicts with std::min && std::max functions
 	add_compile_options(-DMINIUPNP_STATICLIB)		# define miniupnp static library
 
+	# It appears that LLVM 3.8 has introduced some additional warnings.
+	# They don't appear to be specific to VS2015, but related to code which was modified
+	# between LLVM 3.7 and LLVM 3.8.    Ideally we would localize these warning suppressions to just the compilation
+	# units which hit the issues, and we would wrap them in push/pop warning pragmas, so that we could bracket the
+	# "sin" to just the code which needs it.  Sadly, it appears that these warnings pop up all over the place,
+	# because they are in common headers.
+	#
+	# We should report the issues to the LLVM team.  Hopefully they can be fixed by LLVM 3.9, or LLVM 3.8.1, if they
+	# will be doing such a point-release.
+	#
+	if (EVMJIT)
+		# Compiler Warning (level 1) C4141
+		# 'modifier' : used more than once
+		# https://msdn.microsoft.com/en-us/library/6shtf0k3.aspx
+		#
+		# LLVM 3.8 has got instances of the LLVM_ATTRIBUTE_ALWAYS_INLINE macro and 'inline' modifiers in some places.
+		# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/ADT/StringRef.h#L566
+		# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/ADT/StringRef.h#L571
+		add_compile_options(/wd4141)
+		
+		# Compiler Warning (level 1) C4291
+		# 'declaration' : no matching operator delete found; memory will not be freed if initialization throws an exception
+		# https://msdn.microsoft.com/en-us/library/cxdxz3x6.aspx
+		#
+		# LLVM 3.8 is using placement new for at least 'llvm::User::operator new'.
+		# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/IR/Instructions.h#L1441
+		add_compile_options(/wd4291)
+	endif()
+
 	# Always use Release variant of C++ runtime.
 	# We don't want to provide Debug variants of all dependencies. Some default
 	# flags set by CMake must be tweaked.
