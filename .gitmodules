@@ -12,5 +12,5 @@
 	branch = master
 [submodule "evmjit"]
 	path = evmjit
-	url = https://github.com/ethereum/evmjit.git
-	branch = develop
+	url = https://github.com/bobsummerwill/evmjit.git
+	branch =  llvm_versions
