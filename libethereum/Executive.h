@@ -52,10 +52,19 @@ struct ExecutiveWarnChannel: public LogChannel { static const char* name(); stat
 class StandardTrace
 {
 public:
+	struct DebugOptions
+	{
+		bool disableStorage = false;
+		bool disableMemory = false;
+		bool disableStack = false;
+		bool fullStorage = false;
+	};
+
 	StandardTrace();
 	void operator()(uint64_t _steps, Instruction _inst, bigint _newMemSize, bigint _gasCost, bigint _gas, VM* _vm, ExtVMFace const* _extVM);
 
 	void setShowMnemonics() { m_showMnemonics = true; }
+	void setOptions(DebugOptions _options) { m_options = _options; }
 
 	std::string json(bool _styled = false) const;
 
@@ -66,6 +75,7 @@ private:
 	std::vector<Instruction> m_lastInst;
 	bytes m_lastCallData;
 	Json::Value m_trace;
+	DebugOptions m_options;
 };
 
 /**
