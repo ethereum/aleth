@@ -26,15 +26,15 @@ public:
 	}
 
 
-	virtual Json::Value debug_traceTransaction(std::string const& _blockHash, int _txIndex, Json::Value const& _json) override;
+	virtual Json::Value debug_traceTransaction(std::string const& _txHash, Json::Value const& _json) override;
 	virtual Json::Value debug_traceBlockByNumber(int _blockNumber, Json::Value const& _json) override;
 	virtual Json::Value debug_traceBlockByHash(std::string const& _blockHash, Json::Value const& _json) override;
-	virtual Json::Value debug_storageAt(std::string const& _blockNumberOrHash, int _txIndex, std::string const& _address) override;
+	virtual Json::Value debug_storageAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address) override;
 
 private:
 
 	eth::Client& m_eth;
-	h256 blockHash(std::string const& _blockNumberOrHash) const;
+	h256 blockHash(std::string const& _blockHashOrNumber) const;
 	Json::Value traceTransaction(dev::eth::Executive& _e, dev::eth::Transaction const& _t, Json::Value const& _json);
 	Json::Value traceBlock(dev::eth::Block const& _block, Json::Value const& _json);
 };
