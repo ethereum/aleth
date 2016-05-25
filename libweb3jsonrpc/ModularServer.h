@@ -135,6 +135,8 @@ public:
 
 	ModularServer<I, Is...>(I* _i, Is*... _is): ModularServer<Is...>(_is...), m_interface(_i)
 	{
+		if (!m_interface)
+			return;
 		for (auto const& method: m_interface->methods())
 		{
 			m_methods[std::get<0>(method).GetProcedureName()] = std::get<1>(method);

@@ -1221,33 +1221,34 @@ int main(int argc, char** argv)
 
 	if (jsonRPCURL > -1 || ipc)
 	{
+		using FullServer = ModularServer<
+			rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+			rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+			rpc::DebugFace
+		>;
 		sessionManager.reset(new rpc::SessionManager());
 		accountHolder.reset(new SimpleAccountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator));
 		auto ethFace = new rpc::Eth(*web3.ethereum(), *accountHolder.get());
-		auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 		if (jsonRPCURL >= 0)
 		{
+			rpc::AdminEth* adminEth = nullptr;
+			rpc::PersonalFace* personal = nullptr;
+			rpc::AdminNet* adminNet = nullptr;
+			rpc::AdminUtils* adminUtils = nullptr;
 			if (adminViaHttp)
-				jsonrpcHttpServer.reset(new ModularServer<
-					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-					rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
-					rpc::DebugFace
-				>(
-					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get()),
-					new rpc::Debug(*web3.ethereum())
-				));
-			else
-				jsonrpcHttpServer.reset(new ModularServer<
-					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-					rpc::NetFace, rpc::Web3Face, rpc::DebugFace
-				>(
-					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()),
-					new rpc::Debug(*web3.ethereum())
-				));
+			{
+				personal = new rpc::Personal(keyManager, *accountHolder);
+				adminEth = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
+				adminNet = new rpc::AdminNet(web3, *sessionManager.get());
+				adminUtils = new rpc::AdminUtils(*sessionManager.get());
+			}
+			jsonrpcHttpServer.reset(new FullServer(
+				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
+				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), personal,
+				adminEth, adminNet, adminUtils,
+				new rpc::Debug(*web3.ethereum())
+			));
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 			httpConnector->setAllowedOrigin(rpcCorsDomain);
 			jsonrpcHttpServer->addConnector(httpConnector);
@@ -1255,15 +1256,11 @@ int main(int argc, char** argv)
 		}
 		if (ipc)
 		{
-			jsonrpcIpcServer.reset(new ModularServer<
-				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
-				rpc::DebugFace
-			>(
+			jsonrpcIpcServer.reset(new FullServer(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
 				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-				adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()),
+				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
+				new rpc::AdminNet(web3, *sessionManager.get()),
 				new rpc::AdminUtils(*sessionManager.get()),
 				new rpc::Debug(*web3.ethereum())
 			));
