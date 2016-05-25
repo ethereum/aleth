@@ -157,24 +157,22 @@ elseif (DEFINED MSVC)
 	# We should report the issues to the LLVM team.  Hopefully they can be fixed by LLVM 3.9, or LLVM 3.8.1, if they
 	# will be doing such a point-release.
 	#
-	if (EVMJIT)
-		# Compiler Warning (level 1) C4141
-		# 'modifier' : used more than once
-		# https://msdn.microsoft.com/en-us/library/6shtf0k3.aspx
-		#
-		# LLVM 3.8 has got instances of the LLVM_ATTRIBUTE_ALWAYS_INLINE macro and 'inline' modifiers in some places.
-		# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/ADT/StringRef.h#L566
-		# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/ADT/StringRef.h#L571
-		add_compile_options(/wd4141)
-		
-		# Compiler Warning (level 1) C4291
-		# 'declaration' : no matching operator delete found; memory will not be freed if initialization throws an exception
-		# https://msdn.microsoft.com/en-us/library/cxdxz3x6.aspx
-		#
-		# LLVM 3.8 is using placement new for at least 'llvm::User::operator new'.
-		# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/IR/Instructions.h#L1441
-		add_compile_options(/wd4291)
-	endif()
+	# Compiler Warning (level 1) C4141
+	# 'modifier' : used more than once
+	# https://msdn.microsoft.com/en-us/library/6shtf0k3.aspx
+	#
+	# LLVM 3.8 has got instances of the LLVM_ATTRIBUTE_ALWAYS_INLINE macro and 'inline' modifiers in some places.
+	# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/ADT/StringRef.h#L566
+	# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/ADT/StringRef.h#L571
+	add_compile_options(/wd4141)
+	
+	# Compiler Warning (level 1) C4291
+	# 'declaration' : no matching operator delete found; memory will not be freed if initialization throws an exception
+	# https://msdn.microsoft.com/en-us/library/cxdxz3x6.aspx
+	#
+	# LLVM 3.8 is using placement new for at least 'llvm::User::operator new'.
+	# ie. https://github.com/llvm-mirror/llvm/blob/release_38/include/llvm/IR/Instructions.h#L1441
+	add_compile_options(/wd4291)
 
 	# Always use Release variant of C++ runtime.
 	# We don't want to provide Debug variants of all dependencies. Some default
