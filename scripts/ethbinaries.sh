@@ -137,6 +137,17 @@ if [[ $OSTYPE == "cygwin" ]]; then
 		exit 1
 	fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
+
+	# Detect whether we are running on a Yosemite or El Capitan machine.
+	if echo `sw_vers` | grep "10.11"; then
+		OSX_VERSION=elcapitan
+	elif echo `sw_vers` | grep "10.10"; then
+		OSX_VERSION=yosemite
+	else
+		echo Unsupported OS X version.  We only support Yosemite and El Capitan
+		exit 1
+	fi
+
 	if [[ $DEV_TEST -eq 1 ]]; then
 		echo "ETHBINARIES - INFO: Building MacOSX for development test.";
 		cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
@@ -157,6 +168,8 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 			echo "ETHBINARIES - ERROR: Building a DMG for Macosx failed.";
 			exit 1
 		fi
+		mv Ethereum.dmg cpp-ethereum-osx-${OSX_VERSION}.dmg
+		
 		make -j${MAKE_CORES} install
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBINARIES - ERROR: Make install for Macosx failed.";
@@ -178,7 +191,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 		# run again to process dylibs copied on previous step
 		for f in *.dylib ; do /usr/bin/env ruby ../../webthree-helpers/scripts/locdep.rb $f . ; done
 		cd ..
-		zip eth_standalone_osx.zip ethbin/*
+		zip cpp-ethereum-osx-${OSX_VERSION}.zip ethbin/*
 
 	fi
 else
