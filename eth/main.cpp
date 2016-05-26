@@ -1016,8 +1016,11 @@ int main(int argc, char** argv)
 	auto nodesState = contents(getDataDir() + "/network.rlp");
 	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
 
-	if (testingMode)	//force NoProof for testing
+	if (testingMode)
+	{
 		chainParams.sealEngineName = "NoProof";
+		chainParams.otherParams["allowFutureBlocks"] = "1";
+	}
 
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
