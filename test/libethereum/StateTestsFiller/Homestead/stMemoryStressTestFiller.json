@@ -204,7 +204,7 @@
         "env" : {
             "currentCoinbase" : "945304eb96065b2a98b57a48a06ae28d285a71b5",
             "currentDifficulty" : "5623894562375",
-	    "currentGasLimit" : "9223372036854775807",
+            "currentGasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "currentNumber" : "1150000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -240,103 +240,6 @@
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "264050067"
-        }
-    },
-
-    "CREATE_Bounds" : {
-        "env" : {
-            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-            "currentDifficulty" : "45678256",
-	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
-            "currentTimestamp" : 1,
-            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
-        },
-	"expect" : {
-	    "1000000000000000000000000000000000000000" : {
-                "balance" : "98"
-             },
-	    "13136008b64ff592819b2fa6d43f2835c452020e" : {
-		"balance" : "1"
-	     },
-	    "7c5a2c91b22d7a9226523d4ba717db6afb741ebd" : {
-		"balance" : "1"
-	     }
-	},
-        "pre" :
-        {
-	    "1000000000000000000000000000000000000000" : {
-                "balance" : "100",
-                "code" : "{  (MSTORE 0 0x6001600155601080600c6000396000f3006000355415600957005b6020356000 )  (MSTORE8 32 0x35) (MSTORE8 33 0x55) (CREATE 1 0 0) (CREATE 1 0 0xfffffff) }",
-                "nonce" : "0",
-                "storage" : {
-                }
-            },
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0xfffffffffffffffffffffffffffffffffffffffffffffffff",
-                "code" : "",
-                "nonce" : "0",
-                "storage" : {
-                }
-            }
-        },
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "0x7fffffffffffffff",
-            "gasPrice" : "1",
-            "nonce" : "0",
-            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "1000000000000000000000000000000000000000",
-            "value" : "0"
-        }
-    },
-
-    "CREATE_Bounds2" : {
-        "env" : {
-            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-            "currentDifficulty" : "45678256",
-	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
-            "currentTimestamp" : 1,
-            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
-        },
-	"expect" : {
-	    "1000000000000000000000000000000000000000" : {
-                "balance" : "100"
-             },
-	    "13136008b64ff592819b2fa6d43f2835c452020e" : {
-		"shouldnotexist" : "1"
-	     }
-	},
-        "pre" :
-        {
-	    "1000000000000000000000000000000000000000" : {
-                "balance" : "100",
-                "code" : "{  (MSTORE 0 0x6001600155601080600c6000396000f3006000355415600957005b6020356000 )  (MSTORE8 32 0x35) (MSTORE8 33 0x55) (CREATE 1 0 0xffffffff) }",
-                "nonce" : "0",
-                "storage" : {
-                }
-            },
-            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0xfffffffffffffffffffffffffffffffffffffffffffffffff",
-                "code" : "",
-                "nonce" : "0",
-                "storage" : {
-                }
-            }
-        },
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "0x7fffffffffffffff",
-            "gasPrice" : "1",
-            "nonce" : "0",
-            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
-            "to" : "1000000000000000000000000000000000000000",
-            "value" : "0"
         }
     }
 }

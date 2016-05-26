@@ -31,38 +31,38 @@ namespace eth
 
 struct EVMSchedule
 {
-	EVMSchedule(): tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
-	EVMSchedule(bool _efcd, bool _hdc, unsigned const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<unsigned, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
+	EVMSchedule(): tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}) {}
+	EVMSchedule(bool _efcd, bool _hdc, u256 const& _txCreateGas): exceptionalFailedCodeDeposit(_efcd), haveDelegateCall(_hdc), tierStepGas(std::array<u256, 8>{{0, 2, 3, 5, 8, 10, 20, 0}}), txCreateGas(_txCreateGas) {}
 	bool exceptionalFailedCodeDeposit = true;
 	bool haveDelegateCall = true;
-	unsigned stackLimit = 1024;
-	std::array<unsigned, 8> tierStepGas;
-	unsigned expGas = 10;
-	unsigned expByteGas = 10;
-	unsigned sha3Gas = 30;
-	unsigned sha3WordGas = 6;
-	unsigned sloadGas = 50;
-	unsigned sstoreSetGas = 20000;
-	unsigned sstoreResetGas = 5000;
-	unsigned sstoreRefundGas = 15000;
-	unsigned jumpdestGas = 1;
-	unsigned logGas = 375;
-	unsigned logDataGas = 8;
-	unsigned logTopicGas = 375;
-	unsigned createGas = 32000;
-	unsigned callGas = 40;
-	unsigned callStipend = 2300;
-	unsigned callValueTransferGas = 9000;
-	unsigned callNewAccountGas = 25000;
-	unsigned suicideRefundGas = 24000;
-	unsigned memoryGas = 3;
-	unsigned quadCoeffDiv = 512;
-	unsigned createDataGas = 200;
-	unsigned txGas = 21000;
-	unsigned txCreateGas = 53000;
-	unsigned txDataZeroGas = 4;
-	unsigned txDataNonZeroGas = 68;
-	unsigned copyGas = 3;
+	u256 stackLimit = 1024;
+	std::array<u256, 8> tierStepGas;
+	u256 expGas = 10;
+	u256 expByteGas = 10;
+	u256 sha3Gas = 30;
+	u256 sha3WordGas = 6;
+	u256 sloadGas = 50;
+	u256 sstoreSetGas = 20000;
+	u256 sstoreResetGas = 5000;
+	u256 sstoreRefundGas = 15000;
+	u256 jumpdestGas = 1;
+	u256 logGas = 375;
+	u256 logDataGas = 8;
+	u256 logTopicGas = 375;
+	u256 createGas = 32000;
+	u256 callGas = 40;
+	u256 callStipend = 2300;
+	u256 callValueTransferGas = 9000;
+	u256 callNewAccountGas = 25000;
+	u256 suicideRefundGas = 24000;
+	u256 memoryGas = 3;
+	u256 quadCoeffDiv = 512;
+	u256 createDataGas = 200;
+	u256 txGas = 21000;
+	u256 txCreateGas = 53000;
+	u256 txDataZeroGas = 4;
+	u256 txDataNonZeroGas = 68;
+	u256 copyGas = 3;
 };
 
 static const EVMSchedule DefaultSchedule = EVMSchedule();

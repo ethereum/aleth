@@ -2777,8 +2777,7 @@
         "env" : {
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
-	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentGasLimit" : "0xffffffffffffffffffffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -2821,7 +2820,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0xffffffffffffffffffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",

@@ -742,8 +742,7 @@
         "transaction" :
         {
             "data" : "",
-	    "gasLimit" : "2^63 - 1",
-            "gasLimit" : "9223372036854775807",
+            "gasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "gasPrice" : "1",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
@@ -771,24 +770,7 @@
         }
     },
 
-   "TransactionWithHihghGasPrice2" : {
-	"expect" : "valid",
-	"blocknumber" : "0",
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "21000",
-            "gasPrice" : "167697673397359",
-            "nonce" : "0",
-            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-            "value" : "0",
-            "v" : "27",
-            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-        }
-    },
-
-    "TransactionWithGasLimitxPriceOverflow" : {
+   "TransactionWithGasLimitxPriceOverflow" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
         "transaction" :
@@ -796,23 +778,6 @@
             "data" : "",
             "gasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "gasPrice" : "100000000000000000",
-            "nonce" : "0",
-            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-            "value" : "0",
-            "v" : "27",
-            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-        }
-    },
-
-   "TransactionWithGasLimitxPriceOverflow2" : {
-	"expect" : "valid",
-	"blocknumber" : "0",
-        "transaction" :
-        {
-            "data" : "",
-            "gasLimit" : "10000000",
-            "gasPrice" : "16769767339735900",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "0",
@@ -846,59 +811,7 @@
         {
             "data" : "",
             "gasLimit" : "115792089237316195423570985008687907853269984665640564039457584007913129639936",
-            "gasPrice" : "1",
-            "nonce" : "0",
-            "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-            "value" : "11",
-            "v" : "27",
-            "r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-            "s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-        }
-    },
-
-   "TransactionWithGasLimitOverflow63" : {
-	"expect" : "valid",
-	"blocknumber" : "0",
-	"transaction" :
-	{
-		"data" : "",
-		"gasLimit" : "9223372036854775808",
-		"gasPrice" : "1",
-		"nonce" : "0",
-		"to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-		"value" : "11",
-		"v" : "27",
-		"r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-		"s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-	}
-    },
-
-    "TransactionWithGasLimitOverflow63_1" : {
-	"expect" : "valid",
-	"blocknumber" : "0",
-	"transaction" :
-	{
-		"data" : "",
-		"gasLimit" : "9223372036854775809",
-		"gasPrice" : "1",
-		"nonce" : "0",
-		"to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
-		"value" : "11",
-		"v" : "27",
-		"r" : "0x48b55bfa915ac795c431978d8a6a992b628d557da5ff759b307d495a36649353",
-		"s" : "0xefffd310ac743f371de3b9f7f9cb56c0b28ad43601b4ab949f53faa07bd2c804"
-	}
-    },
-
-    "TransactionWithGasLimitOverflow2" : {
-	"expect" : "valid",
-	"blocknumber" : "0",
-        "transaction" :
-        {
-            "data" : "",
-	    "gasLimit" : "2^63",
-            "gasLimit" : "9223372036854775808",
-            "gasPrice" : "1",
+            "gasPrice" : "123",
             "nonce" : "0",
             "to" : "095e7baea6a6c7c4c2dfeb977efac326af552d87",
             "value" : "11",

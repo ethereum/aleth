@@ -232,7 +232,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 eth::OnOpFunc FakeExtVM::simpleTrace()
 {
 
-	return [](uint64_t steps, uint64_t PC, eth::Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
+	return [](uint64_t steps, eth::Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
 	{
 		FakeExtVM const& ext = *static_cast<FakeExtVM const*>(voidExt);
 		eth::VM& vm = *voidVM;
@@ -248,7 +248,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			o << std::showbase << std::hex << i.first << ": " << i.second << std::endl;
 
 		dev::LogOutputStream<eth::VMTraceChannel, false>() << o.str();
-		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << PC << " : " << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
+		dev::LogOutputStream<eth::VMTraceChannel, false>() << " | " << std::dec << ext.depth << " | " << ext.myAddress << " | #" << steps << " | " << std::hex << std::setw(4) << std::setfill('0') << vm.curPC() << " : " << instructionInfo(inst).name << " | " << std::dec << gas << " | -" << std::dec << gasCost << " | " << newMemSize << "x32" << " ]";
 
 		/*creates json stack trace*/
 		if (eth::VMTraceChannel::verbosity <= g_logVerbosity)
@@ -280,7 +280,7 @@ eth::OnOpFunc FakeExtVM::simpleTrace()
 			o_step.push_back(Pair("gas", (string)gas));
 			o_step.push_back(Pair("address", toString(ext.myAddress )));
 			o_step.push_back(Pair("step", steps ));
-			o_step.push_back(Pair("pc", (int)PC));
+			o_step.push_back(Pair("pc", (int)vm.curPC()));
 			o_step.push_back(Pair("opcode", instructionInfo(inst).name ));
 
 			/*append the JSON object to the log file*/
