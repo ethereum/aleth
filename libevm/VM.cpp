@@ -36,10 +36,11 @@ template<class T> static rmword to_rmword(T v)
 }
 
 
+// checked for too long a jump or failed conversion
 uint64_t VM::verifyJumpDest(u256 const& _dest)
 {
 	uint64_t pc = uint64_t(_dest);
-	if (!m_jumpDests.count(pc))
+	if (pc > 0x7FFFFFFFFFFFFFFF || pc != _dest || !m_jumpDests.count(pc))
 		throwVMException(BadJumpDestination());
 	return pc;
 };
