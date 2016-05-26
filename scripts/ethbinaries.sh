@@ -168,7 +168,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 			echo "ETHBINARIES - ERROR: Building a DMG for Macosx failed.";
 			exit 1
 		fi
-		mv Ethereum.dmg cpp-ethereum-osx-${OSX_VERSION}.dmg
+		mv cpp-ethereum-osx.dmg cpp-ethereum-osx-${OSX_VERSION}.dmg
 		
 		make -j${MAKE_CORES} install
 		if [[ $? -ne 0 ]]; then
