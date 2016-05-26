@@ -38,6 +38,6 @@ before_install:
 before_script:
     - mkdir build
     - cd build
-    - cmake .. -DGUI=0 -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
     - make
