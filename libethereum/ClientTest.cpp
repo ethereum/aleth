@@ -95,11 +95,6 @@ void ClientTest::mineBlocks(unsigned _count)
 	startSealing();
 }
 
-void ClientTest::doWork()
-{
-	Client::doWork(false);
-}
-
 void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 {
 	Client::onNewBlocks(_blocks, io_changed);

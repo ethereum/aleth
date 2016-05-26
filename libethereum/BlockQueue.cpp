@@ -235,8 +235,7 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	DEV_INVARIANT_CHECK;
 
 	// Check it's not in the future
-	(void)_isOurs;
-	if (bi.timestamp() > utcTime()/* && !_isOurs*/)
+	if (bi.timestamp() > utcTime() && !_isOurs)
 	{
 		m_future.insert(make_pair((unsigned)bi.timestamp(), make_pair(h, _block.toBytes())));
 		char buf[24];

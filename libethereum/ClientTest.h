@@ -50,7 +50,6 @@ public:
 
 protected:
 	unsigned m_blocksToMine;
-	void doWork();
 
 	virtual void onNewBlocks(h256s const& _blocks, h256Hash& io_changed) override;
 
