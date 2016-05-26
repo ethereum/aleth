@@ -166,10 +166,6 @@ void help()
 		<< endl;
 	MinerCLI::streamHelp(cout);
 	cout
-		<< "Attach mode:" << endl
-		<< "    --session-key <hex>  Use the given session key when attaching to the remote eth instance." << endl
-		<< "    --url <url>  Attach to the remote eth instance with the given URL." << endl
-		<< endl
 		<< "Import/export modes:" << endl
 		<< "    --from <n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
 		<< "    --to <n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
@@ -253,8 +249,7 @@ enum class OperationMode
 {
 	Node,
 	Import,
-	Export,
-	Attach
+	Export
 };
 
 enum class Format
@@ -312,12 +307,6 @@ int main(int argc, char** argv)
 //	unsigned prime = 0;
 //	bool yesIReallyKnowWhatImDoing = false;
 	strings scripts;
-
-	/// When attaching.
-	string remoteURL = contentsString(getDataDir("web3") + "/session.url");
-	if (remoteURL.empty())
-		remoteURL = "http://localhost:8545";
-	string remoteSessionKey = contentsString(getDataDir("web3") + "/session.key");
 
 	/// File name for import/export.
 	string filename;
@@ -487,8 +476,6 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
-		else if (arg == "attach")
-			mode = OperationMode::Attach;
 		else if (arg == "--to" && i + 1 < argc)
 			exportTo = argv[++i];
 		else if (arg == "--from" && i + 1 < argc)
@@ -873,16 +860,6 @@ int main(int argc, char** argv)
 			cerr << "Invalid argument: " << arg << endl;
 			exit(-1);
 		}
-	}
-
-	if (mode == OperationMode::Attach)
-	{
-		if (remoteURL.find_last_of("-1") == remoteURL.size() - 1)
-		{
-			cerr << "json-rpc server not found, please start eth with the --json-rpc option (note that this might make it accessible from the network)";
-			return 0;
-		}
-		return 0;
 	}
 
 	if (!configJSON.empty())
