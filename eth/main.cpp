@@ -409,11 +409,9 @@ int main(int argc, char** argv)
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
-		if (m.interpretOption(i, argc, argv)) {}
-		else if (arg == "--url" && i + 1 < argc)
-			remoteURL = argv[++i];
-		else if (arg == "--session-key" && i + 1 < argc)
-			remoteSessionKey = argv[++i];
+		if (m.interpretOption(i, argc, argv))
+		{
+		}
 		else if (arg == "--listen-ip" && i + 1 < argc)
 			listenIP = argv[++i];
 		else if ((arg == "--listen" || arg == "--listen-port") && i + 1 < argc)
