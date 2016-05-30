@@ -30,6 +30,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
+#include <boost/filesystem.hpp>
 
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/EthashAux.h>
@@ -60,6 +61,7 @@
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Debug.h>
+#include <libweb3jsonrpc/Test.h>
 #include "PhoneHome.h"
 #include "Farm.h"
 #endif // ETH_JSONRPC
@@ -91,6 +93,7 @@ void help()
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
 		<< "    --morden  Use the Morden testnet." << endl
 		<< "    --private <name>  Use a private chain." << endl
+		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
 		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
@@ -385,6 +388,7 @@ int main(int argc, char** argv)
 
 	/// Whisper
 	bool useWhisper = false;
+	bool testingMode = false;
 
 	string configFile = getDataDir() + "/config.rlp";
 	bytes b = contents(configFile);
@@ -857,6 +861,13 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
+		else if (arg == "--test")
+		{
+			testingMode = true;
+			enableDiscovery = false;
+			disableDiscovery = true;
+			bootstrap = false;
+		}
 		else
 		{
 			cerr << "Invalid argument: " << arg << endl;
@@ -932,7 +943,12 @@ int main(int argc, char** argv)
 
 	m.execute();
 
-	KeyManager keyManager;
+	std::string secretsPath;
+	if (testingMode)
+		secretsPath = (boost::filesystem::path(getDataDir()) / "keystore").string();
+	else
+		secretsPath = SecretStore::defaultPath();
+	KeyManager keyManager(KeyManager::defaultPath(), secretsPath);
 	for (auto const& s: passwordsToNote)
 		keyManager.notePassword(s);
 
@@ -999,6 +1015,13 @@ int main(int argc, char** argv)
 
 	auto nodesState = contents(getDataDir() + "/network.rlp");
 	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
+
+	if (testingMode)
+	{
+		chainParams.sealEngineName = "NoProof";
+		chainParams.otherParams["allowFutureBlocks"] = "1";
+	}
+
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
 		getDataDir(),
@@ -1006,7 +1029,9 @@ int main(int argc, char** argv)
 		withExisting,
 		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
-		&nodesState);
+		&nodesState,
+		testingMode
+	);
 
 	if (!extraData.empty())
 		web3.ethereum()->setExtraData(extraData);
@@ -1225,11 +1250,16 @@ int main(int argc, char** argv)
 			rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
 			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
 			rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
-			rpc::DebugFace
+			rpc::DebugFace, rpc::TestFace
 		>;
+
 		sessionManager.reset(new rpc::SessionManager());
 		accountHolder.reset(new SimpleAccountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator));
 		auto ethFace = new rpc::Eth(*web3.ethereum(), *accountHolder.get());
+		rpc::TestFace* testEth = nullptr;
+		if (testingMode)
+			testEth = new rpc::Test(*web3.ethereum());
+
 		if (jsonRPCURL >= 0)
 		{
 			rpc::AdminEth* adminEth = nullptr;
@@ -1243,11 +1273,13 @@ int main(int argc, char** argv)
 				adminNet = new rpc::AdminNet(web3, *sessionManager.get());
 				adminUtils = new rpc::AdminUtils(*sessionManager.get());
 			}
+
 			jsonrpcHttpServer.reset(new FullServer(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
 				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), personal,
 				adminEth, adminNet, adminUtils,
-				new rpc::Debug(*web3.ethereum())
+				new rpc::Debug(*web3.ethereum()),
+				testEth
 			));
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 			httpConnector->setAllowedOrigin(rpcCorsDomain);
@@ -1262,7 +1294,8 @@ int main(int argc, char** argv)
 				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
 				new rpc::AdminNet(web3, *sessionManager.get()),
 				new rpc::AdminUtils(*sessionManager.get()),
-				new rpc::Debug(*web3.ethereum())
+				new rpc::Debug(*web3.ethereum()),
+				testEth
 			));
 			auto ipcConnector = new IpcServer("geth");
 			jsonrpcIpcServer->addConnector(ipcConnector);
