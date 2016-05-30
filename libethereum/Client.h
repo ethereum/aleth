@@ -197,6 +197,7 @@ public:
 	/// Rescue the chain.
 	void rescue() { bc().rescue(m_stateDB); }
 
+	void doWorkInternal();
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
@@ -227,7 +228,7 @@ protected:
 	void noteChanged(h256Hash const& _filters);
 
 	/// Submit
-	bool submitSealed(bytes const& _s);
+	virtual bool submitSealed(bytes const& _s);
 
 protected:
 	/// Called when Worker is starting.
@@ -247,7 +248,7 @@ protected:
 	void onDeadBlocks(h256s const& _blocks, h256Hash& io_changed);
 
 	/// Called on chain changes
-	void onNewBlocks(h256s const& _blocks, h256Hash& io_changed);
+	virtual void onNewBlocks(h256s const& _blocks, h256Hash& io_changed);
 
 	/// Called after processing blocks by onChainChanged(_ir)
 	void resyncStateFromChain();

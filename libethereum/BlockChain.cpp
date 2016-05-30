@@ -586,7 +586,7 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	}
 
 	// Check it's not crazy
-	if (_block.info.timestamp() > utcTime())
+	if (_block.info.timestamp() > utcTime() && !m_params.otherParams.count("allowFutureBlocks"))
 	{
 		clog(BlockChainChat) << _block.info.hash() << ": Future time " << _block.info.timestamp() << " (now at " << utcTime() << ")";
 		// Block has a timestamp in the future. This is no good.
@@ -687,7 +687,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	}
 
 	// Check it's not crazy
-	if (_block.info.timestamp() > utcTime())
+	if (_block.info.timestamp() > utcTime() && !m_params.otherParams.count("allowFutureBlocks"))
 	{
 		clog(BlockChainChat) << _block.info.hash() << ": Future time " << _block.info.timestamp() << " (now at " << utcTime() << ")";
 		// Block has a timestamp in the future. This is no good.
