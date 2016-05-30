@@ -117,11 +117,17 @@ TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionS
 		if (start < end && chrono::steady_clock::now() < end)
 			locked = false;
 	}
-	if (locked && m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
-		ret.r = TransactionRepercussion::Refused;
-	else if (locked)
-		ret.r = TransactionRepercussion::Locked;
-	else if (isRealAccount(_t.from))
+	ret.r = TransactionRepercussion::Locked;
+	if (locked && m_getAuthorisation)
+	{
+		if (m_getAuthorisation(_t, isProxyAccount(_t.from)))
+			locked = false;
+		else
+			ret.r = TransactionRepercussion::Refused;
+	}
+	if (locked)
+		return ret;
+	if (isRealAccount(_t.from))
 	{
 		if (Secret s = m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }))
 		{
