@@ -1242,7 +1242,7 @@ int main(int argc, char** argv)
 			rpc::AdminUtils* adminUtils = nullptr;
 			if (adminViaHttp)
 			{
-				personal = new rpc::Personal(keyManager, *accountHolder);
+				personal = new rpc::Personal(keyManager, *accountHolder, *web3.ethereum());
 				adminEth = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 				adminNet = new rpc::AdminNet(web3, *sessionManager.get());
 				adminUtils = new rpc::AdminUtils(*sessionManager.get());
@@ -1264,7 +1264,7 @@ int main(int argc, char** argv)
 		{
 			jsonrpcIpcServer.reset(new FullServer(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
-				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
+				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
 				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
 				new rpc::AdminNet(web3, *sessionManager.get()),
 				new rpc::AdminUtils(*sessionManager.get()),
