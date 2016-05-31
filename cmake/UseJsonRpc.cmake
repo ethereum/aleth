@@ -23,7 +23,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_compile_definitions(${TARGET} PUBLIC ETH_JSONRPC)
 
 		eth_use(${TARGET} ${REQUIRED} CURL)
-		eth_copy_dlls(${TARGET} CURL_DLLS)
 	endif()
 
 endfunction()
