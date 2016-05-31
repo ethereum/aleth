@@ -146,21 +146,15 @@ macro(eth_install_executable EXECUTABLE)
 
 	elseif (DEFINED MSVC)
 
-		# Default to RelWithDebInfo configuration if no configuration is explicitly specified.
-		if (NOT CMAKE_BUILD_TYPE)
-			set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
-				"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
-		endif()
-
 		# Map from CMake configurations to Qt configurations, so that we get the right DLLs deployed.
 		set(WINDEPLOYQT_PARAMS "")
-		if (${CMAKE_BUILD_TYPE}==Debug)
+		if (CMAKE_BUILD_TYPE MATCHES Debug)
 			set(WINDEPLOYQT_PARAMS "--debug")
-		elseif(${CMAKE_BUILD_TYPE}==Release)
+		elseif(CMAKE_BUILD_TYPE MATCHES Release)
 			set(WINDEPLOYQT_PARAMS "--release")
-		elseif(${CMAKE_BUILD_TYPE}==RelWithDebInfo)
+		elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
 			set(WINDEPLOYQT_PARAMS "--release-with-debug-info")
-		elseif (${CMAKE_BUILD_TYPE}==MinSizeRel)
+		elseif (CMAKE_BUILD_TYPE MATCHES MinSizeRel)
 			set(WINDEPLOYQT_PARAMS "--release")
 		endif()
 
