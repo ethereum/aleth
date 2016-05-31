@@ -146,11 +146,29 @@ macro(eth_install_executable EXECUTABLE)
 
 	elseif (DEFINED MSVC)
 
+		# Default to RelWithDebInfo configuration if no configuration is explicitly specified.
+		if (NOT CMAKE_BUILD_TYPE)
+			set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+				"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+		endif()
+
+		# Map from CMake configurations to Qt configurations, so that we get the right DLLs deployed.
+		set(WINDEPLOYQT_PARAMS "")
+		if (${CMAKE_BUILD_TYPE}==Debug)
+			set(WINDEPLOYQT_PARAMS "--debug")
+		elseif(${CMAKE_BUILD_TYPE}==Release)
+			set(WINDEPLOYQT_PARAMS "--release")
+		elseif(${CMAKE_BUILD_TYPE}==RelWithDebInfo)
+			set(WINDEPLOYQT_PARAMS "--release-with-debug-info")
+		elseif (${CMAKE_BUILD_TYPE}==MinSizeRel)
+			set(WINDEPLOYQT_PARAMS "--release")
+		endif()
+
 		get_target_property(TARGET_LIBS ${EXECUTABLE} INTERFACE_LINK_LIBRARIES)
 		string(REGEX MATCH "Qt5::Core" HAVE_QT ${TARGET_LIBS})
 		if ("${HAVE_QT}" STREQUAL "Qt5::Core")
 			add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-				COMMAND cmd /C "set PATH=${Qt5Core_DIR}/../../../bin;%PATH% && ${WINDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${EXECUTABLE}.exe ${eth_qml_dir}"
+				COMMAND cmd /C "set PATH=${Qt5Core_DIR}/../../../bin;%PATH% && ${WINDEPLOYQT_APP} ${WINDEPLOYQT_PARAMS} ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${EXECUTABLE}.exe ${eth_qml_dir}"
 				WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			)
 			#workaround for https://bugreports.qt.io/browse/QTBUG-42083
