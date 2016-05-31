@@ -122,10 +122,10 @@ public:
 
 	/// @returns the secret key associated with an address provided the password query
 	/// function @a _pass or the zero-secret key on error.
-	Secret secret(Address const& _address, std::function<std::string()> const& _pass = DontKnowThrow) const;
+	Secret secret(Address const& _address, std::function<std::string()> const& _pass = DontKnowThrow, bool _usePasswordCache = true) const;
 	/// @returns the secret key associated with the uuid of a key provided the password query
 	/// function @a _pass or the zero-secret key on error.
-	Secret secret(h128 const& _uuid, std::function<std::string()> const& _pass = DontKnowThrow) const;
+	Secret secret(h128 const& _uuid, std::function<std::string()> const& _pass = DontKnowThrow, bool _usePasswordCache = true) const;
 
 	bool recode(Address const& _address, SemanticPassword _newPass, std::function<std::string()> const& _pass = DontKnowThrow, KDF _kdf = KDF::Scrypt);
 	bool recode(Address const& _address, std::string const& _newPass, std::string const& _hint, std::function<std::string()> const& _pass = DontKnowThrow, KDF _kdf = KDF::Scrypt);

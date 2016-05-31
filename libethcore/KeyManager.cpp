@@ -139,20 +139,20 @@ bool KeyManager::load(string const& _pass)
 	}
 }
 
-Secret KeyManager::secret(Address const& _address, function<string()> const& _pass) const
+Secret KeyManager::secret(Address const& _address, function<string()> const& _pass, bool _usePasswordCache) const
 {
 	auto it = m_keyInfo.find(_address);
 	if (it == m_keyInfo.end())
 		return Secret();
 	if (m_addrLookup.count(_address))
-		return secret(m_addrLookup.at(_address), _pass);
+		return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
 	else
 		return brain(_pass());
 }
 
-Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass) const
+Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass, bool _usePasswordCache) const
 {
-	return Secret(m_store.secret(_uuid, [&](){ return getPassword(_uuid, _pass); }));
+	return Secret(m_store.secret(_uuid, [&](){ return getPassword(_uuid, _pass); }, _usePasswordCache));
 }
 
 string KeyManager::getPassword(h128 const& _uuid, function<string()> const& _pass) const
