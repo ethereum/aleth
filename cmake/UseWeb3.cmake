@@ -19,7 +19,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	endif()
 
 	if (${SUBMODULE} STREQUAL "web3jsonrpc")
-		eth_use(${TARGET} ${REQUIRED} Mhd Web3::webthree JsonRpc::Client JsonRpc::Server)
+		eth_use(${TARGET} ${REQUIRED} Web3::webthree JsonRpc::Client JsonRpc::Server)
 		if (SOLIDITY)
 			eth_use(${TARGET} ${REQUIRED} Solidity)
 		endif (SOLIDITY)
