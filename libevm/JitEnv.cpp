@@ -1,6 +1,3 @@
-
-#pragma GCC diagnostic ignored "-Wconversion"
-#include <libdevcore/SHA3.h>
 #include <libevm/ExtVMFace.h>
 
 #include "JitUtils.h"
@@ -104,12 +101,6 @@ extern "C"
 
 		*io_gas += static_cast<int64_t>(params.gas); // it is never more than initial _callGas
 		return ret;
-	}
-
-	EXPORT void env_sha3(byte* _begin, uint64_t _size, h256* o_hash)
-	{
-		auto hash = sha3({_begin, (size_t)_size});
-		*o_hash = hash;
 	}
 
 	EXPORT byte const* env_extcode(ExtVMFace* _env, h256* _addr256, uint64_t* o_size)
