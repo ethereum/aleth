@@ -160,7 +160,7 @@ bool SimpleAccountHolder::unlockAccount(Address const& _account, string const& _
 
 	try
 	{
-		if (!m_keyManager.secret(_account))
+		if (!m_keyManager.secret(_account, [&] { return _password; }, false))
 			return false;
 	}
 	catch (PasswordUnknown const&)
