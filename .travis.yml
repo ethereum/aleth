@@ -5,6 +5,8 @@
 #
 # http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
 #
+# TODO - We are currently disabling EVMJIT, because of https://github.com/ethereum/webthree-umbrella/issues/549
+#
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
@@ -38,6 +40,6 @@ before_install:
 before_script:
     - mkdir build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE -DEVMJIT=0
 script:
     - make

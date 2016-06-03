@@ -5,6 +5,8 @@
 #
 # http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
 #
+# TODO - We are currently disabling EVMJIT, because of https://github.com/ethereum/webthree-umbrella/issues/549
+#
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
@@ -26,6 +28,6 @@ install:
 before_build:
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" ..
+    - cmake -G "Visual Studio 14 2015 Win64" .. -DEVMIT=0
 build_script:
     - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln /t:%PROJECT_NAME%
