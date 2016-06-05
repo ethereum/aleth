@@ -102,6 +102,9 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 		if (_bi.gasLimit() < chainParams().u256Param("minGasLimit"))
 			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().u256Param("minGasLimit")), bigint(_bi.gasLimit())) );
 
+		if (_bi.gasLimit() > chainParams().u256Param("maxGasLimit"))
+			BOOST_THROW_EXCEPTION(InvalidGasLimit() << RequirementError(bigint(chainParams().u256Param("maxGasLimit")), bigint(_bi.gasLimit())) );
+
 		if (_bi.number() && _bi.extraData().size() > chainParams().maximumExtraDataSize)
 			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 	}
@@ -116,7 +119,9 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 		auto gasLimit = _bi.gasLimit();
 		auto parentGasLimit = _parent.gasLimit();
-		if (gasLimit < chainParams().u256Param("minGasLimit") ||
+		if (
+			gasLimit < chainParams().u256Param("minGasLimit") ||
+			gasLimit > chainParams().u256Param("maxGasLimit") ||
 			gasLimit <= parentGasLimit - parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor") ||
 			gasLimit >= parentGasLimit + parentGasLimit / chainParams().u256Param("gasLimitBoundDivisor"))
 			BOOST_THROW_EXCEPTION(
