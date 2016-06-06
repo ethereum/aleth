@@ -14,14 +14,6 @@ os: Visual Studio 2015
 configuration:
     - Debug
     - RelWithDebInfo
-environment:
-    matrix:
-        - PROJECT_NAME: bench
-        - PROJECT_NAME: eth
-        - PROJECT_NAME: ethkey
-        - PROJECT_NAME: ethminer
-        - PROJECT_NAME: ethvm
-        - PROJECT_NAME: rlp
 install:
     - git submodule update --init --recursive
     - cmake -P deps\install_deps.cmake
@@ -30,4 +22,4 @@ before_build:
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
-    - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln /t:%PROJECT_NAME%
+    - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln
