@@ -152,7 +152,10 @@ Secret KeyManager::secret(Address const& _address, function<string()> const& _pa
 
 Secret KeyManager::secret(h128 const& _uuid, function<string()> const& _pass, bool _usePasswordCache) const
 {
-	return Secret(m_store.secret(_uuid, [&](){ return getPassword(_uuid, _pass); }, _usePasswordCache));
+	if (_usePasswordCache)
+		return Secret(m_store.secret(_uuid, [&](){ return getPassword(_uuid, _pass); }, _usePasswordCache));
+	else
+		return Secret(m_store.secret(_uuid, _pass, _usePasswordCache));
 }
 
 string KeyManager::getPassword(h128 const& _uuid, function<string()> const& _pass) const
