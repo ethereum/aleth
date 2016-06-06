@@ -33,6 +33,9 @@
 #include <libwebthree/WebThree.h>
 #include <libp2p/Network.h>
 
+// This is defined by some weird windows header - workaround for now.
+#undef GetMessage
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
