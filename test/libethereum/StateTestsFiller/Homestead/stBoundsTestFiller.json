@@ -79,7 +79,7 @@
                 }
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0x7fffffffffffffff",
+                "balance" : "0x7ffffffffffffffffff",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -89,7 +89,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -123,7 +123,7 @@
                 }
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0x7fffffffffffffff",
+                "balance" : "0x7ffffffffffffffffff",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -133,7 +133,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -177,7 +177,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -198,7 +198,8 @@
         },
 	"expect" : {
 	    "1000000000000000000000000000000000000000" : {
-                "balance" : "0"
+                "balance" : "0",
+		"code" : "0x63ffffffff5667ffffffffffffffff566fffffffffffffffffffffffffffffffff567fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff56"
              }
 	},
         "pre" :
@@ -221,7 +222,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -230,7 +231,7 @@
         }
     },
 
-    "JUMP1_Bounds" : {
+    "JUMPI_Bounds" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
@@ -242,14 +243,15 @@
         },
 	"expect" : {
 	    "1000000000000000000000000000000000000000" : {
-                "balance" : "1"
+                "balance" : "0",
+		"code" : "0x600163ffffffff57600167ffffffffffffffff5760016fffffffffffffffffffffffffffffffff5760017fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff57"
              }
 	},
         "pre" :
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "0",
-                "code" : "{ (JUMP1 0xffffffff 1) (JUMP1 0xffffffffffffffff 1) (JUMP1 0xffffffffffffffffffffffffffffffff 1) (JUMP1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1) }",
+                "code" : "{ (JUMPI 0xffffffff 1) (JUMPI 0xffffffffffffffff 1) (JUMPI 0xffffffffffffffffffffffffffffffff 1) (JUMPI 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 1) }",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -265,7 +267,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -299,7 +301,7 @@
                 }
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0x7fffffffffffffff",
+                "balance" : "0x7ffffffffffffffffff",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -309,7 +311,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -337,13 +339,13 @@
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "0",
-                "code" : "{ (MLOAD 0) (MLOAD 0xffffffff) (MLOAD 0xffffffffffffffff) (MLOAD 0xffffffffffffffffffffffffffffffff) (MLOAD 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
+                "code" : "{ (MLOAD 0) (MLOAD 0xffffffff) }",
                 "nonce" : "0",
                 "storage" : {
                 }
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0x7fffffffffffffff",
+                "balance" : "0x7ffffffffffffffffff",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -353,7 +355,95 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0x7ffffffffffffff0",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "MLOAD_Bounds2" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0"
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+                "code" : "{ (MLOAD 0xffffffffffffffff) (MLOAD 0xffffffffffffffffffffffffffffffff) (MLOAD 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0x7ffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "MLOAD_Bounds3" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1"
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+                "code" : "{  (MLOAD 0xffffffffff) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0x7ffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -367,7 +457,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -397,8 +487,51 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0xffffffffffffffffffffffffffff",
-	    "gasLimit" : "0xfffffffffffffffff",
+	    "gasLimit" : "0x7ffffffffffffff0",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "MSTORE_Bounds2" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1"
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+                "code" : "{  (MSTORE 0xffffffffff 1)}",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+	    "gasLimit" : "0x7ffffffffffffff0",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -451,38 +584,36 @@
         }
     },
 
-    "CREATE_Bounds" : {
+    "CREATE_Bounds3" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
 	    "1000000000000000000000000000000000000000" : {
-                "balance" : "98"
+                "balance" : "100"
              },
 	    "13136008b64ff592819b2fa6d43f2835c452020e" : {
-		"balance" : "1"
-	     },
-	    "7c5a2c91b22d7a9226523d4ba717db6afb741ebd" : {
-		"balance" : "1"
+		"shouldnotexist" : "1"
 	     }
 	},
         "pre" :
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "100",
-                "code" : "{  (MSTORE 0 0x6001600155601080600c6000396000f3006000355415600957005b6020356000 )  (MSTORE8 32 0x35) (MSTORE8 33 0x55) (CREATE 1 0 0) (CREATE 1 0 0xfffffff) (CREATE 1 0 0xffffffff) (CREATE 1 0 0xffffffffffffffff) (CREATE 1 0 0xffffffffffffffffffffffffffffffff) (CREATE 1 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CREATE 1 0xfffffff 0) (CREATE 1 0xffffffff 0) (CREATE 1 0xffffffffffffffff 0) (CREATE 1 0xffffffffffffffffffffffffffffffff 0) (CREATE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) (CREATE 1 0xfffffff 0xfffffff) (CREATE 1 0xffffffff 0xffffffff) (CREATE 1 0xffffffffffffffff 0xffffffffffffffff) (CREATE 1 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (CREATE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
+		"code" : "",
+                "code" : "{  (MSTORE 0 0x6001600155601080600c6000396000f3006000355415600957005b6020356000 )  (MSTORE8 32 0x35) (MSTORE8 33 0x55) (CREATE 1 0 0xffffffffffffffff) (CREATE 1 0 0xffffffffffffffffffffffffffffffff) (CREATE 1 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CREATE 1 0xfffffff 0) (CREATE 1 0xffffffff 0) (CREATE 1 0xffffffffffffffff 0) (CREATE 1 0xffffffffffffffffffffffffffffffff 0) (CREATE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) (CREATE 1 0xfffffff 0xfffffff) (CREATE 1 0xffffffff 0xffffffff) (CREATE 1 0xffffffffffffffff 0xffffffffffffffff) (CREATE 1 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (CREATE 1 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)}",
                 "nonce" : "0",
                 "storage" : {
                 }
             },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "balance" : "0xfffffffffffffffffffffffffffffffffffffffffffffffff",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -492,7 +623,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0xffffffffffffffffffffffffffff",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -506,7 +637,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -517,7 +648,7 @@
              },
 	    "1000000000000000000000000000000000000001" : {
                 "storage" : {
-		    "0x00" : "0x02"
+		    "0x00" : "0x08"
 		}
              }
 	},
@@ -525,7 +656,7 @@
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "0",
-                "code" : "{  (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0 0) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xfffffff 0 0xfffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffff 0 0xffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffff 0 0xffffffffffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0 0xfffffff 0) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0 0xffffffff 0) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0 0xffffffffffffffff 0) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff 0) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0xfffffff 0xfffffff 0xfffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)  }",
+                "code" : "{  (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0 0) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xfffffff 0 0xfffffff) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffff 0 0xffffffff) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0 0xfffffff 0) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0 0xffffffff 0) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0 0xffffffffffffffff 0) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff 0) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0)  }",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -540,7 +671,7 @@
             },
 
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffff",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -550,7 +681,181 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0xffffffffffffffffffffffffffff",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "CALL_Bounds2" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1"
+             },
+	    "1000000000000000000000000000000000000001" : {
+                "storage" : {
+		    "0x00" : "0x01"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",  
+                "code" : "{   (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0xfffffff 0xfffffff 0xfffffff)   }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "CALL_Bounds2a" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1"
+             },
+	    "1000000000000000000000000000000000000001" : {
+                "storage" : {
+		    "0x00" : "0x00"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",  
+                "code" : "{   (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff)  }",		      
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "CALL_Bounds3" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0"
+             },
+	    "1000000000000000000000000000000000000001" : {
+                "storage" : {
+		    "0x00" : "0x00"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"code" : "{ (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffff 0 0xffffffffffffffff)  (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff)  (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -564,7 +869,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -573,7 +878,7 @@
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "1",
 		"storage" : {
-		    "0x00" : "0x02"
+		    "0x00" : "0x08"
 		}
              }
 	},
@@ -581,7 +886,7 @@
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "0",
-                "code" : "{  (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0 0) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xfffffff 0 0xfffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffff 0 0xffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffff 0 0xffffffffffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0 0xfffffff 0) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0 0xffffffff 0) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0 0xffffffffffffffff 0) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff 0) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0xfffffff 0xfffffff 0xfffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (CALLCODE 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)  }",
+                "code" : "{  (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0 0) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xfffffff 0 0xfffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffff 0 0xffffffff)  (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0 0xfffffff 0) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0 0xffffffff 0) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0 0xffffffffffffffff 0) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff 0) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0)  }",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -606,7 +911,177 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0xffffffffffffffffffffffffffff",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "CALLCODE_Bounds2" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1",
+		"storage" : {
+		    "0x00" : "0x01"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"code" : "(CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffff 0 0xffffffffffffffff)  (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff)  (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff)",
+                "code" : "{ (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0xfffffff 0xfffffff 0xfffffff)  }",			    
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "CALLCODE_Bounds3" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1",
+		"storage" : {
+		    "0x00" : "0x00"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"code" : "       ",
+                "code" : "{  (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0xffffffff 0xffffffff 0xffffffff)  }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "CALLCODE_Bounds4" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"storage" : {
+		    "0x00" : "0x00"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"code" : "{ (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffff 0 0xffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (CALLCODE 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -620,7 +1095,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -629,7 +1104,7 @@
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "1",
 		"storage" : {
-		    "0x00" : "0x02"
+		    "0x00" : "0x09"
 		}
              }
 	},
@@ -637,7 +1112,7 @@
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "0",
-                "code" : "{  (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0 0xfffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0 0xffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0 0xffffffffffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xfffffff 0 0xfffffff 0) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffff 0 0xffffffff 0) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffff 0 0xffffffffffffffff 0) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff 0) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xfffffff 0xfffffff 0xfffffff 0xfffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffff 0xffffffff 0xffffffff 0xffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (DELEGATECALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)  }",
+		"code" : "{(DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xfffffff 0 0xfffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffff 0 0xffffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xfffffff 0 0xfffffff 0) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffff 0 0xffffffff 0)  (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffff 0 0xffffffffffffffff 0) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff 0) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xfffffff 0xfffffff 0xfffffff 0xfffffff)  }",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -662,7 +1137,119 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0xffffffffffffffffffffffffffff",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "DELEGATECALL_Bounds2" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "1",
+		"storage" : {
+		    "0x00" : "0x00"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"code" : "{ (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffff 0xffffffff 0xffffffff 0xffffffff) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
+            "gasPrice" : "1",
+            "nonce" : "0",
+            "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
+            "to" : "1000000000000000000000000000000000000000",
+            "value" : "1"
+        }
+    },
+
+    "DELEGATECALL_Bounds3" : {
+        "env" : {
+            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+            "currentDifficulty" : "45678256",
+	    "currentGasLimit" : "2^63-1",
+            "currentGasLimit" : "0x7fffffffffffffff",
+            "currentNumber" : "1150000",
+            "currentTimestamp" : 1,
+            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+        },
+	"expect" : {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"storage" : {
+		    "0x00" : "0x00"
+		}
+             }
+	},
+        "pre" :
+        {
+	    "1000000000000000000000000000000000000000" : {
+                "balance" : "0",
+		"code" : "{ (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffff 0 0xffffffffffffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff 0xffffffffffffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffff) (DELEGATECALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+	    "1000000000000000000000000000000000000001" : {
+                "balance" : "0",
+                "code" : "{ (SSTORE 0 (ADD 1 (SLOAD 0))) }",
+                "nonce" : "0",
+                "storage" : {
+                }
+            },
+
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+                "code" : "",
+                "nonce" : "0",
+                "storage" : {
+                }
+            }
+        },
+        "transaction" :
+        {
+            "data" : "",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -676,7 +1263,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
-            "currentGasLimit" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+            "currentGasLimit" : "0x7fffffffffffffff",
             "currentNumber" : "1150000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
@@ -694,7 +1281,8 @@
                     "0x07" : "0x01",
                     "0x08" : "0x01",
                     "0x09" : "0x01",
-                    "0x0a" : "0x01"
+                    "0x0a" : "0x01",
+                    "0x0b" : "0x01"
                 }
              }
 	},
@@ -702,7 +1290,7 @@
         {
 	    "1000000000000000000000000000000000000000" : {
                 "balance" : "0",
-                "code" : "{ [[1]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0 0) [[2]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000002 0 0 0 0 0) [[3]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000003 0 0 0 0 0) [[4]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000004 0 0 0 0 0) [[5]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000005 0 0 0 0 0) [[6]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[7]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[8]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[9]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[10]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[11]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[12]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[13]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[14]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[15]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[16]] (CALL 0xfffffffffffffffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0)}",
+                "code" : "{ [[1]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000001 0 0 0 0 0) [[2]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000002 0 0 0 0 0) [[3]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000003 0 0 0 0 0) [[4]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000004 0 0 0 0 0) [[5]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000005 0 0 0 0 0) [[6]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[7]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[8]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[9]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[10]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[11]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[12]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[13]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[14]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[15]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0) [[16]] (CALL 0x7ffffffffffffff 0x1000000000000000000000000000000000000006 0 0 0 0 0)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -847,7 +1435,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "0xffffffffffffffffffffffffffff",
+            "gasLimit" : "0x7fffffffffffffff",
             "gasPrice" : "1",
             "nonce" : "0",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
