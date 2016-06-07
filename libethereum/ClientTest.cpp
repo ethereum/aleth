@@ -56,14 +56,14 @@ void ClientTest::setChainParams(string const& _genesis)
 	{
 		params = params.loadConfig(_genesis);
 		if (params.sealEngineName != "NoProof")
-			BOOST_THROW_EXCEPTION(ChainParamsNotNoProof() << errinfo_comment("provided configuration is not well formatted"));
+			BOOST_THROW_EXCEPTION(ChainParamsNotNoProof() << errinfo_comment("Provided configuration is not well formatted."));
 
 		reopenChain(params, WithExisting::Kill);
 		setAuthor(params.author); //for some reason author is not being set
 	}
 	catch (...)
 	{
-		BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment("provided configuration is not well formatted"));
+		BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment("Provided configuration is not well formatted."));
 	}
 }
 
