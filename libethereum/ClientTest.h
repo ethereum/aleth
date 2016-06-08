@@ -29,6 +29,9 @@ namespace dev
 namespace eth
 {
 
+DEV_SIMPLE_EXCEPTION(ChainParamsInvalid);
+DEV_SIMPLE_EXCEPTION(ChainParamsNotNoProof);
+
 class ClientTest: public Client
 {
 public:
@@ -43,6 +46,7 @@ public:
 		TransactionQueue::Limits const& _l = TransactionQueue::Limits{1024, 1024}
 	);
 
+	void setChainParams(std::string const& _genesis);
 	void mineBlocks(unsigned _count);
 	void modifyTimestamp(u256 const& _timestamp);
 	void rewindToBlock(unsigned _number);
@@ -50,9 +54,7 @@ public:
 
 protected:
 	unsigned m_blocksToMine;
-
 	virtual void onNewBlocks(h256s const& _blocks, h256Hash& io_changed) override;
-
 };
 
 ClientTest& asClientTest(Interface& _c);

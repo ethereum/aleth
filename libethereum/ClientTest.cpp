@@ -21,6 +21,7 @@
 
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -36,8 +37,6 @@ ClientTest* dev::eth::asClientTest(Interface* _c)
 	return &dynamic_cast<ClientTest&>(*_c);
 }
 
-DEV_SIMPLE_EXCEPTION(ChainParamsNotEthash);
-
 ClientTest::ClientTest(
 	ChainParams const& _params,
 	int _networkID,
@@ -48,7 +47,24 @@ ClientTest::ClientTest(
 	TransactionQueue::Limits const& _limits
 ):
 	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
+{}
+
+void ClientTest::setChainParams(string const& _genesis)
 {
+	ChainParams params;
+	try
+	{
+		params = params.loadConfig(_genesis);
+		if (params.sealEngineName != "NoProof")
+			BOOST_THROW_EXCEPTION(ChainParamsNotNoProof() << errinfo_comment("Provided configuration is not well formatted."));
+
+		reopenChain(params, WithExisting::Kill);
+		setAuthor(params.author); //for some reason author is not being set
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(ChainParamsInvalid() << errinfo_comment("Provided configuration is not well formatted."));
+	}
 }
 
 bool ClientTest::addBlock(string const& _rlp)
@@ -63,7 +79,7 @@ bool ClientTest::addBlock(string const& _rlp)
 
 void ClientTest::rewindToBlock(unsigned _number)
 {
-	m_bc.rewind(_number);
+	bc().rewind(_number);
 }
 
 void ClientTest::modifyTimestamp(u256 const& _timestamp)
