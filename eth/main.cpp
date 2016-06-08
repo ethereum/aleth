@@ -1222,7 +1222,11 @@ int main(int argc, char** argv)
 
 	AddressHash allowedDestinations;
 
-	auto authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
+	std::function<bool(TransactionSkeleton const&, bool)> authenticator;
+	if (testingMode)
+		authenticator = [](TransactionSkeleton const&, bool) -> bool { return true; };
+	else
+		authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
 		// "unlockAccount" functionality is done in the AccountHolder.
 		if (!alwaysConfirm || allowedDestinations.count(_t.to))
 			return true;
