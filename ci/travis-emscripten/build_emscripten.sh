@@ -19,7 +19,7 @@ echo -en 'travis_fold:start:compiling_cryptopp\\r'
 cd "$WORKSPACE/cryptopp"
 # if .git exists, it is a fresh checkout, otherwise it comes from the cache
 # and is already compiled
-test -x .git && (
+test -e .git && (
 emcmake cmake -DCRYPTOPP_LIBRARY_TYPE=STATIC -DCRYPTOPP_RUNTIME_TYPE=STATIC && emmake make -j 4
 ln -s . src/cryptopp || true
 rm -rf .git
@@ -31,7 +31,7 @@ echo -en 'travis_fold:start:compiling_jsoncpp\\r'
 cd "$WORKSPACE/jsoncpp"
 # if .git exists, it is a fresh checkout, otherwise it comes from the cache
 # and is already compiled
-test -x .git && (
+test -e .git && (
 emcmake cmake -DJSONCPP_LIB_BUILD_STATIC=ON -DJSONCPP_LIB_BUILD_SHARED=OFF \
               -DJSONCPP_WITH_TESTS=OFF -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF \
               -G "Unix Makefiles" .
@@ -45,7 +45,7 @@ echo -en 'travis_fold:start:compiling_boost\\r'
 cd "$WORKSPACE"/boost_1_57_0
 # if b2 exists, it is a fresh checkout, otherwise it comes from the cache
 # and is already compiled
-test -x b2 && (
+test -e b2 && (
 sed -i 's|using gcc ;|using gcc : : /usr/local/bin/em++ ;|g' ./project-config.jam
 sed -i 's|$(archiver\[1\])|/usr/local/bin/emar|g' ./tools/build/src/tools/gcc.jam
 sed -i 's|$(ranlib\[1\])|/usr/local/bin/emranlib|g' ./tools/build/src/tools/gcc.jam
