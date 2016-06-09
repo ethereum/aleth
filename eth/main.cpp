@@ -1227,24 +1227,24 @@ int main(int argc, char** argv)
 		authenticator = [](TransactionSkeleton const&, bool) -> bool { return true; };
 	else
 		authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
-		// "unlockAccount" functionality is done in the AccountHolder.
-		if (!alwaysConfirm || allowedDestinations.count(_t.to))
-			return true;
+			// "unlockAccount" functionality is done in the AccountHolder.
+			if (!alwaysConfirm || allowedDestinations.count(_t.to))
+				return true;
 
-		string r = getResponse(_t.userReadable(isProxy,
-			[&](TransactionSkeleton const& _t) -> pair<bool, string>
-			{
-				h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
-				if (contractCodeHash == EmptySHA3)
-					return std::make_pair(false, std::string());
-				// TODO: actually figure out the natspec. we'll need the natspec database here though.
-				return std::make_pair(true, std::string());
-			}, [&](Address const& _a) { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
-		) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
-		if (r == "always")
-			allowedDestinations.insert(_t.to);
-		return r == "yes" || r == "always";
-	};
+			string r = getResponse(_t.userReadable(isProxy,
+				[&](TransactionSkeleton const& _t) -> pair<bool, string>
+				{
+					h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
+					if (contractCodeHash == EmptySHA3)
+						return std::make_pair(false, std::string());
+					// TODO: actually figure out the natspec. we'll need the natspec database here though.
+					return std::make_pair(true, std::string());
+				}, [&](Address const& _a) { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
+			) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
+			if (r == "always")
+				allowedDestinations.insert(_t.to);
+			return r == "yes" || r == "always";
+		};
 
 	ExitHandler exitHandler;
 
