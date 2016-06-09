@@ -38,17 +38,21 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
+static const u256 MaxBlockGasLimit = ChainParams(genesisInfo(Network::HomesteadTest)).u256Param("maxGasLimit");
+
 void help()
 {
 	cout
 		<< "Usage ethvm <options> [trace|stats|output] (<file>|--)" << endl
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
-		<< "    --gas <n>  Transaction should be given <n> gas (default: block gas limit)." << endl
-		<< "    --gas-limit <n>  Block gas limit (default: " << DefaultBlockGasLimit << "." << endl
+		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit)." << endl
+		<< "    --gas-limit <n>  Block gas limit (default: " << MaxBlockGasLimit << ")." << endl
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
+		<< "    --input <d>   Transaction code should be <d>" << endl
+		<< "    --code <d>    Contract code <d>. Makes transaction a call to this contract" << endl
 #if ETH_EVMJIT
 		<< endl
 		<< "VM options:" << endl
@@ -84,25 +88,24 @@ enum class Mode
 
 int main(int argc, char** argv)
 {
-	string incoming = "--";
-
 	Mode mode = Mode::Statistics;
 	VMKind vmKind = VMKind::Interpreter;
 	State state(0);
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = DefaultBlockGasLimit;
+	u256 gas = MaxBlockGasLimit;
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
 	EnvInfo envInfo;
 	Network networkName = Network::HomesteadTest;
-	envInfo.setGasLimit(gas);
+	envInfo.setGasLimit(MaxBlockGasLimit);
+	string transactionDataString = "";
+	string contractCodeString = "";
 	
 	Ethash::init();
 	NoProof::init();
-
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -132,8 +135,6 @@ int main(int argc, char** argv)
 			st.setShowMnemonics();
 		else if (arg == "--flat")
 			styledJson = false;
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
 		else if (arg == "--sender" && i + 1 < argc)
 			sender = Address(argv[++i]);
 		else if (arg == "--origin" && i + 1 < argc)
@@ -142,10 +143,6 @@ int main(int argc, char** argv)
 			gas = u256(argv[++i]);
 		else if (arg == "--gas-price" && i + 1 < argc)
 			gasPrice = u256(argv[++i]);
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
 		else if (arg == "--author" && i + 1 < argc)
 			envInfo.setAuthor(Address(argv[++i]));
 		else if (arg == "--number" && i + 1 < argc)
@@ -181,21 +178,28 @@ int main(int argc, char** argv)
 			mode = Mode::OutputOnly;
 		else if (arg == "trace")
 			mode = Mode::Trace;
-		else
-			incoming = arg;
+		else if (arg == "--input" && i + 1 < argc)
+			transactionDataString = argv[++i];
+		else if (arg == "--code" && i + 1 < argc)
+			contractCodeString = argv[++i];
 	}
 
 	VMFactory::setKind(vmKind);
 
-	bytes code;
-	if (incoming == "--" || incoming.empty())
-		for (int i = cin.get(); i != -1; i = cin.get())
-			code.push_back((char)i);
-	else
-		code = contents(incoming);
-	bytes data = fromHex(boost::trim_copy(asString(code)));
-	if (data.empty())
-		data = code;
+	bytes contractCode;
+	bytes transactionDataCode = fromHex(transactionDataString);
+	Transaction t = eth::Transaction(value, gasPrice, gas, transactionDataCode, 0);
+	Address contractDestination("1122334455667788991011121314151617181920");
+	if (contractCodeString != "")
+	{
+		contractCode = fromHex(contractCodeString);
+		Account account(0,0, Account::ContractConception);
+		account.setCode(fromHex(contractCodeString));
+		std::unordered_map<Address, Account> map;
+		map[contractDestination] = account;
+		state.populateFrom(map);
+		t = eth::Transaction(value, gasPrice, gas, contractDestination, transactionDataCode, 0);
+	}
 
 	state.addBalance(sender, value);
 
@@ -203,7 +207,6 @@ int main(int argc, char** argv)
 	Executive executive(state, envInfo, se.get());
 	ExecutionResult res;
 	executive.setResultRecipient(res);
-	Transaction t = eth::Transaction(value, gasPrice, gas, data, 0);
 	t.forceSender(sender);
 
 	unordered_map<byte, pair<unsigned, bigint>> counts;
@@ -223,7 +226,11 @@ int main(int argc, char** argv)
 	};
 
 	executive.initialize(t);
-	executive.create(sender, value, gasPrice, gas, &data, origin);
+	if (contractCodeString != "")
+		executive.create(sender, value, gasPrice, gas, &transactionDataCode, origin);
+	else
+		executive.call(contractDestination, sender, value, gasPrice, &transactionDataCode, gas);
+
 	Timer timer;
 	if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Interpreter)
 		// If we use onOp, the factory falls back to "interpreter"
