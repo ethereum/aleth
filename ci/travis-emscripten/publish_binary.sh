@@ -31,6 +31,7 @@ git clean -f -d -x
 # We only want one release per day and we do not want to push the same commit twice.
 if ls ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js" > /dev/null
 then
+  true
 else
   cp ../soljson-*.js ./bin/
   ./update-index.sh
