@@ -28,15 +28,18 @@ git config user.name "travis"
 git config user.email "chris@ethereum.org"
 git checkout -B gh-pages origin/gh-pages
 git clean -f -d -x
-cp ../soljson-*.js ./bin/
-./update-index.sh
-cd bin
-LATEST=$(ls -r soljson-v* | head -n 1)
-cp "$LATEST" soljson-latest.js
-cp soljson-latest.js ../soljson.js
-git add .
-git add ../soljson.js
-if git commit -m "Added compiler version $LATEST"
+# We only want one release per day and we do not want to push the same commit twice.
+if ls ./bin/soljson-"$VER-$DATE"-*.js ./bin/soljson-*-"$COMMIT.js" > /dev/null
 then
+else
+  cp ../soljson-*.js ./bin/
+  ./update-index.sh
+  cd bin
+  LATEST=$(ls -r soljson-v* | head -n 1)
+  cp "$LATEST" soljson-latest.js
+  cp soljson-latest.js ../soljson.js
+  git add .
+  git add ../soljson.js
+  git commit -m "Added compiler version $LATEST"
   git push origin gh-pages
 fi
