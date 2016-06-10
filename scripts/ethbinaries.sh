@@ -150,6 +150,14 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 
 	if [[ $DEV_TEST -eq 1 ]]; then
 		echo "ETHBINARIES - INFO: Building MacOSX for development test.";
+		cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo
+		make -j4
+		if [[ $? -ne 0 ]]; then
+			echo "ETHBINARIES - ERROR: Building for Macosx failed.";
+			exit 1
+		fi
+	else
+		echo "ETHBINARIES - INFO: Building MacOSX binaries.";
 		# Temporarily forcing OS X binaries to Debug as a workaround for the Heisenbug.
 		# Ideally we would only have built Mix in Debug, but it turns out that is close
 		# to impossible because of the existing umbrella setup, so we'll do a
@@ -161,15 +169,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
 		#
 		# See "Fix the Heisenbug!"
 		# https://github.com/ethereum/webthree-umbrella/issues/565
-		cmake .. -DCMAKE_BUILD_TYPE=Debug #RelWithDebInfo
-		make -j4
-		if [[ $? -ne 0 ]]; then
-			echo "ETHBINARIES - ERROR: Building for Macosx failed.";
-			exit 1
-		fi
-	else
-		echo "ETHBINARIES - INFO: Building MacOSX binaries.";
-		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=RelWithDebInfo
+		cmake .. -DCMAKE_INSTALL_PREFIX=install -DCMAKE_BUILD_TYPE=Debug
 		if [[ $? -ne 0 ]]; then
 			echo "ETHBINARIES - ERROR: cmake configure phase failed.";
 			exit 1
