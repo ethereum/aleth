@@ -8,7 +8,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(ethereum VERSION "1.2.7")
+project(ethereum VERSION "1.2.8")
 
 include(EthCompilerSettings)
 
