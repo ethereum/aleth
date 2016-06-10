@@ -1,0 +1,28 @@
+sudo: required
+services:
+ - docker
+language: cpp
+compiler: gcc
+
+before_install:
+ - docker pull trzeci/emscripten:sdk-tag-1.35.4-64bit
+
+script: ./ci/travis-emscripten/install_dependencies.sh && docker run -v $(pwd):/src trzeci/emscripten:sdk-tag-1.35.4-64bit ./ci/travis-emscripten/build_emscripten.sh
+
+cache:
+  ccache: false
+  directories:
+    - boost_1_57_0
+    - jsoncpp
+    - cryptopp
+
+deploy:
+  provider: script
+  script: ci/travis-emscripten/publish_binary.sh
+  skip_cleanup: true
+  on:
+        branch: develop
+
+env:
+  global:
+  - ENCRYPTION_LABEL="296c219a3f41"
