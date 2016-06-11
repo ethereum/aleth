@@ -86,7 +86,7 @@ elif [[ "$OSTYPE" == "linux-gnu" ]]; then
     git checkout v0.6.0
     mkdir build
     cd build
-    cmake ..
+    cmake .. -DCOMPILE_TESTS=NO
     make
     sudo make install
     sudo ldconfig
