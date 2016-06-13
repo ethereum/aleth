@@ -238,6 +238,12 @@ static bool ethash_hash(
 
 	}
 
+// Workaround for incorrect warning in earlier GCC versions, which manifests on Debian 8 (Jesse)
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif // define (__GNUC__)
+
 	// compress mix
 	for (uint32_t w = 0; w != MIX_WORDS; w += 4) {
 		uint32_t reduction = mix->words[w + 0];
@@ -246,6 +252,10 @@ static bool ethash_hash(
 		reduction = reduction * FNV_PRIME ^ mix->words[w + 3];
 		mix->words[w / 4] = reduction;
 	}
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif // define (__GNUC__)
 
 	fix_endian_arr32(mix->words, MIX_WORDS / 4);
 	memcpy(&ret->mix_hash, mix->bytes, 32);
