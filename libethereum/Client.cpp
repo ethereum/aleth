@@ -160,6 +160,24 @@ void Client::onBadBlock(Exception& _ex) const
 	badBlock(*block, _ex.what());
 }
 
+void Client::callQueuedFunctions()
+{
+	while (true)
+	{
+		function<void()> f;
+		DEV_WRITE_GUARDED(x_functionQueue)
+			if (!m_functionQueue.empty())
+			{
+				f = m_functionQueue.front();
+				m_functionQueue.pop();
+			}
+		if (f)
+			f();
+		else
+			break;
+	}
+}
+
 u256 Client::networkId() const
 {
 	if (auto h = m_host.lock())
@@ -267,6 +285,13 @@ void Client::reopenChain(ChainParams const& _p, WithExisting _we)
 	startWorking();
 	if (wasSealing)
 		startSealing();
+}
+
+void Client::executeInMainThread(function<void ()> const& _function)
+{
+	DEV_WRITE_GUARDED(x_functionQueue)
+		m_functionQueue.push(_function);
+	m_signalled.notify_all();
 }
 
 void Client::clearPending()
@@ -588,7 +613,14 @@ void Client::rejigSealing()
 
 			clog(ClientTrace) << "Rejigging seal engine...";
 			DEV_WRITE_GUARDED(x_working)
+			{
+				if (m_working.isSealed())
+				{
+					clog(ClientNote) << "Tried to seal sealed block...";
+					return;
+				}
 				m_working.commitToSeal(bc(), m_extraData);
+			}
 			DEV_READ_GUARDED(x_working)
 			{
 				DEV_WRITE_GUARDED(x_postSeal)
@@ -660,6 +692,8 @@ void Client::doWork(bool _doWait)
 		syncTransactionQueue();
 
 	tick();
+
+	callQueuedFunctions();
 
 	if (!m_syncBlockQueue && !m_syncTransactionQueue && _doWait)
 	{
@@ -786,8 +820,11 @@ bool Client::submitSealed(bytes const& _header)
 
 void Client::rewind(unsigned _n)
 {
-	bc().rewind(_n);
-	onChainChanged(ImportRoute{});
+	executeInMainThread([=]() {
+		bc().rewind(_n);
+		onChainChanged(ImportRoute());
+	});
+
 	for (unsigned i = 0; i < 10; ++i)
 	{
 		u256 n;

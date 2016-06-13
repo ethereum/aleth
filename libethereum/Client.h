@@ -25,6 +25,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <list>
+#include <queue>
 #include <atomic>
 #include <string>
 #include <array>
@@ -195,6 +196,9 @@ public:
 	/// Rescue the chain.
 	void rescue() { bc().rescue(m_stateDB); }
 
+	/// Queues a function to be executed in the main thread (that owns the blockchain, etc).
+	void executeInMainThread(std::function<void()> const& _function);
+
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
@@ -283,6 +287,9 @@ protected:
 	/// @warning May be called from any thread.
 	void onBadBlock(Exception& _ex) const;
 
+	/// Executes the pending functions in m_functionQueue
+	void callQueuedFunctions();
+
 	BlockChain m_bc;						///< Maintains block database and owns the seal engine.
 	BlockQueue m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 	std::shared_ptr<GasPricer> m_gp;		///< The gas pricer.
@@ -317,6 +324,9 @@ protected:
 	unsigned m_syncAmount = 50;				///< Number of blocks to sync in each go.
 
 	ActivityReport m_report;
+
+	SharedMutex x_functionQueue;
+	std::queue<std::function<void()>> m_functionQueue;	///< Functions waiting to be executed in the main thread.
 
 	std::condition_variable m_signalled;
 	Mutex x_signalled;
