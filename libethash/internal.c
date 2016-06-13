@@ -238,6 +238,22 @@ static bool ethash_hash(
 
 	}
 
+// Workaround for a GCC regression which causes a bogus -Warray-bounds warning.
+// The regression was introduced in GCC 4.8.4, fixed in GCC 5.0.0 and backported to GCC 4.9.3 but
+// never to the GCC 4.8.x line.
+//
+// See https://gcc.gnu.org/bugzilla/show_bug.cgi?id=56273
+//
+// This regression is affecting Debian Jesse (8.5) builds of cpp-ethereum (GCC 4.9.2) and also
+// manifests in the doublethinkco armel v5 cross-builds, which use crosstool-ng and resulting
+// in the use of GCC 4.8.4.  The Tizen runtime wants an even older GLIBC version - the one from
+// GCC 4.6.0!
+
+#if defined(__GNUC__) && (__GNUC__ < 5)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif // define (__GNUC__)
+
 	// compress mix
 	for (uint32_t w = 0; w != MIX_WORDS; w += 4) {
 		uint32_t reduction = mix->words[w + 0];
@@ -246,6 +262,10 @@ static bool ethash_hash(
 		reduction = reduction * FNV_PRIME ^ mix->words[w + 3];
 		mix->words[w / 4] = reduction;
 	}
+
+#if defined(__GNUC__) && (__GNUC__ < 5)
+#pragma GCC diagnostic pop
+#endif // define (__GNUC__)
 
 	fix_endian_arr32(mix->words, MIX_WORDS / 4);
 	memcpy(&ret->mix_hash, mix->bytes, 32);
