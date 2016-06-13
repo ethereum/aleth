@@ -88,6 +88,7 @@ enum class Mode
 
 int main(int argc, char** argv)
 {
+	string incoming = "--";
 	Mode mode = Mode::Statistics;
 	VMKind vmKind = VMKind::Interpreter;
 	State state(0);
@@ -101,8 +102,8 @@ int main(int argc, char** argv)
 	EnvInfo envInfo;
 	Network networkName = Network::HomesteadTest;
 	envInfo.setGasLimit(MaxBlockGasLimit);
-	string transactionDataString = "";
-	string contractCodeString = "";
+	string transactionDataString;
+	string contractCodeString;
 	
 	Ethash::init();
 	NoProof::init();
@@ -182,17 +183,36 @@ int main(int argc, char** argv)
 			transactionDataString = argv[++i];
 		else if (arg == "--code" && i + 1 < argc)
 			contractCodeString = argv[++i];
+		else
+			incoming = arg;
 	}
 
 	VMFactory::setKind(vmKind);
 
-	bytes contractCode;
-	bytes transactionDataCode = fromHex(transactionDataString);
+
+	//Read transaction data field from input
+	bytes code;
+	if (incoming == "--" || incoming.empty())
+		for (int i = cin.get(); i != -1; i = cin.get())
+			code.push_back((char)i);
+	else
+		code = contents(incoming);
+
+	bytes data = fromHex(boost::trim_copy(asString(code)));
+	if (data.empty())
+		data = code;
+
+	//override transaction data field by transactionDataString if it's set
+	bytes transactionDataCode;
+	if (!data.empty() && transactionDataString.empty())
+		transactionDataCode = data;
+	else
+		transactionDataCode = fromHex(transactionDataString);
 	Transaction t = eth::Transaction(value, gasPrice, gas, transactionDataCode, 0);
+
 	Address contractDestination("1122334455667788991011121314151617181920");
 	if (contractCodeString != "")
 	{
-		contractCode = fromHex(contractCodeString);
 		Account account(0,0, Account::ContractConception);
 		account.setCode(fromHex(contractCodeString));
 		std::unordered_map<Address, Account> map;
@@ -226,7 +246,7 @@ int main(int argc, char** argv)
 	};
 
 	executive.initialize(t);
-	if (contractCodeString != "")
+	if (!contractCodeString.empty())
 		executive.create(sender, value, gasPrice, gas, &transactionDataCode, origin);
 	else
 		executive.call(contractDestination, sender, value, gasPrice, &transactionDataCode, gas);
