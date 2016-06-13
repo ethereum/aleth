@@ -138,7 +138,7 @@ public:
 	std::tuple<ImportRoute, bool, unsigned> syncQueue(unsigned _max = 1);
 
 	// Sealing stuff:
-	// Note: "sealing"/"miner" is deprecated. Use "sealing"/"sealer".
+	// Note: "mining"/"miner" is deprecated. Use "sealing"/"sealer".
 
 	virtual Address author() const override { ReadGuard l(x_preSeal); return m_preSeal.author(); }
 	virtual void setAuthor(Address const& _us) override { WriteGuard l(x_preSeal); m_preSeal.setAuthor(_us); }
@@ -155,11 +155,9 @@ public:
 	bool setSealOption(std::string const& _name, bytes const& _value) { auto ret = sealEngine()->setOption(_name, _value); if (wouldSeal()) startSealing(); return ret; }
 
 	/// Start sealing.
-	/// NOT thread-safe - call it & stopSealing only from a single thread
 	void startSealing() override;
 	/// Stop sealing.
-	/// NOT thread-safe
-	void stopSealing() override { m_wouldSeal = false; rejigSealing(); }
+	void stopSealing() override { m_wouldSeal = false; }
 	/// Are we sealing now?
 	bool wouldSeal() const override { return m_wouldSeal; }
 
@@ -197,7 +195,6 @@ public:
 	/// Rescue the chain.
 	void rescue() { bc().rescue(m_stateDB); }
 
-	void doWorkInternal();
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.

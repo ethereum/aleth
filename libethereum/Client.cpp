@@ -560,17 +560,19 @@ bool Client::remoteActive() const
 void Client::onPostStateChanged()
 {
 	clog(ClientTrace) << "Post state changed.";
-	rejigSealing();
+	m_signalled.notify_all();
 	m_remoteWorking = false;
 }
 
 void Client::startSealing()
 {
+	if (m_wouldSeal == true)
+		return;
 	clog(ClientNote) << "Mining Beneficiary: " << author();
 	if (author())
 	{
 		m_wouldSeal = true;
-		rejigSealing();
+		m_signalled.notify_all();
 	}
 	else
 		clog(ClientNote) << "You need to set an author in order to seal!";
@@ -676,10 +678,8 @@ void Client::tick()
 		m_lastTick = chrono::system_clock::now();
 		if (m_report.ticks == 15)
 			clog(ClientTrace) << activityReport();
-
-		if (m_wouldButShouldnot)
-			rejigSealing();
 	}
+	rejigSealing();
 }
 
 void Client::checkWatchGarbage()
@@ -787,6 +787,16 @@ bool Client::submitSealed(bytes const& _header)
 void Client::rewind(unsigned _n)
 {
 	bc().rewind(_n);
+	onChainChanged(ImportRoute{});
+	for (unsigned i = 0; i < 10; ++i)
+	{
+		u256 n;
+		DEV_READ_GUARDED(x_working)
+			n = m_working.info().number();
+		if (n == _n + 1)
+			break;
+		this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 	auto h = m_host.lock();
 	if (h)
 		h->reset();
