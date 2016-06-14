@@ -88,7 +88,7 @@ enum class Mode
 
 int main(int argc, char** argv)
 {
-	string incoming = "--";
+	string inputFile;
 	Mode mode = Mode::Statistics;
 	VMKind vmKind = VMKind::Interpreter;
 	State state(0);
@@ -102,8 +102,8 @@ int main(int argc, char** argv)
 	EnvInfo envInfo;
 	Network networkName = Network::HomesteadTest;
 	envInfo.setGasLimit(MaxBlockGasLimit);
-	string transactionDataString;
-	string contractCodeString;
+	bytes data;
+	bytes code;
 	
 	Ethash::init();
 	NoProof::init();
@@ -180,46 +180,51 @@ int main(int argc, char** argv)
 		else if (arg == "trace")
 			mode = Mode::Trace;
 		else if (arg == "--input" && i + 1 < argc)
-			transactionDataString = argv[++i];
+			data = fromHex(argv[++i]);
 		else if (arg == "--code" && i + 1 < argc)
-			contractCodeString = argv[++i];
+			code = fromHex(argv[++i]);
+		else if (inputFile.empty())
+			inputFile = arg;  // Assign input file name only once.
 		else
-			incoming = arg;
+		{
+			cerr << "Unknown argument: " << arg << '\n';
+			return -1;
+		}
 	}
 
 	VMFactory::setKind(vmKind);
 
 
-	//Read transaction data field from input
-	bytes code;
-	if (incoming == "--" || incoming.empty())
-		for (int i = cin.get(); i != -1; i = cin.get())
-			code.push_back((char)i);
-	else
-		code = contents(incoming);
-
-	bytes data = fromHex(boost::trim_copy(asString(code)));
-	if (data.empty())
-		data = code;
-
-	//override transaction data field by transactionDataString if it's set
-	bytes transactionDataCode;
-	if (!data.empty() && transactionDataString.empty())
-		transactionDataCode = data;
-	else
-		transactionDataCode = fromHex(transactionDataString);
-	Transaction t = eth::Transaction(value, gasPrice, gas, transactionDataCode, 0);
-
-	Address contractDestination("1122334455667788991011121314151617181920");
-	if (contractCodeString != "")
+	// Read code from input file.
+	if (!inputFile.empty())
 	{
+		if (!code.empty())
+			cerr << "--code argument overwritten by input file "
+				 << inputFile << '\n';
+
+		if (inputFile == "-")
+			for (int i = cin.get(); i != -1; i = cin.get())
+				code.push_back((char)i);
+		else
+			code = contents(inputFile);
+	}
+
+	Transaction t;
+	Address contractDestination("1122334455667788991011121314151617181920");
+	if (!code.empty())
+	{
+		// Deploy the code on some fake account to be called later.
 		Account account(0,0, Account::ContractConception);
-		account.setCode(fromHex(contractCodeString));
+		account.setCode(bytes{code});
 		std::unordered_map<Address, Account> map;
 		map[contractDestination] = account;
 		state.populateFrom(map);
-		t = eth::Transaction(value, gasPrice, gas, contractDestination, transactionDataCode, 0);
+		t = Transaction(value, gasPrice, gas, contractDestination, data, 0);
 	}
+	else
+		// If not code provided construct "create" transaction out of the input
+		// data.
+		t = Transaction(value, gasPrice, gas, data, 0);
 
 	state.addBalance(sender, value);
 
@@ -246,10 +251,10 @@ int main(int argc, char** argv)
 	};
 
 	executive.initialize(t);
-	if (!contractCodeString.empty())
-		executive.create(sender, value, gasPrice, gas, &transactionDataCode, origin);
+	if (!code.empty())
+		executive.call(contractDestination, sender, value, gasPrice, &data, gas);
 	else
-		executive.call(contractDestination, sender, value, gasPrice, &transactionDataCode, gas);
+		executive.create(sender, value, gasPrice, gas, &data, origin);
 
 	Timer timer;
 	if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Interpreter)
