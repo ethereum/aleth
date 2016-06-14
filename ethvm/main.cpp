@@ -83,7 +83,12 @@ enum class Mode
 {
 	Trace,
 	Statistics,
-	OutputOnly
+	OutputOnly,
+
+	/// Test mode -- output information needed for test verification and
+	/// benchmarking. The execution is not introspected not to degrade
+	/// performance.
+	Test
 };
 
 int main(int argc, char** argv)
@@ -179,6 +184,8 @@ int main(int argc, char** argv)
 			mode = Mode::OutputOnly;
 		else if (arg == "trace")
 			mode = Mode::Trace;
+		else if (arg == "test")
+			mode = Mode::Test;
 		else if (arg == "--input" && i + 1 < argc)
 			data = fromHex(argv[++i]);
 		else if (arg == "--code" && i + 1 < argc)
@@ -289,7 +296,17 @@ int main(int argc, char** argv)
 	else if (mode == Mode::Trace)
 		cout << st.json(styledJson);
 	else if (mode == Mode::OutputOnly)
-		cout << toHex(output);
+		cout << toHex(output) << '\n';
+	else if (mode == Mode::Test)
+	{
+		// Output information needed for test verification and benchmarking
+		// in YAML-like dictionaly format.
+		auto exception = res.excepted != TransactionException::None;
+		cout << "output: '" << toHex(output) << "'\n";
+		cout << "gas used: " << res.gasUsed << '\n';
+		cout << "exception: " << boolalpha << exception << '\n';
+		cout << "exec time: " << fixed << setprecision(6) << execTime << '\n';
+	}
 
 	return 0;
 }
