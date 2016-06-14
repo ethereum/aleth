@@ -350,7 +350,7 @@ private:
 	void checkConsistency();
 
 	/// Clears all caches from the tip of the chain up to (including) _firstInvalid.
-	/// These incude the blooms, the block hashes and the transaction lookup tables.
+	/// These include the blooms, the block hashes and the transaction lookup tables.
 	void clearCachesDuringChainReversion(unsigned _firstInvalid);
 	void clearBlockBlooms(unsigned _begin, unsigned _end);
 
