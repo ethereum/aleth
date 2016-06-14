@@ -23,6 +23,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_blockNumber", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &dev::rpc::EthFace::eth_blockNumberI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getBalance", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getBalanceI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getStorageAt", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getStorageAtI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("eth_getStorageRoot", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getStorageRootI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getTransactionCount", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getTransactionCountI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_pendingTransactions", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_STRING,  NULL), &dev::rpc::EthFace::eth_pendingTransactionsI);
                     this->bindAndAddMethod(jsonrpc::Procedure("eth_getBlockTransactionCountByHash", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING, NULL), &dev::rpc::EthFace::eth_getBlockTransactionCountByHashI);
@@ -108,6 +109,10 @@ namespace dev {
                 inline virtual void eth_getStorageAtI(const Json::Value &request, Json::Value &response)
                 {
                     response = this->eth_getStorageAt(request[0u].asString(), request[1u].asString(), request[2u].asString());
+                }
+                inline virtual void eth_getStorageRootI(const Json::Value &request, Json::Value &response)
+                {
+                    response = this->eth_getStorageRoot(request[0u].asString(), request[1u].asString());
                 }
                 inline virtual void eth_getTransactionCountI(const Json::Value &request, Json::Value &response)
                 {
@@ -288,6 +293,7 @@ namespace dev {
                 virtual std::string eth_blockNumber() = 0;
                 virtual std::string eth_getBalance(const std::string& param1, const std::string& param2) = 0;
                 virtual std::string eth_getStorageAt(const std::string& param1, const std::string& param2, const std::string& param3) = 0;
+                virtual std::string eth_getStorageRoot(const std::string& param1, const std::string& param2) = 0;
                 virtual std::string eth_getTransactionCount(const std::string& param1, const std::string& param2) = 0;
                 virtual std::string eth_pendingTransactions() = 0;
                 virtual Json::Value eth_getBlockTransactionCountByHash(const std::string& param1) = 0;
