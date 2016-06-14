@@ -34,18 +34,6 @@ namespace dev
 namespace eth
 {
 
-// Convert from a 256-bit integer stack/memory entry into a 160-bit Address hash.
-// Currently we just pull out the right (low-order in BE) 160-bits.
-inline Address asAddress(u256 _item)
-{
-	return right160(h256(_item));
-}
-
-inline u256 fromAddress(Address _a)
-{
-	return (u160)_a;
-}
-
 
 struct InstructionMetric
 {
@@ -55,8 +43,6 @@ struct InstructionMetric
 };
 
 // real machine word, virtual machine word, signed and unsigned overflow words
-typedef uint64_t mw64;
-typedef mw64 rmword;
 typedef u256 vmword;
 typedef s512 soword;
 typedef u512 uoword;
