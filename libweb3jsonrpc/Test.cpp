@@ -93,7 +93,7 @@ bool Test::test_rewindToBlock(int _number)
 {
 	try
 	{
-		asClientTest(m_eth).rewindToBlock(_number);
+		m_eth.rewind(_number);
 	}
 	catch (std::exception const&)
 	{
