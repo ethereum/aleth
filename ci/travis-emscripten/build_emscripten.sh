@@ -8,6 +8,10 @@
 
 set -ev
 
+# We need git for extracting the commit hash
+apt-get update
+apt-get -y install git-core
+
 if [ -z ${WORKSPACE} ]
 then
 	WORKSPACE=$(pwd)
