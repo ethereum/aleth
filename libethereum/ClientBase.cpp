@@ -184,6 +184,11 @@ u256 ClientBase::stateAt(Address _a, u256 _l, BlockNumber _block) const
 	return asOf(_block).storage(_a, _l);
 }
 
+h256 ClientBase::stateRootAt(Address _a, BlockNumber _block) const
+{
+	return asOf(_block).storageRoot(_a);
+}
+
 bytes ClientBase::codeAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).code(_a);
