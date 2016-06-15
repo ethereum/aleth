@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(basicGasPricer_RPC_API_Test_Homestead)
 {
 	u256 _expectedAsk = 155633980282;
 	u256 _expectedBid = 155633980282;
-	dev::test::executeGasPricerTest("RPC_API_Test", 30.679, 15.0, "/BlockchainTests/bcRPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
+	dev::test::executeGasPricerTest("RPC_API_Test", 30.679, 15.0, "/BlockchainTests/Homestead/bcRPC_API_Test.json", TransactionPriority::Medium, _expectedAsk, _expectedBid, eth::Network::HomesteadTest);
 }
 
 BOOST_AUTO_TEST_CASE(basicGasPricer_bcValidBlockTest)
