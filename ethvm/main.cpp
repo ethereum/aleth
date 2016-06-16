@@ -38,17 +38,21 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
+static const u256 MaxBlockGasLimit = ChainParams(genesisInfo(Network::HomesteadTest)).u256Param("maxGasLimit");
+
 void help()
 {
 	cout
 		<< "Usage ethvm <options> [trace|stats|output] (<file>|--)" << endl
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
-		<< "    --gas <n>  Transaction should be given <n> gas (default: block gas limit)." << endl
-		<< "    --gas-limit <n>  Block gas limit (default: " << DefaultBlockGasLimit << "." << endl
+		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit)." << endl
+		<< "    --gas-limit <n>  Block gas limit (default: " << MaxBlockGasLimit << ")." << endl
 		<< "    --gas-price <n>  Transaction's gas price' should be <n> (default: 0)." << endl
 		<< "    --sender <a>  Transaction sender should be <a> (default: 0000...0069)." << endl
 		<< "    --origin <a>  Transaction origin should be <a> (default: 0000...0069)." << endl
+		<< "    --input <d>   Transaction code should be <d>" << endl
+		<< "    --code <d>    Contract code <d>. Makes transaction a call to this contract" << endl
 #if ETH_EVMJIT
 		<< endl
 		<< "VM options:" << endl
@@ -79,30 +83,35 @@ enum class Mode
 {
 	Trace,
 	Statistics,
-	OutputOnly
+	OutputOnly,
+
+	/// Test mode -- output information needed for test verification and
+	/// benchmarking. The execution is not introspected not to degrade
+	/// performance.
+	Test
 };
 
 int main(int argc, char** argv)
 {
-	string incoming = "--";
-
+	string inputFile;
 	Mode mode = Mode::Statistics;
 	VMKind vmKind = VMKind::Interpreter;
 	State state(0);
 	Address sender = Address(69);
 	Address origin = Address(69);
 	u256 value = 0;
-	u256 gas = DefaultBlockGasLimit;
+	u256 gas = MaxBlockGasLimit;
 	u256 gasPrice = 0;
 	bool styledJson = true;
 	StandardTrace st;
 	EnvInfo envInfo;
 	Network networkName = Network::HomesteadTest;
-	envInfo.setGasLimit(gas);
+	envInfo.setGasLimit(MaxBlockGasLimit);
+	bytes data;
+	bytes code;
 	
 	Ethash::init();
 	NoProof::init();
-
 
 	for (int i = 1; i < argc; ++i)
 	{
@@ -132,8 +141,6 @@ int main(int argc, char** argv)
 			st.setShowMnemonics();
 		else if (arg == "--flat")
 			styledJson = false;
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
 		else if (arg == "--sender" && i + 1 < argc)
 			sender = Address(argv[++i]);
 		else if (arg == "--origin" && i + 1 < argc)
@@ -142,10 +149,6 @@ int main(int argc, char** argv)
 			gas = u256(argv[++i]);
 		else if (arg == "--gas-price" && i + 1 < argc)
 			gasPrice = u256(argv[++i]);
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
-		else if (arg == "--value" && i + 1 < argc)
-			value = u256(argv[++i]);
 		else if (arg == "--author" && i + 1 < argc)
 			envInfo.setAuthor(Address(argv[++i]));
 		else if (arg == "--number" && i + 1 < argc)
@@ -181,21 +184,54 @@ int main(int argc, char** argv)
 			mode = Mode::OutputOnly;
 		else if (arg == "trace")
 			mode = Mode::Trace;
+		else if (arg == "test")
+			mode = Mode::Test;
+		else if (arg == "--input" && i + 1 < argc)
+			data = fromHex(argv[++i]);
+		else if (arg == "--code" && i + 1 < argc)
+			code = fromHex(argv[++i]);
+		else if (inputFile.empty())
+			inputFile = arg;  // Assign input file name only once.
 		else
-			incoming = arg;
+		{
+			cerr << "Unknown argument: " << arg << '\n';
+			return -1;
+		}
 	}
 
 	VMFactory::setKind(vmKind);
 
-	bytes code;
-	if (incoming == "--" || incoming.empty())
-		for (int i = cin.get(); i != -1; i = cin.get())
-			code.push_back((char)i);
+
+	// Read code from input file.
+	if (!inputFile.empty())
+	{
+		if (!code.empty())
+			cerr << "--code argument overwritten by input file "
+				 << inputFile << '\n';
+
+		if (inputFile == "-")
+			for (int i = cin.get(); i != -1; i = cin.get())
+				code.push_back((char)i);
+		else
+			code = contents(inputFile);
+	}
+
+	Transaction t;
+	Address contractDestination("1122334455667788991011121314151617181920");
+	if (!code.empty())
+	{
+		// Deploy the code on some fake account to be called later.
+		Account account(0,0, Account::ContractConception);
+		account.setCode(bytes{code});
+		std::unordered_map<Address, Account> map;
+		map[contractDestination] = account;
+		state.populateFrom(map);
+		t = Transaction(value, gasPrice, gas, contractDestination, data, 0);
+	}
 	else
-		code = contents(incoming);
-	bytes data = fromHex(boost::trim_copy(asString(code)));
-	if (data.empty())
-		data = code;
+		// If not code provided construct "create" transaction out of the input
+		// data.
+		t = Transaction(value, gasPrice, gas, data, 0);
 
 	state.addBalance(sender, value);
 
@@ -203,7 +239,6 @@ int main(int argc, char** argv)
 	Executive executive(state, envInfo, se.get());
 	ExecutionResult res;
 	executive.setResultRecipient(res);
-	Transaction t = eth::Transaction(value, gasPrice, gas, data, 0);
 	t.forceSender(sender);
 
 	unordered_map<byte, pair<unsigned, bigint>> counts;
@@ -223,7 +258,11 @@ int main(int argc, char** argv)
 	};
 
 	executive.initialize(t);
-	executive.create(sender, value, gasPrice, gas, &data, origin);
+	if (!code.empty())
+		executive.call(contractDestination, sender, value, gasPrice, &data, gas);
+	else
+		executive.create(sender, value, gasPrice, gas, &data, origin);
+
 	Timer timer;
 	if ((mode == Mode::Statistics || mode == Mode::Trace) && vmKind == VMKind::Interpreter)
 		// If we use onOp, the factory falls back to "interpreter"
@@ -257,7 +296,17 @@ int main(int argc, char** argv)
 	else if (mode == Mode::Trace)
 		cout << st.json(styledJson);
 	else if (mode == Mode::OutputOnly)
-		cout << toHex(output);
+		cout << toHex(output) << '\n';
+	else if (mode == Mode::Test)
+	{
+		// Output information needed for test verification and benchmarking
+		// in YAML-like dictionaly format.
+		auto exception = res.excepted != TransactionException::None;
+		cout << "output: '" << toHex(output) << "'\n";
+		cout << "gas used: " << res.gasUsed << '\n';
+		cout << "exception: " << boolalpha << exception << '\n';
+		cout << "exec time: " << fixed << setprecision(6) << execTime << '\n';
+	}
 
 	return 0;
 }
