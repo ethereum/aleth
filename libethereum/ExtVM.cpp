@@ -27,7 +27,7 @@
 using namespace dev;
 using namespace dev::eth;
 
-namespace
+namespace // anonymous
 {
 
 static unsigned const c_depthLimit = 1024;
@@ -59,7 +59,7 @@ void goOnOffloadedStack(Executive& _e, OnOpFunc const& _onOp)
 
 	// Create new thread with big stack and join immediately.
 	// TODO: It is possible to switch the implementation to Boost.Context or similar when the API is stable.
-	std::exception_ptr exception;
+	boost::exception_ptr exception;
 	boost::thread{attrs, [&]{
 		try
 		{
@@ -67,11 +67,11 @@ void goOnOffloadedStack(Executive& _e, OnOpFunc const& _onOp)
 		}
 		catch (...)
 		{
-			exception = std::current_exception(); // Catch all exceptions to be rethrown in parent thread.
+			exception = boost::current_exception(); // Catch all exceptions to be rethrown in parent thread.
 		}
 	}}.join();
 	if (exception)
-		std::rethrow_exception(exception);
+		boost::rethrow_exception(exception);
 }
 
 void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
@@ -89,7 +89,9 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 	else
 		_e.go(_onOp);
 }
-}
+
+} // anonymous namespace
+
 
 bool ExtVM::call(CallParameters& _p)
 {
