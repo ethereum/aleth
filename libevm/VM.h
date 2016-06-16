@@ -42,11 +42,6 @@ struct InstructionMetric
 	int ret;
 };
 
-// real machine word, virtual machine word, signed and unsigned overflow words
-typedef u256 vmword;
-typedef s512 soword;
-typedef u512 uoword;
-
 
 /**
  */
@@ -68,6 +63,7 @@ private:
 	void copyDataToMemory(bytesConstRef _data, u256*& SP);
 	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
 	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
+	void throwVMStackException(unsigned _size, unsigned _n, unsigned _d);
 
 	std::unordered_set<uint64_t> m_jumpDests;
 	std::function<void()> m_onFail;
@@ -80,11 +76,7 @@ private:
 	u256s m_stack_vector;
 	u256* m_stack;
 	u256** m_pSP = 0;
-
-	// state of the metering and memorizing
-	uint64_t runGas = 0;
-	uint64_t newMemSize = 0;
-	uint64_t copySize = 0;
+	
 };
 
 void throwVMException(VMException);

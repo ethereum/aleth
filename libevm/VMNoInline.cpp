@@ -32,6 +32,22 @@ void dev::eth::throwVMException(VMException x) {
 	BOOST_THROW_EXCEPTION(x);
 }
 
+void VM::throwVMStackException(unsigned _size, unsigned _n, unsigned _d)
+{
+	if (_size < _n)
+	{
+		if (m_onFail)
+			m_onFail();
+		throwVMException(StackUnderflow() << RequirementError((bigint)_n, (bigint)_size));
+	}
+	if (_size - _n + _d > 1024)
+	{
+		if (m_onFail)
+			m_onFail();
+		throwVMException(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)_size));
+	}
+}
+
 
 array<InstructionMetric, 256> VM::metrics()
 {
@@ -64,7 +80,7 @@ void VM::makeJumpDestTable(ExtVMFace& _ext)
 void VM::copyDataToMemory(bytesConstRef _data, u256*& SP)
 {
 	auto offset = static_cast<size_t>(*SP--);
-	soword bigIndex = *SP--;
+	s512 bigIndex = *SP--;
 	auto index = static_cast<size_t>(bigIndex);
 	auto size = static_cast<size_t>(*SP--);
 
