@@ -672,7 +672,11 @@ void BlockChainSync::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP con
 		removeItem(m_bodies, blockNumber);
 		if (m_headers.empty())
 		{
-			assert(m_bodies.empty());
+			if (!m_bodies.empty())
+			{
+				clog(NetMessageDetail) << "Block headers map is empty, but block bodies map is not. Force-clearing.";
+				m_bodies.clear();
+			}
 			completeSync();
 		}
 		break;
