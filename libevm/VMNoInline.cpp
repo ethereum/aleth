@@ -28,7 +28,8 @@ using namespace dev::eth;
 //#define BOOST_THROW_EXCEPTION(X) ((cerr << "VM EXCEPTION " << boost::diagnostic_information(X) << endl), abort())
 
 // consolidate exception throws to avoid spraying boost code all over interpreter
-void dev::eth::throwVMException(VMException x) {
+void dev::eth::throwVMException(VMException x)
+{
 	BOOST_THROW_EXCEPTION(x);
 }
 

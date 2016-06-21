@@ -51,7 +51,7 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= SP + 1); return u256s(m_stack, SP + 1); };
+	u256s stack() const { assert(m_stack <= m_SP + 1); return u256s(m_stack, m_SP + 1); };
 
 	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data() + 1) {};
 
@@ -66,7 +66,7 @@ private:
 
 	void makeJumpDestTable(ExtVMFace& _ext);
 	uint64_t verifyJumpDest(u256 const& _dest);
-	void copyDataToMemory(bytesConstRef _data, u256*& SP);
+	void copyDataToMemory(bytesConstRef _data, u256*& m_SP);
 	void throwVMStackException(unsigned _size, unsigned _n, unsigned _d);
 	void reportStackUse();
 
@@ -89,14 +89,14 @@ private:
 	u256* m_stack;
 
 	// interpreter state
-	uint64_t PC = 0;
-	u256* SP = m_stack - 1;
-	Instruction inst;
+	uint64_t m_PC = 0;
+	u256* m_SP = m_stack - 1;
+	Instruction m_inst;
 
 	// metering and memory state
-	uint64_t runGas = 0;
-	uint64_t newMemSize = 0;
-	uint64_t copyMemSize = 0;
+	uint64_t m_runGas = 0;
+	uint64_t m_newMemSize = 0;
+	uint64_t m_copyMemSize = 0;
 
 	void onOperation();
 	void checkStack(unsigned _n, unsigned _d);
@@ -104,7 +104,7 @@ private:
 	void updateIOGas();
 	void updateGas();
 	void updateMem();
-	void logGasMem(Instruction inst);
+	void logGasMem(Instruction m_inst);
 
 	// interpreter loop & switch
 	void interpretCases();
