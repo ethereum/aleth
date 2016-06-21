@@ -51,23 +51,35 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= *m_pSP + 1); return u256s(m_stack, *m_pSP + 1); };
+	u256s stack() const { assert(m_stack <= SP + 1); return u256s(m_stack, SP + 1); };
 
 	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data() + 1) {};
 
 private:
 
-	static std::array<InstructionMetric, 256> metrics();
+	u256* m_io_gas = 0;
+	ExtVMFace* m_ext = 0;
+	OnOpFunc const* m_onOp = 0;
+
+	static std::array<InstructionMetric, 256> c_metrics;
+	static void initMetrics();
+
 	void makeJumpDestTable(ExtVMFace& _ext);
 	uint64_t verifyJumpDest(u256 const& _dest);
 	void copyDataToMemory(bytesConstRef _data, u256*& SP);
-	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
-	void requireMem(unsigned _n) { if (m_mem.size() < _n) { m_mem.resize(_n); } }
 	void throwVMStackException(unsigned _size, unsigned _n, unsigned _d);
+	void reportStackUse();
 
 	std::unordered_set<uint64_t> m_jumpDests;
-	std::function<void()> m_onFail;
+
+	typedef void (VM::*MemFnPtr)();
+	MemFnPtr m_bounce = 0;
+	MemFnPtr m_onFail = 0;
+	uint64_t m_nSteps = 0;
 	EVMSchedule const* m_schedule = nullptr;
+
+	// return bytes
+	bytesConstRef m_bytes = bytesConstRef();
 
 	// space for memory
 	bytes m_mem;
@@ -75,8 +87,32 @@ private:
 	// space for stack
 	u256s m_stack_vector;
 	u256* m_stack;
-	u256** m_pSP = 0;
-	
+
+	// interpreter state
+	uint64_t PC = 0;
+	u256* SP = m_stack - 1;
+	Instruction inst;
+
+	// metering and memory state
+	uint64_t runGas = 0;
+	uint64_t newMemSize = 0;
+	uint64_t copyMemSize = 0;
+
+	void onOperation();
+	void checkStack(unsigned _n, unsigned _d);
+	uint64_t gasForMem(u512 _size);
+	void updateIOGas();
+	void updateGas();
+	void updateMem();
+	void logGasMem(Instruction inst);
+
+	// interpreter loop & switch
+	void interpretCases();
+
+	// interpreter cases that call out
+	void caseCreate();
+	bool caseCallSetup(CallParameters*);
+	void caseCall();
 };
 
 void throwVMException(VMException);

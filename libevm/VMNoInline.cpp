@@ -37,31 +37,37 @@ void VM::throwVMStackException(unsigned _size, unsigned _n, unsigned _d)
 	if (_size < _n)
 	{
 		if (m_onFail)
-			m_onFail();
+			(this->*m_onFail)();
 		throwVMException(StackUnderflow() << RequirementError((bigint)_n, (bigint)_size));
 	}
 	if (_size - _n + _d > 1024)
 	{
 		if (m_onFail)
-			m_onFail();
+			(this->*m_onFail)();
 		throwVMException(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)_size));
 	}
 }
 
-
-array<InstructionMetric, 256> VM::metrics()
+std::array<InstructionMetric, 256> VM::c_metrics;
+void VM::initMetrics()
 {
-	array<InstructionMetric, 256> s_ret;
 	for (unsigned i = 0; i < 256; ++i)
 	{
 		InstructionInfo inst = instructionInfo((Instruction)i);
-		s_ret[i].gasPriceTier = inst.gasPriceTier;
-		s_ret[i].args = inst.args;
-		s_ret[i].ret = inst.ret;
+		c_metrics[i].gasPriceTier = inst.gasPriceTier;
+		c_metrics[i].args = inst.args;
+		c_metrics[i].ret = inst.ret;
 	}
-	return s_ret;
 }
 
+void VM::reportStackUse()
+{
+	static intptr_t p = 0;
+	intptr_t q = intptr_t(&q);
+	if (p)
+		cerr << "STACK: " << p << " - " << q << " = " << (p - q) << endl;
+	p = q;
+}
 
 void VM::makeJumpDestTable(ExtVMFace& _ext)
 {
