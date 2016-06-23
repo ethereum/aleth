@@ -351,8 +351,8 @@ do
 			# We get here if no special branch was requested, so make sure we got the non-special
 			# branch checked out before pulling
 			echo "ETHUPDATE - INFO: Make sure we are in $REQUESTED_BRANCH"
-			git fetch origin $SHALLOW_FETCH
-			git checkout -f -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
+			git fetch origin $REQUESTED_BRANCH $SHALLOW_FETCH
+			git checkout -f -B $REQUESTED_BRANCH FETCH_HEAD
 		else
 			git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 		fi
