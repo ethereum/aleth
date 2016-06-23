@@ -24,6 +24,8 @@
 ## debuild command (see below).
 ##############################################################################
 
+set -e
+
 distribution=${debplatform}
 echo "building for ${debplatform}"
 if [ -z "$distribution" ]
@@ -48,7 +50,8 @@ fi
 echo codebranch=${codebranch}
 echo pparepo=${pparepo}
 
-keyid=build@ethdev.com
+keyid=703F83D0
+email=builds@ethereum.org
 mainppa="http://ppa.launchpad.net/ethereum/ethereum/ubuntu"
 devppa="http://ppa.launchpad.net/ethereum/ethereum-dev/ubuntu"
 qtppa="http://ppa.launchpad.net/ethereum/ethereum-qt/ubuntu"
@@ -77,7 +80,7 @@ wget https://github.com/ethereum/ethereum-ppa/archive/${ppabranch}.tar.gz -O- |
 tar -zx --exclude package.sh --exclude README.md --strip-components=1
 
 # bump version
-EMAIL="$keyid" dch -v ${debversion}-0ubuntu1 "git build of ${revision}"
+EMAIL="$email" dch -v ${debversion}-0ubuntu1 "git build of ${revision}"
 
 # build source package
 # If packages is rejected because original source is already present, add
