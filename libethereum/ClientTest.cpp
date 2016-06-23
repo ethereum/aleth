@@ -77,11 +77,6 @@ bool ClientTest::addBlock(string const& _rlp)
 	return (m_bq.import(blockRLP.data(), true) == ImportResult::Success);
 }
 
-void ClientTest::rewindToBlock(unsigned _number)
-{
-	bc().rewind(_number);
-}
-
 void ClientTest::modifyTimestamp(u256 const& _timestamp)
 {
 	Block block(chainParams().accountStartNonce);
@@ -116,9 +111,5 @@ void ClientTest::onNewBlocks(h256s const& _blocks, h256Hash& io_changed)
 	Client::onNewBlocks(_blocks, io_changed);
 
 	if(--m_blocksToMine <= 0)
-	{
-		//stop mining
-		m_wouldSeal = false;
-		rejigSealing();
-	}
+		stopSealing();
 }

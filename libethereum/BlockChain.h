@@ -202,7 +202,6 @@ public:
 	 */
 	BlocksBlooms blocksBlooms(unsigned _level, unsigned _index) const { return blocksBlooms(chunkId(_level, _index)); }
 	BlocksBlooms blocksBlooms(h256 const& _chunkId) const { return queryExtras<BlocksBlooms, ExtraBlocksBlooms>(_chunkId, m_blocksBlooms, x_blocksBlooms, NullBlocksBlooms); }
-	void clearBlockBlooms(unsigned _begin, unsigned _end);
 	LogBloom blockBloom(unsigned _number) const { return blocksBlooms(chunkId(0, _number / c_bloomIndexSize)).blooms[_number % c_bloomIndexSize]; }
 	std::vector<unsigned> withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest) const;
 	std::vector<unsigned> withBlockBloom(LogBloom const& _b, unsigned _earliest, unsigned _latest, unsigned _topLevel, unsigned _index) const;
@@ -349,6 +348,11 @@ private:
 	}
 
 	void checkConsistency();
+
+	/// Clears all caches from the tip of the chain up to (including) _firstInvalid.
+	/// These include the blooms, the block hashes and the transaction lookup tables.
+	void clearCachesDuringChainReversion(unsigned _firstInvalid);
+	void clearBlockBlooms(unsigned _begin, unsigned _end);
 
 	/// The caches of the disk DB and their locks.
 	mutable SharedMutex x_blocks;

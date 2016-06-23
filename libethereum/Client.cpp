@@ -160,6 +160,24 @@ void Client::onBadBlock(Exception& _ex) const
 	badBlock(*block, _ex.what());
 }
 
+void Client::callQueuedFunctions()
+{
+	while (true)
+	{
+		function<void()> f;
+		DEV_WRITE_GUARDED(x_functionQueue)
+			if (!m_functionQueue.empty())
+			{
+				f = m_functionQueue.front();
+				m_functionQueue.pop();
+			}
+		if (f)
+			f();
+		else
+			break;
+	}
+}
+
 u256 Client::networkId() const
 {
 	if (auto h = m_host.lock())
@@ -267,6 +285,13 @@ void Client::reopenChain(ChainParams const& _p, WithExisting _we)
 	startWorking();
 	if (wasSealing)
 		startSealing();
+}
+
+void Client::executeInMainThread(function<void ()> const& _function)
+{
+	DEV_WRITE_GUARDED(x_functionQueue)
+		m_functionQueue.push(_function);
+	m_signalled.notify_all();
 }
 
 void Client::clearPending()
@@ -560,17 +585,19 @@ bool Client::remoteActive() const
 void Client::onPostStateChanged()
 {
 	clog(ClientTrace) << "Post state changed.";
-	rejigSealing();
+	m_signalled.notify_all();
 	m_remoteWorking = false;
 }
 
 void Client::startSealing()
 {
+	if (m_wouldSeal == true)
+		return;
 	clog(ClientNote) << "Mining Beneficiary: " << author();
 	if (author())
 	{
 		m_wouldSeal = true;
-		rejigSealing();
+		m_signalled.notify_all();
 	}
 	else
 		clog(ClientNote) << "You need to set an author in order to seal!";
@@ -586,7 +613,14 @@ void Client::rejigSealing()
 
 			clog(ClientTrace) << "Rejigging seal engine...";
 			DEV_WRITE_GUARDED(x_working)
+			{
+				if (m_working.isSealed())
+				{
+					clog(ClientNote) << "Tried to seal sealed block...";
+					return;
+				}
 				m_working.commitToSeal(bc(), m_extraData);
+			}
 			DEV_READ_GUARDED(x_working)
 			{
 				DEV_WRITE_GUARDED(x_postSeal)
@@ -659,6 +693,8 @@ void Client::doWork(bool _doWait)
 
 	tick();
 
+	callQueuedFunctions();
+
 	if (!m_syncBlockQueue && !m_syncTransactionQueue && _doWait)
 	{
 		std::unique_lock<std::mutex> l(x_signalled);
@@ -676,10 +712,8 @@ void Client::tick()
 		m_lastTick = chrono::system_clock::now();
 		if (m_report.ticks == 15)
 			clog(ClientTrace) << activityReport();
-
-		if (m_wouldButShouldnot)
-			rejigSealing();
 	}
+	rejigSealing();
 }
 
 void Client::checkWatchGarbage()
@@ -786,7 +820,20 @@ bool Client::submitSealed(bytes const& _header)
 
 void Client::rewind(unsigned _n)
 {
-	bc().rewind(_n);
+	executeInMainThread([=]() {
+		bc().rewind(_n);
+		onChainChanged(ImportRoute());
+	});
+
+	for (unsigned i = 0; i < 10; ++i)
+	{
+		u256 n;
+		DEV_READ_GUARDED(x_working)
+			n = m_working.info().number();
+		if (n == _n + 1)
+			break;
+		this_thread::sleep_for(std::chrono::milliseconds(50));
+	}
 	auto h = m_host.lock();
 	if (h)
 		h->reset();
