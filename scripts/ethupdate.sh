@@ -296,6 +296,7 @@ do
 	BRANCH=${BRANCH##refs/heads/}
 
 	get_repo_branch $repository
+        get_repo_url $repository
 	# if the "none" value was given then checkout and pull requested branch
 	if [[ $BUILD_PR == "none" ]]; then
 		git checkout -f $REQUESTED_BRANCH
@@ -351,7 +352,7 @@ do
 			# We get here if no special branch was requested, so make sure we got the non-special
 			# branch checked out before pulling
 			echo "ETHUPDATE - INFO: Make sure we are in $REQUESTED_BRANCH"
-			git fetch origin $REQUESTED_BRANCH $SHALLOW_FETCH
+			git fetch "$REPO_URL" $REQUESTED_BRANCH $SHALLOW_FETCH
 			git checkout -f -B $REQUESTED_BRANCH FETCH_HEAD
 		else
 			git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
