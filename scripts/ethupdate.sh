@@ -352,9 +352,10 @@ do
 			# branch checked out before pulling
 			echo "ETHUPDATE - INFO: Make sure we are in $REQUESTED_BRANCH"
 			git fetch origin $SHALLOW_FETCH
-			git checkout -f --track -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
+			git checkout -f -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
+		else
+			git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 		fi
-		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 		# Init new and update submodules
 		git submodule update --init --force
 	else
