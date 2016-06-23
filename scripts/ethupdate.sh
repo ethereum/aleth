@@ -351,7 +351,8 @@ do
 			# We get here if no special branch was requested, so make sure we got the non-special
 			# branch checked out before pulling
 			echo "ETHUPDATE - INFO: Make sure we are in $REQUESTED_BRANCH"
-			git checkout -f $REQUESTED_BRANCH
+			git fetch origin $SHALLOW_FETCH
+			git checkout -f --track -b $REQUESTED_BRANCH origin/$REQUESTED_BRANCH
 		fi
 		git pull $UPSTREAM $REQUESTED_BRANCH $SHALLOW_FETCH
 		# Init new and update submodules
