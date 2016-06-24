@@ -8,6 +8,7 @@
 { "name": "eth_blockNumber", "params": [], "order": [], "returns" : ""},
 { "name": "eth_getBalance", "params": ["", ""], "order": [], "returns" : ""},
 { "name": "eth_getStorageAt", "params": ["", "", ""], "order": [], "returns": ""},
+{ "name": "eth_getStorageRoot", "params": ["", ""], "order": [], "returns": ""},
 { "name": "eth_getTransactionCount", "params": ["", ""], "order": [], "returns" : ""},
 { "name": "eth_pendingTransactions", "params": [], "order": [], "returns" : ""},
 { "name": "eth_getBlockTransactionCountByHash", "params": [""], "order": [], "returns" : {}},
