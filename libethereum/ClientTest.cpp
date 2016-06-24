@@ -83,15 +83,18 @@ void ClientTest::modifyTimestamp(u256 const& _timestamp)
 	DEV_READ_GUARDED(x_preSeal)
 		block = m_preSeal;
 
-	Transactions transactions = block.pending();
+	Transactions transactions;
+	DEV_READ_GUARDED(x_postSeal)
+		transactions = m_postSeal.pending();
 	block.resetCurrent(_timestamp);
+
+	DEV_WRITE_GUARDED(x_preSeal)
+		m_preSeal = block;
 
 	auto lastHashes = bc().lastHashes();
 	for (auto const& t: transactions)
 		block.execute(lastHashes, t);
 
-	DEV_WRITE_GUARDED(x_preSeal)
-		m_preSeal = block;
 	DEV_WRITE_GUARDED(x_working)
 		m_working = block;
 	DEV_READ_GUARDED(x_postSeal)
