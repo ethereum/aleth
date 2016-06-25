@@ -116,6 +116,5 @@ int main( int argc, char* argv[] )
 	for (int i = 0; i < argc; i++)
 		parameters.push_back(argv[i]);
 
-	unit_test_main(fake_init_func, argc, argv);
-
+	return unit_test_main(fake_init_func, argc, argv);
 }
