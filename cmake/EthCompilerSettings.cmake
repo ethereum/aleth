@@ -13,6 +13,15 @@
 # most of our compiler settings are common between GCC and Clang.
 #
 # These settings then end up spanning all POSIX platforms (Linux, OS X, BSD, etc)
+
+# Use ccache if available
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+	set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
+	message("Using ccache")
+endif(CCACHE_FOUND)
+
 if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
 
 	# Use ISO C++11 standard language.
