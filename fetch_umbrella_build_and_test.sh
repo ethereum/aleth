@@ -11,11 +11,6 @@ rm -rf libethereum
 mv ../libethereum .
 mkdir build
 cd build
-OPTIONS=""
-if [[ "$OSTYPE" != "darwin"* ]]
-then
-  OPTIONS="-DCMAKE_C_COMPILER=/usr/lib/ccache/$CC -DCMAKE_CXX_COMPILER=/usr/lib/ccache/$CXX"
-fi
-cmake .. -DGUI=0 -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE $OPTIONS
-make
+cmake .. -DGUI=0 -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+make -j 2 eth ethvm testeth
 ./libethereum/test/testeth
