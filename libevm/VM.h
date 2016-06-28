@@ -34,17 +34,14 @@ namespace dev
 namespace eth
 {
 
-// Convert from a 256-bit integer stack/memory entry into a 160-bit Address hash.
-// Currently we just pull out the right (low-order in BE) 160-bits.
-inline Address asAddress(u256 _item)
-{
-	return right160(h256(_item));
-}
 
-inline u256 fromAddress(Address _a)
+struct InstructionMetric
 {
-	return (u160)_a;
-}
+	int gasPriceTier;
+	int args;
+	int ret;
+};
+
 
 /**
  */
@@ -53,27 +50,72 @@ class VM: public VMFace
 public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
-	uint64_t curPC() const { return m_curPC; }
+	bytes const& memory() const { return m_mem; }
+	u256s stack() const { assert(m_stack <= m_SP + 1); return u256s(m_stack, m_SP + 1); };
 
-	bytes const& memory() const { return m_temp; }
-	u256s const& stack() const { return m_stack; }
+	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data() + 1) {};
 
 private:
-	void checkRequirements(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp, Instruction _inst);
-	void require(u256 _n, u256 _d);
-	void requireMem(unsigned _n) { if (m_temp.size() < _n) { m_temp.resize(_n); } }
-	static uint64_t verifyJumpDest(u256 const& _dest, std::vector<uint64_t> const& _validDests);
-	void copyDataToMemory(bytesConstRef _data);
-	uint64_t execOrdinaryOpcode(Instruction _inst, u256& io_gas, ExtVMFace& _ext);
 
-	uint64_t m_curPC = 0;
-	uint64_t m_steps = 0;
-	bytes m_temp;
-	u256s m_stack;
-	std::vector<uint64_t> m_jumpDests;
-	std::function<void()> m_onFail;
+	u256* m_io_gas = 0;
+	ExtVMFace* m_ext = 0;
+	OnOpFunc const* m_onOp = 0;
+
+	static std::array<InstructionMetric, 256> c_metrics;
+	static void initMetrics();
+
+	void makeJumpDestTable(ExtVMFace& _ext);
+	uint64_t verifyJumpDest(u256 const& _dest);
+	void copyDataToMemory(bytesConstRef _data, u256*& m_SP);
+	void throwVMStackException(unsigned _size, unsigned _n, unsigned _d);
+	void reportStackUse();
+
+	std::unordered_set<uint64_t> m_jumpDests;
+
+	typedef void (VM::*MemFnPtr)();
+	MemFnPtr m_bounce = 0;
+	MemFnPtr m_onFail = 0;
+	uint64_t m_nSteps = 0;
 	EVMSchedule const* m_schedule = nullptr;
+
+	// return bytes
+	bytesConstRef m_bytes = bytesConstRef();
+
+	// space for memory
+	bytes m_mem;
+
+	// space for stack
+	u256s m_stack_vector;
+	u256* m_stack;
+
+	// interpreter state
+	uint64_t m_PC = 0;
+	u256* m_SP = m_stack - 1;
+	Instruction m_inst;
+
+	// metering and memory state
+	uint64_t m_runGas = 0;
+	uint64_t m_newMemSize = 0;
+	uint64_t m_copyMemSize = 0;
+
+	void onOperation();
+	void checkStack(unsigned _n, unsigned _d);
+	uint64_t gasForMem(u512 _size);
+	void updateIOGas();
+	void updateGas();
+	void updateMem();
+	void logGasMem(Instruction m_inst);
+
+	// interpreter loop & switch
+	void interpretCases();
+
+	// interpreter cases that call out
+	void caseCreate();
+	bool caseCallSetup(CallParameters*);
+	void caseCall();
 };
+
+void throwVMException(VMException);
 
 }
 }
