@@ -548,15 +548,15 @@ bytes importData(json_spirit::mObject const& _o)
 
 string compileLLL(string const& _code)
 {
-#if defined(_WIN32)
-	BOOST_ERROR("LLL compilation only supported on posix systems.");
-	return "";
-#else
 	if (_code == "")
 		return "0x";
 	if (_code.substr(0,2) == "0x" && _code.size() >= 2)
 		return _code;
 
+#if defined(_WIN32)
+	BOOST_ERROR("LLL compilation only supported on posix systems.");
+	return "";
+#else
 	char input[1024];
 	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
 	string cmd = string("../../solidity/lllc/lllc -o 0 ") + path.string();
