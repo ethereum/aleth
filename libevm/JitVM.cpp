@@ -78,65 +78,66 @@ evm_variant evm_query(evm_env* _opaqueEnv, evm_query_key _key,
 	evm_variant v;
 	switch (_key)
 	{
-		case EVM_ADDRESS:
-			v.address = toEvmC(env.myAddress);
-			break;
-		case EVM_CALLER:
-			v.address = toEvmC(env.caller);
-			break;
-		case EVM_ORIGIN:
-			v.address = toEvmC(env.origin);
-			break;
-		case EVM_GAS_PRICE:
-			v.uint256 = toEvmC(env.gasPrice);
-			break;
-		case EVM_COINBASE:
-			v.address = toEvmC(env.envInfo().author());
-			break;
-		case EVM_DIFFICULTY:
-			v.uint256 = toEvmC(env.envInfo().difficulty());
-			break;
-		case EVM_GAS_LIMIT:
-			v.uint256 = toEvmC(env.envInfo().gasLimit());
-			break;
-		case EVM_NUMBER:
-			// TODO: Handle overflow / exception
-			v.int64 = static_cast<int64_t>(env.envInfo().number());
-			break;
-		case EVM_TIMESTAMP:
-			// TODO: Handle overflow / exception
-			v.int64 = static_cast<int64_t>(env.envInfo().timestamp());
-			break;
-		case EVM_CODE_BY_ADDRESS:
-		{
-			auto addr = fromEvmC(_arg.address);
-			auto &code = env.codeAt(addr);
-			v.bytes.bytes = reinterpret_cast<char const*>(code.data());
-			v.bytes.size = code.size();
-			break;
-		}
-		case EVM_BALANCE:
-		{
-			auto addr = fromEvmC(_arg.address);
-			v.uint256 = toEvmC(env.balance(addr));
-			break;
-		}
-		case EVM_BLOCKHASH:
-			v.hash256 = toEvmC(env.blockHash(_arg.int64));
-			break;
-		case EVM_STORAGE:
-		{
-			auto key = fromEvmC(_arg.uint256);
-			v.uint256 = toEvmC(env.store(key));
-			break;
-		}
+	case EVM_ADDRESS:
+		std::cout << env.myAddress;
+		v.address = toEvmC(env.myAddress);
+		break;
+	case EVM_CALLER:
+		v.address = toEvmC(env.caller);
+		break;
+	case EVM_ORIGIN:
+		v.address = toEvmC(env.origin);
+		break;
+	case EVM_GAS_PRICE:
+		v.uint256 = toEvmC(env.gasPrice);
+		break;
+	case EVM_COINBASE:
+		v.address = toEvmC(env.envInfo().author());
+		break;
+	case EVM_DIFFICULTY:
+		v.uint256 = toEvmC(env.envInfo().difficulty());
+		break;
+	case EVM_GAS_LIMIT:
+		v.uint256 = toEvmC(env.envInfo().gasLimit());
+		break;
+	case EVM_NUMBER:
+		// TODO: Handle overflow / exception
+		v.int64 = static_cast<int64_t>(env.envInfo().number());
+		break;
+	case EVM_TIMESTAMP:
+		// TODO: Handle overflow / exception
+		v.int64 = static_cast<int64_t>(env.envInfo().timestamp());
+		break;
+	case EVM_CODE_BY_ADDRESS:
+	{
+		auto addr = fromEvmC(_arg.address);
+		auto &code = env.codeAt(addr);
+		v.bytes.bytes = reinterpret_cast<char const*>(code.data());
+		v.bytes.size = code.size();
+		break;
+	}
+	case EVM_BALANCE:
+	{
+		auto addr = fromEvmC(_arg.address);
+		v.uint256 = toEvmC(env.balance(addr));
+		break;
+	}
+	case EVM_BLOCKHASH:
+		v.hash256 = toEvmC(env.blockHash(_arg.int64));
+		break;
+	case EVM_STORAGE:
+	{
+		auto key = fromEvmC(_arg.uint256);
+		v.uint256 = toEvmC(env.store(key));
+		break;
+	}
 	}
 	return v;
 }
 
 }
 
-extern "C" void env_sload(); // fake declaration for linker symbol stripping workaround, see a call below
+extern "C" void env_sstore(); // fake declaration for linker symbol stripping workaround, see a call below
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
@@ -191,7 +192,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	case evmjit::ReturnCode::OutOfGas:
 		BOOST_THROW_EXCEPTION(OutOfGas());
 	case evmjit::ReturnCode::LinkerWorkaround:	// never happens
-		env_sload();					// but forces linker to include env_* JIT callback functions
+		env_sstore();					// but forces linker to include env_* JIT callback functions
 		break;
 	default:
 		break;

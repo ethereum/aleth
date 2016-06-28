@@ -15,13 +15,6 @@ extern "C"
 	using namespace dev::eth;
 	using evmjit::i256;
 
-	EXPORT void env_sload(ExtVMFace* _env, i256* _index, i256* o_value)
-	{
-		auto index = jit2eth(*_index);
-		auto value = _env->store(index); // Interface uses native endianness
-		*o_value = eth2jit(value);
-	}
-
 	EXPORT void env_sstore(ExtVMFace* _env, i256* _index, i256* _value)
 	{
 		auto index = jit2eth(*_index);
@@ -90,14 +83,6 @@ extern "C"
 
 		*io_gas += static_cast<int64_t>(params.gas); // it is never more than initial _callGas
 		return ret;
-	}
-
-	EXPORT byte const* env_extcode(ExtVMFace* _env, h256* _addr256, uint64_t* o_size)
-	{
-		auto addr = right160(*_addr256);
-		auto& code = _env->codeAt(addr);
-		*o_size = code.size();
-		return code.data();
 	}
 
 	EXPORT void env_log(ExtVMFace* _env, byte* _beg, uint64_t _size, h256* _topic1, h256* _topic2, h256* _topic3, h256* _topic4)
