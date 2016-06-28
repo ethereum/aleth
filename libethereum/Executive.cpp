@@ -63,6 +63,8 @@ bool changesStorage(Instruction _inst)
 
 void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, VM* voidVM, ExtVMFace const* voidExt)
 {
+	(void)_steps;
+
 	ExtVM const& ext = dynamic_cast<ExtVM const&>(*voidExt);
 	VM& vm = *voidVM;
 
@@ -86,7 +88,6 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 		assert(m_lastInst.size() == ext.depth);
 		m_lastInst.push_back(inst);
 		newContext = true;
-		r["calldata"] = "0x" + toHex(ext.data.toBytes());
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
@@ -127,11 +128,6 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 		r["storage"] = storage;
 	}
 
-	if (returned || newContext)
-		r["depth"] = ext.depth;
-	if (newContext)
-		r["address"] = ext.myAddress.hex();
-	r["steps"] = (unsigned)_steps;
 	if (m_showMnemonics)
 		r["op"] = instructionInfo(inst).name;
 	r["pc"] = toString(PC);
