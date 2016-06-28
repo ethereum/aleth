@@ -33,17 +33,6 @@ extern "C"
 		_env->setStore(index, value);	// Interface uses native endianness
 	}
 
-	EXPORT i256 env_balance(ExtVMFace* _env, h256 _address)
-	{
-		auto u = _env->balance(right160(_address));
-		return eth2jit(u);
-	}
-
-	EXPORT evmjit::h256 env_blockhash(ExtVMFace* _env, i256 _number)
-	{
-		return eth2jit(_env->blockHash(jit2eth(_number)));
-	}
-
 	EXPORT void env_create(ExtVMFace* _env, int64_t* io_gas, i256* _endowment, byte* _initBeg, uint64_t _initSize, h256* o_address)
 	{
 		auto endowment = jit2eth(*_endowment);

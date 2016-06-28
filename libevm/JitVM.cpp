@@ -4,7 +4,6 @@
 #include "JitVM.h"
 
 #include <libdevcore/Log.h>
-#include <libdevcore/SHA3.h>
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 
@@ -14,11 +13,135 @@ namespace dev
 {
 namespace eth
 {
+namespace
+{
+
+static_assert(sizeof(Address) == sizeof(evm_hash160),
+              "Address types size mismatch");
+static_assert(alignof(Address) == alignof(evm_hash160),
+              "Address types alignment mismatch");
+
+evm_hash160 toEvmC(Address _addr)
+{
+	return *reinterpret_cast<evm_hash160*>(&_addr);
+}
+
+Address fromEvmC(evm_hash160 _addr)
+{
+	return *reinterpret_cast<Address*>(&_addr);
+}
+
+static_assert(sizeof(h256) == sizeof(evm_hash256),
+              "Hash types size mismatch");
+static_assert(alignof(h256) != alignof(evm_hash256),
+              "Hash types alignment match -- update implementation");
+
+evm_hash256 toEvmC(h256 _h)
+{
+	// Because the h256 only pretends to be aligned to 8 bytes we have to do
+	// non-aligned memory copy.
+	// TODO: h256 should be aligned to 8 bytes.
+	evm_hash256 g;
+	std::memcpy(&g, &_h, sizeof(g));
+	return g;
+}
+
+evm_uint256 toEvmC(u256 _n)
+{
+	evm_uint256 m;
+	m.words[0] = static_cast<uint64_t>(_n);
+	_n >>= 64;
+	m.words[1] = static_cast<uint64_t>(_n);
+	_n >>= 64;
+	m.words[2] = static_cast<uint64_t>(_n);
+	_n >>= 64;
+	m.words[3] = static_cast<uint64_t>(_n);
+	return m;
+}
+
+u256 fromEvmC(evm_uint256 _n)
+{
+	u256 u = _n.words[3];
+	u <<= 64;
+	u |= _n.words[2];
+	u <<= 64;
+	u |= _n.words[1];
+	u <<= 64;
+	u |= _n.words[0];
+	return u;
+}
+
+evm_variant evm_query(evm_env* _opaqueEnv, evm_query_key _key,
+                      evm_variant _arg) noexcept
+{
+	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	evm_variant v;
+	switch (_key)
+	{
+		case EVM_ADDRESS:
+			v.address = toEvmC(env.myAddress);
+			break;
+		case EVM_CALLER:
+			v.address = toEvmC(env.caller);
+			break;
+		case EVM_ORIGIN:
+			v.address = toEvmC(env.origin);
+			break;
+		case EVM_GAS_PRICE:
+			v.uint256 = toEvmC(env.gasPrice);
+			break;
+		case EVM_COINBASE:
+			v.address = toEvmC(env.envInfo().author());
+			break;
+		case EVM_DIFFICULTY:
+			v.uint256 = toEvmC(env.envInfo().difficulty());
+			break;
+		case EVM_GAS_LIMIT:
+			v.uint256 = toEvmC(env.envInfo().gasLimit());
+			break;
+		case EVM_NUMBER:
+			// TODO: Handle overflow / exception
+			v.int64 = static_cast<int64_t>(env.envInfo().number());
+			break;
+		case EVM_TIMESTAMP:
+			// TODO: Handle overflow / exception
+			v.int64 = static_cast<int64_t>(env.envInfo().timestamp());
+			break;
+		case EVM_CODE_BY_ADDRESS:
+		{
+			auto addr = fromEvmC(_arg.address);
+			auto &code = env.codeAt(addr);
+			v.bytes.bytes = reinterpret_cast<char const*>(code.data());
+			v.bytes.size = code.size();
+			break;
+		}
+		case EVM_BALANCE:
+		{
+			auto addr = fromEvmC(_arg.address);
+			v.uint256 = toEvmC(env.balance(addr));
+			break;
+		}
+		case EVM_BLOCKHASH:
+			v.hash256 = toEvmC(env.blockHash(_arg.int64));
+			break;
+		case EVM_STORAGE:
+		{
+			auto key = fromEvmC(_arg.uint256);
+			v.uint256 = toEvmC(env.store(key));
+			break;
+		}
+	}
+	return v;
+}
+
+}
 
 extern "C" void env_sload(); // fake declaration for linker symbol stripping workaround, see a call below
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
+	evmjit::JIT::init(evm_query);
+
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
 	rejected |= io_gas > std::numeric_limits<decltype(m_data.gas)>::max(); // Do not accept requests with gas > 2^63 (int64 max)
