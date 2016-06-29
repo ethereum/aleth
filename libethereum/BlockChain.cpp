@@ -611,7 +611,10 @@ void BlockChain::insert(VerifiedBlockRef _block, bytesConstRef _receipts, bool _
 	// done here.
 	details(_block.info.parentHash());
 	DEV_WRITE_GUARDED(x_details)
-		m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+	{
+		if (!dev::contains(m_details[_block.info.parentHash()].children, _block.info.hash()))
+			m_details[_block.info.parentHash()].children.push_back(_block.info.hash());
+	}
 
 	blocksBatch.Put(toSlice(_block.info.hash()), ldb::Slice(_block.block));
 	DEV_READ_GUARDED(x_details)
