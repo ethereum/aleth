@@ -78,7 +78,6 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 		r["stack"] = stack;
 	}
 
-	bool returned = false;
 	bool newContext = false;
 	Instruction lastInst = Instruction::STOP;
 
@@ -91,8 +90,6 @@ void StandardTrace::operator()(uint64_t _steps, uint64_t PC, Instruction inst, b
 	}
 	else if (m_lastInst.size() == ext.depth + 2)
 	{
-		// returned from old context
-		returned = true;
 		m_lastInst.pop_back();
 		lastInst = m_lastInst.back();
 	}
