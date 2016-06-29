@@ -37,7 +37,7 @@ __constant uint2 const Keccak_f1600_RC[24] = {
 };
 
 #if PLATFORM == OPENCL_PLATFORM_NVIDIA && COMPUTE >= 35
-static uint2 ROL2(const uint2 a, const int offset) {
+ uint2 ROL2(const uint2 a, const int offset) {
 	uint2 result;
 	if (offset >= 32) {
 		asm("shf.l.wrap.b32 %0, %1, %2, %3;" : "=r"(result.x) : "r"(a.x), "r"(a.y), "r"(offset));
@@ -51,7 +51,7 @@ static uint2 ROL2(const uint2 a, const int offset) {
 }
 #elif PLATFORM == OPENCL_PLATFORM_AMD
 #pragma OPENCL EXTENSION cl_amd_media_ops : enable
-static uint2 ROL2(const uint2 vv, const int r)
+ uint2 ROL2(const uint2 vv, const int r)
 {
 	if (r <= 32)
 	{
@@ -63,7 +63,7 @@ static uint2 ROL2(const uint2 vv, const int r)
 	}
 }
 #else
-static uint2 ROL2(const uint2 v, const int n)
+ uint2 ROL2(const uint2 v, const int n)
 {
 	uint2 result;
 	if (n <= 32)
@@ -80,7 +80,7 @@ static uint2 ROL2(const uint2 v, const int n)
 }
 #endif
 
-static void chi(uint2 * a, const uint n, const uint2 * t)
+ void chi(uint2 * a, const uint n, const uint2 * t)
 {
 	a[n+0] = bitselect(t[n + 0] ^ t[n + 2], t[n + 0], t[n + 1]);
 	a[n+1] = bitselect(t[n + 1] ^ t[n + 3], t[n + 1], t[n + 2]);
@@ -89,7 +89,7 @@ static void chi(uint2 * a, const uint n, const uint2 * t)
 	a[n+4] = bitselect(t[n + 4] ^ t[n + 1], t[n + 4], t[n + 0]);
 }
 
-static void keccak_f1600_round(uint2* a, uint r)
+ void keccak_f1600_round(uint2* a, uint r)
 {
 	uint2 t[25];
 	uint2 u;
@@ -175,7 +175,7 @@ static void keccak_f1600_round(uint2* a, uint r)
 	chi(a, 20, t);
 }
 
-static void keccak_f1600_no_absorb(uint2* a, uint out_size, uint isolate)
+ void keccak_f1600_no_absorb(uint2* a, uint out_size, uint isolate)
 {
 	// Originally I unrolled the first and last rounds to interface
 	// better with surrounding code, however I haven't done this
@@ -206,17 +206,17 @@ static void keccak_f1600_no_absorb(uint2* a, uint out_size, uint isolate)
 
 #define copy(dst, src, count) for (uint i = 0; i != count; ++i) { (dst)[i] = (src)[i]; }
 
-static uint fnv(uint x, uint y)
+ uint fnv(uint x, uint y)
 {
 	return x * FNV_PRIME ^ y;
 }
 
-static uint4 fnv4(uint4 x, uint4 y)
+ uint4 fnv4(uint4 x, uint4 y)
 {
 	return x * FNV_PRIME ^ y;
 }
 
-static uint fnv_reduce(uint4 v)
+ uint fnv_reduce(uint4 v)
 {
 	return fnv(fnv(fnv(v.x, v.y), v.z), v.w);
 }
@@ -346,7 +346,7 @@ __kernel void ethash_search(
 	}
 }
 
-static void SHA3_512(uint2* s, uint isolate)
+ void SHA3_512(uint2* s, uint isolate)
 {
 	for (uint i = 8; i != 25; ++i)
 	{
