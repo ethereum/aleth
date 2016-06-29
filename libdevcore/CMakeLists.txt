@@ -1,7 +1,7 @@
 cmake_policy(SET CMP0015 NEW)
 set(CMAKE_AUTOMOC OFF)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB -fpermissive")
 
 aux_source_directory(. SRC_LIST)
 
