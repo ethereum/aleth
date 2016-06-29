@@ -1,4 +1,5 @@
 #include <jsonrpccpp/common/exception.h>
+#include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonJS.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
@@ -93,6 +94,13 @@ Json::Value Debug::debug_traceTransaction(string const& _txHash, Json::Value con
 		cwarn << diagnostic_information(_e);
 	}
 	return ret;
+}
+
+Json::Value Debug::debug_traceBlock(string const& _blockRLP, Json::Value const& _json)
+{
+	bytes bytes = fromHex(_blockRLP);
+	BlockHeader blockHeader(bytes);
+	return debug_traceBlockByHash(blockHeader.hash().hex(), _json);
 }
 
 Json::Value Debug::debug_traceBlockByHash(string const& _blockHash, Json::Value const& _json)
