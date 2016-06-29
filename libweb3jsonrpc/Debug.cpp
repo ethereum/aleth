@@ -103,12 +103,6 @@ Json::Value Debug::debug_traceBlock(string const& _blockRLP, Json::Value const& 
 	return debug_traceBlockByHash(blockHeader.hash().hex(), _json);
 }
 
-Json::Value Debug::debug_traceBlockFromfile(string const& _fileName, Json::Value const& _json)
-{
-	string content = contentsString(_fileName);
-	return debug_traceBlock(content, _json);
-}
-
 Json::Value Debug::debug_traceBlockByHash(string const& _blockHash, Json::Value const& _json)
 {
 	Json::Value ret;
