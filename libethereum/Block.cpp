@@ -38,6 +38,7 @@
 #include "CachedAddressState.h"
 #include "BlockChain.h"
 #include "TransactionQueue.h"
+#include "GenesisInfo.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -126,6 +127,8 @@ void Block::resetCurrent(u256 const& _timestamp)
 	m_state.setRoot(m_previousBlock.stateRoot());
 	m_precommit = m_state;
 	m_committedToSeal = false;
+
+	performIrregularModifications();
 }
 
 SealEngineFace* Block::sealEngine() const
@@ -454,7 +457,6 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 #if !ETH_RELEASE
 	assert(m_previousBlock.hash() == _block.info.parentHash());
 	assert(m_currentBlock.parentHash() == _block.info.parentHash());
-	assert(rootHash() == m_previousBlock.stateRoot());
 #endif
 
 	if (m_currentBlock.parentHash() != m_previousBlock.hash())
@@ -674,6 +676,21 @@ void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 con
 		r += _blockReward / 32;
 	}
 	m_state.addBalance(m_currentBlock.author(), r);
+}
+
+void Block::performIrregularModifications()
+{
+	u256 daoHardfork = m_sealEngine->chainParams().u256Param("daoHardforkBlock");
+	if (info().number() == daoHardfork)
+	{
+		Address mainDAO("0xbb9bc244d798123fde783fcc1c72d3bb8c189413");
+		Address recipient("0xabcabcabcabcabcabcabcabcabcabcabcabcabca"); //@TODO
+		Addresses allDAOs = childDaos();
+		m_state.transferBalance(mainDAO, recipient, m_state.balance(mainDAO));
+		for (Address const& dao: allDAOs)
+			m_state.transferBalance(dao, recipient, m_state.balance(dao));
+		m_state.commit();
+	}
 }
 
 void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)

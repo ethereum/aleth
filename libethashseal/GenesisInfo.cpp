@@ -157,6 +157,7 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"frontierCompatibilityModeLimit": "0x05",
+		"daoHardforkBlock": "0x08",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
@@ -196,6 +197,7 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"maximumExtraDataSize": "0x20",
+		"daoHardforkBlock": "0xfffffffffffffff",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,
@@ -234,6 +236,7 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"frontierCompatibilityModeLimit": "0x118c30",
+		"daoHardforkBlock": "0xfffffffffffffff",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
