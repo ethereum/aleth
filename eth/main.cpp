@@ -116,7 +116,7 @@ void help()
 		<< "    -S,--import-session-secret <secret>  Import a secret key into the key store and use as the default for this session only." << endl
 		<< "    --sign-key <address>  Sign all transactions with the key of the given address." << endl
 		<< "    --session-sign-key <address>  Sign all transactions with the key of the given address for this session only." << endl
-		<< "    --master <password>  Give the master password for the key store." << endl
+		<< "    --master <password>  Give the master password for the key store. Use --master \"\" to show a prompt." << endl
 		<< "    --password <password>  Give a password for a private key." << endl
 		<< endl
 		<< "Client transacting:" << endl
@@ -1106,13 +1106,8 @@ int main(int argc, char** argv)
 	{
 		if (keyManager.exists())
 		{
-			if (!keyManager.load(masterPassword))
+			if (!keyManager.load(masterPassword) && masterSet)
 			{
-				if (masterSet)
-				{
-					cerr << "Incorrect password specified." << endl;
-					return -1;
-				}
 				while (true)
 				{
 					masterPassword = getPassword("Please enter your MASTER password: ");
