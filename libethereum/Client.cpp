@@ -631,7 +631,8 @@ void Client::rejigSealing()
 			if (wouldSeal())
 			{
 				sealEngine()->onSealGenerated([=](bytes const& header){
-					this->submitSealed(header);
+					if (!this->submitSealed(header))
+						clog(ClientNote) << "Submitting block failed...";
 				});
 				ctrace << "Generating seal on" << m_sealingInfo.hash(WithoutSeal) << "#" << m_sealingInfo.number();
 				sealEngine()->generateSeal(m_sealingInfo);
@@ -693,9 +694,15 @@ void Client::doWork(bool _doWait)
 
 	tick();
 
+	rejigSealing();
+
 	callQueuedFunctions();
 
-	if (!m_syncBlockQueue && !m_syncTransactionQueue && _doWait)
+	DEV_READ_GUARDED(x_working)
+		isSealed = m_working.isSealed();
+	// If the block is sealed, we have to wait for it to tickle through the block queue
+	// (which only signals as wanting to be synced if it is ready).
+	if (!m_syncBlockQueue && !m_syncTransactionQueue && (_doWait || isSealed))
 	{
 		std::unique_lock<std::mutex> l(x_signalled);
 		m_signalled.wait_for(l, chrono::seconds(1));
@@ -713,7 +720,6 @@ void Client::tick()
 		if (m_report.ticks == 15)
 			clog(ClientTrace) << activityReport();
 	}
-	rejigSealing();
 }
 
 void Client::checkWatchGarbage()
