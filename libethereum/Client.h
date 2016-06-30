@@ -270,7 +270,7 @@ protected:
 	/// Magically called when m_tq needs syncing. Be nice and don't block.
 	void onTransactionQueueReady() { m_syncTransactionQueue = true; m_signalled.notify_all(); }
 
-	/// Magically called when m_tq needs syncing. Be nice and don't block.
+	/// Magically called when m_bq needs syncing. Be nice and don't block.
 	void onBlockQueueReady() { m_syncBlockQueue = true; m_signalled.notify_all(); }
 
 	/// Called when the post state has changed (i.e. when more transactions are in it or we're sealing on a new block).
