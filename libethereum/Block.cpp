@@ -710,6 +710,7 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 					++unclesCount;
 					if (unclesCount == 2)
 						break;
+					excluded.insert(u);
 				}
 		}
 	}
