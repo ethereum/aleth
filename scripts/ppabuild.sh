@@ -43,8 +43,12 @@ elif [ "${distribution}" = "xenial" ]; then
 fi
 codebranch=${ethbranch}
 pparepo=ethereum/ethereum
-if [ -z "$codebranch" ]; then
+if [ -z "$codebranch" ]
+then
 	codebranch=develop
+fi
+if [ "$codebranch" = "develop" ]
+then
     pparepo=ethereum/ethereum-dev
 fi
 echo codebranch=${codebranch}
