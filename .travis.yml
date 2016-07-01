@@ -11,5 +11,10 @@ matrix:
           env: TRAVIS_BUILD_TYPE=Debug
 git:
     depth: 2
+branches:
+    # Build only pushes to main branches to avoid double builds of internal PRs.
+    only:
+        - master
+        - develop
 before_install: ./install_dependencies.sh
 script: ./fetch_umbrella_build_and_test.sh
