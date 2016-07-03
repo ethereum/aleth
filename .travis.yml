@@ -36,7 +36,7 @@ matrix:
 git:
     depth: 2
 before_install:
-    - ./setup.sh
+    - ./install_dependencies.sh
 before_script:
     - mkdir build
     - cd build
