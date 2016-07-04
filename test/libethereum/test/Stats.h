@@ -20,7 +20,7 @@
 #include <chrono>
 #include <vector>
 
-#include <test/TestHelper.h>
+#include "TestHelper.h"
 
 namespace dev
 {

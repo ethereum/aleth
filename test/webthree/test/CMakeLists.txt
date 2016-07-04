@@ -1,6 +1,6 @@
 add_subdirectory(ethrpctest)
 
-include_directories(.)
+include_directories(..)
 
 aux_source_directory(. SRCS)
 aux_source_directory(./libwhisper SRCS)

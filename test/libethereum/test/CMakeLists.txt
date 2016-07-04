@@ -1,6 +1,6 @@
 aux_source_directory(. SRC_LIST)
 
-include_directories(.)
+include_directories(..)
 
 macro (add_sources)
 	foreach (_src ${ARGN})

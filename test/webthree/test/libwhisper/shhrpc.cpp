@@ -43,7 +43,6 @@
 #include <libp2p/Common.h>
 #include <libwhisper/WhisperHost.h>
 
-
 using namespace std;
 using namespace dev;
 using namespace dev::eth;

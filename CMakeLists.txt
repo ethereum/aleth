@@ -15,7 +15,7 @@ include(EthPolicy)
 eth_policy()
 
 # project name and version should be set after cmake_policy CMP0048
-project(cpp-ethereum VERSION "1.2.3")
+project(cpp-ethereum VERSION "1.2.9")
 
 include(EthCompilerSettings)
 include(EthExecutableHelper)
@@ -61,9 +61,9 @@ if (TOOLS)
 endif()
 
 if (TESTS)
-    add_subdirectory(test/libethereum)
-    add_subdirectory(test/libweb3core)
-    add_subdirectory(test/webthree)
+    add_subdirectory(test/libethereum/test)
+    add_subdirectory(test/libweb3core/test)
+    add_subdirectory(test/webthree/test)
 endif()
 
 # TODO - split out json_spirit, libscrypt and sec256k1

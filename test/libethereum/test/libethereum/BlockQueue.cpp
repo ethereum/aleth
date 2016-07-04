@@ -23,7 +23,7 @@
 #include <libethereum/BlockQueue.h>
 #include <test/TestHelper.h>
 #include <test/BlockChainHelper.h>
-#include <json_spirit/JsonSpiritHeaders.h>
+#include <test/JsonSpiritHeaders.h>
 
 using namespace std;
 using namespace dev;
