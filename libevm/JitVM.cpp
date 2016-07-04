@@ -148,7 +148,12 @@ void evm_update(evm_env* _opaqueEnv, evm_update_key _key,
 			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
 		env.setStore(index, value);    // Interface uses native endianness
+		break;
 	}
+	case EVM_SELFDESTRUCT:
+		// Register selfdestruction beneficiary.
+		env.suicide(fromEvmC(_arg1.address));
+		break;
 	}
 }
 
@@ -194,10 +199,6 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	auto exitCode = evmjit::JIT::exec(m_context, m_schedule);
 	switch (exitCode)
 	{
-	case evmjit::ReturnCode::Suicide:
-		_ext.suicide(right160(jit2eth(m_data.address)));
-		break;
-
 	case evmjit::ReturnCode::OutOfGas:
 		BOOST_THROW_EXCEPTION(OutOfGas());
 	case evmjit::ReturnCode::LinkerWorkaround:	// never happens
