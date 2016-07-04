@@ -79,7 +79,6 @@ evm_variant evm_query(evm_env* _opaqueEnv, evm_query_key _key,
 	switch (_key)
 	{
 	case EVM_ADDRESS:
-		std::cout << env.myAddress;
 		v.address = toEvmC(env.myAddress);
 		break;
 	case EVM_CALLER:
@@ -165,12 +164,8 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	m_data.gasPrice		= static_cast<decltype(m_data.gasPrice)>(_ext.gasPrice);
 	m_data.callData 	= _ext.data.data();
 	m_data.callDataSize = _ext.data.size();
-	m_data.address      = eth2jit(static_cast<u160>(_ext.myAddress));
-	m_data.caller       = eth2jit(static_cast<u160>(_ext.caller));
-	m_data.origin       = eth2jit(static_cast<u160>(_ext.origin));
 	m_data.transferredValue = eth2jit(_ext.value);
 	m_data.apparentValue = eth2jit(_ext.value);
-	m_data.coinBase     = eth2jit(static_cast<u160>(_ext.envInfo().author()));
 	m_data.difficulty   = eth2jit(_ext.envInfo().difficulty());
 	m_data.gasLimit     = eth2jit(_ext.envInfo().gasLimit());
 	m_data.number 		= static_cast<decltype(m_data.number)>(_ext.envInfo().number());
