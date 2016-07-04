@@ -19,7 +19,7 @@
  * @date 2015
  */
 
-#include "fuzzHelper.h"
+#include <test/fuzzTesting/fuzzHelper.h>
 
 #include <chrono>
 #include <boost/random.hpp>

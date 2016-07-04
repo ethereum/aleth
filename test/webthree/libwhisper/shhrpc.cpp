@@ -36,11 +36,13 @@
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <test/TestHelper.h>
 #include <test/libweb3jsonrpc/WebThreeStubClient.h>
 #include <libethcore/KeyManager.h>
 #include <libp2p/Common.h>
 #include <libwhisper/WhisperHost.h>
+
 
 using namespace std;
 using namespace dev;

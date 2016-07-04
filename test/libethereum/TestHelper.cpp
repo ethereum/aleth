@@ -19,7 +19,7 @@
  * @date 2014
  */
 
-#include "TestHelper.h"
+#include <test/TestHelper.h>
 
 #include <thread>
 #include <chrono>

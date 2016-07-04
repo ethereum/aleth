@@ -23,12 +23,13 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
+#include <json_spirit/JsonSpiritHeaders.h>
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/Ethash.h>
 #include <test/TestHelper.h>
 #include <test/BlockChainHelper.h>
-#include <test/JsonSpiritHeaders.h>
 #include "test/fuzzTesting/fuzzHelper.h"
+
 using namespace std;
 using namespace json_spirit;
 using namespace dev;
