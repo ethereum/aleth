@@ -129,7 +129,7 @@ public:
 		std::set<std::string> const& _interfaces = {"eth", "shh", "bzz"},
 		p2p::NetworkPreferences const& _n = p2p::NetworkPreferences(),
 		bytesConstRef _network = bytesConstRef(),
-		eth::TransactionQueue::Limits const& _l = eth::TransactionQueue::Limits{1024, 1024}
+		bool _testing = false
 	);
 
 	/// Destructor.

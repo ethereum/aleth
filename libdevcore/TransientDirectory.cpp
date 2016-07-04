@@ -40,7 +40,8 @@ TransientDirectory::TransientDirectory(std::string const& _path):
 	if (boost::filesystem::exists(m_path))
 		BOOST_THROW_EXCEPTION(FileError());
 
-	fs::create_directories(m_path);
+	if (!fs::create_directories(m_path))
+		BOOST_THROW_EXCEPTION(FileError());
 	DEV_IGNORE_EXCEPTIONS(fs::permissions(m_path, fs::owner_all));
 }
 
@@ -60,5 +61,7 @@ TransientDirectory::~TransientDirectory()
 	ec.clear();
 	fs::remove_all(m_path, ec);
 	if (!ec)
+	{
 		cwarn << "Failed to delete directory '" << m_path << "': " << ec.message();
+	}
 }

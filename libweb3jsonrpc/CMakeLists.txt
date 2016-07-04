@@ -63,6 +63,11 @@ jsonrpcstub_create(personal.json
 	PersonalClient ${CMAKE_CURRENT_BINARY_DIR} PersonalClient
 )
 
+jsonrpcstub_create(test.json
+	dev::rpc::TestFace ${CMAKE_CURRENT_SOURCE_DIR} TestFace
+	TestClient ${CMAKE_CURRENT_BINARY_DIR} TestClient
+)
+
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
 install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 

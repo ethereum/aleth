@@ -146,11 +146,23 @@ macro(eth_install_executable EXECUTABLE)
 
 	elseif (DEFINED MSVC)
 
+		# Map from CMake configurations to Qt configurations, so that we get the right DLLs deployed.
+		set(WINDEPLOYQT_PARAMS "")
+		if (CMAKE_BUILD_TYPE MATCHES Debug)
+			set(WINDEPLOYQT_PARAMS "--debug")
+		elseif(CMAKE_BUILD_TYPE MATCHES Release)
+			set(WINDEPLOYQT_PARAMS "--release")
+		elseif(CMAKE_BUILD_TYPE MATCHES RelWithDebInfo)
+			set(WINDEPLOYQT_PARAMS "--release-with-debug-info")
+		elseif (CMAKE_BUILD_TYPE MATCHES MinSizeRel)
+			set(WINDEPLOYQT_PARAMS "--release")
+		endif()
+
 		get_target_property(TARGET_LIBS ${EXECUTABLE} INTERFACE_LINK_LIBRARIES)
 		string(REGEX MATCH "Qt5::Core" HAVE_QT ${TARGET_LIBS})
 		if ("${HAVE_QT}" STREQUAL "Qt5::Core")
 			add_custom_command(TARGET ${EXECUTABLE} POST_BUILD
-				COMMAND cmd /C "set PATH=${Qt5Core_DIR}/../../../bin;%PATH% && ${WINDEPLOYQT_APP} ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${EXECUTABLE}.exe ${eth_qml_dir}"
+				COMMAND cmd /C "set PATH=${Qt5Core_DIR}/../../../bin;%PATH% && ${WINDEPLOYQT_APP} ${WINDEPLOYQT_PARAMS} ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_CFG_INTDIR}/${EXECUTABLE}.exe ${eth_qml_dir}"
 				WORKING_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
 			)
 			#workaround for https://bugreports.qt.io/browse/QTBUG-42083
@@ -205,15 +217,15 @@ macro(eth_nsis)
 		# packaging stuff
 		include(InstallRequiredSystemLibraries)
 		set(CPACK_GENERATOR "NSIS")
-		set(CPACK_PACKAGE_NAME "Ethereum")
-		set(CPACK_PACKAGE_FILE_NAME "Ethereum")
-		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Ethereum C++")
+		set(CPACK_PACKAGE_NAME "cpp-ethereum")
+		set(CPACK_PACKAGE_FILE_NAME "cpp-ethereum-windows")
+		set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "cpp-ethereum")
 		set(CPACK_PACKAGE_VENDOR "ethereum.org")
 		set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 		set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 		set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
-		set(CPACK_NSIS_DISPLAY_NAME "Ethereum")
-		set(CPACK_PACKAGE_INSTALL_DIRECTORY "Ethereum")
+		set(CPACK_NSIS_DISPLAY_NAME "cpp-ethereum")
+		set(CPACK_PACKAGE_INSTALL_DIRECTORY "cpp-ethereum")
 		set(CPACK_NSIS_HELP_LINK "https://ethereum.org")
 		set(CPACK_NSIS_URL_INFO_ABOUT "https://ethereum.org")
 		set(CPACK_NSIS_CONTACT "ethereum.org")

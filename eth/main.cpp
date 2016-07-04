@@ -30,6 +30,7 @@
 
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim_all.hpp>
+#include <boost/filesystem.hpp>
 
 #include <libdevcore/FileSystem.h>
 #include <libethashseal/EthashAux.h>
@@ -60,6 +61,7 @@
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Debug.h>
+#include <libweb3jsonrpc/Test.h>
 #include "PhoneHome.h"
 #include "Farm.h"
 #endif // ETH_JSONRPC
@@ -91,6 +93,7 @@ void help()
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
 		<< "    --morden  Use the Morden testnet." << endl
 		<< "    --private <name>  Use a private chain." << endl
+		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
 		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
@@ -128,7 +131,6 @@ void help()
 		<< "    -a,--address <addr>  Set the author (mining payout) address to given address (default: auto)." << endl
 		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off)." << endl
 		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off)." << endl
-		<< "    --mine-on-wrong-chain  Mine even when we know that it is the wrong chain (default: off)." << endl
 		<< "    -C,--cpu  When mining, use the CPU." << endl
 		<< "    -G,--opencl  When mining, use the GPU via OpenCL." << endl
 		<< "    --opencl-platform <n>  When mining using -G/--opencl, use OpenCL platform n (default: 0)." << endl
@@ -164,10 +166,6 @@ void help()
 		<< endl;
 	MinerCLI::streamHelp(cout);
 	cout
-		<< "Attach mode:" << endl
-		<< "    --session-key <hex>  Use the given session key when attaching to the remote eth instance." << endl
-		<< "    --url <url>  Attach to the remote eth instance with the given URL." << endl
-		<< endl
 		<< "Import/export modes:" << endl
 		<< "    --from <n>  Export only from block n; n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
 		<< "    --to <n>  Export only to block n (inclusive); n may be a decimal, a '0x' prefixed hash, or 'latest'." << endl
@@ -251,8 +249,7 @@ enum class OperationMode
 {
 	Node,
 	Import,
-	Export,
-	Attach
+	Export
 };
 
 enum class Format
@@ -311,12 +308,6 @@ int main(int argc, char** argv)
 //	bool yesIReallyKnowWhatImDoing = false;
 	strings scripts;
 
-	/// When attaching.
-	string remoteURL = contentsString(getDataDir("web3") + "/session.url");
-	if (remoteURL.empty())
-		remoteURL = "http://localhost:8545";
-	string remoteSessionKey = contentsString(getDataDir("web3") + "/session.key");
-
 	/// File name for import/export.
 	string filename;
 	bool safeImport = false;
@@ -366,7 +357,6 @@ int main(int argc, char** argv)
 
 	/// Mining params
 	unsigned mining = 0;
-	bool mineOnWrongChain = false;
 	Address signingKey;
 	Address sessionKey;
 	Address author = signingKey;
@@ -387,6 +377,7 @@ int main(int argc, char** argv)
 
 	/// Whisper
 	bool useWhisper = false;
+	bool testingMode = false;
 
 	string configFile = getDataDir() + "/config.rlp";
 	bytes b = contents(configFile);
@@ -418,11 +409,9 @@ int main(int argc, char** argv)
 	for (int i = 1; i < argc; ++i)
 	{
 		string arg = argv[i];
-		if (m.interpretOption(i, argc, argv)) {}
-		else if (arg == "--url" && i + 1 < argc)
-			remoteURL = argv[++i];
-		else if (arg == "--session-key" && i + 1 < argc)
-			remoteSessionKey = argv[++i];
+		if (m.interpretOption(i, argc, argv))
+		{
+		}
 		else if (arg == "--listen-ip" && i + 1 < argc)
 			listenIP = argv[++i];
 		else if ((arg == "--listen" || arg == "--listen-port") && i + 1 < argc)
@@ -468,8 +457,6 @@ int main(int argc, char** argv)
 			mode = OperationMode::Export;
 			filename = argv[++i];
 		}
-		else if (arg == "--mine-on-wrong-chain")
-			mineOnWrongChain = true;
 		else if (arg == "--script" && i + 1 < argc)
 			scripts.push_back(argv[++i]);
 		else if (arg == "--format" && i + 1 < argc)
@@ -487,8 +474,6 @@ int main(int argc, char** argv)
 				return -1;
 			}
 		}
-		else if (arg == "attach")
-			mode = OperationMode::Attach;
 		else if (arg == "--to" && i + 1 < argc)
 			exportTo = argv[++i];
 		else if (arg == "--from" && i + 1 < argc)
@@ -861,21 +846,18 @@ int main(int argc, char** argv)
 			help();
 		else if (arg == "-V" || arg == "--version")
 			version();
+		else if (arg == "--test")
+		{
+			testingMode = true;
+			enableDiscovery = false;
+			disableDiscovery = true;
+			bootstrap = false;
+		}
 		else
 		{
 			cerr << "Invalid argument: " << arg << endl;
 			exit(-1);
 		}
-	}
-
-	if (mode == OperationMode::Attach)
-	{
-		if (remoteURL.find_last_of("-1") == remoteURL.size() - 1)
-		{
-			cerr << "json-rpc server not found, please start eth with the --json-rpc option (note that this might make it accessible from the network)";
-			return 0;
-		}
-		return 0;
 	}
 
 	if (!configJSON.empty())
@@ -936,7 +918,12 @@ int main(int argc, char** argv)
 
 	m.execute();
 
-	KeyManager keyManager;
+	std::string secretsPath;
+	if (testingMode)
+		secretsPath = (boost::filesystem::path(getDataDir()) / "keystore").string();
+	else
+		secretsPath = SecretStore::defaultPath();
+	KeyManager keyManager(KeyManager::defaultPath(), secretsPath);
 	for (auto const& s: passwordsToNote)
 		keyManager.notePassword(s);
 
@@ -1003,6 +990,13 @@ int main(int argc, char** argv)
 
 	auto nodesState = contents(getDataDir() + "/network.rlp");
 	auto caps = useWhisper ? set<string>{"eth", "shh"} : set<string>{"eth"};
+
+	if (testingMode)
+	{
+		chainParams.sealEngineName = "NoProof";
+		chainParams.otherParams["allowFutureBlocks"] = "1";
+	}
+
 	dev::WebThreeDirect web3(
 		WebThreeDirect::composeClientVersion("eth"),
 		getDataDir(),
@@ -1010,8 +1004,10 @@ int main(int argc, char** argv)
 		withExisting,
 		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
-		&nodesState);
-	web3.ethereum()->setSealOption("sealOnBadChain", rlp(mineOnWrongChain));
+		&nodesState,
+		testingMode
+	);
+
 	if (!extraData.empty())
 		web3.ethereum()->setExtraData(extraData);
 
@@ -1201,57 +1197,69 @@ int main(int argc, char** argv)
 
 	AddressHash allowedDestinations;
 
-	auto authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
-		// "unlockAccount" functionality is done in the AccountHolder.
-		if (!alwaysConfirm || allowedDestinations.count(_t.to))
-			return true;
+	std::function<bool(TransactionSkeleton const&, bool)> authenticator;
+	if (testingMode)
+		authenticator = [](TransactionSkeleton const&, bool) -> bool { return true; };
+	else
+		authenticator = [&](TransactionSkeleton const& _t, bool isProxy) -> bool {
+			// "unlockAccount" functionality is done in the AccountHolder.
+			if (!alwaysConfirm || allowedDestinations.count(_t.to))
+				return true;
 
-		string r = getResponse(_t.userReadable(isProxy,
-			[&](TransactionSkeleton const& _t) -> pair<bool, string>
-			{
-				h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
-				if (contractCodeHash == EmptySHA3)
-					return std::make_pair(false, std::string());
-				// TODO: actually figure out the natspec. we'll need the natspec database here though.
-				return std::make_pair(true, std::string());
-			}, [&](Address const& _a) { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
-		) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
-		if (r == "always")
-			allowedDestinations.insert(_t.to);
-		return r == "yes" || r == "always";
-	};
+			string r = getResponse(_t.userReadable(isProxy,
+				[&](TransactionSkeleton const& _t) -> pair<bool, string>
+				{
+					h256 contractCodeHash = web3.ethereum()->postState().codeHash(_t.to);
+					if (contractCodeHash == EmptySHA3)
+						return std::make_pair(false, std::string());
+					// TODO: actually figure out the natspec. we'll need the natspec database here though.
+					return std::make_pair(true, std::string());
+				}, [&](Address const& _a) { return ICAP(_a).encoded() + " (" + _a.abridged() + ")"; }
+			) + "\nEnter yes/no/always (always to this address): ", {"yes", "n", "N", "no", "NO", "always"});
+			if (r == "always")
+				allowedDestinations.insert(_t.to);
+			return r == "yes" || r == "always";
+		};
 
 	ExitHandler exitHandler;
 
 	if (jsonRPCURL > -1 || ipc)
 	{
+		using FullServer = ModularServer<
+			rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
+			rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
+			rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
+			rpc::DebugFace, rpc::TestFace
+		>;
+
 		sessionManager.reset(new rpc::SessionManager());
 		accountHolder.reset(new SimpleAccountHolder([&](){ return web3.ethereum(); }, getAccountPassword, keyManager, authenticator));
 		auto ethFace = new rpc::Eth(*web3.ethereum(), *accountHolder.get());
-		auto adminEthFace = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
+		rpc::TestFace* testEth = nullptr;
+		if (testingMode)
+			testEth = new rpc::Test(*web3.ethereum());
+
 		if (jsonRPCURL >= 0)
 		{
+			rpc::AdminEth* adminEth = nullptr;
+			rpc::PersonalFace* personal = nullptr;
+			rpc::AdminNet* adminNet = nullptr;
+			rpc::AdminUtils* adminUtils = nullptr;
 			if (adminViaHttp)
-				jsonrpcHttpServer.reset(new ModularServer<
-					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-					rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-					rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
-					rpc::DebugFace
-				>(
-					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-					adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()), new rpc::AdminUtils(*sessionManager.get()),
-					new rpc::Debug(*web3.ethereum())
-				));
-			else
-				jsonrpcHttpServer.reset(new ModularServer<
-					rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-					rpc::NetFace, rpc::Web3Face, rpc::DebugFace
-				>(
-					ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
-					new rpc::Net(web3), new rpc::Web3(web3.clientVersion()),
-					new rpc::Debug(*web3.ethereum())
-				));
+			{
+				personal = new rpc::Personal(keyManager, *accountHolder);
+				adminEth = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
+				adminNet = new rpc::AdminNet(web3, *sessionManager.get());
+				adminUtils = new rpc::AdminUtils(*sessionManager.get());
+			}
+
+			jsonrpcHttpServer.reset(new FullServer(
+				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}),
+				new rpc::Net(web3), new rpc::Web3(web3.clientVersion()), personal,
+				adminEth, adminNet, adminUtils,
+				new rpc::Debug(*web3.ethereum()),
+				testEth
+			));
 			auto httpConnector = new SafeHttpServer(jsonRPCURL, "", "", SensibleHttpThreads);
 			httpConnector->setAllowedOrigin(rpcCorsDomain);
 			jsonrpcHttpServer->addConnector(httpConnector);
@@ -1259,17 +1267,14 @@ int main(int argc, char** argv)
 		}
 		if (ipc)
 		{
-			jsonrpcIpcServer.reset(new ModularServer<
-				rpc::EthFace, rpc::DBFace, rpc::WhisperFace,
-				rpc::NetFace, rpc::Web3Face, rpc::PersonalFace,
-				rpc::AdminEthFace, rpc::AdminNetFace, rpc::AdminUtilsFace,
-				rpc::DebugFace
-			>(
+			jsonrpcIpcServer.reset(new FullServer(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
 				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
-				adminEthFace, new rpc::AdminNet(web3, *sessionManager.get()),
+				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
+				new rpc::AdminNet(web3, *sessionManager.get()),
 				new rpc::AdminUtils(*sessionManager.get()),
-				new rpc::Debug(*web3.ethereum())
+				new rpc::Debug(*web3.ethereum()),
+				testEth
 			));
 			auto ipcConnector = new IpcServer("geth");
 			jsonrpcIpcServer->addConnector(ipcConnector);

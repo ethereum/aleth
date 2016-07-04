@@ -184,6 +184,11 @@ u256 ClientBase::stateAt(Address _a, u256 _l, BlockNumber _block) const
 	return asOf(_block).storage(_a, _l);
 }
 
+h256 ClientBase::stateRootAt(Address _a, BlockNumber _block) const
+{
+	return asOf(_block).storageRoot(_a);
+}
+
 bytes ClientBase::codeAt(Address _a, BlockNumber _block) const
 {
 	return asOf(_block).code(_a);
@@ -593,5 +598,5 @@ bool ClientBase::isKnownTransaction(h256 const& _transactionHash) const
 
 bool ClientBase::isKnownTransaction(h256 const& _blockHash, unsigned _i) const
 {
-	return isKnown(_blockHash) && bc().transactions().size() > _i;
+	return isKnown(_blockHash) && asOf(_blockHash).pending().size() > _i;
 }

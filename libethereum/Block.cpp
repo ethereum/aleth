@@ -110,14 +110,14 @@ Block& Block::operator=(Block const& _s)
 	return *this;
 }
 
-void Block::resetCurrent()
+void Block::resetCurrent(u256 const& _timestamp)
 {
 	m_transactions.clear();
 	m_receipts.clear();
 	m_transactionSet.clear();
 	m_currentBlock = BlockHeader();
 	m_currentBlock.setAuthor(m_author);
-	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, (u256)utcTime()));
+	m_currentBlock.setTimestamp(max(m_previousBlock.timestamp() + 1, _timestamp));
 	m_currentBytes.clear();
 	sealEngine()->populateFromParent(m_currentBlock, m_previousBlock);
 

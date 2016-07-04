@@ -12,8 +12,8 @@ configure_file(${APP_DMG_FILE} ${OUTFILE})
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${APP_DMG_ICON}" "${ETH_BUILD_DIR}/appdmg_icon.icns")
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${APP_DMG_BACKGROUND}" "${ETH_BUILD_DIR}/appdmg_background.png")
-execute_process(COMMAND ${CMAKE_COMMAND} -E remove "${ETH_BUILD_DIR}/Ethereum.dmg") 
-execute_process(COMMAND ${APP_DMG_EXE} ${OUTFILE} "${ETH_BUILD_DIR}/Ethereum.dmg" RESULT_VARIABLE RETURN_CODE)
+execute_process(COMMAND ${CMAKE_COMMAND} -E remove "${ETH_BUILD_DIR}/cpp-ethereum-osx.dmg") 
+execute_process(COMMAND ${APP_DMG_EXE} ${OUTFILE} "${ETH_BUILD_DIR}/cpp-ethereum-osx.dmg" RESULT_VARIABLE RETURN_CODE)
 
 if (NOT RETURN_CODE EQUAL 0)
   message(FATAL_ERROR "Failed to run 'appdmg' npm module.  Is it correctly installed?")

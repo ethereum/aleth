@@ -7,7 +7,7 @@ git submodule update --init --remote .
 mkdir -p build
 cd build
 cmake ..
-make -j 4
+make
 cd ..
 # Only update if tests do not fail (disabled for now)
 #./webthree-helpers/scripts/ethtests.sh all --umbrella

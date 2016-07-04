@@ -3,7 +3,7 @@ function(eth_apply TARGET REQUIRED)
 	eth_show_dependency(OpenCL OpenCL)
 	if (OpenCL_FOUND)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${OpenCL_INCLUDE_DIRS})
-		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux" AND ETHASHCL)
+		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux" AND ETHASHCL AND GUI)
 			# workaround for https://github.com/ethereum/alethzero/issues/69
 			# force linking to libOpenCL as early as possible
 			target_link_libraries(${TARGET} "-Wl,--no-as-needed -l${OpenCL_LIBRARIES} -Wl,--as-needed")

@@ -521,9 +521,11 @@ private:
 				f.onSolutionFound([&](EthashProofOfWork::Solution sol)
 				{
 					solution = sol;
-					return completed = true;
+					completed = true;
+					return true;
 				});
-				for (unsigned i = 0; !completed; ++i)
+				
+				while (!completed)
 				{
 					auto mp = f.miningProgress();
 					f.resetMiningProgress();

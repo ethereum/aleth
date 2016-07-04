@@ -72,6 +72,7 @@ struct ChainOperationParams
 	 *
 	 * e.g. Ethash specific:
 	 * - minGasLimit
+	 * - maxGasLimit
 	 * - gasLimitBoundDivisor
 	 * - minimumDifficulty
 	 * - difficultyBoundDivisor

@@ -108,17 +108,25 @@ AddressHash SimpleAccountHolder::realAccounts() const
 TransactionNotification SimpleAccountHolder::authenticate(dev::eth::TransactionSkeleton const& _t)
 {
 	TransactionNotification ret;
-	bool unlocked = false;
+	bool locked = true;
 	if (m_unlockedAccounts.count(_t.from))
 	{
 		chrono::steady_clock::time_point start = m_unlockedAccounts[_t.from].first;
 		chrono::seconds duration(m_unlockedAccounts[_t.from].second);
 		auto end = start + duration;
 		if (start < end && chrono::steady_clock::now() < end)
-			unlocked = true;
+			locked = false;
 	}
-	if (!unlocked && m_getAuthorisation && !m_getAuthorisation(_t, isProxyAccount(_t.from)))
-		ret.r = TransactionRepercussion::Refused;
+	ret.r = TransactionRepercussion::Locked;
+	if (locked && m_getAuthorisation)
+	{
+		if (m_getAuthorisation(_t, isProxyAccount(_t.from)))
+			locked = false;
+		else
+			ret.r = TransactionRepercussion::Refused;
+	}
+	if (locked)
+		return ret;
 	if (isRealAccount(_t.from))
 	{
 		if (Secret s = m_keyManager.secret(_t.from, [&](){ return m_getPassword(_t.from); }))
@@ -152,7 +160,7 @@ bool SimpleAccountHolder::unlockAccount(Address const& _account, string const& _
 
 	try
 	{
-		if (!m_keyManager.secret(_account))
+		if (!m_keyManager.secret(_account, [&] { return _password; }, false))
 			return false;
 	}
 	catch (PasswordUnknown const&)

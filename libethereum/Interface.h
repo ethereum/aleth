@@ -130,6 +130,7 @@ public:
 	virtual u256 balanceAt(Address _a, BlockNumber _block) const = 0;
 	virtual u256 countAt(Address _a, BlockNumber _block) const = 0;
 	virtual u256 stateAt(Address _a, u256 _l, BlockNumber _block) const = 0;
+	virtual h256 stateRootAt(Address _a, BlockNumber _block) const = 0;
 	virtual bytes codeAt(Address _a, BlockNumber _block) const = 0;
 	virtual h256 codeHashAt(Address _a, BlockNumber _block) const = 0;
 	virtual std::unordered_map<u256, u256> storageAt(Address _a, BlockNumber _block) const = 0;

@@ -69,9 +69,12 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	Json::Value r(Json::objectValue);
 
 	Json::Value stack(Json::arrayValue);
-	for (auto const& i: vm.stack())
-		stack.append("0x" + toHex(toCompactBigEndian(i, 1)));
-	r["stack"] = stack;
+	if (!m_options.disableStack)
+	{
+		for (auto const& i: vm.stack())
+			stack.append("0x" + toHex(toCompactBigEndian(i, 1)));
+		r["stack"] = stack;
+	}
 
 	bool returned = false;
 	bool newContext = false;
@@ -105,15 +108,18 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 		m_lastInst.resize(ext.depth + 1);
 	}
 
-	if (changesMemory(lastInst) || newContext)
+	Json::Value memJson(Json::arrayValue);
+	if (!m_options.disableMemory && (changesMemory(lastInst) || newContext))
 	{
-		if (vm.memory().size() < 1024)
-			r["memory"] = toHex(vm.memory());
-		else
-			r["sha3memory"] = sha3(vm.memory()).hex();
+		for (unsigned i = 0; i < vm.memory().size(); i += 32)
+		{
+			bytesConstRef memRef(vm.memory().data() + i, 32);
+			memJson.append(toHex(memRef, 2, HexPrefix::DontAdd));
+		}
+		r["memory"] = memJson;
 	}
 
-	if (changesStorage(lastInst) || newContext)
+	if (!m_options.disableStorage && (m_options.fullStorage || changesStorage(lastInst) || newContext))
 	{
 		Json::Value storage(Json::objectValue);
 		for (auto const& i: ext.state().storage(ext.myAddress))
@@ -126,12 +132,11 @@ void StandardTrace::operator()(uint64_t _steps, Instruction inst, bigint newMemS
 	if (newContext)
 		r["address"] = ext.myAddress.hex();
 	r["steps"] = (unsigned)_steps;
-	r["inst"] = (unsigned)inst;
 	if (m_showMnemonics)
-		r["instname"] = instructionInfo(inst).name;
+		r["op"] = instructionInfo(inst).name;
 	r["pc"] = toString(vm.curPC());
 	r["gas"] = toString(gas);
-	r["gascost"] = toString(gasCost);
+	r["gasCost"] = toString(gasCost);
 	if (!!newMemSize)
 		r["memexpand"] = toString(newMemSize);
 
@@ -400,11 +405,17 @@ bool Executive::go(OnOpFunc const& _onOp)
 		{
 			// TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
 			cwarn << "Unexpected exception in VM. There may be a bug in this implementation. " << diagnostic_information(_e);
+			exit(1);
+			// Another solution would be to reject this transaction, but that also
+			// has drawbacks. Essentially, the amount of ram has to be increased here.
 		}
 		catch (std::exception const& _e)
 		{
 			// TODO: AUDIT: check that this can never reasonably happen. Consider what to do if it does.
-			cwarn << "Unexpected std::exception in VM. This is probably unrecoverable. " << _e.what();
+			cwarn << "Unexpected std::exception in VM. Not enough RAM? " << _e.what();
+			exit(1);
+			// Another solution would be to reject this transaction, but that also
+			// has drawbacks. Essentially, the amount of ram has to be increased here.
 		}
 #if ETH_TIMED_EXECUTIONS
 		cnote << "VM took:" << t.elapsed() << "; gas used: " << (sgas - m_endGas);

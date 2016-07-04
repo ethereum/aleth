@@ -5,8 +5,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 	find_program(ETH_JSON_RPC_STUB jsonrpcstub)
 	eth_show_dependency(JSON_RPC_CPP json-rpc-cpp)
 
-	eth_use(${TARGET} ${REQUIRED} CURL)
-
 	if (${SUBMODULE} STREQUAL "Server")
 		eth_use(${TARGET} ${REQUIRED} Mhd)
 		get_property(DISPLAYED GLOBAL PROPERTY ETH_JSONRPCSTUB_DISPLAYED)
@@ -24,7 +22,7 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		target_link_libraries(${TARGET} ${JSON_RPC_CPP_CLIENT_LIBRARIES})
 		target_compile_definitions(${TARGET} PUBLIC ETH_JSONRPC)
 
-		eth_copy_dlls(${TARGET} CURL_DLLS)
+		eth_use(${TARGET} ${REQUIRED} CURL)
 	endif()
 
 endfunction()

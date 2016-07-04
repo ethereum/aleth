@@ -82,6 +82,7 @@ public:
 	virtual std::string eth_blockNumber()override;
 	virtual std::string eth_getBalance(std::string const& _address, std::string const& _blockNumber) override;
 	virtual std::string eth_getStorageAt(std::string const& _address, std::string const& _position, std::string const& _blockNumber) override;
+	virtual std::string eth_getStorageRoot(std::string const& _address, std::string const& _blockNumber) override;
 	virtual std::string eth_getTransactionCount(std::string const& _address, std::string const& _blockNumber) override;
 	virtual std::string eth_pendingTransactions() override;
 	virtual Json::Value eth_getBlockTransactionCountByHash(std::string const& _blockHash) override;

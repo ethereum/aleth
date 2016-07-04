@@ -128,6 +128,18 @@ string Eth::eth_getStorageAt(string const& _address, string const& _position, st
 	}
 }
 
+string Eth::eth_getStorageRoot(string const& _address, string const& _blockNumber)
+{
+	try
+	{
+		return toString(client()->stateRootAt(jsToAddress(_address), jsToBlockNumber(_blockNumber)));
+	}
+	catch (...)
+	{
+		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
+	}
+}
+
 string Eth::eth_pendingTransactions()
 {
 	//Return list of transaction that being sent by local accounts

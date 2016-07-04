@@ -246,8 +246,9 @@ public:
 	/// the block since all state changes are ultimately reversed.
 	void cleanup(bool _fullCommit);
 
-	/// Sets m_currentBlock to a clean state, (i.e. no change from m_previousBlock).
-	void resetCurrent();
+	/// Sets m_currentBlock to a clean state, (i.e. no change from m_previousBlock) and
+	/// optionally modifies the timestamp.
+	void resetCurrent(u256 const& _timestamp = u256(utcTime()));
 
 	// Sealing
 
