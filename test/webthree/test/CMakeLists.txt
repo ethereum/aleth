@@ -2,6 +2,9 @@ add_subdirectory(ethrpctest)
 
 include_directories(..)
 
+# Messy.  The webthree tests depend on the libethereum tests (TestHelper.h)
+include_directories(../../libethereum)
+
 aux_source_directory(. SRCS)
 aux_source_directory(./libwhisper SRCS)
 aux_source_directory(./libweb3jsonrpc SRCS)
