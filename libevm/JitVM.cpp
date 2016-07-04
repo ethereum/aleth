@@ -145,9 +145,9 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
 	rejected |= io_gas > std::numeric_limits<decltype(m_data.gas)>::max(); // Do not accept requests with gas > 2^63 (int64 max)
-	rejected |= _ext.gasPrice > std::numeric_limits<decltype(m_data.gasPrice)>::max();
-	rejected |= _ext.envInfo().number() > std::numeric_limits<decltype(m_data.number)>::max();
-	rejected |= _ext.envInfo().timestamp() > std::numeric_limits<decltype(m_data.timestamp)>::max();
+	rejected |= _ext.envInfo().number() > std::numeric_limits<int64_t>::max();
+	rejected |= _ext.envInfo().timestamp() > std::numeric_limits<int64_t>::max();
+	rejected |= _ext.envInfo().gasLimit() > std::numeric_limits<int64_t>::max();
 	if (!toJITSchedule(_ext.evmSchedule(), m_schedule))
 	{
 		cwarn << "Schedule changed, not suitable for JIT!";
@@ -161,15 +161,10 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	}
 
 	m_data.gas 			= static_cast<decltype(m_data.gas)>(io_gas);
-	m_data.gasPrice		= static_cast<decltype(m_data.gasPrice)>(_ext.gasPrice);
 	m_data.callData 	= _ext.data.data();
 	m_data.callDataSize = _ext.data.size();
 	m_data.transferredValue = eth2jit(_ext.value);
 	m_data.apparentValue = eth2jit(_ext.value);
-	m_data.difficulty   = eth2jit(_ext.envInfo().difficulty());
-	m_data.gasLimit     = eth2jit(_ext.envInfo().gasLimit());
-	m_data.number 		= static_cast<decltype(m_data.number)>(_ext.envInfo().number());
-	m_data.timestamp 	= static_cast<decltype(m_data.timestamp)>(_ext.envInfo().timestamp());
 	m_data.code     	= _ext.code.data();
 	m_data.codeSize 	= _ext.code.size();
 	m_data.codeHash		= eth2jit(_ext.codeHash);
