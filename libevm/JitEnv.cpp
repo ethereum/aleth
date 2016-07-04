@@ -15,17 +15,6 @@ extern "C"
 	using namespace dev::eth;
 	using evmjit::i256;
 
-	EXPORT void env_sstore(ExtVMFace* _env, i256* _index, i256* _value)
-	{
-		auto index = jit2eth(*_index);
-		auto value = jit2eth(*_value);
-
-		if (value == 0 && _env->store(index) != 0)	// If delete
-			_env->sub.refunds += _env->evmSchedule().sstoreRefundGas;	// Increase refund counter
-
-		_env->setStore(index, value);	// Interface uses native endianness
-	}
-
 	EXPORT void env_create(ExtVMFace* _env, int64_t* io_gas, i256* _endowment, byte* _initBeg, uint64_t _initSize, h256* o_address)
 	{
 		auto endowment = jit2eth(*_endowment);

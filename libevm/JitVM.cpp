@@ -134,13 +134,32 @@ evm_variant evm_query(evm_env* _opaqueEnv, evm_query_key _key,
 	return v;
 }
 
+void evm_update(evm_env* _opaqueEnv, evm_update_key _key,
+				evm_variant _arg1, evm_variant _arg2) noexcept
+{
+	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	switch (_key)
+	{
+	case EVM_SSTORE:
+	{
+		auto index = fromEvmC(_arg1.uint256);
+		auto value = fromEvmC(_arg2.uint256);
+		if (value == 0 && env.store(index) != 0)                   // If delete
+			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
+
+		env.setStore(index, value);    // Interface uses native endianness
+	}
+	}
 }
 
-extern "C" void env_sstore(); // fake declaration for linker symbol stripping workaround, see a call below
+
+}
+
+extern "C" void env_call(); // fake declaration for linker symbol stripping workaround, see a call below
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	evmjit::JIT::init(evm_query);
+	evmjit::JIT::init(evm_query, evm_update);
 
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
@@ -182,7 +201,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	case evmjit::ReturnCode::OutOfGas:
 		BOOST_THROW_EXCEPTION(OutOfGas());
 	case evmjit::ReturnCode::LinkerWorkaround:	// never happens
-		env_sstore();					// but forces linker to include env_* JIT callback functions
+		env_call();					// but forces linker to include env_* JIT callback functions
 		break;
 	default:
 		break;
