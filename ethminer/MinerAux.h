@@ -121,7 +121,7 @@ public:
 			m_farmURL = argv[++i];
 			m_activeFarmURL = m_farmURL;
 		}
-		else if ((arg == "-FF" || arg == "-FS" || arg == "--farm-failover" || arg == "--stratum-failover") && i + 1 < argc)
+		else if ((arg == "-FF" || arg == "-FS" || arg == "--farm-failover" || arg == "--failover-stratum") && i + 1 < argc)
 		{
 			string url = argv[++i];
 

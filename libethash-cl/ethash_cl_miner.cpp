@@ -39,6 +39,7 @@
 #include <libethash/internal.h>
 #include "ethash_cl_miner.h"
 #include "ethash_cl_miner_kernel.h"
+#include <boost/progress.hpp>
 
 #define ETHASH_BYTES 32
 
@@ -481,6 +482,8 @@ bool ethash_cl_miner::init(
 		m_dagKernel.setArg(2, m_dag);
 		m_dagKernel.setArg(3, ~0u);
 
+		boost::progress_timer t;
+
 		for (uint32_t i = 0; i < fullRuns; i++)
 		{
 			m_dagKernel.setArg(0, i * m_globalWorkSize);
@@ -488,7 +491,7 @@ bool ethash_cl_miner::init(
 			m_queue.finish();
 			printf("OPENCL#%d: %.0f%%\n", _deviceId, 100.0f * (float)i / (float)fullRuns);
 		}
-
+		printf("%.2fGB of DAG generated in ", (float)dagSize / (1024 * 1024 * 1024));
 	}
 	catch (cl::Error const& err)
 	{
