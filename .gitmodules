@@ -1,16 +1,4 @@
-[submodule "solidity"]
-	path = solidity
-	url = https://github.com/ethereum/solidity
-	branch = develop
-[submodule "webthree"]
-	path = webthree
-	url = https://github.com/ethereum/webthree
-	branch = develop
 [submodule "deps"]
 	path = deps
 	url = https://github.com/ethereum/cpp-dependencies
 	branch = master
-[submodule "evmjit"]
-	path = evmjit
-	url = https://github.com/bobsummerwill/evmjit.git
-	branch =  llvm_versions
