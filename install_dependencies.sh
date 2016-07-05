@@ -7,6 +7,13 @@
 #
 # http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
 #
+# TODO - We need to readd LLVM to our Ubuntu builds, EVMJIT is currently
+# disabled by default on Linux.
+#
+# TODO - Need to update LLVM to 3.8, or, if that is already explicitly done
+# via the EVMJIT CMake changes, then just remove the macOS dependency here
+# and in the Homebrew formula.
+#
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
@@ -42,7 +49,7 @@ case $(uname -s) in
         brew install jsoncpp
         brew install libmicrohttpd
         brew install libjson-rpc-cpp
-        brew install homebrew/versions/llvm37        
+        brew install homebrew/versions/llvm37
         ;;
     FreeBSD)
         echo "install_dependencies.sh doesn't have FreeBSD support yet."
@@ -77,18 +84,15 @@ case $(uname -s) in
                         #trusty
                         echo "Installing cpp-ethereum dependencies on Ubuntu Trusty"
 
-                        # Add additional PPAs which we need to be able to build cpp-ethereum on
-                        # Ubuntu Trusty.  That includes our own PPAs and a PPA for getting CMake 3.x
-                        # on Trusty.
+                        # We need to add our own PPA to get newer versions of libcryptopp and
+                        # libjson-rpc-cpp, though we are actually building the latter from source
+                        # at the time of writing.
                         sudo add-apt-repository -y ppa:ethereum/ethereum
-                        sudo add-apt-repository -y ppa:ethereum/ethereum-dev
-                        sudo apt-add-repository -y ppa:george-edison55/cmake-3.x
                         sudo apt-get -y update
 
                         # Install binaries for nearly all of our dependencies
                         sudo apt-get -y install \
                             build-essential \
-                            cmake \
                             git \
                             libboost-all-dev \
                             libcurl4-openssl-dev \
