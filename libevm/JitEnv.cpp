@@ -73,23 +73,4 @@ extern "C"
 		*io_gas += static_cast<int64_t>(params.gas); // it is never more than initial _callGas
 		return ret;
 	}
-
-	EXPORT void env_log(ExtVMFace* _env, byte* _beg, uint64_t _size, h256* _topic1, h256* _topic2, h256* _topic3, h256* _topic4)
-	{
-		dev::h256s topics;
-
-		if (_topic1)
-			topics.push_back(*_topic1);
-
-		if (_topic2)
-			topics.push_back(*_topic2);
-
-		if (_topic3)
-			topics.push_back(*_topic3);
-
-		if (_topic4)
-			topics.push_back(*_topic4);
-
-		_env->log(std::move(topics), {_beg, (size_t)_size});
-	}
 }

@@ -150,6 +150,14 @@ void evm_update(evm_env* _opaqueEnv, evm_update_key _key,
 		env.setStore(index, value);    // Interface uses native endianness
 		break;
 	}
+	case EVM_LOG:
+	{
+		bytesConstRef data{reinterpret_cast<byte const*>(_arg1.bytes.bytes), _arg1.bytes.size};
+		size_t numTopics = _arg2.bytes.size / sizeof(h256);
+		h256 const* pTopics = reinterpret_cast<h256 const*>(_arg2.bytes.bytes);
+		env.log({pTopics, pTopics + numTopics}, data);
+		break;
+	}
 	case EVM_SELFDESTRUCT:
 		// Register selfdestruction beneficiary.
 		env.suicide(fromEvmC(_arg1.address));
