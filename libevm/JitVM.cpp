@@ -165,14 +165,67 @@ void evm_update(evm_env* _opaqueEnv, evm_update_key _key,
 	}
 }
 
+int64_t evm_call(evm_env* _opaqueEnv,
+                 evm_call_kind _kind,
+                 int64_t _gas,
+                 evm_hash160 _address,
+                 evm_uint256 _value,
+                 evm_bytes_view _input,
+                 evm_mutable_bytes_view _output) noexcept
+{
+	assert(_gas >= 0 && "Invalid gas value");
+	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+
+	CallParameters params;
+	auto gas = _gas;
+	auto cost = gas;
+
+	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : fromEvmC(_value);
+	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
+	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
+	params.codeAddress = fromEvmC(_address);
+	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
+	params.data = {reinterpret_cast<byte const*>(_input.bytes), _input.size};
+	params.out = {reinterpret_cast<byte*>(_output.bytes), _output.size};
+	params.onOp = {};
+
+	if (params.valueTransfer)
+	{
+		gas += 2300;
+		cost += 9000;
+	}
+	if (_kind == EVM_CALL && !env.exists(params.receiveAddress))
+		cost += 25000;
+
+	auto ret = false;
+	if (env.depth < 1024 && env.balance(env.myAddress) >= params.valueTransfer)
+	{
+		params.gas = gas;
+		ret = env.call(params);
+		gas = static_cast<int64_t>(params.gas);  // Should not throw.
+	}
+
+	cost -= gas;
+
+	// Saturate cost.
+	// TODO: Move up and handle each +=.
+	if (cost < 0)
+		cost = std::numeric_limits<decltype(cost)>::max();
+
+	// Add failure indicator.
+	if (!ret)
+		cost += std::numeric_limits<int64_t>::min();
+
+	return cost;
+}
 
 }
 
-extern "C" void env_call(); // fake declaration for linker symbol stripping workaround, see a call below
+extern "C" void env_create(); // fake declaration for linker symbol stripping workaround, see a call below
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	evmjit::JIT::init(evm_query, evm_update);
+	evmjit::JIT::init(evm_query, evm_update, evm_call);
 
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
@@ -210,7 +263,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	case evmjit::ReturnCode::OutOfGas:
 		BOOST_THROW_EXCEPTION(OutOfGas());
 	case evmjit::ReturnCode::LinkerWorkaround:	// never happens
-		env_call();					// but forces linker to include env_* JIT callback functions
+		env_create();					// but forces linker to include env_* JIT callback functions
 		break;
 	default:
 		break;
