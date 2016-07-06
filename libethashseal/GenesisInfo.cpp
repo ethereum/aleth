@@ -197,7 +197,7 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"maximumExtraDataSize": "0x20",
-		"daoHardforkBlock": "0xfffffffffffffff",
+		"daoHardforkBlock": "0xfffffffffffffff", //@TODO set correct number
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,

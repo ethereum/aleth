@@ -324,6 +324,10 @@ R"E(
 	{
 		"address" : "0xf4c64518ea10f995918a454158c6b61407ea345c",
 		"extraBalanceAccount" : "0x7602b46df5390e432ef1c307d4f2c9ff6d65cc97"
+	},
+	{
+		"address" : "0xbb9bc244d798123fde783fcc1c72d3bb8c189413",
+		"extraBalanceAccount" : "807640a13483f8ac783c557fcdf27be11ea4ac7a"
 	}]
 })E";
 
