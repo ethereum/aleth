@@ -43,7 +43,7 @@ static const u256 MaxBlockGasLimit = ChainParams(genesisInfo(Network::HomesteadT
 void help()
 {
 	cout
-		<< "Usage ethvm <options> [trace|stats|output] (<file>|--)" << endl
+		<< "Usage ethvm <options> [trace|stats|output|test] (<file>|-)" << endl
 		<< "Transaction options:" << endl
 		<< "    --value <n>  Transaction should transfer the <n> wei (default: 0)." << endl
 		<< "    --gas <n>    Transaction should be given <n> gas (default: block gas limit)." << endl
