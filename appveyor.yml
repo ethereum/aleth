@@ -31,10 +31,10 @@ before_build:
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln
-#test_script:
+test_script:
 #    - cd C:\projects\cpp-ethereum\build\test\libethereum\test\Debug
 #    - testeth.exe
 #    - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
 #    - testweb3core.exe
-#    - cd C:\projects\cpp-ethereum\build\test\libwebthree\test\Debug
-#    - testweb3.exe
+    - cd C:\projects\cpp-ethereum\build\test\libwebthree\test\Debug
+    - testweb3.exe
