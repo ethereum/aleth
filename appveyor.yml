@@ -19,7 +19,6 @@ install:
     - cmake -P deps\install_deps.cmake
 cache:
     - C:\projects\cpp-ethereum\build
-    - C:\projects\cpp-ethereum\deps
     - C:\projects\cpp-ethereum\deps\install
 before_build:
     - cd ..
