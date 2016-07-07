@@ -9,6 +9,9 @@
 # globally disabled by default to work around unresolved LLVM build issues
 # for Ubuntu.  See https://github.com/ethereum/webthree-umbrella/issues/549.
 #
+# TODO - Address the hardcoded paths in this file.
+# See https://github.com/ethereum/webthree-umbrella/issues/625.
+#
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
