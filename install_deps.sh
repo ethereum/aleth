@@ -162,15 +162,6 @@ case $(uname -s) in
 
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
-
-                # TODO - We aren't trying to get LLVM installed here.  The LLVM steps
-                # detailed on http://ethdocs.org don't work aymore, because the LLVM project
-                # are no longer serving URLs, which comprised 95% of their server load.
-                # We need to re-enable EVMJIT by default on Ubuntu.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/549
-                # See https://github.com/ethereum/webthree-umbrella/issues/514
-
                 sudo apt-get -y install \
                     build-essential \
                     cmake \

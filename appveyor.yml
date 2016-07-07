@@ -5,10 +5,6 @@
 #
 # http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
 #
-# TODO - We are explicitly enabling EVMJIT here for Windows, because it is
-# globally disabled by default to work around unresolved LLVM build issues
-# for Ubuntu.  See https://github.com/ethereum/webthree-umbrella/issues/549.
-#
 # TODO - Address the hardcoded paths in this file.
 # See https://github.com/ethereum/webthree-umbrella/issues/625.
 #
@@ -32,7 +28,7 @@ before_build:
     - cd cpp-ethereum
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" .. -DEVMJIT=On
+    - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln
 test_script:
