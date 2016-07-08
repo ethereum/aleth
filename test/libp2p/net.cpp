@@ -30,11 +30,12 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::p2p;
 namespace ba = boost::asio;
 namespace bi = ba::ip;
 
-struct NetFixture
+struct NetFixture: public TestOutputHelper
 {
 	NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~NetFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }

@@ -23,16 +23,18 @@
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 #include <libdevcore/MemoryDB.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 
 namespace dev {  namespace test {
 
 
 } }// Namespace Close
 
-BOOST_AUTO_TEST_SUITE(memDB)
+BOOST_FIXTURE_TEST_SUITE(memDB, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(kill)
 {

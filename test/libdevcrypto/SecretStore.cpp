@@ -38,7 +38,7 @@ using namespace dev::test;
 namespace js = json_spirit;
 namespace fs = boost::filesystem;
 
-BOOST_AUTO_TEST_SUITE(KeyStore)
+BOOST_FIXTURE_TEST_SUITE(KeyStore, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(basic_tests)
 {

@@ -23,11 +23,13 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/TransientDirectory.h>
 #include <libdevcore/OverlayDB.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(OverlayDBTests)
+BOOST_FIXTURE_TEST_SUITE(OverlayDBTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(basicUsage)
 {

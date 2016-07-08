@@ -31,13 +31,15 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::crypto;
 using namespace CryptoPP;
 
-struct DevcryptoTestFixture {
+struct DevcryptoTestFixture: public TestOutputHelper {
 	DevcryptoTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
 	~DevcryptoTestFixture() {}
 

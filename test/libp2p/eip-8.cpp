@@ -25,12 +25,14 @@
 #include <libp2p/Host.h>
 #include <libp2p/RLPXSocket.h>
 #include <libp2p/RLPxHandshake.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::p2p;
 
-BOOST_AUTO_TEST_SUITE(eip8)
+BOOST_FIXTURE_TEST_SUITE(eip8, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(test_discovery_packets)
 {

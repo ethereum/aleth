@@ -66,7 +66,26 @@ Options::Options()
 			performance = true;
 		else if (arg == "--nonetwork")
 			nonetwork = true;
+		else if (arg == "--verbosity" && i + 1 < argc)
+		{
+			static std::ostringstream strCout; //static string to redirect logs to
+			std::string indentLevel = std::string{argv[i + 1]};
+			if (indentLevel == "0")
+			{
+				logVerbosity = Verbosity::None;
+				std::cout.rdbuf(strCout.rdbuf());
+				std::cerr.rdbuf(strCout.rdbuf());
+				g_logVerbosity = -1;
+			}
+			else if (indentLevel == "1")
+				logVerbosity = Verbosity::NiceReport;
+			else
+				logVerbosity = Verbosity::Full;
 
+			int indentLevelInt = atoi(argv[i + 1]);
+			if (indentLevelInt > g_logVerbosity)
+				g_logVerbosity = indentLevelInt;
+		}
 	}
 }
 
@@ -74,6 +93,27 @@ Options const& Options::get()
 {
 	static Options instance;
 	return instance;
+}
+
+using namespace boost;
+string TestOutputHelper::m_currentTestName = "n/a";
+string TestOutputHelper::m_currentTestCaseName = "n/a";
+
+void TestOutputHelper::initTest()
+{
+	if (Options::get().logVerbosity ==  Options::Verbosity::NiceReport || Options::get().logVerbosity ==  Options::Verbosity::None)
+		g_logVerbosity = -1;
+
+	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
+	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
+}
+
+bool TestOutputHelper::passTest(std::string& _testName)
+{
+	cnote << _testName;
+	_testName = "(" + _testName + ") ";
+	m_currentTestName = _testName;
+	return true;
 }
 
 }} //namespaces

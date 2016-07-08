@@ -31,6 +31,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 
 namespace js = json_spirit;
 
@@ -49,7 +50,7 @@ static unsigned fac(unsigned _i)
 
 using dev::operator <<;
 
-BOOST_AUTO_TEST_SUITE(TrieTests)
+BOOST_FIXTURE_TEST_SUITE(TrieTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(fat_trie)
 {
