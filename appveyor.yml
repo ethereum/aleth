@@ -20,17 +20,17 @@ install:
 before_build:
     - cd ..
     - git clone https://github.com/ethereum/tests.git
-    - set ETHEREUM_TEST_PATH=C:\projects\tests
     - cd cpp-ethereum
     - mkdir build
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln
-#test_script:
+test_script:
 #    - cd C:\projects\cpp-ethereum\build\test\libethereum\test\Debug
 #    - testeth.exe
 #    - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
 #    - testweb3core.exe
-#    - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
-#    - testweb3.exe
+    - set ETHEREUM_TEST_PATH=C:\projects\tests
+    - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
+    - testweb3.exe
