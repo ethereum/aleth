@@ -326,16 +326,25 @@ KeyPair KeyManager::presaleSecret(std::string const& _json, function<string(bool
 
 Addresses KeyManager::accounts() const
 {
-	Addresses ret;
-	ret.reserve(m_keyInfo.size());
+	set<Address> addresses;
 	for (auto const& i: m_keyInfo)
-		ret.push_back(i.first);
-	return ret;
+		addresses.insert(i.first);
+	for (auto const& key: m_store.keys())
+		addresses.insert(m_store.address(key));
+	// Remove the zero address if present
+	return Addresses{addresses.upper_bound(Address()), addresses.end()};
 }
 
 bool KeyManager::hasAccount(Address const& _address) const
 {
-	return m_keyInfo.count(_address);
+	if (!_address)
+		return false;
+	if (m_keyInfo.count(_address))
+		return true;
+	for (auto const& key: m_store.keys())
+		if (m_store.address(key) == _address)
+			return true;
+	return false;
 }
 
 string const& KeyManager::accountName(Address const& _address) const
