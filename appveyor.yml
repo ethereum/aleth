@@ -32,5 +32,6 @@ test_script:
 #    - testeth.exe
 #    - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
 #    - testweb3core.exe
-    - cd C:\projects\cpp-ethereum\build\test\libwebthree\test\Debug
+    - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
+    - ethrpctest.exe
     - testweb3.exe
