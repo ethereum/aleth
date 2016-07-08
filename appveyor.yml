@@ -33,19 +33,19 @@ test_script:
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
-    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\win64\bin\OpenCL.dll" .
     - testeth.exe
 
     - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
-    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\win64\bin\OpenCL.dll" .
     - testweb3core.exe
 
     - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
-    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\win64\bin\OpenCL.dll" .
     - testweb3.exe
