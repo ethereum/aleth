@@ -38,7 +38,7 @@
 #include "<test/TestHelper.h>"
 #include "WebThreeStubClient.h"
 
-BOOST_AUTO_TEST_SUITE(jsonrpc)
+BOOST_FIXTURE_TEST_SUITE(jsonrpc, TestOutputHelper)
 
 using namespace std;
 using namespace dev;

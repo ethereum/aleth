@@ -30,6 +30,7 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::p2p;
 using namespace dev::shh;
 
@@ -37,6 +38,7 @@ struct P2PFixture
 {
 	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
+	TestOutputHelper testHelper;
 };
 
 BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
