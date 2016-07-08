@@ -35,6 +35,6 @@ script:
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
     - cd cpp-ethereum/build
-#    - ./test/libethereum/test/testeth
+    - ./test/libethereum/test/testeth
     - ./test/libweb3core/test/testweb3core
     - ./test/webthree/test/testweb3
