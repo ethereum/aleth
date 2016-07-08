@@ -21,6 +21,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libweb3jsonrpc/AccountHolder.h>
+#include <test/test.h>
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -30,7 +31,7 @@ namespace dev
 namespace test
 {
 
-BOOST_AUTO_TEST_SUITE(AccountHolderTest)
+BOOST_FIXTURE_TEST_SUITE(AccountHolderTest, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(ProxyAccountUseCase)
 {

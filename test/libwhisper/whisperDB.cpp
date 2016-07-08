@@ -37,10 +37,11 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::shh;
 using namespace dev::p2p;
 
-struct P2PFixture
+struct P2PFixture: public TestOutputHelper
 {
 	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
 	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }

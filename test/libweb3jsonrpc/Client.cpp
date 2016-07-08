@@ -32,6 +32,7 @@
 #include <libethcore/KeyManager.h>
 #include <libwebthree/WebThree.h>
 #include <libp2p/Network.h>
+#include <test/test.h>
 
 // This is defined by some weird windows header - workaround for now.
 #undef GetMessage
@@ -46,7 +47,7 @@ namespace dev
 namespace test
 {
 
-BOOST_AUTO_TEST_SUITE(ClientTests)
+BOOST_FIXTURE_TEST_SUITE(ClientTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(Personal)
 {
