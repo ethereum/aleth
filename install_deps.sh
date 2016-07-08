@@ -215,6 +215,8 @@ case $(uname -s) in
                 sudo apt-get -y install \
                     build-essential \
                     cmake \
+                    g++ \
+                    gcc \
                     git \
                     libboost-all-dev \
                     libcurl4-openssl-dev \
@@ -226,7 +228,8 @@ case $(uname -s) in
                     libz-dev \
                     mesa-common-dev \
                     ocl-icd-libopencl1 \
-                    opencl-headers
+                    opencl-headers \
+                    unzip
 
                 # All the Debian releases until Stretch have shipped with CryptoPP 5.6.1,
                 # but we need 5.6.2 or newer, so we build it from source.
