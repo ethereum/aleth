@@ -25,7 +25,7 @@ case $(uname -s) in
                 echo "NOTE - You are in unknown territory with this preview OS."
                 echo "Even Homebrew doesn't have official support yet, and there are"
                 echo "known issues (see https://github.com/ethereum/webthree-umbrella/issues/614)."
-                echo "If you would like to partner with us to work through these, that"
+                echo "If you would like to partner with us to work through these issues, that"
                 echo "would be fantastic.  Please just comment on that issue.  Thanks!"
                 ;;
             *)
@@ -74,18 +74,28 @@ case $(uname -s) in
                 case $(lsb_release -cs) in
                     jessie)
                         #jessie
-                        echo "Debian Jessie"
-                        echo "install_dependencies.sh doesn't have Debian Jessie support yet."
+                        echo "Installing cpp-ethereum dependencies on Debian Jesse (8.5)."
+                        echo "ERROR - install_dependencies.sh doesn't have Debian Jessie support yet."
+                        echo "There are manual instructions at http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux-debian.html though"
                         exit 1
                         ;;
                     *)
                         #other Debian
-                        echo "Debian Jessie is the only Debian version which cpp-ethereum has been tested on."
-                        echo "Please let us know if you see this error message, and we can work out what is missing."
-                        echo "At https://gitter.im/ethereum/cpp-ethereum-development."
+                        echo "Installing cpp-ethereum dependencies on unknown Debian version."
+                        echo "ERROR - Debian Jessie is the only Debian version which cpp-ethereum has been tested on."
+                        echo "If you are using a different release and would like to get 'install_deps.sh'"
+                        echo "working for that release that would be fantastic."
+                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                         exit 1
                         ;;
                 esac
+                ;;
+            openSUSE project)
+                #openSUSE
+                echo "Installing cpp-ethereum dependencies on openSUSE."
+                echo "ERROR - install_dependencies.sh doesn't have openSUSE support yet."
+                echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
+                exit 1
                 ;;
             Ubuntu)
                 #Ubuntu
@@ -122,7 +132,7 @@ case $(uname -s) in
                         ;;
                     *)
                         #other Ubuntu
-                        echo "Unsupported Ubuntu version."
+                        echo "ERROR - Unknown or unsupported Ubuntu version."
                         echo "We only support Trusty, Utopic, Vivid, Wily and Xenial, with work-in-progress on Yakkety."
                         exit 1
                         ;;
@@ -228,7 +238,7 @@ case $(uname -s) in
                 ;;
             *)
                 #other Linux
-                echo "Unsupported or unidentified Linux distro."
+                echo "ERROR - Unsupported or unidentified Linux distro."
                 echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
                 echo "Please let us know if you see this error message, and we can work out what is missing."
                 echo "We had had success with Fedora, openSUSE and Alpine Linux too."
