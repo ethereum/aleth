@@ -27,14 +27,24 @@ before_build:
 build_script:
     - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln
 test_script:
-#    - cd C:\projects\cpp-ethereum\build\test\libethereum\test\Debug
-#    - testeth.exe
-#    - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
-#    - testweb3core.exe
     - set ETHEREUM_TEST_PATH=C:\projects\tests
+
+    - cd C:\projects\cpp-ethereum\build\test\libethereum\test\Debug
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
+    - testeth.exe
+
+    - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
+    - testweb3core.exe
+
     - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
-    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvcp140.dll" .
-    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvcr140.dll" .
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
     - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
