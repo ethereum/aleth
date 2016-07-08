@@ -2,7 +2,7 @@
 
 #------------------------------------------------------------------------------
 # Bash script for installing pre-requisite packages for cpp-ethereum on a
-# variety of a Linux and other UNIX-derived platforms.
+# variety of Linux and other UNIX-derived platforms.
 #
 # This is an "infrastucture-as-code" alternative to the manual build
 # instructions pages which we previously maintained, first as Wiki pages
@@ -23,6 +23,12 @@
 # See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
 # for some more background on this common problem.
 #
+# TODO - There is no support here yet for cross-builds in any form, only
+# native builds.  Expanding the functionality here to cover the mobile,
+# wearable and SBC platforms covered by doublethink and EthEmbedded would
+# also bring in support for Android, iOS, watchOS, tvOS, Tizen, Sailfish,
+# Maemo, MeeGo and Yocto.
+#
 # The documentation for cpp-ethereum is hosted at:
 #
 # http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
@@ -34,6 +40,11 @@
 uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires 'uname' to identify the platform."; exit 1; }
 
 case $(uname -s) in
+
+#------------------------------------------------------------------------------
+# macOS
+#------------------------------------------------------------------------------
+
     Darwin)
         case $(sw_vers -productVersion | awk -F . '{print $1"."$2}') in
             10.10)
@@ -84,6 +95,11 @@ case $(uname -s) in
         brew install homebrew/versions/llvm37
 
         ;;
+
+#------------------------------------------------------------------------------
+# FreeBSD
+#------------------------------------------------------------------------------
+
     FreeBSD)
         echo "Installing cpp-ethereum dependencies on FreeBSD."
         echo "ERROR - 'install_deps.sh' doesn't have FreeBSD support yet."
@@ -91,8 +107,18 @@ case $(uname -s) in
         echo "At https://gitter.im/ethereum/cpp-ethereum-development."
         exit 1
         ;;
+
+#------------------------------------------------------------------------------
+# Linux
+#------------------------------------------------------------------------------
+        
     Linux)
         case $(lsb_release -is) in
+
+#------------------------------------------------------------------------------
+# Arch Linux
+#------------------------------------------------------------------------------
+        
             Arch)
                 #Arch
                 echo "Installing cpp-ethereum dependencies on Arch Linux."
@@ -102,6 +128,11 @@ case $(uname -s) in
                 echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                 exit 1
                 ;;
+
+#------------------------------------------------------------------------------
+# Alpine Linux
+#------------------------------------------------------------------------------
+
             Alpine)
                 #Alpine
                 echo "Installing cpp-ethereum dependencies on Alpine Linux."
@@ -112,6 +143,11 @@ case $(uname -s) in
                 echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
                 exit 1
                 ;;
+
+#------------------------------------------------------------------------------
+# Debian
+#------------------------------------------------------------------------------
+
             Debian)
                 #Debian
                 case $(lsb_release -cs) in
@@ -205,6 +241,11 @@ case $(uname -s) in
                 cd ../..
 
                 ;;
+
+#------------------------------------------------------------------------------
+# Fedora
+#------------------------------------------------------------------------------
+
             Fedora)
                 #Fedora
                 echo "Installing cpp-ethereum dependencies on Fedora."
@@ -214,6 +255,11 @@ case $(uname -s) in
                 echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                 exit 1
                 ;;
+
+#------------------------------------------------------------------------------
+# OpenSUSE
+#------------------------------------------------------------------------------
+
             "openSUSE project")
                 #openSUSE
                 echo "Installing cpp-ethereum dependencies on openSUSE."
@@ -223,6 +269,21 @@ case $(uname -s) in
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
                 ;;
+
+#------------------------------------------------------------------------------
+# Ubuntu
+#
+# TODO - I wonder whether all of the Ubuntu-variants need some special
+# treatment?
+#
+# TODO - We should also test this code on Ubuntu Server, Ubuntu Snappy Core
+# and Ubuntu Phone.
+#
+# TODO - Our Ubuntu build is only working for amd64 and i386 processors.
+# It would be good to add armel, armhf and arm64.
+# See https://github.com/ethereum/webthree-umbrella/issues/228.
+#------------------------------------------------------------------------------
+
             Ubuntu)
                 #Ubuntu
                 case $(lsb_release -cs) in
@@ -299,10 +360,6 @@ case $(uname -s) in
                 #
                 # See https://github.com/ethereum/webthree-umbrella/issues/549
                 # See https://github.com/ethereum/webthree-umbrella/issues/514
-                #
-                # TODO - Our Ubuntu build is only working for amd64 and i386 processors.
-                # It would be good to add armel, armhf and arm64.
-                # See https://github.com/ethereum/webthree-umbrella/issues/228.
 
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
@@ -371,6 +428,13 @@ case $(uname -s) in
 
                 ;;
             *)
+
+#------------------------------------------------------------------------------
+# Other (unknown) Linux
+# Major and medium distros which we are missing would include Mint, CentOS,
+# RHEL, Raspbian, Cygwin, OpenWrt, gNewSense, Trisquel and SteamOS.
+#------------------------------------------------------------------------------
+
                 #other Linux
                 echo "ERROR - Unsupported or unidentified Linux distro."
                 echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
@@ -380,6 +444,13 @@ case $(uname -s) in
                 ;;
         esac
         ;;
+
+#------------------------------------------------------------------------------
+# Other platform (not Linux, FreeBSD or macOS).
+# Not sure what might end up here?
+# Maybe OpenBSD, NetBSD, AIX, Solaris, HP-UX?
+#------------------------------------------------------------------------------
+
     *)
         #other
         echo "ERROR - Unsupported or unidentified operating system."
