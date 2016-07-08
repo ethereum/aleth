@@ -33,4 +33,9 @@ test_script:
 #    - testweb3core.exe
     - set ETHEREUM_TEST_PATH=C:\projects\tests
     - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvcp140.dll" .
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvcr140.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libcurl.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\libmicrohttpd-dll.dll" .
+    - copy C:\projects\cpp-ethereum\deps\install\x64\bin\OpenCL.dll" .
     - testweb3.exe
