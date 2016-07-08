@@ -1,7 +1,27 @@
 #!/usr/bin/env bash
 
 #------------------------------------------------------------------------------
-# Bash script for installing pre-requisite packages for cpp-ethereum.
+# Bash script for installing pre-requisite packages for cpp-ethereum on a
+# variety of a Linux and other UNIX-derived platforms.
+#
+# This is an "infrastucture-as-code" alternative to the manual build
+# instructions pages which we previously maintained, first as Wiki pages
+# and later as readthedocs pages at http://ethdocs.org.
+#
+# The aim of this script is to simplify things down to the following basic
+# flow for all supported operating systems:
+#
+# - git clone --recursive
+# - ./install_deps.sh
+# - cmake && make
+#
+# At the time of writing we are assuming that 'lsb_release' is present for all
+# Linux distros, which is not a valid assumption.  We will need a variety of
+# approaches to actually get this working across all the distros which people
+# are using.
+#
+# See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
+# for some more background on this common problem.
 #
 # The documentation for cpp-ethereum is hosted at:
 #
@@ -9,6 +29,9 @@
 #
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
+
+# Check for 'uname' and abort if it is not available.
+uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires 'uname' to identify the platform."; exit 1; }
 
 case $(uname -s) in
     Darwin)
@@ -62,26 +85,46 @@ case $(uname -s) in
 
         ;;
     FreeBSD)
-        echo "install_dependencies.sh doesn't have FreeBSD support yet."
+        echo "Installing cpp-ethereum dependencies on FreeBSD."
+        echo "ERROR - 'install_deps.sh' doesn't have FreeBSD support yet."
         echo "Please let us know if you see this error message, and we can work out what is missing."
         echo "At https://gitter.im/ethereum/cpp-ethereum-development."
         exit 1
         ;;
     Linux)
         case $(lsb_release -is) in
+            Arch)
+                #Arch
+                echo "Installing cpp-ethereum dependencies on Arch Linux."
+                echo "ERROR - 'install_deps.sh' doesn't have Arch Linux support yet."
+                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "If you would like to get 'install_deps.sh' working for Arch Linux, that would be fantastic."
+                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                exit 1
+                ;;
+            Alpine)
+                #Alpine
+                echo "Installing cpp-ethereum dependencies on Alpine Linux."
+                echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
+                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "If you would like to get 'install_deps.sh' working for AlpineLinux, that would be fantastic."
+                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
+                exit 1
+                ;;
             Debian)
                 #Debian
                 case $(lsb_release -cs) in
                     jessie)
                         #jessie
                         echo "Installing cpp-ethereum dependencies on Debian Jesse (8.5)."
-                        echo "ERROR - install_dependencies.sh doesn't have Debian Jessie support yet."
-                        echo "There are manual instructions at http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux-debian.html though"
+                        echo "ERROR - 'install_deps.sh' doesn't have Debian Jessie support yet."
+                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
                         exit 1
                         ;;
                     *)
                         #other Debian
-                        echo "Installing cpp-ethereum dependencies on unknown Debian version."
+                        echo "Installing 'install_deps.sh' dependencies on unknown Debian version."
                         echo "ERROR - Debian Jessie is the only Debian version which cpp-ethereum has been tested on."
                         echo "If you are using a different release and would like to get 'install_deps.sh'"
                         echo "working for that release that would be fantastic."
@@ -90,10 +133,21 @@ case $(uname -s) in
                         ;;
                 esac
                 ;;
-            openSUSE project)
+            Fedora)
+                #Fedora
+                echo "Installing cpp-ethereum dependencies on Fedora."
+                echo "ERROR - 'install_deps.sh' doesn't have Fedora support yet."
+                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "If you would like to get CentOS working, that would be fantastic."
+                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                exit 1
+                ;;
+            "openSUSE project")
                 #openSUSE
                 echo "Installing cpp-ethereum dependencies on openSUSE."
-                echo "ERROR - install_dependencies.sh doesn't have openSUSE support yet."
+                echo "ERROR - 'install_deps.sh' doesn't have openSUSE support yet."
+                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
                 ;;
@@ -240,17 +294,17 @@ case $(uname -s) in
                 #other Linux
                 echo "ERROR - Unsupported or unidentified Linux distro."
                 echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
-                echo "Please let us know if you see this error message, and we can work out what is missing."
-                echo "We had had success with Fedora, openSUSE and Alpine Linux too."
-                echo "At https://gitter.im/ethereum/cpp-ethereum-development."
+                echo "If you would like to get your distro working, that would be fantastic."
+                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                exit 1
                 ;;
         esac
         ;;
     *)
         #other
-        echo "Unsupported or unidentified operating system."
+        echo "ERROR - Unsupported or unidentified operating system."
         echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/ for manual instructions."
-        echo "Please let us know if you see this error message, and we can work out what is missing."
-        echo "At https://gitter.im/ethereum/cpp-ethereum-development."
+        echo "If you would like to get your operating system working, that would be fantastic."
+        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
         ;;
 esac
