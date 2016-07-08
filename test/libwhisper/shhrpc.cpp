@@ -66,7 +66,7 @@ unique_ptr<WebThreeStubClient> jsonrpcClient;
 static string const c_version("shhrpc-web3");
 static unsigned const c_ttl = 777000;
 
-struct Setup
+struct Setup: public TestOutputHelper
 {
 	Setup()
 	{
