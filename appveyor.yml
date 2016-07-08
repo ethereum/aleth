@@ -17,9 +17,6 @@ configuration:
 install:
     - git submodule update --init --recursive
     - cmake -P deps\install_deps.cmake
-cache:
-    - C:\projects\cpp-ethereum\build
-    - C:\projects\cpp-ethereum\deps\install
 before_build:
     - cd ..
     - git clone https://github.com/ethereum/tests.git
