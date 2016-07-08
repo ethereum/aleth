@@ -17,6 +17,9 @@ configuration:
 install:
     - git submodule update --init --recursive
     - cmake -P deps\install_deps.cmake
+cache:
+    - C:\projects\cpp-ethereum\build
+    - C:\projects\cpp-ethereum\deps\install
 before_build:
     - cd ..
     - git clone https://github.com/ethereum/tests.git
@@ -27,10 +30,10 @@ before_build:
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     - msbuild C:\projects\cpp-ethereum\build\cpp-ethereum.sln
-test_script:
+#test_script:
 #    - cd C:\projects\cpp-ethereum\build\test\libethereum\test\Debug
 #    - testeth.exe
 #    - cd C:\projects\cpp-ethereum\build\test\libweb3core\test\Debug
 #    - testweb3core.exe
-    - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
-    - testweb3.exe
+#    - cd C:\projects\cpp-ethereum\build\test\webthree\test\Debug
+#    - testweb3.exe
