@@ -122,11 +122,28 @@ case $(uname -s) in
             Arch)
                 #Arch
                 echo "Installing cpp-ethereum dependencies on Arch Linux."
-                echo "ERROR - 'install_deps.sh' doesn't have Arch Linux support yet."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
-                echo "If you would like to get 'install_deps.sh' working for Arch Linux, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                exit 1
+
+                # The majority of our dependencies can be found in the
+                # Arch Linux official repositories.
+                # See https://wiki.archlinux.org/index.php/Official_repositories
+                sudo pacman -Sy \
+                    base-devel \
+                    boost \ 
+                    cmake \
+                    crypto++ \
+                    git \
+                    leveldb \
+                    libcl \
+                    libmicrohttpd \
+                    llvm \
+                    miniupnpc \
+                    opencl-headers
+
+                # The one exception is libjson-rpc-cpp, which comes from the
+                # ArchLinux User Repository (AUR).
+                # See https://aur.archlinux.org/.
+                yaourt -Sy libjson-rpc-cpp
+
                 ;;
 
 #------------------------------------------------------------------------------
@@ -158,6 +175,7 @@ case $(uname -s) in
                         echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                        echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
                         exit 1
                         ;;
                     jessie)
