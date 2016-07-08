@@ -115,9 +115,27 @@ case $(uname -s) in
             Debian)
                 #Debian
                 case $(lsb_release -cs) in
+                    wheezy)
+                        #wheezy
+                        echo "Installing cpp-ethereum dependencies on Debian Wheezy (7.x)."
+                        echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
+                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                        echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
+                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                        exit 1
+                        ;;
                     jessie)
                         #jessie
-                        echo "Installing cpp-ethereum dependencies on Debian Jesse (8.5)."
+                        echo "Installing cpp-ethereum dependencies on Debian Jesse (8.x)."
+                        ;;
+                    stretch)
+                        #stretch
+                        echo "Installing cpp-ethereum dependencies on Debian Stretch (9.x)."
+                        echo "ERROR - 'install_deps.sh' doesn't have Debian Stretch support yet."
+                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                        echo "If you would like to get 'install_deps.sh' working for Debian Stretch, that would be fantastic."
+                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+                        exit 1
                         ;;
                     *)
                         #other Debian
@@ -159,10 +177,9 @@ case $(uname -s) in
                 # All the Debian releases until Stretch have shipped with CryptoPP 5.6.1,
                 # but we need 5.6.2 or newer, so we build it from source.
                 #
-                # - https://packages.debian.org/jessie/libcrypto++-dev (5.6.1)
                 # - https://packages.debian.org/wheezy/libcrypto++-dev (5.6.1)
+                # - https://packages.debian.org/jessie/libcrypto++-dev (5.6.1)
                 # - https://packages.debian.org/stretch/libcrypto++-dev (5.6.3)
-                # - https://packages.debian.org/sid/libcrypto++-dev (5.6.3)
 
                 mkdir cryptopp && cd cryptopp
                 wget https://www.cryptopp.com/cryptopp563.zip
