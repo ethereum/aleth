@@ -1,5 +1,3 @@
-add_subdirectory(ethrpctest)
-
 include_directories(..)
 
 # Messy.  The webthree tests depend on the libethereum tests (TestHelper.h)

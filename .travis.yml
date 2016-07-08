@@ -37,5 +37,4 @@ script:
     - cd cpp-ethereum/build
     - ./test/libethereum/test/testeth
 #    - ./test/libweb3core/test/testweb3core         # temporary disable, to skip over failing tests.
-    - ./test/webthree/test/ethrpctest
     - ./test/webthree/test/testweb3
