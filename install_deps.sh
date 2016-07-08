@@ -118,9 +118,6 @@ case $(uname -s) in
                     jessie)
                         #jessie
                         echo "Installing cpp-ethereum dependencies on Debian Jesse (8.5)."
-                        echo "ERROR - 'install_deps.sh' doesn't have Debian Jessie support yet."
-                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
-                        exit 1
                         ;;
                     *)
                         #other Debian
@@ -132,6 +129,64 @@ case $(uname -s) in
                         exit 1
                         ;;
                 esac
+
+                # Install "normal packages"
+                #
+                # TODO - We are missing LLVM installation steps here on Debian for the time being,
+                # but that is OK, because EVMJIT is disabled by default.  As and when we want to get
+                # EVMJIT working on Debian with this script, we will need to add steps here based
+                # on the manual steps which we already have detailed here:
+                #
+                # See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux-debian.html
+
+                sudo apt-get -y update
+                sudo apt-get -y install \
+                    build-essential \
+                    cmake \
+                    git \
+                    libboost-all-dev \
+                    libcurl4-openssl-dev \
+                    libgmp-dev \
+                    libjsoncpp-dev \
+                    libleveldb-dev \
+                    libmicrohttpd-dev \
+                    libminiupnpc-dev \
+                    libz-dev \
+                    mesa-common-dev \
+                    ocl-icd-libopencl1 \
+                    opencl-headers
+
+                # All the Debian releases until Stretch have shipped with CryptoPP 5.6.1,
+                # but we need 5.6.2 or newer, so we build it from source.
+                #
+                # - https://packages.debian.org/jessie/libcrypto++-dev (5.6.1)
+                # - https://packages.debian.org/wheezy/libcrypto++-dev (5.6.1)
+                # - https://packages.debian.org/stretch/libcrypto++-dev (5.6.3)
+                # - https://packages.debian.org/sid/libcrypto++-dev (5.6.3)
+
+                mkdir cryptopp && cd cryptopp
+                wget https://www.cryptopp.com/cryptopp563.zip
+                unzip -a cryptopp563.zip
+                make dynamic
+                make libcryptopp.so
+                sudo make install PREFIX=/usr/local
+                cd ..
+
+                # Build libjsonrpccpp-v0.6.0 from source.
+                # Rationale for this is given in the Ubuntu comments lower down this file.
+
+                sudo apt-get -y install libargtable2-dev libedit-dev
+                git clone git://github.com/cinemast/libjson-rpc-cpp.git
+                cd libjson-rpc-cpp
+                git checkout v0.6.0
+                mkdir build
+                cd build
+                cmake .. -DCOMPILE_TESTS=NO
+                make
+                sudo make install
+                sudo ldconfig
+                cd ../..
+
                 ;;
             Fedora)
                 #Fedora
@@ -219,6 +274,14 @@ case $(uname -s) in
                 # which would make this versioning problem moot.
                 #
                 # See https://github.com/ethereum/webthree-umbrella/issues/103
+                #
+                # TODO - We aren't trying to get LLVM installed here.  The LLVM steps
+                # detailed on http://ethdocs.org don't work aymore, because the LLVM project
+                # are no longer serving URLs, which comprised 95% of their server load.
+                # We need to re-enable EVMJIT by default on Ubuntu.
+                #
+                # See https://github.com/ethereum/webthree-umbrella/issues/549
+                # See https://github.com/ethereum/webthree-umbrella/issues/514
                 #
                 # TODO - Our Ubuntu build is only working for amd64 and i386 processors.
                 # It would be good to add armel, armhf and arm64.
