@@ -48,6 +48,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::p2p;
 using namespace dev::shh;
+using namespace dev::test;
 namespace js = json_spirit;
 
 WebThreeDirect* web3;
@@ -99,6 +100,8 @@ struct Setup
 	{
 		dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 	}
+
+	TestOutputHelper testHelper;
 };
 
 Json::Value createMessage(string const& _from, string const& _to, string const& _topic = "", string _payload = "")

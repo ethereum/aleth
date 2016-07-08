@@ -22,9 +22,11 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libwhisper/BloomFilter.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::shh;
 
 using TopicBloomFilterShort = TopicBloomFilterBase<4>;
@@ -102,7 +104,7 @@ double testFalsePositiveRate(TopicBloomFilterTest const& f, int inserted, Topic&
 	return expected;
 }
 
-BOOST_AUTO_TEST_SUITE(bloomFilter)
+BOOST_FIXTURE_TEST_SUITE(bloomFilter, TestOutputHelper)
 
 //
 // Disabled tests as they are unstable and tend to stall the test suite.

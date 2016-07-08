@@ -21,9 +21,11 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 #include <libwhisper/Message.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 using namespace dev::shh;
 
 Topics createRandomTopics(unsigned int i)
@@ -78,7 +80,7 @@ void sealAndOpenSingleMessage(unsigned int i)
 	}
 }
 
-BOOST_AUTO_TEST_SUITE(whisperMessage)
+BOOST_FIXTURE_TEST_SUITE(whisperMessage, TestOutputHelper)
 
 //
 // Disabled tests as they are unstable and tend to stall the test suite.
