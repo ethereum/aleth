@@ -267,11 +267,45 @@ case $(uname -s) in
             Fedora)
                 #Fedora
                 echo "Installing cpp-ethereum dependencies on Fedora."
-                echo "ERROR - 'install_deps.sh' doesn't have Fedora support yet."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
-                echo "If you would like to get CentOS working, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                exit 1
+
+                # Install "normal packages"
+                # See https://fedoraproject.org/wiki/Package_management_system.
+                dnf install \
+                    autoconf \ 
+                    automake \
+                    boost-devel \
+                    cmake \
+                    cryptopp-devel \
+                    curl-devel \
+                    gcc \
+                    gcc-c++ \
+                    git \
+                    gmp-devel \
+                    leveldb-devel \ 
+                    libtool \
+                    mesa-dri-drivers \
+                    miniupnpc-devel \
+                    snappy-devel
+
+                # We grab LLVM from a user-authored repository, so that we can grab
+                # a new enough release.  See https://fedorahosted.org/copr/
+                dnf copr enable alonid/llvm-3.7
+                dnf install llvm-3.7 llvm-3.7-devel llvm-3.7-static llvm-3.7-libs
+
+                # Build libjsonrpccpp-v0.6.0 from source.
+                # Rationale for this is given in the Ubuntu comments lower down this file.
+                sudo apt-get -y install libargtable2-dev libedit-dev
+                git clone git://github.com/cinemast/libjson-rpc-cpp.git
+                cd libjson-rpc-cpp
+                git checkout v0.6.0
+                mkdir build
+                cd build
+                cmake .. -DCOMPILE_TESTS=NO
+                make
+                sudo make install
+                sudo ldconfig
+                cd ../..
+
                 ;;
 
 #------------------------------------------------------------------------------
