@@ -35,6 +35,6 @@ before_script:
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
     - make -j`getconf _NPROCESSORS_ONLN`
-#    - ./test/libethereum/test/testeth
-#    - ./test/libweb3core/test/testweb3core
-#    - ./test/webthree/test/testweb3
+    - ./test/libethereum/test/testeth
+    - ./test/libweb3core/test/testweb3core
+    - ./test/webthree/test/testweb3
