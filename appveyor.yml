@@ -51,7 +51,7 @@ test_script:
     - testweb3.exe
 artifacts:
     - path: cpp-ethereum-zip
-        name: cpp-ethereum.zip
+      name: cpp-ethereum.zip
 deploy:
     release: cpp-ethereum-appveyor-v$(appveyor_build_version)
     description: 'Automated Appveyor release of cpp-ethereum'
