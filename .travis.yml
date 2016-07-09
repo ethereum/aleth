@@ -26,15 +26,15 @@ git:
 before_install:
     - ./install_deps.sh
 before_script:
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
-script:
-    - make -j`getconf _NPROCESSORS_ONLN`
-    - cd ../..
+    - cd ..
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    - cd cpp-ethereum/build
-    - ./test/libethereum/test/testeth
-    - ./test/libweb3core/test/testweb3core
-    - ./test/webthree/test/testweb3
+    - cd cpp-ethereum
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE -DEVMJIT=On
+script:
+    - make -j`getconf _NPROCESSORS_ONLN`
+#    - ./test/libethereum/test/testeth
+#    - ./test/libweb3core/test/testweb3core
+#    - ./test/webthree/test/testweb3

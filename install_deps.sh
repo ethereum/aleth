@@ -86,15 +86,6 @@ case $(uname -s) in
         brew install libmicrohttpd
         brew install libjson-rpc-cpp
 
-        # TODO - Need to update LLVM to 3.8, or, if that is already explicitly done
-        # via the EVMJIT CMake changes, then just remove the macOS dependency here
-        # and in the Homebrew formula.
-        #
-        # See https://github.com/ethereum/homebrew-ethereum/pull/67
-        # See https://github.com/ethereum/evmjit/pull/53
-        
-        brew install homebrew/versions/llvm37
-
         ;;
 
 #------------------------------------------------------------------------------
@@ -136,7 +127,6 @@ case $(uname -s) in
                     leveldb \
                     libcl \
                     libmicrohttpd \
-                    llvm \
                     miniupnpc \
                     opencl-headers
 
@@ -204,14 +194,6 @@ case $(uname -s) in
                 esac
 
                 # Install "normal packages"
-                #
-                # TODO - We are missing LLVM installation steps here on Debian for the time being,
-                # but that is OK, because EVMJIT is disabled by default.  As and when we want to get
-                # EVMJIT working on Debian with this script, we will need to add steps here based
-                # on the manual steps which we already have detailed here:
-                #
-                # See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux-debian.html
-
                 sudo apt-get -y update
                 sudo apt-get -y install \
                     build-essential \
@@ -290,11 +272,6 @@ case $(uname -s) in
                     mesa-dri-drivers \
                     miniupnpc-devel \
                     snappy-devel
-
-                # We grab LLVM from a user-authored repository, so that we can grab
-                # a new enough release.  See https://fedorahosted.org/copr/
-                dnf copr enable alonid/llvm-3.7
-                dnf install llvm-3.7 llvm-3.7-devel llvm-3.7-static llvm-3.7-libs
 
                 # Build libjsonrpccpp-v0.6.0 from source.
                 # Rationale for this is given in the Ubuntu comments lower down this file.
@@ -383,7 +360,7 @@ case $(uname -s) in
 
                 # The Ethereum PPA is required for the handful of packages where we need newer versions than
                 # are shipped with Ubuntu itself.  We can likely minimize or remove the need for the PPA entirely
-                # as we switch more to a "build from source" model, as Pawel has recently done for LLVM.
+                # as we switch more to a "build from source" model, as Pawel has recently done for LLVM in evmjit.
                 #
                 # See https://launchpad.net/~ethereum/+archive/ubuntu/ethereum
                 #
@@ -408,14 +385,6 @@ case $(uname -s) in
                 # which would make this versioning problem moot.
                 #
                 # See https://github.com/ethereum/webthree-umbrella/issues/103
-                #
-                # TODO - We aren't trying to get LLVM installed here.  The LLVM steps
-                # detailed on http://ethdocs.org don't work aymore, because the LLVM project
-                # are no longer serving URLs, which comprised 95% of their server load.
-                # We need to re-enable EVMJIT by default on Ubuntu.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/549
-                # See https://github.com/ethereum/webthree-umbrella/issues/514
 
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
