@@ -50,6 +50,7 @@ DEV_SIMPLE_EXCEPTION(BlockGasLimitReached);
 DEV_SIMPLE_EXCEPTION(FeeTooSmall);
 DEV_SIMPLE_EXCEPTION(TooMuchGasUsed);
 DEV_SIMPLE_EXCEPTION(ExtraDataTooBig);
+DEV_SIMPLE_EXCEPTION(ExtraDataIncorrect);
 DEV_SIMPLE_EXCEPTION(InvalidSignature);
 DEV_SIMPLE_EXCEPTION(InvalidTransactionFormat);
 DEV_SIMPLE_EXCEPTION(InvalidBlockFormat);

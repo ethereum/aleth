@@ -193,7 +193,6 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				vector<TestBlock> validUncles = blockchain.syncUncles(block.uncles());
 				block.setUncles(validUncles);
 
-				//read premining parameters //DO WE REALY NEED THIS?
 				if (blObj.count("blockHeaderPremine"))
 				{
 					overwriteBlockHeaderForTest(blObj.at("blockHeaderPremine").get_obj(), block, *chainMap[chainname]);
