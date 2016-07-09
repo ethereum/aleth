@@ -38,8 +38,6 @@
 // /home/ricardo/cpp-ethereum/cryptopp/misc.h:1074:20:
 // error: ‘std::string CryptoPP::StringNarrow(const wchar_t*, bool)’ defined but not used [-Werror=unused-function]
 // static std::string StringNarrow(const wchar_t *str, bool throwOnError = true)
-//
-// TODO - Can we bracket this more tightly, so that we have a diagnostic pop too?
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic push
@@ -385,4 +383,8 @@ void Secp256k1PP::exponentToPublic(Integer const& _e, Public& o_p)
 	
 	exportPublicKey(pk, o_p);
 }
+
+// TODO - Can we bracket this more tightly?
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
