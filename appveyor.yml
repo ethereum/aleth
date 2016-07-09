@@ -50,7 +50,7 @@ test_script:
     - copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
     - testweb3.exe
 artifacts:
-    - path: %APPVEYOR_BUILD_FOLDER%\eth\cpp-ethereum.zip
+    - path: C:\projects\cpp-ethereum\build\eth\cpp-ethereum.zip
       name: cpp-ethereum-zip
 deploy:
     release: cpp-ethereum-appveyor-v$(appveyor_build_version)
