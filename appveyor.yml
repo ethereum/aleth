@@ -28,8 +28,8 @@ before_build:
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     - msbuild %APPVEYOR_BUILD_FOLDER%\build\cpp-ethereum.sln
-    - cd %APPVEYOR_BUILD_FOLDER%\build\eth
-    - 7z a cpp-ethereum.zip Debug\eth.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - 7z a cpp-ethereum.zip %APPVEYOR_BUILD_FOLDER%\build\bench\Debug\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\Debug\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\Debug\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\Debug\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\Debug\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\Debug\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\Debug\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\Debug\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
@@ -50,7 +50,7 @@ test_script:
     - copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
     - testweb3.exe
 artifacts:
-    - path: build\eth\cpp-ethereum.zip
+    - path: cpp-ethereum.zip
       name: cpp-ethereum-zip
 deploy:
     release: cpp-ethereum-appveyor-v$(appveyor_build_version)
