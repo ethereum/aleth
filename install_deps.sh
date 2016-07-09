@@ -73,8 +73,7 @@ case $(uname -s) in
         brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
         brew update
-        # Let's try NOT upgrading everything, and see how that goes for timings.
-        #brew upgrade
+        brew upgrade
         
         brew install boost
         brew install cmake
