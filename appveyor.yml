@@ -11,6 +11,7 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+version: v1.2.9.{build}
 os: Visual Studio 2015
 configuration:
     - Debug
