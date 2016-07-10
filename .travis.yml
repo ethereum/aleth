@@ -23,6 +23,9 @@ matrix:
           env: TRAVIS_BUILD_TYPE=Debug
 git:
     depth: 2
+branches:
+    except:
+        - /cpp-ethereum-appveyor-v[0-9]/
 before_install:
     - ./install_deps.sh
 before_script:
@@ -34,7 +37,15 @@ before_script:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
-    - make -j`getconf _NPROCESSORS_ONLN`
+    - cmake --build .
+#    - 7z a cpp-ethereum.zip eth/Debug/eth eth/Debug/*.so
     - ./test/libethereum/test/testeth
     - ./test/libweb3core/test/testweb3core
     - ./test/webthree/test/testweb3
+#deploy:
+#    provider: releases
+#    api_key: "GITHUB OAUTH TOKEN"
+#    file: cpp-ethereum.zip
+#    skip_cleanup: true
+#    on:
+#        tags: true
