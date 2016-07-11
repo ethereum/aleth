@@ -39,7 +39,7 @@ build_script:
 
     # Create Windows installer
     - cd %APPVEYOR_BUILD_FOLDER%\build
-    - cmake --build . --target package -- /m:%NUMBER_OF_PROCESSORS% /p:Configuration=%CONFIGURATION%
+    - cmake -G "Visual Studio 14 2015 Win64" --build . --target package -- /m:%NUMBER_OF_PROCESSORS% /p:Configuration=%CONFIGURATION%
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
