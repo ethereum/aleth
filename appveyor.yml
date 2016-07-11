@@ -29,23 +29,30 @@ before_build:
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
+    # Build code
     - msbuild %APPVEYOR_BUILD_FOLDER%\build\cpp-ethereum.sln
+	- cmake --build . --target package -- /m:2 /p:Configuration=%CONFIGURATION%
+
+    # Create ZIP
     - cd %APPVEYOR_BUILD_FOLDER%
-    - 7z a cpp-ethereum.zip %APPVEYOR_BUILD_FOLDER%\build\bench\Debug\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\Debug\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\Debug\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\Debug\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\Debug\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\Debug\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\Debug\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\Debug\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+    - 7z a cpp-ethereum.zip %APPVEYOR_BUILD_FOLDER%\build\bench\%CONFIGURATION%\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\%CONFIGURATION%\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\%CONFIGURATION%\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\%CONFIGURATION%\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\%CONFIGURATION%\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\%CONFIGURATION%\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+
+    # Create Windows installer
+	- cmake --build . --target package -- /m:2 /p:Configuration=%CONFIGURATION%
 test_script:
-    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug
+    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     - testeth.exe
 
-#    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\Debug
+#    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%
 #    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
 #    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
 #    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
 #    - testweb3core.exe
 #
-    - cd %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\Debug
+    - cd %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
