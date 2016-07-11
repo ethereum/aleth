@@ -601,7 +601,7 @@ void overwriteUncleHeaderForTest(mObject& uncleHeaderObj, TestBlock& uncle, std:
 			overwrite == "gasLimit" ? toInt(uncleHeaderObj.at("gasLimit")) : uncleHeader.gasLimit(),
 			overwrite == "gasUsed" ? toInt(uncleHeaderObj.at("gasUsed")) : uncleHeader.gasUsed(),
 			overwrite == "timestamp" ? toInt(uncleHeaderObj.at("timestamp")) : uncleHeader.timestamp(),
-			uncleHeader.extraData());
+			overwrite == "extraData" ? fromHex(uncleHeaderObj.at("extraData").get_str()) : uncleHeader.extraData());
 	}
 
 	uncle.setBlockHeader(uncleHeader);
@@ -672,10 +672,10 @@ void checkExpectedException(mObject& _blObj, Exception const& _e)
 	if (!test::Options::get().checkState)
 		return;
 
-	BOOST_REQUIRE_MESSAGE(_blObj.count("expectException") > 0, TestOutputHelper::testName() + "block import thrown unexpected Excpetion!");
 	string exWhat {	_e.what() };
-	string exExpect = _blObj.at("expectException").get_str();
+	BOOST_REQUIRE_MESSAGE(_blObj.count("expectException") > 0, TestOutputHelper::testName() + "block import thrown unexpected Excpetion! (" + exWhat + ")");
 
+	string exExpect = _blObj.at("expectException").get_str();
 	BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + "block import expected another exeption: " + exExpect);
 	_blObj.erase(_blObj.find("expectException"));
 }

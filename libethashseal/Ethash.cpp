@@ -109,10 +109,9 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 			BOOST_THROW_EXCEPTION(ExtraDataTooBig() << RequirementError(bigint(chainParams().maximumExtraDataSize), bigint(_bi.extraData().size())) << errinfo_extraData(_bi.extraData()));
 
 		u256 daoHardfork = chainParams().u256Param("daoHardforkBlock");
-		bytes extraData = fromHex("0x64616f2d686172642d666f726b");
 		if (_bi.number() >= daoHardfork && _bi.number() <= daoHardfork + 9)
-			if (_bi.extraData() != extraData)
-				BOOST_THROW_EXCEPTION(ExtraDataIncorrect() << errinfo_comment("Block with this number require specific Extradata of 0x64616f2d686172642d666f726b!"));
+			if (_bi.extraData() != fromHex("0x64616f2d686172642d666f726b"))
+				BOOST_THROW_EXCEPTION(ExtraDataIncorrect() << errinfo_comment("Received block from the wrong fork (invalid extradata)."));
 	}
 
 	if (_parent)
