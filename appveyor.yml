@@ -39,7 +39,8 @@ build_script:
 
     # Create Windows installer
     - cd %APPVEYOR_BUILD_FOLDER%\build
-    - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /t:PACKAGE /m:%NUMBER_OF_PROCESSORS%
+    - cmake --build . --target package -- /m:%NUMBER_OF_PROCESSORS% /p:Configuration=%CONFIGURATION%
+
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
