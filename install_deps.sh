@@ -119,7 +119,7 @@ case $(uname -s) in
             sudo pacman -Sy --noconfirm \
                 base-devel \
                 boost \ 
-                extra/cmake \
+                #extra/cmake \
                 extra/crypto++ \
                 git \
                 leveldb \
@@ -131,7 +131,11 @@ case $(uname -s) in
             # The one exception is libjson-rpc-cpp, which comes from the
             # ArchLinux User Repository (AUR).
             # See https://aur.archlinux.org/.
-            yaourt -Sy libjson-rpc-cpp
+            git clone https://aur.archlinux.org/libjson-rpc-cpp.git 
+            cd ./libjson-rpc-cpp/
+            makepkg
+            sudo pacman -U libjson-rpc-cpp-0.6.0-1x86_64.pkg.tar.xz
+            cd ..
 
         fi
 
