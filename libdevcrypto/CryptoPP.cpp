@@ -22,16 +22,29 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/Assertions.h>
 #include "ECDHE.h"
-/*
- * At 5.6.3 the ECIES implementation has been deprecated and a warning has
- * been added. A new implementation will be added in 6.0. Until then and for
- * -Werror to not fail the build we have to have this warning ignore pragma here
- * and until the end of the file.
- * Refer here for more information:
- * https://www.cryptopp.com/wiki/Elliptic_Curve_Integrated_Encryption_Scheme#5.6.3_and_6.0_Changes
- */
+
+// At 5.6.3 the ECIES implementation has been deprecated and a warning has
+// been added. A new implementation will be added in 6.0. Until then and for
+// -Werror to not fail the build we have to have this warning ignore pragma here
+// and until the end of the file.
+//
+// Refer here for more information:
+// https://www.cryptopp.com/wiki/Elliptic_Curve_Integrated_Encryption_Scheme#5.6.3_and_6.0_Changes
+//
+// There is also a warning which needs suppressing for Debian builds to work,
+// presumably because to older GCC version (4.9.2) in Debian Jesse compared to
+// other distros.
+//
+// /home/ricardo/cpp-ethereum/cryptopp/misc.h:1074:20:
+// error: ‘std::string CryptoPP::StringNarrow(const wchar_t*, bool)’ defined but not used [-Werror=unused-function]
+// static std::string StringNarrow(const wchar_t *str, bool throwOnError = true)
+
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#endif // defined(__GNUC__)
+
 #include "CryptoPP.h"
 
 using namespace std;
@@ -370,4 +383,8 @@ void Secp256k1PP::exponentToPublic(Integer const& _e, Public& o_p)
 	
 	exportPublicKey(pk, o_p);
 }
+
+// TODO - Can we bracket this more tightly?
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
