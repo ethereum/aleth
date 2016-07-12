@@ -128,15 +128,16 @@ case $(uname -s) in
                 miniupnpc \
                 opencl-headers \
 
-            # The one exception is libjson-rpc-cpp, which comes from the
-            # ArchLinux User Repository (AUR).
-            # See https://aur.archlinux.org/.
-            rm -rf libjson-rpc-cpp
-            git clone https://aur.archlinux.org/libjson-rpc-cpp.git 
-            cd ./libjson-rpc-cpp/
-            makepkg
-            pacman -U libjson-rpc-cpp-0.6.0-1x86_64.pkg.tar.xz
-            cd ..
+                git clone git://github.com/cinemast/libjson-rpc-cpp.git
+                cd libjson-rpc-cpp
+                git checkout v0.6.0
+                mkdir build
+                cd build
+                cmake .. -DCOMPILE_TESTS=NO
+                make
+                sudo make install
+                sudo ldconfig
+                cd ../..
 
         fi
 
