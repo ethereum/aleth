@@ -58,7 +58,6 @@ keyid=703F83D0
 email=builds@ethereum.org
 mainppa="http://ppa.launchpad.net/ethereum/ethereum/ubuntu"
 devppa="http://ppa.launchpad.net/ethereum/ethereum-dev/ubuntu"
-qtppa="http://ppa.launchpad.net/ethereum/ethereum-qt/ubuntu"
 
 # clone source repo
 git clone https://github.com/ethereum/${mainrepo}.git -b ${codebranch} --recursive
@@ -92,7 +91,7 @@ EMAIL="$email" dch -v ${debversion}-0ubuntu1 "git build of ${revision}"
 debuild -S -sa -us -uc
 
 # set PPA dependencies for pbuilder
-echo "OTHERMIRROR=\"deb [trusted=yes] ${mainppa} ${distribution} main|deb-src [trusted=yes] ${mainppa} ${distribution} main|deb [trusted=yes] ${devppa} ${distribution} main|deb-src [trusted=yes] ${devppa} ${distribution} main|deb [trusted=yes] ${qtppa} ${distribution} main|deb-src [trusted=yes] ${qtppa} ${distribution} main\"" > ~/.pbuilderrc
+echo "OTHERMIRROR=\"deb [trusted=yes] ${mainppa} ${distribution} main|deb-src [trusted=yes] ${mainppa} ${distribution} main|deb [trusted=yes] ${devppa} ${distribution} main|deb-src [trusted=yes] ${devppa} ${distribution} main|deb [trusted=yes]\"" > ~/.pbuilderrc
 
 # do the build
 #pdebuild --buildresult . --pbuilder /usr/sbin/cowbuilder --architecture amd64 -- --buildresult . --basepath /var/cache/pbuilder/${distribution}-${arch}-ethereum.cow

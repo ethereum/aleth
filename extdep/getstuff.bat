@@ -14,7 +14,6 @@ call :download leveldb 1.18
 call :download llvm 3.7.0
 call :download microhttpd 0.9.2
 call :download OpenCL_ICD 1
-call :download qt 5.4.1
 call :download miniupnpc 1.9
 
 goto :EOF
