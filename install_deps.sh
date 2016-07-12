@@ -116,7 +116,7 @@ case $(uname -s) in
             # The majority of our dependencies can be found in the
             # Arch Linux official repositories.
             # See https://wiki.archlinux.org/index.php/Official_repositories
-            sudo pacman -Sy \
+            sudo pacman -Sy --noconfirm \
                 base-devel \
                 boost \ 
                 cmake \
@@ -134,7 +134,7 @@ case $(uname -s) in
             yaourt -Sy libjson-rpc-cpp
 
         fi
-        
+
         case $(lsb_release -is) in
 
 #------------------------------------------------------------------------------
