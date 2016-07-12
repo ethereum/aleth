@@ -119,8 +119,8 @@ case $(uname -s) in
             sudo pacman -Sy --noconfirm \
                 base-devel \
                 boost \ 
-                cmake \
-                crypto++ \
+                extra/cmake \
+                extra/crypto++ \
                 git \
                 leveldb \
                 libcl \
