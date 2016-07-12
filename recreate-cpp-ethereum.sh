@@ -30,8 +30,6 @@ rsync -r ./libethereum/libethcore/        $outputDirectory/libethcore/
 rsync -r ./libethereum/libethereum/       $outputDirectory/libethereum/
 rsync -r ./libethereum/libevm/            $outputDirectory/libevm/
 rsync -r ./libethereum/libevmcore/        $outputDirectory/libevmcore/
-rsync -r ./libethereum/libnatspec/        $outputDirectory/libnatspec/
-rsync -r ./libethereum/libtestutils/      $outputDirectory/libtestutils/
 rsync -r ./libethereum/test/              $outputDirectory/test/libethereum/test/
 rsync -r ./libweb3core/bench/             $outputDirectory/bench/
 rsync -r ./libweb3core/libdevcore/        $outputDirectory/libdevcore/
@@ -82,7 +80,8 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.g
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.gitmodules > $outputDirectory/.gitmodules
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.travis.yml > $outputDirectory/.travis.yml
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/appveyor.yml > $outputDirectory/appveyor.yml
-curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_dependencies.sh > $outputDirectory/install_dependencies.sh
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.bat > $outputDirectory/install_deps.bat
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.sh > $outputDirectory/install_deps.sh
 
 # TODO - evmjit and deps submodules will need "hooking up", for now we'll just git clone them into local directories to get
 # the content we need for testing.
