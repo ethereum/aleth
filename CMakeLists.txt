@@ -55,14 +55,7 @@ if (ETHASHCL)
 	add_subdirectory(libethash-cl)
 endif()
 
-# other libraries
-add_subdirectory(libnatspec)
-if (NOT EMSCRIPTEN)
-	add_subdirectory(libtestutils)
-endif()
-
 # executables
-
 if (TOOLS)
 	add_subdirectory(ethkey)
 	add_subdirectory(ethminer)

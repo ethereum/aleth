@@ -31,7 +31,7 @@
 #include <libethereum/State.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libevm/ExtVMFace.h>
-#include <libtestutils/Common.h>
+#include <test/libtestutils/Common.h>
 
 namespace dev
 {

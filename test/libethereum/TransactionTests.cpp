@@ -23,9 +23,9 @@
 #include <libethcore/SealEngine.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libethereum/ChainParams.h>
-#include <libtestutils/Common.h>
-#include "test/TestHelper.h"
-#include "test/fuzzTesting/fuzzHelper.h"
+#include <test/libtestutils/Common.h>
+#include <test/TestHelper.h>
+#include <test/fuzzTesting/fuzzHelper.h>
 
 using namespace std;
 using namespace json_spirit;
