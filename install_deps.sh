@@ -104,37 +104,38 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
         
     Linux)
-        case $(lsb_release -is) in
 
 #------------------------------------------------------------------------------
 # Arch Linux
 #------------------------------------------------------------------------------
+
+        if [ -f "/etc/arch-release" ]; then
+
+            echo "Installing cpp-ethereum dependencies on Arch Linux."
+
+            # The majority of our dependencies can be found in the
+            # Arch Linux official repositories.
+            # See https://wiki.archlinux.org/index.php/Official_repositories
+            sudo pacman -Sy \
+                base-devel \
+                boost \ 
+                cmake \
+                crypto++ \
+                git \
+                leveldb \
+                libcl \
+                libmicrohttpd \
+                miniupnpc \
+                opencl-headers
+
+            # The one exception is libjson-rpc-cpp, which comes from the
+            # ArchLinux User Repository (AUR).
+            # See https://aur.archlinux.org/.
+            yaourt -Sy libjson-rpc-cpp
+
+        fi
         
-            Arch)
-                #Arch
-                echo "Installing cpp-ethereum dependencies on Arch Linux."
-
-                # The majority of our dependencies can be found in the
-                # Arch Linux official repositories.
-                # See https://wiki.archlinux.org/index.php/Official_repositories
-                sudo pacman -Sy \
-                    base-devel \
-                    boost \ 
-                    cmake \
-                    crypto++ \
-                    git \
-                    leveldb \
-                    libcl \
-                    libmicrohttpd \
-                    miniupnpc \
-                    opencl-headers
-
-                # The one exception is libjson-rpc-cpp, which comes from the
-                # ArchLinux User Repository (AUR).
-                # See https://aur.archlinux.org/.
-                yaourt -Sy libjson-rpc-cpp
-
-                ;;
+        case $(lsb_release -is) in
 
 #------------------------------------------------------------------------------
 # Alpine Linux
