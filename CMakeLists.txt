@@ -19,7 +19,15 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project(CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL EVMJIT FATDB)
+
+set(LIBETHEREUM_OPTIONS CPUID CURL VMTRACE ROCKSDB OLYMPIC PARANOID TESTS ETHASHCL FATDB)
+if (${CMAKE_SYSTEM_PROCESSOR} MATCHES "x86_64|AMD64")
+	# EVMJIT option is only available for x86_64 targets.
+	list(APPEND LIBETHEREUM_OPTIONS EVMJIT)
+else()
+	set(EVMJIT OFF)
+endif()
+configure_project(${LIBETHEREUM_OPTIONS})
 
 if (EVMJIT)
 	if (DEFINED MSVC AND NOT DEFINED LLVM_DIR)
@@ -30,7 +38,6 @@ if (EVMJIT)
 		set(EVMJIT_DLLS_LOCAL $<TARGET_FILE:evmjit>)
 		set(EVMJIT_DLLS optimized ${EVMJIT_DLLS_LOCAL} debug ${EVMJIT_DLLS_LOCAL} PARENT_SCOPE)
 	endif()
-
 endif()
 
 # core libraries
