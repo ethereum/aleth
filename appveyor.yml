@@ -39,7 +39,7 @@ build_script:
 
     # Create Windows installer
     - cd %APPVEYOR_BUILD_FOLDER%\build
-    - msbuild cpp-ethereum.sln /t:PACKAGE /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
+    - msbuild PACKAGE.vcxproj /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
