@@ -134,7 +134,7 @@ case $(uname -s) in
             git clone https://aur.archlinux.org/libjson-rpc-cpp.git 
             cd ./libjson-rpc-cpp/
             makepkg
-            sudo pacman -U libjson-rpc-cpp-0.6.0-1x86_64.pkg.tar.xz
+            pacman -U libjson-rpc-cpp-0.6.0-1x86_64.pkg.tar.xz
             cd ..
 
         fi
