@@ -116,11 +116,11 @@ case $(uname -s) in
             # The majority of our dependencies can be found in the
             # Arch Linux official repositories.
             # See https://wiki.archlinux.org/index.php/Official_repositories
-            sudo pacman -Sy --noconfirm \
+            pacman -Sy --noconfirm \
                 base-devel \
                 boost \ 
-                #extra/cmake \
-                extra/crypto++ \
+                cmake \
+                crypto++ \
                 git \
                 leveldb \
                 libcl \
@@ -131,6 +131,7 @@ case $(uname -s) in
             # The one exception is libjson-rpc-cpp, which comes from the
             # ArchLinux User Repository (AUR).
             # See https://aur.archlinux.org/.
+            rm -rf libjson-rpc-cpp
             git clone https://aur.archlinux.org/libjson-rpc-cpp.git 
             cd ./libjson-rpc-cpp/
             makepkg
