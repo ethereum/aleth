@@ -1,5 +1,15 @@
-# Define color codes
+#------------------------------------------------------------------------------
+# Top-level CMake file for the cpp-ethereum project.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
+# Copyright (c) 2014-2016 cpp-ethereum contributors
+#------------------------------------------------------------------------------
 
+
+# Define color codes
 if(NOT WIN32)
   string(ASCII 27 Esc)
   set(ColourReset "${Esc}[m")
@@ -39,7 +49,7 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project(GUI SOLIDITY)
+configure_project(SOLIDITY)
 
 add_subdirectory(webthree-helpers/utils)
 
@@ -49,13 +59,4 @@ add_subdirectory(webthree)
 
 if (SOLIDITY)
 	add_subdirectory(solidity)
-endif()
-
-if (GUI)
-	add_subdirectory(alethzero)
-	if (SOLIDITY)
-		add_subdirectory(mix)
-	endif()
-	eth_appdmg()
-	eth_nsis()
 endif()
