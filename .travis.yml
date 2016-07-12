@@ -39,9 +39,11 @@ before_script:
 script:
     - cmake --build .
 #    - 7z a cpp-ethereum.zip eth/Debug/eth eth/Debug/*.so
-    - ./test/libethereum/test/testeth
-    - ./test/libweb3core/test/testweb3core
-    - ./test/webthree/test/testweb3
+
+#    - ./test/libethereum/test/testeth
+#    - ./test/libweb3core/test/testweb3core
+#    - ./test/webthree/test/testweb3
+
 #deploy:
 #    provider: releases
 #    api_key: "GITHUB OAUTH TOKEN"

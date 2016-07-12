@@ -42,20 +42,21 @@ test_script:
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-    - testeth.exe
+#    - testeth.exe
 
-#    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%
-#    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-#    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
-#    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
+    - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%
+    - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
+    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
+    - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
 #    - testweb3core.exe
-#
+
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     - copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
-    - testweb3.exe
+#    - testweb3.exe
+
 artifacts:
     - path: cpp-ethereum.zip
       name: cpp-ethereum-zip
