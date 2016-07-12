@@ -20,15 +20,6 @@ function(eth_apply TARGET REQUIRED SUBMODULE)
 		eth_use(${TARGET} OPTIONAL Cryptopp)
 		target_link_libraries(${TARGET} ${Eth_ETHASH_LIBRARIES})
 		# even if ethash is required, ethash-cl and cpuid are optional
-
-		# workaround for https://github.com/ethereum/alethzero/issues/69
-		# force linking to libOpenCL as early as possible
-		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux" AND ETHASHCL AND GUI)
-			find_package (OpenCL)
-			if (OpenCL_FOUND)
-				target_link_libraries(${TARGET} "-Wl,--no-as-needed -l${OpenCL_LIBRARIES} -Wl,--as-needed")
-			endif()
-		endif()
 	endif()
 
 	if (${SUBMODULE} STREQUAL "ethash-cl")
