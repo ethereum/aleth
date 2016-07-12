@@ -128,6 +128,7 @@ case $(uname -s) in
                 miniupnpc \
                 opencl-headers \
 
+                rm -rf libjson-rpc-cpp
                 git clone git://github.com/cinemast/libjson-rpc-cpp.git
                 cd libjson-rpc-cpp
                 git checkout v0.6.0
