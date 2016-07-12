@@ -125,7 +125,8 @@ case $(uname -s) in
                 leveldb \
                 libcl \
                 libmicrohttpd \
-                miniupnpc
+                miniupnpc \
+                opencl-headers \
 
             # The one exception is libjson-rpc-cpp, which comes from the
             # ArchLinux User Repository (AUR).
