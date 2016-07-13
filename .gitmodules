@@ -1,11 +1,3 @@
-[submodule "alethzero"]
-	path = alethzero
-	url = https://github.com/ethereum/alethzero
-	branch = develop
-[submodule "mix"]
-	path = mix
-	url = https://github.com/ethereum/mix
-	branch = develop
 [submodule "solidity"]
 	path = solidity
 	url = https://github.com/ethereum/solidity
@@ -25,8 +17,4 @@
 [submodule "webthree-helpers"]
 	path = webthree-helpers
 	url = https://github.com/ethereum/webthree-helpers
-	branch = develop
-[submodule "web3.js"]
-	path = web3.js
-	url = https://github.com/ethereum/web3.js
 	branch = develop
