@@ -21,10 +21,10 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
-#include <libtestutils/FixedClient.h>
 #include <libethashseal/Ethash.h>
 #include <test/TestHelper.h>
-#include "../TestUtils.h"
+#include <test/TestUtils.h>
+#include <test/libtestutils/FixedClient.h>
 
 using namespace std;
 using namespace dev;
