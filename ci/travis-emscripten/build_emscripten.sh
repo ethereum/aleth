@@ -102,7 +102,7 @@ emcmake cmake \
   -DDev_DEVCRYPTO_LIBRARY="$WORKSPACE"/libweb3core/build/libdevcrypto/libdevcrypto.a \
   -DEth_EVMASM_LIBRARY="$WORKSPACE"/solidity/build/libevmasm/libevmasm.a \
   -DUtils_SCRYPT_LIBRARY="$WORKSPACE"/webthree-helpers/utils/build/libscrypt/libscrypt.a \
-  -DETHASHCL=0 -DEVMJIT=0 -DETH_STATIC=1 -DSOLIDITY=1 -DGUI=0 -DFATDB=0 -DTESTS=0 -DTOOLS=0 \
+  -DETHASHCL=0 -DEVMJIT=0 -DETH_STATIC=1 -DSOLIDITY=1 -DFATDB=0 -DTESTS=0 -DTOOLS=0 \
   ..
 emmake make -j 4
 done
