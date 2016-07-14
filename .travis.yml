@@ -29,6 +29,7 @@ git:
 branches:
     except:
         - /cpp-ethereum-develop/
+        - /untagged/
 before_install:
     - ./install_deps.sh
 before_script:
