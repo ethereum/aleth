@@ -1,3 +1,5 @@
+include_directories(..)
+
 aux_source_directory(. SRC_LIST)
 
 macro (add_sources)
