@@ -8,15 +8,13 @@
 #
 # See https://github.com/ethereum/webthree-umbrella/issues/453
 
-outputDirectory=../cpp-ethereum-recreated
+outputDirectory=../cpp-ethereum
 
-rm    -rf $outputDirectory
-mkdir -p  $outputDirectory
+#rm    -rf $outputDirectory
 mkdir -p  $outputDirectory/test/libethereum/
 mkdir -p  $outputDirectory/test/libweb3core/
 mkdir -p  $outputDirectory/test/webthree/
 
-# alethzero intentionally omitted
 rsync -r ./dependency_graph/              $outputDirectory/dependency_graph/
 rsync -r ./doc/                           $outputDirectory/doc/
 rsync -r ./docker/                        $outputDirectory/docker/
@@ -37,10 +35,7 @@ rsync -r ./libweb3core/libdevcrypto/      $outputDirectory/libdevcrypto/
 rsync -r ./libweb3core/libp2p/            $outputDirectory/libp2p/
 rsync -r ./libweb3core/rlp/               $outputDirectory/rlp/
 rsync -r ./libweb3core/test/              $outputDirectory/test/libweb3core/test/
-# mix intentionally omitted
-# res intentionally omitted
 # solidity intentionally omitted
-# web3.js intentionally omitted
 rsync -r ./webthree/eth/                  $outputDirectory/eth/
 rsync -r ./webthree/libweb3jsonrpc/       $outputDirectory/libweb3jsonrpc/
 rsync -r ./webthree/libwebthree/          $outputDirectory/libwebthree/
@@ -64,10 +59,9 @@ rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
 rsync -r ./CodingStandards.txt            $outputDirectory/CodingStandards.txt
 rsync -r ./CONTRIBUTING.md                $outputDirectory/CONTRIBUTING.md
 rsync -r ./LICENSE                        $outputDirectory/LICENSE
-# qtcreator-style intentionally omitted.
 # README.md intentionally omitted.
 rsync -r ./sanitizer-blacklist.txt        $outputDirectory/sanitizer-blacklist.txt
-rsync -r ./sync.sh                        $outputDirectory/sync.sh
+# sync.sh intentionally omitted.
 
 # These files cannot be upstreamed, but instead need to be manually maintained and then dropped into 'cpp-ethereum' when we merge.
 # These CMakeLists.txt were manually synthesized by Bob.
@@ -82,10 +76,5 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.t
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/appveyor.yml > $outputDirectory/appveyor.yml
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.bat > $outputDirectory/install_deps.bat
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.sh > $outputDirectory/install_deps.sh
-
-# TODO - evmjit and deps submodules will need "hooking up", for now we'll just git clone them into local directories to get
-# the content we need for testing.
-#git clone https://github.com/ethereum/cpp_dependencies $outputDirectory/deps
-#git clone https://github.com/ethereum/evmjit $outputDirectory/evmjit
 
 # TODO - Move Contributing and coding standards to http://ethdocs.org
