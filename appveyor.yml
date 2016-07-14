@@ -61,7 +61,7 @@ artifacts:
       name: cpp-ethereum-develop-windows-zip
 deploy:
     release: cpp-ethereum-develop-v$(APPVEYOR_BUILD_VERSION)
-    description: 'Development release of cpp-ethereum at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP)`.'
+    description: 'Development release of cpp-ethereum at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
