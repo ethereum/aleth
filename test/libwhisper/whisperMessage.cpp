@@ -21,7 +21,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <boost/test/unit_test.hpp>
 #include <libwhisper/Message.h>
-#include <test/test.h>
+#include "../test.h"
 
 using namespace std;
 using namespace dev;
