@@ -118,6 +118,7 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"frontierCompatibilityModeLimit": "0xffffffffffffffff",
+		"daoHardforkBlock": "0xfffffffffffffff",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
