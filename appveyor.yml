@@ -61,7 +61,7 @@ artifacts:
     - path: cpp-ethereum-windows.zip
       name: cpp-ethereum-windows-zip
 deploy:
-    release: cpp-ethereum-develop-windows-v$(APPVEYOR_BUILD_VERSION)-${APPVEYOR_REPO_COMMIT}
+    release: cpp-ethereum-develop-windows-v$(APPVEYOR_BUILD_VERSION)-$(APPVEYOR_REPO_COMMIT)
     description: 'Development release of cpp-ethereum at commit ${APPVEYOR_REPO_COMMIT}.\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR) at ${APPVEYOR_REPO_COMMIT_TIMESTAMP}.'
     provider: GitHub
     auth_token:
