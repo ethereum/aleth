@@ -1,47 +1,55 @@
+#------------------------------------------------------------------------------
+# TravisCI configuration file for cpp-ethereum.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
 language: cpp
 matrix:
-  include:
-  - os: linux
-    dist: trusty
-    sudo: required
-    env: ZIP_SUFFIX=ubuntu-trusty
-  - os: osx
-    osx_image: xcode7.1
-    env: ZIP_SUFFIX=osx-yosemite
-  - os: osx
-    osx_image: xcode7.3
-    env: ZIP_SUFFIX=osx-elcapitan
+    include:
+        - os: linux
+          dist: trusty
+          sudo: required
+          env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=ubuntu-trusty
+        - os: osx
+          osx_image: xcode7.1
+          env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=osx-yosemite
+        - os: osx
+          osx_image: xcode7.3
+          env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=osx-elcapitan
 git:
-  depth: 2
+    depth: 2
 branches:
-  except:
-  - /cpp-ethereum-develop-windows/
+    except:
+        - /cpp-ethereum-develop-windows/
 before_install:
-- ./install_deps.sh
+    - ./install_deps.sh
 before_script:
-- cd ..
-- git clone https://github.com/ethereum/tests.git
-- export ETHEREUM_TEST_PATH=$(pwd)/tests/
-- cd cpp-ethereum
-- mkdir build
-- cd build
-- cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - cd ..
+    - git clone https://github.com/ethereum/tests.git
+    - export ETHEREUM_TEST_PATH=$(pwd)/tests/
+    - cd cpp-ethereum
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
 script:
-- make -j2
-- zip -j cpp-ethereum-$ZIP_SUFFIX.zip bench/bench eth/eth ethkey/ethkey ethminer/ethminer
-  ethvm/ethvm libdevcore/*.dylib libdevcore/*.so libdevcrypto/*.dylib libdevcrypto/*.so
-  libethash/*.dylib libethash/*.so libethash-cl/*.dylib libethash-cl/*.so libethashseal/*.dylib
-  libethashseal/*.so libethcore/*.dylib libethcore/*.so libethereum/*.dylib libethereum/*.so
-  libevm/*.dylib libevm/*.so libevmcore/*.dylib libevmcore/*.so libp2p/*.dylib libp2p/*.so
-  libweb3jsonrpc/*.dylib libweb3jsonrpc/*.so libwebthree/*.dylib libwebthree/*.so
-  libwhisper/*.dylib libwhisper/*.so rlp/rlp test/libethereum/testeth test/libweb3core/testweb3core
-  test/webthree/testweb3
+    - make -j2
+    
+    # -j is "junk paths", because we don't want any directory substructure in the output ZIP.
+    - zip -j cpp-ethereum-$ZIP_SUFFIX.zip bench/bench eth/eth ethkey/ethkey ethminer/ethminer ethvm/ethvm libdevcore/*.dylib libdevcore/*.so libdevcrypto/*.dylib libdevcrypto/*.so libethash/*.dylib libethash/*.so libethash-cl/*.dylib libethash-cl/*.so libethashseal/*.dylib libethashseal/*.so libethcore/*.dylib libethcore/*.so libethereum/*.dylib libethereum/*.so libevm/*.dylib libevm/*.so libevmcore/*.dylib libevmcore/*.so libp2p/*.dylib libp2p/*.so libweb3jsonrpc/*.dylib libweb3jsonrpc/*.so libwebthree/*.dylib libwebthree/*.so libwhisper/*.dylib libwhisper/*.so rlp/rlp test/libethereum/testeth test/libweb3core/testweb3core test/webthree/testweb3
 deploy:
-  provider: releases
-  api_key:
-    secure: HHcAWFjVNwf8b83KVQnEa172Eo7aur+scVCq4BzgPDXnF+v4GDXT7PAaXyWBwIyrFoIJduPCojsiIBP8QZwtjaKgnywnREjaLc0syTCLSeUHcp/+jPRdickvfgHJWG06sU7ZST8/HnGmoOqV/BUlGhHiqma1oJfGEJ6aaG4oza77ZYAxLPxwq9NOuTHVGJwlphcfeevcU3F0C/mxDEEMEz66lDolp4DCP5L4muHlrOCZ+HSjRwz5/anVNVWNO/nM1I0wmI2TRAS0RPzwClVD8iiGJHhZ/WdgenG4nosBG9UQjd/56LLKI25bIJijz/tpe89pCRUJtMYtcXR5C7w8Is05a1GMedBAiT7Bu35qHbpxJeqcw26DJL4U3+IeHfymXpK/E3RAj16bj+mtxxYSEzaae7obCm1rDA1LnPTI94kAea2ZNOUucDK5FaROX/uBXk422xrQTdJpEpg4TLa7GmQGdtyJC0OnzaOTXWg87lbVMq1PndDLE3STqXT5J/wj/WfUtXlN38x9aX7wwrmyCXY3WJ1zzShAgRO9YjRRosMBkahGDj5l75w9KX8yW3C5txcxjPVGSxQIl+bv9FPrBJmU1WOOPYQlHm92JQJus8BXXQCuhg3mEsZQfmGpgrS82NUB15V1nZB3xCXniKcKnQirzbRXLg8wjlPbT9DKGbc=
-  file: cpp-ethereum-$ZIP_SUFFIX.zip
-  skip_cleanup: true
-  on:
-    repo: bobsummerwill/cpp-ethereum
-    branch: merge_repos
+    provider: releases
+    api_key:
+        secure: HHcAWFjVNwf8b83KVQnEa172Eo7aur+scVCq4BzgPDXnF+v4GDXT7PAaXyWBwIyrFoIJduPCojsiIBP8QZwtjaKgnywnREjaLc0syTCLSeUHcp/+jPRdickvfgHJWG06sU7ZST8/HnGmoOqV/BUlGhHiqma1oJfGEJ6aaG4oza77ZYAxLPxwq9NOuTHVGJwlphcfeevcU3F0C/mxDEEMEz66lDolp4DCP5L4muHlrOCZ+HSjRwz5/anVNVWNO/nM1I0wmI2TRAS0RPzwClVD8iiGJHhZ/WdgenG4nosBG9UQjd/56LLKI25bIJijz/tpe89pCRUJtMYtcXR5C7w8Is05a1GMedBAiT7Bu35qHbpxJeqcw26DJL4U3+IeHfymXpK/E3RAj16bj+mtxxYSEzaae7obCm1rDA1LnPTI94kAea2ZNOUucDK5FaROX/uBXk422xrQTdJpEpg4TLa7GmQGdtyJC0OnzaOTXWg87lbVMq1PndDLE3STqXT5J/wj/WfUtXlN38x9aX7wwrmyCXY3WJ1zzShAgRO9YjRRosMBkahGDj5l75w9KX8yW3C5txcxjPVGSxQIl+bv9FPrBJmU1WOOPYQlHm92JQJus8BXXQCuhg3mEsZQfmGpgrS82NUB15V1nZB3xCXniKcKnQirzbRXLg8wjlPbT9DKGbc=
+    file: cpp-ethereum-$ZIP_SUFFIX.zip
+    skip_cleanup: true
+    on:
+        repo: bobsummerwill/cpp-ethereum
+        branch: merge_repos
