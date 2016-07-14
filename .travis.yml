@@ -28,7 +28,7 @@ git:
     depth: 2
 branches:
     except:
-        - /cpp-ethereum-develop-windows/
+        - /cpp-ethereum-develop/
 before_install:
     - ./install_deps.sh
 before_script:
