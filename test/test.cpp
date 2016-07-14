@@ -10,7 +10,7 @@
 #pragma warning(pop)
 #endif
 
-#include <test/test.h>
+#include "test.h"
 #include <libdevcore/Log.h>
 
 using namespace boost;

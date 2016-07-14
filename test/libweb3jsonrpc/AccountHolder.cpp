@@ -21,7 +21,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libweb3jsonrpc/AccountHolder.h>
-#include <test/test.h>
+#include "../test.h"
+
 using namespace std;
 using namespace dev;
 using namespace eth;
