@@ -21,22 +21,19 @@ install:
     - install_deps.bat
     - set ETHEREUM_DEPS_PATH=%APPVEYOR_BUILD_FOLDER%\deps\install
 before_build:
-    - cd ..
-    - git clone https://github.com/ethereum/tests.git
-    - set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
-    - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
-    # Build code
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
-
-    # Create ZIP
     - cd %APPVEYOR_BUILD_FOLDER%
     - 7z a cpp-ethereum-develop-windows.zip .\build\bench\%CONFIGURATION%\bench.exe .\build\eth\%CONFIGURATION%\eth.exe .\build\ethkey\%CONFIGURATION%\ethkey.exe .\build\ethminer\%CONFIGURATION%\ethminer.exe .\build\ethvm\%CONFIGURATION%\ethvm.exe .\build\rlp\%CONFIGURATION%\rlp.exe .\build\test\libethereum\test\Debug\testeth.exe .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
 
 test_script:
+    - cd ..
+    - git clone https://github.com/ethereum/tests.git
+    - set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
+
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
@@ -62,7 +59,8 @@ artifacts:
 deploy:
     release: cpp-ethereum-develop-v$(APPVEYOR_BUILD_VERSION)
     tag: develop-v$(APPVEYOR_BUILD_VERSION)
-    description: 'Development release of cpp-ethereum at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
+    description: 'Development build of cpp-ethereum at commit $(APPVEYOR_REPO_COMMIT).\n\n$(APPVEYOR_REPO_COMMIT_MESSAGE)\n\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP).'
+    prerelease: true
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv

@@ -9,6 +9,9 @@
 #------------------------------------------------------------------------------
 
 language: cpp
+branches:
+    except:
+        - /develop-v/
 matrix:
     include:
         - os: linux
@@ -26,24 +29,20 @@ matrix:
           env: ZIP_SUFFIX=osx-elcapitan
 git:
     depth: 2
-branches:
-    except:
-        - /develop-v/
-before_install:
+install:
     - ./install_deps.sh
 before_script:
+    - mkdir build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - make -j`getconf NPROCESSORS_ONLN`
+    - zip -j cpp-ethereum-develop-$ZIP_SUFFIX.zip bench/bench eth/eth ethkey/ethkey ethminer/ethminer ethvm/ethvm libdevcore/*.dylib libdevcore/*.so libdevcrypto/*.dylib libdevcrypto/*.so libethash/*.dylib libethash/*.so libethash-cl/*.dylib libethash-cl/*.so libethashseal/*.dylib libethashseal/*.so libethcore/*.dylib libethcore/*.so libethereum/*.dylib libethereum/*.so libevm/*.dylib libevm/*.so libevmcore/*.dylib libevmcore/*.so libp2p/*.dylib libp2p/*.so libweb3jsonrpc/*.dylib libweb3jsonrpc/*.so libwebthree/*.dylib libwebthree/*.so libwhisper/*.dylib libwhisper/*.so rlp/rlp test/libethereum/testeth test/libweb3core/testweb3core test/webthree/testweb3
+script:
     - cd ..
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
     - cd cpp-ethereum
-    - mkdir build
-    - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
-script:
-    - make -j2
-    
-    # -j is "junk paths", because we don't want any directory substructure in the output ZIP.
-    - zip -j cpp-ethereum-develop-$ZIP_SUFFIX.zip bench/bench eth/eth ethkey/ethkey ethminer/ethminer ethvm/ethvm libdevcore/*.dylib libdevcore/*.so libdevcrypto/*.dylib libdevcrypto/*.so libethash/*.dylib libethash/*.so libethash-cl/*.dylib libethash-cl/*.so libethashseal/*.dylib libethashseal/*.so libethcore/*.dylib libethcore/*.so libethereum/*.dylib libethereum/*.so libevm/*.dylib libevm/*.so libevmcore/*.dylib libevmcore/*.so libp2p/*.dylib libp2p/*.so libweb3jsonrpc/*.dylib libweb3jsonrpc/*.so libwebthree/*.dylib libwebthree/*.so libwhisper/*.dylib libwhisper/*.so rlp/rlp test/libethereum/testeth test/libweb3core/testweb3core test/webthree/testweb3
+    # Re-add unit-tests here when possible!
 deploy:
     provider: releases
     api_key:
