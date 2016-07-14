@@ -1,6 +1,12 @@
 macro(configure_project)
 	set(NAME ${PROJECT_NAME})
 
+	# Default to RelWithDebInfo configuration if no configuration is explicitly specified.
+	if (NOT CMAKE_BUILD_TYPE)
+		set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
+			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
+	endif()
+	
 	# features
 	eth_default_option(VMTRACE OFF)
 	eth_default_option(PROFILING OFF)
@@ -11,7 +17,6 @@ macro(configure_project)
 	eth_default_option(MINIUPNPC ON)
 
 	# components
-	eth_default_option(GUI ON)
 	eth_default_option(TESTS ON)
 	eth_default_option(TOOLS ON)
 	eth_default_option(ETHASHCL ON)
@@ -133,9 +138,6 @@ if (SUPPORT_MINIUPNPC)
 	message("-- MINIUPNPC        -                                        ${MINIUPNPC}")
 endif()
 	message("------------------------------------------------------------- components")
-if (SUPPORT_GUI)
-	message("-- GUI              Build GUI components                     ${GUI}")
-endif()
 if (SUPPORT_TESTS)
 	message("-- TESTS            Build tests                              ${TESTS}")
 endif()
