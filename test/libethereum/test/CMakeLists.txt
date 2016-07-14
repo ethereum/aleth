@@ -1,7 +1,5 @@
 aux_source_directory(. SRC_LIST)
 
-include_directories(..)
-
 macro (add_sources)
 	foreach (_src ${ARGN})
 		file (RELATIVE_PATH _relPath "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_LIST_DIR}")
@@ -13,9 +11,9 @@ endmacro()
 add_subdirectory(fuzzTesting)
 add_subdirectory(libethcore)
 add_subdirectory(libethereum)
+add_subdirectory(libtestutils)
 add_subdirectory(libweb3core)
 add_subdirectory(libevm)
-add_subdirectory(libnatspec)
 add_subdirectory(external-dependencies)
 
 set(SRC_LIST ${SRC_LIST} ${SRC})

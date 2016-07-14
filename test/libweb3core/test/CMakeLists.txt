@@ -1,7 +1,5 @@
 aux_source_directory(. SRC_LIST)
 
-include_directories(..)
-
 macro (add_sources)
 	foreach (_src ${ARGN})
 		file (RELATIVE_PATH _relPath "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_LIST_DIR}")

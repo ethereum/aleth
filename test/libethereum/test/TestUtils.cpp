@@ -23,10 +23,10 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
 #include <libdevcrypto/Common.h>
-#include <libtestutils/Common.h>
-#include <libtestutils/BlockChainLoader.h>
-#include <libtestutils/FixedClient.h>
-#include "TestUtils.h"
+#include <test/libtestutils/Common.h>
+#include <test/libtestutils/BlockChainLoader.h>
+#include <test/libtestutils/FixedClient.h>
+#include <test/TestUtils.h>
 
 using namespace std;
 using namespace dev;
