@@ -15,12 +15,15 @@ matrix:
           dist: trusty
           sudo: required
           env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=ubuntu-trusty
         - os: osx
           osx_image: xcode7.1
           env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=osx-yosemite
         - os: osx
           osx_image: xcode7.3
           env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=osx-elcapitan
 git:
     depth: 2
 branches:
@@ -45,7 +48,7 @@ deploy:
     provider: releases
     api_key:
         secure: Mb0k9yRCMlA+cFfTdiYbNfMjQJpWBRNqMMo7U8EBMXZCX0xWrAQDzM2PMfZev32qXTKDw/b4vmNOEy96L5bKng6wTl95QWMR7gghabr0C1nV4d057NcnhpTAJLKE1ODKCD4s+qraUbtc9Ghg0ENZsCTWxCgtK9igJs9kxSasXl2oambW+11F5VWht+oDSlkevpIy0XcuEpYUQJhO4BlJfEU0n9v65I4JJkbowLsdFSCVwRlw2jRUkpLwowGnDn5RJBl+aqtzvMRnKXNqaZWOztAw3oc0/zgp4NddrGJRJH+Tb7O+Uii6u/RSFYVb8HW3n+8jAYd5M3lOhrYHvhBwPBqWecrMk0FWzsVY+45NyzfMYjcj6jZOldUF+bZA16UxI/a367qUd8MhM2dJr9whfDQtd3Z5uS27gASSf7h987SjV7lp2Ok3QViFBWDi6MqWnlMq5lZzMGXGXiYvoB+rkw5ktzm3tvR4WIiGEK4V3X5/3lFS4Y0MN9B1YFNudPQ/byeawcXQHNsvSTsBCehJ3+KDpvjwQLGTup0lMK0hbglI0MichBmCqz0aAAimSyZQBgg8RQBA/elTyZSM1G8pUugjly3/E9T09x65iwhff37Zr868gvMtKre97tD+i0KbimRJCZHPW5iN9BIYhwMbLY2g6qX+Nu1KMU+i7TBXAAw=
-    file: cpp-ethereum.zip
+    file: cpp-ethereum-$ZIP_SUFFIX.zip
     skip_cleanup: true
     on:
         repo: bobsummerwill/cpp-ethereum

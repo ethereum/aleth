@@ -35,7 +35,7 @@ build_script:
 
     # Create ZIP
     - cd %APPVEYOR_BUILD_FOLDER%
-    - 7z a cpp-ethereum.zip %APPVEYOR_BUILD_FOLDER%\build\bench\%CONFIGURATION%\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\%CONFIGURATION%\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\%CONFIGURATION%\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\%CONFIGURATION%\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\%CONFIGURATION%\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\%CONFIGURATION%\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+    - 7z a cpp-ethereum-windows.zip %APPVEYOR_BUILD_FOLDER%\build\bench\%CONFIGURATION%\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\%CONFIGURATION%\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\%CONFIGURATION%\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\%CONFIGURATION%\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\%CONFIGURATION%\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\%CONFIGURATION%\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
@@ -58,14 +58,14 @@ test_script:
 #    - testweb3.exe
 
 artifacts:
-    - path: cpp-ethereum.zip
-      name: cpp-ethereum-zip
+    - path: cpp-ethereum-windows.zip
+      name: cpp-ethereum-windows-zip
 deploy:
     release: cpp-ethereum-appveyor-v$(appveyor_build_version)
     description: 'Automated Appveyor release of cpp-ethereum'
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
-    artifact: cpp-ethereum-zip
+    artifact: cpp-ethereum-windows-zip
     on:
         branch: merge_repos
