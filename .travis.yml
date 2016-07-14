@@ -28,7 +28,7 @@ git:
     depth: 2
 branches:
     except:
-        - /cpp-ethereum-appveyor-v[0-9]/
+        - /cpp-ethereum-develop-windows/
 before_install:
     - ./install_deps.sh
 before_script:
