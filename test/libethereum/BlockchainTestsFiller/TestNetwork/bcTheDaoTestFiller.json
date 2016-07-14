@@ -1662,6 +1662,271 @@
                 ]
             }
         ]
+    },
+
+    "DaoTransactions_XBlockm1" : {
+        "genesisBlockHeader" : {
+            "bloom" : "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+            "coinbase" : "0x8888f1f195afa192cfee860698584c030f4c9db1",
+            "difficulty" : "131072",
+            "extraData" : "0x42",
+            "gasLimit" : "314159200",
+            "gasUsed" : "0",
+            "mixHash" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "nonce" : "0x0102030405060708",
+            "number" : "0",
+            "parentHash" : "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "receiptTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "stateRoot" : "0xf99eb1626cfa6db435c0836235942d7ccaa935f1ae247d3f1c21e495685f903a",
+            "timestamp" : "0x54c98c81",
+            "transactionsTrie" : "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+            "uncleHash" : "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347"
+        },
+        "expect" : {
+            "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "nonce1" : "0"
+            },
+	    "304a554a310c7e546dfe434669c62820b7d83490" : {
+                "balance" : "1000000"
+            },
+	    "914d1b8b43e92723e64fd0a06f5bdb8dd9b10c79" : {
+		"balance" : "10000000000"
+	    },
+	    "fe24cdd8648121a43a7c86d289be4dd2951ed49f" : {
+		"balance" : "10000000000"
+	    },
+	    "17802f43a0137c506ba92291391a8a8f207f487d" : {
+		"balance" : "10000000000"
+	    },
+	    "b136707642a4ea12fb4bae820f03d2562ebff487" : {
+		"balance" : "10000000000"
+	    },
+	    "dbe9b615a3ae8709af8b93336ce9b477e4ac0940" : {
+		"balance" : "10000000000"
+	    },
+	    "f14c14075d6c4ed84b86798af0956deef67365b5" : {
+		"balance" : "10000000000"
+	    },
+	    "ca544e5c4687d109611d0f8f928b53a25af72448" : {
+		"balance" : "10000000000"
+	    },
+	    "aeeb8ff27288bdabc0fa5ebb731b6f409507516c" : {
+		"balance" : "10000000000"
+	    },
+	    "cbb9d3703e651b0d496cdefb8b92c25aeb2171f7" : {
+		"balance" : "10000000000"
+	    },
+	    "accc230e8a6e5be9160b8cdf2864dd2a001c28b6" : {
+		"balance" : "10000000000"
+	    },
+	    "2b3455ec7fedf16e646268bf88846bd7a2319bb2" : {
+		"balance" : "10000000000"
+	    },
+	    "4613f3bca5c44ea06337a9e439fbc6d42e501d0a" : {
+		"balance" : "10000000000"
+	    },
+	    "d343b217de44030afaa275f54d31a9317c7f441e" : {
+		"balance" : "10000000000"
+	    },
+	    "84ef4b2357079cd7a7c69fd7a37cd0609a679106" : {
+		"balance" : "10000000000"
+	    },
+	    "da2fef9e4a3230988ff17df2165440f37e8b1708" : {
+		"balance" : "10000000000"
+	    },
+	    "f4c64518ea10f995918a454158c6b61407ea345c" : {
+		"balance" : "10000000000"
+	    },
+	    "7602b46df5390e432ef1c307d4f2c9ff6d65cc97" : {
+		"balance" : "10000000000"
+	    },
+	    "bb9bc244d798123fde783fcc1c72d3bb8c189413" : {
+		"balance" : "10000000000"
+	    },
+	    "807640a13483f8ac783c557fcdf27be11ea4ac7a" : {
+		"balance" : "10000000000"
+	    }
+
+        },
+        "pre" : {
+	    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                "balance" : "1000000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            },
+            "304a554a310c7e546dfe434669c62820b7d83490" : {
+                "balance" : "1000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+            },
+	    "914d1b8b43e92723e64fd0a06f5bdb8dd9b10c79" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "fe24cdd8648121a43a7c86d289be4dd2951ed49f" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "17802f43a0137c506ba92291391a8a8f207f487d" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "b136707642a4ea12fb4bae820f03d2562ebff487" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "dbe9b615a3ae8709af8b93336ce9b477e4ac0940" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "f14c14075d6c4ed84b86798af0956deef67365b5" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "ca544e5c4687d109611d0f8f928b53a25af72448" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "aeeb8ff27288bdabc0fa5ebb731b6f409507516c" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "cbb9d3703e651b0d496cdefb8b92c25aeb2171f7" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "accc230e8a6e5be9160b8cdf2864dd2a001c28b6" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "2b3455ec7fedf16e646268bf88846bd7a2319bb2" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "4613f3bca5c44ea06337a9e439fbc6d42e501d0a" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "d343b217de44030afaa275f54d31a9317c7f441e" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "84ef4b2357079cd7a7c69fd7a37cd0609a679106" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "da2fef9e4a3230988ff17df2165440f37e8b1708" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "f4c64518ea10f995918a454158c6b61407ea345c" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "7602b46df5390e432ef1c307d4f2c9ff6d65cc97" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "bb9bc244d798123fde783fcc1c72d3bb8c189413" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    },
+	    "807640a13483f8ac783c557fcdf27be11ea4ac7a" : {
+		"balance" : "10000000000",
+                "nonce" : "0",
+                "code" : "",
+                "storage": {}
+	    }
+        },
+        "blocks" : [
+            {
+		"blocknumber" : "1",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+	    {
+		"blocknumber" : "2",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+	    {
+		"blocknumber" : "3",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+	    {
+		"blocknumber" : "4",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+	    {
+		"blocknumber" : "5",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+	    {
+		"blocknumber" : "6",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            },
+	    {
+		"blocknumber" : "7",
+                "transactions" : [
+                ],
+                "uncleHeaders" : [
+                ]
+            }
+        ]
     }
 }
 
