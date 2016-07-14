@@ -24,18 +24,15 @@ before_build:
     - cd ..
     - git clone https://github.com/ethereum/tests.git
     - set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
-    - cd %APPVEYOR_BUILD_FOLDER%
     - mkdir build
     - cd build
     - cmake -G "Visual Studio 14 2015 Win64" ..
 build_script:
     # Build code
-    - cd %APPVEYOR_BUILD_FOLDER%\build
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
 
     # Create ZIP
-    - cd %APPVEYOR_BUILD_FOLDER%
-    - 7z a cpp-ethereum-windows.zip %APPVEYOR_BUILD_FOLDER%\build\bench\%CONFIGURATION%\bench.exe %APPVEYOR_BUILD_FOLDER%\build\eth\%CONFIGURATION%\eth.exe %APPVEYOR_BUILD_FOLDER%\build\ethkey\%CONFIGURATION%\ethkey.exe %APPVEYOR_BUILD_FOLDER%\build\ethminer\%CONFIGURATION%\ethminer.exe %APPVEYOR_BUILD_FOLDER%\build\ethvm\%CONFIGURATION%\ethvm.exe %APPVEYOR_BUILD_FOLDER%\build\rlp\%CONFIGURATION%\rlp.exe %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\Debug\testeth.exe %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+    - 7z a cpp-ethereum-develop-windows.zip .\bench\%CONFIGURATION%\bench.exe .\eth\%CONFIGURATION%\eth.exe .\ethkey\%CONFIGURATION%\ethkey.exe .\ethminer\%CONFIGURATION%\ethminer.exe .\ethvm\%CONFIGURATION%\ethvm.exe .\rlp\%CONFIGURATION%\rlp.exe .\test\libethereum\test\Debug\testeth.exe .\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe .\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
 
 test_script:
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libethereum\test\%CONFIGURATION%
@@ -58,14 +55,14 @@ test_script:
 #    - testweb3.exe
 
 artifacts:
-    - path: cpp-ethereum-windows.zip
-      name: cpp-ethereum-windows-zip
+    - path: cpp-ethereum-develop-windows.zip
+      name: cpp-ethereum-develop-windows-zip
 deploy:
     release: cpp-ethereum-develop-windows-v$(APPVEYOR_BUILD_VERSION)
     description: 'Development release of cpp-ethereum at commit $(APPVEYOR_REPO_COMMIT).\nCommitted by $(APPVEYOR_REPO_COMMIT_AUTHOR), $(APPVEYOR_REPO_COMMIT_TIMESTAMP)`.'
     provider: GitHub
     auth_token:
         secure: yukM9mHUbzuZSS5WSBLKSW0yGJerJEqAXkFhDhSHBBcKJE7GAryjQsdO9Kxh3yRv
-    artifact: cpp-ethereum-windows-zip
+    artifact: cpp-ethereum-develop-windows-zip
     on:
         branch: merge_repos
