@@ -31,7 +31,7 @@ before_build:
 build_script:
     # Build code
     - cd %APPVEYOR_BUILD_FOLDER%\build
-    - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS%
+    - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
 
     # Create ZIP
     - cd %APPVEYOR_BUILD_FOLDER%
