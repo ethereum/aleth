@@ -683,7 +683,7 @@ void Block::performIrregularModifications()
 	u256 daoHardfork = m_sealEngine->chainParams().u256Param("daoHardforkBlock");
 	if (info().number() == daoHardfork)
 	{
-		Address recipient("0xabcabcabcabcabcabcabcabcabcabcabcabcabca"); //@TODO
+		Address recipient("0xbf4ed7b27f1d666546e30d74d50d173d20bca754");
 		Addresses allDAOs = childDaos();
 		for (Address const& dao: allDAOs)
 			m_state.transferBalance(dao, recipient, m_state.balance(dao));
