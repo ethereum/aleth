@@ -98,7 +98,12 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 		# Enable strong stack protection.
-		add_compile_options(-fstack-protector-strong)
+
+		# Temporary removal of this setting, which is not available in older versions of Clang,
+		# such as those shipped with OS X Mavericks, and with Ubuntu Trusty.  Need to work out
+		# an equivalent version-conditional to that we have for GCC (above)
+		#add_compile_options(-fstack-protector-strong)
+
 		add_compile_options(-fstack-protector)
 
 		# A couple of extra warnings suppressions which we seemingly
