@@ -74,6 +74,10 @@ case $(uname -s) in
 
         brew update
         brew upgrade
+
+        # Bonus fun - TravisCI image for Yosemite includes a gmp version which doesn't
+        # like being updated, so we need to unlink it first.
+        brew unlink gmp
         
         brew install \
             boost \
