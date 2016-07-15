@@ -35,7 +35,7 @@ rm -rf cpp-ethereum
 mkdir cpp-ethereum
 mkdir cpp-ethereum/$VERSION
 p="../webthree-helpers/homebrew/"
-cp ${p}homebrew.mxcl.cpp-ethereum.plist ${p}INSTALL_RECEIPT.json ${p}LICENSE ${p}README.md cpp-ethereum/$VERSION
+cp ${p}homebrew.mxcl.cpp-ethereum.plist ${p}INSTALL_RECEIPT.json ../web-helpers/LICENSE cpp-ethereum/$VERSION
 
 # build umbrella project and move install directory to destination
 #
