@@ -20,6 +20,10 @@ matrix:
           env: TRAVIS_BUILD_TYPE=Debug
           env: ZIP_SUFFIX=ubuntu-trusty
         - os: osx
+          osx_image: osx_image: beta-xcode6.2
+          env: TRAVIS_BUILD_TYPE=Debug
+          env: ZIP_SUFFIX=osx-mavericks
+        - os: osx
           osx_image: xcode7.1
           env: TRAVIS_BUILD_TYPE=Debug
           env: ZIP_SUFFIX=osx-yosemite
