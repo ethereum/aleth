@@ -178,7 +178,7 @@ case $(uname -s) in
                         ;;
                     jessie)
                         #jessie
-                        echo "Installing cpp-ethereum dependencies on Debian Jesse (8.x)."
+                        echo "Installing cpp-ethereum dependencies on Debian Jessie (8.x)."
                         ;;
                     stretch)
                         #stretch
