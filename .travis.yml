@@ -38,10 +38,10 @@ before_script:
     - make -j2
     - zip -j cpp-ethereum-develop-$ZIP_SUFFIX.zip bench/bench eth/eth ethkey/ethkey ethminer/ethminer ethvm/ethvm libdevcore/*.dylib libdevcore/*.so libdevcrypto/*.dylib libdevcrypto/*.so libethash/*.dylib libethash/*.so libethash-cl/*.dylib libethash-cl/*.so libethashseal/*.dylib libethashseal/*.so libethcore/*.dylib libethcore/*.so libethereum/*.dylib libethereum/*.so libevm/*.dylib libevm/*.so libevmcore/*.dylib libevmcore/*.so libp2p/*.dylib libp2p/*.so libweb3jsonrpc/*.dylib libweb3jsonrpc/*.so libwebthree/*.dylib libwebthree/*.so libwhisper/*.dylib libwhisper/*.so rlp/rlp test/libethereum/testeth test/libweb3core/testweb3core test/webthree/testweb3
 script:
-    - cd ..
+    - cd $TRAVIS_BUILD_DIR/..
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    - cd cpp-ethereum
+    - cd $TRAVIS_BUILD_DIR
     # Re-add unit-tests here when possible!
 deploy:
     provider: releases
