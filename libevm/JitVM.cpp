@@ -216,7 +216,7 @@ int64_t evm_call(evm_env* _opaqueEnv,
 
 	// Add failure indicator.
 	if (!ret)
-		cost += std::numeric_limits<int64_t>::min();
+		cost |= EVM_EXCEPTION;
 
 	return cost;
 }
