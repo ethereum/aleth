@@ -170,8 +170,10 @@ int64_t evm_call(evm_env* _opaqueEnv,
                  int64_t _gas,
                  evm_hash160 _address,
                  evm_uint256 _value,
-                 evm_bytes_view _input,
-                 evm_mutable_bytes_view _output) noexcept
+				 char const* _inputData,
+				 size_t _inputSize,
+                 char* _outputData,
+				 size_t _outputSize) noexcept
 {
 	assert(_gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
@@ -185,8 +187,8 @@ int64_t evm_call(evm_env* _opaqueEnv,
 	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
 	params.codeAddress = fromEvmC(_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = {reinterpret_cast<byte const*>(_input.bytes), _input.size};
-	params.out = {reinterpret_cast<byte*>(_output.bytes), _output.size};
+	params.data = {reinterpret_cast<byte const*>(_inputData), _inputSize};
+	params.out = {reinterpret_cast<byte*>(_outputData), _outputSize};
 	params.onOp = {};
 
 	if (params.valueTransfer)
