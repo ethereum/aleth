@@ -21,12 +21,12 @@ static_assert(sizeof(Address) == sizeof(evm_hash160),
 static_assert(alignof(Address) == alignof(evm_hash160),
               "Address types alignment mismatch");
 
-evm_hash160 toEvmC(Address _addr)
+inline evm_hash160 toEvmC(Address _addr)
 {
 	return *reinterpret_cast<evm_hash160*>(&_addr);
 }
 
-Address fromEvmC(evm_hash160 _addr)
+inline Address fromEvmC(evm_hash160 _addr)
 {
 	return *reinterpret_cast<Address*>(&_addr);
 }
@@ -36,7 +36,7 @@ static_assert(sizeof(h256) == sizeof(evm_hash256),
 static_assert(alignof(h256) != alignof(evm_hash256),
               "Hash types alignment match -- update implementation");
 
-evm_hash256 toEvmC(h256 _h)
+inline evm_hash256 toEvmC(h256 _h)
 {
 	// Because the h256 only pretends to be aligned to 8 bytes we have to do
 	// non-aligned memory copy.
@@ -46,7 +46,7 @@ evm_hash256 toEvmC(h256 _h)
 	return g;
 }
 
-evm_uint256 toEvmC(u256 _n)
+inline evm_uint256 toEvmC(u256 _n)
 {
 	evm_uint256 m;
 	m.words[0] = static_cast<uint64_t>(_n);
@@ -59,7 +59,7 @@ evm_uint256 toEvmC(u256 _n)
 	return m;
 }
 
-u256 fromEvmC(evm_uint256 _n)
+inline u256 fromEvmC(evm_uint256 _n)
 {
 	u256 u = _n.words[3];
 	u <<= 64;
