@@ -79,7 +79,7 @@ public:
 	static std::string generate(int _maxOpNumber = 1, RandomCodeOptions _options = RandomCodeOptions());
 
 	/// Replace keywords in given string with values
-	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap = {});
+	static void parseTestWithTypes(std::string& _test, std::map<std::string, std::string> const& _varMap);
 
 	/// Generate random byte string of a given length
 	static std::string rndByteSequence(int _length = 1, SizeStrictness _sizeType = SizeStrictness::Strict);
