@@ -71,8 +71,11 @@ inline u256 fromEvmC(evm_uint256 _n)
 	return u;
 }
 
-evm_variant evm_query(evm_env* _opaqueEnv, evm_query_key _key,
-                      evm_variant _arg) noexcept
+evm_variant evm_query(
+	evm_env* _opaqueEnv,
+	evm_query_key _key,
+	evm_variant _arg
+) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
 	evm_variant v;
@@ -134,8 +137,12 @@ evm_variant evm_query(evm_env* _opaqueEnv, evm_query_key _key,
 	return v;
 }
 
-void evm_update(evm_env* _opaqueEnv, evm_update_key _key,
-				evm_variant _arg1, evm_variant _arg2) noexcept
+void evm_update(
+	evm_env* _opaqueEnv,
+	evm_update_key _key,
+	evm_variant _arg1,
+	evm_variant _arg2
+) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
 	switch (_key)
@@ -165,15 +172,17 @@ void evm_update(evm_env* _opaqueEnv, evm_update_key _key,
 	}
 }
 
-int64_t evm_call(evm_env* _opaqueEnv,
-                 evm_call_kind _kind,
-                 int64_t _gas,
-                 evm_hash160 _address,
-                 evm_uint256 _value,
-				 char const* _inputData,
-				 size_t _inputSize,
-                 char* _outputData,
-				 size_t _outputSize) noexcept
+int64_t evm_call(
+	evm_env* _opaqueEnv,
+	evm_call_kind _kind,
+	int64_t _gas,
+	evm_hash160 _address,
+	evm_uint256 _value,
+	char const* _inputData,
+	size_t _inputSize,
+	char* _outputData,
+	size_t _outputSize
+) noexcept
 {
 	assert(_gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
