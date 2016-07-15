@@ -177,17 +177,35 @@ int64_t evm_call(evm_env* _opaqueEnv,
 {
 	assert(_gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	auto value = fromEvmC(_value);
+	bytesConstRef input{reinterpret_cast<byte const*>(_inputData), _inputSize};
+
+	if (_kind == EVM_CREATE)
+	{
+		assert(_outputSize == 20);
+		if (env.depth >= 1024 || env.balance(env.myAddress) < value)
+			return EVM_EXCEPTION;
+		u256 gas = _gas;
+		auto addr = env.create(value, gas, input, {});
+		auto gasLeft = static_cast<decltype(_gas)>(gas);
+		auto finalCost = _gas - gasLeft;
+		if (addr)
+			std::memcpy(_outputData, addr.data(), 20);
+		else
+			finalCost |= EVM_EXCEPTION;
+		return finalCost;
+	}
 
 	CallParameters params;
 	auto gas = _gas;
 	auto cost = gas;
 
-	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : fromEvmC(_value);
+	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
 	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
 	params.codeAddress = fromEvmC(_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
-	params.data = {reinterpret_cast<byte const*>(_inputData), _inputSize};
+	params.data = input;
 	params.out = {reinterpret_cast<byte*>(_outputData), _outputSize};
 	params.onOp = {};
 
@@ -204,7 +222,7 @@ int64_t evm_call(evm_env* _opaqueEnv,
 	{
 		params.gas = gas;
 		ret = env.call(params);
-		gas = static_cast<int64_t>(params.gas);  // Should not throw.
+		gas = static_cast<decltype(_gas)>(params.gas);  // Should not throw.
 	}
 
 	cost -= gas;
@@ -222,8 +240,6 @@ int64_t evm_call(evm_env* _opaqueEnv,
 }
 
 }
-
-extern "C" void env_create(); // fake declaration for linker symbol stripping workaround, see a call below
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
@@ -250,7 +266,6 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	m_data.gas 			= static_cast<decltype(m_data.gas)>(io_gas);
 	m_data.callData 	= _ext.data.data();
 	m_data.callDataSize = _ext.data.size();
-	m_data.transferredValue = eth2jit(_ext.value);
 	m_data.apparentValue = eth2jit(_ext.value);
 	m_data.code     	= _ext.code.data();
 	m_data.codeSize 	= _ext.code.size();
@@ -260,16 +275,8 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	// JIT will do nothing with the pointer, just pass it to Env callback functions implemented in Env.cpp.
 	m_context.init(m_data, reinterpret_cast<evmjit::Env*>(&_ext));
 	auto exitCode = evmjit::JIT::exec(m_context, m_schedule);
-	switch (exitCode)
-	{
-	case evmjit::ReturnCode::OutOfGas:
+	if (exitCode == evmjit::ReturnCode::OutOfGas)
 		BOOST_THROW_EXCEPTION(OutOfGas());
-	case evmjit::ReturnCode::LinkerWorkaround:	// never happens
-		env_create();					// but forces linker to include env_* JIT callback functions
-		break;
-	default:
-		break;
-	}
 
 	io_gas = m_data.gas;
 	return {std::get<0>(m_context.returnData), std::get<1>(m_context.returnData)};
