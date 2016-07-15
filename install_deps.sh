@@ -75,15 +75,16 @@ case $(uname -s) in
         brew update
         brew upgrade
         
-        brew install boost
-        brew install cmake
-        brew install cryptopp
-        brew install miniupnpc
-        brew install leveldb
-        brew install gmp
-        brew install jsoncpp
-        brew install libmicrohttpd
-        brew install libjson-rpc-cpp
+        brew install \
+            boost \
+            cmake \
+            cryptopp \
+            gmp \
+            jsoncpp \
+            leveldb \
+            libjson-rpc-cpp \
+            libmicrohttpd \
+            miniupnpc
 
         ;;
 
