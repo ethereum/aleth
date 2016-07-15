@@ -104,10 +104,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		# an equivalent version-conditional to that we have for GCC (above)
 		#add_compile_options(-fstack-protector-strong)
 
-		message(WARNING "CLANG_VERSION_MAJOR = ${CLANG_VERSION_MAJOR}")
-		message(WARNING "CLANG_VERSION_MINOR = ${CLANG_VERSION_MINOR}")
-		message(WARNING "CLANG_VERSION_PATCHLEVEL = ${CLANG_VERSION_PATCHLEVEL}")
-		message(WARNING "CLANG_VERSION_STRING = ${CLANG_VERSION_PATCHLEVEL}")
+		message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 
 		add_compile_options(-fstack-protector)
 
