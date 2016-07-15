@@ -46,6 +46,7 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
 
     Darwin)
+    	sw_vers -productVersion
         case $(sw_vers -productVersion | awk -F . '{print $1"."$2}') in
             10.09)
                 echo "Installing cpp-ethereum dependencies on OS X 10.09 Mavericks."
