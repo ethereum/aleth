@@ -60,6 +60,15 @@ before_script:
     - cp libwebthree/*.dylib zip/
     - cp libwhisper/*.dylib zip/
     - cp rlp/rlp zip/
+    - cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib zip/
+    - cp /usr/local/opt/gmp/lib/libgmp.10.dylib zip/
+    - cp /usr/local/opt/jsoncpp/lib/libjsoncpp.1.dylib zip/
+    - cp /usr/local/opt/leveldb/lib/libleveldb.1.dylib zip/
+    - cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-common.0.dylib zip/
+    - cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-client.0.dylib zip/
+    - cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-server.0.dylib zip/
+    - cp /usr/local/opt/libmicrohttps/lib/libmicrohttpd.12.dylib zip/
+    - cp /usr/local/opt/miniupnpc/lib/libminiupnpc.16.dylib zip/
     #- cp test/libethereum/testeth zip/           # Incorrect paths?  Will come back to these.
     #- cp test/libweb3core/testweb3core zip/
     #- cp test/webthree/testweb3 zip/
