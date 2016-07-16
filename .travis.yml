@@ -56,6 +56,7 @@ before_script:
     - cp libevm/*.dylib zip/
     - cp libevmcore/*.dylib zip/
     - cp libp2p/*.dylib zip/
+    - cp libscrypt/*.dylib zip/
     - cp libweb3jsonrpc/*.dylib zip/
     - cp libwebthree/*.dylib zip/
     - cp libwhisper/*.dylib zip/
