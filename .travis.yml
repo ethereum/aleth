@@ -68,7 +68,7 @@ before_script:
     - cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-common.0.dylib zip/
     - cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-client.0.dylib zip/
     - cp /usr/local/opt/libjson-rpc-cpp/lib/libjsonrpccpp-server.0.dylib zip/
-    - cp /usr/local/opt/libmicrohttps/lib/libmicrohttpd.12.dylib zip/
+    - cp /usr/local/opt/libmicrohttpd/lib/libmicrohttpd.12.dylib zip/
     - cp /usr/local/opt/miniupnpc/lib/libminiupnpc.16.dylib zip/
     #- cp test/libethereum/testeth zip/           # Incorrect paths?  Will come back to these.
     #- cp test/libweb3core/testweb3core zip/
