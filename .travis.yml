@@ -56,11 +56,11 @@ before_script:
     - cp libevm/*.dylib zip/
     - cp libevmcore/*.dylib zip/
     - cp libp2p/*.dylib zip/
-    - cp libscrypt/*.dylib zip/
     - cp libweb3jsonrpc/*.dylib zip/
     - cp libwebthree/*.dylib zip/
     - cp libwhisper/*.dylib zip/
     - cp rlp/rlp zip/
+    - cp utils/libscrypt/*.dylib zip/
     - cp /usr/local/opt/cryptopp/lib/libcryptopp.dylib zip/
     - cp /usr/local/opt/gmp/lib/libgmp.10.dylib zip/
     - cp /usr/local/opt/jsoncpp/lib/libjsoncpp.1.dylib zip/
