@@ -41,37 +41,28 @@ before_script:
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
     - make -j2
     - mkdir zip    
+    - DLL_EXT_FOR_linux=so
+    - DLL_EXT_FOR_osx=dylib
+    - DLL_EXT_EXPRESSION_NAME=DLL_EXT_FOR_$TRAVIS_OS_NAME
+    - DLL_EXT=$DLL_EXT_EXPRESSION_NAME
     - cp bench/bench zip/
     - cp eth/eth zip/
     - cp ethkey/ethkey zip/
     - cp ethminer/ethminer zip/
     - cp ethvm/ethvm zip/
-    - cp libdevcore/*.dylib zip/
-    - cp libdevcore/*.so zip/
-    - cp libdevcrypto/*.dylib zip/
-    - cp libdevcrypto/*.so zip/
-    - cp libethash/*.dylib zip/
-    - cp libethash/*.so zip/
-    - cp libethash-cl/*.dylib zip/
-    - cp libethash-cl/*.so zip/
-    - cp libethashseal/*.dylib zip/
-    - cp libethashseal/*.so zip/
-    - cp libethcore/*.dylib zip/
-    - cp libethcore/*.so zip/
-    - cp libethereum/*.dylib zip/
-    - cp libethereum/*.so zip/
-    - cp libevm/*.dylib zip/
-    - cp libevm/*.so zip/
-    - cp libevmcore/*.dylib zip/
-    - cp libevmcore/*.so zip/
-    - cp libp2p/*.dylib zip/
-    - cp libp2p/*.so zip/
-    - cp libweb3jsonrpc/*.dylib zip/
-    - cp libweb3jsonrpc/*.so zip/
-    - cp libwebthree/*.dylib zip/
-    - cp libwebthree/*.so zip/
-    - cp libwhisper/*.dylib zip/
-    - cp libwhisper/*.so zip/
+    - cp libdevcore/*.$DLL_EXT zip/
+    - cp libdevcrypto/*.$DLL_EXT zip/
+    - cp libethash/*.$DLL_EXT zip/
+    - cp libethash-cl/*.$DLL_EXT zip/
+    - cp libethashseal/*.$DLL_EXT zip/
+    - cp libethcore/*.$DLL_EXT zip/
+    - cp libethereum/*.$DLL_EXT zip/
+    - cp libevm/*.$DLL_EXT zip/
+    - cp libevmcore/*.$DLL_EXT zip/
+    - cp libp2p/*.$DLL_EXT zip/
+    - cp libweb3jsonrpc/*.$DLL_EXT zip/
+    - cp libwebthree/*.$DLL_EXT zip/
+    - cp libwhisper/*.$DLL_EXT zip/
     - cp rlp/rlp zip/
     - cp test/libethereum/testeth zip/
     - cp test/libweb3core/testweb3core zip/
