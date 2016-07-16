@@ -40,12 +40,48 @@ before_script:
     - cd build
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
     - make -j2
+    - mkdir zip    
+    - cp bench/bench zip/
+    - cp eth/eth zip/
+    - cp ethkey/ethkey zip/
+    - cp ethminer/ethminer zip/
+    - cp ethvm/ethvm zip/
+    - cp libdevcore/*.dylib zip/
+    - cp libdevcore/*.so zip/
+    - cp libdevcrypto/*.dylib zip/
+    - cp libdevcrypto/*.so zip/
+    - cp libethash/*.dylib zip/
+    - cp libethash/*.so zip/
+    - cp libethash-cl/*.dylib zip/
+    - cp libethash-cl/*.so zip/
+    - cp libethashseal/*.dylib zip/
+    - cp libethashseal/*.so zip/
+    - cp libethcore/*.dylib zip/
+    - cp libethcore/*.so zip/
+    - cp libethereum/*.dylib zip/
+    - cp libethereum/*.so zip/
+    - cp libevm/*.dylib zip/
+    - cp libevm/*.so zip/
+    - cp libevmcore/*.dylib zip/
+    - cp libevmcore/*.so zip/
+    - cp libp2p/*.dylib zip/
+    - cp libp2p/*.so zip/
+    - cp libweb3jsonrpc/*.dylib zip/
+    - cp libweb3jsonrpc/*.so zip/
+    - cp libwebthree/*.dylib zip/
+    - cp libwebthree/*.so zip/
+    - cp libwhisper/*.dylib zip/
+    - cp libwhisper/*.so zip/
+    - cp rlp/rlp zip/
+    - cp test/libethereum/testeth zip/
+    - cp test/libweb3core/testweb3core zip/
+    - cp test/webthree/testweb3 zip/
     - PATH_FIX_COMMAND_FOR_linux=""
-    - PATH_FIX_COMMAND_FOR_osx="python ../homebrew/fix_homebrew_paths_in_standalone_zip.py ."
+    - PATH_FIX_COMMAND_FOR_osx="python ../homebrew/fix_homebrew_paths_in_standalone_zip.py zip/"
     - PATH_FIX_COMMAND_EXPRESSION_NAME=PATH_FIX_COMMAND_FOR_$TRAVIS_OS_NAME
     - PATH_FIX_COMMAND=$PATH_FIX_COMMAND_EXPRESSION_NAME
     - eval \$$PATH_FIX_COMMAND
-    - zip -j $TRAVIS_BUILD_DIR/cpp-ethereum-develop-$ZIP_SUFFIX.zip bench/bench eth/eth ethkey/ethkey ethminer/ethminer ethvm/ethvm libdevcore/*.dylib libdevcore/*.so libdevcrypto/*.dylib libdevcrypto/*.so libethash/*.dylib libethash/*.so libethash-cl/*.dylib libethash-cl/*.so libethashseal/*.dylib libethashseal/*.so libethcore/*.dylib libethcore/*.so libethereum/*.dylib libethereum/*.so libevm/*.dylib libevm/*.so libevmcore/*.dylib libevmcore/*.so libp2p/*.dylib libp2p/*.so libweb3jsonrpc/*.dylib libweb3jsonrpc/*.so libwebthree/*.dylib libwebthree/*.so libwhisper/*.dylib libwhisper/*.so rlp/rlp test/libethereum/testeth test/libweb3core/testweb3core test/webthree/testweb3
+    - zip -j $TRAVIS_BUILD_DIR/cpp-ethereum-develop-$ZIP_SUFFIX.zip zip/*    
 script:
     - cd $TRAVIS_BUILD_DIR/..
     - git clone https://github.com/ethereum/tests.git
