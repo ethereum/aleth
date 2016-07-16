@@ -60,9 +60,9 @@ before_script:
     - cp libwebthree/*.dylib zip/
     - cp libwhisper/*.dylib zip/
     - cp rlp/rlp zip/
-    - cp test/libethereum/testeth zip/
-    - cp test/libweb3core/testweb3core zip/
-    - cp test/webthree/testweb3 zip/
+    #- cp test/libethereum/testeth zip/           # Incorrect paths?  Will come back to these.
+    #- cp test/libweb3core/testweb3core zip/
+    #- cp test/webthree/testweb3 zip/
     - PATH_FIX_COMMAND_FOR_linux=""
     - PATH_FIX_COMMAND_FOR_osx="python ../homebrew/fix_homebrew_paths_in_standalone_zip.py zip/"
     - PATH_FIX_COMMAND_EXPRESSION_NAME=PATH_FIX_COMMAND_FOR_$TRAVIS_OS_NAME
