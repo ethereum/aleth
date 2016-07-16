@@ -44,7 +44,7 @@ before_script:
     - DLL_EXT_FOR_linux=so
     - DLL_EXT_FOR_osx=dylib
     - DLL_EXT_EXPRESSION_NAME=DLL_EXT_FOR_$TRAVIS_OS_NAME
-    - DLL_EXT=eval \$$DLL_EXT_EXPRESSION_NAME
+    - DLL_EXT=\$$DLL_EXT_EXPRESSION_NAME
     - cp bench/bench zip/
     - cp eth/eth zip/
     - cp ethkey/ethkey zip/
