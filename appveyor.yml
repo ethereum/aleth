@@ -27,7 +27,7 @@ before_build:
 build_script:
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
-    - 7z a cpp-ethereum-develop-windows.zip .\build\bench\%CONFIGURATION%\bench.exe .\build\eth\%CONFIGURATION%\eth.exe .\build\ethkey\%CONFIGURATION%\ethkey.exe .\build\ethminer\%CONFIGURATION%\ethminer.exe .\build\ethvm\%CONFIGURATION%\ethvm.exe .\build\rlp\%CONFIGURATION%\rlp.exe .\build\test\libethereum\test\Debug\testeth.exe .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
+    - scripts\release.bat %CONFIGURATION% %ETHEREUM_DEPS_PATH%
 
 test_script:
     - cd ..
@@ -38,20 +38,20 @@ test_script:
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-#    - testeth.exe
+    - testeth.exe
 
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\libweb3core\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-#    - testweb3core.exe
+    - testweb3core.exe
 
     - cd %APPVEYOR_BUILD_FOLDER%\build\test\webthree\test\%CONFIGURATION%
     - copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     - copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     - copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
-#    - testweb3.exe
+    - testweb3.exe
 
 artifacts:
     - path: cpp-ethereum-develop-windows.zip
