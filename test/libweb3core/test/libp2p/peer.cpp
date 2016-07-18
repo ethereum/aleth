@@ -239,9 +239,12 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	//
 	// See https://github.com/ethereum/webthree-umbrella/issues/618
 	//
-	// DisconnectReason disconnect1 = peers1[0].lastDisconnect();
-	// DisconnectReason disconnect2 = peers2[0].lastDisconnect();
-	// BOOST_REQUIRE_EQUAL(disconnect1, disconnect2);
+
+#if !defined(ETH_AFTER_REPOSITORY_MERGE)
+	DisconnectReason disconnect1 = peers1[0].lastDisconnect();
+	DisconnectReason disconnect2 = peers2[0].lastDisconnect();
+	BOOST_REQUIRE_EQUAL(disconnect1, disconnect2);
+#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
 	host1.relinquishPeer(node2);
 
