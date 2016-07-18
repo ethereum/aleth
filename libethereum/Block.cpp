@@ -681,7 +681,7 @@ void Block::applyRewards(vector<BlockHeader> const& _uncleBlockHeaders, u256 con
 void Block::performIrregularModifications()
 {
 	u256 daoHardfork = m_sealEngine->chainParams().u256Param("daoHardforkBlock");
-	if (info().number() == daoHardfork)
+	if (daoHardfork != 0 && info().number() == daoHardfork)
 	{
 		Address recipient("0xbf4ed7b27f1d666546e30d74d50d173d20bca754");
 		Addresses allDAOs = childDaos();
