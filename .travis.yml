@@ -41,15 +41,14 @@ before_script:
     - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
     - make -j2
     - ../scripts/release.sh $ZIP_SUFFIX
-    #- ./test/libethereum/test/testeth
-    #- ./test/libweb3core/test/testweb3core
-    #- ./test/webthree/test/testweb3    
 script:
     - cd $TRAVIS_BUILD_DIR/..
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
     - cd $TRAVIS_BUILD_DIR
-    # Re-add unit-tests here when possible!
+    - ./test/libethereum/test/testeth
+    - ./test/libweb3core/test/testweb3core
+    - ./test/webthree/test/testweb3    
 deploy:
     provider: releases
     api_key:
