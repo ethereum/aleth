@@ -611,6 +611,10 @@ int main(int argc, char** argv)
 			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
 			chainParams.otherParams["daoHardforkBlock"] = toHex(u256(-1) - 10, HexPrefix::Add);
 		}
+		else if (arg == "--support-dao-fork")
+		{
+			// default
+		}
 		else if (arg == "--bob")
 		{
 			cout << "Asking Bob for blocks (this should work in theoreum)..." << endl;
