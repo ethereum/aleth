@@ -4,7 +4,9 @@
 // Bandwidth: 124533 MB/s
 // search kernel should fit in <= 84 VGPRS (3 wavefronts)
 
+#ifdef cl_clang_storage_class_specifiers
 #pragma OPENCL EXTENSION cl_clang_storage_class_specifiers : enable
+#endif
 
 #define THREADS_PER_HASH (128 / 16)
 #define HASHES_PER_LOOP (GROUP_SIZE / THREADS_PER_HASH)
