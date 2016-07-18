@@ -2,6 +2,13 @@
 
 This repository contains [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.
 
+Need help? -> [![Join the chat at https://gitter.im/ethereum/cpp-ethereum](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/cpp-ethereum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
+                 | Status
+-----------------|-----------
+Ubuntu and macOS | [![Build Status](https://travis-ci.org/bobsummerwill/cpp-ethereum.svg?branch=merge_repos)](https://travis-ci.org/bobsummerwill/cpp-ethereum)
+Windows          | [![Build Status](https://ci.appveyor.com/api/projects/status/ke9kvs3u1g18vf5t/branch/merge_repos)](https://ci.appveyor.com/project/bobsummerwill/cpp-ethereum)
+
 It is the third most popular of the Ethereum clients, behind [geth](https://github.com/ethereum/go-ethereum) (the [go](https://golang.org)
 client) and [Parity](https://github.com/ethcore/parity) (the [rust](https://www.rust-lang.org/) client).  The code is exceptionally
 [portable](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/portability.html) and has been used successfully on a very broad range
@@ -13,23 +20,9 @@ licence, to enable Ethereum to be used as broadly as possible.  There is a long-
 article - ["Ethereum Everywhere"](https://bobsummerwill.com/2016/07/12/ethereum-everywhere/) - which talks about the rationale for the change and
 the history leading up to this proposed change of licensing.
 
-## Getting Started
+The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
 
-Read more about the cpp-ethereum project at **[https://ethdocs.org](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
-
-![C++](http://www.ethdocs.org/en/latest/_images/cpp_35k9.png) 
-![Ethereum](http://www.ethdocs.org/en/latest/_images/ETHEREUM-ICON_Black.png)
-
-## Build Status
-
-Need help? -> [![Join the chat at https://gitter.im/ethereum/cpp-ethereum](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/cpp-ethereum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-                 | Status
------------------|-----------
-Ubuntu and macOS | [![Build Status](https://travis-ci.org/bobsummerwill/cpp-ethereum.svg?branch=merge_repos)](https://travis-ci.org/bobsummerwill/cpp-ethereum)
-Windows          | [![Build Status](https://ci.appveyor.com/api/projects/status/ke9kvs3u1g18vf5t/branch/merge_repos)](https://ci.appveyor.com/project/bobsummerwill/cpp-ethereum)
-
-# Contributing
+## Contributing
 
 The current codebase is the work of many, many hands, with probably close to 100
 [individual contributors](https://github.com/bobsummerwill/cpp-ethereum/graphs/contributors) over the course of its development.
@@ -55,12 +48,12 @@ as described in [CodingStandards.txt](CodingStandards.txt).
 
 All development goes in develop branch.
 
-# Testing
+##Testing
 
 To run the tests, make sure you clone https://github.com/ethereum/tests and point the environment variable
 `ETHEREUM_TEST_PATH` to that path.
 
-# License
+## License
 
 All contributions are made under the [GPLv3 license](http://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
 
