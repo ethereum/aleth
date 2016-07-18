@@ -13,9 +13,12 @@ licence, to enable Ethereum to be used as broadly as possible.  There is a long-
 article - ["Ethereum Everywhere"](https://bobsummerwill.com/2016/07/12/ethereum-everywhere/) - which talks about the rationale for the change and
 the history leading up to this proposed change of licensing.
 
-The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
+## Getting Started
 
-Come and chat to us on the [cpp-ethereum](https://gitter.im/ethereum/cpp-ethereum) gitter channel.
+The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**, which
+has a Quick Start section.
+
+Please do come and chat to us on the [cpp-ethereum](https://gitter.im/ethereum/cpp-ethereum) gitter channel if you need help with anything!
 
                  | Status
 -----------------|-----------
@@ -50,7 +53,7 @@ as described in [CodingStandards.txt](CodingStandards.txt).
 
 All development goes in develop branch.
 
-##Testing
+## Testing
 
 To run the tests, make sure you clone https://github.com/ethereum/tests and point the environment variable
 `ETHEREUM_TEST_PATH` to that path.
