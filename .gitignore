@@ -67,6 +67,9 @@ project.pbxproj
 # JetBrains stuff
 .idea/
 
+# Visual Studio Code
+browse.VC.db
+
 doc/html
 *.autosave
 node_modules/
