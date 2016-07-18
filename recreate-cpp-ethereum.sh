@@ -71,5 +71,7 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.t
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/appveyor.yml > $outputDirectory/appveyor.yml
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.bat > $outputDirectory/install_deps.bat
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.sh > $outputDirectory/install_deps.sh
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.bat > $outputDirectory/scripts/release.bat
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.sh > $outputDirectory/scripts/release.sh
 
 # TODO - Move Contributing and coding standards to http://ethdocs.org
