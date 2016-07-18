@@ -47,7 +47,6 @@ rsync -r ./webthree-helpers/extdep/       $outputDirectory/extdep/
 rsync -r ./webthree-helpers/homebrew/     $outputDirectory/homebrew/
 rsync -r ./webthree-helpers/js/           $outputDirectory/js/
 rsync -r ./webthree-helpers/scripts/      $outputDirectory/scripts/
-rsync -r ./webthree-helpers/templates/    $outputDirectory/templates/
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
 # intentionally left /webthree-helpers root files behind: (LICENSE, README.md)
 
