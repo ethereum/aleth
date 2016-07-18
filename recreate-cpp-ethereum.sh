@@ -44,7 +44,6 @@ rsync -r ./webthree/test/                 $outputDirectory/test/webthree/test/
 # intentionally left /webthree root files behind: (CMakeLists.txt, LICENSE, README.md)
 rsync -r ./webthree-helpers/cmake/        $outputDirectory/cmake/
 rsync -r ./webthree-helpers/homebrew/     $outputDirectory/homebrew/
-rsync -r ./webthree-helpers/js/           $outputDirectory/js/
 rsync -r ./webthree-helpers/scripts/      $outputDirectory/scripts/
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
 # intentionally left /webthree-helpers root files behind: (LICENSE, README.md)
@@ -69,8 +68,8 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.g
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.gitmodules > $outputDirectory/.gitmodules
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.travis.yml > $outputDirectory/.travis.yml
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/appveyor.yml > $outputDirectory/appveyor.yml
-curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.bat > $outputDirectory/install_deps.bat
-curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/install_deps.sh > $outputDirectory/install_deps.sh
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/install_deps.bat > $outputDirectory/scripts/install_deps.bat
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/install_deps.sh > $outputDirectory/scripts/install_deps.sh
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.bat > $outputDirectory/scripts/release.bat
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.sh > $outputDirectory/scripts/release.sh
 
