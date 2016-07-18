@@ -43,7 +43,6 @@ rsync -r ./webthree/libwhisper/           $outputDirectory/libwhisper/
 rsync -r ./webthree/test/                 $outputDirectory/test/webthree/test/
 # intentionally left /webthree root files behind: (CMakeLists.txt, LICENSE, README.md)
 rsync -r ./webthree-helpers/cmake/        $outputDirectory/cmake/
-rsync -r ./webthree-helpers/extdep/       $outputDirectory/extdep/
 rsync -r ./webthree-helpers/homebrew/     $outputDirectory/homebrew/
 rsync -r ./webthree-helpers/js/           $outputDirectory/js/
 rsync -r ./webthree-helpers/scripts/      $outputDirectory/scripts/
