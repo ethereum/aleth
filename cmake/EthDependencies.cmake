@@ -13,12 +13,31 @@ function(eth_show_dependency DEP NAME)
 	endif()
 endfunction()
 
-if (DEFINED MSVC)
-	# by defining CMAKE_PREFIX_PATH variable, cmake will look for dependencies first in our own repository before looking in system paths like /usr/local/ ...
-	# this must be set to point to the same directory as $ETH_DEPENDENCY_INSTALL_DIR in /extdep directory
+# The Windows platform has not historically had any standard packaging system for delivering
+# versioned releases of libraries.  Homebrew and PPA perform that function for macOS and Ubuntu
+# respectively, and there are analogous standards for other Linux distros.  In the absense of
+# such a standard, we have chosen to make a "fake packaging system" for cpp-ethereum, which is
+# implemented in https://github.com/ethereum/cpp-dependencies.
+#
+# NOTE - In the last couple of years, the NuGet packaging system, first created for delivery
+# of .NET packages, has added support for C++ packages, and it may be possible for us to migrate
+# our "fake package server" to that real package server.   That would certainly be preferable
+# to rolling our own, but it also puts us at the mercy of intermediate package maintainers who
+# may be inactive.  There is not a fantastic range of packages available at the time of writing,
+# so we might find that such a move turns us into becoming the package maintainer for our
+# dependencies.   Not a net win :-)
+#
+# "Windows - Try to use NuGet C++ packages"
+# https://github.com/ethereum/webthree-umbrella/issues/509
+#
+# Perhaps a better alternative is to step away from dependencies onto binary releases entirely,
+# and switching to build-from-source for some (or all) of our dependencies, especially if they
+# are small.  That gives us total control, but at the cost of longer build times.  That is the
+# approach which Pawel has taken for LLVM in https://github.com/ethereum/evmjit.
 
+if (DEFINED MSVC)
 	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
-		set (ETH_DEPENDENCY_INSTALL_DIR "${CMAKE_CURRENT_LIST_DIR}/../extdep/install/windows/x64")
+		message(FATAL_ERROR "ERROR - As of the 1.3.0 release, cpp-ethereum only supports Visual Studio 2015 or newer.\nPlease download from https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.")
 	else()
 		get_filename_component(DEPS_DIR "${CMAKE_CURRENT_LIST_DIR}/../deps/install" ABSOLUTE)
 		set(ETH_DEPENDENCY_INSTALL_DIR
@@ -29,8 +48,12 @@ if (DEFINED MSVC)
 	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
 
-	# TODO it windows SDK is NOT FOUND, throw ERROR
+	# TODO if windows SDK is NOT FOUND, throw ERROR
 	# from https://github.com/rpavlik/cmake-modules/blob/master/FindWindowsSDK.cmake
+	#
+	# TODO What are we using WindowsSDK for specifically?  Do we need to do that, or
+	# can we just use the version which ships with the Visual Studio release and is
+	# implicitly added to the include paths for the compiler.
 	find_package(WINDOWSSDK REQUIRED)
 	message(" - WindowsSDK dirs: ${WINDOWSSDK_DIRS}")
 	set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${WINDOWSSDK_DIRS})
@@ -50,37 +73,44 @@ set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
 
 find_program(CTEST_COMMAND ctest)
 
-#message(STATUS "CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH}")
-#message(STATUS "CMake Helper Path: ${ETH_CMAKE_DIR}")
-#message(STATUS "CMake Script Path: ${ETH_SCRIPTS_DIR}")
-#message(STATUS "ctest path: ${CTEST_COMMAND}")
-
-## use multithreaded boost libraries, with -mt suffix
+# Use Boost in multithreaded mode with static linkage, on all operating systems.
 set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_LIBS ON)
 
-if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-
-# use static boost libraries *.lib
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (APPLE)
-
-# use static boost libraries *.a
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (UNIX)
-# use dynamic boost libraries *.dll
-	set(Boost_USE_STATIC_LIBS OFF)
-
-endif()
+# We have work-in-progress here to support building cpp-ethereum with static-linkage, which
+# provides a fantastic end-user experience.  You have entirely standalone executables
+# which are entirely atomic and "just work".  They contain everything you need and talk directly
+# to the operating system kernel.  Such linkage also allow best-possible dead-code removal and
+# global optimizations.  That is the model which is used by default for all golang apps.
+#
+# "Enable static build of binaries"
+# https://github.com/ethereum/webthree-umbrella/issues/495
+#
+# So we just have `geth` and `geth.exe`.  This mode lets you have an `eth` which works just
+# the same.  This approach is a particular benefit on Linux where there is huge fragmentation
+# of packaging systems and .so versioning across distros.  Building a standalone executable
+# for Linux which "just works" on all distros would be a huge win.  This mode allows just
+# that to happen already on Alpine Linux using the musl standard library, and I hope we can
+# extend that support to further distros in the near future.
+#
+# We also have partial support for static linkage on macOS, though we would only be able to
+# statically link the external dependencies above the kernel.  Anything which is part of the
+# operating system itself can only be used via dylibs.  Still, we can improve things a lot.
+#
+# This is a macOS operating system constraint.
+#
+# See https://developer.apple.com/library/mac/qa/qa1118/_index.html
+#
+# "Apple does not support statically linked binaries on Mac OS X.  A statically linked binary
+# assumes binary compatibility at the kernel system call interface, and we do not make any
+# guarantees on that front. Rather, we strive to ensure binary compatibility in each
+# dynamically linked system library and framework."
 
 set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
 
 if (STATIC_LINKING)
 
-	set(Boost_USE_STATIC_LIBS ON)
 	set(Boost_USE_STATIC_RUNTIME ON)
-
 	set(OpenSSL_USE_STATIC_LIBS ON)
 
 	if (MSVC)
@@ -112,10 +142,34 @@ if (STATIC_LINKING)
 	set(ETH_STATIC ON)
 endif()
 
+# TODO - Why do we have a specific version number here?  If that is a minimum
+# version then it looks very low.  Pawel and Bob have done some iteration
+# on workarounds for issues in Boost headers (multiprecisionnumber) which
+# need specific, fairly new versions to be dependable.
+#
+# See the mess around https://github.com/ethereum/libweb3core/blob/develop/libdevcore/Common.h#L53
 find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
-
 eth_show_dependency(Boost boost)
 
+# Add Homebrew include paths and library paths for macOS clients.
+#
+# Homebrew (http://brew.sh/) is the de-facto standard package manager for Mac.
+# It is a rolling-release manager, which brings its own problems, because it
+# means that we are building on top of an unstable platform, where the build
+# can work for me today and be broken for you tomorrow, even though we didn't
+# change anything ourselves.  Qt was particularly problematic for this, but
+# thankfully is no longer an issue for us anymore, after we removed the GUI
+# applications in cpp-ethereum-v1.3.0.
+#
+# There is an alternative (minority) packaging system called MacPorts, but it isn't
+# possible to run both on a single computer, so we dropped support for
+# MacPorts in early 2016 to simplify our problem space.
+#
+# Again, as per the Windows notes above, building dependencies from source
+# would sidestep these issues entirely.
+#
+# "Both Homebrew and MacPorts are 'rolling release' package managers"
+# https://github.com/ethereum/webthree-umbrella/issues/118
 if (APPLE)
 	link_directories(/usr/local/lib)
 	include_directories(/usr/local/include)
