@@ -95,6 +95,7 @@ void help()
 		<< "    --private <name>  Use a private chain." << endl
 		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
 		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
+		<< "    --oppose-dao-fork  Ignore DAO hard fork (default is to participate)." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
 		<< endl
@@ -605,6 +606,15 @@ int main(int argc, char** argv)
 			chainParams = ChainParams(genesisInfo(eth::Network::Olympic));
 		else if (arg == "--morden" || arg == "--testnet")
 			chainParams = ChainParams(genesisInfo(eth::Network::Morden), genesisStateRoot(eth::Network::Morden));
+		else if (arg == "--oppose-dao-fork")
+		{
+			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
+			chainParams.otherParams["daoHardforkBlock"] = toHex(u256(-1) - 10, HexPrefix::Add);
+		}
+		else if (arg == "--support-dao-fork")
+		{
+			// default
+		}
 		else if (arg == "--bob")
 		{
 			cout << "Asking Bob for blocks (this should work in theoreum)..." << endl;
@@ -1242,7 +1252,7 @@ int main(int argc, char** argv)
 			rpc::AdminUtils* adminUtils = nullptr;
 			if (adminViaHttp)
 			{
-				personal = new rpc::Personal(keyManager, *accountHolder);
+				personal = new rpc::Personal(keyManager, *accountHolder, *web3.ethereum());
 				adminEth = new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get());
 				adminNet = new rpc::AdminNet(web3, *sessionManager.get());
 				adminUtils = new rpc::AdminUtils(*sessionManager.get());
@@ -1264,7 +1274,7 @@ int main(int argc, char** argv)
 		{
 			jsonrpcIpcServer.reset(new FullServer(
 				ethFace, new rpc::LevelDB(), new rpc::Whisper(web3, {}), new rpc::Net(web3),
-				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder),
+				new rpc::Web3(web3.clientVersion()), new rpc::Personal(keyManager, *accountHolder, *web3.ethereum()),
 				new rpc::AdminEth(*web3.ethereum(), *gasPricer.get(), keyManager, *sessionManager.get()),
 				new rpc::AdminNet(web3, *sessionManager.get()),
 				new rpc::AdminUtils(*sessionManager.get()),

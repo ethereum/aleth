@@ -313,6 +313,9 @@ private:
 	/// @returns gas used by transactions thus far executed.
 	u256 gasUsed() const { return m_receipts.size() ? m_receipts.back().gasUsed() : 0; }
 
+	/// Performs irregular modifications right after initialization, e.g. to implement a hard fork.
+	void performIrregularModifications();
+
 	/// Provide a standard VM trace for debugging purposes.
 	std::string vmTrace(bytesConstRef _block, BlockChain const& _bc, ImportRequirements::value _ir);
 

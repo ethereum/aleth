@@ -354,6 +354,18 @@ void TestBlock::verify(TestBlockChain const& _bc) const
 	{
 		_bc.interface().sealEngine()->verify(CheckNothingNew, m_blockHeader, BlockHeader(), &m_bytes);
 	}
+	catch (Exception const& _e)
+	{
+		u256 daoHardfork = _bc.interface().sealEngine()->chainParams().u256Param("daoHardforkBlock");
+		if ((m_blockHeader.number() >= daoHardfork && m_blockHeader.number() <= daoHardfork + 9) || m_blockHeader.number() == 0)
+		{
+			string exWhat {	_e.what() };
+			string exExpect = "InvalidTransactionsRoot";
+			BOOST_REQUIRE_MESSAGE(exWhat.find(exExpect) != string::npos, TestOutputHelper::testName() + "block import expected another exeption: " + exExpect);
+		}
+		else
+			BOOST_ERROR(TestOutputHelper::testName() + toString(m_blockHeader.number()) + " BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
+	}
 	catch (...)
 	{
 		BOOST_ERROR(TestOutputHelper::testName() + "BlockHeader Verification failed: " <<  boost::current_exception_diagnostic_information());
@@ -485,7 +497,7 @@ bool TestBlockChain::addBlock(TestBlock const& _block)
 		block.sync(*m_blockChain.get());
 
 		//BOOST_REQUIRE(m_lastBlock.blockHeader().hash() == BlockHeader(block.blockData()).hash());
-		m_lastBlock.setState(block.state());
+		m_lastBlock.setState(block.fromPending(10000));
 		return true;
 	}
 

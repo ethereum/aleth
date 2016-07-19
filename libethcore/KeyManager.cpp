@@ -36,7 +36,14 @@ namespace fs = boost::filesystem;
 
 KeyManager::KeyManager(string const& _keysFile, string const& _secretsPath):
 	m_keysFile(_keysFile), m_store(_secretsPath)
-{}
+{
+	for (auto const& uuid: m_store.keys())
+	{
+		auto addr = m_store.address(uuid);
+		m_addrLookup[addr] = uuid;
+		m_uuidLookup[uuid] = addr;
+	}
+}
 
 KeyManager::~KeyManager()
 {}
@@ -141,9 +148,6 @@ bool KeyManager::load(string const& _pass)
 
 Secret KeyManager::secret(Address const& _address, function<string()> const& _pass, bool _usePasswordCache) const
 {
-	auto it = m_keyInfo.find(_address);
-	if (it == m_keyInfo.end())
-		return Secret();
 	if (m_addrLookup.count(_address))
 		return secret(m_addrLookup.at(_address), _pass, _usePasswordCache);
 	else
