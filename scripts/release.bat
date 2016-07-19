@@ -26,8 +26,8 @@ REM
 REM Copyright (c) 2016 cpp-ethereum contributors.
 REM ---------------------------------------------------------------------------
 
-set CONFIGURATION=$1
-set ETHEREUM_DEPS_PATH=$2
+set CONFIGURATION=%1
+set ETHEREUM_DEPS_PATH=%2
 
 7z a cpp-ethereum-develop-windows.zip ^
     .\build\bench\%CONFIGURATION%\bench.exe ^
