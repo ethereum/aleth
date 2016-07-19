@@ -32,16 +32,7 @@ The current codebase is the work of many, many hands, with probably close to 100
 
 Our day-to-day development chat happens on the [cpp-ethereum-development](https://gitter.im/ethereum/cpp-ethereum-development) gitter channel.
 
-The following individuals are currently employed or contracted by the Ethereum Foundation for C++ client work:
-
-- [Greg Colvin](https://github.com/gcolvin) - @gcolvin
-- [Liana Husikyan](https://github.com/LianaHus) - @lianaHus
-- [Dimitry Khoklov](https://github.com/winsvega) - @winsvega
-- [Yann Levreau](https://github.com/yann300) - @yann300
-- [Christian Reitwiessner](https://github.com/chriseth) - @chriseth (C++ Development Lead)
-- [Bob Summerwill](https://github.com/bobsummerwill) - @bobsummerwill
-
-External contributions are more than welcome!  We try to keep a list of tasks that are suitable for
+All contributions are welcome!  We try to keep a list of tasks that are suitable for
 newcomers under the tag [good first task](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
 If you have any questions, please just ask.
 
