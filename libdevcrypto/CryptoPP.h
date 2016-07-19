@@ -24,16 +24,33 @@
 #pragma once
 
 #include <mutex>
-// need to leave this one disabled for link-time. blame cryptopp.
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma warning(push)
-#pragma warning(disable:4100 4244 4297)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wunused-variable"
-#pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
-#pragma GCC diagnostic ignored "-Wextra"
+
+#if defined(_MSC_VER)
+	#pragma warning(push)
+	// Compiler Warning (level 4) C4100 - 'identifier' : unreferenced formal parameter
+	#pragma warning(disable:4100)
+	// Compiler Warning (levels 3 and 4) C4244 - 'conversion' conversion from 'type1' to 'type2', possible loss of data
+	#pragma warning(disable:4244)
+	// Compiler Warning (level 1) C4297 - 'function' : function assumed not to throw an exception but does
+	#pragma warning(disable:4297)
+#endif // defined(_MSC_VER)
+
+#if defined(__GNUC__)
+	#pragma GCC diagnostic push
+	// Warn if a prototype causes a type conversion that is different from what would happen to the same argument in the absence of a prototype.
+	#pragma GCC diagnostic ignored "-Wconversion"
+	// Deleting object of polymorphic class type 'Base' which has non-virtual destructor might cause undefined behaviour
+	#pragma GCC diagnostic ignored "-Wdelete-non-virtual-dtor"
+	// This enables some extra warning flags that are not enabled by -Wall
+	#pragma GCC diagnostic ignored "-Wextra"
+	// Warn whenever a static function is declared but not defined or a non-inline static function is unused
+	#pragma GCC diagnostic ignored "-Wunused-function"
+	// Warn whenever a function parameter is unused aside from its declaration.
+	#pragma GCC diagnostic ignored "-Wunused-parameter"
+	// Warn whenever a local or static variable is unused aside from its declaration.
+	#pragma GCC diagnostic ignored "-Wunused-variable"
+#endif // defined(__GNUC__)
+
 #include <cryptopp/sha.h>
 #include <cryptopp/sha3.h>
 #include <cryptopp/ripemd.h>
@@ -47,8 +64,15 @@
 #include <cryptopp/osrng.h>
 #include <cryptopp/oids.h>
 #include <cryptopp/dsa.h>
-#pragma warning(pop)
-#pragma GCC diagnostic pop
+
+#if defined(__GNUC__)
+	#pragma GCC diagnostic pop
+#endif // defined(__GNUC__)
+
+#if defined(_MSC_VER)
+	#pragma warning(pop)
+#endif // defined(_MSC_VER)
+
 #include <libdevcore/SHA3.h>
 #include "Common.h"
 
