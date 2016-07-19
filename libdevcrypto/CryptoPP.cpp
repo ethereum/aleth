@@ -40,9 +40,9 @@
 // static std::string StringNarrow(const wchar_t *str, bool throwOnError = true)
 
 #if defined(__GNUC__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#pragma GCC diagnostic ignored "-Wunused-function"
+	#pragma GCC diagnostic push
+	// Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute
+	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 #endif // defined(__GNUC__)
 
 #include "CryptoPP.h"
@@ -384,7 +384,6 @@ void Secp256k1PP::exponentToPublic(Integer const& _e, Public& o_p)
 	exportPublicKey(pk, o_p);
 }
 
-// TODO - Can we bracket this more tightly?
 #if defined(__GNUC__)
-#pragma GCC diagnostic pop
+	#pragma GCC diagnostic pop
 #endif // defined(__GNUC__)
