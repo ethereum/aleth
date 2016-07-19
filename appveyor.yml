@@ -16,6 +16,7 @@ skip_tags: true
 os: Visual Studio 2015
 configuration:
     - RelWithDebInfo
+cache: build
 install:
     - git submodule update --init --recursive
     - scripts/install_deps.bat
@@ -23,7 +24,7 @@ install:
 before_build:
     - mkdir build
     - cd build
-    - cmake -G "Visual Studio 14 2015 Win64" ..
+    - cmake -G "Visual Studio 14 2015 Win64" .. -DTESTS=0
 build_script:
     - msbuild cpp-ethereum.sln /p:Configuration=%CONFIGURATION% /m:%NUMBER_OF_PROCESSORS% /v:minimal
     - cd %APPVEYOR_BUILD_FOLDER%
