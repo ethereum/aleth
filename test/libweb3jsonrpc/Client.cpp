@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(Personal)
 			return false; // user input goes here
 		}
 	);
-	rpc::Personal personal(keyManager, accountHolder);
+	rpc::Personal personal(keyManager, accountHolder, *web3.ethereum());
 	rpc::Eth eth(*web3.ethereum(), accountHolder);
 
 	// Create account
