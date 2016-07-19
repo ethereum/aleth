@@ -42,7 +42,7 @@ install:
 before_script:
     - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE -DTESTS=0
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
     - make -j2
     - ../scripts/release.sh $ZIP_SUFFIX
 script:
