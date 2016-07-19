@@ -11,6 +11,7 @@
 outputDirectory=../cpp-ethereum
 
 #rm    -rf $outputDirectory
+mkdir -p  $outputDirectory/scripts/
 mkdir -p  $outputDirectory/test/libethereum/
 mkdir -p  $outputDirectory/test/libweb3core/
 mkdir -p  $outputDirectory/test/webthree/
@@ -44,7 +45,10 @@ rsync -r ./webthree/test/                 $outputDirectory/test/webthree/test/
 # intentionally left /webthree root files behind: (CMakeLists.txt, LICENSE, README.md)
 rsync -r ./webthree-helpers/cmake/        $outputDirectory/cmake/
 rsync -r ./webthree-helpers/homebrew/     $outputDirectory/homebrew/
-rsync -r ./webthree-helpers/scripts/      $outputDirectory/scripts/
+rsync -r ./webthree-helpers/scripts/build_emscripten.sh        $outputDirectory/scripts/build_emscripten.sh
+rsync -r ./webthree-helpers/scripts/ethcoverage.sh             $outputDirectory/scripts/ethcoverage.sh
+rsync -r ./webthree-helpers/scripts/ppabuild.sh                $outputDirectory/scripts/ppabuild.sh
+rsync -r ./webthree-helpers/scripts/upload-homebrew-formula.sh $outputDirectory/scripts/upload-homebrew-formula.sh
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
 # intentionally left /webthree-helpers root files behind: (LICENSE, README.md)
 
