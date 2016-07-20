@@ -39,13 +39,10 @@ def getDependencyEdges(submodulePath, library):
                         fromNode = executable
                     toNodes = result.group(3).split()
                     for toNode in toNodes:
-                        # Merge all Qt::* and JsonRpc::* nodes
-                        # to simplify the output graph.   Not much
-                        # value in the details there.
-                        if toNode.startswith("Qt::"):
-                            toNode = "Qt*"
-                        elif toNode.startswith("JsonRpc::"):
-                            toNode = "JsonRpc*"
+                        # Merge all JsonRpc::* nodes to simplify the output graph.
+                        # Not much value in the details there.
+                        if toNode.startswith("JsonRpc::"):
+                            toNode = "JsonRpc"
                         elif "::" in toNode:
                             toNode = toNode.split("::")[1]
                         edgeText = '"' + fromNode + '" -> "' + toNode + '"'
@@ -83,60 +80,55 @@ def getLibraryAndApplicationNames(submodulePath):
 
 
 # Generate a sub-graph for each sub-module in the umbrella.
-def processSubmodule(root, submodule):
-    submodulePath = os.path.join(root, submodule)
-    cleanName = submodule.replace(".", "_").replace("-", "_")
+def processModule(root, folder):
+    folderPath = os.path.join(root, folder)
+
+    cleanName = folder.replace(".", "_").replace("-", "_")
 
     print "    subgraph cluster_" + cleanName + " {"
-    print "        label = <" + submodule + " dependencies>"
+    print "        label = <" + folder + " dependencies>"
+    print "        bgcolor = LavenderBlush"
+    
+    print getLibraryAndApplicationNames(folderPath)
 
-    # Hard-coded dependency edge for "soljson" which is within
-    # an EMSCRIPTEN conditional.   It's not worth bothering with
-    # complicating the parsing to cope with conditionals for this
-    # single misplaced dependency edge.   We'll just hard-code it.
-    if "solidity" in submodule:
-        print '    "soljson" -> "solidity"'
+    for module in os.listdir(folderPath):
+        absLibPath = os.path.join(folderPath, module)
+        if os.path.isdir(module):
+            print getDependencyEdges(folderPath, module)
 
-    # Mix doesn't have the same sub-module structure as everything else
-    if (submodule == "mix"):
-        print '"Mix-ide"\n'
-    else:
-        print getLibraryAndApplicationNames(submodulePath)
-
-    if (submodule == "libethereum"):
-        print "        bgcolor = LavenderBlush"
-    elif (submodule == "webthree"):
-        print "        bgcolor = Honeydew"
-    elif (submodule == "libweb3core"):
-        print "        bgcolor = AliceBlue"
-    elif (submodule == "solidity"):
-        print "        bgcolor = WhiteSmoke"
-    else:
-        print "        bgcolor = LightGray"
     print "    }"
 
-    for library in os.listdir(submodulePath):
-        absLibPath = os.path.join(submodulePath, library)
-        if os.path.isdir(absLibPath):
-            print getDependencyEdges(submodulePath, library)
 
+# Walk the top-level folders within the repository
+def processRepository(root):
 
-# Walk the sub-modules under the umbrella
-def processUmbrella(root):
-    for submodule in os.listdir(root):
-        absPath = os.path.join(root, submodule)
+    print "    subgraph cluster_cppethereum {"
+    print '        label = <https://github.com/ethereum/cpp-ethereum>'
+    print "        bgcolor = LavenderBlush"
+    print '        "buildinfo"'
+    print '        "base"'
+    print '        "json_spirit"'
+    print '        "scrypt"'
+    print '        "secp256k1"'
+    
+    for folder in os.listdir(root):
+        absPath = os.path.join(root, folder)
         if os.path.isdir(absPath):
-            if not (".git" in absPath) \
-                and not ("dependency_graph" in absPath) \
-                    and not ("webthree-helpers" in absPath):
-                        processSubmodule(root, submodule)
+            if not (".git" in absPath):
+                folderPath = os.path.join(root, folder)
+                print getLibraryAndApplicationNames(folderPath)
 
-    # Mix doesn't have the same sub-module structure as everything else
-    print getDependencyEdges(root, "mix")
+    for folder in os.listdir(root):
+        absPath = os.path.join(root, folder)
+        if os.path.isdir(absPath):
+            if not (".git" in absPath):
+                print getDependencyEdges(root, folder)
+
+    print "    }"
 
 
 print 'digraph webthree {'
-print '    graph [ label   = "webthree dependencies" ]'
+print '    graph [ label   = "Ethereum C++ dependencies" ]'
 print '    node  [ fontname = "Courier", fontsize = 10 ]'
 print ''
 print '    compound = true'
@@ -147,12 +139,20 @@ print '    compound = true'
 # be way too much work.   Easier to hard-code them.   This script is
 # not attempting to be a general CMake-dependencies graph generator,
 # after all.   It's specific to webthree-umbrella.
-print "    subgraph cluster_webthree_helpers {"
-print '        label = <webthree-helpers dependencies>'
-print '        bgcolor = LemonChiffon'
+
+processRepository('../..')
+
+print "    subgraph cluster_external {"
+print '        label = <https://github.com/ethereum/cpp-dependencies>'
+print "        bgcolor = HoneyDew"
+print '        "boost"'
 print '        "buildinfo"'
 print '        "base"'
+print '        "gmp"'
+print '        "Jsoncpp"'
 print '        "json_spirit"'
+print '        "LevelDB"'
+print '        "pthreads"'
 print '        "scrypt"'
 print '        "secp256k1"'
 print "    }"
@@ -162,12 +162,5 @@ print '    "base" -> "json_spirit"'
 print '    "base" -> "LevelDB"'
 print '    "base" -> "pthreads"'
 print '    "secp256k1" -> "gmp"'
-
-# Hard-coded dependencies for 'libaleth', which doesn't have a UseAleth.cmake
-# to go with it, because the library is only used by the Aleth* applications,
-# and is not exposed to other applications.
-print '    "AlethZero" -> "aleth"'
-
-processUmbrella('..')
 
 print "}"
