@@ -114,8 +114,8 @@ evm_variant evm_query(
 	{
 		auto addr = fromEvmC(_arg.address);
 		auto &code = env.codeAt(addr);
-		v.bytes.bytes = reinterpret_cast<char const*>(code.data());
-		v.bytes.size = code.size();
+		v.data = reinterpret_cast<char const*>(code.data());
+		v.data_size = code.size();
 		break;
 	}
 	case EVM_BALANCE:
@@ -159,9 +159,9 @@ void evm_update(
 	}
 	case EVM_LOG:
 	{
-		bytesConstRef data{reinterpret_cast<byte const*>(_arg1.bytes.bytes), _arg1.bytes.size};
-		size_t numTopics = _arg2.bytes.size / sizeof(h256);
-		h256 const* pTopics = reinterpret_cast<h256 const*>(_arg2.bytes.bytes);
+		bytesConstRef data{reinterpret_cast<byte const*>(_arg1.data), _arg1.data_size};
+		size_t numTopics = _arg2.data_size / sizeof(h256);
+		h256 const* pTopics = reinterpret_cast<h256 const*>(_arg2.data);
 		env.log({pTopics, pTopics + numTopics}, data);
 		break;
 	}
