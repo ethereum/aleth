@@ -42,7 +42,7 @@ def getDependencyEdges(submodulePath, library):
                         # Merge all JsonRpc::* nodes to simplify the output graph.
                         # Not much value in the details there.
                         if toNode.startswith("JsonRpc::"):
-                            toNode = "JsonRpc"
+                            toNode = "json-rpc-cpp"
                         elif "::" in toNode:
                             toNode = toNode.split("::")[1]
                         edgeText = '"' + fromNode + '" -> "' + toNode + '"'
@@ -58,24 +58,22 @@ def getDependencyEdges(submodulePath, library):
 def getLibraryAndApplicationNames(submodulePath):
     outputString = ""
     for subDirectoryName in os.listdir(submodulePath):
-        absSubDirectoryPath = os.path.join(submodulePath, subDirectoryName)
-        if os.path.isdir(absSubDirectoryPath):
-            cmakeListsPath = os.path.join(absSubDirectoryPath,
-                                          "CMakeLists.txt")
-            if os.path.exists(cmakeListsPath):
-                moduleName = ""
-                with open(cmakeListsPath) as fileHandle:
-                    for line in fileHandle.readlines():
-                        result = re.search(assignmentPattern, line)
-                        if result:
-                            moduleName = result.group(3)
-                if (moduleName == ""):
-                    moduleName = subDirectoryName
-                outputString = outputString + '    "' + moduleName + '"'
-                if not subDirectoryName.startswith("lib"):
-                    outputString = outputString + \
-                                    ' [shape="box", style="bold"]'
-                outputString = outputString + "\n"
+        if (subDirectoryName != "examples"):
+            absSubDirectoryPath = os.path.join(submodulePath, subDirectoryName)
+            if os.path.isdir(absSubDirectoryPath):
+                cmakeListsPath = os.path.join(absSubDirectoryPath,
+                                            "CMakeLists.txt")
+                if os.path.exists(cmakeListsPath):
+                    moduleName = ""
+                    with open(cmakeListsPath) as fileHandle:
+                        for line in fileHandle.readlines():
+                            result = re.search(assignmentPattern, line)
+                            if result:
+                                moduleName = result.group(3)
+                    if (moduleName == ""):
+                        moduleName = subDirectoryName
+                    outputString = outputString + '    "' + moduleName + '"'
+                    outputString = outputString + "\n"
     return outputString
 
 
@@ -102,14 +100,27 @@ def processModule(root, folder):
 # Walk the top-level folders within the repository
 def processRepository(root):
 
+    print "    subgraph cluster_external {"
+    print '        label = <https://github.com/ethereum/cpp-dependencies>'
+    print "        bgcolor = HoneyDew"
+    print '        "boost"'
+    print '        "gmp"'
+    print '        "Jsoncpp"'
+    print '        "json-rpc-cpp"'
+    print '        "LevelDB"'
+    print '        "llvm"'
+    print '        "pthreads"'
+    print "    }"
+    print '    "json-rpc-cpp" -> "Jsoncpp"'
+
     print "    subgraph cluster_cppethereum {"
     print '        label = <https://github.com/ethereum/cpp-ethereum>'
     print "        bgcolor = LavenderBlush"
     print '        "buildinfo"'
     print '        "base"'
-    print '        "json_spirit"'
-    print '        "scrypt"'
-    print '        "secp256k1"'
+    print '        "json_spirit" [color=red]'
+    print '        "scrypt" [color=red]'
+    print '        "secp256k1" [color=red]'
     
     for folder in os.listdir(root):
         absPath = os.path.join(root, folder)
@@ -125,6 +136,14 @@ def processRepository(root):
                 print getDependencyEdges(root, folder)
 
     print "    }"
+    print '    "base" -> "boost"'
+    print '    "base" -> "Jsoncpp"'
+    print '    "base" -> "json_spirit"'
+    print '    "base" -> "LevelDB"'
+    print '    "base" -> "pthreads"'
+    print '    "ethereum" -> "libevmjit"'
+    print '    "libevmjit" -> "llvm" [style=dotted]'
+    print '    "secp256k1" -> "gmp"'
 
 
 print 'digraph webthree {'
@@ -141,26 +160,5 @@ print '    compound = true'
 # after all.   It's specific to webthree-umbrella.
 
 processRepository('../..')
-
-print "    subgraph cluster_external {"
-print '        label = <https://github.com/ethereum/cpp-dependencies>'
-print "        bgcolor = HoneyDew"
-print '        "boost"'
-print '        "buildinfo"'
-print '        "base"'
-print '        "gmp"'
-print '        "Jsoncpp"'
-print '        "json_spirit"'
-print '        "LevelDB"'
-print '        "pthreads"'
-print '        "scrypt"'
-print '        "secp256k1"'
-print "    }"
-print '    "base" -> "boost"'
-print '    "base" -> "Jsoncpp"'
-print '    "base" -> "json_spirit"'
-print '    "base" -> "LevelDB"'
-print '    "base" -> "pthreads"'
-print '    "secp256k1" -> "gmp"'
 
 print "}"
