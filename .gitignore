@@ -33,6 +33,7 @@ build_xc
 *~
 
 # build system
+bin/
 build.*/
 extdep/install
 extdep/download
