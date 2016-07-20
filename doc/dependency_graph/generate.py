@@ -1,14 +1,41 @@
 #!/usr/bin/env python
+
+# ------------------------------------------------------------------------------
+# This file is part of cpp-ethereum.
 #
-# generate.py
+# cpp-ethereum is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
 #
+# cpp-ethereum is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+#
+#------------------------------------------------------------------------------
 # Python script to generate a DOT graph showing the dependency graph of
-# the components within the Ethereum webthree-umbrella project.
+# the modules within the cpp-ethereum project.   It is a mixture of
+# dynamically-generated and hard-coded content to augment and improve
+# the results.
 #
-# See http://github.com/ethereum/webthree-umbrella for more info on webthree
-# See http://ethereum.org for more info on Ethereum
+# The script was originally written by Bob Summerwill to assist his own
+# efforts at understanding the dependencies for the cpp-ethereum-cross
+# project which cross-builds cpp-ethereum, and then contributed to the
+# main cpp-ethereum project.
 #
-# Contributed by Bob Summerwill (bob@summerwill.net)
+# See https://github.com/doublethinkco/cpp-ethereum-cross for more
+# information on the cross-builds project.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
+# (c) 2015-2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
 
 import os
 import re
@@ -99,51 +126,17 @@ def processModule(root, folder):
 
 # Walk the top-level folders within the repository
 def processRepository(root):
-
-    print "    subgraph cluster_external {"
-    print '        label = <https://github.com/ethereum/cpp-dependencies>'
-    print "        bgcolor = HoneyDew"
-    print '        "boost"'
-    print '        "gmp"'
-    print '        "Jsoncpp"'
-    print '        "json-rpc-cpp"'
-    print '        "LevelDB"'
-    print '        "llvm"'
-    print '        "pthreads"'
-    print "    }"
-    print '    "json-rpc-cpp" -> "Jsoncpp"'
-
-    print "    subgraph cluster_cppethereum {"
-    print '        label = <https://github.com/ethereum/cpp-ethereum>'
-    print "        bgcolor = LavenderBlush"
-    print '        "buildinfo"'
-    print '        "base"'
-    print '        "json_spirit" [color=red]'
-    print '        "scrypt" [color=red]'
-    print '        "secp256k1" [color=red]'
-    
     for folder in os.listdir(root):
         absPath = os.path.join(root, folder)
         if os.path.isdir(absPath):
             if not (".git" in absPath):
                 folderPath = os.path.join(root, folder)
                 print getLibraryAndApplicationNames(folderPath)
-
     for folder in os.listdir(root):
         absPath = os.path.join(root, folder)
         if os.path.isdir(absPath):
             if not (".git" in absPath):
                 print getDependencyEdges(root, folder)
-
-    print "    }"
-    print '    "base" -> "boost"'
-    print '    "base" -> "Jsoncpp"'
-    print '    "base" -> "json_spirit"'
-    print '    "base" -> "LevelDB"'
-    print '    "base" -> "pthreads"'
-    print '    "ethereum" -> "libevmjit"'
-    print '    "libevmjit" -> "llvm" [style=dotted]'
-    print '    "secp256k1" -> "gmp"'
 
 
 print 'digraph webthree {'
@@ -151,14 +144,38 @@ print '    graph [ label   = "Ethereum C++ dependencies" ]'
 print '    node  [ fontname = "Courier", fontsize = 10 ]'
 print ''
 print '    compound = true'
-
-# Hard-coded cluster for webthree-helpers, which does contain any
-# of the Ethereum libraries or executables, but does define CMake
-# rules which introduce implicit dependencies.   Parsing those would
-# be way too much work.   Easier to hard-code them.   This script is
-# not attempting to be a general CMake-dependencies graph generator,
-# after all.   It's specific to webthree-umbrella.
+print ''
+print "    subgraph cluster_external {"
+print '        label = <https://github.com/ethereum/cpp-dependencies>'
+print "        bgcolor = HoneyDew"
+print '        "boost"'
+print '        "gmp"'
+print '        "Jsoncpp"'
+print '        "json-rpc-cpp"'
+print '        "LevelDB"'
+print '        "llvm"'
+print '        "pthreads"'
+print "    }"
+print '    "json-rpc-cpp" -> "Jsoncpp"'
+print ''
+print "    subgraph cluster_cppethereum {"
+print '        label = <https://github.com/ethereum/cpp-ethereum>'
+print "        bgcolor = LavenderBlush"
+print '        "buildinfo"'
+print '        "base"'
+print '        "json_spirit" [color=red]'
+print '        "scrypt" [color=red]'
+print '        "secp256k1" [color=red]'
 
 processRepository('../..')
 
+print "    }"
+print '    "base" -> "boost"'
+print '    "base" -> "Jsoncpp"'
+print '    "base" -> "json_spirit"'
+print '    "base" -> "LevelDB"'
+print '    "base" -> "pthreads"'
+print '    "ethereum" -> "libevmjit"'
+print '    "libevmjit" -> "llvm" [style=dotted]'
+print '    "secp256k1" -> "gmp"'
 print "}"
