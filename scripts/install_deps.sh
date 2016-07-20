@@ -177,12 +177,9 @@ case $(uname -s) in
                     wheezy)
                         #wheezy
                         echo "Installing cpp-ethereum dependencies on Debian Wheezy (7.x)."
-                        echo "ERROR - 'install_deps.sh' doesn't have Debian Wheezy support yet."
                         echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                        echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-                        exit 1
                         ;;
                     jessie)
                         #jessie
