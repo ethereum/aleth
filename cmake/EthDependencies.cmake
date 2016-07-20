@@ -47,22 +47,7 @@ if (DEFINED MSVC)
 		)
 	endif()
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
-
-	# TODO if windows SDK is NOT FOUND, throw ERROR
-	# from https://github.com/rpavlik/cmake-modules/blob/master/FindWindowsSDK.cmake
-	#
-	# TODO What are we using WindowsSDK for specifically?  Do we need to do that, or
-	# can we just use the version which ships with the Visual Studio release and is
-	# implicitly added to the include paths for the compiler.
-	find_package(WINDOWSSDK REQUIRED)
-	message(" - WindowsSDK dirs: ${WINDOWSSDK_DIRS}")
-	set (CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH} ${WINDOWSSDK_DIRS})
 endif()
-
-# setup directory for cmake generated files and include it globally
-# it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
-set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
-include_directories(${ETH_GENERATED_DIR})
 
 # boilerplate macros for some code editors
 add_definitions(-DETH_TRUE)
