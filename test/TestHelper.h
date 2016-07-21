@@ -176,7 +176,7 @@ dev::eth::BlockHeader constructHeader(
 	u256 const& _timestamp,
 	bytes const& _extraData);
 void updateEthashSeal(dev::eth::BlockHeader& _header, h256 const& _mixHash, dev::eth::Nonce const& _nonce);
-void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests);
+void executeTests(const std::string& _name, const std::string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix = true);
 void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
@@ -244,13 +244,16 @@ public:
 	static void initTest(json_spirit::mValue& _v);
 	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
 	static void setMaxTests(int _count) { m_maxTests = _count; }
+	static void setCurrentTestFileName(std::string _name) { m_currentTestFileName = _name; }
 	static std::string const& testName() { return m_currentTestName; }
 	static std::string const& caseName() { return m_currentTestCaseName; }
+	static std::string const& testFileName() { return m_currentTestFileName; }
 private:
 	static size_t m_currTest;
 	static size_t m_maxTests;
 	static std::string m_currentTestName;
 	static std::string m_currentTestCaseName;
+	static std::string m_currentTestFileName;
 };
 
 /// Allows observing test execution process.

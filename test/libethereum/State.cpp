@@ -328,37 +328,61 @@ BOOST_AUTO_TEST_CASE(stRandom)
 {
 	test::Options::get(); // parse command line options, e.g. to enable JIT
 
-	string testPath = dev::test::getTestPath();
-	testPath += "/StateTests/RandomTests";
-
-	vector<boost::filesystem::path> testFiles;
-	boost::filesystem::directory_iterator iterator(testPath);
-	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
-		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-			testFiles.push_back(iterator->path());
-
-	test::TestOutputHelper::initTest();
-	test::TestOutputHelper::setMaxTests(testFiles.size());
-
-	for (auto& path: testFiles)
+	if (dev::test::Options::get().fillTests)
 	{
-		try
+		test::TestOutputHelper::initTest();
+		std::string fillersPath = dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests";
+
+		vector<boost::filesystem::path> testFiles;
+		boost::filesystem::directory_iterator iterator(fillersPath);
+		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+				testFiles.push_back(iterator->path());
+
+		test::TestOutputHelper::setMaxTests(testFiles.size() * 2);
+		for (auto& path: testFiles)
 		{
-			cnote << "Testing ..." << path.filename();
-			json_spirit::mValue v;
-			string s = asString(dev::contents(path.string()));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-			json_spirit::read_string(s, v);
-			test::Listener::notifySuiteStarted(path.filename().string());
-			dev::test::doStateTests(v, false);
+			std::string filename = path.filename().c_str();
+			test::TestOutputHelper::setCurrentTestFileName(filename);
+			filename = filename.substr(0, filename.length() - 5); //without .json
+			dev::test::executeTests(filename, "/StateTests/RandomTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
 		}
-		catch (Exception const& _e)
+	}
+	else
+	{
+		string testPath = dev::test::getTestPath();
+		testPath += "/StateTests/RandomTests";
+
+		vector<boost::filesystem::path> testFiles;
+		boost::filesystem::directory_iterator iterator(testPath);
+		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+				testFiles.push_back(iterator->path());
+
+		test::TestOutputHelper::initTest();
+		test::TestOutputHelper::setMaxTests(testFiles.size());
+
+		for (auto& path: testFiles)
 		{
-			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << diagnostic_information(_e));
-		}
-		catch (std::exception const& _e)
-		{
-			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
+			try
+			{
+				cnote << "Testing ..." << path.filename();
+				test::TestOutputHelper::setCurrentTestFileName(path.filename().c_str());
+				json_spirit::mValue v;
+				string s = asString(dev::contents(path.string()));
+				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+				json_spirit::read_string(s, v);
+				test::Listener::notifySuiteStarted(path.filename().string());
+				dev::test::doStateTests(v, false);
+			}
+			catch (Exception const& _e)
+			{
+				BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << diagnostic_information(_e));
+			}
+			catch (std::exception const& _e)
+			{
+				BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
+			}
 		}
 	}
 }
