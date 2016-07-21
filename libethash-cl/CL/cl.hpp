@@ -2790,11 +2790,11 @@ __declspec(selectany) Context Context::default_;
 __declspec(selectany) volatile cl_int Context::default_error_ = CL_SUCCESS;
 #else // !_WIN32
 #ifdef CL_HPP_CPP11_ATOMICS_SUPPORTED
-__attribute__((weak)) std::atomic<int> Context::default_initialized_;
+std::atomic<int> Context::default_initialized_;
 #else // !CL_HPP_CPP11_ATOMICS_SUPPORTED
-__attribute__((weak)) volatile int Context::default_initialized_ = __DEFAULT_NOT_INITIALIZED;
+volatile int Context::default_initialized_ = __DEFAULT_NOT_INITIALIZED;
 #endif // !CL_HPP_CPP11_ATOMICS_SUPPORTED
-__attribute__((weak)) Context Context::default_;
+Context Context::default_;
 __attribute__((weak)) volatile cl_int Context::default_error_ = CL_SUCCESS;
 #endif // !_WIN32
 
@@ -6562,11 +6562,11 @@ __declspec(selectany) CommandQueue CommandQueue::default_;
 __declspec(selectany) volatile cl_int CommandQueue::default_error_ = CL_SUCCESS;
 #else // !_WIN32
 #ifdef CL_HPP_CPP11_ATOMICS_SUPPORTED
-__attribute__((weak)) std::atomic<int> CommandQueue::default_initialized_;
+std::atomic<int> CommandQueue::default_initialized_;
 #else // !CL_HPP_CPP11_ATOMICS_SUPPORTED
-__attribute__((weak)) volatile int CommandQueue::default_initialized_ = __DEFAULT_NOT_INITIALIZED;
+volatile int CommandQueue::default_initialized_ = __DEFAULT_NOT_INITIALIZED;
 #endif // !CL_HPP_CPP11_ATOMICS_SUPPORTED
-__attribute__((weak)) CommandQueue CommandQueue::default_;
+CommandQueue CommandQueue::default_;
 __attribute__((weak)) volatile cl_int CommandQueue::default_error_ = CL_SUCCESS;
 #endif // !_WIN32
 
