@@ -85,7 +85,7 @@ def getDependencyEdges(submodulePath, library):
 def getLibraryAndApplicationNames(submodulePath):
     outputString = ""
     for subDirectoryName in os.listdir(submodulePath):
-        if (subDirectoryName != "examples"):
+        if (subDirectoryName != "examples" and subDirectoryName != "utils" and subDirectoryName != ".git"):
             absSubDirectoryPath = os.path.join(submodulePath, subDirectoryName)
             if os.path.isdir(absSubDirectoryPath):
                 cmakeListsPath = os.path.join(absSubDirectoryPath,
@@ -100,38 +100,18 @@ def getLibraryAndApplicationNames(submodulePath):
                     if (moduleName == ""):
                         moduleName = subDirectoryName
                     outputString = outputString + '    "' + moduleName + '"'
+                    
+                    if ("lib" in absSubDirectoryPath or (moduleName == "evmjit")):
+                        outputString = outputString + " [style=filled,fillcolor=deepskyblue]"
+                    else:
+                        outputString = outputString + " [shape=box;style=filled,penwidth=2,fillcolor=chartreuse]"
+                    
                     outputString = outputString + "\n"
     return outputString
 
-
-# Generate a sub-graph for each sub-module in the umbrella.
-def processModule(root, folder):
-    folderPath = os.path.join(root, folder)
-
-    cleanName = folder.replace(".", "_").replace("-", "_")
-
-    print "    subgraph cluster_" + cleanName + " {"
-    print "        label = <" + folder + " dependencies>"
-    print "        bgcolor = LavenderBlush"
-    
-    print getLibraryAndApplicationNames(folderPath)
-
-    for module in os.listdir(folderPath):
-        absLibPath = os.path.join(folderPath, module)
-        if os.path.isdir(module):
-            print getDependencyEdges(folderPath, module)
-
-    print "    }"
-
-
 # Walk the top-level folders within the repository
 def processRepository(root):
-    for folder in os.listdir(root):
-        absPath = os.path.join(root, folder)
-        if os.path.isdir(absPath):
-            if not (".git" in absPath):
-                folderPath = os.path.join(root, folder)
-                print getLibraryAndApplicationNames(folderPath)
+    print getLibraryAndApplicationNames(root)
     for folder in os.listdir(root):
         absPath = os.path.join(root, folder)
         if os.path.isdir(absPath):
@@ -145,52 +125,31 @@ print '    node  [ fontname = "Courier", fontsize = 10 ]'
 print ''
 print '    compound = true'
 print ''
-print "    subgraph cluster_external {"
-print '        label = <https://github.com/ethereum/cpp-dependencies>'
-print "        bgcolor = HoneyDew"
-print '        "boost"'
-print '        "curl"'
-print '        "gmp"'
-print '        "Jsoncpp"'
-print '        "json-rpc-cpp"'
-print '        "LevelDB"'
-print '        "llvm"'
-print '        "microhttpd"'
-print '        "pthreads"'
-print "    }"
-print '    "curl" -> "ssh2"  [style=dotted]'
-print '    "curl" -> "openssl"  [style=dotted]'
-print '    "curl" -> "zlib"  [style=dotted]'
-print '    "json-rpc-cpp" -> "curl"'
-print '    "json-rpc-cpp" -> "microhttpd"'
-print '    "json-rpc-cpp" -> "Jsoncpp"'
-print '    "json-rpc-cpp" -> "argtable2"'
-print '    "LevelDB" -> "snappy"'
+print '    "buildinfo" [style=filled,fillcolor=deepskyblue]'
+print '    "base" [style=filled,fillcolor=deepskyblue]'
+print '    "json_spirit" [color=red]'
+print '    "libevmjit" [style=filled,fillcolor=LavenderBlush]'
+print '    "scrypt" [color=red]'
+print '    "secp256k1" [color=red]'
 print ''
-print "    subgraph cluster_evmjit {"
-print '        label = <https://github.com/ethereum/evmjit>'
-print "        bgcolor = LavenderBlush"
-print '        "libevmjit"'
-print '        }'
-print '        "libevmjit" -> "libedit"'
-print ''
-print "    subgraph cluster_cppethereum {"
-print '        label = <https://github.com/ethereum/cpp-ethereum>'
-print "        bgcolor = LavenderBlush"
-print '        "buildinfo"'
-print '        "base"'
-print '        "json_spirit" [color=red]'
-print '        "scrypt" [color=red]'
-print '        "secp256k1" [color=red]'
-
-processRepository('../..')
-
-print "    }"
 print '    "base" -> "boost"'
 print '    "base" -> "json_spirit"'
 print '    "base" -> "LevelDB"'
-print '    "base" -> "pthreads"'
+print '    "base" -> "pthreads" [style=dotted]'
+print '    "curl" -> "ssh2"  [style=dotted]'
+print '    "curl" -> "openssl"  [style=dotted]'
+print '    "curl" -> "zlib"  [style=dotted]'
 print '    "ethereum" -> "libevmjit" [style=dotted]'
+print '    "json-rpc-cpp" -> "curl"'
+print '    "json-rpc-cpp" -> "microhttpd"'
+print '    "json-rpc-cpp" -> "Jsoncpp"'
+print '    "json-rpc-cpp" -> "argtable2" [style=dotted]'
+print '    "LevelDB" -> "snappy" [style=dotted]'
+print '    "libevmjit" -> "libedit"'
 print '    "libevmjit" -> "llvm"'
 print '    "secp256k1" -> "gmp"'
+print ''
+
+processRepository('../..')
+
 print "}"
