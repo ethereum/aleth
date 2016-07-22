@@ -304,13 +304,15 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 		cnote << "Authorized worker " << p_active->user;
 		break;
 	case 4:
+	case 6:
+		// id 6 == stale submit
 		if (responseObject.get("result", false).asBool()) {
 			cnote << "B-) Submitted and accepted.";
-			p_farm->acceptedSolution(m_stale);
+			p_farm->acceptedSolution(id==6);
 		}
 		else {
 			cwarn << ":-( Not accepted.";
-			p_farm->rejectedSolution(m_stale);
+			p_farm->rejectedSolution(id==6);
 		}
 		break;
 	default:
@@ -348,11 +350,7 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 
 						h256 seedHash = h256(sSeedHash);
 
-						m_previous.headerHash = m_current.headerHash;
-						m_previous.seedHash = m_current.seedHash;
-						m_previous.boundary = m_current.boundary;
-						m_previous.startNonce = m_current.startNonce;
-						m_previous.exSizeBits = m_previous.exSizeBits;
+						m_previous  = m_current;
 						m_previousJob = m_job;
 
 						m_current.headerHash = h256(sHeaderHash);
@@ -391,9 +389,7 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 							//if (p_worktimer)
 							//	p_worktimer->cancel();
 
-							m_previous.headerHash = m_current.headerHash;
-							m_previous.seedHash = m_current.seedHash;
-							m_previous.boundary = m_current.boundary;
+							m_previous  = m_current;
 							m_previousJob = m_job;
 
 							m_current.headerHash = h256(sHeaderHash);
@@ -447,68 +443,63 @@ void EthStratumClientV2::work_timeout_handler(const boost::system::error_code& e
 }
 
 bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
-	x_current.lock();
-	EthashProofOfWork::WorkPackage tempWork(m_current);
-	string temp_job = m_job;
-	EthashProofOfWork::WorkPackage tempPreviousWork(m_previous);
-	string temp_previous_job = m_previousJob;
-	x_current.unlock();
+	//x_current.lock();
+	//EthashProofOfWork::WorkPackage tempWork(m_current);
+	//string temp_job = m_job;
+	//EthashProofOfWork::WorkPackage tempPreviousWork(m_previous);
+	//string temp_previous_job = m_previousJob;
+	//x_current.unlock();
 
 	cnote << "Solution found; Submitting to" << p_active->host << "...";
 
 	string minernonce;
-	if (m_protocol != STRATUM_PROTOCOL_ETHEREUMSTRATUM)
-		cnote << "  Nonce:" << "0x" + solution.nonce.hex();
-	else
+	if (m_protocol == STRATUM_PROTOCOL_ETHEREUMSTRATUM)
 		minernonce = solution.nonce.hex().substr(m_extraNonceHexSize, 16 - m_extraNonceHexSize);
+	else
+		minernonce = "0x" + solution.nonce.hex();
 
+	cnote << "  Nonce:" << minernonce;
 
-	if (EthashAux::eval(tempWork.seedHash, tempWork.headerHash, solution.nonce).value < tempWork.boundary)
+	string json, jsonid, jobid, workHexHash;
+
+	if (EthashAux::eval(m_current.seedHash, m_current.headerHash, solution.nonce).value < m_current.boundary)
 	{
-		string json;
-		switch (m_protocol) {
-		case STRATUM_PROTOCOL_STRATUM:
-			json = "{\"id\": 4, \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + temp_job + "\",\"0x" + solution.nonce.hex() + "\",\"0x" + tempWork.headerHash.hex() + "\",\"0x" + solution.mixHash.hex() + "\"]}\n";
-			break;
-		case STRATUM_PROTOCOL_ETHPROXY:
-			json = "{\"id\": 4, \"worker\":\"" + m_worker + "\", \"method\": \"eth_submitWork\", \"params\": [\"0x" + solution.nonce.hex() + "\",\"0x" + tempWork.headerHash.hex() + "\",\"0x" + solution.mixHash.hex() + "\"]}\n";
-			break;
-		case STRATUM_PROTOCOL_ETHEREUMSTRATUM:
-			json = "{\"id\": 4, \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + temp_job + "\",\"" + minernonce + "\"]}\n";
-			break;
-		}
-		std::ostream os(&m_requestBuffer);
-		os << json;
-		m_stale = false;
-		write(m_socket, m_requestBuffer);
-		return true;
+		jsonid = "{\"id\": 4";
+		jobid = m_job;
+		workHexHash = m_current.headerHash.hex();
 	}
-	else if (EthashAux::eval(tempPreviousWork.seedHash, tempPreviousWork.headerHash, solution.nonce).value < tempPreviousWork.boundary)
+	else if (EthashAux::eval(m_previous.seedHash, m_previous.headerHash, solution.nonce).value < m_previous.boundary)
 	{
-		string json;
-		switch (m_protocol) {
-		case STRATUM_PROTOCOL_STRATUM:
-			json = "{\"id\": 4, \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + temp_previous_job + "\",\"0x" + solution.nonce.hex() + "\",\"0x" + tempPreviousWork.headerHash.hex() + "\",\"0x" + solution.mixHash.hex() + "\"]}\n";
-			break;
-		case STRATUM_PROTOCOL_ETHPROXY:
-			json = "{\"id\": 4, \"worker\":\"" + m_worker + "\", \"method\": \"eth_submitWork\", \"params\": [\"0x" + solution.nonce.hex() + "\",\"0x" + tempPreviousWork.headerHash.hex() + "\",\"0x" + solution.mixHash.hex() + "\"]}\n";
-			break;
-		case STRATUM_PROTOCOL_ETHEREUMSTRATUM:
-			json = "{\"id\": 4, \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + temp_previous_job + "\",\"" + minernonce + "\"]}\n";
-			break;
-		}		std::ostream os(&m_requestBuffer);
-		os << json;
-		m_stale = true;
+		jsonid = "{\"id\": 6";
+		jobid = m_previousJob;
+		workHexHash = m_previous.headerHash.hex();
+
 		cwarn << "Submitting stale solution.";
-		write(m_socket, m_requestBuffer);
-		return true;
 	}
 	else {
-		m_stale = false;
 		cwarn << "FAILURE: GPU gave incorrect result!";
 		p_farm->failedSolution();
+		return false;
 	}
 
-	return false;
+	switch (m_protocol) {
+	case STRATUM_PROTOCOL_STRATUM:
+		json = jsonid + ", \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + jobid + "\",\"" + minernonce + "\",\"0x" + workHexHash + "\",\"0x" + solution.mixHash.hex() + "\"]}\n";
+		break;
+	case STRATUM_PROTOCOL_ETHPROXY:
+		// Dwarf protocol
+		json = jsonid + ", \"worker\":\"" + m_worker + "\", \"method\": \"eth_submitWork\", \"params\": [\"" + minernonce + "\",\"0x" + workHexHash + "\",\"0x" + solution.mixHash.hex() + "\"]}\n";
+		break;
+	case STRATUM_PROTOCOL_ETHEREUMSTRATUM:
+		// NiceHash protocol
+		json = jsonid + ", \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + jobid + "\",\"" + minernonce + "\"]}\n";
+		break;
+	}
+	cnote << json;	
+	std::ostream os(&m_requestBuffer);
+	os << json;
+	write(m_socket, m_requestBuffer);
+
+	return true;
 }
 

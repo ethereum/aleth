@@ -65,11 +65,9 @@ private:
 	string m_response;
 
 	GenericFarm<EthashProofOfWork> * p_farm;
-	mutex x_current;
+	//mutex x_current;
 	EthashProofOfWork::WorkPackage m_current;
 	EthashProofOfWork::WorkPackage m_previous;
-
-	bool m_stale = false;
 
 	string m_job;
 	string m_previousJob;
