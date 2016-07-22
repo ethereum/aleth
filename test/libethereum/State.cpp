@@ -348,41 +348,39 @@ BOOST_AUTO_TEST_CASE(stRandom)
 			dev::test::executeTests(filename, "/StateTests/RandomTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
 		}
 	}
-	else
+
+	string testPath = dev::test::getTestPath();
+	testPath += "/StateTests/RandomTests";
+
+	vector<boost::filesystem::path> testFiles;
+	boost::filesystem::directory_iterator iterator(testPath);
+	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+			testFiles.push_back(iterator->path());
+
+	test::TestOutputHelper::initTest();
+	test::TestOutputHelper::setMaxTests(testFiles.size());
+
+	for (auto& path: testFiles)
 	{
-		string testPath = dev::test::getTestPath();
-		testPath += "/StateTests/RandomTests";
-
-		vector<boost::filesystem::path> testFiles;
-		boost::filesystem::directory_iterator iterator(testPath);
-		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
-			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-				testFiles.push_back(iterator->path());
-
-		test::TestOutputHelper::initTest();
-		test::TestOutputHelper::setMaxTests(testFiles.size());
-
-		for (auto& path: testFiles)
+		try
 		{
-			try
-			{
-				cnote << "Testing ..." << path.filename();
-				test::TestOutputHelper::setCurrentTestFileName(path.filename().c_str());
-				json_spirit::mValue v;
-				string s = asString(dev::contents(path.string()));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
-				json_spirit::read_string(s, v);
-				test::Listener::notifySuiteStarted(path.filename().string());
-				dev::test::doStateTests(v, false);
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
-			}
+			cnote << "Testing ..." << path.filename();
+			test::TestOutputHelper::setCurrentTestFileName(path.filename().c_str());
+			json_spirit::mValue v;
+			string s = asString(dev::contents(path.string()));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+			json_spirit::read_string(s, v);
+			test::Listener::notifySuiteStarted(path.filename().string());
+			dev::test::doStateTests(v, false);
+		}
+		catch (Exception const& _e)
+		{
+			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << diagnostic_information(_e));
+		}
+		catch (std::exception const& _e)
+		{
+			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
 		}
 	}
 }

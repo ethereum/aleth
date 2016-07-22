@@ -17,7 +17,7 @@
                 "code" : "0x7f00000000000000000000000100000000000000000000000000000000000000007f000000000000000000000000000000000000000000000000000000000000c3507f00000000000000000000000100000000000000000000000000000000000000007f0000000000000000000000010000000000000000000000000000000000000000457fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe7ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffe950955",
                 "nonce" : "0",
                 "storage" : {
-                    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff3caf" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                    "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff3caf" : "0x7fffffffffffffff"
                 }
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {

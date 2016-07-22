@@ -17,7 +17,7 @@
                 "code" : "0x43414043454445450855",
                 "nonce" : "0",
                 "storage" : {
-                    "0x04180354e5f1" : "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+                    "0x03f634392077" : "0x7fffffffffffffff"
                 }
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
