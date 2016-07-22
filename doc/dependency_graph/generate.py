@@ -155,18 +155,24 @@ print '        "Jsoncpp"'
 print '        "json-rpc-cpp"'
 print '        "LevelDB"'
 print '        "llvm"'
-print '        "openssl"'
 print '        "microhttpd"'
 print '        "pthreads"'
-print '        "ssh2"'
-print '        "zlib"'
 print "    }"
-print '    "json-rpc-cpp" -> "curl"'
-print '    "json-rpc-cpp" -> "microhttpd"'
-print '    "json-rpc-cpp" -> "Jsoncpp"'
 print '    "curl" -> "ssh2"  [style=dotted]'
 print '    "curl" -> "openssl"  [style=dotted]'
 print '    "curl" -> "zlib"  [style=dotted]'
+print '    "json-rpc-cpp" -> "curl"'
+print '    "json-rpc-cpp" -> "microhttpd"'
+print '    "json-rpc-cpp" -> "Jsoncpp"'
+print '    "json-rpc-cpp" -> "argtable2"'
+print '    "LevelDB" -> "snappy"'
+print ''
+print "    subgraph cluster_evmjit {"
+print '        label = <https://github.com/ethereum/evmjit>'
+print "        bgcolor = LavenderBlush"
+print '        "libevmjit"'
+print '        }'
+print '        "libevmjit" -> "libedit"'
 print ''
 print "    subgraph cluster_cppethereum {"
 print '        label = <https://github.com/ethereum/cpp-ethereum>'
@@ -181,7 +187,6 @@ processRepository('../..')
 
 print "    }"
 print '    "base" -> "boost"'
-print '    "base" -> "Jsoncpp"'
 print '    "base" -> "json_spirit"'
 print '    "base" -> "LevelDB"'
 print '    "base" -> "pthreads"'
