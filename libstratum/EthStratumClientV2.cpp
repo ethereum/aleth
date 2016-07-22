@@ -497,12 +497,18 @@ bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
 		json = jsonid + ", \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + jobid + "\",\"" + minernonce + "\"]}\n";
 		break;
 	}
-	cdebug << "Submitting share: " << json;	
-	std::ostream os(&m_requestBuffer);
-	os << json;
-	write(m_socket, m_requestBuffer);
 
-	m_worktimer.expires_from_now(boost::posix_time::milliseconds(m_worktimeout));
+	try{
+		cdebug << "Submitting share: " << json;	
+		std::ostream os(&m_requestBuffer);
+		os << json;
+		write(m_socket, m_requestBuffer);
+		m_worktimer.expires_from_now(boost::posix_time::milliseconds(m_worktimeout));
+	}
+		catch (std::exception const& _e) {
+			cwarn << "Share submit failed:" <<  _e.what();
+	}
+
 	// m_worktimer.async_wait(boost::bind(&EthStratumClientV2::work_timeout_handler, this, boost::asio::placeholders::error));
 
 	return true;
