@@ -29,7 +29,8 @@ static void diffToTarget(uint32_t *target, double diff)
 
 EthStratumClientV2::EthStratumClientV2(GenericFarm<EthashProofOfWork> * f, MinerType m, string const & host, string const & port, string const & user, string const & pass, int const & retries, int const & worktimeout, int const & protocol, string const & email)
 	: Worker("stratum"), 
-	  m_socket(m_io_service)
+	  m_socket(m_io_service),
+	  m_worktimer(m_io_service, boost::posix_time::milliseconds(0))
 {
 	m_minerType = m;
 	m_primary.host = host;
@@ -48,7 +49,6 @@ EthStratumClientV2::EthStratumClientV2(GenericFarm<EthashProofOfWork> * f, Miner
 	m_email = email;
 
 	p_farm = f;
-	p_worktimer = nullptr;
 	startWorking();
 }
 
@@ -89,6 +89,7 @@ void EthStratumClientV2::workLoop()
 
 			if (!response.empty() && response.front() == '{' && response.back() == '}')
 			{
+				cdebug << "received: " << response;
 				Json::Value responseObject;
 				Json::Reader reader;
 				if (reader.parse(response.c_str(), responseObject))
@@ -138,6 +139,9 @@ void EthStratumClientV2::connect()
 	{
 		cnote << "Connected!";
 		m_connected = true;
+		boost::asio::socket_base::keep_alive option_ka(true);
+		m_socket.set_option(option_ka);
+
 		if (!p_farm->isMining())
 		{
 			cnote << "Starting farm";
@@ -190,10 +194,7 @@ void EthStratumClientV2::connect()
 
 void EthStratumClientV2::reconnect()
 {
-	if (p_worktimer) {
-		p_worktimer->cancel();
-		p_worktimer = nullptr;
-	}
+	m_worktimer.cancel();
 
 	//m_io_service.reset();
 	//m_socket.close(); // leads to crashes on Linux
@@ -253,7 +254,7 @@ void EthStratumClientV2::processExtranonce(std::string& enonce)
 void EthStratumClientV2::processReponse(Json::Value& responseObject)
 {
 	Json::Value error = responseObject.get("error", new Json::Value);
-	if (error.isArray())
+	if (error.size())
 	{
 		string msg = error.get(1, "Unknown error").asString();
 		cnote << msg;
@@ -261,6 +262,7 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 	std::ostream os(&m_requestBuffer);
 	Json::Value params;
 	int id = responseObject.get("id", Json::Value::null).asInt();
+	long responseTime = 0;
 	switch (id)
 	{
 		case 1:
@@ -306,12 +308,14 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 	case 4:
 	case 6:
 		// id 6 == stale submit
+		responseTime = m_worktimeout -  m_worktimer.expires_from_now().total_milliseconds();
+		//m_worktimer.cancel();
 		if (responseObject.get("result", false).asBool()) {
-			cnote << "B-) Submitted and accepted.";
+			cnote << "B-) Submitted and accepted in" << responseTime << "ms.";
 			p_farm->acceptedSolution(id==6);
 		}
 		else {
-			cwarn << ":-( Not accepted.";
+			cwarn << ":-( Rejected in" << responseTime << "ms.";
 			p_farm->rejectedSolution(id==6);
 		}
 		break;
@@ -436,19 +440,15 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 }
 
 void EthStratumClientV2::work_timeout_handler(const boost::system::error_code& ec) {
+
+	cnote << "work_timeout_handler";
 	if (!ec) {
-		cnote << "No new work received in" << m_worktimeout << "seconds.";
+		cnote << "No share response received in" << m_worktimeout << "milliseconds.";
 		reconnect();
 	}
 }
 
 bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
-	//x_current.lock();
-	//EthashProofOfWork::WorkPackage tempWork(m_current);
-	//string temp_job = m_job;
-	//EthashProofOfWork::WorkPackage tempPreviousWork(m_previous);
-	//string temp_previous_job = m_previousJob;
-	//x_current.unlock();
 
 	cnote << "Solution found; Submitting to" << p_active->host << "...";
 
@@ -458,9 +458,11 @@ bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
 	else
 		minernonce = "0x" + solution.nonce.hex();
 
-	cnote << "  Nonce:" << minernonce;
+	cdebug << "  Nonce:" << minernonce;
 
 	string json, jsonid, jobid, workHexHash;
+
+	// m_socket.shutdown(boost::asio::ip::tcp::socket::shutdown_send); // for failure testing
 
 	if (EthashAux::eval(m_current.seedHash, m_current.headerHash, solution.nonce).value < m_current.boundary)
 	{
@@ -495,10 +497,13 @@ bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
 		json = jsonid + ", \"method\": \"mining.submit\", \"params\": [\"" + p_active->user + "\",\"" + jobid + "\",\"" + minernonce + "\"]}\n";
 		break;
 	}
-	cnote << json;	
+	cdebug << "Submitting share: " << json;	
 	std::ostream os(&m_requestBuffer);
 	os << json;
 	write(m_socket, m_requestBuffer);
+
+	m_worktimer.expires_from_now(boost::posix_time::milliseconds(m_worktimeout));
+	// m_worktimer.async_wait(boost::bind(&EthStratumClientV2::work_timeout_handler, this, boost::asio::placeholders::error));
 
 	return true;
 }
