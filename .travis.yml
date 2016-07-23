@@ -10,9 +10,12 @@
 
 language: cpp
 branches:
+    only:
+        - develop
+        - merge_repos
+        - release
     except:
         - /develop-v[0-9]/
-        - /untagged-[0-9]/
 matrix:
     include:
         - os: linux
@@ -20,18 +23,22 @@ matrix:
           sudo: required
           env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=ubuntu-trusty
+          env: TESTS=On
         - os: osx
           osx_image: beta-xcode6.2
           env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=osx-mavericks
+          env: TESTS=On
         - os: osx
           osx_image: xcode7.1
           env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=osx-yosemite
+          env: TESTS=On
         - os: osx
           osx_image: xcode7.3
           env: TRAVIS_BUILD_TYPE=RelWithDebInfo
           env: ZIP_SUFFIX=osx-elcapitan
+          env: TESTS=Off
 git:
     depth: 2
 cache:
@@ -42,14 +49,14 @@ install:
 before_script:
     - mkdir -p build
     - cd build
-    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE -DTESTS=$TESTS
     - make -j2
-    - ../scripts/release.sh $ZIP_SUFFIX
+    - ../scripts/release.sh $ZIP_SUFFIX $TESTS
 script:
     - cd $TRAVIS_BUILD_DIR/..
-    - git clone https://github.com/ethereum/tests.git
-    - export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    - cd $TRAVIS_BUILD_DIR/build
+    #- git clone https://github.com/ethereum/tests.git
+    #- export ETHEREUM_TEST_PATH=$(pwd)/tests/
+    #- cd $TRAVIS_BUILD_DIR/build
     #- ./test/libethereum/test/testeth
     #- ./test/libweb3core/test/testweb3core
     #- ./test/webthree/test/testweb3    
