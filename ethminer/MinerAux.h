@@ -59,7 +59,6 @@
 #include "FarmClient.h"
 #endif
 #if ETH_STRATUM || !ETH_TRUE
-#include <libstratum/EthStratumClient.h>
 #include <libstratum/EthStratumClientV2.h>
 #endif
 using namespace std;
@@ -188,19 +187,6 @@ public:
 			if (p + 1 <= userpass.length())
 				m_pass = userpass.substr(p+1);
 		}
-		else if ((arg == "-SC" || arg == "--stratum-client") && i + 1 < argc)
-		{
-			try {
-				m_stratumClientVersion = atoi(argv[++i]);
-				if (m_stratumClientVersion > 2) m_stratumClientVersion = 2;
-				else if (m_stratumClientVersion < 1) m_stratumClientVersion = 1;
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-		}
 		else if ((arg == "-SP" || arg == "--stratum-protocol") && i + 1 < argc)
 		{
 			try {
@@ -255,7 +241,7 @@ public:
 		{
 			m_fport = string(argv[++i]);
 		}
-		else if ((arg == "--work-timeout") && i + 1 < argc)
+		else if ((arg == "--share-timeout") && i + 1 < argc)
 		{
 			m_worktimeout = atoi(argv[++i]);
 		}
@@ -579,8 +565,7 @@ public:
 			<< "	-FS, --failover-stratum <host:port>  Failover stratum server at host:port" << endl
 			<< "    -O, --userpass <username.workername:password> Stratum login credentials" << endl
 			<< "    -FO, --failover-userpass <username.workername:password> Failover stratum login credentials (optional, will use normal credentials when omitted)" << endl
-			<< "    --work-timeout <n> reconnect/failover after n seconds of working on the same (stratum) job. Defaults to 180. Don't set lower than max. avg. block time" << endl
-			<< "    -SC, --stratum-client <n>  Stratum client version. Defaults to 1 (async client). Use 2 to use the new synchronous client." << endl
+			<< "    --share-timeout <n> reconnect if no response to submitted share received within n ms (non-functional - for testing)" << endl
 			<< "    -SP, --stratum-protocol <n> Choose which stratum protocol to use:" << endl
 			<< "        0: official stratum spec: ethpool, ethermine, coinotron, mph, nanopool (default)" << endl
 			<< "        1: eth-proxy compatible: dwarfpool, f2pool, nanopool" << endl
@@ -986,52 +971,6 @@ private:
 		
 		GenericFarm<EthashProofOfWork> f;
 
-		// this is very ugly, but if Stratum Client V2 tunrs out to be a success, V1 will be completely removed anyway
-		if (m_stratumClientVersion == 1) {
-			EthStratumClient client(&f, m_minerType, m_farmURL, m_port, m_user, m_pass, m_maxFarmRetries, m_worktimeout, m_stratumProtocol, m_email);
-			if (m_farmFailOverURL != "")
-			{
-				if (m_fuser != "")
-				{
-					client.setFailover(m_farmFailOverURL, m_fport, m_fuser, m_fpass);
-				}
-				else
-				{
-					client.setFailover(m_farmFailOverURL, m_fport);
-				}
-			}
-			f.setSealers(sealers);
-
-			f.onSolutionFound([&](EthashProofOfWork::Solution sol)
-			{
-				if (client.isConnected()) {
-					client.submit(sol);
-				}
-				else {
-					cwarn << "Can't submit solution: Not connected";
-				}
-				return false;
-			});
-
-			while (client.isRunning())
-			{
-				auto mp = f.miningProgress();
-				f.resetMiningProgress();
-				if (client.isConnected())
-				{
-					if (client.current())
-					{
-						minelog << "Mining on PoWhash" << "#" + (client.currentHeaderHash().hex().substr(0, 8)) << ": " << mp << f.getSolutionStats();
-					}
-					else if (client.waitState() == MINER_WAIT_STATE_WORK)
-					{
-						minelog << "Waiting for work package...";
-					}
-				}
-				this_thread::sleep_for(chrono::milliseconds(m_farmRecheckPeriod));
-			}
-		}
-		else if (m_stratumClientVersion == 2) {
 			EthStratumClientV2 client(&f, m_minerType, m_farmURL, m_port, m_user, m_pass, m_maxFarmRetries, m_worktimeout, m_stratumProtocol, m_email);
 			if (m_farmFailOverURL != "")
 			{
@@ -1069,8 +1008,6 @@ private:
 				}
 				this_thread::sleep_for(chrono::milliseconds(m_farmRecheckPeriod));
 			}
-		}
-
 	}
 #endif
 
@@ -1122,7 +1059,7 @@ private:
 	unsigned m_farmRecheckPeriod = 500;
 	unsigned m_defaultStratumFarmRecheckPeriod = 2000;
 	bool m_farmRecheckSet = false;
-	int m_worktimeout = 180;
+	int m_worktimeout = 1500;		// milliseconds
 
 #if ETH_STRATUM || !ETH_TRUE
 	int m_stratumClientVersion = 1;
