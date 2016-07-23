@@ -24,6 +24,7 @@
 #include <thread>
 #include <list>
 #include <atomic>
+#include <sstream>
 #include <libdevcore/Common.h>
 #include <libdevcore/Worker.h>
 #include <libethcore/Common.h>
@@ -140,8 +141,13 @@ public:
 		p.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_lastStart).count();
 		{
 			ReadGuard l2(x_minerWork);
-			for (auto const& i: m_miners)
+			for (auto const& i: m_miners){
 				p.hashes += i->hashCount();
+				// string khs = std::string (p.hashes/p.ms);
+				ostringstream khs;
+				khs << (i->hashCount()/p.ms);
+				p.hashDetail += khs.str() + ' '; 
+			}
 		}
 		ReadGuard l(x_progress);
 		m_progress = p;

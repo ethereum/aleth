@@ -71,10 +71,9 @@ struct MineInfo: public WorkingProgress {};
 
 inline std::ostream& operator<<(std::ostream& _out, WorkingProgress _p)
 {
-	float mh = _p.rate() / 1000000.0f;
-	char mhs[16];
-	sprintf(mhs, "%.2f", mh);
-	_out << std::string(mhs) + "MH/s";
+	ostringstream khsTtl;
+	khsTtl << (_p.hashes/_p.ms);
+	_out << _p.hashDetail + "= " + khsTtl.str() + "Khs ";
 	return _out;
 }
 
