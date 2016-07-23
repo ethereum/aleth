@@ -31,6 +31,7 @@
 
 ZIP_SUFFIX=$1
 ZIP_TEMP_DIR=$(pwd)/zip/
+TESTS=$2
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
     DLL_EXT=dylib
@@ -48,9 +49,11 @@ cp ethkey/ethkey                       $ZIP_TEMP_DIR
 cp ethminer/ethminer                   $ZIP_TEMP_DIR
 cp ethvm/ethvm                         $ZIP_TEMP_DIR
 cp rlp/rlp                             $ZIP_TEMP_DIR
-cp test/libethereum/test/testeth       $ZIP_TEMP_DIR
-cp test/libweb3core/test/testweb3core  $ZIP_TEMP_DIR
-cp test/webthree/test/testweb3         $ZIP_TEMP_DIR
+if [[ "$TESTS" == "On" ]]; then
+    cp test/libethereum/test/testeth       $ZIP_TEMP_DIR
+    cp test/libweb3core/test/testweb3core  $ZIP_TEMP_DIR
+    cp test/webthree/test/testweb3         $ZIP_TEMP_DIR
+fi
 
 # Copy all the dynamic libraries into a temporary directory prior to ZIP creation.
 # There are a lot of these, and it would be great if we didn't have to worry about them.
