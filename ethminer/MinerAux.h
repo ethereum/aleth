@@ -999,7 +999,7 @@ private:
 				{
 					if (client.current())
 					{
-						minelog << "Mining on PoWhash" << "#" + (client.currentHeaderHash().hex().substr(0, 8)) << ": " << mp << f.getSolutionStats();
+						minelog << mp << f.getSolutionStats();
 					}
 					else if (client.waitState() == MINER_WAIT_STATE_WORK)
 					{
