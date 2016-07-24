@@ -139,6 +139,7 @@ public:
 	{
 		WorkingProgress p;
 		p.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_lastStart).count();
+		if (p.ms == 0) p.ms = 1;		// avoid divide by zero
 		{
 			ReadGuard l2(x_minerWork);
 			for (auto const& i: m_miners){
