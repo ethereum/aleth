@@ -79,7 +79,7 @@ cd cpp-ethereum/
 mkdir build
 cd build
 cmake -DBUNDLE=miner ..
-make -j8
+make
 ```
 
 You can then find the executable in the ethminer subfolder
@@ -97,8 +97,8 @@ git clone https://github.com/Genoil/cpp-ethereum/
 cd cpp-ethereum/
 mkdir build
 cd build
-cmake -DBUNDLE=miner ..
-make -j8
+cmake -DBUNDLE=cudaminer ..
+make
 ```
 
 You can then find the executable in the ethminer subfolder
