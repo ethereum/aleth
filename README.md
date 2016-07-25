@@ -5,11 +5,11 @@ What is ethminer-0.9.41-genoil-1.x.x?
 Formerly known as Genoil's CUDA miner, ethminer-0.9.41-genoil-1.x.x is a fork of the stock ethminer version 0.9.41. While native CUDA support is its most significant difference, it has the following additional features:
 
 - realistic benchmarking against arbitrary epoch/DAG/blocknumber
-- custom DAG storage directory
-- auto DAG directory cleanup
+- fast on-GPU DAG creation uses no disk space
 - stratum mining without proxy
 - OpenCL devices picking
 - farm failover (getwork + stratum)
+- submits stale shares for previous block
 
 ### Usage
 
