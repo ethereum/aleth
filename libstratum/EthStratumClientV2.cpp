@@ -253,12 +253,14 @@ void EthStratumClientV2::processExtranonce(std::string& enonce)
 
 void EthStratumClientV2::processReponse(Json::Value& responseObject)
 {
-	Json::Value error = responseObject.get("error", new Json::Value);
-	if (error.size())
-	{
-		string msg = error.get(1, "Unknown error").asString();
-		cnote << msg;
-	}
+	// libjsoncpp-dev 0.6.0 is buggy so skip error checking until
+	// a one of the newer versions is verified
+	// Json::Value error = responseObject.get("error", new Json::Value);
+	// if (error.size())
+	// {
+	// 	string msg = error.get(1, "Unknown error").asString();
+	// 	cnote << msg;
+	// }
 	std::ostream os(&m_requestBuffer);
 	Json::Value params;
 	int id = responseObject.get("id", Json::Value::null).asInt();
@@ -450,7 +452,7 @@ void EthStratumClientV2::work_timeout_handler(const boost::system::error_code& e
 
 bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
 
-	cnote << "Solution found; Submitting to" << p_active->host << "...";
+	cnote << "Submitting solution to" << p_active->host << "...";
 
 	string minernonce;
 	if (m_protocol == STRATUM_PROTOCOL_ETHEREUMSTRATUM)
