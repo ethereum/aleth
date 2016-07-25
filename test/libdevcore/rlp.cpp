@@ -259,7 +259,9 @@ void runRlpTest(string _name, string _path)
 	}
 }
 
-BOOST_AUTO_TEST_SUITE(RlpTests)
+using namespace dev::test;
+
+BOOST_FIXTURE_TEST_SUITE(RlpTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(EmptyArrayList)
 {

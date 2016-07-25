@@ -34,8 +34,16 @@ namespace test
 	class Options
 	{
 	public:
+		enum class Verbosity
+		{
+			Full,
+			NiceReport,
+			None
+		};
+
 		bool performance = false;
 		bool nonetwork = false;
+		Verbosity logVerbosity = Verbosity::NiceReport;
 
 		/// Get reference to options
 		/// The first time used, options are parsed
@@ -46,4 +54,16 @@ namespace test
 		Options(Options const&) = delete;
 	};
 
+	class TestOutputHelper
+	{
+	public:
+		TestOutputHelper() { TestOutputHelper::initTest(); }
+		static void initTest();
+		static bool passTest(std::string& _testName);
+		static std::string const& testName() { return m_currentTestName; }
+		static std::string const& caseName() { return m_currentTestCaseName; }
+	private:
+		static std::string m_currentTestName;
+		static std::string m_currentTestCaseName;
+	};
 }}

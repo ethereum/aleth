@@ -24,10 +24,11 @@
 #include <libdevcore/CommonJS.h>
 #include <test/test.h>
 
-BOOST_AUTO_TEST_SUITE(CommonJSTests)
-
 using namespace dev;
 using namespace std;
+using namespace test;
+
+BOOST_FIXTURE_TEST_SUITE(CommonJSTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(test_toJS)
 {

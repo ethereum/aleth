@@ -20,12 +20,14 @@
  */
 
 #include <boost/test/unit_test.hpp>
+#include <test/test.h>
 #include <libdevcore/Base64.h>
 
 using namespace std;
 using namespace dev;
+using namespace test;
 
-BOOST_AUTO_TEST_SUITE(Base36Tests)
+BOOST_FIXTURE_TEST_SUITE(Base36Tests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(basicEncoding)
 {

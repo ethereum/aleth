@@ -30,8 +30,9 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 
-BOOST_AUTO_TEST_SUITE(AES)
+BOOST_FIXTURE_TEST_SUITE(AES, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(AesDecrypt)
 {
