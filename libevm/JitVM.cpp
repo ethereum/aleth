@@ -1,6 +1,3 @@
-
-#pragma GCC diagnostic ignored "-Wconversion"
-
 #include "JitVM.h"
 
 #include <libdevcore/Log.h>
@@ -253,6 +250,7 @@ int64_t evm_call(
 class EVM
 {
 	evm_instance* m_instance = nullptr;
+	bool m_hasDelegateCall = false;
 
 public:
 	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn)
@@ -267,6 +265,45 @@ public:
 
 	EVM(EVM const&) = delete;
 	EVM& operator=(EVM) = delete;
+
+	void hasDelegateCall(bool _flag)
+	{
+		if (_flag != m_hasDelegateCall)
+		{
+			// Set the option only the value has changed.
+			evm_set_option(m_instance, "delegatecall", _flag ? "true" : "false");
+			m_hasDelegateCall = _flag;
+		}
+	}
+
+	struct Result : evm_result
+	{
+		Result(evm_result const& _other)
+		{
+			// FIXME: Looks like iheritance from C struct is not very effective.
+			//        Composition should be better?
+			gas_left = _other.gas_left;
+			output_data = _other.output_data;
+			output_size = _other.output_size;
+			internal_memory = _other.internal_memory;
+		}
+
+		~Result()
+		{
+			// TODO: Decide when the result has to be destroyed.
+			evm_destroy_result(*this);
+		}
+	};
+
+	/// Handy wrapper for evm_execute().
+	Result execute(ExtVMFace& _ext, int64_t gas)
+	{
+		auto env = reinterpret_cast<evm_env*>(&_ext);
+		// FIXME: Use `unsigned char*` in EVM-C.
+		auto code = reinterpret_cast<char const*>(_ext.code.data());
+		auto input = reinterpret_cast<char const*>(_ext.data.data());
+		return evm_execute(m_instance, env, toEvmC(_ext.codeHash), code, _ext.code.size(), gas, input, _ext.data.size(), toEvmC(_ext.value));
+	}
 };
 
 }
@@ -278,15 +315,10 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
-	rejected |= io_gas > std::numeric_limits<decltype(m_data.gas)>::max(); // Do not accept requests with gas > 2^63 (int64 max)
+	rejected |= io_gas > std::numeric_limits<int64_t>::max(); // Do not accept requests with gas > 2^63 (int64 max)
 	rejected |= _ext.envInfo().number() > std::numeric_limits<int64_t>::max();
 	rejected |= _ext.envInfo().timestamp() > std::numeric_limits<int64_t>::max();
 	rejected |= _ext.envInfo().gasLimit() > std::numeric_limits<int64_t>::max();
-	if (!toJITSchedule(_ext.evmSchedule(), m_schedule))
-	{
-		cwarn << "Schedule changed, not suitable for JIT!";
-		rejected = true;
-	}
 	if (rejected)
 	{
 		cwarn << "Execution rejected by EVM JIT (gas limit: " << io_gas << "), executing with interpreter";
@@ -294,23 +326,16 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 		return m_fallbackVM->execImpl(io_gas, _ext, _onOp);
 	}
 
-	m_data.gas 			= static_cast<decltype(m_data.gas)>(io_gas);
-	m_data.callData 	= _ext.data.data();
-	m_data.callDataSize = _ext.data.size();
-	m_data.apparentValue = eth2jit(_ext.value);
-	m_data.code     	= _ext.code.data();
-	m_data.codeSize 	= _ext.code.size();
-	m_data.codeHash		= eth2jit(_ext.codeHash);
-
-	// Pass pointer to ExtVMFace casted to evmjit::Env* opaque type.
-	// JIT will do nothing with the pointer, just pass it to Env callback functions implemented in Env.cpp.
-	m_context.init(m_data, reinterpret_cast<evmjit::Env*>(&_ext));
-	auto exitCode = evmjit::JIT::exec(m_context, m_schedule);
-	if (exitCode == evmjit::ReturnCode::OutOfGas)
+	jit.hasDelegateCall(_ext.evmSchedule().haveDelegateCall);
+	auto gas = static_cast<int64_t>(io_gas);
+	auto r = jit.execute(_ext, gas);
+	if (r.gas_left < 0)
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
-	io_gas = m_data.gas;
-	return {std::get<0>(m_context.returnData), std::get<1>(m_context.returnData)};
+	io_gas = r.gas_left;
+	// FIXME: Copy the output for now, but copyless version possible.
+	m_output.assign(r.output_data, r.output_data + r.output_size);
+	return {m_output.data(), m_output.size()};
 }
 
 }
