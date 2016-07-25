@@ -248,11 +248,33 @@ int64_t evm_call(
 	return cost;
 }
 
+
+/// RAII wrapper for an evm instance.
+class EVM
+{
+	evm_instance* m_instance = nullptr;
+
+public:
+	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn)
+	{
+		m_instance = evm_create(_queryFn, _updateFn, _callFn);
+	}
+
+	~EVM()
+	{
+		evm_destroy(m_instance);
+	}
+
+	EVM(EVM const&) = delete;
+	EVM& operator=(EVM) = delete;
+};
+
 }
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	evmjit::JIT::init(evm_query, evm_update, evm_call);
+	// Create EVM JIT instance by using EVM-C interface.
+	static EVM jit(evm_query, evm_update, evm_call);
 
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
