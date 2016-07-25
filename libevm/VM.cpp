@@ -180,6 +180,7 @@ void VM::caseCreate()
 		*++m_SP = (u160)m_ext->create(endowment, *m_io_gas, bytesConstRef(m_mem.data() + initOff, initSize), *m_onOp);
 	else
 		*++m_SP = 0;
+	++m_PC;
 }
 
 void VM::caseCall()
@@ -191,6 +192,7 @@ void VM::caseCall()
 	else
 		*++m_SP = 0;
 	*m_io_gas += callParams->gas;
+	++m_PC;
 }
 
 bool VM::caseCallSetup(CallParameters *callParams)
@@ -277,7 +279,6 @@ void VM::interpretCases()
 //			caseCreate();
 //			break;
 			m_bounce = &VM::caseCreate;
-			++m_PC;
 			return;
 
 		case Instruction::DELEGATECALL:
@@ -292,7 +293,6 @@ void VM::interpretCases()
 //			caseCall();
 //			break;
 			m_bounce = &VM::caseCall;
-			++m_PC;
 			return;
 		}
 
