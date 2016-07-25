@@ -68,12 +68,9 @@ cmake -DBUNDLE=cudaminer -G "Visual Studio 12 2013 Win64" ..
 
 ### Building on Ubuntu
 
-Note: this section was copied from [ethpool](https://ethpool.freshdesk.com/support/solutions/articles/8000032853-how-to-compile-genoils-cuda-miner-on-ubuntu)
-
 Ubuntu 14.04. OpenCL only (for AMD cards)
 
 ```bash
-sudo apt-get update
 sudo add-apt-repository -y ppa:ethereum/ethereum
 sudo apt-get update
 sudo apt-get install software-properties-common git cmake libcryptopp-dev libleveldb-dev libjsoncpp-dev libjson-rpc-cpp-dev libboost-all-dev ocl-icd-libopencl1 opencl-headers build-essential -y
