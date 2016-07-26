@@ -253,14 +253,11 @@ void EthStratumClientV2::processExtranonce(std::string& enonce)
 
 void EthStratumClientV2::processReponse(Json::Value& responseObject)
 {
-	// libjsoncpp-dev 0.6.0 is buggy so skip error checking until
-	// a one of the newer versions is verified
-	// Json::Value error = responseObject.get("error", new Json::Value);
-	// if (error.size())
-	// {
-	// 	string msg = error.get(1, "Unknown error").asString();
-	// 	cnote << msg;
-	// }
+	Json::Value json_err = responseObject.get("error", Json::Value::null);
+	if (!json_err.isNull())
+	{
+		cwarn << "unknown stratum error: " << json_err.asString();
+	}
 	std::ostream os(&m_requestBuffer);
 	Json::Value params;
 	int id = responseObject.get("id", Json::Value::null).asInt();
