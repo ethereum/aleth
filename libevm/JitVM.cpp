@@ -109,7 +109,7 @@ evm_variant evm_query(
 	{
 		auto addr = fromEvmC(_arg.address);
 		auto &code = env.codeAt(addr);
-		v.data = reinterpret_cast<char const*>(code.data());
+		v.data = code.data();
 		v.data_size = code.size();
 		break;
 	}
@@ -154,10 +154,9 @@ void evm_update(
 	}
 	case EVM_LOG:
 	{
-		bytesConstRef data{reinterpret_cast<byte const*>(_arg1.data), _arg1.data_size};
 		size_t numTopics = _arg2.data_size / sizeof(h256);
 		h256 const* pTopics = reinterpret_cast<h256 const*>(_arg2.data);
-		env.log({pTopics, pTopics + numTopics}, data);
+		env.log({pTopics, pTopics + numTopics}, {_arg1.data, _arg1.data_size});
 		break;
 	}
 	case EVM_SELFDESTRUCT:
@@ -173,16 +172,16 @@ int64_t evm_call(
 	int64_t _gas,
 	evm_hash160 _address,
 	evm_uint256 _value,
-	char const* _inputData,
+	uint8_t const* _inputData,
 	size_t _inputSize,
-	char* _outputData,
+	uint8_t* _outputData,
 	size_t _outputSize
 ) noexcept
 {
 	assert(_gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
 	auto value = fromEvmC(_value);
-	bytesConstRef input{reinterpret_cast<byte const*>(_inputData), _inputSize};
+	bytesConstRef input{_inputData, _inputSize};
 
 	if (_kind == EVM_CREATE)
 	{
@@ -210,7 +209,7 @@ int64_t evm_call(
 	params.codeAddress = fromEvmC(_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
-	params.out = {reinterpret_cast<byte*>(_outputData), _outputSize};
+	params.out = {_outputData, _outputSize};
 	params.onOp = {};
 
 	if (params.valueTransfer)
@@ -299,10 +298,10 @@ public:
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
 		auto env = reinterpret_cast<evm_env*>(&_ext);
-		// FIXME: Use `unsigned char*` in EVM-C.
-		auto code = reinterpret_cast<char const*>(_ext.code.data());
-		auto input = reinterpret_cast<char const*>(_ext.data.data());
-		return evm_execute(m_instance, env, toEvmC(_ext.codeHash), code, _ext.code.size(), gas, input, _ext.data.size(), toEvmC(_ext.value));
+		return evm_execute(m_instance, env, toEvmC(_ext.codeHash),
+		                   _ext.code.data(), _ext.code.size(), gas,
+		                   _ext.data.data(), _ext.data.size(),
+		                   toEvmC(_ext.value));
 	}
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
