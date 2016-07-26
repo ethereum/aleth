@@ -1,22 +1,6 @@
 @ECHO OFF
 
 REM ---------------------------------------------------------------------------
-REM This file is part of cpp-ethereum.
-REM
-REM cpp-ethereum is free software: you can redistribute it and/or modify
-REM it under the terms of the GNU General Public License as published by
-REM the Free Software Foundation, either version 3 of the License, or
-REM (at your option) any later version.
-REM
-REM cpp-ethereum is distributed in the hope that it will be useful,
-REM but WITHOUT ANY WARRANTY; without even the implied warranty of
-REM MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-REM GNU General Public License for more details.
-REM
-REM You should have received a copy of the GNU General Public License
-REM along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
-REM
-REM ---------------------------------------------------------------------------
 REM Batch file for installing pre-requisite packages for cpp-ethereum on
 REM Windows platforms.  That is implemented using CMake targets which
 REM extract pre-built ZIPs hosted on GitHub into "deps\install_deps".
@@ -54,6 +38,22 @@ REM
 REM The documentation for cpp-ethereum is hosted at:
 REM
 REM http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+REM
+REM ---------------------------------------------------------------------------
+REM This file is part of cpp-ethereum.
+REM
+REM cpp-ethereum is free software: you can redistribute it and/or modify
+REM it under the terms of the GNU General Public License as published by
+REM the Free Software Foundation, either version 3 of the License, or
+REM (at your option) any later version.
+REM
+REM cpp-ethereum is distributed in the hope that it will be useful,
+REM but WITHOUT ANY WARRANTY; without even the implied warranty of
+REM MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+REM GNU General Public License for more details.
+REM
+REM You should have received a copy of the GNU General Public License
+REM along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
 REM
 REM Copyright (c) 2016 cpp-ethereum contributors.
 REM ---------------------------------------------------------------------------

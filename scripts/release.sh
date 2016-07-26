@@ -1,5 +1,15 @@
 #!/usr/bin/env bash
 
+#------------------------------------------------------------------------------
+# Bash script implementing release flow for cpp-ethereum for Linux and macOS.
+#
+# TODO - At the time of writing, we only have ZIPs working.  Need to hook up
+# support for Homebrew and PPAs.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
 # ------------------------------------------------------------------------------
 # This file is part of cpp-ethereum.
 #
@@ -15,16 +25,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
-#
-#------------------------------------------------------------------------------
-# Bash script implementing release flow for cpp-ethereum for Linux and macOS.
-#
-# TODO - At the time of writing, we only have ZIPs working.  Need to hook up
-# support for Homebrew and PPAs.
-#
-# The documentation for cpp-ethereum is hosted at:
-#
-# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
 #
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
