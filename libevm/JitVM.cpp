@@ -4,8 +4,6 @@
 #include <libevm/VM.h>
 #include <libevm/VMFactory.h>
 
-#include "JitUtils.h"
-
 namespace dev
 {
 namespace eth
@@ -266,6 +264,8 @@ public:
 	EVM(EVM const&) = delete;
 	EVM& operator=(EVM) = delete;
 
+	evm_instance* evmInstance() { return m_instance; }
+
 	void hasDelegateCall(bool _flag)
 	{
 		if (_flag != m_hasDelegateCall)
@@ -304,15 +304,30 @@ public:
 		auto input = reinterpret_cast<char const*>(_ext.data.data());
 		return evm_execute(m_instance, env, toEvmC(_ext.codeHash), code, _ext.code.size(), gas, input, _ext.data.size(), toEvmC(_ext.value));
 	}
+
+	bool isCodeReady(evm_mode _mode, h256 _codeHash)
+	{
+		return evmjit_is_code_ready(m_instance, _mode, toEvmC(_codeHash));
+	}
+
+	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
+	{
+		evmjit_compile(m_instance, _mode, _code.data(), _code.size(),
+		               toEvmC(_codeHash));
+	}
 };
+
+EVM& getJit()
+{
+	// Create EVM JIT instance by using EVM-C interface.
+	static EVM jit(evm_query, evm_update, evm_call);
+	return jit;
+}
 
 }
 
 bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
-	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(evm_query, evm_update, evm_call);
-
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
 	rejected |= io_gas > std::numeric_limits<int64_t>::max(); // Do not accept requests with gas > 2^63 (int64 max)
@@ -326,6 +341,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 		return m_fallbackVM->execImpl(io_gas, _ext, _onOp);
 	}
 
+	auto& jit = getJit();
 	jit.hasDelegateCall(_ext.evmSchedule().haveDelegateCall);
 	auto gas = static_cast<int64_t>(io_gas);
 	auto r = jit.execute(_ext, gas);
@@ -336,6 +352,16 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	// FIXME: Copy the output for now, but copyless version possible.
 	m_output.assign(r.output_data, r.output_data + r.output_size);
 	return {m_output.data(), m_output.size()};
+}
+
+bool JitVM::isCodeReady(evm_mode _mode, h256 _codeHash)
+{
+	return getJit().isCodeReady(_mode, _codeHash);
+}
+
+void JitVM::compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
+{
+	getJit().compile(_mode, _code, _codeHash);
 }
 
 }
