@@ -16,6 +16,7 @@ branches:
         - release
     except:
         - /develop-v[0-9]/
+        - /untagged/
 matrix:
     include:
         - os: linux
