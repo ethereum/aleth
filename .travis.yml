@@ -48,18 +48,6 @@ matrix:
               - TRAVIS_BUILD_TYPE=RelWithDebInfo
               - ZIP_SUFFIX=osx-mavericks
               - TESTS=On
-        - os: osx
-          osx_image: xcode7.1
-          env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - ZIP_SUFFIX=osx-yosemite
-              - TESTS=On
-        - os: osx
-          osx_image: xcode7.3
-          env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - ZIP_SUFFIX=osx-elcapitan
-              - TESTS=Off
 git:
     depth: 2
 cache:
@@ -75,12 +63,12 @@ before_script:
     - ../scripts/release.sh $ZIP_SUFFIX $TESTS
 script:
     - cd $TRAVIS_BUILD_DIR/..
-    #- git clone https://github.com/ethereum/tests.git
-    #- export ETHEREUM_TEST_PATH=$(pwd)/tests/
-    #- cd $TRAVIS_BUILD_DIR/build
-    #- ./test/libethereum/test/testeth
-    #- ./test/libweb3core/test/testweb3core
-    #- ./test/webthree/test/testweb3    
+    - git clone https://github.com/ethereum/tests.git
+    - export ETHEREUM_TEST_PATH=$(pwd)/tests/
+    - cd $TRAVIS_BUILD_DIR/build
+    - ./test/libethereum/test/testeth
+    - ./test/libweb3core/test/testweb3core
+    - ./test/webthree/test/testweb3    
 deploy:
     provider: releases
     api_key:
