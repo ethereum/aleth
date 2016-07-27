@@ -256,7 +256,7 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 	Json::Value json_err = responseObject.get("error", Json::Value::null);
 	if (!json_err.isNull())
 	{
-		cwarn << "unknown stratum error: " << json_err.asString();
+		cwarn << "unknown stratum error";
 	}
 	std::ostream os(&m_requestBuffer);
 	Json::Value params;
