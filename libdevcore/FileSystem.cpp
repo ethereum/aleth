@@ -39,10 +39,29 @@ using namespace dev;
 
 // Should be written to only once during startup
 static string s_ethereumDatadir;
+static string s_ethereumIpcPath;
 
 void dev::setDataDir(string const& _dataDir)
 {
 	s_ethereumDatadir = _dataDir;
+}
+
+void dev::setIpcPath(string const& _ipcDir)
+{
+	s_ethereumIpcPath = _ipcDir;
+}
+
+string dev::getIpcPath()
+{
+	if (s_ethereumIpcPath.empty())
+		return string(getDataDir());
+	else
+	{
+		size_t socketPos = s_ethereumIpcPath.rfind("geth.ipc");
+		if (socketPos != string::npos)
+			return s_ethereumIpcPath.substr(0, socketPos);
+		return s_ethereumIpcPath;
+	}
 }
 
 string dev::getDataDir(string _prefix)
