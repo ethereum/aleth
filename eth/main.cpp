@@ -102,6 +102,7 @@ void help()
 #if ETH_JSONRPC
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --ipc  Enable IPC server (default: on)." << endl
+		<< "    --ipcpath Set .ipc socket path (default: data directory)" << endl
 		<< "    --admin-via-http  Expose admin interface via http - UNSAFE! (default: off)." << endl
 		<< "    --no-ipc  Disable IPC server." << endl
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
@@ -562,6 +563,8 @@ int main(int argc, char** argv)
 			sessionKey = Address(fromHex(argv[++i]));
 		else if ((arg == "-d" || arg == "--path" || arg == "--db-path" || arg == "--datadir") && i + 1 < argc)
 			setDataDir(argv[++i]);
+		else if (arg == "--ipcpath" && i + 1 < argc )
+			setIpcPath(argv[++i]);
 		else if ((arg == "--genesis-json" || arg == "--genesis") && i + 1 < argc)
 		{
 			try

@@ -42,18 +42,18 @@ string ipcSocketPath()
 #ifdef __APPLE__
 	// A bit hacky, but backwards compatible: If we did not change the default data dir,
 	// put the socket in ~/Library/Ethereum, otherwise in the set data dir.
-	string path = getDataDir();
+	string path = getIpcPath();
 	if (path == getDefaultDataDir())
 		return getenv("HOME") + string("/Library/Ethereum");
 	else
 		return path;
 #else
-	return getDataDir();
+	return getIpcPath();
 #endif
 }
 
 UnixDomainSocketServer::UnixDomainSocketServer(string const& _appId):
-	IpcServerBase(string(ipcSocketPath() + "/" + _appId + ".ipc").substr(0, c_pathMaxSize))
+	IpcServerBase(string(getIpcPath() + "/" + _appId + ".ipc").substr(0, c_pathMaxSize))
 {
 }
 
