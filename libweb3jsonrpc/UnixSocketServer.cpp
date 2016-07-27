@@ -120,12 +120,13 @@ void UnixDomainSocketServer::CloseConnection(int _socket)
 	close(_socket);
 }
 
+
 size_t UnixDomainSocketServer::Write(int _connection, string const& _data)
 {
-	int r = write(_connection, _data.data(), _data.size());
+	int r = send(_connection, _data.data(), _data.size(), MSG_NOSIGNAL);
 	if (r > 0)
 		return r;
-	return 0;	
+	return 0;
 }
 
 size_t UnixDomainSocketServer::Read(int _connection, void* _data, size_t _size)
