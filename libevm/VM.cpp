@@ -37,30 +37,21 @@ inline u256 fromAddress(Address _a)
 	return (u160)_a;
 }
 
-template<class T> static uint64_t toUint64(T v)
-{
-	// check for overflow
-	if (v > 0x7FFFFFFFFFFFFFFF)
-		throwVMException(OutOfGas());
-	uint64_t w = uint64_t(v);
-	return w;
-}
-
 
 uint64_t VM::verifyJumpDest(u256 const& _dest)
 {
 	// check for overflow
 	if (_dest > 0x7FFFFFFFFFFFFFFF)
-		throwVMException(BadJumpDestination());
+		throwBadJumpDestination();
 	uint64_t pc = uint64_t(_dest);
 	if (!m_jumpDests.count(pc))
-		throwVMException(BadJumpDestination());
+		throwBadJumpDestination();
 	return pc;
 }
 
 
 
-static uint64_t memNeed(u256 _offset, u256 _size)
+uint64_t VM::memNeed(u256 _offset, u256 _size)
 {
 	return toUint64(_size ? u512(_offset) + _size : u512(0));
 }
@@ -93,7 +84,7 @@ void VM::checkStack(unsigned _removed, unsigned _added)
 	int const size = 1 + m_SP - m_stack;
 	int const usedSize = size - _removed;
 	if (usedSize < 0 || usedSize + _added > 1024)
-		throwVMStackException(size, _removed, _added);
+		throwBadStack(size, _removed, _added);
 }
 
 uint64_t VM::gasForMem(u512 _size)
@@ -105,7 +96,7 @@ uint64_t VM::gasForMem(u512 _size)
 void VM::updateIOGas()
 {
 	if (*m_io_gas < m_runGas)
-		throwVMException(OutOfGas());
+		throwOutOfGas();
 	*m_io_gas -= m_runGas;
 }
 
@@ -115,7 +106,7 @@ void VM::updateGas()
 		m_runGas += toUint64(gasForMem(m_newMemSize) - gasForMem(m_mem.size()));
 	m_runGas += (m_schedule->copyGas * ((m_copyMemSize + 31) / 32));
 	if (*m_io_gas < m_runGas)
-		throwVMException(OutOfGas());
+		throwOutOfGas();
 }
 
 void VM::updateMem()
@@ -284,7 +275,7 @@ void VM::interpretCases()
 
 			// Pre-homestead
 			if (!m_schedule->haveDelegateCall)
-				throwVMException(BadInstruction());
+				throwBadInstruction();
 
 		case Instruction::CALL:
 		case Instruction::CALLCODE:
@@ -959,7 +950,7 @@ void VM::interpretCases()
 			break;
 
 		default:
-			throwVMException(BadInstruction());
+			throwBadInstruction();
 		}
 		
 		++m_PC;
