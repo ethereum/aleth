@@ -247,7 +247,6 @@ int64_t evm_call(
 class EVM
 {
 	evm_instance* m_instance = nullptr;
-	bool m_hasDelegateCall = false;
 
 public:
 	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn)
@@ -262,18 +261,6 @@ public:
 
 	EVM(EVM const&) = delete;
 	EVM& operator=(EVM) = delete;
-
-	evm_instance* evmInstance() { return m_instance; }
-
-	void hasDelegateCall(bool _flag)
-	{
-		if (_flag != m_hasDelegateCall)
-		{
-			// Set the option only the value has changed.
-			evm_set_option(m_instance, "delegatecall", _flag ? "true" : "false");
-			m_hasDelegateCall = _flag;
-		}
-	}
 
 	struct Result : evm_result
 	{
@@ -298,7 +285,9 @@ public:
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
 		auto env = reinterpret_cast<evm_env*>(&_ext);
-		return evm_execute(m_instance, env, toEvmC(_ext.codeHash),
+		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
+		                                                : EVM_FRONTIER;
+		return evm_execute(m_instance, env, mode, toEvmC(_ext.codeHash),
 		                   _ext.code.data(), _ext.code.size(), gas,
 		                   _ext.data.data(), _ext.data.size(),
 		                   toEvmC(_ext.value));
@@ -340,10 +329,8 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 		return m_fallbackVM->execImpl(io_gas, _ext, _onOp);
 	}
 
-	auto& jit = getJit();
-	jit.hasDelegateCall(_ext.evmSchedule().haveDelegateCall);
 	auto gas = static_cast<int64_t>(io_gas);
-	auto r = jit.execute(_ext, gas);
+	auto r = getJit().execute(_ext, gas);
 	if (r.gas_left < 0)
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
