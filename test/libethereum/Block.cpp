@@ -123,12 +123,12 @@ BOOST_AUTO_TEST_CASE(bGasPricer)
 	}
 
 	{
-		//Block not synced to blockchain - BlockGasLimitReached
+		//Block not synced to blockchain
 		TestBlock testBlockT = testBlock;
 		ZeroGasPricer gp;
 		Block block = blockchain.genesisBlock(genesisDB);
 		block.sync(blockchain, testBlockT.transactionQueue(), gp);
-		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 0);
+		BOOST_REQUIRE(testBlockT.transactionQueue().topTransactions(4).size() == 2);
 	}
 
 	{

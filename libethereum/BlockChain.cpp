@@ -1430,7 +1430,11 @@ Block BlockChain::genesisBlock(OverlayDB const& _db) const
 {
 	h256 r = BlockHeader(m_params.genesisBlock()).stateRoot();
 	if (_db.exists(r))
-		return Block(*this, _db, r);
+	{
+		Block gen(*this, _db, r);
+		gen.m_currentBlock = BlockHeader(m_params.genesisBlock());
+		return gen;
+	}
 	Block ret(*this, _db, BaseState::Empty);
 	ret.noteChain(*this);
 	dev::eth::commit(m_params.genesisState, ret.mutableState().m_state);	// bit horrible. maybe consider a better way of constructing it?
