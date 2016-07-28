@@ -34,6 +34,7 @@
 #include <random>
 #include <atomic>
 #include <sstream>
+#include <libdevcore/Log.h>
 #include <libethash/util.h>
 #include <libethash/ethash.h>
 #include <libethash/internal.h>
@@ -468,7 +469,7 @@ bool ethash_cl_miner::init(
 			m_searchBuffer[i] = cl::Buffer(m_context, CL_MEM_WRITE_ONLY, (c_maxSearchResults + 1) * sizeof(uint32_t));
 		}
 
-		ETHCL_LOG("Generating DAG data");
+		cnote << "Start DAG generation";
 
 		uint32_t const work = (uint32_t)(dagSize / sizeof(node));
 		//while (work < blocks * threads) blocks /= 2;
@@ -495,6 +496,7 @@ bool ethash_cl_miner::init(
 		ETHCL_LOG(err.what() << "(" << err.err() << ")");
 		return false;
 	}
+	cnote << "Finished DAG generation";
 	return true;
 }
 
