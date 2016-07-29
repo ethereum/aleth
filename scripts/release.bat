@@ -1,4 +1,3 @@
-@ECHO OFF
 
 REM ---------------------------------------------------------------------------
 REM Batch file for implementing release flow for cpp-ethereum for Windows.
@@ -33,8 +32,7 @@ set VISUALC_VERSION="VC140"
 set TESTS=%3
 set TEST_EXECUTABLES=
 
-if "%TESTS%"=="On"
-(
+if "%TESTS%"=="On" (
     TEST_EXECUTABLES= ^
         .\build\test\libethereum\test\%CONFIGURATION%\testeth.exe ^
         .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe ^
