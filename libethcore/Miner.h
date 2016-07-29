@@ -73,7 +73,7 @@ inline std::ostream& operator<<(std::ostream& _out, WorkingProgress _p)
 {
 	ostringstream khsTtl;
 	khsTtl << (_p.hashes/_p.ms);
-	_out << _p.hashDetail + "= " + khsTtl.str() + "Khs ";
+	_out << _p.hashDetail + "=" + khsTtl.str() + "Khs ";
 	return _out;
 }
 
@@ -105,7 +105,8 @@ private:
 
 inline std::ostream& operator<<(std::ostream& os, SolutionStats s)
 {
-	return os << "[A" << s.getAccepts() << "+" << s.getAcceptedStales() << ":R" << s.getRejects() << "+" << s.getRejectedStales() << ":F" << s.getFailures() << "]";
+//	return os << "[A" << s.getAccepts() << "+" << s.getAcceptedStales() << ":R" << s.getRejects() << "+" << s.getRejectedStales() << ":F" << s.getFailures() << "]";
+	return os << "A" << s.getAccepts() << "+" << s.getAcceptedStales() << ":R" << s.getRejects() << "+" << s.getRejectedStales();
 }
 
 template <class PoW> class GenericMiner;

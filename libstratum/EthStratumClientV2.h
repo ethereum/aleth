@@ -90,4 +90,5 @@ private:
 	int m_extraNonceHexSize;
 
 	void processExtranonce(std::string& enonce);
+	void jobReport();
 };

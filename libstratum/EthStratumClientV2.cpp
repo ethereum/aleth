@@ -251,6 +251,13 @@ void EthStratumClientV2::processExtranonce(std::string& enonce)
 	m_extraNonce = h64(enonce);
 }
 
+void EthStratumClientV2::jobReport()
+{
+	cnote << "New job" << m_job << 
+			 "target " << m_current.boundary.hex().substr(4, 8) << 
+			 "header " << m_current.headerHash.hex().substr(0,8);
+}
+
 void EthStratumClientV2::processReponse(Json::Value& responseObject)
 {
 	Json::Value json_err = responseObject.get("error", Json::Value::null);
@@ -349,8 +356,6 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 
 					if (sHeaderHash != "" && sSeedHash != "")
 					{
-						cnote << "Received new job #" + job;
-
 						h256 seedHash = h256(sSeedHash);
 
 						m_previous  = m_current;
@@ -365,6 +370,7 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 						m_job = job;
 
 						p_farm->setWork(m_current);
+						jobReport();			// display new job info
 					}
 				}
 				else
@@ -381,8 +387,6 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 
 					if (sHeaderHash != "" && sSeedHash != "" && sShareTarget != "")
 					{
-						cnote << "Received new job #" + job.substr(0, 8);
-
 						h256 seedHash = h256(sSeedHash);
 						h256 headerHash = h256(sHeaderHash);
 
@@ -404,6 +408,8 @@ void EthStratumClientV2::processReponse(Json::Value& responseObject)
 							//x_current.unlock();
 							//p_worktimer = new boost::asio::deadline_timer(m_io_service, boost::posix_time::seconds(m_worktimeout));
 							//p_worktimer->async_wait(boost::bind(&EthStratumClientV2::work_timeout_handler, this, boost::asio::placeholders::error));
+		
+							jobReport();			// display new job info
 						}
 					}
 				}
@@ -449,7 +455,7 @@ void EthStratumClientV2::work_timeout_handler(const boost::system::error_code& e
 
 bool EthStratumClientV2::submit(EthashProofOfWork::Solution solution) {
 
-	cnote << "Submitting solution to" << p_active->host << "...";
+	cnote << "Submit solution to" << p_active->host;
 
 	string minernonce;
 	if (m_protocol == STRATUM_PROTOCOL_ETHEREUMSTRATUM)

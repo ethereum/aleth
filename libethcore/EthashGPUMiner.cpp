@@ -107,7 +107,7 @@ int EthashGPUMiner::s_devices[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 
 EthashGPUMiner::EthashGPUMiner(ConstructionInfo const& _ci):
 	GenericMiner<EthashProofOfWork>(_ci),
-	Worker("OCLminer" + toString(index())),
+	Worker("GPU" + toString(index())),
 	m_hook(new EthashCLHook(this))
 {
 }
@@ -139,7 +139,7 @@ void EthashGPUMiner::workLoop()
 	// take local copy of work since it may end up being overwritten by kickOff/pause.
 	try {
 		WorkPackage w = work();
-		cnote << "set work; seed: " << "#" + w.seedHash.hex().substr(0, 8) + ", target: " << "#" + w.boundary.hex().substr(0, 12);
+		// cnote << "set work; seed: " << "#" + w.seedHash.hex().substr(0, 8) + ", target: " << "#" + w.boundary.hex().substr(0, 12);
 		if (!m_miner || m_minerSeed != w.seedHash)
 		{
 			if (s_dagLoadMode == DAG_LOAD_MODE_SEQUENTIAL)
