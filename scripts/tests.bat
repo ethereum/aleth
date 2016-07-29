@@ -32,8 +32,8 @@ if "%TESTS%"=="On" (
     set CONFIGURATION=%2
     set REPO_ROOT=%3
     set ETHEREUM_DEPS_PATH=%4
-    set VISUALC_PATH="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
-    set VISUALC_VERSION="VC140"
+    set VISUALC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
+    set VISUALC_VERSION=VC140
 
     git clone https://github.com/ethereum/tests.git
     set ETHEREUM_TEST_PATH=%REPO_ROOT%\..\tests
