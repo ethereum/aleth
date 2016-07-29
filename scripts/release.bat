@@ -47,7 +47,7 @@ if "%TESTS%"=="On" (
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
     %TEST_EXECUTABLES% ^
-    "%VISUAL_STUDIO_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" ^
+    "%VISUALC_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll ^
     %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
