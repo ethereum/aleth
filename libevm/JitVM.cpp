@@ -122,7 +122,7 @@ evm_variant evm_query(
 	case EVM_BLOCKHASH:
 		v.hash256 = toEvmC(env.blockHash(_arg.int64));
 		break;
-	case EVM_STORAGE:
+	case EVM_SLOAD:
 	{
 		auto key = fromEvmC(_arg.uint256);
 		v.uint256 = toEvmC(env.store(key));
