@@ -52,8 +52,8 @@ build_script:
     - cd %APPVEYOR_BUILD_FOLDER%
     - scripts\release.bat %CONFIGURATION% %ETHEREUM_DEPS_PATH% %TESTS%
 test_script:
-    - cd %APPVEYOR_BUILD_FOLDER%\..
-    - %APPVEYOR_BUILD_FOLDER%\scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%
+    - cd %APPVEYOR_BUILD_FOLDER%
+    - scripts\tests.bat %TESTS% %CONFIGURATION% %APPVEYOR_BUILD_FOLDER% %ETHEREUM_DEPS_PATH%
 artifacts:
     - path: cpp-ethereum-develop-windows.zip
       name: cpp-ethereum-develop-windows-zip

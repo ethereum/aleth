@@ -35,6 +35,7 @@ if "%TESTS%"=="On" (
     set VISUALC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
     set VISUALC_VERSION=VC140
 
+    cd ..
     git clone https://github.com/ethereum/tests.git
     set ETHEREUM_TEST_PATH=%REPO_ROOT%\..\tests
 
