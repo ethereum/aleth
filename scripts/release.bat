@@ -28,6 +28,18 @@ REM ---------------------------------------------------------------------------
 
 set CONFIGURATION=%1
 set ETHEREUM_DEPS_PATH=%2
+set VISUALC_PATH="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
+set VISUALC_VERSION="VC140"
+set TESTS=%3
+set TEST_EXECUTABLES=
+
+if "%TESTS%"=="On"
+(
+    TEST_EXECUTABLES= ^
+        .\build\test\libethereum\test\%CONFIGURATION%\testeth.exe ^
+        .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe ^
+        .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe
+)
 
 7z a cpp-ethereum-develop-windows.zip ^
     .\build\bench\%CONFIGURATION%\bench.exe ^
@@ -36,10 +48,8 @@ set ETHEREUM_DEPS_PATH=%2
     .\build\ethminer\%CONFIGURATION%\ethminer.exe ^
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
-    .\build\test\libethereum\test\%CONFIGURATION%\testeth.exe ^
-    .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe ^
-    .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe ^
-    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" ^
+    %TEST_EXECUTABLES% ^
+    "%VISUAL_STUDIO_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll ^
     %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
