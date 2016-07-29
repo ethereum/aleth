@@ -32,27 +32,25 @@ if "%TESTS%"=="On" (
     set CONFIGURATION=%2
     set REPO_ROOT=%3
     set ETHEREUM_DEPS_PATH=%4
-    set VISUALC_PATH=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC
-    set VISUALC_VERSION=VC140
 
     cd ..
     git clone https://github.com/ethereum/tests.git
     set ETHEREUM_TEST_PATH=%REPO_ROOT%\..\tests
 
     cd %REPO_ROOT%\build\test\libethereum\test\%CONFIGURATION%
-    copy "%VISUALC_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" .
+    copy C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     testeth.exe
 
     cd %REPO_ROOT%\build\test\libweb3core\test\%CONFIGURATION%
-    copy "%VISUALC_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" .
+    copy C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     testweb3core.exe
 
     cd %REPO_ROOT%\build\test\webthree\test\%CONFIGURATION%
-    copy "%VISUALC_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" .
+    copy C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .

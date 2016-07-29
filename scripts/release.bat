@@ -27,8 +27,6 @@ REM ---------------------------------------------------------------------------
 
 set CONFIGURATION=%1
 set ETHEREUM_DEPS_PATH=%2
-set VISUALC_PATH="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC"
-set VISUALC_VERSION="VC140"
 set TESTS=%3
 set TEST_EXECUTABLES=
 
@@ -47,7 +45,7 @@ if "%TESTS%"=="On" (
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
     %TEST_EXECUTABLES% ^
-    "%VISUALC_PATH%\redist\x86\Microsoft.%VISUALC_VERSION%.CRT\msvc*.dll" ^
+    "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll ^
     %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll
