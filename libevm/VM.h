@@ -67,7 +67,11 @@ private:
 	void makeJumpDestTable(ExtVMFace& _ext);
 	uint64_t verifyJumpDest(u256 const& _dest);
 	void copyDataToMemory(bytesConstRef _data, u256*& m_SP);
-	void throwVMStackException(unsigned _size, unsigned _n, unsigned _d);
+	uint64_t memNeed(u256 _offset, u256 _size);
+	void throwOutOfGas();
+	void throwBadInstruction();
+	void throwBadJumpDestination();
+	void throwBadStack(unsigned _size, unsigned _n, unsigned _d);
 	void reportStackUse();
 
 	std::unordered_set<uint64_t> m_jumpDests;
@@ -113,9 +117,16 @@ private:
 	void caseCreate();
 	bool caseCallSetup(CallParameters*);
 	void caseCall();
-};
 
-void throwVMException(VMException);
+	template<class T> uint64_t toUint64(T v)
+	{
+		// check for overflow
+		if (v > 0x7FFFFFFFFFFFFFFF)
+			throwOutOfGas();
+		uint64_t w = uint64_t(v);
+		return w;
+	}
+	};
 
 }
 }
