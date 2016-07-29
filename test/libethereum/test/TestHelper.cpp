@@ -728,7 +728,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests)
+void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix)
 {
 	string testPath = getTestPath();
 	testPath += _testPathAppendix;
@@ -743,8 +743,11 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 			cnote << "Populating tests...";
 			json_spirit::mValue v;
 			boost::filesystem::path p(__FILE__);
-			string s = asString(dev::contents(_pathToFiller.string() + "/" + _name + "Filler.json"));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + "Filler.json is empty.");
+
+			string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
+			string 	s = asString(dev::contents(_pathToFiller.string() + "/" + _name + nameEnding));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + nameEnding + " is empty.");
+
 			json_spirit::read_string(s, v);
 			doTests(v, true);
 			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
@@ -1033,6 +1036,7 @@ size_t TestOutputHelper::m_currTest = 0;
 size_t TestOutputHelper::m_maxTests = 0;
 string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
+string TestOutputHelper::m_currentTestFileName = "n/a";
 
 using namespace boost;
 void TestOutputHelper::initTest(int _maxTests)
@@ -1077,7 +1081,7 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 	}
 
 	cnote << _testName;
-	_testName = "(" + _testName + ") ";
+	_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
 	m_currentTestName = _testName;
 	return true;
 }

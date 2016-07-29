@@ -25,7 +25,9 @@
 #include <libdevcore/Log.h>
 #include <test/test.h>
 
-BOOST_AUTO_TEST_SUITE(CoreLibTests)
+using namespace dev::test;
+
+BOOST_FIXTURE_TEST_SUITE(CoreLibTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(byteRef)
 {	

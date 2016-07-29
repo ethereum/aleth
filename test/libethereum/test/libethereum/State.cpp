@@ -328,6 +328,27 @@ BOOST_AUTO_TEST_CASE(stRandom)
 {
 	test::Options::get(); // parse command line options, e.g. to enable JIT
 
+	if (dev::test::Options::get().fillTests)
+	{
+		test::TestOutputHelper::initTest();
+		std::string fillersPath = dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests";
+
+		vector<boost::filesystem::path> testFiles;
+		boost::filesystem::directory_iterator iterator(fillersPath);
+		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+				testFiles.push_back(iterator->path());
+
+		test::TestOutputHelper::setMaxTests(testFiles.size() * 2);
+		for (auto& path: testFiles)
+		{
+			std::string filename = path.filename().c_str();
+			test::TestOutputHelper::setCurrentTestFileName(filename);
+			filename = filename.substr(0, filename.length() - 5); //without .json
+			dev::test::executeTests(filename, "/StateTests/RandomTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
+		}
+	}
+
 	string testPath = dev::test::getTestPath();
 	testPath += "/StateTests/RandomTests";
 
@@ -345,6 +366,7 @@ BOOST_AUTO_TEST_CASE(stRandom)
 		try
 		{
 			cnote << "Testing ..." << path.filename();
+			test::TestOutputHelper::setCurrentTestFileName(path.filename().c_str());
 			json_spirit::mValue v;
 			string s = asString(dev::contents(path.string()));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");

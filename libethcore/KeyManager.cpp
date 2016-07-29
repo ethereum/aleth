@@ -422,13 +422,15 @@ void KeyManager::write(SecureFixedHash<16> const& _key, string const& _keysFile)
 {
 	RLPStream s(4);
 	s << 1; // version
-	s.appendList(accounts().size());
-	for (auto const& address: accounts())
+
+	s.appendList(m_keyInfo.size());
+	for (auto const& info: m_keyInfo)
 	{
-		h128 id = uuid(address);
-		auto const& ki = m_keyInfo.at(address);
-		s.appendList(5) << address << id << ki.passHash << ki.accountName << ki.passwordHint;
+		h128 id = uuid(info.first);
+		auto const& ki = info.second;
+		s.appendList(5) << info.first << id << ki.passHash << ki.accountName << ki.passwordHint;
 	}
+
 	s.appendList(m_passwordHint.size());
 	for (auto const& i: m_passwordHint)
 		s.appendList(2) << i.first << i.second;

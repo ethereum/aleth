@@ -28,26 +28,38 @@ using namespace dev::eth;
 //#define BOOST_THROW_EXCEPTION(X) ((cerr << "VM EXCEPTION " << boost::diagnostic_information(X) << endl), abort())
 
 // consolidate exception throws to avoid spraying boost code all over interpreter
-void dev::eth::throwVMException(VMException x)
+
+void VM::throwOutOfGas()
 {
-	BOOST_THROW_EXCEPTION(x);
+	BOOST_THROW_EXCEPTION(OutOfGas());
 }
 
-void VM::throwVMStackException(unsigned _size, unsigned _n, unsigned _d)
+void VM::throwBadInstruction()
+{
+	BOOST_THROW_EXCEPTION(BadInstruction());
+}
+
+void VM::throwBadJumpDestination()
+{
+	BOOST_THROW_EXCEPTION(BadJumpDestination());
+}
+
+void VM::throwBadStack(unsigned _size, unsigned _n, unsigned _d)
 {
 	if (_size < _n)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		throwVMException(StackUnderflow() << RequirementError((bigint)_n, (bigint)_size));
+		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_n, (bigint)_size));
 	}
 	if (_size - _n + _d > 1024)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		throwVMException(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)_size));
+		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)_size));
 	}
 }
+
 
 std::array<InstructionMetric, 256> VM::c_metrics;
 void VM::initMetrics()

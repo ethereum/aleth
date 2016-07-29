@@ -30,14 +30,16 @@
 #include <libp2p/RLPxHandshake.h>
 #include <libp2p/RLPXFrameWriter.h>
 #include <libp2p/RLPXFrameReader.h>
+#include <test/test.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
 using namespace dev::p2p;
+using namespace dev::test;
 using namespace CryptoPP;
 
-struct RLPXTestFixture {
+struct RLPXTestFixture: public TestOutputHelper {
 	RLPXTestFixture() : s_secp256k1(Secp256k1PP::get()) {}
 	~RLPXTestFixture() {}
 

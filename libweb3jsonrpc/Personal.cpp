@@ -50,6 +50,11 @@ string Personal::personal_sendTransaction(Json::Value const& _transaction, strin
 	return string();
 }
 
+string Personal::personal_signAndSendTransaction(Json::Value const& _transaction, string const& _password)
+{
+	return personal_sendTransaction(_transaction, _password);
+}
+
 bool Personal::personal_unlockAccount(std::string const& _address, std::string const& _password, int _duration)
 {
 	return m_accountHolder.unlockAccount(Address(fromHex(_address, WhenError::Throw)), _password, _duration);

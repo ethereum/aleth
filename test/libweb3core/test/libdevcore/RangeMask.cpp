@@ -31,7 +31,7 @@ namespace dev
 namespace test
 {
 
-BOOST_AUTO_TEST_SUITE(RangeMaskTest)
+BOOST_FIXTURE_TEST_SUITE(RangeMaskTest, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(constructor)
 {

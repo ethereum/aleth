@@ -33,9 +33,10 @@
 
 using namespace std;
 using namespace dev;
+using namespace dev::test;
 namespace js = json_spirit;
 
-BOOST_AUTO_TEST_SUITE(BasicTests)
+BOOST_FIXTURE_TEST_SUITE(BasicTests, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(hexPrefix_test)
 {
