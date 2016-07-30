@@ -61,32 +61,7 @@ if (JSONRPC)
 	message (" - json-rpc-cpp header: ${JSON_RPC_CPP_INCLUDE_DIRS}")
 	message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
 	add_definitions(-DETH_JSONRPC)
-
- 	find_package(MHD)
-	message(" - microhttpd header: ${MHD_INCLUDE_DIRS}")
-	message(" - microhttpd lib   : ${MHD_LIBRARIES}")
-	message(" - microhttpd dll   : ${MHD_DLLS}")
 endif() #JSONRPC
-
-# TODO readline package does not yet check for correct version number
-# TODO make readline package dependent on cmake options
-# TODO get rid of -DETH_READLINE
-find_package (Readline 6.3.8)
-if (READLINE_FOUND)
-	message (" - readline header: ${READLINE_INCLUDE_DIRS}")
-	message (" - readline lib   : ${READLINE_LIBRARIES}")
-	add_definitions(-DETH_READLINE)
-endif ()
-
-# TODO miniupnpc package does not yet check for correct version number
-# TODO make miniupnpc package dependent on cmake options
-# TODO get rid of -DMINIUPNPC
-find_package (Miniupnpc 1.8.2013)
-if (MINIUPNPC_FOUND)
-	message (" - miniupnpc header: ${MINIUPNPC_INCLUDE_DIRS}")
-	message (" - miniupnpc lib   : ${MINIUPNPC_LIBRARIES}")
-	add_definitions(-DETH_MINIUPNPC)
-endif()
 
 # TODO gmp package does not yet check for correct version number
 # TODO it is also not required in msvc build

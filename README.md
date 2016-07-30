@@ -71,9 +71,10 @@ cmake -DBUNDLE=cudaminer -G "Visual Studio 12 2013 Win64" ..
 Ubuntu 14.04. OpenCL only (for AMD cards)
 
 ```bash
-add-apt-repository -y ppa:ethereum/ethereum
+sudo apt-get install software-properties-common -y 
+sudo add-apt-repository -y ppa:ethereum/ethereum
 sudo apt-get update
-sudo apt-get install software-properties-common git cmake libcryptopp-dev libleveldb-dev libjsoncpp-dev libjson-rpc-cpp-dev libboost-all-dev libgmp-dev libreadline-dev libcurl4-gnutls-dev ocl-icd-libopencl1 opencl-headers mesa-common-dev libmicrohttpd-dev build-essential -y
+sudo apt-get install git cmake libcryptopp-dev libleveldb-dev libjsoncpp-dev libjson-rpc-cpp-dev libboost-all-dev ocl-icd-libopencl1 opencl-headers build-essential -y
 git clone https://github.com/Genoil/cpp-ethereum/
 cd cpp-ethereum/
 mkdir build
