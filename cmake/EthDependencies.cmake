@@ -11,6 +11,12 @@ else ()
 endif()
 set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR})
 
+if(ETH_STATIC)
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
+	endif()
+endif()
+
 # setup directory for cmake generated files and include it globally
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
 set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
@@ -63,13 +69,9 @@ if (JSONRPC)
 	add_definitions(-DETH_JSONRPC)
 endif() #JSONRPC
 
-# TODO gmp package does not yet check for correct version number
-# TODO it is also not required in msvc build
-find_package (Gmp 6.0.0)
-if (GMP_FOUND)
-	message(" - gmp header: ${GMP_INCLUDE_DIRS}")
-	message(" - gmp lib   : ${GMP_LIBRARIES}")
-endif()
+# TODO specify min curl version, on windows we are currently using 7.29
+find_package (CURL)
+message(" - curl lib   : ${CURL_LIBRARIES}")
 
 # cpuid required for eth
 find_package (Cpuid)
@@ -138,22 +140,15 @@ endif() #GUI
 # use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (ETH_STATIC)
+	set(Boost_USE_STATIC_LIBS ON)
+else()
+	set(Boost_USE_STATIC_LIBS OFF)
+endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 # TODO hanlde other msvc versions or it will fail find them
 	set(Boost_COMPILER -vc120)
-# use static boost libraries *.lib
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (APPLE)
-
-# use static boost libraries *.a
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (UNIX)
-# use dynamic boost libraries .dll
-	set(Boost_USE_STATIC_LIBS OFF)
-
 endif()
 
 find_package(Boost 1.54.0 REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
