@@ -66,7 +66,22 @@ script:
     - git clone https://github.com/ethereum/tests.git
     - export ETHEREUM_TEST_PATH=$(pwd)/tests/
     - cd $TRAVIS_BUILD_DIR/build
-    - ./test/libethereum/test/testeth
+
+    # Workaround for fairly frequent timeout issue, as shown here, is to prepend
+    # 'travis_wait' to your long-running command, which tells TravisCI not to panic
+    # if a specific command does not update STDOUT for 20 minutes.   Unsure at the
+    # time of writing whether this will actually help anything, or whether this STDOUT
+    # stall actually represents a real crash or hang.
+    #
+    # 'No output has been received in the last 10 minutes, this potentially indicates a stalled
+    # build or something wrong with the build itself'
+    #
+    # See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/148445495 for an instance
+    # of this problem actually happening within a TravisCI automation step.
+    #
+    # See http://stackoverflow.com/questions/28746046/how-can-i-install-something-on-travis-ci-without-a-timeout/28833319#28833319
+
+    - travis_wait ./test/libethereum/test/testeth
     - ./test/libweb3core/test/testweb3core
     - ./test/webthree/test/testweb3    
 deploy:
