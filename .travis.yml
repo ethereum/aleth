@@ -17,4 +17,4 @@ branches:
         - master
         - develop
 before_install: ./install_dependencies.sh
-script: ./fetch_umbrella_build_and_test.sh
+script: travis_wait 40 ./fetch_umbrella_build_and_test.sh
