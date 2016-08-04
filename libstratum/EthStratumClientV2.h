@@ -2,7 +2,6 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <json/json.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Worker.h>
@@ -18,6 +17,11 @@ using namespace boost::asio;
 using boost::asio::ip::tcp;
 using namespace dev;
 using namespace dev::eth;
+
+// Json::Value is not part of the public interface 
+namespace Json {
+class Value;
+}
 
 class EthStratumClientV2 : public Worker
 {

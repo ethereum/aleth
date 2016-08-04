@@ -1,5 +1,6 @@
 
 #include "EthStratumClientV2.h"
+#include <json/json.h>
 #include <libdevcore/Log.h>
 #include <libethash/endian.h>
 using boost::asio::ip::tcp;
