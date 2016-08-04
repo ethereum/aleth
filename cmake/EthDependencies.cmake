@@ -47,9 +47,9 @@ message(STATUS "ctest path: ${CTEST_COMMAND}")
 
 # Dependencies must have a version number, to ensure reproducible build. The version provided here is the one that is in the extdep repository. If you use system libraries, version numbers may be different.
 
-find_package (CryptoPP 5.6.2 REQUIRED)
-message(" - CryptoPP header: ${CRYPTOPP_INCLUDE_DIRS}")
-message(" - CryptoPP lib   : ${CRYPTOPP_LIBRARIES}")
+#find_package (CryptoPP 5.6.2 REQUIRED)
+#message(" - CryptoPP header: ${CRYPTOPP_INCLUDE_DIRS}")
+#message(" - CryptoPP lib   : ${CRYPTOPP_LIBRARIES}")
 
 find_package (LevelDB REQUIRED)
 message(" - LevelDB header: ${LEVELDB_INCLUDE_DIRS}")
@@ -67,11 +67,11 @@ if (JSONRPC)
 	message (" - json-rpc-cpp header: ${JSON_RPC_CPP_INCLUDE_DIRS}")
 	message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
 	add_definitions(-DETH_JSONRPC)
-endif() #JSONRPC
 
-# TODO specify min curl version, on windows we are currently using 7.29
-find_package (CURL)
-message(" - curl lib   : ${CURL_LIBRARIES}")
+	# TODO specify min curl version, on windows we are currently using 7.29
+	find_package (CURL)
+	message(" - curl lib   : ${CURL_LIBRARIES}")
+endif() #JSONRPC
 
 # cpuid required for eth
 find_package (Cpuid)
