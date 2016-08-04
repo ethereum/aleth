@@ -42,7 +42,6 @@
 #include "Miner.h"
 #include "Params.h"
 #include "EthashSealEngine.h"
-#include "EthashCPUMiner.h"
 #include "EthashGPUMiner.h"
 #include "EthashCUDAMiner.h"
 using namespace std;

@@ -73,13 +73,6 @@ if (JSONRPC)
 	message(" - curl lib   : ${CURL_LIBRARIES}")
 endif() #JSONRPC
 
-# cpuid required for eth
-find_package (Cpuid)
-if (CPUID_FOUND)
-	message(" - cpuid header: ${CPUID_INCLUDE_DIRS}")
-	message(" - cpuid lib   : ${CPUID_LIBRARIES}")
-endif()
-
 find_package (OpenCL)
 if (OpenCL_FOUND)
 	message(" - opencl header: ${OpenCL_INCLUDE_DIRS}")

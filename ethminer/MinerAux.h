@@ -41,7 +41,6 @@
 #include <libethcore/EthashAux.h>
 #include <libethcore/EthashCUDAMiner.h>
 #include <libethcore/EthashGPUMiner.h>
-#include <libethcore/EthashCPUMiner.h>
 #include <libethcore/Farm.h>
 #if ETH_ETHASHCL || !ETH_TRUE
 #include <libethash-cl/ethash_cl_miner.h>
@@ -391,8 +390,6 @@ public:
 				cerr << "Bad " << arg << " option: " << argv[i] << endl;
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
-		else if (arg == "-C" || arg == "--cpu")
-			m_minerType = MinerType::CPU;
 		else if (arg == "-G" || arg == "--opencl")
 			m_minerType = MinerType::CL;
 		else if (arg == "-U" || arg == "--cuda")
@@ -475,16 +472,9 @@ public:
 			if (m_minerType == MinerType::CUDA || m_minerType == MinerType::Mixed)
 				EthashCUDAMiner::listDevices();
 #endif
-			if (m_minerType == MinerType::CPU)
-				cout << "--list-devices should be combined with GPU mining flag (-G for OpenCL or -U for CUDA)" << endl;
 			exit(0);
 		}
 
-		if (m_minerType == MinerType::CPU)
-		{
-			cout << "CPU mining is no longer supported in this miner. Use -G (opencl) or -U (cuda) flag to select GPU platform." << endl;
-			exit(0);
-		}
 		else if (m_minerType == MinerType::CL || m_minerType == MinerType::Mixed)
 		{
 #if ETH_ETHASHCL || !ETH_TRUE
@@ -589,7 +579,7 @@ public:
 			<< "    --opencl-platform <n>  When mining using -G/--opencl use OpenCL platform n (default: 0)." << endl
 			<< "    --opencl-device <n>  When mining using -G/--opencl use OpenCL device n (default: 0)." << endl
 			<< "    --opencl-devices <0 1 ..n> Select which OpenCL devices to mine on. Default is to use all" << endl
-			<< "    -t, --mining-threads <n> Limit number of CPU/GPU miners to n (default: use everything available on selected platform)" << endl
+			<< "    -t, --mining-threads <n> Limit number of GPU miners to n (default: use everything available on selected platform)" << endl
 			<< "    --allow-opencl-cpu Allows CPU to be considered as an OpenCL device if the OpenCL platform supports it." << endl
 			<< "    --list-devices List the detected OpenCL/CUDA devices and exit. Should be combined with -G or -U flag" << endl
 			<< "    -L, --dag-load-mode <mode> DAG generation mode." << endl
@@ -638,7 +628,6 @@ private:
 
 		GenericFarm<EthashProofOfWork> f;
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
-		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
 #if ETH_ETHASHCL
 		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
 #endif
@@ -656,9 +645,7 @@ private:
 
 		genesis.setDifficulty(u256(1) << 63);
 		f.setWork(genesis);
-		if (_m == MinerType::CPU)
-			f.start("cpu", false);
-		else if (_m == MinerType::CL)
+		if (_m == MinerType::CL)
 			f.start("opencl", false);
 		else if (_m == MinerType::CUDA)
 			f.start("cuda", false);
@@ -722,7 +709,6 @@ private:
 
 		GenericFarm<EthashProofOfWork> f;
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
-		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{ &EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); } };
 #if ETH_ETHASHCL
 		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{ &EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); } };
 #endif
@@ -740,9 +726,7 @@ private:
 		genesis.setDifficulty(u256(1) << difficulty);
 		f.setWork(genesis);
 
-		if (_m == MinerType::CPU)
-			f.start("cpu", false);
-		else if (_m == MinerType::CL)
+		if (_m == MinerType::CL)
 			f.start("opencl", false);
 		else if (_m == MinerType::CUDA)
 			f.start("cuda", false);
@@ -802,7 +786,6 @@ private:
 	void doFarm(MinerType _m, string & _remote, unsigned _recheckPeriod)
 	{
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
-		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
 #if ETH_ETHASHCL
 		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
 #endif
@@ -823,9 +806,7 @@ private:
 		h256 id = h256::random();
 		GenericFarm<EthashProofOfWork> f;
 		f.setSealers(sealers);
-		if (_m == MinerType::CPU)
-			f.start("cpu", false);
-		else if (_m == MinerType::CL)
+		if (_m == MinerType::CL)
 			f.start("opencl", false);
 		else if (_m == MinerType::CUDA)
 			f.start("cuda", false);
@@ -958,7 +939,6 @@ private:
 	void doStratum()
 	{
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
-		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{ &EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); } };
 #if ETH_ETHASHCL
 		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{ &EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); } };
 #endif
@@ -1015,7 +995,7 @@ private:
 
 	/// Mining options
 	bool m_running = true;
-	MinerType m_minerType = MinerType::CPU;
+	MinerType m_minerType = MinerType::CL;
 	unsigned m_openclPlatform = 0;
 	unsigned m_openclDevice = 0;
 	unsigned m_miningThreads = UINT_MAX;
