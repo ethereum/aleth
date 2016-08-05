@@ -146,15 +146,14 @@ BOOST_AUTO_TEST_CASE(capability)
 	for (int i = 0; i < target; checksum += i++)
 		thc2->sendTestMessage(host1.id(), i);
 
-	this_thread::sleep_for(chrono::seconds(target / 64 + 1));
-	std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
-
 	// Temporarily disable these checks which are failing in TravisCI.
 	//
 	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/150109254
 	//
 
 #if !defined(ETH_AFTER_REPOSITORY_MERGE)
+	this_thread::sleep_for(chrono::seconds(target / 64 + 1));
+	std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
 	BOOST_REQUIRE_EQUAL(target, testData.first);
 	BOOST_REQUIRE_EQUAL(checksum, testData.second);
 #endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
