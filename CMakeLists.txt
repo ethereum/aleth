@@ -26,7 +26,6 @@ set(UTILS_DIR "${CMAKE_CURRENT_LIST_DIR}/webthree-helpers/utils" CACHE PATH "The
 set(DEV_DIR "${CMAKE_CURRENT_LIST_DIR}/libweb3core" CACHE PATH "The path to the dev libraries directory")
 set(ETH_DIR "${CMAKE_CURRENT_LIST_DIR}/libethereum" CACHE PATH "The path to the eth libraries directory")
 set(WEB3_DIR "${CMAKE_CURRENT_LIST_DIR}/webthree" CACHE PATH "The path to the webthree libraries directory")
-set(SOL_DIR "${CMAKE_CURRENT_LIST_DIR}/solidity" CACHE PATH "The path to the solidity libraries directory")
 
 # set cmake_policies
 
@@ -49,14 +48,10 @@ include(EthDependencies)
 include(EthUtils)
 
 include(EthOptions)
-configure_project(SOLIDITY)
+configure_project()
 
 add_subdirectory(webthree-helpers/utils)
 
 add_subdirectory(libweb3core)
 add_subdirectory(libethereum)
 add_subdirectory(webthree)
-
-if (SOLIDITY)
-	add_subdirectory(solidity)
-endif()
