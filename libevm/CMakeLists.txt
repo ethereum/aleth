@@ -30,4 +30,3 @@ eth_use(${EXECUTABLE} REQUIRED Eth::ethcore Dev::devcrypto Eth::evmcore Dev::dev
 eth_use(${EXECUTABLE} OPTIONAL Eth::evmjit)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-install( FILES ${HEADERS} DESTINATION include/libethereum/libevm )

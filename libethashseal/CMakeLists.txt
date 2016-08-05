@@ -9,5 +9,4 @@ eth_use(${EXECUTABLE} REQUIRED Eth::ethereum Eth::ethcore Eth::ethash Dev::devcr
 eth_use(${EXECUTABLE} OPTIONAL Eth::ethash-cl Cpuid)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
