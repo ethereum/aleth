@@ -342,7 +342,7 @@ BOOST_AUTO_TEST_CASE(stRandom)
 		test::TestOutputHelper::setMaxTests(testFiles.size() * 2);
 		for (auto& path: testFiles)
 		{
-			std::string filename = path.filename().c_str();
+			std::string filename = path.filename().string();
 			test::TestOutputHelper::setCurrentTestFileName(filename);
 			filename = filename.substr(0, filename.length() - 5); //without .json
 			dev::test::executeTests(filename, "/StateTests/RandomTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(stRandom)
 		try
 		{
 			cnote << "Testing ..." << path.filename();
-			test::TestOutputHelper::setCurrentTestFileName(path.filename().c_str());
+			test::TestOutputHelper::setCurrentTestFileName(path.filename().string());
 			json_spirit::mValue v;
 			string s = asString(dev::contents(path.string()));
 			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + path.string() + " is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
