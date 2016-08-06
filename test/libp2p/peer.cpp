@@ -87,19 +87,34 @@ BOOST_AUTO_TEST_CASE(host)
 	auto node2 = host2.id();
 	int const step = 10;
 
-	for (int i = 0; i < 3000 && (!host1.isStarted() || !host2.isStarted()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if (host1.isStarted() && host2.isStarted())
+			break;
+	}
 
 	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
 	
-	for (int i = 0; i < 3000 && (!host1.haveNetwork() || !host2.haveNetwork()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if (host1.haveNetwork() && host2.haveNetwork())
+			break;
+	}
 
 	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
 	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
-	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
+			break;
+	}
 
 	BOOST_REQUIRE_EQUAL(host1.peerCount(), 1);
 	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
@@ -213,8 +228,14 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	for (unsigned i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+	// Wait for up to 3 seconds, to give the hosts time to connect to each other.
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
+			break;
+	}
 
 	auto host1peerCount = host1.peerCount();
 	auto host2peerCount = host2.peerCount();
@@ -232,25 +253,20 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	BOOST_REQUIRE_EQUAL(peers1.size(), 1);
 	BOOST_REQUIRE_EQUAL(peers2.size(), 1);
 
-	// Temporarily disable this check which is failing in TravisCI only for OS X Yosemite
-	// The failure is "critical check disconnect1 == disconnect2 has failed [5 != 65535]"
-	// Where 5 is DuplicatePeer and 0xFFF is NoDisconnect.   I'm not sure if the failure
-	// is that one of the peers is duplicate or that one of the peers is failing to		
-	// disconnect.
-	//
-	// See https://github.com/ethereum/webthree-umbrella/issues/618
-	//
-
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	DisconnectReason disconnect1 = peers1[0].lastDisconnect();
 	DisconnectReason disconnect2 = peers2[0].lastDisconnect();
 	BOOST_REQUIRE_EQUAL(disconnect1, disconnect2);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
 	host1.relinquishPeer(node2);
 
-	for (unsigned i = 0; i < 2000 && (host1.peerCount() || host2.peerCount()); i += step)
+	// Wait for up to 2 seconds, to give the hosts time to disconnect from each other.
+	for (unsigned i = 0; i < 2000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if ((host1.peerCount() == 0) && (host2.peerCount() == 0))
+			break;
+	}
 
 	host1peerCount = host1.peerCount();
 	host2peerCount = host2.peerCount();
