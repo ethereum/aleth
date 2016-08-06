@@ -87,29 +87,37 @@ BOOST_AUTO_TEST_CASE(host)
 	auto node2 = host2.id();
 	int const step = 10;
 
-	for (int i = 0; i < 3000 && (!host1.isStarted() || !host2.isStarted()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if (host1.isStarted() && host2.isStarted())
+			break;
+	}
 
 	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
 	
-	for (int i = 0; i < 3000 && (!host1.haveNetwork() || !host2.haveNetwork()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if (host1.haveNetwork() && host2.haveNetwork())
+			break;
+	}
 
 	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
 	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
-	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	// Temporarily disable these checks which are failing in TravisCI.
-	//
-	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/149999540
-	//
+		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
+			break;
+	}
 
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	BOOST_REQUIRE_EQUAL(host1.peerCount(), 1);
 	BOOST_REQUIRE_EQUAL(host2.peerCount(), 1);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 }
 
 BOOST_AUTO_TEST_CASE(networkConfig)
