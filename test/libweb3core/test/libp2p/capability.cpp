@@ -122,41 +122,36 @@ BOOST_AUTO_TEST_CASE(capability)
 	BOOST_REQUIRE(port2);	
 	BOOST_REQUIRE_NE(port1, port2);
 
-	for (int i = 0; i < 3000 && (!host1.isStarted() || !host2.isStarted()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if (host1.isStarted() && host2.isStarted())
+			break;
+	}
 
 	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
 	host1.requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	// Temporarily disable this check which is failing in TravisCI.
-	//
-	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/150109254
-	//
+		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
+			break;
+	}
 
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	BOOST_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
-
 
 	int const target = 64;
 	int checksum = 0;
 	for (int i = 0; i < target; checksum += i++)
 		thc2->sendTestMessage(host1.id(), i);
 
-	// Temporarily disable these checks which are failing in TravisCI.
-	//
-	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/150109254
-	//
-
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	this_thread::sleep_for(chrono::seconds(target / 64 + 1));
 	std::pair<int, int> testData = thc1->retrieveTestData(host2.id());
 	BOOST_REQUIRE_EQUAL(target, testData.first);
 	BOOST_REQUIRE_EQUAL(checksum, testData.second);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
