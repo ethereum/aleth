@@ -69,5 +69,4 @@ jsonrpcstub_create(test.json
 )
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 

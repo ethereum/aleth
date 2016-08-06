@@ -559,7 +559,7 @@ string compileLLL(string const& _code)
 #else
 	char input[1024];
 	boost::filesystem::path path(boost::filesystem::temp_directory_path() / boost::filesystem::unique_path());
-	string cmd = string("../../solidity/lllc/lllc -o 0 ") + path.string();
+	string cmd = string("lllc -o 0 ") + path.string();
 	writeFile(path.string(), _code);
 
 	FILE *fp = popen(cmd.c_str(), "r");
