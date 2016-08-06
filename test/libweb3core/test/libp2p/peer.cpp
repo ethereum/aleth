@@ -220,67 +220,50 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	for (unsigned i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+	// Wait for up to 3 seconds, to give the hosts time to connect to each other.
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	// Temporarily disable this check which is failing in TravisCI only for Ubuntu Trusty.
-	//
-	// See https://travis-ci.org/ethereum/cpp-ethereum/jobs/149963903
-	//
+		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
+			break;
+	}
 
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	auto host1peerCount = host1.peerCount();
 	auto host2peerCount = host2.peerCount();
 	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
 	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
-	// Temporarily disable this check which is failing in TravisCI.
-
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	PeerSessionInfos sis1 = host1.peerSessionInfo();
 	PeerSessionInfos sis2 = host2.peerSessionInfo();
 
 	BOOST_REQUIRE_EQUAL(sis1.size(), 1);
 	BOOST_REQUIRE_EQUAL(sis2.size(), 1);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
-	// Temporarily disable this check which is failing in TravisCI.
-
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	Peers peers1 = host1.getPeers();
 	Peers peers2 = host2.getPeers();
 	BOOST_REQUIRE_EQUAL(peers1.size(), 1);
 	BOOST_REQUIRE_EQUAL(peers2.size(), 1);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
-	// Temporarily disable this check which is failing in TravisCI only for OS X Yosemite
-	// The failure is "critical check disconnect1 == disconnect2 has failed [5 != 65535]"
-	// Where 5 is DuplicatePeer and 0xFFF is NoDisconnect.   I'm not sure if the failure
-	// is that one of the peers is duplicate or that one of the peers is failing to		
-	// disconnect.
-	//
-	// See https://github.com/ethereum/webthree-umbrella/issues/618
-	//
-
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
 	DisconnectReason disconnect1 = peers1[0].lastDisconnect();
 	DisconnectReason disconnect2 = peers2[0].lastDisconnect();
 	BOOST_REQUIRE_EQUAL(disconnect1, disconnect2);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
 	host1.relinquishPeer(node2);
 
-	for (unsigned i = 0; i < 2000 && (host1.peerCount() || host2.peerCount()); i += step)
+	// Wait for up to 2 seconds, to give the hosts time to disconnect from each other.
+	for (unsigned i = 0; i < 2000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
-	// Temporarily disable this check which is failing in TravisCI.
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
+		if ((host1.peerCount() == 0) && (host2.peerCount() == 0))
+			break;
+	}
+
 	host1peerCount = host1.peerCount();
 	host2peerCount = host2.peerCount();
 	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
 	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
