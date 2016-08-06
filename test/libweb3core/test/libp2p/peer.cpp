@@ -224,17 +224,18 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	for (unsigned i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
 		this_thread::sleep_for(chrono::milliseconds(step));
 
+	auto host1peerCount = host1.peerCount();
+	auto host2peerCount = host2.peerCount();
+
 	// Temporarily disable this check which is failing in TravisCI only for Ubuntu Trusty.
 	//
 	// See https://travis-ci.org/ethereum/cpp-ethereum/jobs/149963903
 	//
 
 #if !defined(ETH_AFTER_REPOSITORY_MERGE)
-	auto host1peerCount = host1.peerCount();
 	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
 #endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
-	auto host2peerCount = host2.peerCount();
 	BOOST_REQUIRE_EQUAL(host2peerCount, 1);
 
 	PeerSessionInfos sis1 = host1.peerSessionInfo();
@@ -245,15 +246,6 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	Peers peers1 = host1.getPeers();
 	Peers peers2 = host2.getPeers();
-
-	// Temporarily disable this check which is failing in TravisCI only for Ubuntu Trusty.
-	//
-	// See https://travis-ci.org/ethereum/cpp-ethereum/jobs/149963903
-	//
-
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
-	BOOST_REQUIRE_EQUAL(host1peerCount, 1);
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
 
 	BOOST_REQUIRE_EQUAL(peers2.size(), 1);
 
