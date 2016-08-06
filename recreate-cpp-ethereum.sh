@@ -45,8 +45,6 @@ rsync -r ./webthree/test/                 $outputDirectory/test/webthree/test/
 # intentionally left /webthree root files behind: (CMakeLists.txt, LICENSE, README.md)
 rsync -r ./webthree-helpers/cmake/        $outputDirectory/cmake/
 rsync -r ./webthree-helpers/homebrew/     $outputDirectory/homebrew/
-rsync -r ./webthree-helpers/scripts/build_emscripten.sh        $outputDirectory/scripts/build_emscripten.sh
-rsync -r ./webthree-helpers/scripts/ethcoverage.sh             $outputDirectory/scripts/ethcoverage.sh
 rsync -r ./webthree-helpers/scripts/ppabuild.sh                $outputDirectory/scripts/ppabuild.sh
 rsync -r ./webthree-helpers/scripts/upload-homebrew-formula.sh $outputDirectory/scripts/upload-homebrew-formula.sh
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
@@ -77,5 +75,6 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/sc
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/install_deps.sh > $outputDirectory/scripts/install_deps.sh
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.bat > $outputDirectory/scripts/release.bat
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.sh > $outputDirectory/scripts/release.sh
+curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/tests.bat > $outputDirectory/scripts/tests.bat
 
 # TODO - Move Contributing and coding standards to http://ethdocs.org
