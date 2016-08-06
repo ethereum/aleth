@@ -12,5 +12,4 @@ add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
 eth_use(${EXECUTABLE} REQUIRED Web3::whisper Eth::ethereum Eth::ethashseal)
 
 install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
-install( FILES ${HEADERS} DESTINATION include/${EXECUTABLE} )
 
