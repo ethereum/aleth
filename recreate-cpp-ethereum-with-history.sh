@@ -31,6 +31,7 @@ git rm .gitmodules
 git add CMakeLists.txt
 git add CodingStandards.txt
 git rm recreate-cpp-ethereum.sh
+git rm recreate-cpp-ethereum-with-history.sh
 git rm --cached libethereum
 git rm --cached libweb3core
 git rm --cached webthree
@@ -39,6 +40,7 @@ rm -rf libweb3core
 rm -rf webthree
 rm -rf webthree-helpers
 rm recreate-cpp-ethereum.sh
+rm recreate-cpp-ethereum-with-history.sh
 rm .gitmodules
 git commit -m "webthree-umbrella merge"
 #git push
@@ -115,8 +117,7 @@ git submodule add https://github.com/ethereum/cpp-dependencies deps
 git submodule add https://github.com/ethereum/evmjit evmjit
 git commit -m "submodules"
 
-
-exit 0
+#exit 0
 
 git remote rm origin
 git remote add origin https://github.com/bobsummerwill/cpp-ethereum-with-history
