@@ -69,7 +69,6 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.g
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.gitmodules > $outputDirectory/.gitmodules
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/.travis.yml > $outputDirectory/.travis.yml
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/appveyor.yml > $outputDirectory/appveyor.yml
-curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/doc/dependency_graph/generate.py > $outputDirectory/doc/dependency_graph/generate.py
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/install_deps.bat > $outputDirectory/scripts/install_deps.bat
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/install_deps.sh > $outputDirectory/scripts/install_deps.sh
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.bat > $outputDirectory/scripts/release.bat
