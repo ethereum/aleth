@@ -257,6 +257,28 @@ case $(uname -s) in
                 sudo make install PREFIX=/usr/local
                 cd ..
 
+                # All the Debian releases until Stretch have shipped with versions of CMake
+                # which are too old for cpp-ethereum to build successfully.  CMake v3.0.x
+                # should be the minimum version, but the v3.0.2 which comes with Jessie
+                # doesn't work properly, so maybe our minimum version should actually be
+                # CMake v3.1.x?  Anyway - we just build and install CMake from source
+                # here, so that it works on any distro.
+                #
+                # - https://packages.debian.org/wheezy/cmake (2.8.9)
+                # - https://packages.debian.org/jessie/cmake (3.0.2)
+                # - https://packages.debian.org/stretch/cmake (3.5.2)
+
+                wget https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
+                tar -xf cmake-3.5.2.tar.gz
+                cd cmake-3.5.2/
+                cmake .
+                make -j 2
+                sudo make install
+                source ~/.profile
+                cd ..
+                rm -rf cmake-3.5.2
+                rm cmake-3.5.2.tar.gz
+
                 # Build libjsonrpccpp-v0.6.0 from source.
                 # Rationale for this is given in the Ubuntu comments lower down this file.
 
