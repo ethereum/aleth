@@ -122,14 +122,24 @@ BOOST_AUTO_TEST_CASE(capability)
 	BOOST_REQUIRE(port2);	
 	BOOST_REQUIRE_NE(port1, port2);
 
-	for (int i = 0; i < 3000 && (!host1.isStarted() || !host2.isStarted()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if (host1.isStarted() && host2.isStarted())
+			break;
+	}
 
 	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
 	host1.requirePeer(host2.id(), NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	for (int i = 0; i < 3000 && (!host1.peerCount() || !host2.peerCount()); i += step)
+	for (unsigned i = 0; i < 3000; i += step)
+	{
 		this_thread::sleep_for(chrono::milliseconds(step));
+
+		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
+			break;
+	}
 
 	BOOST_REQUIRE(host1.peerCount() > 0 && host2.peerCount() > 0);
 
