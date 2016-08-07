@@ -36,7 +36,6 @@ rsync -r ./libweb3core/libp2p/            $outputDirectory/libp2p/
 rsync -r ./libweb3core/rlp/               $outputDirectory/rlp/
 rsync -r ./libweb3core/test/              $outputDirectory/test/libweb3core/test/
 # intentionally left /libweb3core root files behind: (CMakeLists.txt, LICENSE, README.md)
-# solidity intentionally omitted
 rsync -r ./webthree/eth/                  $outputDirectory/eth/
 rsync -r ./webthree/libweb3jsonrpc/       $outputDirectory/libweb3jsonrpc/
 rsync -r ./webthree/libwebthree/          $outputDirectory/libwebthree/
@@ -50,8 +49,8 @@ rsync -r ./webthree-helpers/scripts/upload-homebrew-formula.sh $outputDirectory/
 rsync -r ./webthree-helpers/utils/        $outputDirectory/utils/
 # intentionally left /webthree-helpers root files behind: (LICENSE, README.md)
 
-# Loose files in the root directory of webthree-umbrella.
-# TODO - Move all these loose scripts in the root into /scripts
+# .gitignore intentionally omitted.
+# .gitmodules intentionally omitted.
 # CMakeLists.txt intentionally omitted.
 rsync -r ./CodingStandards.txt            $outputDirectory/CodingStandards.txt
 rsync -r ./CONTRIBUTING.md                $outputDirectory/CONTRIBUTING.md
@@ -76,5 +75,3 @@ curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/sc
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.bat > $outputDirectory/scripts/release.bat
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/release.sh > $outputDirectory/scripts/release.sh
 curl https://raw.githubusercontent.com/bobsummerwill/cpp-ethereum/merge_repos/scripts/tests.bat > $outputDirectory/scripts/tests.bat
-
-# TODO - Move Contributing and coding standards to http://ethdocs.org
