@@ -1,0 +1,10 @@
+[
+{ "name": "admin_net_start", "params": [""], "returns": true },
+{ "name": "admin_net_stop", "params": [""], "returns": true },
+{ "name": "admin_net_connect", "params": ["", ""], "returns": true },
+{ "name": "admin_net_peers", "params": [""], "returns": [] },
+{ "name": "admin_net_nodeInfo", "params": [""], "returns": {}},
+{ "name": "admin_nodeInfo", "params": [], "returns": {}},
+{ "name": "admin_peers", "params": [], "returns": {}},
+{ "name": "admin_addPeer", "params": [""], "returns": true}
+]
