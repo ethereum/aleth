@@ -48,7 +48,6 @@
 #endif // ETH_ETHASHCL
 
 #if ETH_JSONRPC
-#include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #endif // ETH_JSONRPC
 
