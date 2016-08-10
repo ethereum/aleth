@@ -1,0 +1,120 @@
+#------------------------------------------------------------------------------
+# TravisCI configuration file for cpp-ethereum.
+#
+# The documentation for cpp-ethereum is hosted at:
+#
+# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+#
+# ------------------------------------------------------------------------------
+# This file is part of cpp-ethereum.
+#
+# cpp-ethereum is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cpp-ethereum is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
+language: cpp
+branches:
+    only:
+        - develop
+        - merge_repos
+        - release
+    except:
+        - /develop-v[0-9]/
+        - /untagged/
+matrix:
+    include:
+        - os: linux
+          dist: trusty
+          sudo: required
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - ZIP_SUFFIX=ubuntu-trusty
+              - TESTS=On
+        - os: osx
+          osx_image: beta-xcode6.2
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - ZIP_SUFFIX=osx-mavericks
+              - TESTS=On
+        - os: osx
+          osx_image: xcode7.1
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - ZIP_SUFFIX=osx-yosemite
+              - TESTS=Off
+        - os: osx
+          osx_image: xcode7.3
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - ZIP_SUFFIX=osx-elcapitan
+              - TESTS=Off
+        - os: osx
+          osx_image: xcode8
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - ZIP_SUFFIX=macos-sierra
+              - TESTS=Off
+git:
+    depth: 2
+cache:
+    - ccache
+    - directories: build
+install:
+    - ./scripts/install_deps.sh
+before_script:
+    - mkdir -p build
+    - cd build
+    - cmake .. -DCMAKE_BUILD_TYPE=$TRAVIS_BUILD_TYPE -DTESTS=$TESTS
+    - make -j2
+    - ../scripts/release.sh $ZIP_SUFFIX $TESTS
+script:
+    # TODO - Move these steps into tests.sh too?
+    - cd $TRAVIS_BUILD_DIR/..
+    - git clone https://github.com/ethereum/tests.git
+    - export ETHEREUM_TEST_PATH=$(pwd)/tests/
+    - cd $TRAVIS_BUILD_DIR/build
+
+    # Workaround for fairly frequent timeout issue, as shown here, is to prepend
+    # 'travis_wait' to your long-running command, which tells TravisCI not to panic
+    # if a specific command does not update STDOUT for 20 minutes.   Unsure at the
+    # time of writing whether this will actually help anything, or whether this STDOUT
+    # stall actually represents a real crash or hang.
+    #
+    # 'No output has been received in the last 10 minutes, this potentially indicates a stalled
+    # build or something wrong with the build itself'
+    #
+    # See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/148445495 for an instance
+    # of this problem actually happening within a TravisCI automation step.
+    #
+    # See http://stackoverflow.com/questions/28746046/how-can-i-install-something-on-travis-ci-without-a-timeout/28833319#28833319
+
+    - travis_wait ../scripts/tests.sh
+
+
+# Release workflow for development ZIPs.  Disabled for the time being, because we came
+# to the conclusion that it would just be overkill.
+#
+# TODO - Renable this flow, but within conditionals so that it is only invoked from
+# the release branch.
+
+#deploy:
+#    provider: releases
+#    api_key:
+#        secure: HHcAWFjVNwf8b83KVQnEa172Eo7aur+scVCq4BzgPDXnF+v4GDXT7PAaXyWBwIyrFoIJduPCojsiIBP8QZwtjaKgnywnREjaLc0syTCLSeUHcp/+jPRdickvfgHJWG06sU7ZST8/HnGmoOqV/BUlGhHiqma1oJfGEJ6aaG4oza77ZYAxLPxwq9NOuTHVGJwlphcfeevcU3F0C/mxDEEMEz66lDolp4DCP5L4muHlrOCZ+HSjRwz5/anVNVWNO/nM1I0wmI2TRAS0RPzwClVD8iiGJHhZ/WdgenG4nosBG9UQjd/56LLKI25bIJijz/tpe89pCRUJtMYtcXR5C7w8Is05a1GMedBAiT7Bu35qHbpxJeqcw26DJL4U3+IeHfymXpK/E3RAj16bj+mtxxYSEzaae7obCm1rDA1LnPTI94kAea2ZNOUucDK5FaROX/uBXk422xrQTdJpEpg4TLa7GmQGdtyJC0OnzaOTXWg87lbVMq1PndDLE3STqXT5J/wj/WfUtXlN38x9aX7wwrmyCXY3WJ1zzShAgRO9YjRRosMBkahGDj5l75w9KX8yW3C5txcxjPVGSxQIl+bv9FPrBJmU1WOOPYQlHm92JQJus8BXXQCuhg3mEsZQfmGpgrS82NUB15V1nZB3xCXniKcKnQirzbRXLg8wjlPbT9DKGbc=
+#    file: $TRAVIS_BUILD_DIR/cpp-ethereum-develop-$ZIP_SUFFIX.zip
+#    skip_cleanup: true
+#    on:
+#        repo: bobsummerwill/cpp-ethereum
+#        branch: merge_repos
