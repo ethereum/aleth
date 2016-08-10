@@ -272,6 +272,7 @@ case $(uname -s) in
                 tar -xf cmake-3.5.2.tar.gz
                 cd cmake-3.5.2/
                 cmake .
+                ./bootstrap --prefix=/usr
                 make -j 2
                 sudo make install
                 source ~/.profile
