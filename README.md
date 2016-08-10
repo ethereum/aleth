@@ -1,32 +1,53 @@
-# Former and future home of Ethereum C++ client
+# webthree-umbrella
 
-Significant effort was put into new
-[Ethereum C++ Documentation](http://ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)
-for the [Homestead release](https://blog.ethereum.org/2016/02/29/homestead-release/)
-in March 2016.
+This repository is an umbrella repository with git sub-module references to all of the components
+of [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the
+[Ethereum](http://ethereum.org) C++ client.
+The project was initiated by [Gavin Wood](http://gavwood.com/>), the
+[former CTO](<https://blog.ethereum.org/2016/01/11/last-blog-post/>) of the
+[Ethereum Foundation](http://www.ethdocs.org/en/latest/introduction/foundation.html),
+in December 2013.   It is the second most popular of the clients, trailing a long way behind
+the dominant [geth](https://github.com/ethereum/go-ethereum) client, also built by the
+Ethereum Foundation.
 
-The C++ codebase was developed in this repository from its inception in December 2013
-until October 2015, at which stage it was split into multiple repositories, all 
-gathered as git sub-modules under the
-[webthree-umbrella](https://github.com/ethereum/webthree-umbrella/) repository.
+![C++](http://www.ethdocs.org/en/latest/_images/cpp_35k9.png) 
+![Ethereum](http://www.ethdocs.org/en/latest/_images/ETHEREUM-ICON_Black.png)
 
-Those changes were part of an attempt at rebranding the C++ code-base to align with
-[Gavin Wood's Web3 vision](https://www.youtube.com/watch?v=TGD7-rfdXDU), but it left
-us with a rather bewildering number of names for things.
-We [simplified all our naming](https://github.com/ethereum/webthree-umbrella/issues/250)
-just prior to Homestead.
+Read more about the project at the **[cpp-ethereum Homepage](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**.
 
-We are about to [re-consolidate the repositories](https://github.com/ethereum/webthree-umbrella/issues/251),
-which should make the structure of the codebase much easier to understand, and allow us to
-make independent releases of cpp-ethereum, solidity and mix.
+[![cpp-ethereum](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/ethereum/cpp-ethereum?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-A dry run for the reorganization is underway at
-[bobsummerwill/cpp-ethereum](https://github.com/bobsummerwill/cpp-ethereum/tree/merge_repos)
+See [Contributors](https://github.com/ethereum/webthree-umbrella/wiki/Contributors) for the
+full list of everybody who has worked on the code.
 
-Current dependencies:
+The following individuals are currently employed or contracted by the Ethereum Foundation for C++ client work:
 
-![webthree](http://doublethinkco.github.io/cpp-ethereum-cross/images/dependency_graph.svg)
+- [Greg Colvin](https://github.com/gcolvin)
+- [Liana Husikyan](https://github.com/LianaHus)
+- [Dimitry Khoklov](https://github.com/winsvega)
+- [Yann Levreau](https://github.com/yann300)
+- [Christian Reitwiessner](https://github.com/chriseth) - C++ Lead
+- [Bob Summerwill](https://github.com/bobsummerwill)
 
-Target dependencies:
+### Testing
 
-![cpp-ethereum](http://doublethinkco.github.io/cpp-ethereum-cross/images/target_dependency_graph.svg)
+To run the tests, make sure you clone https://github.com/ethereum/tests and point the environment variable
+`ETHEREUM_TEST_PATH` to that path.
+
+### Contributing
+
+External contributions are more than welcome! We try to keep a list of tasks that are suitable for
+newcomers under the tag [good first task](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
+If you have any questions, please ask in our [gitter channel](https://gitter.im/ethereum/cpp-ethereum).
+
+Please refer to the file [CONTRIBUTING.md](CONTRIBUTING.md) for some guidelines.
+
+Please read [CodingStandards.txt](CodingStandards.txt) thoroughly before making alterations to the code base.
+Please do *NOT* use an editor that automatically reformats whitespace away from astylerc or the formatting guidelines
+as described in [CodingStandards.txt](CodingStandards.txt).
+
+All development goes in develop branch - please don't submit pull requests to master.
+
+### License
+
+All contributions are made under the [GPLv3 license](http://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).

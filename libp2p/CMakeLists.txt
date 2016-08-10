@@ -1,0 +1,15 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
+
+aux_source_directory(. SRC_LIST)
+
+set(EXECUTABLE p2p)
+
+file(GLOB HEADERS "*.h")
+
+add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+
+eth_use(${EXECUTABLE} REQUIRED Dev::devcore Dev::devcrypto)
+eth_use(${EXECUTABLE} OPTIONAL Miniupnpc)
+
+install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+

@@ -1,0 +1,6 @@
+[
+{ "name": "debug_traceTransaction", "params": ["", {}], "returns": {}},
+{ "name": "debug_storageAt", "params": ["", 0, ""], "returns": {}},
+{ "name": "debug_traceBlockByNumber", "params": [0, {}], "returns": {}},
+{ "name": "debug_traceBlockByHash", "params": ["", {}], "returns": {}}
+]
