@@ -33,6 +33,7 @@ build_xc
 *~
 
 # build system
+bin/
 build.*/
 extdep/install
 extdep/download
@@ -66,6 +67,9 @@ project.pbxproj
 
 # JetBrains stuff
 .idea/
+
+# Visual Studio Code
+browse.VC.db
 
 doc/html
 *.autosave
