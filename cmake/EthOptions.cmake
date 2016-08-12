@@ -21,6 +21,7 @@ macro(configure_project)
 	eth_default_option(TOOLS ON)
 	eth_default_option(ETHASHCL ON)
 	eth_default_option(EVMJIT OFF)
+	eth_default_option(SOLIDITY ON)
 
 	# Resolve any clashes between incompatible options.
 	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -38,6 +39,15 @@ macro(configure_project)
 	foreach(FEATURE ${ARGN})
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
+
+	# Temporary pre-processor symbol used to indicate that we are building the
+	# codebase using the post-repo-remerge "cpp-ethereum" directory.   That just
+	# affects a handful of include paths for including the generated BuildInfo.h
+	# file, which is generated in a different location after the merger, because
+	# we have no need for multiple versions anymore.
+	#
+	# TODO - When we are "over the transition" this needs to be stripped out again.
+	add_definitions(-DETH_AFTER_REPOSITORY_MERGE)
 
 	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
 	# Common code has no business knowing which application it is part of.
@@ -139,6 +149,9 @@ if (SUPPORT_ETHASHCL)
 endif()
 if (SUPPORT_EVMJIT)
 	message("-- EVMJIT           Build LLVM-based JIT EVM                 ${EVMJIT}")
+endif()
+if (SUPPORT_SOLIDITY)
+	message("-- SOLIDITY         Build Solidity                           ${SOLIDITY}")
 endif()
 	message("------------------------------------------------------------------------")
 	message("")
