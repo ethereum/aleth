@@ -953,6 +953,8 @@ Options::Options(int argc, char** argv)
 				rCheckTest += argv[j];
 			break;
 		}
+		else if (arg == "--mininglimit" && i + 1 < argc)
+			testMiningTimeout = atoi(argv[i + 1]);
 	}
 
 	//Default option
@@ -1084,6 +1086,27 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 	_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
 	m_currentTestName = _testName;
 	return true;
+}
+
+void testMiningFunc(void(*_testFunc)())
+{
+	bool success = false;
+	int timeout = Options::get().testMiningTimeout;
+	for (int i=0; i<3; i++)
+	{
+		std::thread threadTest(_testFunc);
+		auto future = std::async(std::launch::async, &std::thread::join, &threadTest);
+		if (future.wait_for(std::chrono::seconds(timeout)) == std::future_status::timeout)
+			cerr << "Mining timeout! Trying again...";
+		else
+		{
+			success = true;
+			break;
+		}
+	}
+
+	if (!success)
+		BOOST_ERROR("Mining Timeout!");
 }
 
 } } // namespaces

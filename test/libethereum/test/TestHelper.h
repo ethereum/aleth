@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <thread>
+#include <future>
 #include <functional>
 #include <boost/test/unit_test.hpp>
 #include <boost/filesystem.hpp>
@@ -182,6 +184,7 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State _state);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
+void testMiningFunc(void(*_testFunc)());
 
 //Fill Test Functions
 int createRandomTest(std::vector<char*> const& _parameters);
@@ -212,6 +215,7 @@ public:
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;
 	eth::Network sealEngineNetwork = eth::Network::Test; ///< set seal engine (Frontier, Homestead, ...)
+	int testMiningTimeout = 150;///< Max mining time limit for tests in seconds
 
 	/// Test selection
 	/// @{
