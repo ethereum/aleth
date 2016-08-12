@@ -83,6 +83,7 @@ int main( int argc, char* argv[] )
 {
 	//Initialize options
 	dev::test::Options const& opt = dev::test::Options::get(argc, argv);
+
 	if (opt.createRandomTest)
 	{
 		//disable initial output
