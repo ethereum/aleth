@@ -6,9 +6,7 @@
 # TODO - At the time of writing, we only have ZIPs working.  Need to hook up
 # support for Homebrew and PPAs.
 #
-# The documentation for cpp-ethereum is hosted at:
-#
-# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of cpp-ethereum.

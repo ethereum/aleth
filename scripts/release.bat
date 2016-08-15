@@ -2,9 +2,7 @@
 REM ---------------------------------------------------------------------------
 REM Batch file for implementing release flow for cpp-ethereum for Windows.
 REM
-REM The documentation for cpp-ethereum is hosted at:
-REM
-REM http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+REM The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 REM
 REM ---------------------------------------------------------------------------
 REM This file is part of cpp-ethereum.
@@ -28,23 +26,17 @@ REM ---------------------------------------------------------------------------
 set CONFIGURATION=%1
 set ETHEREUM_DEPS_PATH=%2
 set TESTS=%3
-set TEST_EXECUTABLES=
 
-if "%TESTS%"=="On" (
-    TEST_EXECUTABLES= ^
-        .\build\test\libethereum\test\%CONFIGURATION%\testeth.exe ^
-        .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe ^
-        .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe
-)
-
-7z a cpp-ethereum-develop-windows.zip ^
+7z a cpp-ethereum-windows.zip ^
     .\build\bench\%CONFIGURATION%\bench.exe ^
     .\build\eth\%CONFIGURATION%\eth.exe ^
     .\build\ethkey\%CONFIGURATION%\ethkey.exe ^
     .\build\ethminer\%CONFIGURATION%\ethminer.exe ^
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
-    %TEST_EXECUTABLES% ^
+    .\build\test\libethereum\test\%CONFIGURATION%\testeth.exe ^
+    .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe ^
+    .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe ^
     "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll ^

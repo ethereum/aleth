@@ -29,9 +29,7 @@
 # also bring in support for Android, iOS, watchOS, tvOS, Tizen, Sailfish,
 # Maemo, MeeGo and Yocto.
 #
-# The documentation for cpp-ethereum is hosted at:
-#
-# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 #
 # ------------------------------------------------------------------------------
 # This file is part of cpp-ethereum.
@@ -176,7 +174,7 @@ case $(uname -s) in
                 #Alpine
                 echo "Installing cpp-ethereum dependencies on Alpine Linux."
                 echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
                 echo "If you would like to get 'install_deps.sh' working for AlpineLinux, that would be fantastic."
                 echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                 echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
@@ -193,7 +191,7 @@ case $(uname -s) in
                     wheezy)
                         #wheezy
                         echo "Installing cpp-ethereum dependencies on Debian Wheezy (7.x)."
-                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                        echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                         ;;
@@ -205,7 +203,7 @@ case $(uname -s) in
                         #stretch
                         echo "Installing cpp-ethereum dependencies on Debian Stretch (9.x)."
                         echo "ERROR - 'install_deps.sh' doesn't have Debian Stretch support yet."
-                        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                        echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
                         echo "If you would like to get 'install_deps.sh' working for Debian Stretch, that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                         exit 1
@@ -348,7 +346,7 @@ case $(uname -s) in
                 #openSUSE
                 echo "Installing cpp-ethereum dependencies on openSUSE."
                 echo "ERROR - 'install_deps.sh' doesn't have openSUSE support yet."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
                 echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
                 echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
                 exit 1
@@ -513,7 +511,7 @@ case $(uname -s) in
 
                 #other Linux
                 echo "ERROR - Unsupported or unidentified Linux distro."
-                echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/linux.html for manual instructions."
+                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
                 echo "If you would like to get your distro working, that would be fantastic."
                 echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                 exit 1
@@ -530,7 +528,7 @@ case $(uname -s) in
     *)
         #other
         echo "ERROR - Unsupported or unidentified operating system."
-        echo "See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/building-from-source/ for manual instructions."
+        echo "See http://cpp-ethereum.org/building-from-source/ for manual instructions."
         echo "If you would like to get your operating system working, that would be fantastic."
         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
         ;;

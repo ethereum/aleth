@@ -35,9 +35,7 @@ REM gives us an unbeatable degree of control, though, because we
 REM then perfectly control versioning and build flags for the binaries
 REM for those packages.
 REM
-REM The documentation for cpp-ethereum is hosted at:
-REM
-REM http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+REM The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 REM
 REM ---------------------------------------------------------------------------
 REM This file is part of cpp-ethereum.

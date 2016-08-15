@@ -1,10 +1,10 @@
 # cpp-ethereum - Ethereum C++ client
 
-This repository contains [cpp-ethereum](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/), the [Ethereum](http://ethereum.org) C++ client.
+This repository contains [cpp-ethereum](http://cpp-ethereum.org), the [Ethereum](http://ethereum.org) C++ client.
 
 It is the third most popular of the Ethereum clients, behind [geth](https://github.com/ethereum/go-ethereum) (the [go](https://golang.org)
 client) and [Parity](https://github.com/ethcore/parity) (the [rust](https://www.rust-lang.org/) client).  The code is exceptionally
-[portable](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/portability.html) and has been used successfully on a very broad range
+[portable](http://cpp-ethereum.org/portability.html) and has been used successfully on a very broad range
 of operating systems and hardware.
 
 We are in the [process of re-licensing](https://bobsummerwill.com/2016/07/12/c-re-licensing-plan/) the codebase from the copyleft
@@ -15,7 +15,7 @@ the history leading up to this proposed change of licensing.
 
 ## Getting Started
 
-The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/)**, which
+The Ethereum Documentation site hosts the **[cpp-ethereum homepage](http://cpp-ethereum.org)**, which
 has a Quick Start section.
 
 Please do come and chat to us on the [cpp-ethereum](https://gitter.im/ethereum/cpp-ethereum) gitter channel if you need help with anything!

@@ -2,9 +2,7 @@
 REM ---------------------------------------------------------------------------
 REM Batch file for running the unit-tests for cpp-ethereum for Windows.
 REM
-REM The documentation for cpp-ethereum is hosted at:
-REM
-REM http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+REM The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 REM
 REM ---------------------------------------------------------------------------
 REM This file is part of cpp-ethereum.
@@ -26,33 +24,40 @@ REM Copyright (c) 2016 cpp-ethereum contributors.
 REM ---------------------------------------------------------------------------
 
 set TESTS=%1
+set CONFIGURATION=%2
+set APPVEYOR_BUILD_FOLDER=%cd%
+set ETHEREUM_DEPS_PATH=%4
 
 if "%TESTS%"=="On" (
 
-    set CONFIGURATION=%2
-    set REPO_ROOT=%3
-    set ETHEREUM_DEPS_PATH=%4
-
     cd ..
     git clone https://github.com/ethereum/tests.git
-    set ETHEREUM_TEST_PATH=%REPO_ROOT%\..\tests
+    set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
+    cd cpp-ethereum
 
-    cd %REPO_ROOT%\build\test\libethereum\test\%CONFIGURATION%
+    echo CONFIGURATION=%CONFIGURATION%
+    echo APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%
+    echo ETHEREUM_DEPS_PATH=%ETHEREUM_DEPS_PATH%
+    
+    cd build\test\libethereum\test\%CONFIGURATION%
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     testeth.exe
+    cd ..\..\..\..\..
 
-    cd %REPO_ROOT%\build\test\libweb3core\test\%CONFIGURATION%
+    cd build\test\libweb3core\test\%CONFIGURATION%
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     testweb3core.exe
+    cd ..\..\..\..\..
 
-    cd %REPO_ROOT%\build\test\webthree\test\%CONFIGURATION%
+    cd build\test\webthree\test\%CONFIGURATION%
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
     testweb3.exe
+    cd ..\..\..\..\..
 )

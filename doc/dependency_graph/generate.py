@@ -30,9 +30,7 @@
 # See https://github.com/doublethinkco/cpp-ethereum-cross for more
 # information on the cross-builds project.
 #
-# The documentation for cpp-ethereum is hosted at:
-#
-# http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/
+# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 #
 # (c) 2015-2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------

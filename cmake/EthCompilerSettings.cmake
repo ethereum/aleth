@@ -4,7 +4,7 @@
 # CMake file for cpp-ethereum project which specifies our compiler settings
 # for each supported platform and build configuration.
 #
-# See http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/.
+# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
 #
 # Copyright (c) 2014-2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
