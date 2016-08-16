@@ -8,7 +8,6 @@ set(SOURCES
 
 if (EVMJIT)
 	list(APPEND SOURCES
-		JitEnv.cpp
 		JitVM.cpp
 		SmartVM.cpp
 	)
