@@ -38,12 +38,16 @@ if "%TESTS%"=="On" (
     echo CONFIGURATION=%CONFIGURATION%
     echo APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%
     echo ETHEREUM_DEPS_PATH=%ETHEREUM_DEPS_PATH%
-    
+
     cd build\test\libethereum\test\%CONFIGURATION%
+    copy build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-    testeth.exe
+    echo Testing testeth
+    testeth.exe --verbosity 2
+    echo Testing EVMJIT
+    testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
     cd ..\..\..\..\..
 
     cd build\test\libweb3core\test\%CONFIGURATION%
