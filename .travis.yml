@@ -1,0 +1,137 @@
+#------------------------------------------------------------------------------
+# TravisCI configuration file for cpp-ethereum.
+#
+# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
+#
+# ------------------------------------------------------------------------------
+# This file is part of cpp-ethereum.
+#
+# cpp-ethereum is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cpp-ethereum is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) 2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
+
+language: cpp
+branches:
+    # We need to whitelist the branches which we want to have "push" automation.
+    # Pull request automation is not constrained to this set of branches.
+    only:
+        - develop
+        - release
+matrix:
+    include:
+        # Ubuntu 14.04 LTS "Trusty Tahr"
+        # https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_14.04_LTS_.28Trusty_Tahr.29
+        #
+        # TravisCI doesn't directly support any new Ubuntu releases.  These is
+        # some Docker support, which we should probably investigate, at least for
+        # Ubuntu 16.04 LTS "Xenial Xerus"
+        # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
+        - os: linux
+          dist: trusty
+          sudo: required
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - TRAVIS_TESTS=On
+              - ZIP_SUFFIX=ubuntu-trusty
+
+        # OS X Mavericks (10.9)
+        # https://en.wikipedia.org/wiki/OS_X_Mavericks
+        #
+        - os: osx
+          osx_image: beta-xcode6.2
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - TRAVIS_TESTS=On
+              - ZIP_SUFFIX=osx-mavericks
+
+        # OS X Yosemite (10.10)
+        # https://en.wikipedia.org/wiki/OS_X_Yosemite
+        #
+        - os: osx
+          osx_image: xcode7.1
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - TRAVIS_TESTS=Off
+              - ZIP_SUFFIX=osx-yosemite
+
+        # OS X El Capitan (10.11)
+        # https://en.wikipedia.org/wiki/OS_X_El_Capitan
+        #
+        - os: osx
+          osx_image: xcode7.3
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - TRAVIS_TESTS=Off
+              - ZIP_SUFFIX=osx-elcapitan
+
+        # macOS Sierra (10.12)
+        # https://en.wikipedia.org/wiki/MacOS_Sierra
+        #
+        - os: osx
+          osx_image: xcode8
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - TRAVIS_TESTS=Off
+              - ZIP_SUFFIX=macos-sierra
+git:
+    depth: 2
+cache:
+    ccache: true
+    directories:
+        - build
+install:
+    - ./scripts/install_deps.sh
+before_script:
+    - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
+script:
+    - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
+
+deploy:
+    # This is the deploy target for the native build (Linux and macOS)
+    # which generates ZIPs per commit.  We are in agreement that
+    # generating ZIPs per commit for the develop branch is probably
+    # just noise, so we only run this deployment target on 'release'.
+    #
+    # Unlike the Appveyor GitHub Releases target, the support in TravisCI
+    # seemingly doesn't provide a means for passing a description, tag, etc.
+    # In practice, we are letting the Appveyor CI do all that stuff, and
+    # then this deployment flow just seems to find that most recent tag,
+    # and just add our Linux and macOS ZIPs into the same tag, which is
+    # what we want to happen.  But is very accidental and brittle-looking.
+    #
+    # The 'skip_cleanup' stops the workspace being cleaned out prior to
+    # generation of the artifacts.  Strange that we should explicitly
+    # need to do that, but we do.
+    #
+    # Tokens in TravisCI can be generated a few different ways.  Bob had
+    # success using the 'travis' gem, and then using that gem to
+    # create/edit this .travis.yml file, and then cut-and-pasting the
+    # good bits back out of what it generated.  The gem changes all the
+    # whitespace and deletes comments, so cannot be used as-is.  But
+    # it does generate an appropriate auth token.
+    #
+    # See https://docs.travis-ci.com/user/deployment/releases
+    # See https://blog.travis-ci.com/2013-01-28-token-token-token/
+    # See https://github.com/ethereum/webthree-umbrella/issues/658
+    #
+
+    - provider: releases
+      api_key:
+          secure: HHcAWFjVNwf8b83KVQnEa172Eo7aur+scVCq4BzgPDXnF+v4GDXT7PAaXyWBwIyrFoIJduPCojsiIBP8QZwtjaKgnywnREjaLc0syTCLSeUHcp/+jPRdickvfgHJWG06sU7ZST8/HnGmoOqV/BUlGhHiqma1oJfGEJ6aaG4oza77ZYAxLPxwq9NOuTHVGJwlphcfeevcU3F0C/mxDEEMEz66lDolp4DCP5L4muHlrOCZ+HSjRwz5/anVNVWNO/nM1I0wmI2TRAS0RPzwClVD8iiGJHhZ/WdgenG4nosBG9UQjd/56LLKI25bIJijz/tpe89pCRUJtMYtcXR5C7w8Is05a1GMedBAiT7Bu35qHbpxJeqcw26DJL4U3+IeHfymXpK/E3RAj16bj+mtxxYSEzaae7obCm1rDA1LnPTI94kAea2ZNOUucDK5FaROX/uBXk422xrQTdJpEpg4TLa7GmQGdtyJC0OnzaOTXWg87lbVMq1PndDLE3STqXT5J/wj/WfUtXlN38x9aX7wwrmyCXY3WJ1zzShAgRO9YjRRosMBkahGDj5l75w9KX8yW3C5txcxjPVGSxQIl+bv9FPrBJmU1WOOPYQlHm92JQJus8BXXQCuhg3mEsZQfmGpgrS82NUB15V1nZB3xCXniKcKnQirzbRXLg8wjlPbT9DKGbc=
+      file: $TRAVIS_BUILD_DIR/cpp-ethereum-$ZIP_SUFFIX.zip
+      skip_cleanup: true
+      on:
+          repo: ethereum/cpp-ethereum
+          branch: release

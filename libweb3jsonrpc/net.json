@@ -1,0 +1,5 @@
+[
+{ "name": "net_version", "params": [], "order": [], "returns" : "" },
+{ "name": "net_peerCount", "params": [], "order": [], "returns" : "" },
+{ "name": "net_listening", "params": [], "order": [], "returns" : false }
+]

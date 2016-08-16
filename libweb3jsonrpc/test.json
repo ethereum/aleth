@@ -1,0 +1,7 @@
+[
+{ "name": "test_setChainParams", "params": [{}], "order": [], "returns": false},
+{ "name": "test_mineBlocks", "params": [0], "returns": false },
+{ "name": "test_modifyTimestamp", "params": [0], "returns": false },
+{ "name": "test_addBlock", "params": [""], "returns": false },
+{ "name": "test_rewindToBlock", "params": [0], "returns": false }
+]
