@@ -44,8 +44,8 @@ public:
 	virtual void flushTransactions() override {}
 	virtual eth::BlockChain& bc() override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("FixedClient::bc()")); }
 	virtual eth::BlockChain const& bc() const override { return m_bc; }
-	using ClientBase::asOf;
-	virtual eth::Block asOf(h256 const& _h) const override;
+	using ClientBase::block;
+	virtual eth::Block block(h256 const& _h) const override;
 	virtual eth::Block preSeal() const override { ReadGuard l(x_stateDB); return m_block; }
 	virtual eth::Block postSeal() const override { ReadGuard l(x_stateDB); return m_block; }
 	virtual void setAuthor(Address const& _us) override { WriteGuard l(x_stateDB); m_block.setAuthor(_us); }

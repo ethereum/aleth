@@ -18,6 +18,7 @@ namespace dev {
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_storageAt", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_INTEGER,"param3",jsonrpc::JSON_STRING, NULL), &dev::rpc::DebugFace::debug_storageAtI);
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_traceBlockByNumber", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_INTEGER,"param2",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::DebugFace::debug_traceBlockByNumberI);
                     this->bindAndAddMethod(jsonrpc::Procedure("debug_traceBlockByHash", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_STRING,"param2",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::DebugFace::debug_traceBlockByHashI);
+                    this->bindAndAddMethod(jsonrpc::Procedure("debug_traceCall", jsonrpc::PARAMS_BY_POSITION, jsonrpc::JSON_OBJECT, "param1",jsonrpc::JSON_OBJECT,"param2",jsonrpc::JSON_STRING,"param3",jsonrpc::JSON_OBJECT, NULL), &dev::rpc::DebugFace::debug_traceCallI);
                 }
 
                 inline virtual void debug_traceTransactionI(const Json::Value &request, Json::Value &response)
@@ -36,10 +37,15 @@ namespace dev {
                 {
                     response = this->debug_traceBlockByHash(request[0u].asString(), request[1u]);
                 }
+                inline virtual void debug_traceCallI(const Json::Value &request, Json::Value &response)
+                {
+                    response = this->debug_traceCall(request[0u], request[1u].asString(), request[2u]);
+                }
                 virtual Json::Value debug_traceTransaction(const std::string& param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_storageAt(const std::string& param1, int param2, const std::string& param3) = 0;
                 virtual Json::Value debug_traceBlockByNumber(int param1, const Json::Value& param2) = 0;
                 virtual Json::Value debug_traceBlockByHash(const std::string& param1, const Json::Value& param2) = 0;
+                virtual Json::Value debug_traceCall(const Json::Value& param1, const std::string& param2, const Json::Value& param3) = 0;
         };
 
     }
