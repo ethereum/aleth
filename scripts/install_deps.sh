@@ -139,7 +139,10 @@ case $(uname -s) in
             # Arch Linux official repositories.
             # See https://wiki.archlinux.org/index.php/Official_repositories
             pacman -Sy --noconfirm \
-                base-devel \
+                autoconf \
+                automake \
+                gcc \
+                libtool \
                 boost \ 
                 cmake \
                 crypto++ \
