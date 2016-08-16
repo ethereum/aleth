@@ -151,19 +151,14 @@ case $(uname -s) in
                 libcl \
                 libmicrohttpd \
                 miniupnpc \
-                opencl-headers \
+                opencl-headers
 
-                rm -rf libjson-rpc-cpp
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
+            rm -rf libjson-rpc-cpp-git
+            git clone http://aur.archlinux.org/libjson-rpc-cpp-git.git libjson-rpc-cpp-git
+            cd libjson-rpc-cpp-git
+            makepkg
+            pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
+            cd ../..
 
         fi
 
