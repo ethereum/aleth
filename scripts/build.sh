@@ -30,8 +30,30 @@ CMAKE_BUILD_TYPE=$1
 TESTS=$2
 
 # There is an implicit assumption here that we HAVE to run from repo root
-# TODO Add handling for error codes
+#
+# NOTE - We are disabling OpenCL here to work around currently unexplained
+# problems which occur when running "testweb3" unit-tests on Ubuntu.
+# The same issue is showing up with the solidity Tests-over-RPC connecting
+# to an `eth` node.
+#
+# Maybe we really need to do something more in our TravisCI configuration which
+# ensures that the VM we have can run with this OpenCL support enabled?  But
+# this simple approach will do for right now.
+#
+# See, for example, https://travis-ci.org/ethereum/cpp-ethereum/jobs/152901242
+#
+# modprobe: ERROR: could not insert 'fglrx': No such device
+# Error: Fail to load fglrx kernel module!
+# Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
+# modprobe: ERROR: could not insert 'fglrx': No such device
+# Error: Fail to load fglrx kernel module!
+# Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
+# modprobe: ERROR: could not insert 'fglrx': No such device
+# Error: Fail to load fglrx kernel module!
+# Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
+# No output has been received in the last 10m0s, this potentially indicates a stalled build or something wrong with the build itself.
+
 mkdir -p build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=$1 -DTESTS=$2
+cmake .. -DCMAKE_BUILD_TYPE=$1 -DTESTS=$2 -DETHASHCL=0
 make -j2
