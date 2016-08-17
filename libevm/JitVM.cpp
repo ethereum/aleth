@@ -246,13 +246,10 @@ int64_t evm_call(
 /// RAII wrapper for an evm instance.
 class EVM
 {
-	evm_instance* m_instance = nullptr;
-
 public:
-	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn)
-	{
-		m_instance = evm_create(_queryFn, _updateFn, _callFn);
-	}
+	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn):
+		m_instance(evm_create(_queryFn, _updateFn, _callFn))
+	{}
 
 	~EVM()
 	{
@@ -262,23 +259,31 @@ public:
 	EVM(EVM const&) = delete;
 	EVM& operator=(EVM) = delete;
 
-	struct Result : evm_result
+	class Result
 	{
-		Result(evm_result const& _other)
-		{
-			// FIXME: Looks like iheritance from C struct is not very effective.
-			//        Composition should be better?
-			gas_left = _other.gas_left;
-			output_data = _other.output_data;
-			output_size = _other.output_size;
-			internal_memory = _other.internal_memory;
-		}
+	public:
+		Result(evm_result const& _result):
+			m_result(_result)
+		{}
 
 		~Result()
 		{
 			// TODO: Decide when the result has to be destroyed.
-			evm_destroy_result(*this);
+			evm_destroy_result(m_result);
 		}
+
+		int64_t gasLeft() const
+		{
+			return m_result.gas_left;
+		}
+
+		bytesConstRef output() const
+		{
+			return {m_result.output_data, m_result.output_size};
+		}
+
+	private:
+		evm_result m_result;
 	};
 
 	/// Handy wrapper for evm_execute().
@@ -287,10 +292,11 @@ public:
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
 		                                                : EVM_FRONTIER;
-		return evm_execute(m_instance, env, mode, toEvmC(_ext.codeHash),
-		                   _ext.code.data(), _ext.code.size(), gas,
-		                   _ext.data.data(), _ext.data.size(),
-		                   toEvmC(_ext.value));
+		return evm_execute(
+			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
+			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
+			toEvmC(_ext.value)
+		);
 	}
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
@@ -300,9 +306,13 @@ public:
 
 	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
 	{
-		evmjit_compile(m_instance, _mode, _code.data(), _code.size(),
-		               toEvmC(_codeHash));
+		evmjit_compile(
+			m_instance, _mode, _code.data(), _code.size(), toEvmC(_codeHash)
+		);
 	}
+
+private:
+	evm_instance* m_instance = nullptr;
 };
 
 EVM& getJit()
@@ -331,12 +341,13 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 
 	auto gas = static_cast<int64_t>(io_gas);
 	auto r = getJit().execute(_ext, gas);
-	if (r.gas_left < 0)
+	if (r.gasLeft() < 0)
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
-	io_gas = r.gas_left;
+	io_gas = r.gasLeft();
 	// FIXME: Copy the output for now, but copyless version possible.
-	m_output.assign(r.output_data, r.output_data + r.output_size);
+	auto output = r.output();
+	m_output.assign(output.begin(), output.end());
 	return {m_output.data(), m_output.size()};
 }
 
