@@ -24,6 +24,8 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+set -e
+
 TESTS=$1
 
 # There is an implicit assumption here that we HAVE to run from build directory.
