@@ -55,5 +55,5 @@ TESTS=$2
 
 mkdir -p build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=$1 -DTESTS=$2 -DETHASHCL=0
+cmake .. -DCMAKE_BUILD_TYPE=$1 -DTESTS=$2 -DETHASHCL=Off -DEVMJIT=On -DLLVM_DIR=/usr/lib/llvm-3.9/lib/cmake/llvm
 make -j2

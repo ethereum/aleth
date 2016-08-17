@@ -97,7 +97,7 @@ case $(uname -s) in
         # Bonus fun - TravisCI image for Yosemite includes a gmp version which doesn't
         # like being updated, so we need to uninstall it first.
         brew uninstall gmp
-        
+
         brew install \
             boost \
             cmake \
@@ -126,7 +126,7 @@ case $(uname -s) in
 #------------------------------------------------------------------------------
 # Linux
 #------------------------------------------------------------------------------
-        
+
     Linux)
 
 #------------------------------------------------------------------------------
@@ -145,7 +145,7 @@ case $(uname -s) in
                 automake \
                 gcc \
                 libtool \
-                boost \ 
+                boost \
                 cmake \
                 crypto++ \
                 git \
@@ -306,7 +306,7 @@ case $(uname -s) in
                 # Install "normal packages"
                 # See https://fedoraproject.org/wiki/Package_management_system.
                 dnf install \
-                    autoconf \ 
+                    autoconf \
                     automake \
                     boost-devel \
                     cmake \
@@ -316,7 +316,7 @@ case $(uname -s) in
                     gcc-c++ \
                     git \
                     gmp-devel \
-                    leveldb-devel \ 
+                    leveldb-devel \
                     libtool \
                     mesa-dri-drivers \
                     miniupnpc-devel \
@@ -372,6 +372,8 @@ case $(uname -s) in
                     trusty)
                         #trusty
                         echo "Installing cpp-ethereum dependencies on Ubuntu Trusty Tahr (14.04)."
+                        echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" \
+                        | sudo tee -a /etc/apt/sources.list > /dev/null
                         ;;
                     utopic)
                         #utopic
@@ -437,7 +439,7 @@ case $(uname -s) in
 
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
-                sudo apt-get -y install \
+                sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
                     build-essential \
                     cmake \
                     git \
@@ -450,6 +452,7 @@ case $(uname -s) in
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
                     libz-dev \
+                    llvm-3.9-dev \
                     mesa-common-dev \
                     ocl-icd-libopencl1 \
                     opencl-headers
