@@ -337,7 +337,17 @@ BOOST_AUTO_TEST_CASE(stRandom)
 		boost::filesystem::directory_iterator iterator(fillersPath);
 		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
 			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-				testFiles.push_back(iterator->path());
+			{
+				if (test::Options::get().singleTest)
+				{
+					string fileboost = iterator->path().filename().string();
+					string filesingletest = test::Options::get().singleTestName; //parse singletest as a filename of random test
+					if (fileboost == filesingletest || fileboost.substr(0, fileboost.length()-5) == filesingletest)
+						testFiles.push_back(iterator->path());
+				}
+				else
+					testFiles.push_back(iterator->path());
+			}
 
 		test::TestOutputHelper::setMaxTests(testFiles.size() * 2);
 		for (auto& path: testFiles)
@@ -347,6 +357,7 @@ BOOST_AUTO_TEST_CASE(stRandom)
 			filename = filename.substr(0, filename.length() - 5); //without .json
 			dev::test::executeTests(filename, "/StateTests/RandomTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
 		}
+		return; //executeTests has already run test after filling
 	}
 
 	string testPath = dev::test::getTestPath();
@@ -356,7 +367,17 @@ BOOST_AUTO_TEST_CASE(stRandom)
 	boost::filesystem::directory_iterator iterator(testPath);
 	for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
 		if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
-			testFiles.push_back(iterator->path());
+		{
+			if (test::Options::get().singleTest)
+			{
+				string fileboost = iterator->path().filename().string();
+				string filesingletest = test::Options::get().singleTestName; //parse singletest as a filename of random test
+				if (fileboost == filesingletest || fileboost.substr(0, fileboost.length()-5) == filesingletest)
+					testFiles.push_back(iterator->path());
+			}
+			else
+				testFiles.push_back(iterator->path());
+		}
 
 	test::TestOutputHelper::initTest();
 	test::TestOutputHelper::setMaxTests(testFiles.size());
