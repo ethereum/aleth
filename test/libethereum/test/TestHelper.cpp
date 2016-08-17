@@ -1076,6 +1076,7 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 		std::cout << std::endl;
 	}
 
+	if (m_currentTestCaseName != "stRandom")
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 	{
 		_o.clear();
