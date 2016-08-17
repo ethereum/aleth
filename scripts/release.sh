@@ -27,6 +27,8 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+set -e
+
 ZIP_SUFFIX=$1
 ZIP_TEMP_DIR=$(pwd)/zip/
 TESTS=$2
