@@ -228,8 +228,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	// Wait for up to 3 seconds, to give the hosts time to connect to each other.
-	for (unsigned i = 0; i < 3000; i += step)
+	// Wait for up to 6 seconds, to give the hosts time to connect to each other.
+	for (unsigned i = 0; i < 6000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
