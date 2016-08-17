@@ -142,7 +142,7 @@ macro (eth_name KEY VALUE)
 	endif()
 endmacro()
 
-macro(jsonrpcstub_client_create SPEC CLIENTNAME CLIENTDIR CLIENTFILENAME)
+macro(jsonrpcstub_client_create EXECUTABLE SPEC CLIENTNAME CLIENTDIR CLIENTFILENAME)
 	if (ETH_JSON_RPC_STUB)
 		add_custom_target(${SPEC}stub)
 		add_custom_command(
@@ -161,7 +161,7 @@ macro(jsonrpcstub_client_create SPEC CLIENTNAME CLIENTDIR CLIENTFILENAME)
 	endif ()
 endmacro()
 
-macro(jsonrpcstub_create SPEC SERVERNAME SERVERDIR SERVERFILENAME CLIENTNAME CLIENTDIR CLIENTFILENAME)
+macro(jsonrpcstub_create EXECUTABLE SPEC SERVERNAME SERVERDIR SERVERFILENAME CLIENTNAME CLIENTDIR CLIENTFILENAME)
 	if (ETH_JSON_RPC_STUB)
 		add_custom_target(${SPEC}stub)
 		add_custom_command(

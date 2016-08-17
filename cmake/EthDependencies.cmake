@@ -153,15 +153,6 @@ if (STATIC_LINKING)
 	set(ETH_STATIC ON)
 endif()
 
-# TODO - Why do we have a specific version number here?  If that is a minimum
-# version then it looks very low.  Pawel and Bob have done some iteration
-# on workarounds for issues in Boost headers (multiprecisionnumber) which
-# need specific, fairly new versions to be dependable.
-#
-# See the mess around https://github.com/ethereum/libweb3core/blob/develop/libdevcore/Common.h#L53
-find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
-eth_show_dependency(Boost boost)
-
 # Add Homebrew include paths and library paths for macOS clients.
 #
 # Homebrew (http://brew.sh/) is the de-facto standard package manager for Mac.

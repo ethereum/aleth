@@ -1,15 +1,17 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
-
-set(EXECUTABLE p2p)
+include_directories(..)
 
 file(GLOB HEADERS "*.h")
 
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+add_library(p2p ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Dev::devcore Dev::devcrypto)
-eth_use(${EXECUTABLE} OPTIONAL Miniupnpc)
+eth_use(p2p REQUIRED Cryptopp Miniupnpc)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+find_package(Dev)
 
+target_link_libraries(p2p ${Dev_DEVCORE_LIBRARIES})
+target_link_libraries(p2p ${Dev_DEVCRYPTO_LIBRARIES})
+
+install(TARGETS p2p RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

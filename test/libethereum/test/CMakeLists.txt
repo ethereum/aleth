@@ -1,6 +1,9 @@
 include_directories(..)
 
 aux_source_directory(. SRC_LIST)
+include_directories(..)
+include_directories(../../..)
+include_directories(../../../utils)
 
 macro (add_sources)
 	foreach (_src ${ARGN})
@@ -22,8 +25,6 @@ add_subdirectory(external-dependencies)
 
 set(SRC_LIST ${SRC_LIST} ${SRC})
 
-set(EXECUTABLE testeth)
-
 # search for test names and create ctest tests
 enable_testing()
 foreach(file ${SRC_LIST})
@@ -35,16 +36,26 @@ foreach(file ${SRC_LIST})
 			string(SUBSTRING ${test} 6 -1 TestSuite)
 		elseif(test MATCHES "^CASE .*")
 			string(SUBSTRING ${test} 5 -1 TestCase)
-			add_test(NAME ${TestSuite}/${TestCase} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test COMMAND ${EXECUTABLE} -t ${TestSuite}/${TestCase})
+			add_test(NAME ${TestSuite}/${TestCase} WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/test COMMAND testeth -t ${TestSuite}/${TestCase})
 		endif(test MATCHES "^SUITE .*")
 	endforeach(test_raw)
 endforeach(file)
 
 file(GLOB HEADERS "*.h")
-add_executable(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+add_executable(testeth ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::ethashseal Eth::ethereum Eth::testutils)
-target_link_libraries(${EXECUTABLE} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time unit_test_framework)
+find_package(Eth)
+
+target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
+if (DEFINED MSVC)
+	target_link_libraries(testeth ${Boost_CHRONO_LIBRARIES})
+	target_link_libraries(testeth ${Boost_DATE_TIME_LIBRARIES})
+endif()
+target_link_libraries(testeth ${Eth_TESTUTILS_LIBRARIES})
+if (UNIX AND NOT APPLE)
+	target_link_libraries(testeth pthread)
+endif()
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)

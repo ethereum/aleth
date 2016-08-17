@@ -1,13 +1,15 @@
 aux_source_directory(. SRC_LIST)
-
-set(EXECUTABLE ethcore)
+include_directories(..)
+include_directories(../utils)
 
 file(GLOB HEADERS "*.h")
 
-include_directories(BEFORE ..)
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+add_library(ethcore ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Dev::devcrypto Dev::buildinfo Dev::devcore)
+find_package(Dev)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+target_link_libraries(ethcore ${Dev_DEVCORE_LIBRARIES})
+target_link_libraries(ethcore ${Dev_DEVCRYPTO_LIBRARIES})
+
+install(TARGETS ethcore RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
 
