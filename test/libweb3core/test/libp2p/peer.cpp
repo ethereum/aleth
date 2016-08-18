@@ -87,7 +87,8 @@ BOOST_AUTO_TEST_CASE(host)
 	auto node2 = host2.id();
 	int const step = 10;
 
-	for (unsigned i = 0; i < 3000; i += step)
+	// Wait for up to 6 seconds, to give the hosts time to start.
+	for (unsigned i = 0; i < 6000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
@@ -97,7 +98,8 @@ BOOST_AUTO_TEST_CASE(host)
 
 	BOOST_REQUIRE(host1.isStarted() && host2.isStarted());
 	
-	for (unsigned i = 0; i < 3000; i += step)
+	// Wait for up to 6 seconds, to give the hosts time to get their network connection established
+	for (unsigned i = 0; i < 6000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
@@ -108,7 +110,8 @@ BOOST_AUTO_TEST_CASE(host)
 	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
 	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
-	for (unsigned i = 0; i < 3000; i += step)
+	// Wait for up to 6 seconds, to give the hosts time to find each other
+	for (unsigned i = 0; i < 6000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
@@ -228,8 +231,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	// Wait for up to 3 seconds, to give the hosts time to connect to each other.
-	for (unsigned i = 0; i < 3000; i += step)
+	// Wait for up to 6 seconds, to give the hosts time to connect to each other.
+	for (unsigned i = 0; i < 6000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
@@ -259,8 +262,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1.relinquishPeer(node2);
 
-	// Wait for up to 2 seconds, to give the hosts time to disconnect from each other.
-	for (unsigned i = 0; i < 2000; i += step)
+	// Wait for up to 6 seconds, to give the hosts time to disconnect from each other.
+	for (unsigned i = 0; i < 6000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 

@@ -24,6 +24,8 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+set -e
+
 TESTS=$1
 
 # There is an implicit assumption here that we HAVE to run from build directory.
@@ -39,5 +41,25 @@ if [[ "$TESTS" == "On" ]]; then
 
     $BUILD_ROOT/test/libethereum/test/testeth
     $BUILD_ROOT/test/libweb3core/test/testweb3core
-    $BUILD_ROOT/test/webthree/test/testweb3    
+
+    # Disable testweb3 tests for Ubuntu temporarily.  It looks like they are
+    # hanging.  Maybe some OpenCL configuration issue, or maybe something else?
+    #
+    # See, for example, https://travis-ci.org/ethereum/cpp-ethereum/jobs/152901242
+    #
+    # modprobe: ERROR: could not insert 'fglrx': No such device
+    # Error: Fail to load fglrx kernel module!
+    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
+    # modprobe: ERROR: could not insert 'fglrx': No such device
+    # Error: Fail to load fglrx kernel module!
+    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
+    # modprobe: ERROR: could not insert 'fglrx': No such device
+    # Error: Fail to load fglrx kernel module!
+    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
+    # No output has been received in the last 10m0s, this potentially indicates a stalled build or something wrong with the build itself.
+
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        $BUILD_ROOT/test/webthree/test/testweb3
+    fi
+
 fi

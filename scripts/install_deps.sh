@@ -50,6 +50,8 @@
 # (c) 2016 cpp-ethereum contributors.
 #------------------------------------------------------------------------------
 
+set -e
+
 # Check for 'uname' and abort if it is not available.
 uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires 'uname' to identify the platform."; exit 1; }
 
@@ -139,7 +141,10 @@ case $(uname -s) in
             # Arch Linux official repositories.
             # See https://wiki.archlinux.org/index.php/Official_repositories
             pacman -Sy --noconfirm \
-                base-devel \
+                autoconf \
+                automake \
+                gcc \
+                libtool \
                 boost \ 
                 cmake \
                 crypto++ \
@@ -148,19 +153,14 @@ case $(uname -s) in
                 libcl \
                 libmicrohttpd \
                 miniupnpc \
-                opencl-headers \
+                opencl-headers
 
-                rm -rf libjson-rpc-cpp
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
+            rm -rf libjson-rpc-cpp-git
+            git clone http://aur.archlinux.org/libjson-rpc-cpp-git.git libjson-rpc-cpp-git
+            cd libjson-rpc-cpp-git
+            makepkg
+            pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
+            cd ../..
 
         fi
 
