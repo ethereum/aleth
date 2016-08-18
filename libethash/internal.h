@@ -8,6 +8,8 @@
 
 #if defined(_M_X64) && ENABLE_SSE
 #include <smmintrin.h>
+#elif defined(__MIC__)
+#include <immintrin.h>
 #endif
 
 #ifdef __cplusplus
@@ -27,6 +29,8 @@ typedef union node {
 
 #if defined(_M_X64) && ENABLE_SSE
 	__m128i xmm[NODE_WORDS/4];
+#elif defined(__MIC__)
+	__m512i zmm[NODE_WORDS/16];
 #endif
 
 } node;
