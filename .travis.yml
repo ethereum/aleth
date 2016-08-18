@@ -59,12 +59,19 @@ matrix:
         # OS X Yosemite (10.10)
         # https://en.wikipedia.org/wiki/OS_X_Yosemite
         #
-        - os: osx
-          osx_image: xcode7.1
-          env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=osx-yosemite
+        # TODO - This is currently disabled as a very temporary workaround
+        # for the 'carthage' break.  There is no quick fix for this one, so
+        # let's just side-step it until we have a better understanding of the
+        # root cause.
+        #
+        # See https://github.com/ethereum/solidity/issues/924
+        #
+        #- os: osx
+        #  osx_image: xcode7.1
+        #  env:
+        #      - TRAVIS_BUILD_TYPE=RelWithDebInfo
+        #      - TRAVIS_TESTS=Off
+        #      - ZIP_SUFFIX=osx-yosemite
 
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
