@@ -98,6 +98,7 @@ cache:
     ccache: true
     directories:
         - build
+        - ~/.ethash
 install:
     - ./scripts/install_deps.sh
 before_script:
