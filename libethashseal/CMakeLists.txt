@@ -1,5 +1,4 @@
 aux_source_directory(. SRC_LIST)
-include_directories(..)
 
 file(GLOB HEADERS "*.h")
 
@@ -8,6 +7,7 @@ eth_use(ethashseal OPTIONAL Eth::ethash-cl Cpuid)
 
 find_package(Eth)
 
+target_include_directories(ethashseal PRIVATE ..)
 target_link_libraries(ethashseal ${Eth_ETHASH_LIBRARIES})
 target_link_libraries(ethashseal ${Eth_ETHEREUM_LIBRARIES})
 
@@ -21,4 +21,3 @@ if (ETHASHCL)
 endif()
 
 install(TARGETS ethashseal RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-

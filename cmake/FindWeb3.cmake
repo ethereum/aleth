@@ -34,7 +34,7 @@ else()
 
 		set(Web3_${L}_LIBRARIES ${Web3_${L}_LIBRARY})
 
-		if (DEFINED MSVC)
+		if (MSVC)
 			find_library(Web3_${L}_LIBRARY_DEBUG
 				NAMES ${l}
 				PATHS ${CMAKE_LIBRARY_PATH}

@@ -1,5 +1,4 @@
 aux_source_directory(. SRC_LIST)
-include_directories(..)
 
 file(GLOB HEADERS "*.h")
 
@@ -69,6 +68,7 @@ jsonrpcstub_create(web3jsonrpc test.json
 
 find_package(Web3)
 
+target_include_directories(web3jsonrpc PRIVATE ..)
 target_link_libraries(web3jsonrpc ${Web3_WEBTHREE_LIBRARIES})
 target_link_libraries(web3jsonrpc ${Web3_WHISPER_LIBRARIES})
 

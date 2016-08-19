@@ -1,8 +1,5 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
-include_directories(..)
-include_directories(../utils)
-
 aux_source_directory(. SRC_LIST)
 
 file(GLOB HEADERS "*.h")
@@ -16,6 +13,8 @@ find_package(Boost QUIET REQUIRED COMPONENTS regex)
 find_package(Dev)
 find_package(Eth)
 
+target_include_directories(ethereum PRIVATE ..)
+target_include_directories(ethereum PRIVATE ../utils)
 target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES})
 target_link_libraries(ethereum ${Eth_ETHCORE_LIBRARIES})
 target_link_libraries(ethereum ${Eth_EVM_LIBRARIES})

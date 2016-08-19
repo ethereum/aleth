@@ -1,6 +1,4 @@
 
-include_directories(..)
-
 # A custom command and target to turn the OpenCL kernel into a byte array header
 # The normal build depends on it properly and if the kernel file is changed, then
 # a rebuild of libethash-cl should be triggered
@@ -24,9 +22,11 @@ set(HEADERS ${OUR_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/ethash_cl_miner_kernel.h)
 cmake_policy(SET CMP0038 OLD)
 add_library(ethash-cl ${SRC_LIST} ${HEADERS})
 eth_use(ethash-cl REQUIRED OpenCL)
-target_include_directories(ethash-cl PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
 find_package(Eth)
+
+target_include_directories(ethash-cl PRIVATE ..)
+target_include_directories(ethash-cl PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 
 target_link_libraries(ethash-cl ${Eth_ETHASH_LIBRARIES})
 

@@ -1,9 +1,5 @@
-include_directories(..)
 
 aux_source_directory(. SRC_LIST)
-include_directories(..)
-include_directories(../../..)
-include_directories(../../../utils)
 
 macro (add_sources)
 	foreach (_src ${ARGN})
@@ -44,15 +40,21 @@ endforeach(file)
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 
-find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time unit_test_framework)
+find_package(Boost QUIET REQUIRED COMPONENTS unit_test_framework)
 find_package(Eth)
 
+target_include_directories(testeth PRIVATE ..)
+target_include_directories(testeth PRIVATE ../../..)
+target_include_directories(testeth PRIVATE ../../../utils)
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
-if (DEFINED MSVC)
+target_link_libraries(testeth ${Eth_TESTUTILS_LIBRARIES})
+
+if (MSVC)
+	find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time)
 	target_link_libraries(testeth ${Boost_CHRONO_LIBRARIES})
 	target_link_libraries(testeth ${Boost_DATE_TIME_LIBRARIES})
 endif()
-target_link_libraries(testeth ${Eth_TESTUTILS_LIBRARIES})
+
 if (UNIX AND NOT APPLE)
 	target_link_libraries(testeth pthread)
 endif()

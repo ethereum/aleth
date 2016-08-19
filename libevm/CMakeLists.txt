@@ -13,21 +13,18 @@ if (EVMJIT)
 	)
 endif()
 
-include_directories(..)
-if (EVMJIT)
-	include_directories(../evmjit/include)
-endif()
-
 file(GLOB HEADERS "*.h")
 
 add_library(evm ${SOURCES} ${HEADERS})
 
 find_package(Eth)
 
+target_include_directories(evm PRIVATE ..)
 target_link_libraries(evm ${Eth_ETHCORE_LIBRARIES})
 target_link_libraries(evm ${Eth_EVMCORE_LIBRARIES})
 
 if (EVMJIT)
+	target_include_directories(evm PRIVATE ../evmjit/include)
 	target_link_libraries(evm ${Eth_EVMJIT_LIBRARIES})
 endif()
 

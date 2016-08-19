@@ -35,7 +35,7 @@ endfunction()
 # are small.  That gives us total control, but at the cost of longer build times.  That is the
 # approach which Pawel has taken for LLVM in https://github.com/ethereum/evmjit.
 
-if (DEFINED MSVC)
+if (MSVC)
 	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
 		message(FATAL_ERROR "ERROR - As of the 1.3.0 release, cpp-ethereum only supports Visual Studio 2015 or newer.\nPlease download from https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.")
 	else()
@@ -61,7 +61,7 @@ find_program(CTEST_COMMAND ctest)
 # Use Boost "multithreaded mode" for Windows.  The platform C/C++ runtime libraries come in
 # two flavors on Windows, which causes an ABI schism across the whole ecosystem.  This setting
 # is declaring which side of that schism we fall on.
-if (DEFINED MSVC)
+if (MSVC)
 	set(Boost_USE_MULTITHREADED ON)
 endif()
 

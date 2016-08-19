@@ -51,7 +51,7 @@ set (JSON_RPC_CPP_CLIENT_LIBRARIES ${JSON_RPC_CPP_COMMON_LIBRARY} ${JSON_RPC_CPP
 # debug library on windows
 # same naming convention as in qt (appending debug library with d)
 # boost is using the same "hack" as us with "optimized" and "debug"
-if (DEFINED MSVC)
+if (MSVC)
 
 	find_library(
 		JSON_RPC_CPP_COMMON_LIBRARY_DEBUG

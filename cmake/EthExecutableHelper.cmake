@@ -105,7 +105,7 @@ macro(eth_install_executable EXECUTABLE)
 		# TODO - Why is this different than the branch Linux below, which has the RUNTIME keyword too?
 		install(TARGETS ${EXECUTABLE} DESTINATION bin)
 
-	elseif (DEFINED MSVC)
+	elseif (MSVC)
 
 		set(COMPONENT ${EXECUTABLE})
 
