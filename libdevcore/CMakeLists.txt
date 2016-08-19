@@ -9,6 +9,7 @@ add_library(devcore ${SRC_LIST} ${HEADERS})
 find_package(Boost QUIET REQUIRED COMPONENTS thread filesystem random system)
 
 target_include_directories(devcore PRIVATE ..)
+target_include_directories(devcore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
 target_link_libraries(devcore ${Boost_FILESYSTEM_LIBRARIES})
 target_link_libraries(devcore ${Boost_RANDOM_LIBRARIES})
 target_link_libraries(devcore ${Boost_SYSTEM_LIBRARIES})
