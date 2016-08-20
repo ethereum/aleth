@@ -110,8 +110,8 @@ BOOST_AUTO_TEST_CASE(host)
 	BOOST_REQUIRE(host1.haveNetwork() && host2.haveNetwork());
 	host1.addNode(node2, NodeIPEndpoint(bi::address::from_string("127.0.0.1"), host2port, host2port));
 
-	// Wait for up to 6 seconds, to give the hosts time to find each other
-	for (unsigned i = 0; i < 6000; i += step)
+	// Wait for up to 12 seconds, to give the hosts time to find each other
+	for (unsigned i = 0; i < 12000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
@@ -231,8 +231,8 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
-	// Wait for up to 6 seconds, to give the hosts time to connect to each other.
-	for (unsigned i = 0; i < 6000; i += step)
+	// Wait for up to 12 seconds, to give the hosts time to connect to each other.
+	for (unsigned i = 0; i < 12000; i += step)
 	{
 		this_thread::sleep_for(chrono::milliseconds(step));
 
