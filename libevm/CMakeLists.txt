@@ -13,19 +13,19 @@ if (EVMJIT)
 	)
 endif()
 
-# we may not use it in libevm, but one of our dependecies is including boost in header file
-# and windows is failing to build without that
-if (EVMJIT)
-	include_directories(../evmjit/include)
-endif()
-
-set(EXECUTABLE evm)
-
 file(GLOB HEADERS "*.h")
 
-add_library(${EXECUTABLE} ${SOURCES} ${HEADERS})
+add_library(evm ${SOURCES} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::ethcore Dev::devcrypto Eth::evmcore Dev::devcore)
-eth_use(${EXECUTABLE} OPTIONAL Eth::evmjit)
+find_package(Eth)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+target_include_directories(evm PRIVATE ..)
+target_link_libraries(evm ${Eth_ETHCORE_LIBRARIES})
+target_link_libraries(evm ${Eth_EVMCORE_LIBRARIES})
+
+if (EVMJIT)
+	target_include_directories(evm PRIVATE ../evmjit/include)
+	target_link_libraries(evm ${Eth_EVMJIT_LIBRARIES})
+endif()
+
+install(TARGETS evm RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

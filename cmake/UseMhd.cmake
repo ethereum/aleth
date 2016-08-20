@@ -1,5 +1,5 @@
 function(eth_apply TARGET REQUIRED)	
-	find_package(MHD ${REQUIRED})
+	find_package(MHD REQUIRED)
 	eth_show_dependency(MHD microhttpd)
 	if (MHD_FOUND)
 		target_include_directories(${TARGET} SYSTEM PUBLIC ${MHD_INCLUDE_DIRS})

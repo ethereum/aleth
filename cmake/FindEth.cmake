@@ -8,7 +8,7 @@
 #  TODO: ETH_INCLUDE_DIRS
 
 include(EthUtils)
-set(LIBS ethashseal;ethereum;evm;ethcore;evmcore;ethash-cl;ethash;natspec;evmjit;testutils)
+set(LIBS ethashseal;ethereum;evm;ethcore;evmcore;ethash-cl;ethash;evmjit;testutils)
 
 set(Eth_INCLUDE_DIRS "${ETH_DIR}")
 
@@ -37,7 +37,7 @@ else()
 
 		set(Eth_${L}_LIBRARIES ${Eth_${L}_LIBRARY})
 
-		if (DEFINED MSVC)
+		if (MSVC)
 			find_library(Eth_${L}_LIBRARY_DEBUG
 				NAMES ${l}
 				PATHS ${CMAKE_LIBRARY_PATH}

@@ -2,16 +2,30 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
 
-set(EXECUTABLE ethereum)
-
 file(GLOB HEADERS "*.h")
 
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-eth_use(${EXECUTABLE} REQUIRED Eth::evm Eth::ethcore)
+add_library(ethereum ${SRC_LIST} ${HEADERS})
+eth_use(ethereum REQUIRED Jsoncpp)
+
+target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES})
+
+find_package(Boost QUIET REQUIRED COMPONENTS regex)
+find_package(Dev)
+find_package(Eth)
+
+target_include_directories(ethereum PRIVATE ..)
+target_include_directories(ethereum PRIVATE ../utils)
+target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES})
+target_link_libraries(ethereum ${Eth_ETHCORE_LIBRARIES})
+target_link_libraries(ethereum ${Eth_EVM_LIBRARIES})
+
 if (NOT EMSCRIPTEN)
-	eth_use(${EXECUTABLE} REQUIRED Dev::p2p Dev::devcrypto)
+	target_link_libraries(ethereum ${Dev_P2P_LIBRARIES})
+	target_link_libraries(ethereum ${Dev_DEVCRYPTO_LIBRARIES})
 endif()
-target_link_libraries(${EXECUTABLE} ${Boost_REGEX_LIBRARIES})
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+if (EVMJIT)
+	target_link_libraries(ethereum ${Eth_EVMJIT_LIBRARIES})
+endif()
 
+install(TARGETS ethereum RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

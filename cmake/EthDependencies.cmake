@@ -35,7 +35,7 @@ endfunction()
 # are small.  That gives us total control, but at the cost of longer build times.  That is the
 # approach which Pawel has taken for LLVM in https://github.com/ethereum/evmjit.
 
-if (DEFINED MSVC)
+if (MSVC)
 	if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0)
 		message(FATAL_ERROR "ERROR - As of the 1.3.0 release, cpp-ethereum only supports Visual Studio 2015 or newer.\nPlease download from https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx.")
 	else()
@@ -61,7 +61,7 @@ find_program(CTEST_COMMAND ctest)
 # Use Boost "multithreaded mode" for Windows.  The platform C/C++ runtime libraries come in
 # two flavors on Windows, which causes an ABI schism across the whole ecosystem.  This setting
 # is declaring which side of that schism we fall on.
-if (DEFINED MSVC)
+if (MSVC)
 	set(Boost_USE_MULTITHREADED ON)
 endif()
 
@@ -152,15 +152,6 @@ if (STATIC_LINKING)
 
 	set(ETH_STATIC ON)
 endif()
-
-# TODO - Why do we have a specific version number here?  If that is a minimum
-# version then it looks very low.  Pawel and Bob have done some iteration
-# on workarounds for issues in Boost headers (multiprecisionnumber) which
-# need specific, fairly new versions to be dependable.
-#
-# See the mess around https://github.com/ethereum/libweb3core/blob/develop/libdevcore/Common.h#L53
-find_package(Boost 1.54.0 QUIET REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
-eth_show_dependency(Boost boost)
 
 # Add Homebrew include paths and library paths for macOS clients.
 #

@@ -2,14 +2,14 @@
 # Don't re-use SRC_LIST, because it has a special meaning within the test folder,
 # with some dynamic aggregation of unit-testing going on.
 aux_source_directory(. LOCAL_SRC_LIST)
-
-set(EXECUTABLE testutils)
+include_directories(../../../..)
 
 file(GLOB HEADERS "*.h")
 
-add_library(${EXECUTABLE} ${LOCAL_SRC_LIST} ${HEADERS})
+add_library(testutils ${LOCAL_SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Eth::ethereum Eth::ethashseal)
+find_package(Eth)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+target_link_libraries(testutils ${Eth_ETHASHSEAL_LIBRARIES})
 
+install(TARGETS testutils RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

@@ -1,4 +1,3 @@
-set(EXECUTABLE ethash-cl)
 
 # A custom command and target to turn the OpenCL kernel into a byte array header
 # The normal build depends on it properly and if the kernel file is changed, then
@@ -21,8 +20,14 @@ set(HEADERS ${OUR_HEADERS} ${CMAKE_CURRENT_BINARY_DIR}/ethash_cl_miner_kernel.h)
 
 # TODO: Should fix properly. Cmake >= 3.4.0 detects a self linking of ethash-cl library here.
 cmake_policy(SET CMP0038 OLD)
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
-eth_use(${EXECUTABLE} REQUIRED Eth::ethash OpenCL)
-target_include_directories(${EXECUTABLE} PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
+add_library(ethash-cl ${SRC_LIST} ${HEADERS})
+eth_use(ethash-cl REQUIRED OpenCL)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+find_package(Eth)
+
+target_include_directories(ethash-cl PRIVATE ..)
+target_include_directories(ethash-cl PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
+target_link_libraries(ethash-cl ${Eth_ETHASH_LIBRARIES})
+
+install(TARGETS ethash-cl RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

@@ -1,11 +1,12 @@
 aux_source_directory(. SRC_LIST)
 
-set(EXECUTABLE evmcore)
-
 file(GLOB HEADERS "*.h")
 
-add_library(${EXECUTABLE} ${SRC_LIST} ${HEADERS})
+add_library(evmcore ${SRC_LIST} ${HEADERS})
 
-eth_use(${EXECUTABLE} REQUIRED Dev::devcore)
+find_package(Boost QUIET REQUIRED)
 
-install( TARGETS ${EXECUTABLE} RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib )
+target_include_directories(evmcore PRIVATE ..)
+target_include_directories(evmcore SYSTEM PUBLIC ${Boost_INCLUDE_DIRS})
+
+install(TARGETS evmcore RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

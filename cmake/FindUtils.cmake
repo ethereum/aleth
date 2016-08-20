@@ -34,7 +34,7 @@ else()
 
 		set(Utils_${L}_LIBRARIES ${Utils_${L}_LIBRARY})
 
-		if (DEFINED MSVC)
+		if (MSVC)
 			find_library(Utils_${L}_LIBRARY_DEBUG
 				NAMES ${l}
 				PATHS ${CMAKE_LIBRARY_PATH}
