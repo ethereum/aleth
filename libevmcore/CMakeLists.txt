@@ -1,5 +1,4 @@
 aux_source_directory(. SRC_LIST)
-enable_bulkbuild(evmcore SRC_LIST)
 
 file(GLOB HEADERS "*.h")
 
