@@ -108,6 +108,9 @@ void ethash_calculate_dag_item(
 	__m128i xmm1 = ret->xmm[1];
 	__m128i xmm2 = ret->xmm[2];
 	__m128i xmm3 = ret->xmm[3];
+#elif defined(__MIC__)
+	__m512i const fnv_prime = _mm512_set1_epi32(FNV_PRIME);
+	__m512i zmm0 = ret->zmm[0];
 #endif
 
 	for (uint32_t i = 0; i != ETHASH_DATASET_PARENTS; ++i) {
@@ -130,6 +133,14 @@ void ethash_calculate_dag_item(
 			ret->xmm[1] = xmm1;
 			ret->xmm[2] = xmm2;
 			ret->xmm[3] = xmm3;
+		}
+		#elif defined(__MIC__)
+		{
+			zmm0 = _mm512_mullo_epi32(zmm0, fnv_prime);
+
+			// have to write to ret as values are used to compute index
+			zmm0 = _mm512_xor_si512(zmm0, parent->zmm[0]);
+			ret->zmm[0] = zmm0;
 		}
 		#else
 		{
@@ -227,6 +238,14 @@ static bool ethash_hash(
 				mix[n].xmm[2] = _mm_xor_si128(xmm2, dag_node->xmm[2]);
 				mix[n].xmm[3] = _mm_xor_si128(xmm3, dag_node->xmm[3]);
 			}
+			#elif defined(__MIC__)
+			{
+				// __m512i implementation via union
+				//	Each vector register (zmm) can store sixteen 32-bit integer numbers
+				__m512i fnv_prime = _mm512_set1_epi32(FNV_PRIME);
+				__m512i zmm0 = _mm512_mullo_epi32(fnv_prime, mix[n].zmm[0]);
+				mix[n].zmm[0] = _mm512_xor_si512(zmm0, dag_node->zmm[0]);
+			}
 			#else
 			{
 				for (unsigned w = 0; w != NODE_WORDS; ++w) {
@@ -320,7 +339,11 @@ ethash_light_t ethash_light_new_internal(uint64_t cache_size, ethash_h256_t cons
 	if (!ret) {
 		return NULL;
 	}
+#if defined(__MIC__)
+	ret->cache = _mm_malloc((size_t)cache_size, 64);
+#else
 	ret->cache = malloc((size_t)cache_size);
+#endif
 	if (!ret->cache) {
 		goto fail_free_light;
 	}
@@ -332,7 +355,11 @@ ethash_light_t ethash_light_new_internal(uint64_t cache_size, ethash_h256_t cons
 	return ret;
 
 fail_free_cache_mem:
+#if defined(__MIC__)
+	_mm_free(ret->cache);
+#else
 	free(ret->cache);
+#endif
 fail_free_light:
 	free(ret);
 	return NULL;
@@ -428,6 +455,17 @@ ethash_full_t ethash_full_new_internal(
 			ETHASH_CRITICAL("mmap failure()");
 			goto fail_close_file;
 		}
+#if defined(__MIC__)
+		node* tmp_nodes = _mm_malloc((size_t)full_size, 64);
+		//copy all nodes from ret->data
+		//mmapped_nodes are not aligned properly
+		uint32_t const countnodes = (uint32_t) ((size_t)ret->file_size / sizeof(node));
+		//fprintf(stderr,"ethash_full_new_internal:countnodes:%d",countnodes);
+		for (uint32_t i = 1; i != countnodes; ++i) {
+			tmp_nodes[i] = ret->data[i];
+		}
+		ret->data = tmp_nodes;
+#endif
 		return ret;
 	case ETHASH_IO_MEMO_SIZE_MISMATCH:
 		// if a DAG of same filename but unexpected size is found, silently force new file creation
@@ -444,6 +482,9 @@ ethash_full_t ethash_full_new_internal(
 		break;
 	}
 
+#if defined(__MIC__)
+	ret->data = _mm_malloc((size_t)full_size, 64);
+#endif
 	if (!ethash_compute_full_data(ret->data, full_size, light, callback)) {
 		ETHASH_CRITICAL("Failure at computing DAG data.");
 		goto fail_free_full_data;
@@ -468,6 +509,9 @@ ethash_full_t ethash_full_new_internal(
 fail_free_full_data:
 	// could check that munmap(..) == 0 but even if it did not can't really do anything here
 	munmap(ret->data, (size_t)full_size);
+#if defined(__MIC__)
+	_mm_free(ret->data);
+#endif
 fail_close_file:
 	fclose(ret->file);
 fail_free_full:
