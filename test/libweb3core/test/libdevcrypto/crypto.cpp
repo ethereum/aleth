@@ -114,6 +114,8 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 
 BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 {
+	using CryptoPP::Integer;
+
 #if ETH_HAVE_SECP256K1
 	secp256k1_context_t* ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY);
 #endif
@@ -342,8 +344,8 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	string original = message;
 	bytes b = asBytes(message);
 
-	bytesConstRef shared("shared MAC data");
-	bytesConstRef wrongShared("wrong shared MAC data");
+	bytesConstRef shared(std::string("shared MAC data"));
+	bytesConstRef wrongShared(std::string("wrong shared MAC data"));
 
 	s_secp256k1->encryptECIES(k.pub(), shared, b);
 	BOOST_REQUIRE(b != asBytes(original));
@@ -376,6 +378,8 @@ BOOST_AUTO_TEST_CASE(ecies_eckeypair)
 
 BOOST_AUTO_TEST_CASE(ecdh)
 {
+	using CryptoPP::Integer;
+
 	cnote << "Testing ecdh...";
 
 	ECDH<ECP>::Domain dhLocal(s_curveOID);
@@ -686,6 +690,8 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_ctr)
 	SecByteBlock key(0x00, aesKeyLen);
 	rng.GenerateBlock(key, key.size());
 	
+	using CryptoPP::AES;
+
 	// cryptopp uses IV as nonce/counter which is same as using nonce w/0 ctr
 	FixedHash<AES::BLOCKSIZE> ctr;
 	rng.GenerateBlock(ctr.data(), sizeof(ctr));
@@ -759,6 +765,8 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 	AutoSeededRandomPool rng;
 	SecByteBlock key(0x00, aesKeyLen);
 	rng.GenerateBlock(key, key.size());
+
+	using CryptoPP::AES;
 	
 	// Generate random IV
 	byte iv[AES::BLOCKSIZE];
@@ -791,6 +799,8 @@ BOOST_AUTO_TEST_CASE(cryptopp_aes128_cbc)
 
 BOOST_AUTO_TEST_CASE(recoverVgt3)
 {
+	using CryptoPP::Integer;
+	
 	// base secret
 	Secret secret(sha3("privacy"));
 

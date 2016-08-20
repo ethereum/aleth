@@ -4,6 +4,7 @@ file(GLOB HEADERS "*.h")
 
 add_executable(ethkey ${SRC_LIST} ${HEADERS})
 
+find_package(Dev)
 find_package(Eth)
 
 target_include_directories(ethkey PRIVATE ..)

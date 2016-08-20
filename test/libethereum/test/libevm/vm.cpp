@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(vmRandom)
 			test::Listener::notifySuiteStarted(path.filename().string());
 			doVMTests(v, false);
 		}
-		catch (Exception const& _e)
+		catch (dev::Exception const& _e)
 		{
 			BOOST_ERROR("Failed test with Exception: " << diagnostic_information(_e));
 		}

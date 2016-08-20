@@ -37,6 +37,8 @@ foreach(file ${SRC_LIST})
 	endforeach(test_raw)
 endforeach(file)
 
+enable_bulkbuild(testeth SRC_LIST)
+
 file(GLOB HEADERS "*.h")
 add_executable(testeth ${SRC_LIST} ${HEADERS})
 

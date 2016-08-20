@@ -6,6 +6,10 @@
 #include <vector>
 #include <string>
 
+// For pre-processor conditional about database choice.
+#include "db.h"
+
+
 #ifdef __INTEL_COMPILER
 #pragma warning(disable:597) //will not be called for implicit or explicit conversions
 #endif

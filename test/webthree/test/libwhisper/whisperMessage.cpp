@@ -25,7 +25,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace std;
 using namespace dev;
-using namespace dev::test;
 using namespace dev::shh;
 
 Topics createRandomTopics(unsigned int i)
@@ -80,7 +79,7 @@ void sealAndOpenSingleMessage(unsigned int i)
 	}
 }
 
-BOOST_FIXTURE_TEST_SUITE(whisperMessage, TestOutputHelper)
+BOOST_FIXTURE_TEST_SUITE(whisperMessage, dev::test::TestOutputHelper)
 
 //
 // Disabled tests as they are unstable and tend to stall the test suite.

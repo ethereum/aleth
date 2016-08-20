@@ -36,7 +36,7 @@ BOOST_FIXTURE_TEST_SUITE(AccountHolderTest, TestOutputHelper)
 
 BOOST_AUTO_TEST_CASE(ProxyAccountUseCase)
 {
-	FixedAccountHolder h = FixedAccountHolder(function<Interface*()>(), vector<KeyPair>());
+	FixedAccountHolder h = FixedAccountHolder(std::function<dev::eth::Interface*()>(), std::vector<KeyPair>());
 
 	BOOST_CHECK(h.allAccounts().empty());
 	BOOST_CHECK(h.realAccounts().empty());

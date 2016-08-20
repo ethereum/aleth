@@ -80,12 +80,9 @@ namespace dev
 {
 namespace crypto
 {
+inline CryptoPP::ECP::Point publicToPoint(Public const& _p) { CryptoPP::Integer x(_p.data(), 32); CryptoPP::Integer y(_p.data() + 32, 32); return CryptoPP::ECP::Point(x,y); }
 
-using namespace CryptoPP;
-
-inline ECP::Point publicToPoint(Public const& _p) { Integer x(_p.data(), 32); Integer y(_p.data() + 32, 32); return ECP::Point(x,y); }
-
-inline Integer secretToExponent(Secret const& _s) { return std::move(Integer(_s.data(), Secret::size)); }
+inline CryptoPP::Integer secretToExponent(Secret const& _s) { return std::move(CryptoPP::Integer(_s.data(), Secret::size)); }
 
 /// Amount of bytes added when encrypting with encryptECIES.
 static const unsigned c_eciesOverhead = 113;
@@ -99,7 +96,7 @@ class Secp256k1PP
 public:
 	static Secp256k1PP* get() { if (!s_this) s_this = new Secp256k1PP; return s_this; }
 
-	void toPublic(Secret const& _s, Public& o_public) { exponentToPublic(Integer(_s.data(), sizeof(_s)), o_public); }
+	void toPublic(Secret const& _s, Public& o_public) { exponentToPublic(CryptoPP::Integer(_s.data(), sizeof(_s)), o_public); }
 	
 	/// Encrypts text (replace input). (ECIES w/XOR-SHA1)
 	void encrypt(Public const& _k, bytes& io_cipher);
@@ -143,32 +140,32 @@ public:
 	void agree(Secret const& _s, Public const& _r, Secret& o_s);
 	
 protected:
-	void exportPrivateKey(DL_PrivateKey_EC<ECP> const& _k, Secret& o_s) { _k.GetPrivateExponent().Encode(o_s.writable().data(), Secret::size); }
+	void exportPrivateKey(CryptoPP::DL_PrivateKey_EC<CryptoPP::ECP> const& _k, Secret& o_s) { _k.GetPrivateExponent().Encode(o_s.writable().data(), Secret::size); }
 	
-	void exportPublicKey(DL_PublicKey_EC<ECP> const& _k, Public& o_p);
+	void exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p);
 	
-	void exponentToPublic(Integer const& _e, Public& o_p);
+	void exponentToPublic(CryptoPP::Integer const& _e, Public& o_p);
 	
 	template <class T> void initializeDLScheme(Secret const& _s, T& io_operator) { std::lock_guard<std::mutex> l(x_params); io_operator.AccessKey().Initialize(m_params, secretToExponent(_s)); }
 	
 	template <class T> void initializeDLScheme(Public const& _p, T& io_operator) { std::lock_guard<std::mutex> l(x_params); io_operator.AccessKey().Initialize(m_params, publicToPoint(_p)); }
 	
 private:
-	Secp256k1PP(): m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()), m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder()) {}
+	Secp256k1PP(): m_oid(CryptoPP::ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()), m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder()) {}
 
-	OID m_oid;
+	CryptoPP::OID m_oid;
 	
 	std::mutex x_rng;
-	AutoSeededRandomPool m_rng;
+	CryptoPP::AutoSeededRandomPool m_rng;
 	
 	std::mutex x_params;
-	DL_GroupParameters_EC<ECP> m_params;
+	CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> m_params;
 	
 	std::mutex x_curve;
-	DL_GroupParameters_EC<ECP>::EllipticCurve m_curve;
+	CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP>::EllipticCurve m_curve;
 	
-	Integer m_q;
-	Integer m_qs;
+	CryptoPP::Integer m_q;
+	CryptoPP::Integer m_qs;
 
 	static Secp256k1PP* s_this;
 };

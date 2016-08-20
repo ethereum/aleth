@@ -524,7 +524,7 @@ BOOST_AUTO_TEST_CASE(segmentedPacketFlush)
 		bytesRef frame = frameWithHeader.cropped(h256::size);
 		RLPXFrameInfo f(header);
 		for (RLPXPacket& p: r.demux(decoder, f, frame))
-			packets.push_back(move(p));
+			packets.push_back(std::move(p));
 	}
 	BOOST_REQUIRE_EQUAL(packets.size(), 1);
 	BOOST_REQUIRE_EQUAL(packets.front().size(), packetTypeRLP.size() + rlpPayload.out().size());
@@ -576,7 +576,7 @@ BOOST_AUTO_TEST_CASE(coalescedPacketsPadded)
 	RLPXFrameInfo f(header);
 	BOOST_REQUIRE_EQUAL(f.multiFrame, false);
 	for (RLPXPacket& p: r.demux(decoder, f, frame))
-		packets.push_back(move(p));
+		packets.push_back(std::move(p));
 	
 	RLPStream rlpPayload;
 	rlpPayload << stuff;
@@ -626,7 +626,7 @@ BOOST_AUTO_TEST_CASE(singleFramePacketFlush)
 	RLPXFrameInfo f(header);
 	BOOST_REQUIRE_EQUAL(f.multiFrame, false);
 	for (RLPXPacket& p: r.demux(decoder, f, frame))
-		packets.push_back(move(p));
+		packets.push_back(std::move(p));
 	
 	RLPStream rlpPayload;
 	rlpPayload << stuff;
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(multiProtocol)
 		for (RLPXPacket& p: mr[f.protocolId]->demux(decoder, f, frame))
 		{
 			BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());
-			packets.push_back(move(p));
+			packets.push_back(std::move(p));
 		}
 	}
 
@@ -782,7 +782,7 @@ BOOST_AUTO_TEST_CASE(oddSizedMessages)
 		bytesRef frame = frameWithHeader.cropped(h256::size);
 		RLPXFrameInfo f(header);
 		for (RLPXPacket& p: r.demux(decoder, f, frame))
-			packets.push_back(move(p));
+			packets.push_back(std::move(p));
 	}
 
 	BOOST_REQUIRE_EQUAL(packets.size(), totalMessages);
@@ -861,7 +861,7 @@ BOOST_AUTO_TEST_CASE(pseudorandom)
 		RLPXFrameInfo f(header);
 		auto px = r.demux(decoder, f, frame);
 		for (RLPXPacket& p: px)
-			packetsReceived.push_back(move(p));
+			packetsReceived.push_back(std::move(p));
 	}
 
 	BOOST_REQUIRE_EQUAL(numMessages, packetsReceived.size());
@@ -896,15 +896,15 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 	vector<bytes> packetsSentShuffled;
 	vector<RLPXPacket> packetsReceived;
 	vector<RLPXFrameWriter> writers;
-	vector<shared_ptr<RLPXFrameReader> > readers;
-	map<size_t, size_t> msgPerSubprotocolSent;
-	map<size_t, size_t> msgPerSubprotocolReceived;
+	vector<std::shared_ptr<RLPXFrameReader> > readers;
+	std::map<size_t, size_t> msgPerSubprotocolSent;
+	std::map<size_t, size_t> msgPerSubprotocolReceived;
 
 	// create readers & writers
 	for (size_t i = 0; i < numSubprotocols; ++i)
 	{
 		writers.push_back(RLPXFrameWriter(i));
-		shared_ptr<RLPXFrameReader> p(new RLPXFrameReader(i));
+		std::shared_ptr<RLPXFrameReader> p(new RLPXFrameReader(i));
 		readers.push_back(p);
 	}
 
@@ -960,7 +960,7 @@ BOOST_AUTO_TEST_CASE(randomizedMultiProtocol)
 		for (RLPXPacket& p: px)
 		{
 			BOOST_REQUIRE_EQUAL(f.protocolId, p.cap());
-			packetsReceived.push_back(move(p));
+			packetsReceived.push_back(std::move(p));
 			msgPerSubprotocolReceived[f.protocolId]++;
 		}
 	}

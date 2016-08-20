@@ -26,22 +26,19 @@
 #include <libp2p/Session.h>
 #include <libwhisper/WhisperPeer.h>
 #include <libwhisper/WhisperHost.h>
-#include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;
-using namespace dev::test;
 using namespace dev::p2p;
 using namespace dev::shh;
 
-struct P2PFixture: public TestOutputHelper
+struct WhisperP2PFixture: public dev::test::TestOutputHelper
 {
-	P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
-	~P2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
-	TestOutputHelper testHelper;
+	WhisperP2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = true; }
+	~WhisperP2PFixture() { dev::p2p::NodeIPEndpoint::test_allowLocal = false; }
 };
 
-BOOST_FIXTURE_TEST_SUITE(whisper, P2PFixture)
+BOOST_FIXTURE_TEST_SUITE(whisper, WhisperP2PFixture)
 
 //
 // Disabled tests as they are unstable and tend to stall the test suite.

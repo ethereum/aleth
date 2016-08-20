@@ -264,7 +264,7 @@ BOOST_AUTO_TEST_CASE(Mining_4_BlockQueueSyncing)
 			uncleBlockQueue.setChain(bc2.interface());
 			ImportResult importIntoQueue = uncleBlockQueue.import(&block2.bytes(), false);
 			BOOST_REQUIRE(importIntoQueue == ImportResult::Success);
-			this_thread::sleep_for(chrono::seconds(2));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 
 			BlockChain& bcRef = bc.interfaceUnsafe();
 			bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));
@@ -320,7 +320,7 @@ BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 			BlockQueue uncleBlockQueue;
 			uncleBlockQueue.setChain(bc.interface());
 			uncleBlockQueue.import(&uncleBlock.bytes(), false);
-			this_thread::sleep_for(chrono::seconds(2));
+			std::this_thread::sleep_for(std::chrono::seconds(2));
 
 			BlockChain& bcRef = bc.interfaceUnsafe();
 			bcRef.sync(uncleBlockQueue, bc.testGenesis().state().db(), unsigned(4));

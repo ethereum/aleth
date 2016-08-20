@@ -1,4 +1,5 @@
 aux_source_directory(. SRC_LIST)
+enable_bulkbuild(ethcore SRC_LIST)
 
 file(GLOB HEADERS "*.h")
 

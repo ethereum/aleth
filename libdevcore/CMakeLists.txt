@@ -1,6 +1,7 @@
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
 
 aux_source_directory(. SRC_LIST)
+enable_bulkbuild(devcore SRC_LIST)
 
 file(GLOB HEADERS "*.h")
 

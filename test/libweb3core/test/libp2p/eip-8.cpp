@@ -132,7 +132,7 @@ public:
 	/// as the input on the socket.
 	///
 	/// If remoteID is supplied, the handshake runs in initiator mode.
-	static shared_ptr<TestHandshake> runWithInput(Secret _hostAlias, bytes _packet, NodeID _remoteID = NodeID());
+	static std::shared_ptr<TestHandshake> runWithInput(Secret _hostAlias, bytes _packet, NodeID _remoteID = NodeID());
 
 	/// transition is overridden to stop after key establishment.
  	virtual void transition(boost::system::error_code _ec);
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_plain_auth)
 		"0f2c703f851cbf5ac47396d9ca65b6260bd141ac4d53e2de585a73d1750780db4c9ee4cd4d225173"
 		"a4592ee77e2bd94d0be3691f3b406f9bba9b591fc63facc016bfa8"
 	));
-	shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
+	std::shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
 	BOOST_REQUIRE(h->completedKeyEstablishment());
 	h->checkAuthValuesEIP8(4);
 }
@@ -182,7 +182,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth1)
 		"2aa067241aaa433f0bb053c7b31a838504b148f570c0ad62837129e547678c5190341e4f1693956c"
 		"3bf7678318e2d5b5340c9e488eefea198576344afbdf66db5f51204a6961a63ce072c8926c"
 	));
-	shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
+	std::shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
 	BOOST_REQUIRE(h->completedKeyEstablishment());
 	h->checkAuthValuesEIP8(4);
 }
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_auth2)
 		"f0fce91676fd64c7773bac6a003f481fddd0bae0a1f31aa27504e2a533af4cef3b623f4791b2cca6"
 		"d490"
 	));
-	shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
+	std::shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyB, auth);
 	BOOST_REQUIRE(h->completedKeyEstablishment());
 	h->checkAuthValuesEIP8(56);
 }
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack_plain)
 		"d1497113d5c755e942d1"
 	));
 	NodeID initiatorPubk("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877");
-	shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
+	std::shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
 	BOOST_REQUIRE(h->completedKeyEstablishment());
 	h->checkAckValuesEIP8(4);
 }
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack1)
 		"5833c2464c805246155289f4"
 	));
 	NodeID initiatorPubk("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877");
-	shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
+	std::shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
 	BOOST_REQUIRE(h->completedKeyEstablishment());
 	h->checkAckValuesEIP8(4);
 }
@@ -269,7 +269,7 @@ BOOST_AUTO_TEST_CASE(test_handshake_eip8_ack2)
 		"35b9593b48b9d3ca4c13d245d5f04169b0b1"
 	));
 	NodeID initiatorPubk("fda1cff674c90c9a197539fe3dfb53086ace64f83ed7c6eabec741f7f381cc803e52ab2cd55d5569bce4347107a310dfd5f88a010cd2ffd1005ca406f1842877");
-	shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
+	std::shared_ptr<TestHandshake> h = TestHandshake::runWithInput(keyA, ack, initiatorPubk);
 	BOOST_REQUIRE(h->completedKeyEstablishment());
 	h->checkAckValuesEIP8(57);
 }
@@ -289,10 +289,10 @@ void TestHandshake::checkAckValuesEIP8(uint64_t _expectedRemoteVersion)
 	BOOST_CHECK_EQUAL(m_remoteVersion, _expectedRemoteVersion);
 }
 
-#define throwErrorCode(what, error) \
-	{ if (error) BOOST_THROW_EXCEPTION(Exception(what + _ec.message())); }
+#define THROW_ERROR_CODE(what, error) \
+	{ if (error) BOOST_THROW_EXCEPTION(dev::Exception(what + _ec.message())); }
 
-shared_ptr<TestHandshake> TestHandshake::runWithInput(Secret _hostAlias, bytes _packet, NodeID _remoteID)
+std::shared_ptr<TestHandshake> TestHandshake::runWithInput(Secret _hostAlias, bytes _packet, NodeID _remoteID)
 {
 	// Spawn a listener which sends the packet to any client.
 	ba::io_service io;
@@ -304,17 +304,17 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(Secret _hostAlias, bytes _
 	auto server = std::make_shared<RLPXSocket>(io);
 	acceptor.async_accept(server->ref(), [_packet,server](boost::system::error_code const& _ec)
 	{
-		throwErrorCode("accept error: ", _ec);
+		THROW_ERROR_CODE("accept error: ", _ec);
 		ba::async_write(server->ref(), ba::buffer(_packet), [](const boost::system::error_code& _ec, std::size_t)
 		{
-			throwErrorCode("write error: ", _ec);
+			THROW_ERROR_CODE("write error: ", _ec);
 		});
 	});
 
 	// Spawn a client to execute the handshake.
-	auto host = make_shared<Host>("peer name", KeyPair(_hostAlias));
-	auto client = make_shared<RLPXSocket>(io);
-	shared_ptr<TestHandshake> handshake;
+	auto host = std::make_shared<Host>("peer name", KeyPair(_hostAlias));
+	auto client = std::make_shared<RLPXSocket>(io);
+	std::shared_ptr<TestHandshake> handshake;
 	if (_remoteID == NodeID())
 		handshake.reset(new TestHandshake(host.get(), client));
 	else
@@ -322,7 +322,7 @@ shared_ptr<TestHandshake> TestHandshake::runWithInput(Secret _hostAlias, bytes _
 
 	client->ref().async_connect(acceptor.local_endpoint(), [handshake](boost::system::error_code const& _ec)
 	{
-		throwErrorCode("connect error: ", _ec);
+		THROW_ERROR_CODE("connect error: ", _ec);
 		handshake->start();
 	});
 
