@@ -268,9 +268,19 @@ public:
 
 		~Result()
 		{
-			// TODO: Decide when the result has to be destroyed.
-			evm_destroy_result(m_result);
+			evm_release_result_resources(&m_result);
 		}
+
+		Result(Result&& _other):
+			m_result(_other.m_result)
+		{
+			// FIXME: It is not perfect as we must know what will be released
+			//        by evm_release_result_resources().
+			_other.m_result.internal_memory = nullptr;
+		}
+
+		Result(Result const&) = delete;
+		Result& operator=(Result const&) = delete;
 
 		int64_t gasLeft() const
 		{
