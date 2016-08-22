@@ -268,14 +268,14 @@ public:
 
 		~Result()
 		{
-			evm_release_result_resources(&m_result);
+			evm_release_result(&m_result);
 		}
 
 		Result(Result&& _other):
 			m_result(_other.m_result)
 		{
 			// FIXME: It is not perfect as we must know what will be released
-			//        by evm_release_result_resources().
+			//        by evm_release_result().
 			_other.m_result.internal_memory = nullptr;
 		}
 
