@@ -101,9 +101,11 @@ void FakeExtVM::importEnv(mObject& _o)
 	assert(_o.count("currentTimestamp") > 0);
 	assert(_o.count("currentCoinbase") > 0);
 	assert(_o.count("currentNumber") > 0);
+	auto gasLimit = toInt(_o["currentGasLimit"]);
+	assert(gasLimit <= std::numeric_limits<int64_t>::max());
 
 	EnvInfo& info = *(const_cast<EnvInfo*> (&envInfo())); //trick
-	info.setGasLimit(toInt(_o["currentGasLimit"]));
+	info.setGasLimit(gasLimit.convert_to<int64_t>());
 	info.setDifficulty(toInt(_o["currentDifficulty"]));
 	info.setTimestamp(toInt(_o["currentTimestamp"]));
 	info.setAuthor(Address(_o["currentCoinbase"].get_str()));

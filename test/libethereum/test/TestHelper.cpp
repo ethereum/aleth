@@ -222,7 +222,9 @@ void ImportTest::importEnv(json_spirit::mObject& _o)
 	BOOST_REQUIRE(_o.count("currentNumber") > 0);
 	BOOST_REQUIRE(_o.count("currentTimestamp") > 0);
 	BOOST_REQUIRE(_o.count("currentCoinbase") > 0);
-	m_envInfo.setGasLimit(toInt(_o["currentGasLimit"]));
+	auto gasLimit = toInt(_o["currentGasLimit"]);
+	BOOST_REQUIRE(gasLimit <= std::numeric_limits<int64_t>::max());
+	m_envInfo.setGasLimit(gasLimit.convert_to<int64_t>());
 	m_envInfo.setDifficulty(toInt(_o["currentDifficulty"]));
 	m_envInfo.setNumber(toInt(_o["currentNumber"]));
 	m_envInfo.setTimestamp(toInt(_o["currentTimestamp"]));
