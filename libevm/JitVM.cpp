@@ -95,7 +95,7 @@ evm_variant evm_query(
 		v.uint256 = toEvmC(env.envInfo().difficulty());
 		break;
 	case EVM_GAS_LIMIT:
-		v.uint256 = toEvmC(env.envInfo().gasLimit());
+		v.int64 = env.envInfo().gasLimit();
 		break;
 	case EVM_NUMBER:
 		// TODO: Handle overflow / exception
