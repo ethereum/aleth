@@ -311,12 +311,12 @@ public:
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
 	{
-		return evmjit_is_code_ready(m_instance, _mode, toEvmC(_codeHash));
+		return evm_get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
 	}
 
 	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
 	{
-		evmjit_compile(
+		evm_prepare_code(
 			m_instance, _mode, _code.data(), _code.size(), toEvmC(_codeHash)
 		);
 	}
