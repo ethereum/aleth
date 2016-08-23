@@ -173,7 +173,7 @@ public:
 		m_author(_current.author()),
 		m_timestamp(_current.timestamp()),
 		m_difficulty(_current.difficulty()),
-		// Trim gas limit to int64. convert_to used explicitly instread of
+		// Trim gas limit to int64. convert_to used explicitly instead of
 		// static_cast to be noticed when BlockHeader::gasLimit() will be
 		// changed to int64 too.
 		m_gasLimit(_current.gasLimit().convert_to<int64_t>()),
@@ -186,7 +186,7 @@ public:
 		m_author(_current.author()),
 		m_timestamp(_current.timestamp()),
 		m_difficulty(_current.difficulty()),
-		// Trim gas limit to int64. convert_to used explicitly instread of
+		// Trim gas limit to int64. convert_to used explicitly instead of
 		// static_cast to be noticed when BlockHeader::gasLimit() will be
 		// changed to int64 too.
 		m_gasLimit(_current.gasLimit().convert_to<int64_t>()),
