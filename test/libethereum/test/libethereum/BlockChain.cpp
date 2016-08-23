@@ -537,6 +537,7 @@ BOOST_AUTO_TEST_CASE(rescue)
 
 			try
 			{
+				std::this_thread::sleep_for(std::chrono::seconds(10)); //try wait for block verification before rescue
 				bcRef.rescue(bc.testGenesis().state().db());
 				BOOST_CHECK_MESSAGE(bcRef.number() == 3, "Rescued Blockchain missing some blocks!");
 			}

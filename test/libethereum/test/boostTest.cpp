@@ -78,6 +78,16 @@ void createRandomTest()
 	}
 }
 
+static std::atomic_bool stopTravisOut;
+void travisOut()
+{
+	while (!stopTravisOut)
+	{
+		std::this_thread::sleep_for(std::chrono::seconds(60));
+		std::cout << ".";
+	}
+}
+
 //Custom Boost Unit Test Main
 int main( int argc, char* argv[] )
 {
@@ -117,5 +127,11 @@ int main( int argc, char* argv[] )
 	for (int i = 0; i < argc; i++)
 		parameters.push_back(argv[i]);
 
-	return unit_test_main(fake_init_func, argc, argv);
+	stopTravisOut = false;
+	std::future<int> ret = std::async(unit_test_main, fake_init_func, argc, argv);
+	std::thread outputThread(travisOut);
+	int result = ret.get();
+	stopTravisOut = true;
+	outputThread.join();
+	return result;
 }
