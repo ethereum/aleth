@@ -124,7 +124,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 				t = Transaction(_value, gasPrice, mid, _data, n);
 			t.forceSender(_from);
 			EnvInfo env(bk.info(), bc().lastHashes(), 0);
-			env.setGasLimit(mid);
+			env.setGasLimit(mid.convert_to<int64_t>());
 			State tempState(bk.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 			er = tempState.execute(env, bc().sealEngine(), t, Permanence::Reverted).first;

@@ -38,7 +38,7 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-static const u256 MaxBlockGasLimit = ChainParams(genesisInfo(Network::HomesteadTest)).u256Param("maxGasLimit");
+static const int64_t MaxBlockGasLimit = ChainParams(genesisInfo(Network::HomesteadTest)).u256Param("maxGasLimit").convert_to<int64_t>();
 
 void help()
 {
@@ -158,7 +158,7 @@ int main(int argc, char** argv)
 		else if (arg == "--timestamp" && i + 1 < argc)
 			envInfo.setTimestamp(u256(argv[++i]));
 		else if (arg == "--gas-limit" && i + 1 < argc)
-			envInfo.setGasLimit(u256(argv[++i]));
+			envInfo.setGasLimit(u256(argv[++i]).convert_to<int64_t>());
 		else if (arg == "--value" && i + 1 < argc)
 			value = u256(argv[++i]);
 		else if (arg == "--network" && i + 1 < argc)

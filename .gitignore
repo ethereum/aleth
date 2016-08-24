@@ -66,6 +66,7 @@ project.pbxproj
 
 # JetBrains stuff
 .idea/
+bin/
 
 # Visual Studio Code
 browse.VC.db
