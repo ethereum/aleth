@@ -437,6 +437,10 @@ case $(uname -s) in
                 #
                 # See https://github.com/ethereum/webthree-umbrella/issues/103
 
+                if [ TRAVIS ]; then
+                    # On Travis CI llvm package conficts with the new to be installed.
+                    sudo apt-get -y remove llvm
+                fi
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
                 sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
