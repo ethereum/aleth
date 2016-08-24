@@ -106,14 +106,16 @@ void Secp256k1PP::encryptECIES(Public const& _k, bytesConstRef _sharedMacData, b
 	ctx.Update(mKeyMaterial.data(), mKeyMaterial.size());
 	bytes mKey(32);
 	ctx.Final(mKey.data());
-	
-	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), h128(), bytesConstRef(&io_cipher));
+
+	auto iv = h128::random();
+	bytes cipherText = encryptSymNoAuth(SecureFixedHash<16>(eKey), iv, bytesConstRef(&io_cipher));
 	if (cipherText.empty())
 		return;
 
 	bytes msg(1 + Public::size + h128::size + cipherText.size() + 32);
 	msg[0] = 0x04;
 	r.pub().ref().copyTo(bytesRef(&msg).cropped(1, Public::size));
+	iv.ref().copyTo(bytesRef(&msg).cropped(1 + Public::size, h128::size));
 	bytesRef msgCipherRef = bytesRef(&msg).cropped(1 + Public::size + h128::size, cipherText.size());
 	bytesConstRef(&cipherText).copyTo(msgCipherRef);
 	
