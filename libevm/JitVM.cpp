@@ -325,7 +325,14 @@ public:
 	}
 
 private:
-	evm_interface m_interface = {};
+	/// VM interface -- contains pointers to VM's methods.
+	///
+	/// @internal
+	/// This field does not have initializer because old versions of GCC emit
+	/// invalid warning about `= {}`. The field is initialized in ctors.
+	evm_interface m_interface;
+
+	/// The VM instance created with m_interface.create().
 	evm_instance* m_instance = nullptr;
 };
 
