@@ -2,7 +2,8 @@
 set(SOURCES
 	ExtVMFace.cpp
 	VM.cpp
-	VMNoInline.cpp
+	VMOpt.cpp
+	VMCalls.cpp
 	VMFactory.cpp
 )
 
