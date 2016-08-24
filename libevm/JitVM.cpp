@@ -248,12 +248,13 @@ class EVM
 {
 public:
 	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn):
-		m_instance(evm_create(_queryFn, _updateFn, _callFn))
+		m_interface(evmjit_get_interface()),
+		m_instance(m_interface.create(_queryFn, _updateFn, _callFn))
 	{}
 
 	~EVM()
 	{
-		evm_destroy(m_instance);
+		m_interface.destroy(m_instance);
 	}
 
 	EVM(EVM const&) = delete;
@@ -262,13 +263,14 @@ public:
 	class Result
 	{
 	public:
-		Result(evm_result const& _result):
-			m_result(_result)
+		Result(evm_result const& _result, evm_release_result_fn _release):
+			m_result(_result),
+			m_release(_release)
 		{}
 
 		~Result()
 		{
-			evm_release_result(&m_result);
+			m_release(&m_result);
 		}
 
 		Result(Result&& _other):
@@ -294,6 +296,7 @@ public:
 
 	private:
 		evm_result m_result;
+		evm_release_result_fn m_release;
 	};
 
 	/// Handy wrapper for evm_execute().
@@ -302,26 +305,27 @@ public:
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
 		                                                : EVM_FRONTIER;
-		return evm_execute(
+		return {m_interface.execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
 			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
 			toEvmC(_ext.value)
-		);
+		), m_interface.release_result};
 	}
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
 	{
-		return evm_get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
+		return m_interface.get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
 	}
 
 	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
 	{
-		evm_prepare_code(
+		m_interface.prepare_code(
 			m_instance, _mode, _code.data(), _code.size(), toEvmC(_codeHash)
 		);
 	}
 
 private:
+	evm_interface m_interface = {};
 	evm_instance* m_instance = nullptr;
 };
 
