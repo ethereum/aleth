@@ -714,7 +714,8 @@ void VM::interpretCases()
 			updateIOGas();
 
 			*++SP = m_pool[m_code[++PC]];
-			PC += m_code[++PC];
+			++PC;
+			PC += m_code[PC];
 		CASE_END
 
 		CASE_BEGIN(PUSH1)
