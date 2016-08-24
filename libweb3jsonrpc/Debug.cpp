@@ -1,6 +1,7 @@
 #include <jsonrpccpp/common/exception.h>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/CommonJS.h>
+#include <libethcore/CommonJS.h>
 #include <libethereum/Client.h>
 #include <libethereum/Executive.h>
 #include "Debug.h"
@@ -10,7 +11,7 @@ using namespace dev;
 using namespace dev::rpc;
 using namespace dev::eth;
 
-Debug::Debug(eth::Client& _eth):
+Debug::Debug(eth::Client const& _eth):
 	m_eth(_eth)
 {}
 
@@ -132,5 +133,36 @@ Json::Value Debug::debug_storageAt(string const& _blockHashOrNumber, int _txInde
 
 	for (auto const& i: state.storage(Address(_address)))
 		ret[toHex(toCompactBigEndian(i.first, 1), 2, HexPrefix::Add)] = toHex(toCompactBigEndian(i.second, 1), 2, HexPrefix::Add);
+	return ret;
+}
+
+Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options)
+{
+	Json::Value ret;
+	try
+	{
+		Block temp = m_eth.block(jsToBlockNumber(_blockNumber));
+		TransactionSkeleton ts = toTransactionSkeleton(_call);
+		if (!ts.from) {
+			ts.from = Address();
+		}
+		u256 nonce = temp.transactionsFrom(ts.from);
+		u256 gas = ts.gas == Invalid256 ? m_eth.gasLimitRemaining() : ts.gas;
+		u256 gasPrice = ts.gasPrice == Invalid256 ? m_eth.gasBidPrice() : ts.gasPrice;
+		temp.mutableState().addBalance(ts.from, gas * gasPrice + ts.value);
+		Transaction transaction(ts.value, gasPrice, gas, ts.to, ts.data, nonce);
+		transaction.forceSender(ts.from);
+		eth::ExecutionResult er;
+		Executive e(temp);
+		e.setResultRecipient(er);
+		Json::Value trace = traceTransaction(e, transaction, _options);
+		ret["gas"] = toHex(transaction.gas(), HexPrefix::Add);
+		ret["return"] = toHex(er.output, 2, HexPrefix::Add);
+		ret["structLogs"] = trace;
+	}
+	catch(Exception const& _e)
+	{
+		cwarn << diagnostic_information(_e);
+	}
 	return ret;
 }
