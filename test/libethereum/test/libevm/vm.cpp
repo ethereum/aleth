@@ -93,7 +93,7 @@ mObject FakeExtVM::exportEnv()
 	return ret;
 }
 
-void FakeExtVM::importEnv(mObject& _o)
+EnvInfo FakeExtVM::importEnv(mObject& _o)
 {
 	// cant use BOOST_REQUIRE, because this function is used outside boost test (createRandomTest)
 	assert(_o.count("currentGasLimit") > 0);
@@ -104,13 +104,14 @@ void FakeExtVM::importEnv(mObject& _o)
 	auto gasLimit = toInt(_o["currentGasLimit"]);
 	assert(gasLimit <= std::numeric_limits<int64_t>::max());
 
-	EnvInfo& info = *(const_cast<EnvInfo*> (&envInfo())); //trick
+	EnvInfo info;
 	info.setGasLimit(gasLimit.convert_to<int64_t>());
 	info.setDifficulty(toInt(_o["currentDifficulty"]));
 	info.setTimestamp(toInt(_o["currentTimestamp"]));
 	info.setAuthor(Address(_o["currentCoinbase"].get_str()));
 	info.setNumber(toInt(_o["currentNumber"]));
 	info.setLastHashes( lastHashes( info.number() ) );
+	return info;
 }
 
 mObject FakeExtVM::exportState()
@@ -231,7 +232,7 @@ void FakeExtVM::importCallCreates(mArray& _callcreates)
 	}
 }
 
-eth::OnOpFunc FakeExtVM::simpleTrace()
+eth::OnOpFunc FakeExtVM::simpleTrace() const
 {
 
 	return [](uint64_t steps, uint64_t pc, eth::Instruction inst, bigint newMemSize, bigint gasCost, bigint gas, dev::eth::VM* voidVM, dev::eth::ExtVMFace const* voidExt)
@@ -313,8 +314,8 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("exec") > 0, testname + "exec not set!");
 
-		FakeExtVM fev(eth::EnvInfo{});
-		fev.importEnv(o["env"].get_obj());
+		eth::EnvInfo env = FakeExtVM::importEnv(o["env"].get_obj());
+		FakeExtVM fev(env);
 		fev.importState(o["pre"].get_obj());
 
 		if (_fillin)

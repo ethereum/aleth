@@ -65,7 +65,7 @@ public:
 	void reset(u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage);
 	u256 doPosts();
 	json_spirit::mObject exportEnv();
-	void importEnv(json_spirit::mObject& _o);
+	static dev::eth::EnvInfo importEnv(json_spirit::mObject& _o);
 	json_spirit::mObject exportState();
 	void importState(json_spirit::mObject& _object);
 	json_spirit::mObject exportExec();
@@ -73,7 +73,7 @@ public:
 	json_spirit::mArray exportCallCreates();
 	void importCallCreates(json_spirit::mArray& _callcreates);
 
-	eth::OnOpFunc simpleTrace();
+	eth::OnOpFunc simpleTrace() const;
 
 	std::map<Address, std::tuple<u256, u256, std::map<u256, u256>, bytes>> addresses;
 	eth::Transactions callcreates;
