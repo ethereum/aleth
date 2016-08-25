@@ -26,19 +26,12 @@ inline Address fromEvmC(evm_hash160 _addr)
 	return *reinterpret_cast<Address*>(&_addr);
 }
 
-static_assert(sizeof(h256) == sizeof(evm_hash256),
-              "Hash types size mismatch");
-static_assert(alignof(h256) != alignof(evm_hash256),
-              "Hash types alignment match -- update implementation");
+static_assert(sizeof(h256) == sizeof(evm_hash256), "Hash types size mismatch");
+static_assert(alignof(h256) == alignof(evm_hash256), "Hash types alignment mismatch");
 
 inline evm_hash256 toEvmC(h256 _h)
 {
-	// Because the h256 only pretends to be aligned to 8 bytes we have to do
-	// non-aligned memory copy.
-	// TODO: h256 should be aligned to 8 bytes.
-	evm_hash256 g;
-	std::memcpy(&g, &_h, sizeof(g));
-	return g;
+	return *reinterpret_cast<evm_hash256*>(&_h);
 }
 
 inline evm_uint256 toEvmC(u256 _n)
@@ -187,7 +180,7 @@ int64_t evm_call(
 	{
 		assert(_outputSize == 20);
 		if (env.depth >= 1024 || env.balance(env.myAddress) < value)
-			return EVM_EXCEPTION;
+			return EVM_CALL_FAILURE;
 		u256 gas = _gas;
 		auto addr = env.create(value, gas, input, {});
 		auto gasLeft = static_cast<decltype(_gas)>(gas);
@@ -195,7 +188,7 @@ int64_t evm_call(
 		if (addr)
 			std::memcpy(_outputData, addr.data(), 20);
 		else
-			finalCost |= EVM_EXCEPTION;
+			finalCost |= EVM_CALL_FAILURE;
 		return finalCost;
 	}
 
@@ -237,7 +230,7 @@ int64_t evm_call(
 
 	// Add failure indicator.
 	if (!ret)
-		cost |= EVM_EXCEPTION;
+		cost |= EVM_CALL_FAILURE;
 
 	return cost;
 }
@@ -279,10 +272,16 @@ public:
 			// FIXME: It is not perfect as we must know what will be released
 			//        by evm_release_result().
 			_other.m_result.internal_memory = nullptr;
+			_other.m_result.error_message = nullptr;
 		}
 
 		Result(Result const&) = delete;
 		Result& operator=(Result const&) = delete;
+
+		evm_result_code code() const
+		{
+			return m_result.code;
+		}
 
 		int64_t gasLeft() const
 		{
@@ -320,7 +319,7 @@ public:
 	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
 	{
 		m_interface.prepare_code(
-			m_instance, _mode, _code.data(), _code.size(), toEvmC(_codeHash)
+			m_instance, _mode, toEvmC(_codeHash), _code.data(), _code.size()
 		);
 	}
 
@@ -362,7 +361,9 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 
 	auto gas = static_cast<int64_t>(io_gas);
 	auto r = getJit().execute(_ext, gas);
-	if (r.gasLeft() < 0)
+
+	// TODO: Add EVM-C result codes mapping with exception types.
+	if (r.code() != EVM_SUCCESS)
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
 	io_gas = r.gasLeft();
