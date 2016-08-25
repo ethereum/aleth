@@ -57,7 +57,7 @@ void VM::onOperation()
 
 void VM::checkStack(unsigned _removed, unsigned _added)
 {
-	int const size = 1 + SP - m_stack;
+	int const size = 1 + SP - mStack;
 	int const usedSize = size - _removed;
 	if (usedSize < 0 || usedSize + _added > 1024)
 		throwBadStack(size, _removed, _added);
@@ -103,7 +103,7 @@ void VM::logGasMem()
 
 void VM::fetchInstruction()
 {
-		INST =  Instruction(PC < m_code_vector.size() ? m_code[PC] : 0);
+		INST = Instruction(PC < mCodeSpace.size() ? mCode[PC] : 0);
 		const InstructionMetric& metric = c_metrics[static_cast<size_t>(INST)];
 		checkStack(metric.args, metric.ret);
 
@@ -122,7 +122,7 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	m_io_gas = &io_gas;
 	m_ext = &_ext;
-   m_schedule = &m_ext->evmSchedule();
+	m_schedule = &m_ext->evmSchedule();
 	m_onOp = &_onOp;
 	m_onFail = &VM::onOperation;
 
@@ -709,19 +709,21 @@ void VM::interpretCases()
 			++PC;
 		CASE_END
 
+#ifdef EVM_USE_CONSTANT_POOL
 		CASE_BEGIN(PUSHC)
 			onOperation();
 			updateIOGas();
 
-			*++SP = m_pool[m_code[++PC]];
-			++PC;
-			PC += m_code[PC];
+			*++SP = mPool[mCode[++PC]];
+//?			++PC;
+			PC += mCode[PC];
 		CASE_END
+#endif
 
 		CASE_BEGIN(PUSH1)
 			onOperation();
 			updateIOGas();
-			*++SP = *(uint8_t*)(m_code + ++PC);
+			*++SP = *(uint8_t*)(mCode + ++PC);
 			PC += 1;
 		CASE_END
 
@@ -763,7 +765,7 @@ void VM::interpretCases()
 			int i = (int)INST - (int)Instruction::PUSH1 + 1;
 			*++SP = 0;
 			for (++PC; i--; ++PC)
-				*SP = (*SP << 8) | m_code[PC];
+				*SP = (*SP << 8) | mCode[PC];
 		}
 		CASE_END
 
@@ -778,13 +780,14 @@ void VM::interpretCases()
 		CASE_BEGIN(JUMPI)
 			onOperation();
 			updateIOGas();
-
 			if (*(SP - 1))
 				PC = verifyJumpDest(*SP);
 			else
 				++PC;
 			SP -= 2;
 		CASE_END
+
+#ifdef EVM_REPLACE_CONST_JUMP
 
 		CASE_BEGIN(JUMPV)
 			onOperation();
@@ -804,6 +807,7 @@ void VM::interpretCases()
 				++PC;
 			SP -= 2;
 		CASE_END
+#endif
 
 		CASE_BEGIN(DUP1)
 		CASE_BEGIN(DUP2)
@@ -826,7 +830,7 @@ void VM::interpretCases()
 			updateIOGas();
 
 			unsigned n = 1 + (unsigned)INST - (unsigned)Instruction::DUP1;
-			*(SP+1) = m_stack[(1 + SP - m_stack) - n];
+			*(SP+1) = mStack[(1 + SP - mStack) - n];
 			++SP;
 			++PC;
 		}
@@ -855,8 +859,8 @@ void VM::interpretCases()
 
 			auto n = (unsigned)INST - (unsigned)Instruction::SWAP1 + 2;
 			auto d = *SP;
-			*SP = m_stack[(1 + SP - m_stack) - n];
-			m_stack[(1 + SP - m_stack) - n] = d;
+			*SP = mStack[(1 + SP - mStack) - n];
+			mStack[(1 + SP - mStack) - n] = d;
 			++PC;
 		}
 		CASE_END

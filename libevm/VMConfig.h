@@ -1,12 +1,34 @@
+/*
+	This file is part of cpp-ethereum.
+
+	cpp-ethereum is free software: you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation, either version 3 of the License, or
+	(at your option) any later version.
+
+	cpp-ethereum is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // interpreter configuration macros
 
 //#define EVM_USE_CONSTANT_POOL
 //#define EVM_REPLACE_CONST_JUMP
+#if defined(EVM_USE_CONSTANT_POOL) || defined(EVM_REPLACE_CONST_JUMP)
+	#define EVM_USE_SYNTHETIC_INSTRUCTIONS
+	#define EVM_DO_FIRST_PASS_OPTIMIZATION
+#endif
 
 #define EVM_SWITCH_DISPATCH
 //#define EVM_JUMP_DISPATCH
+
 
 #if defined(EVM_SWITCH_DISPATCH)
 
@@ -26,7 +48,7 @@
 
 	#define DO_CASES fetchInstruction(); goto *VMJumpTable[(byte)INST];
 	#define CASE_BEGIN(label) label:
-	#define CASE_END fetchInstruction(); goto *VMJumpTable[m_code[PC]];
+	#define CASE_END fetchInstruction(); goto *VMJumpTable[mCode[PC]];
 	#define CASE_RETURN return;
 	#define CASE_DEFAULT INVALID:
 	#define END_CASES

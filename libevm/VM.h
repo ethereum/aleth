@@ -63,9 +63,9 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= SP + 1); return u256s(m_stack, SP + 1); };
+	u256s stack() const { assert(mStack <= SP + 1); return u256s(mStack, SP + 1); };
 
-	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data() + 1) {};
+	VM(): mStackSpace(1025), mStack(mStackSpace.data() + 1) {};
 
 private:
 
@@ -88,21 +88,21 @@ private:
 	// space for memory
 	bytes m_mem;
 
-	// space for code
-	bytes m_code_vector;
-	byte* m_code;
+	// space for code and pointer to data
+	bytes mCodeSpace;
+	byte* mCode;
 
-	// space for stack
-	u256s m_stack_vector;
-	u256* m_stack;
+	// space for stack and pointer to data
+	u256s mStackSpace;
+	u256* mStack;
 	
-	// space for constant pool
-	u256s m_pool_vector;
-	u256* m_pool;
+	// space for constant pool and pointer to data
+	u256s mPoolSpace;
+	u256* mPool;
 
 	// interpreter state
 	uint64_t    PC = 0;
-	u256*       SP = m_stack - 1;
+	u256*       SP = mStack - 1;
 	Instruction INST;
 
 	// metering and memory state
@@ -135,7 +135,7 @@ private:
 	std::vector<uint64_t> m_jumpDests;
 	uint64_t verifyJumpDest(u256 const& _dest);
 
-	int pool_constant(const u256&);
+	int poolConstant(const u256&);
 
 	void onOperation();
 	void checkStack(unsigned _n, unsigned _d);

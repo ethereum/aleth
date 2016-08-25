@@ -56,25 +56,25 @@ void VM::initMetrics()
 void VM::initEntry()
 {
 	m_bounce = &VM::interpretCases;	
-	m_code_vector = m_ext->code;
-	m_code = m_code_vector.data();
+	mCodeSpace = m_ext->code;
+	mCode = mCodeSpace.data();
 	
 	initMetrics();	
 	
 	optimize();
 }
 
-int VM::pool_constant(const u256& _con)
+int VM::poolConstant(const u256& _con)
 {
-	int i = 0, n = m_pool_vector.size();
+	int i = 0, n = mPoolSpace.size();
 	while (i < n)
 	{
-		if (m_pool_vector[i] == _con)
+		if (mPoolSpace[i] == _con)
 			return i;
 	}
 	if (i <= 255 )
 	{
-		m_pool_vector.push_back(_con);
+		mPoolSpace.push_back(_con);
 		return i;
 	}
 	return -1;
@@ -83,9 +83,9 @@ int VM::pool_constant(const u256& _con)
 void VM::optimize()
 {	
 	// build a table of jump destinations for use in verifyJumpDest
-	for (size_t i = 0; i < m_code_vector.size(); ++i)
+	for (size_t i = 0; i < mCodeSpace.size(); ++i)
 	{
-		byte inst = m_code[i];
+		byte inst = mCode[i];
 
 		if (inst == (byte)Instruction::JUMPDEST)
 		{
@@ -98,57 +98,63 @@ void VM::optimize()
 		}
 	}
 
-#if defined(EVM_USE_CONSTANT_POOL) || defined (EVM_REPLACE_CONST_JUMP)
+#ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 
-	for (size_t i = 0; i < m_code_vector.size(); ++i)
+	for (size_t i = 0; i < mCodeSpace.size(); ++i)
 	{
-		byte inst = m_code[i];
+		byte inst = mCode[i];
 
 		if ((byte)Instruction::PUSH1 <= inst && inst <= (byte)Instruction::PUSH32)
 		{
 			byte n = inst - (byte)Instruction::PUSH1 + 1;
 
 			// decode pushed bytes to integral value
-			u256 val = m_code[i+1];
+			u256 val = mCode[i+1];
 			for (uint64_t j = i+2, m = n; --m; ++j)
-				val = (val << 8) | m_code[j];
+				val = (val << 8) | mCode[j];
 
-#ifdef EVM_USE_CONSTANT_POOL			
+	#ifdef EVM_USE_CONSTANT_POOL
+	
 			// add value to constant pool and replace PUSHn with PUSHC if room
-			if (1 < n)
+			if (1 < n && VMJumpTable[i] == INVALID)
 			{
-				int pool_off = pool_constant(val);
+				int pool_off = poolConstant(val);
 				if (0 <= pool_off && pool_off < 256)
 				{
-					m_code[i] = (byte)Instruction::PUSHC;
-					m_code[i+1] = (byte)pool_off;
-					m_code[i+2] = n;
+					mCode[i] = (byte)Instruction::PUSHC;
+					mCode[i+1] = (byte)pool_off;
+					mCode[i+2] = n;
 				}
-			}			
-#endif
+			}
 
-#ifdef EVM_REPLACE_CONST_JUMP
+	#endif
+
+	#ifdef EVM_REPLACE_CONST_JUMP
+	
 			// replace JUMP or JUMPI to constant location with JUMPV or JUMPVI
+			// verifyJumpDest is M = log(number of jump destinations)
+			// outer loop is N = number of bytes in code array
+			// so complexity is N log (M)
 			size_t ii = i + n + 1;
-			byte op = m_code[ii];
+			byte op = mCode[ii];
 			if (op == (byte)Instruction::JUMP)
 			{
 				if (verifyJumpDest(val))
-					m_code[ii] = (byte)Instruction::JUMPV;
+					mCode[ii] = (byte)Instruction::JUMPV;
 			}
 			else if (op == (byte)Instruction::JUMPI)
 			{
 				if (verifyJumpDest(val))
-					m_code[ii] = (byte)Instruction::JUMPV;
+					mCode[ii] = (byte)Instruction::JUMPV;
 			}
-#endif
+	#endif
 			
 			i += n;
 		}
 	}	
 #endif
 	
-	m_pool = m_pool_vector.data();
+	mPool = mPoolSpace.data();
 	
 }
 

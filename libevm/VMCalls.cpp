@@ -140,8 +140,8 @@ bool VM::caseCallSetup(CallParameters *callParams)
 
 	unsigned sizesOffset = INST == Instruction::DELEGATECALL ? 3 : 4;
 	m_newMemSize = std::max(
-		memNeed(m_stack[(1 + SP - m_stack) - sizesOffset - 2], m_stack[(1 + SP - m_stack) - sizesOffset - 3]),
-		memNeed(m_stack[(1 + SP - m_stack) - sizesOffset], m_stack[(1 + SP - m_stack) - sizesOffset - 1])
+		memNeed(mStack[(1 + SP - mStack) - sizesOffset - 2], mStack[(1 + SP - mStack) - sizesOffset - 3]),
+		memNeed(mStack[(1 + SP - mStack) - sizesOffset], mStack[(1 + SP - mStack) - sizesOffset - 1])
 	);
 	updateMem();
 	onOperation();
