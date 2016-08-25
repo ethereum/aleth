@@ -48,7 +48,7 @@
 
 	#define DO_CASES fetchInstruction(); goto *VMJumpTable[(byte)INST];
 	#define CASE_BEGIN(label) label:
-	#define CASE_END fetchInstruction(); goto *VMJumpTable[mCode[PC]];
+	#define CASE_END fetchInstruction(); goto *VMJumpTable[m_code[PC]];
 	#define CASE_RETURN return;
 	#define CASE_DEFAULT INVALID:
 	#define END_CASES

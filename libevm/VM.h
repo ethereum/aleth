@@ -63,9 +63,9 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(mStack <= SP + 1); return u256s(mStack, SP + 1); };
+	u256s stack() const { assert(m_stack <= SP + 1); return u256s(m_stack, SP + 1); };
 
-	VM(): mStackSpace(1025), mStack(mStackSpace.data() + 1) {};
+	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1) {};
 
 private:
 
@@ -89,20 +89,20 @@ private:
 	bytes m_mem;
 
 	// space for code and pointer to data
-	bytes mCodeSpace;
-	byte* mCode;
+	bytes m_codeSpace;
+	byte* m_code;
 
 	// space for stack and pointer to data
-	u256s mStackSpace;
-	u256* mStack;
+	u256s m_stackSpace;
+	u256* m_stack;
 	
 	// space for constant pool and pointer to data
-	u256s mPoolSpace;
-	u256* mPool;
+	u256s m_poolSpace;
+	u256* m_pool;
 
 	// interpreter state
 	uint64_t    PC = 0;
-	u256*       SP = mStack - 1;
+	u256*       SP = m_stack - 1;
 	Instruction INST;
 
 	// metering and memory state

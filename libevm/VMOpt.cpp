@@ -56,8 +56,8 @@ void VM::initMetrics()
 void VM::initEntry()
 {
 	m_bounce = &VM::interpretCases;	
-	mCodeSpace = m_ext->code;
-	mCode = mCodeSpace.data();
+	m_codeSpace = m_ext->code;
+	m_code = m_codeSpace.data();
 	
 	initMetrics();	
 	
@@ -66,15 +66,15 @@ void VM::initEntry()
 
 int VM::poolConstant(const u256& _con)
 {
-	int i = 0, n = mPoolSpace.size();
+	int i = 0, n = m_poolSpace.size();
 	while (i < n)
 	{
-		if (mPoolSpace[i] == _con)
+		if (m_poolSpace[i] == _con)
 			return i;
 	}
 	if (i <= 255 )
 	{
-		mPoolSpace.push_back(_con);
+		m_poolSpace.push_back(_con);
 		return i;
 	}
 	return -1;
@@ -83,9 +83,9 @@ int VM::poolConstant(const u256& _con)
 void VM::optimize()
 {	
 	// build a table of jump destinations for use in verifyJumpDest
-	for (size_t i = 0; i < mCodeSpace.size(); ++i)
+	for (size_t i = 0; i < m_codeSpace.size(); ++i)
 	{
-		byte inst = mCode[i];
+		byte inst = m_code[i];
 
 		if (inst == (byte)Instruction::JUMPDEST)
 		{
@@ -100,18 +100,18 @@ void VM::optimize()
 
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 
-	for (size_t i = 0; i < mCodeSpace.size(); ++i)
+	for (size_t i = 0; i < m_codeSpace.size(); ++i)
 	{
-		byte inst = mCode[i];
+		byte inst = m_code[i];
 
 		if ((byte)Instruction::PUSH1 <= inst && inst <= (byte)Instruction::PUSH32)
 		{
 			byte n = inst - (byte)Instruction::PUSH1 + 1;
 
 			// decode pushed bytes to integral value
-			u256 val = mCode[i+1];
+			u256 val = m_code[i+1];
 			for (uint64_t j = i+2, m = n; --m; ++j)
-				val = (val << 8) | mCode[j];
+				val = (val << 8) | m_code[j];
 
 	#ifdef EVM_USE_CONSTANT_POOL
 	
@@ -121,9 +121,9 @@ void VM::optimize()
 				int pool_off = poolConstant(val);
 				if (0 <= pool_off && pool_off < 256)
 				{
-					mCode[i] = (byte)Instruction::PUSHC;
-					mCode[i+1] = (byte)pool_off;
-					mCode[i+2] = n;
+					m_code[i] = (byte)Instruction::PUSHC;
+					m_code[i+1] = (byte)pool_off;
+					m_code[i+2] = n;
 				}
 			}
 
@@ -136,16 +136,16 @@ void VM::optimize()
 			// outer loop is N = number of bytes in code array
 			// so complexity is N log (M)
 			size_t ii = i + n + 1;
-			byte op = mCode[ii];
+			byte op = m_code[ii];
 			if (op == (byte)Instruction::JUMP)
 			{
 				if (verifyJumpDest(val))
-					mCode[ii] = (byte)Instruction::JUMPV;
+					m_code[ii] = (byte)Instruction::JUMPV;
 			}
 			else if (op == (byte)Instruction::JUMPI)
 			{
 				if (verifyJumpDest(val))
-					mCode[ii] = (byte)Instruction::JUMPV;
+					m_code[ii] = (byte)Instruction::JUMPV;
 			}
 	#endif
 			
@@ -154,7 +154,7 @@ void VM::optimize()
 	}	
 #endif
 	
-	mPool = mPoolSpace.data();
+	m_pool = m_poolSpace.data();
 	
 }
 
