@@ -6,10 +6,10 @@ is now on the language Solidity, the IDE Mix and the Ethereum node implementatio
 eth). If something strange happens, please report an issue (see below).
 Once you get to know the technology, you can try to answer questions from
 other people (we do not always have time for that) either on [gitter](https://gitter.im/ethereum/cpp-ethereum),
-[stackexchange](http://ethereum.stackexchange.com/) or just comment on [issues](http://github.com/ethereum/webthree-umbrella/issues).
+[stackexchange](http://ethereum.stackexchange.com/) or just comment on [issues](http://github.com/ethereum/cpp-ethereum/issues).
 
 If you know C++, you can help by submitting pull requests (see below).
-We try to keep a list of [good tasks to start with](https://github.com/ethereum/webthree-umbrella/labels/good%20first%20task).
+We try to keep a list of [good tasks to start with](https://github.com/ethereum/cpp-ethereum/labels/good%20first%20task).
 Please get in contact on gitter if you have any questions or suggestions.
 
 The backlog is kept in github issues with an overview in our
@@ -25,7 +25,7 @@ The waffle board is also useful to keep track of pull requests pending reviews
 Please report issues to the project they appear in, either
 [Solidity](https://github.com/ethereum/solidity/issues),
 [Mix](https://github.com/ethereum/mix/issues) or
-[eth / anything else](https://github.com/ethereum/webthree-umbrella/issues).
+[eth / anything else](https://github.com/ethereum/cpp-ethereum/issues).
 
 Try to mention which version of the software you used and on which platform (Windows, MacOS, Linux, ...),
 how you got into the situation (what did you do), what did you expect to happen
@@ -33,10 +33,10 @@ and what actually happened.
 
 ### How to Submit Pull Requests / Workflow
 
-Please see the [wiki](https://github.com/ethereum/webthree-umbrella/wiki) for how
-to set up your work environment and for build instructions. There, you can
-also find an [overview](https://github.com/ethereum/webthree-umbrella/wiki/Overview)
-of the various repositories and directories.
+Please see the [docs](http://www.ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/) for how
+to set up your work environment and for build instructions. There, you can also find an
+[architecture diagram](http://ethdocs.org/en/latest/ethereum-clients/cpp-ethereum/architecture.html)
+showing the various repositories and directories.
 Please also repect the [Coding Style](CodingStandards.txt).
 
 If you encounter any problems, please ask on gitter.
