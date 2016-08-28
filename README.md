@@ -22,13 +22,13 @@ Please do come and chat to us on the [cpp-ethereum](https://gitter.im/ethereum/c
 
                  | Status
 -----------------|-----------
-Ubuntu and macOS | [![Build Status](https://travis-ci.org/bobsummerwill/cpp-ethereum.svg?branch=merge_repos)](https://travis-ci.org/bobsummerwill/cpp-ethereum)
-Windows          | [![Build Status](https://ci.appveyor.com/api/projects/status/ke9kvs3u1g18vf5t/branch/merge_repos)](https://ci.appveyor.com/project/bobsummerwill/cpp-ethereum)
+Ubuntu and macOS | [![Build Status](https://travis-ci.org/ethereum/cpp-ethereum.svg?branch=develop)](https://travis-ci.org/ethereum/cpp-ethereum/branches)
+Windows          | [![Build Status](https://ci.appveyor.com/api/projects/status/gj9d6wvs08cg85cv/branch/develop?svg=true)](https://ci.appveyor.com/project/ethereum/cpp-ethereum)
 
 ## Contributing
 
-The current codebase is the work of many, many hands, with probably close to 100
-[individual contributors](https://github.com/bobsummerwill/cpp-ethereum/graphs/contributors) over the course of its development.
+The current codebase is the work of many, many hands, with nearly 100
+[individual contributors](https://github.com/ethereum/cpp-ethereum/graphs/contributors) over the course of its development.
 
 Our day-to-day development chat happens on the [cpp-ethereum-development](https://gitter.im/ethereum/cpp-ethereum-development) gitter channel.
 
