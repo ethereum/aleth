@@ -31,7 +31,7 @@ set ETHEREUM_DEPS_PATH=%4
 if "%TESTS%"=="On" (
 
     cd ..
-    git clone https://github.com/ethereum/tests.git
+    git clone --depth 1 https://github.com/ethereum/tests.git
     set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
     cd cpp-ethereum
 
@@ -40,28 +40,30 @@ if "%TESTS%"=="On" (
     echo ETHEREUM_DEPS_PATH=%ETHEREUM_DEPS_PATH%
 
     cd build\test\libethereum\test\%CONFIGURATION%
-    copy build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
+    echo Testing testeth
+    copy %APPVEYOR_BUILD_FOLDER%\build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-    echo Testing testeth
-    testeth.exe --verbosity 2
+    testeth.exe || (echo "Failed" && exit /b 1)
     echo Testing EVMJIT
-    testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
+    testeth.exe -t VMTests,StateTests -- --vm jit --verbosity 2 || (echo "Failed" && exit /b 1)
     cd ..\..\..\..\..
 
     cd build\test\libweb3core\test\%CONFIGURATION%
+    echo Testing testweb3core
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-    testweb3core.exe
+    testweb3core.exe || (echo "Failed" && exit /b 1)
     cd ..\..\..\..\..
 
     cd build\test\webthree\test\%CONFIGURATION%
+    echo Testing testweb3
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
-    testweb3.exe
+    call testweb3.exe || (echo "Failed" && exit /b 1)
     cd ..\..\..\..\..
 )
