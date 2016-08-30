@@ -79,16 +79,6 @@ void createRandomTest()
 	}
 }
 
-static std::atomic_bool stopTravisOut;
-void travisOut()
-{
-	while (!stopTravisOut)
-	{
-		std::this_thread::sleep_for(std::chrono::seconds(10));
-		std::cout << ".";
-	}
-}
-
 /*
 The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
 If the user has an invalid environment setting then it is possible for the call
@@ -152,11 +142,5 @@ int main( int argc, char* argv[] )
 	for (int i = 0; i < argc; i++)
 		parameters.push_back(argv[i]);
 
-	stopTravisOut = false;
-	std::future<int> ret = std::async(unit_test_main, fake_init_func, argc, argv);
-	std::thread outputThread(travisOut);
-	int result = ret.get();
-	stopTravisOut = true;
-	outputThread.join();
-	return result;
+	return unit_test_main(fake_init_func, argc, argv);
 }
