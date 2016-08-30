@@ -19,6 +19,7 @@
  * @date 2014
  * RLP tool.
  */
+#include <clocale>
 #include <fstream>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
@@ -70,6 +71,15 @@ void version()
 {
 	cout << "rlp version " << dev::Version << endl;
 	exit(0);
+}
+
+void setEnv() {
+	std::setlocale(LC_ALL, "C");
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+	if (!std::setlocale(LC_ALL, "")) {
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
 }
 
 enum class Mode {

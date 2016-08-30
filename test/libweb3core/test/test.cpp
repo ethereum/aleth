@@ -30,6 +30,7 @@
 #pragma GCC diagnostic pop
 #include <test/test.h>
 #include <libdevcore/Log.h>
+#include <clocale>
 
 using namespace std;
 
@@ -99,8 +100,18 @@ using namespace boost;
 string TestOutputHelper::m_currentTestName = "n/a";
 string TestOutputHelper::m_currentTestCaseName = "n/a";
 
+void setEnv() {
+	std::setlocale(LC_ALL, "C");
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+	if (!std::setlocale(LC_ALL, "")) {
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
+
 void TestOutputHelper::initTest()
 {
+	setEnv();
 	if (Options::get().logVerbosity ==  Options::Verbosity::NiceReport || Options::get().logVerbosity ==  Options::Verbosity::None)
 		g_logVerbosity = -1;
 

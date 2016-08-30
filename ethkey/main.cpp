@@ -22,6 +22,7 @@
 
 #include <thread>
 #include <chrono>
+#include <clocale>
 #include <fstream>
 #include <iostream>
 #include <libdevcore/FileSystem.h>
@@ -55,8 +56,18 @@ void version()
 	exit(0);
 }
 
+void setEnv() {
+	std::setlocale(LC_ALL, "C");
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+	if (!std::setlocale(LC_ALL, "")) {
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
+
 int main(int argc, char** argv)
 {
+	setEnv();
 	KeyCLI m(KeyCLI::OperationMode::ListBare);
 	g_logVerbosity = 0;
 

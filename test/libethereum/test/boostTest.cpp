@@ -38,6 +38,7 @@
 
 #pragma GCC diagnostic pop
 
+#include <clocale>
 #include <stdlib.h>
 #include <test/TestHelper.h>
 #include <boost/version.hpp>
@@ -88,9 +89,19 @@ void travisOut()
 	}
 }
 
+void setEnv() {
+	std::setlocale(LC_ALL, "C");
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+	if (!std::setlocale(LC_ALL, "")) {
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
+
 //Custom Boost Unit Test Main
 int main( int argc, char* argv[] )
 {
+	setEnv();
 	//Initialize options
 	dev::test::Options const& opt = dev::test::Options::get(argc, argv);
 

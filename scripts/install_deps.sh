@@ -490,16 +490,6 @@ case $(uname -s) in
                 sudo ldconfig
                 cd ../..
 
-                # And install the English language package and reconfigure the locales.
-                # We really shouldn't need to do this, and should instead force our locales to "C"
-                # within our application runtimes, because this issue shows up on multiple Linux distros,
-                # and each will need fixing in the install steps, where we should really just fix it once
-                # in the code.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/169
-                sudo apt-get -y install language-pack-en-base
-                sudo dpkg-reconfigure locales
-
                 ;;
             *)
 
