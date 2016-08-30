@@ -22,11 +22,11 @@
 
 
 
-// Solves the problem of including windows.h before including winsock.h		
-// as detailed here:		
-// http://stackoverflow.com/questions/1372480/c-redefinition-header-files-winsock2-h		
+// Solves the problem of including windows.h before including winsock.h
+// as detailed here:
+// http://stackoverflow.com/questions/1372480/c-redefinition-header-files-winsock2-h
 
-#if defined(_WIN32)	
+#if defined(_WIN32)
 	#define _WINSOCKAPI_
 	#include <windows.h>
 #endif // defined(_WIN32)
@@ -64,10 +64,11 @@ void version()
 	exit(0);
 }
 
-void setEnv() {
-	std::setlocale(LC_ALL, "C");
+void setEnv()
+{
 #if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
-	if (!std::setlocale(LC_ALL, "")) {
+	if (!std::setlocale(LC_ALL, ""))
+	{
 		setenv("LC_ALL", "C", 1);
 	}
 #endif
@@ -100,4 +101,3 @@ int main(int argc, char** argv)
 
 	return 0;
 }
-

@@ -79,6 +79,16 @@ void version()
 	exit(0);
 }
 
+void setEnv()
+{
+#if !defined(WIN32) && !defined(MAC_OSX) && !defined(__FreeBSD__) && !defined(__OpenBSD__)
+	if (!std::setlocale(LC_ALL, ""))
+	{
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
+
 enum class Mode
 {
 	Trace,
@@ -93,6 +103,7 @@ enum class Mode
 
 int main(int argc, char** argv)
 {
+	setEnv();
 	string inputFile;
 	Mode mode = Mode::Statistics;
 	VMKind vmKind = VMKind::Interpreter;
@@ -109,7 +120,7 @@ int main(int argc, char** argv)
 	envInfo.setGasLimit(MaxBlockGasLimit);
 	bytes data;
 	bytes code;
-	
+
 	Ethash::init();
 	NoProof::init();
 
