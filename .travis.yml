@@ -76,12 +76,16 @@ matrix:
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
         #
-        - os: osx
-          osx_image: xcode7.3
-          env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - TRAVIS_TESTS=Off
-              - ZIP_SUFFIX=osx-elcapitan
+        # TODO - This is currently disabled because it is consistently
+        # running into the 48min timeout.  We need to make this process
+        # quicker.
+        #
+        #- os: osx
+        #  osx_image: xcode7.3
+        #  env:
+        #      - TRAVIS_BUILD_TYPE=RelWithDebInfo
+        #      - TRAVIS_TESTS=Off
+        #      - ZIP_SUFFIX=osx-elcapitan
 
         # macOS Sierra (10.12)
         # https://en.wikipedia.org/wiki/MacOS_Sierra
