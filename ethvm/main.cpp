@@ -79,6 +79,29 @@ void version()
 	exit(0);
 }
 
+/*
+The equivalent of setlocale(LC_ALL, “C”) is called before any user code is run.
+If the user has an invalid environment setting then it is possible for the call
+to set locale to fail, so there are only two possible actions, the first is to
+throw a runtime exception and cause the program to quit (default behaviour),
+or the second is to modify the environment to something sensible (least
+surprising behaviour).
+
+The follow code produces the least surprising behaviour. It will use the user
+specified default locale if it is valid, and if not then it will modify the
+environment the process is running in to use a sensible default. This also means
+that users do not need to install language packs for their OS.
+*/
+void setDefaultOrCLocale()
+{
+#if __unix__
+	if (!std::setlocale(LC_ALL, ""))
+	{
+		setenv("LC_ALL", "C", 1);
+	}
+#endif
+}
+
 enum class Mode
 {
 	Trace,
@@ -93,6 +116,7 @@ enum class Mode
 
 int main(int argc, char** argv)
 {
+	setDefaultOrCLocale();
 	string inputFile;
 	Mode mode = Mode::Statistics;
 	VMKind vmKind = VMKind::Interpreter;
@@ -109,7 +133,7 @@ int main(int argc, char** argv)
 	envInfo.setGasLimit(MaxBlockGasLimit);
 	bytes data;
 	bytes code;
-	
+
 	Ethash::init();
 	NoProof::init();
 
