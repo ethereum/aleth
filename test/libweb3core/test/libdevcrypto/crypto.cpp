@@ -352,11 +352,12 @@ BOOST_AUTO_TEST_CASE(ecies_sharedMacData)
 	BOOST_REQUIRE(!s_secp256k1->decryptECIES(k.sec(), wrongShared, b));
 
 	s_secp256k1->decryptECIES(k.sec(), shared, b);
+
 	// Temporary disable this assertion, which is failing in TravisCI only for Ubuntu Trusty.		
 	// See https://travis-ci.org/bobsummerwill/cpp-ethereum/jobs/143250866.
-#if !defined(ETH_AFTER_REPOSITORY_MERGE)
-	BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
-#endif // !defined(ETH_AFTER_REPOSITORY_MERGE)
+	#if !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
+		BOOST_REQUIRE(bytesConstRef(&b).cropped(0, original.size()).toBytes() == asBytes(original));
+	#endif // !defined(DISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
 }
 
 BOOST_AUTO_TEST_CASE(ecies_eckeypair)
