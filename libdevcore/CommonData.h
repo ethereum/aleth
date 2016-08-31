@@ -125,7 +125,7 @@ inline T fromBigEndian(_In const& _bytes)
 {
 	T ret = (T)0;
 	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (byte)(typename std::make_unsigned<typename _In::value_type>::type)i);
+		ret = (T)((ret << 8) | (byte)(typename std::make_unsigned<decltype(i)>::type)i);
 	return ret;
 }
 
