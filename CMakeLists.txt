@@ -1,14 +1,33 @@
+#------------------------------------------------------------------------------
+# Top-level CMake file for cpp-ethereum.
+#
+# The documentation for cpp-ethereum is hosted at http://cpp-ethereum.org
+#
+# ------------------------------------------------------------------------------
+# This file is part of cpp-ethereum.
+#
+# cpp-ethereum is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# cpp-ethereum is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>
+#
+# (c) 2014-2016 cpp-ethereum contributors.
+#------------------------------------------------------------------------------
 
 cmake_minimum_required(VERSION 3.0.0)
 
 set(ETH_CMAKE_DIR "${CMAKE_CURRENT_LIST_DIR}/cmake" CACHE PATH "The path to the cmake directory")
 list(APPEND CMAKE_MODULE_PATH ${ETH_CMAKE_DIR})
 
-set(UTILS_DIR "${CMAKE_CURRENT_LIST_DIR}/utils" CACHE PATH "The path to the utils libraries directory")
-set(DEV_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "The path to the dev libraries directory")
-set(ETH_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "The path to the eth libraries directory")
-set(WEB3_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "The path to the webthree libraries directory")
-#set(SOL_DIR "${CMAKE_CURRENT_LIST_DIR}/solidity" CACHE PATH "The path to the solidity libraries directory")
+set(CPP_ETHEREUM_DIR "${CMAKE_CURRENT_LIST_DIR}" CACHE PATH "Path to the root directory for cpp-ethereum")
 
 # set cmake_policies
 include(EthPolicy)
@@ -22,6 +41,7 @@ include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
 include(EthOptions)
+
 configure_project(CPUID CURL ETHASHCL EVMJIT FATDB GUI MINIUPNPC OLYMPIC ROCKSDB PARANOID SOLIDITY TESTS VMTRACE)
 
 add_subdirectory(eth)
