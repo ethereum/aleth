@@ -50,13 +50,6 @@ if "%TESTS%"=="On" (
     testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
     cd ..\..\..\..\..
 
-    cd build\test\libweb3core\test\%CONFIGURATION%
-    copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-    copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
-    copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-    testweb3core.exe
-    cd ..\..\..\..\..
-
     cd build\test\webthree\test\%CONFIGURATION%
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .

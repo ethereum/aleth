@@ -223,6 +223,7 @@ public:
 	std::string singleTestFile;
 	std::string singleTestName;
 	bool performance = false;
+	bool nonetwork = false;///< For libp2p
 	bool quadratic = false;
 	bool memory = false;
 	bool inputLimits = false;

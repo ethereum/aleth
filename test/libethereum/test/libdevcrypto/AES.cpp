@@ -26,7 +26,7 @@
 #include <libdevcore/Log.h>
 #include <libdevcrypto/AES.h>
 #include <libdevcore/FixedHash.h>
-#include <test/test.h>
+#include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;

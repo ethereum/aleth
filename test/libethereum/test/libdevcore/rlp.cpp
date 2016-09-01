@@ -29,7 +29,7 @@
 #include <libdevcore/CommonIO.h>
 #include <algorithm>
 #include <json_spirit/JsonSpiritHeaders.h>
-#include <test/test.h>
+#include <test/TestHelper.h>
 #include <boost/filesystem.hpp>
 
 using namespace std;
