@@ -27,7 +27,7 @@
 #include <libdevcore/TrieDB.h>
 #include <libdevcore/TrieHash.h>
 #include "MemTrie.h"
-#include <test/test.h>
+#include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;

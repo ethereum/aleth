@@ -26,7 +26,7 @@
 #include <libdevcrypto/Common.h>
 #include <libp2p/UDP.h>
 #include <libp2p/NodeTable.h>
-#include <test/test.h>
+#include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;
@@ -325,15 +325,15 @@ BOOST_AUTO_TEST_SUITE(netTypes)
 
 /*
 
-Test disabled by Bob Summerwill on 1st Sep 2016, because it is
-consistently failing on Ubuntu within TravisCI, and also appears
-to be testing timing-specific behaviour within Boost code which
-we did not author.
+ Test disabled by Bob Summerwill on 1st Sep 2016, because it is
+ consistently failing on Ubuntu within TravisCI, and also appears
+ to be testing timing-specific behaviour within Boost code which
+ we did not author.
 
-See https://github.com/ethereum/cpp-ethereum/issues/3253.
+ See https://github.com/ethereum/cpp-ethereum/issues/3253.
 
-TODO - Work out why this test was written in the first place,
-and why it has started failing.   Re-add it or remove it.
+ TODO - Work out why this test was written in the first place,
+ and why it has started failing.   Re-add it or remove it.
 
 
 BOOST_AUTO_TEST_CASE(deadlineTimer)

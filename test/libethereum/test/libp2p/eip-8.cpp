@@ -25,7 +25,7 @@
 #include <libp2p/Host.h>
 #include <libp2p/RLPXSocket.h>
 #include <libp2p/RLPxHandshake.h>
-#include <test/test.h>
+#include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;

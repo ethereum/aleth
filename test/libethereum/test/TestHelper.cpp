@@ -957,6 +957,8 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--mininglimit" && i + 1 < argc)
 			testMiningTimeout = atoi(argv[i + 1]);
+		else if (arg == "--nonetwork")
+			nonetwork = true;
 	}
 
 	//Default option
