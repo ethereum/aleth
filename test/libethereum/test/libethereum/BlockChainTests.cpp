@@ -257,7 +257,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				}
 
 				blArray.push_back(blObj);  //json data
-				this_thread::sleep_for(chrono::seconds(1));
+				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}//each blocks
 
 			if (o.count("expect") > 0)
@@ -451,7 +451,7 @@ void overwriteBlockHeaderForTest(mObject const& _blObj, TestBlock& _block, Chain
 			BlockHeader parentHeader = importedBlocks.at(importedBlocks.size() - 1).blockHeader();
 			tmp.setTimestamp(toInt(ho["RelTimestamp"]) + parentHeader.timestamp());
 			tmp.setDifficulty(((const Ethash*)sealEngine)->calculateDifficulty(tmp, parentHeader));
-			this_thread::sleep_for(chrono::seconds((int)toInt(ho["RelTimestamp"])));
+			std::this_thread::sleep_for(std::chrono::seconds((int)toInt(ho["RelTimestamp"])));
 		}
 
 		Ethash::setMixHash(tmp, ho.count("mixHash") ? h256(ho["mixHash"].get_str()) : Ethash::mixHash(header));

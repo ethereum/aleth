@@ -23,7 +23,10 @@
 
 #include "MemoryDB.h"
 
-using namespace dev::rpc;
+namespace dev
+{
+namespace rpc
+{
 
 bool MemoryDB::db_put(std::string const& _name, std::string const& _key, std::string const& _value)
 {
@@ -37,3 +40,6 @@ std::string MemoryDB::db_get(std::string const& _name, std::string const& _key)
 	std::string k(_name + "/" + _key);
 	return m_db[k];
 }
+
+} // namespace rpc
+} // namespace dev

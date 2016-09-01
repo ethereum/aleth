@@ -16,6 +16,65 @@ macro(configure_project)
 	eth_default_option(PARANOID OFF)
 	eth_default_option(MINIUPNPC ON)
 
+	# BuildBuild, AKA Unity Builds is a hack for C++ builds which is very well known within
+	# the video-games industry, but is perhaps less known in other parts of the software
+	# industry.
+	#
+	# It is a huge optimization for clean build times, but can also result in better
+	# generated code, because the compiler gets a larger set of code to optimize in each
+	# pass.  This is much the same as Link Time Optimization (LTO) in GCC and
+	# Link Time Code Generation (LTCG) and Whole Program Optimization in VC++.
+	#
+	# C++ uses the same compilation-unit model brought forward from C where there is a very
+	# crude and time-expensive pre-processing phase on each source file, resulting in
+	# compilation to an object file.  Those object files are then later maybe archived into
+	# libraries, and ultimately linked together into an executable.
+	#
+	# That pre-processing phase is commonly what takes the bulk of the time, because the
+	# same header files are repeatedly being read from disk and expanded.  Large C++
+	# applications have hundreds or thousands of source files, and the graph of header
+	# file dependencies for them all will have a lot of commonality, not of which can be
+	# re-used with a normal development flow.  Pre-compiled headers are an attempt to fix
+	# this problem, but they are not a standard feature, and often require a lot of very
+	# brittle manual configuration.
+	#
+	# The majestic hack here is to combine multiple compilation units within the build
+	# system before they ever get passed to the compiler.  That just means dynamic
+	# generation of a BulkBuild source file which just directly includes all the source
+	# files for a given library or application, so they all get processed as part of a
+	# single pass, so that all the header commonality can be optimized out, and there
+	# is no redundant reprocessing.
+	#
+	# That often "just works".  Sometimes clashing static symbols need tweaking.  You
+	# can have a scenario where such symbols were using file-level scoping rather
+	# than namespace scoping and are now forced together into a single compilation
+	# unit, so now they clash.  Similar clashes are possible for 'using namespace'.
+	# This is easy stuff to address.
+	#
+	# Another possible variant, which we aren't doing here yet, but maybe will want to
+	# do so soon is NOT to include all source files in a single unit, but to have a
+	# number of "units" for related subsets of code which are often modified together.
+	#
+	# There is a straight tradeoff also been clean build times (which can be 10x faster
+	# with BulkBuild), and incremental build times (which can be a bit slower with
+	# BulkBuild, because the large unit of code needs rebuilding whenever anything
+	# changes).
+	#
+	# Another downside to BulkBuild, though one which is easy to mitigate against, is
+	# dependencies-rot.  If you only ever build with BulkBuild enabled then you can
+	# get includes indirectly through source files processed earlier with the
+	# BulkBuild unit, and find that you code doesn't build anymore "loose" because
+	# you are missing includes, but got away with it because of BulkBuild already
+	# having processed those headers.
+	#
+	# The easy mitigation to this issue is to support both "loose" and BulkBuild
+	# modes in your build system, and to ensure that you build both modes within
+	# your automation builds.   Engineers will commonly run with BulkBuild enabled
+	# at all times for their local builds, with automated builds ensuring that
+	# any dependencies rot which is introduced is detected in a timely manner,
+	# and then can be addressed.
+	eth_default_option(BULK_BUILD ON)
+
 	# components
 	eth_default_option(TESTS ON)
 	eth_default_option(TOOLS ON)
@@ -106,6 +165,7 @@ macro(print_config NAME)
 	message("------------------------------------------------------------------------")
 	message("--                  CMake Version                            ${CMAKE_VERSION}")
 	message("-- CMAKE_BUILD_TYPE Build type                               ${CMAKE_BUILD_TYPE}")
+	message("-- BULK_BUILD       BulkBuild enabled?                       ${BULK_BUILD}")
 	message("-- TARGET_PLATFORM  Target platform                          ${CMAKE_SYSTEM_NAME}")
 	message("--------------------------------------------------------------- features")
 if (SUPPORT_CPUID)

@@ -86,7 +86,7 @@ struct TestNodeTable: public NodeTable
 		for (auto& n: _testNodes)
 		{
 			ping(NodeIPEndpoint(ourIp, n.second, n.second));
-			this_thread::sleep_for(chrono::milliseconds(2));
+			std::this_thread::sleep_for(std::chrono::milliseconds(2));
 		}
 	}
 
@@ -102,7 +102,7 @@ struct TestNodeTable: public NodeTable
 				// manually add node for test
 				{
 					Guard ln(x_nodes);
-					shared_ptr<NodeEntry> node(new NodeEntry(m_node.id, n.first.pub(), NodeIPEndpoint(ourIp, n.second, n.second)));
+					std::shared_ptr<NodeEntry> node(new NodeEntry(m_node.id, n.first.pub(), NodeIPEndpoint(ourIp, n.second, n.second)));
 					node->pending = false;
 					m_nodes[node->id] = node;
 				}
@@ -127,7 +127,7 @@ struct TestNodeTableHost: public TestHost
 	TestNodeTableHost(unsigned _count = 8): m_alias(KeyPair::create()), nodeTable(new TestNodeTable(m_io, m_alias, bi::address::from_string("127.0.0.1"))), testNodes(TestNodeTable::createTestNodes(_count)) {};
 	~TestNodeTableHost() { m_io.stop(); stopWorking(); }
 
-	void setup() { for (auto n: testNodes) nodeTables.push_back(make_shared<TestNodeTable>(m_io,n.first, bi::address::from_string("127.0.0.1"),n.second)); }
+	void setup() { for (auto n: testNodes) nodeTables.push_back(std::make_shared<TestNodeTable>(m_io,n.first, bi::address::from_string("127.0.0.1"),n.second)); }
 
 	void pingAll() { for (auto& t: nodeTables) t->pingTestNodes(testNodes); }
 
@@ -136,9 +136,9 @@ struct TestNodeTableHost: public TestHost
 	void populate(size_t _count = 0) { nodeTable->populateTestNodes(testNodes, _count); }
 
 	KeyPair m_alias;
-	shared_ptr<TestNodeTable> nodeTable;
+	std::shared_ptr<TestNodeTable> nodeTable;
 	std::vector<std::pair<KeyPair,unsigned>> testNodes; // keypair and port
-	std::vector<shared_ptr<TestNodeTable>> nodeTables;
+	std::vector<std::shared_ptr<TestNodeTable>> nodeTables;
 };
 
 class TestUDPSocket: UDPSocketEvents, public TestHost
@@ -149,7 +149,7 @@ public:
 	void onDisconnected(UDPSocketFace*) {};
 	void onReceived(UDPSocketFace*, bi::udp::endpoint const&, bytesConstRef _packet) { if (_packet.toString() == "AAAA") success = true; }
 
-	shared_ptr<UDPSocket<TestUDPSocket, 1024>> m_socket;
+	std::shared_ptr<UDPSocket<TestUDPSocket, 1024>> m_socket;
 
 	bool success = false;
 };
@@ -167,16 +167,16 @@ BOOST_AUTO_TEST_CASE(requestTimeout)
 	
 	NodeID nodeA(sha3("a"));
 	NodeID nodeB(sha3("b"));
-	timeouts.push_back(make_pair(nodeA, chrono::steady_clock::now()));
-	this_thread::sleep_for(std::chrono::milliseconds(100));
-	timeouts.push_back(make_pair(nodeB, chrono::steady_clock::now()));
-	this_thread::sleep_for(std::chrono::milliseconds(210));
+	timeouts.push_back(std::make_pair(nodeA, std::chrono::steady_clock::now()));
+	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	timeouts.push_back(std::make_pair(nodeB, std::chrono::steady_clock::now()));
+	std::this_thread::sleep_for(std::chrono::milliseconds(210));
 	
 	bool nodeAtriggered = false;
 	bool nodeBtriggered = false;
 	timeouts.remove_if([&](RequestTimeout const& t)
 	{
-		auto now = chrono::steady_clock::now();
+		auto now = std::chrono::steady_clock::now();
 		auto diff = now - t.second;
 		if (t.first == nodeA && diff < timeout)
 			nodeAtriggered = true;
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(kademlia)
 	nodes.sort();
 	node.nodeTable->reset();
 	node.populate(1);
-	this_thread::sleep_for(chrono::milliseconds(2000));
+	std::this_thread::sleep_for(std::chrono::milliseconds(2000));
 	BOOST_REQUIRE_EQUAL(node.nodeTable->count(), 8);
 }
 
@@ -315,7 +315,7 @@ BOOST_AUTO_TEST_CASE(udpOnce)
 	UDPDatagram d(bi::udp::endpoint(boost::asio::ip::address::from_string("127.0.0.1"), 30300), bytes({65,65,65,65}));
 	TestUDPSocket a; a.m_socket->connect(); a.start();
 	a.m_socket->send(d);
-	this_thread::sleep_for(chrono::seconds(1));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	BOOST_REQUIRE_EQUAL(true, a.success);
 }
 
@@ -334,12 +334,12 @@ BOOST_AUTO_TEST_CASE(deadlineTimer)
 	boost::system::error_code ec;
 	std::atomic<unsigned> fired(0);
 	
-	thread thread([&](){ while(!start) this_thread::sleep_for(chrono::milliseconds(10)); io.run(); });
+	std::thread thread([&](){ while(!start) std::this_thread::sleep_for(std::chrono::milliseconds(10)); io.run(); });
 	t.expires_from_now(boost::posix_time::milliseconds(200));
 	start = true;
 	t.async_wait([&](boost::system::error_code const& _ec){ ec = _ec; fired++; });
 	BOOST_REQUIRE_NO_THROW(t.wait());
-	this_thread::sleep_for(chrono::milliseconds(250));
+	std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	auto expire = t.expires_from_now().total_milliseconds();
 	BOOST_REQUIRE(expire <= 0);
 	BOOST_REQUIRE(fired == 1);

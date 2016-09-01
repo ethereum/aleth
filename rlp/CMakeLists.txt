@@ -9,6 +9,7 @@ if (NOT EMSCRIPTEN AND NOT MSVC)
 endif()
 
 find_package(Dev)
+find_package(Web3)
 
 target_include_directories(rlp PRIVATE ..)
 target_include_directories(rlp PRIVATE ../utils)

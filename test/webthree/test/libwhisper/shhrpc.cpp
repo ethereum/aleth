@@ -37,7 +37,6 @@
 #include <jsonrpccpp/server/connectors/httpserver.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <json_spirit/JsonSpiritHeaders.h>
-#include <test/TestHelper.h>
 #include <test/libweb3jsonrpc/WebThreeStubClient.h>
 #include <libethcore/KeyManager.h>
 #include <libp2p/Common.h>
@@ -48,7 +47,7 @@ using namespace dev;
 using namespace dev::eth;
 using namespace dev::p2p;
 using namespace dev::shh;
-using namespace dev::test;
+
 namespace js = json_spirit;
 
 WebThreeDirect* web3;
@@ -66,7 +65,7 @@ unique_ptr<WebThreeStubClient> jsonrpcClient;
 static string const c_version("shhrpc-web3");
 static unsigned const c_ttl = 777000;
 
-struct Setup: public TestOutputHelper
+struct Setup: public dev::test::TestOutputHelper
 {
 	Setup()
 	{
@@ -100,8 +99,6 @@ struct Setup: public TestOutputHelper
 	{
 		dev::p2p::NodeIPEndpoint::test_allowLocal = false;
 	}
-
-	TestOutputHelper testHelper;
 };
 
 Json::Value createMessage(string const& _from, string const& _to, string const& _topic = "", string _payload = "")

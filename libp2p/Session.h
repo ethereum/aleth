@@ -130,7 +130,6 @@ private:
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
 
-	unsigned m_protocolVersion = 0;			///< The protocol version of the peer.
 	std::shared_ptr<Peer> m_peer;			///< The Peer object.
 	bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 

@@ -81,8 +81,8 @@ BOOST_AUTO_TEST_CASE(host)
 	
 	BOOST_REQUIRE_NE(host1port, host2port);
 
-	host1.registerCapability(make_shared<TestHostCap>());
-	host2.registerCapability(make_shared<TestHostCap>());
+	host1.registerCapability(std::make_shared<TestHostCap>());
+	host2.registerCapability(std::make_shared<TestHostCap>());
 	
 	auto node2 = host2.id();
 	int const step = 10;
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(host)
 	// Wait for up to 6 seconds, to give the hosts time to start.
 	for (unsigned i = 0; i < 6000; i += step)
 	{
-		this_thread::sleep_for(chrono::milliseconds(step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(step));
 
 		if (host1.isStarted() && host2.isStarted())
 			break;
@@ -101,7 +101,7 @@ BOOST_AUTO_TEST_CASE(host)
 	// Wait for up to 6 seconds, to give the hosts time to get their network connection established
 	for (unsigned i = 0; i < 6000; i += step)
 	{
-		this_thread::sleep_for(chrono::milliseconds(step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(step));
 
 		if (host1.haveNetwork() && host2.haveNetwork())
 			break;
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(host)
 	// Wait for up to 12 seconds, to give the hosts time to find each other
 	for (unsigned i = 0; i < 12000; i += step)
 	{
-		this_thread::sleep_for(chrono::milliseconds(step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(step));
 
 		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
 			break;
@@ -154,12 +154,12 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 		h->setIdealPeerCount(10);		
 		h->start(); // starting host is required so listenport is available
 		while (!h->haveNetwork())
-			this_thread::sleep_for(chrono::milliseconds(c_step));
+			std::this_thread::sleep_for(std::chrono::milliseconds(c_step));
 
 		BOOST_REQUIRE(h->listenPort());
 		bool inserted = ports.insert(h->listenPort()).second;
 		BOOST_REQUIRE(inserted);
-		h->registerCapability(make_shared<TestHostCap>());
+		h->registerCapability(std::make_shared<TestHostCap>());
 		hosts.push_back(h);
 	}
 	
@@ -168,14 +168,14 @@ BOOST_AUTO_TEST_CASE(saveNodes)
 		host.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
 	for (unsigned i = 0; i < c_peers * 1000 && host.peerCount() < c_peers; i += c_step)
-		this_thread::sleep_for(chrono::milliseconds(c_step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(c_step));
 
 	Host& host2 = *hosts.back();
 	for (auto const& h: hosts)
 		host2.addNode(h->id(), NodeIPEndpoint(bi::address::from_string("127.0.0.1"), h->listenPort(), h->listenPort()));
 
 	for (unsigned i = 0; i < c_peers * 2000 && host2.peerCount() < c_peers; i += c_step)
-		this_thread::sleep_for(chrono::milliseconds(c_step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(c_step));
 
 	BOOST_CHECK_EQUAL(host.peerCount(), c_peers);
 	BOOST_CHECK_EQUAL(host2.peerCount(), c_peers);
@@ -226,15 +226,15 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	BOOST_REQUIRE(port2);
 	BOOST_REQUIRE_NE(port1, port2);
 
-	host1.registerCapability(make_shared<TestHostCap>());
-	host2.registerCapability(make_shared<TestHostCap>());
+	host1.registerCapability(std::make_shared<TestHostCap>());
+	host2.registerCapability(std::make_shared<TestHostCap>());
 
 	host1.requirePeer(node2, NodeIPEndpoint(bi::address::from_string(localhost), port2, port2));
 
 	// Wait for up to 12 seconds, to give the hosts time to connect to each other.
 	for (unsigned i = 0; i < 12000; i += step)
 	{
-		this_thread::sleep_for(chrono::milliseconds(step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(step));
 
 		if ((host1.peerCount() > 0) && (host2.peerCount() > 0))
 			break;
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(requirePeer)
 	// Wait for up to 6 seconds, to give the hosts time to disconnect from each other.
 	for (unsigned i = 0; i < 6000; i += step)
 	{
-		this_thread::sleep_for(chrono::milliseconds(step));
+		std::this_thread::sleep_for(std::chrono::milliseconds(step));
 
 		if ((host1.peerCount() == 0) && (host2.peerCount() == 0))
 			break;
@@ -286,7 +286,7 @@ BOOST_AUTO_TEST_CASE(emptySharedPeer)
 	if (test::Options::get().nonetwork)
 		return;
 
-	shared_ptr<Peer> p;
+	std::shared_ptr<Peer> p;
 	BOOST_REQUIRE(!p);
 	
 	std::map<NodeID, std::shared_ptr<Peer>> peers;
@@ -332,7 +332,7 @@ int peerTest(int argc, char** argv)
 	if (!remoteHost.empty() && !remoteAlias)
 		ph.addNode(remoteAlias, NodeIPEndpoint(bi::address::from_string(remoteHost), remotePort, remotePort));
 
-	this_thread::sleep_for(chrono::milliseconds(200));
+	std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
 	return 0;
 }

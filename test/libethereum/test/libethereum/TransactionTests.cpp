@@ -198,12 +198,12 @@ BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
 {
 	if (test::Options::get().bigData)
 	{
-		auto start = chrono::steady_clock::now();
+		auto start = std::chrono::steady_clock::now();
 
 		dev::test::executeTests("tt10mbDataField", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+		auto end = std::chrono::steady_clock::now();
+		auto duration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
 }
@@ -212,12 +212,12 @@ BOOST_AUTO_TEST_CASE(tt10mbDataField)
 {
 	if (test::Options::get().bigData)
 	{
-		auto start = chrono::steady_clock::now();
+		auto start = std::chrono::steady_clock::now();
 
 		dev::test::executeTests("tt10mbDataField", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
 
-		auto end = chrono::steady_clock::now();
-		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
+		auto end = std::chrono::steady_clock::now();
+		auto duration(std::chrono::duration_cast<std::chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
 	}
 }

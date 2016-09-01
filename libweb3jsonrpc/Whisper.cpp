@@ -33,8 +33,12 @@
 using namespace std;
 using namespace jsonrpc;
 using namespace dev;
-using namespace dev::rpc;
 
+
+namespace dev
+{
+namespace rpc
+{
 
 Whisper::Whisper(WebThreeDirect& _web3, std::vector<dev::KeyPair> const& _accounts): m_web3(_web3)
 {
@@ -200,3 +204,6 @@ Json::Value Whisper::shh_getMessages(std::string const& _filterId)
 		BOOST_THROW_EXCEPTION(JsonRpcException(Errors::ERROR_RPC_INVALID_PARAMS));
 	}
 }
+
+} // namespace rpc
+} // namespace dev

@@ -112,3 +112,24 @@ macro(eth_check_library_link L)
 	endif()
 endmacro()
 
+# Function which dynamically generates BulkBuild files, which are single source files which include
+# all the source files for a particular library or application.   This is a hack/optimization for
+# build times, and can also result in better code generation in some cases.
+#
+# See EthOptions.cmake file for more detailed information in this feature.
+
+function(enable_bulkbuild BB_UNIT_NAME SOURCE_VARIABLE_NAME)
+	set(files ${${SOURCE_VARIABLE_NAME}})
+	set(unit_build_file ${CMAKE_CURRENT_BINARY_DIR}/BulkBuild_${BB_UNIT_NAME}.cpp)
+	# Tag the original source files as "header only" within CMake.
+	set_source_files_properties(${files} PROPERTIES HEADER_FILE_ONLY true)
+	# Open the ub file
+	FILE(WRITE ${unit_build_file} "// This is a generated file\n")
+	foreach(source_file ${files} )
+		FILE( APPEND ${unit_build_file} "#include <${CMAKE_CURRENT_SOURCE_DIR}/${source_file}>\n")
+	endforeach(source_file)
+	# Add our generated BulkBuild back into the list of source files.
+	if (BULK_BUILD)
+		set(${SOURCE_VARIABLE_NAME} ${${SOURCE_VARIABLE_NAME}} ${unit_build_file} PARENT_SCOPE)  
+	endif()
+endfunction(enable_bulkbuild)

@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(tqEqueue)
 	string hashStr = "01020304050607080910111213141516171819202122232425262728293031320102030405060708091011121314151617181920212223242526272829303132";
 	tq.enqueue(tRlp, h512(hashStr));
 	tq.enqueue(tRlp, h512(hashStr));
-	this_thread::sleep_for(chrono::seconds(1));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 
 	//at least 1 transaction should be imported through RLP
 	Transactions topTr = tq.topTransactions(10);

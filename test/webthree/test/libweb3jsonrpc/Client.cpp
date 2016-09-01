@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(Personal)
 	BOOST_TEST_CHECKPOINT("Transaction should be sendable multiple times in unlocked mode.");
 	sendingShouldSucceed();
 
-	this_thread::sleep_for(chrono::seconds(2));
+	std::this_thread::sleep_for(std::chrono::seconds(2));
 	BOOST_TEST_CHECKPOINT("After unlock time, account should be locked again.");
 	BOOST_CHECK_EQUAL(sendingShouldFail(), "Transaction rejected by user.");
 
