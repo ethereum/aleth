@@ -22,7 +22,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonJS.h>
-#include <test/test.h>
+#include <test/TestHelper.h>
 
 using namespace dev;
 using namespace std;
