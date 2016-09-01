@@ -48,6 +48,7 @@ if "%TESTS%"=="On" (
     testeth.exe --verbosity 2
     echo Testing EVMJIT
     testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
+    IF errorlevel 1 GOTO ON-ERROR-CONDITION
     cd ..\..\..\..\..
 
     cd build\test\libweb3core\test\%CONFIGURATION%
@@ -55,6 +56,7 @@ if "%TESTS%"=="On" (
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     testweb3core.exe
+    IF errorlevel 1 GOTO ON-ERROR-CONDITION
     cd ..\..\..\..\..
 
     cd build\test\webthree\test\%CONFIGURATION%
@@ -63,5 +65,12 @@ if "%TESTS%"=="On" (
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
     copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
     testweb3.exe
+    IF errorlevel 1 GOTO ON-ERROR-CONDITION
     cd ..\..\..\..\..
 )
+
+EXIT 0
+
+:ON-ERROR-CONDITION
+echo "ERROR - Unit-test run returned error code."
+EXIT 1
