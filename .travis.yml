@@ -38,6 +38,7 @@ matrix:
         # some Docker support, which we should probably investigate, at least for
         # Ubuntu 16.04 LTS "Xenial Xerus"
         # See https://en.wikipedia.org/wiki/List_of_Ubuntu_releases#Ubuntu_16.04_LTS_.28Xenial_Xerus.29.
+        # See https://github.com/ethereum/cpp-ethereum/issues/3269
         - os: linux
           dist: trusty
           sudo: required
@@ -80,6 +81,8 @@ matrix:
         # running into the 48min timeout.  We need to make this process
         # quicker.
         #
+        # See https://github.com/ethereum/cpp-ethereum/issues/3267
+        #
         #- os: osx
         #  osx_image: xcode7.3
         #  env:
@@ -90,6 +93,12 @@ matrix:
         # macOS Sierra (10.12)
         # https://en.wikipedia.org/wiki/MacOS_Sierra
         #
+        # TODO - Tests are currently disabled because they are consistently
+        # running into the 48min timeout.  We need to make this process
+        # quicker.
+        #
+        # See https://github.com/ethereum/cpp-ethereum/issues/3268
+
         - os: osx
           osx_image: xcode8
           env:
