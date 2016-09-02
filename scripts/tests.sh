@@ -40,7 +40,6 @@ if [[ "$TESTS" == "On" ]]; then
     cd cpp-ethereum/build
 
     $BUILD_ROOT/test/libethereum/test/testeth
-    $BUILD_ROOT/test/libweb3core/test/testweb3core
 
     # Disable testweb3 tests for Ubuntu temporarily.  It looks like they are
     # hanging.  Maybe some OpenCL configuration issue, or maybe something else?

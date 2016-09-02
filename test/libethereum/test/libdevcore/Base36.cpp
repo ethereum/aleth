@@ -20,7 +20,7 @@
  */
 
 #include <boost/test/unit_test.hpp>
-#include <test/test.h>
+#include <test/TestHelper.h>
 #include <libdevcore/Base64.h>
 
 using namespace std;

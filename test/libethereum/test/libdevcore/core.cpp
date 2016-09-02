@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/Log.h>
-#include <test/test.h>
+#include <test/TestHelper.h>
 
 using namespace dev::test;
 

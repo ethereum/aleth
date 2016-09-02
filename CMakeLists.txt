@@ -80,7 +80,6 @@ endif()
 
 if (TESTS)
     add_subdirectory(test/libethereum/test)
-    add_subdirectory(test/libweb3core/test)
     add_subdirectory(test/webthree/test)
 endif()
 

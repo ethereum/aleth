@@ -30,7 +30,7 @@
 #include <libdevcore/TrieHash.h>
 #include <libdevcore/TransientDirectory.h>
 #include "MemTrie.h"
-#include <test/test.h>
+#include <test/TestHelper.h>
 using namespace std;
 using namespace dev;
 using namespace dev::test;
