@@ -39,7 +39,7 @@ if "%TESTS%"=="On" (
     echo APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%
     echo ETHEREUM_DEPS_PATH=%ETHEREUM_DEPS_PATH%
 
-    cd build\test\libethereum\test\%CONFIGURATION%
+    cd build\test\%CONFIGURATION%
     copy build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
@@ -49,16 +49,8 @@ if "%TESTS%"=="On" (
     echo Testing EVMJIT
     testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
-    cd ..\..\..\..\..
+    cd ..\..\..
 
-    cd build\test\webthree\test\%CONFIGURATION%
-    copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
-    copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
-    copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
-    copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCL.dll .
-    testweb3.exe
-    IF errorlevel 1 GOTO ON-ERROR-CONDITION
-    cd ..\..\..\..\..
 )
 
 EXIT 0

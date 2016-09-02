@@ -35,7 +35,7 @@
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include <set>
 #include "../JsonSpiritHeaders.h"
-#include "<test/TestHelper.h>"
+#include <test/TestHelper.h>
 #include "WebThreeStubClient.h"
 
 BOOST_FIXTURE_TEST_SUITE(jsonrpc, TestOutputHelper)

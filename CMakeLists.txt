@@ -79,8 +79,7 @@ if (TOOLS)
 endif()
 
 if (TESTS)
-    add_subdirectory(test/libethereum/test)
-    add_subdirectory(test/webthree/test)
+	add_subdirectory(test)
 endif()
 
 # TODO - split out json_spirit, libscrypt and sec256k1
