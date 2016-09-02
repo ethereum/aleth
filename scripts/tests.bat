@@ -30,22 +30,24 @@ set ETHEREUM_DEPS_PATH=%4
 
 if "%TESTS%"=="On" (
 
+    REM Clone the end-to-end test repo, and point environment variable at it.
     cd ..
     git clone https://github.com/ethereum/tests.git
     set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
-    cd cpp-ethereum
 
-    echo CONFIGURATION=%CONFIGURATION%
-    echo APPVEYOR_BUILD_FOLDER=%APPVEYOR_BUILD_FOLDER%
-    echo ETHEREUM_DEPS_PATH=%ETHEREUM_DEPS_PATH%
-
-    cd build\test\%CONFIGURATION%
-    copy build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
+    REM Copy the DLLs into the test directory which need to be able to run.
+    cd %APPVEYOR_BUILD_FOLDER%\build\test\%CONFIGURATION%
+    copy %APPVEYOR_BUILD_FOLDER%\build\evmjit\libevmjit\%CONFIGURATION%\evmjit.dll .
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
+
+    REM Run the tests for the Interpreter
     echo Testing testeth
     testeth.exe --verbosity 2
+    IF errorlevel 1 GOTO ON-ERROR-CONDITION
+
+    REM Run the tests for the JIT
     echo Testing EVMJIT
     testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
