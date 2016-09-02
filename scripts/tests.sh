@@ -31,34 +31,10 @@ TESTS=$1
 # There is an implicit assumption here that we HAVE to run from build directory.
 BUILD_ROOT=$(pwd)
 
-# TODO Add handling for error codes
 if [[ "$TESTS" == "On" ]]; then
-
     cd ../..
     git clone https://github.com/ethereum/tests.git
     export ETHEREUM_TEST_PATH=$(pwd)/tests/
     cd cpp-ethereum/build
-
     $BUILD_ROOT/test/testeth
-
-    # Disable testweb3 tests for Ubuntu temporarily.  It looks like they are
-    # hanging.  Maybe some OpenCL configuration issue, or maybe something else?
-    #
-    # See, for example, https://travis-ci.org/ethereum/cpp-ethereum/jobs/152901242
-    #
-    # modprobe: ERROR: could not insert 'fglrx': No such device
-    # Error: Fail to load fglrx kernel module!
-    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
-    # modprobe: ERROR: could not insert 'fglrx': No such device
-    # Error: Fail to load fglrx kernel module!
-    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
-    # modprobe: ERROR: could not insert 'fglrx': No such device
-    # Error: Fail to load fglrx kernel module!
-    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
-    # No output has been received in the last 10m0s, this potentially indicates a stalled build or something wrong with the build itself.
-
-    #if [[ "$OSTYPE" == "darwin"* ]]; then
-    #    $BUILD_ROOT/test/webthree/test/testweb3
-    #fi
-
 fi
