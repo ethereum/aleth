@@ -19,6 +19,8 @@ add_subdirectory(libweb3core)
 add_subdirectory(libdevcrypto)
 add_subdirectory(libp2p)
 add_subdirectory(libdevcore)
+add_subdirectory(libweb3jsonrpc)
+add_subdirectory(libwhisper)
 add_subdirectory(libevm)
 add_subdirectory(external-dependencies)
 
@@ -45,10 +47,12 @@ add_executable(testeth ${SRC_LIST} ${HEADERS})
 
 find_package(Boost QUIET REQUIRED COMPONENTS unit_test_framework)
 find_package(Eth)
+find_package(Web3)
 
 target_include_directories(testeth PRIVATE ..)
-target_include_directories(testeth PRIVATE ../../..)
-target_include_directories(testeth PRIVATE ../../../utils)
+target_include_directories(testeth PRIVATE ../..)
+target_include_directories(testeth PRIVATE ../utils)
+
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})
 target_link_libraries(testeth ${Eth_TESTUTILS_LIBRARIES})
 
@@ -61,6 +65,9 @@ endif()
 if (UNIX AND NOT APPLE)
 	target_link_libraries(testeth pthread)
 endif()
+
+target_link_libraries(testeth ${Web3_WEB3JSONRPC_LIBRARIES})
+target_link_libraries(testeth ${Web3_WEBTHREE_LIBRARIES})
 
 enable_testing()
 set(CTEST_OUTPUT_ON_FAILURE TRUE)

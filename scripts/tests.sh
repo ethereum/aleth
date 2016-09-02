@@ -39,7 +39,7 @@ if [[ "$TESTS" == "On" ]]; then
     export ETHEREUM_TEST_PATH=$(pwd)/tests/
     cd cpp-ethereum/build
 
-    $BUILD_ROOT/test/libethereum/test/testeth
+    $BUILD_ROOT/test/testeth
 
     # Disable testweb3 tests for Ubuntu temporarily.  It looks like they are
     # hanging.  Maybe some OpenCL configuration issue, or maybe something else?
@@ -57,8 +57,8 @@ if [[ "$TESTS" == "On" ]]; then
     # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
     # No output has been received in the last 10m0s, this potentially indicates a stalled build or something wrong with the build itself.
 
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        $BUILD_ROOT/test/webthree/test/testweb3
-    fi
+    #if [[ "$OSTYPE" == "darwin"* ]]; then
+    #    $BUILD_ROOT/test/webthree/test/testweb3
+    #fi
 
 fi
