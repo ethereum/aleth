@@ -44,12 +44,12 @@ if "%TESTS%"=="On" (
 
     REM Run the tests for the Interpreter
     echo Testing testeth
-    testeth.exe --verbosity 2
+    testeth.exe
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
 
     REM Run the tests for the JIT
     echo Testing EVMJIT
-    testeth.exe -t VMTests,StateTests --vm jit --verbosity 2
+    testeth.exe -t VMTests,StateTests -- --vm jit
     IF errorlevel 1 GOTO ON-ERROR-CONDITION
     cd ..\..\..
 
