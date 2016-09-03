@@ -28,6 +28,11 @@ configuration:
 environment:
     TESTS: On
 cache: build/evmjit/llvm
+#RDP LOGIN details for trouble shooting
+#init:
+#    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_finish:
+#    - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 install:
     - git submodule update --init --recursive
     - scripts/install_deps.bat
