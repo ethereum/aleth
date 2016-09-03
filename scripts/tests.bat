@@ -41,6 +41,7 @@ if "%TESTS%"=="On" (
     copy "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll .
     copy %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll .
+    copy %ETHEREUM_DEPS_PATH%\win64\bin\OpenCl.dll .
 
     REM Run the tests for the Interpreter
     echo Testing testeth
