@@ -63,7 +63,7 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= SP + 1); return u256s(m_stack, SP + 1); };
+	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
 
 	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1) {};
 
@@ -75,6 +75,9 @@ private:
 
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
+	const void* const* c_jumpTable = 0;
+	const void* c_invalid = 0;
+	bool m_caseInit = false;
 	
 	typedef void (VM::*MemFnPtr)();
 	MemFnPtr m_bounce = 0;
@@ -101,9 +104,9 @@ private:
 	u256* m_pool;
 
 	// interpreter state
-	uint64_t    PC = 0;
-	u256*       SP = m_stack - 1;
-	Instruction INST;
+	uint64_t    m_pc = 0;
+	u256*       m_sp = m_stack - 1;
+	Instruction m_op;
 
 	// metering and memory state
 	uint64_t m_runGas = 0;
@@ -122,7 +125,7 @@ private:
 	bool caseCallSetup(CallParameters*);
 	void caseCall();
 
-	void copyDataToMemory(bytesConstRef _data, u256*& SP);
+	void copyDataToMemory(bytesConstRef _data, u256*& m_sp);
 	uint64_t memNeed(u256 _offset, u256 _size);
 
 	void throwOutOfGas();

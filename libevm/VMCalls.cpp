@@ -24,12 +24,12 @@ using namespace dev::eth;
 
 
 
-void VM::copyDataToMemory(bytesConstRef _data, u256*& SP)
+void VM::copyDataToMemory(bytesConstRef _data, u256*& _sp)
 {
-	auto offset = static_cast<size_t>(*SP--);
-	s512 bigIndex = *SP--;
+	auto offset = static_cast<size_t>(*_sp--);
+	s512 bigIndex = *_sp--;
 	auto index = static_cast<size_t>(bigIndex);
-	auto size = static_cast<size_t>(*SP--);
+	auto size = static_cast<size_t>(*_sp--);
 
 	size_t sizeToBeCopied = bigIndex + size > _data.size() ? _data.size() < bigIndex ? 0 : _data.size() - index : size;
 
@@ -101,20 +101,20 @@ uint64_t VM::verifyJumpDest(u256 const& _dest)
 void VM::caseCreate()
 {
 	m_bounce = &VM::interpretCases;
-	m_newMemSize = memNeed(*(SP - 1), *(SP - 2));
+	m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 2));
 	m_runGas = toUint64(m_schedule->createGas);
 	updateMem();
 	onOperation();
 	updateIOGas();
 	
-	auto const& endowment = *SP--;
-	uint64_t initOff = (uint64_t)*SP--;
-	uint64_t initSize = (uint64_t)*SP--;
+	auto const& endowment = *m_sp--;
+	uint64_t initOff = (uint64_t)*m_sp--;
+	uint64_t initSize = (uint64_t)*m_sp--;
 	
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
-		*++SP = (u160)m_ext->create(endowment, *m_io_gas, bytesConstRef(m_mem.data() + initOff, initSize), *m_onOp);
+		*++m_sp = (u160)m_ext->create(endowment, *m_io_gas, bytesConstRef(m_mem.data() + initOff, initSize), *m_onOp);
 	else
-		*++SP = 0;
+		*++m_sp = 0;
 }
 
 void VM::caseCall()
@@ -122,60 +122,60 @@ void VM::caseCall()
 	m_bounce = &VM::interpretCases;
 	unique_ptr<CallParameters> callParams(new CallParameters());
 	if (caseCallSetup(&*callParams))
-		*++SP = m_ext->call(*callParams);
+		*++m_sp = m_ext->call(*callParams);
 	else
-		*++SP = 0;
+		*++m_sp = 0;
 	*m_io_gas += callParams->gas;
 }
 
 bool VM::caseCallSetup(CallParameters *callParams)
 {
-	m_runGas = toUint64(u512(*SP) + m_schedule->callGas);
+	m_runGas = toUint64(u512(*m_sp) + m_schedule->callGas);
 
-	if (INST == Instruction::CALL && !m_ext->exists(asAddress(*(SP - 1))))
+	if (m_op == Instruction::CALL && !m_ext->exists(asAddress(*(m_sp - 1))))
 		m_runGas += toUint64(m_schedule->callNewAccountGas);
 
-	if (INST != Instruction::DELEGATECALL && *(SP - 2) > 0)
+	if (m_op != Instruction::DELEGATECALL && *(m_sp - 2) > 0)
 		m_runGas += toUint64(m_schedule->callValueTransferGas);
 
-	unsigned sizesOffset = INST == Instruction::DELEGATECALL ? 3 : 4;
+	unsigned sizesOffset = m_op == Instruction::DELEGATECALL ? 3 : 4;
 	m_newMemSize = std::max(
-		memNeed(m_stack[(1 + SP - m_stack) - sizesOffset - 2], m_stack[(1 + SP - m_stack) - sizesOffset - 3]),
-		memNeed(m_stack[(1 + SP - m_stack) - sizesOffset], m_stack[(1 + SP - m_stack) - sizesOffset - 1])
+		memNeed(m_stack[(1 + m_sp - m_stack) - sizesOffset - 2], m_stack[(1 + m_sp - m_stack) - sizesOffset - 3]),
+		memNeed(m_stack[(1 + m_sp - m_stack) - sizesOffset], m_stack[(1 + m_sp - m_stack) - sizesOffset - 1])
 	);
 	updateMem();
 	onOperation();
 	updateIOGas();
 
-	callParams->gas = *SP;
-	if (INST != Instruction::DELEGATECALL && *(SP - 2) > 0)
+	callParams->gas = *m_sp;
+	if (m_op != Instruction::DELEGATECALL && *(m_sp - 2) > 0)
 		callParams->gas += m_schedule->callStipend;
-	--SP;
+	--m_sp;
 
-	callParams->codeAddress = asAddress(*SP);
-	--SP;
+	callParams->codeAddress = asAddress(*m_sp);
+	--m_sp;
 
-	if (INST == Instruction::DELEGATECALL)
+	if (m_op == Instruction::DELEGATECALL)
 	{
 		callParams->apparentValue = m_ext->value;
 		callParams->valueTransfer = 0;
 	}
 	else
 	{
-		callParams->apparentValue = callParams->valueTransfer = *SP;
-		--SP;
+		callParams->apparentValue = callParams->valueTransfer = *m_sp;
+		--m_sp;
 	}
 
-	uint64_t inOff = (uint64_t)*SP--;
-	uint64_t inSize = (uint64_t)*SP--;
-	uint64_t outOff = (uint64_t)*SP--;
-	uint64_t outSize = (uint64_t)*SP--;
+	uint64_t inOff = (uint64_t)*m_sp--;
+	uint64_t inSize = (uint64_t)*m_sp--;
+	uint64_t outOff = (uint64_t)*m_sp--;
+	uint64_t outSize = (uint64_t)*m_sp--;
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{
 		callParams->onOp = *m_onOp;
-		callParams->senderAddress = INST == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
-		callParams->receiveAddress = INST == Instruction::CALL ? callParams->codeAddress : m_ext->myAddress;
+		callParams->senderAddress = m_op == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
+		callParams->receiveAddress = m_op == Instruction::CALL ? callParams->codeAddress : m_ext->myAddress;
 		callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);
 		callParams->out = bytesRef(m_mem.data() + outOff, outSize);
 		return true;

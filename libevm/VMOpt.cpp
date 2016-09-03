@@ -58,6 +58,8 @@ void VM::initEntry()
 	m_bounce = &VM::interpretCases;	
 	m_codeSpace = m_ext->code;
 	m_code = m_codeSpace.data();
+
+	interpretCases(); // first time initializes
 	
 	initMetrics();	
 	
@@ -116,7 +118,7 @@ void VM::optimize()
 	#ifdef EVM_USE_CONSTANT_POOL
 	
 			// add value to constant pool and replace PUSHn with PUSHC if room
-			if (1 < n && VMJumpTable[i] == INVALID)
+			if (1 < n)
 			{
 				int pool_off = poolConstant(val);
 				if (0 <= pool_off && pool_off < 256)
@@ -157,4 +159,3 @@ void VM::optimize()
 	m_pool = m_poolSpace.data();
 	
 }
-
