@@ -67,12 +67,12 @@ matrix:
         #
         # See https://github.com/ethereum/solidity/issues/924
         #
-        #- os: osx
-        #  osx_image: xcode7.1
-        #  env:
-        #      - TRAVIS_BUILD_TYPE=RelWithDebInfo
-        #      - TRAVIS_TESTS=Off
-        #      - ZIP_SUFFIX=osx-yosemite
+        - os: osx
+          osx_image: xcode7.1
+          env:
+              - TRAVIS_BUILD_TYPE=RelWithDebInfo
+              - TRAVIS_TESTS=Off
+              - ZIP_SUFFIX=osx-yosemite
 
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
