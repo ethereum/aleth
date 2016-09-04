@@ -147,7 +147,7 @@ void VM::optimize()
 			else if (op == (byte)Instruction::JUMPI)
 			{
 				if (verifyJumpDest(val))
-					m_code[ii] = (byte)Instruction::JUMPV;
+					m_code[ii] = (byte)Instruction::JUMPVI;
 			}
 	#endif
 			

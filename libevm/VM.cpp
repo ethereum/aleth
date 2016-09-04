@@ -47,13 +47,20 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 // for tracing, checking, metering, measuring ...
 //
 
-void VM::onOperation()
-{
-	if (*m_onOp)
-		(*m_onOp)(++m_nSteps, m_pc, m_op,
-			m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
-			m_runGas, *m_io_gas, this, m_ext);
-}
+#if ETH_VMTRACE
+	void VM::onOperation()
+	{
+		if (*m_onOp)
+			(*m_onOp)(++m_nSteps, m_pc, m_op,
+				m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
+				m_runGas, *m_io_gas, this, m_ext);
+	}
+#else
+	void VM::onOperation()
+	{
+	}
+	#define onOperation() ()
+#endif
 
 void VM::checkStack(unsigned _removed, unsigned _added)
 {
