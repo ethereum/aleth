@@ -69,17 +69,15 @@ matrix:
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
         #
-        # TODO - This is currently disabled because it is consistently
+        # TODO - Tests are currently disabled because they are consistently
         # running into the 48min timeout.  We need to make this process
         # quicker.
-        #
-        # See https://github.com/ethereum/cpp-ethereum/issues/3267
-        #
-        #- os: osx
-        #  osx_image: xcode7.3
-        #  env:
-        #      - TRAVIS_TESTS=Off
-        #      - ZIP_SUFFIX=osx-elcapitan
+
+        - os: osx
+          osx_image: xcode7.3
+          env:
+              - TRAVIS_TESTS=Off
+              - ZIP_SUFFIX=osx-elcapitan
 
         # macOS Sierra (10.12)
         # https://en.wikipedia.org/wiki/MacOS_Sierra
