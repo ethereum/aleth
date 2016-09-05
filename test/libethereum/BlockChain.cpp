@@ -192,6 +192,14 @@ BOOST_AUTO_TEST_CASE(Mining_2_mineUncles)
 	testMiningFunc(threadFunc);
 }
 
+
+/*
+
+Often broken test disabled 5th September 2016, until we have time to
+troubleshoot the root cause.
+
+See https://github.com/ethereum/cpp-ethereum/issues/3256.
+
 BOOST_AUTO_TEST_CASE(Mining_3_mineBlockWithUncles)
 {
 	auto const threadFunc = []()
@@ -243,6 +251,15 @@ BOOST_AUTO_TEST_CASE(Mining_3_mineBlockWithUncles)
 
 	testMiningFunc(threadFunc);
 }
+*/
+
+
+/*
+
+Often broken test disabled 5th September 2016, until we have time to
+troubleshoot the root cause.
+
+See https://github.com/ethereum/cpp-ethereum/issues/3059.
 
 BOOST_AUTO_TEST_CASE(Mining_4_BlockQueueSyncing)
 {
@@ -299,6 +316,8 @@ BOOST_AUTO_TEST_CASE(Mining_4_BlockQueueSyncing)
 
 	testMiningFunc(threadFunc);
 }
+*/
+
 
 BOOST_AUTO_TEST_CASE(Mining_5_BlockFutureTime)
 {
