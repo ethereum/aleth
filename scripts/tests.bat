@@ -32,7 +32,7 @@ if "%TESTS%"=="On" (
 
     REM Clone the end-to-end test repo, and point environment variable at it.
     cd ..
-    git clone https://github.com/ethereum/tests.git
+    git clone --depth 1 https://github.com/ethereum/tests.git
     set ETHEREUM_TEST_PATH=%APPVEYOR_BUILD_FOLDER%\..\tests
 
     REM Copy the DLLs into the test directory which need to be able to run.
