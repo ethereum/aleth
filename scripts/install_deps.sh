@@ -420,6 +420,8 @@ case $(uname -s) in
                     xenial)
                         #xenial
                         echo "Installing cpp-ethereum dependencies on Ubuntu Xenial Xerus (16.04)."
+                        echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main" \
+                        | sudo tee -a /etc/apt/sources.list > /dev/null
                         ;;
                     yakkety)
                         #yakkety
