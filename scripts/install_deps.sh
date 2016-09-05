@@ -100,6 +100,14 @@ case $(uname -s) in
         # https://github.com/Homebrew/homebrew-core/issues/3996
         brew pin carthage
 
+        # A change was committed to 'brew' on 4th September 2016 which
+        # broke various packages, including 'gnupg' and 'nvm.  We can
+        # work around that issue by pinning the Formula for the time being.
+        # The rolling release pattern strikes again.  Live projects
+        # around the world are the test environment.
+        brew pin gnupg
+        brew pin nvm
+
         # Update Homebrew formulas and then upgrade any packages which
         # we have installed using these updated formulas.  This step is
         # required even within TravisCI, because the Homebrew formulas
