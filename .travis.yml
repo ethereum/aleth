@@ -29,6 +29,10 @@ branches:
     only:
         - develop
         - release
+env:
+    global:
+        - TRAVIS_BUILD_TYPE=RelWithDebInfo
+        - TRAVIS_TESTS=On
 matrix:
     include:
         # Ubuntu 14.04 LTS "Trusty Tahr"
@@ -43,8 +47,6 @@ matrix:
           dist: trusty
           sudo: required
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - TRAVIS_TESTS=On
               - ZIP_SUFFIX=ubuntu-trusty
 
         # OS X Mavericks (10.9)
@@ -53,8 +55,6 @@ matrix:
         - os: osx
           osx_image: beta-xcode6.2
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
-              - TRAVIS_TESTS=On
               - ZIP_SUFFIX=osx-mavericks
 
         # OS X Yosemite (10.10)
@@ -63,7 +63,6 @@ matrix:
         - os: osx
           osx_image: xcode7.1
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-yosemite
 
@@ -79,7 +78,6 @@ matrix:
         #- os: osx
         #  osx_image: xcode7.3
         #  env:
-        #      - TRAVIS_BUILD_TYPE=RelWithDebInfo
         #      - TRAVIS_TESTS=Off
         #      - ZIP_SUFFIX=osx-elcapitan
 
@@ -95,7 +93,6 @@ matrix:
         - os: osx
           osx_image: xcode8
           env:
-              - TRAVIS_BUILD_TYPE=RelWithDebInfo
               - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
 git:
