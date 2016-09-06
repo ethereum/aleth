@@ -55,6 +55,19 @@ set -e
 # Check for 'uname' and abort if it is not available.
 uname -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires 'uname' to identify the platform."; exit 1; }
 
+# See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
+detect_linux_distro() {
+    if [ $(command -v lsb_release) ]; then
+        DISTRO=$(lsb_release -is)
+    elif [ -f /etc/os-release ]; then
+        # extract 'foo' from NAME=foo, only on the line with NAME=foo
+        DISTRO=$(sed -n -e 's/^NAME="\(.*\)\"/\1/p' /etc/os-release)
+    else
+        DISTRO=''
+    fi
+    echo $DISTRO
+}
+
 case $(uname -s) in
 
 #------------------------------------------------------------------------------
@@ -196,20 +209,39 @@ case $(uname -s) in
 
         case $(lsb_release -is) in
 
+
 #------------------------------------------------------------------------------
 # Alpine Linux
 #------------------------------------------------------------------------------
 
-            Alpine)
+            "Alpine Linux")
                 #Alpine
                 echo "Installing cpp-ethereum dependencies on Alpine Linux."
-                echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
-                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
+                echo "WARNING - 'install_deps.sh' only has partial Alpine Linux support"
                 echo "If you would like to get 'install_deps.sh' working for AlpineLinux, that would be fantastic."
                 echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-                exit 1
+                echo "See also https://github.com/ethereum/cpp-ethereum/issues/3156 where we are working through Alpine support."
+
+                # All our dependencies can be found in the Alpine Linux official repositories.
+                # See https://pkgs.alpinelinux.org/
+
+                apk update
+                apk add \
+                    boost-dev \
+                    build-base \
+                    cmake \
+                    gmp \
+                    jsoncpp-dev \
+                    leveldb \
+                    libcurl \
+                    libmicrohttpd \
+                    miniupnpc \
+                    zlib-dev
+
+                # We still need libjsonrpccpp
+
                 ;;
+
 
 #------------------------------------------------------------------------------
 # Debian
