@@ -396,11 +396,11 @@ case $(uname -s) in
 # See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
 
-            Ubuntu)
-                #Ubuntu
+            Ubuntu|LinuxMint)
+                #Ubuntu or LinuxMint
                 case $(lsb_release -cs) in
-                    trusty)
-                        #trusty
+                    trusty|rosa|rafaela|rebecca|qiana)
+                        #trusty or compatible LinuxMint distributions
                         echo "Installing cpp-ethereum dependencies on Ubuntu Trusty Tahr (14.04)."
                         echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" \
                         | sudo tee -a /etc/apt/sources.list > /dev/null
@@ -417,7 +417,7 @@ case $(uname -s) in
                         #wily
                         echo "Installing cpp-ethereum dependencies on Ubuntu Wily Werewolf (15.10)."
                         ;;
-                    xenial)
+                    xenial|sarah)
                         #xenial
                         echo "Installing cpp-ethereum dependencies on Ubuntu Xenial Xerus (16.04)."
                         echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main" \
