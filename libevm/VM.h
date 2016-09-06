@@ -136,11 +136,11 @@ private:
 	void reportStackUse();
 
 	std::vector<uint64_t> m_jumpDests;
-	uint64_t verifyJumpDest(u256 const& _dest);
+	int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
 	int poolConstant(const u256&);
 
-	void onOperation();
+	void doOnOperation();
 	void checkStack(unsigned _n, unsigned _d);
 	uint64_t gasForMem(u512 _size);
 	void updateIOGas();

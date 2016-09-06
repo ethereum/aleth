@@ -22,17 +22,83 @@ namespace eth
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// interpreter configuration macros
+// interpreter configuration macros for optimizations and tracing
+//
+// EVM_SWITCH_DISPATCH - dispatch via loop and switch
+// EVM_JUMP_DISPATCH - dispatch via a jump table - available only on GCC
+//
+// EVM_USE_CONSTANT_POOL - 256 constants unpacked and ready to assign to stack
+//
+// EVM_REPLACE_CONST_JUMP - with pre-verified jumps to save runtime lookup
+//
+// ETH_VMTRACE - set by cmake to enable tracing by testeth, ethvm and others
+//
+// EVM_TRACE - provides various levels of tracing that override ETH_VMTRACE
 
-//#define EVM_USE_CONSTANT_POOL
-//#define EVM_REPLACE_CONST_JUMP
-
-#if defined(EVM_USE_CONSTANT_POOL) || defined(EVM_REPLACE_CONST_JUMP)
-	#define EVM_DO_FIRST_PASS_OPTIMIZATION
+#if false
+	#define EVM_SWITCH_DISPATCH
+#elif defined(__GNUG__)
+	#define EVM_JUMP_DISPATCH
+#else
+	#error Gnu C++ required for EVM_JUMP_DISPATCH
 #endif
 
-#define EVM_SWITCH_DISPATCH
-//#define EVM_JUMP_DISPATCH
+#if true
+	#define EVM_REPLACE_CONST_JUMP
+#endif
+
+#if true
+	#define EVM_USE_CONSTANT_POOL
+#endif
+
+#if	defined(EVM_USE_CONSTANT_POOL) || \
+	defined(EVM_REPLACE_CONST_JUMP)
+	
+		#define EVM_DO_FIRST_PASS_OPTIMIZATION
+#endif
+
+
+#if ETH_VMTRACE
+	#define onOperation() doOnOperation()
+#else
+	#define onOperation()
+#endif
+
+// set this to 2, 1, or 0 for more, less, or no tracing to cerr
+#define EVM_TRACE 0
+#if EVM_TRACE
+
+	#undef onOperation
+	#if EVM_TRACE > 1
+		#define onOperation() \
+			(cerr <<"### "<< ++m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl)
+	#else
+		#define onOperation()
+	#endif
+	
+	#define TRACE_OP(level, i, op) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"*** "<< (i) <<" "<< instructionInfo(op).name <<endl;
+			
+	#define TRACE_PRE_OPT(level, i, op) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"@@@ "<< (i) <<" "<< instructionInfo(op).name <<endl;
+			
+	#define TRACE_POST_OPT(level, i, op) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"... "<< (i) <<" "<< instructionInfo(op).name <<endl;
+#else
+	#define TRACE_OP(level, i, op)
+	#define TRACE_PRE_OPT(level, i, op)
+	#define TRACE_POST_OPT(level, i, op)
+#endif
+
+// Executive swallows exceptions in some circumstances
+#if 0
+	#undef BOOST_THROW_EXCEPTION
+	#define BOOST_THROW_EXCEPTION(X) \
+		((cerr << "EVM EXCEPTION " << (X).what() << endl), abort())
+#endif
 
 
 #if defined(EVM_SWITCH_DISPATCH)
@@ -228,10 +294,10 @@ namespace eth
 			&&INVALID,  \
 			&&INVALID,  \
 			&&INVALID,  \
-			&&INVALID,  \
 			&&PUSHC,  \
 			&&JUMPV,  \
 			&&JUMPVI,  \
+			&&BAD,  \
 			&&INVALID,       /* B0, */  \
 			&&INVALID,  \
 			&&INVALID,  \

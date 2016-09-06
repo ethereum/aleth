@@ -16,9 +16,9 @@
 */
 
 
-#include "VM.h"
-#include "VMConfig.h"
 #include <libethereum/ExtVM.h>
+#include "VMConfig.h"
+#include "VM.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -40,10 +40,10 @@ void VM::initMetrics()
 	{
 		for (unsigned i = 0; i < 256; ++i)
 		{
-			InstructionInfo inst = instructionInfo((Instruction)i);
-			c_metrics[i].gasPriceTier = inst.gasPriceTier;
-			c_metrics[i].args = inst.args;
-			c_metrics[i].ret = inst.ret;
+			InstructionInfo op = instructionInfo((Instruction)i);
+			c_metrics[i].gasPriceTier = op.gasPriceTier;
+			c_metrics[i].args = op.args;
+			c_metrics[i].ret = op.ret;
 		}
 	}
 	done = true;
@@ -83,39 +83,53 @@ int VM::poolConstant(const u256& _con)
 }
 
 void VM::optimize()
-{	
+{
+	size_t nBytes = m_codeSpace.size();
+	
 	// build a table of jump destinations for use in verifyJumpDest
-	for (size_t i = 0; i < m_codeSpace.size(); ++i)
+	for (size_t i = 0; i < nBytes; ++i)
 	{
-		byte inst = m_code[i];
-
-		if (inst == (byte)Instruction::JUMPDEST)
+		Instruction op = Instruction(m_code[i]);
+		TRACE_OP(2, i, op);
+				
+		// make synthetic ops in user code trigger invalid instruction if run
+		if (op == Instruction::PUSHC ||
+		    op == Instruction::JUMPV ||
+		    op == Instruction::JUMPVI)
 		{
+			m_code[i] = (byte)Instruction::BAD;
+		}
+
+		if (op == Instruction::JUMPDEST)
+		{
+			TRACE_OP(1, i, op);
 			m_jumpDests.push_back(i);
 		}
-		else if ((byte)Instruction::PUSH1 <= inst && inst <= (byte)Instruction::PUSH32)
+		else if ((byte)Instruction::PUSH1 <= (byte)op &&
+		         (byte)op <= (byte)Instruction::PUSH32)
 		{
-			byte n = inst - (byte)Instruction::PUSH1 + 1;
-			i += n;
+			i += (byte)op - (byte)Instruction::PUSH1 + 1;
 		}
+		
 	}
 
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 
-	for (size_t i = 0; i < m_codeSpace.size(); ++i)
+	for (size_t i = 0; i < nBytes; ++i)
 	{
-		byte inst = m_code[i];
+		Instruction op = Instruction(m_code[i]);
 
-		if ((byte)Instruction::PUSH1 <= inst && inst <= (byte)Instruction::PUSH32)
+		if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
 		{
-			byte n = inst - (byte)Instruction::PUSH1 + 1;
+			byte n = (byte)op - (byte)Instruction::PUSH1 + 1;
 
 			// decode pushed bytes to integral value
 			u256 val = m_code[i+1];
 			for (uint64_t j = i+2, m = n; --m; ++j)
 				val = (val << 8) | m_code[j];
 
-	#ifdef EVM_USE_CONSTANT_POOL
+		#ifdef EVM_USE_CONSTANT_POOL
+			TRACE_PRE_OPT(1, i, op);
 	
 			// add value to constant pool and replace PUSHn with PUSHC if room
 			if (1 < n)
@@ -123,36 +137,46 @@ void VM::optimize()
 				int pool_off = poolConstant(val);
 				if (0 <= pool_off && pool_off < 256)
 				{
-					m_code[i] = (byte)Instruction::PUSHC;
+					m_code[i] = byte(op = Instruction::PUSHC);
 					m_code[i+1] = (byte)pool_off;
 					m_code[i+2] = n;
 				}
 			}
+			
+			TRACE_POST_OPT(1, i, op);
+		#endif
 
-	#endif
-
-	#ifdef EVM_REPLACE_CONST_JUMP
-	
+		#ifdef EVM_REPLACE_CONST_JUMP	
 			// replace JUMP or JUMPI to constant location with JUMPV or JUMPVI
 			// verifyJumpDest is M = log(number of jump destinations)
 			// outer loop is N = number of bytes in code array
-			// so complexity is N log (M)
+			// so complexity is N log M, worst case is N log N
 			size_t ii = i + n + 1;
-			byte op = m_code[ii];
-			if (op == (byte)Instruction::JUMP)
+			op = Instruction(m_code[ii]);
+			if (op == Instruction::JUMP)
 			{
-				if (verifyJumpDest(val))
-					m_code[ii] = (byte)Instruction::JUMPV;
+				TRACE_PRE_OPT(1, ii, op);
+				
+				if (0 <= verifyJumpDest(val, false))
+					m_code[ii] = byte(op = Instruction::JUMPV);
+				
+				TRACE_POST_OPT(1, ii, op);
 			}
-			else if (op == (byte)Instruction::JUMPI)
+			else if (op == Instruction::JUMPI)
 			{
-				if (verifyJumpDest(val))
-					m_code[ii] = (byte)Instruction::JUMPVI;
+				TRACE_PRE_OPT(1, ii, op);
+				
+				if (0 <= verifyJumpDest(val, false))
+					m_code[ii] = byte(op = Instruction::JUMPVI);
+				
+				TRACE_POST_OPT(1, ii, op);
 			}
-	#endif
+
+		#endif
 			
 			i += n;
 		}
+		
 	}	
 #endif
 	

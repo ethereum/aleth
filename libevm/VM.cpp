@@ -19,9 +19,9 @@
  * @date 2014
  */
 
-#include "VM.h"
-#include "VMConfig.h"
 #include <libethereum/ExtVM.h>
+#include "VMConfig.h"
+#include "VM.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -48,7 +48,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 //
 
 #if ETH_VMTRACE
-	void VM::onOperation()
+	void VM::doOnOperation()
 	{
 		if (*m_onOp)
 			(*m_onOp)(++m_nSteps, m_pc, m_op,
@@ -56,10 +56,9 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 				m_runGas, *m_io_gas, this, m_ext);
 	}
 #else
-	void VM::onOperation()
+	void VM::doOnOperation()
 	{
 	}
-	#define onOperation() ()
 #endif
 
 void VM::checkStack(unsigned _removed, unsigned _added)
@@ -131,7 +130,7 @@ bytesConstRef VM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 	m_ext = &_ext;
 	m_schedule = &m_ext->evmSchedule();
 	m_onOp = &_onOp;
-	m_onFail = &VM::onOperation;
+	m_onFail = &VM::doOnOperation;
 
 	// trampoline to minimize depth of call stack when calling out
 	m_bounce = &VM::initEntry;
@@ -717,16 +716,18 @@ void VM::interpretCases()
 			++m_pc;
 		CASE_END
 
-#ifdef EVM_USE_CONSTANT_POOL
 		CASE_BEGIN(PUSHC)
+#ifdef EVM_USE_CONSTANT_POOL
 			onOperation();
 			updateIOGas();
 
 			*++m_sp = m_pool[m_code[++m_pc]];
 //?			++m_pc;
 			m_pc += m_code[m_pc];
-		CASE_END
+#else
+			throwBadInstruction();
 #endif
+		CASE_END
 
 		CASE_BEGIN(PUSH1)
 			onOperation();
@@ -795,17 +796,20 @@ void VM::interpretCases()
 			m_sp -= 2;
 		CASE_END
 
-#ifdef EVM_REPLACE_CONST_JUMP
-
 		CASE_BEGIN(JUMPV)
+#ifdef EVM_REPLACE_CONST_JUMP
 			onOperation();
 			updateIOGas();
 
 			m_pc = uint64_t(*m_sp);
 			--m_sp;
+#else
+			throwBadInstruction();
+#endif
 		CASE_END
 
 		CASE_BEGIN(JUMPVI)
+#ifdef EVM_REPLACE_CONST_JUMP
 			onOperation();
 			updateIOGas();
 
@@ -814,8 +818,10 @@ void VM::interpretCases()
 			else
 				++m_pc;
 			m_sp -= 2;
-		CASE_END
+#else
+			throwBadInstruction();
 #endif
+		CASE_END
 
 		CASE_BEGIN(DUP1)
 		CASE_BEGIN(DUP2)
@@ -930,6 +936,10 @@ void VM::interpretCases()
 			onOperation();
 			updateIOGas();
 			++m_pc;
+		CASE_END
+
+		CASE_BEGIN(BAD)
+			throwBadInstruction();
 		CASE_END
 
 		CASE_DEFAULT

@@ -16,8 +16,9 @@
 */
 
 
-#include "VM.h"
 #include <libethereum/ExtVM.h>
+#include "VMConfig.h"
+#include "VM.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -39,10 +40,6 @@ void VM::copyDataToMemory(bytesConstRef _data, u256*& _sp)
 		std::memset(m_mem.data() + offset + sizeToBeCopied, 0, size - sizeToBeCopied);
 }
 
-
-// Executive swallows exceptions in some circumstances
-//#undef BOOST_THROW_EXCEPTION
-//#define BOOST_THROW_EXCEPTION(X) ((cerr << "VM EXCEPTION " << boost::diagnostic_information(X) << endl), abort())
 
 // consolidate exception throws to avoid spraying boost code all over interpreter
 
@@ -77,20 +74,21 @@ void VM::throwBadStack(unsigned _size, unsigned _n, unsigned _d)
 	}
 }
 
-uint64_t VM::verifyJumpDest(u256 const& _dest)
+int64_t VM::verifyJumpDest(u256 const& _dest, bool _throw)
 {
 	
 	// check for overflow
-	if (_dest > 0x7FFFFFFFFFFFFFFF)
-		throwBadJumpDestination();
+	if (_dest <= 0x7FFFFFFFFFFFFFFF) {
 
-	// check for within bounds and to a jump destination
-	// use binary search of array because hashtable collisions are exploitable
-	uint64_t pc = uint64_t(_dest);
-	if (!std::binary_search(m_jumpDests.begin(), m_jumpDests.end(), pc))
+		// check for within bounds and to a jump destination
+		// use binary search of array because hashtable collisions are exploitable
+		uint64_t pc = uint64_t(_dest);
+		if (std::binary_search(m_jumpDests.begin(), m_jumpDests.end(), pc))
+			return pc;
+	}
+	if (_throw)
 		throwBadJumpDestination();
-
-	return pc;
+	return -1;
 }
 
 
