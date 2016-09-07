@@ -6,13 +6,12 @@ macro(configure_project)
 		set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
 			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 	endif()
-	
+
 	# features
 	eth_default_option(VMTRACE OFF)
 	eth_default_option(PROFILING OFF)
 	eth_default_option(FATDB ON)
 	eth_default_option(ROCKSDB OFF)
-	eth_default_option(OLYMPIC OFF)
 	eth_default_option(PARANOID OFF)
 	eth_default_option(MINIUPNPC ON)
 
@@ -48,13 +47,6 @@ macro(configure_project)
 	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
 	# Common code has no business knowing which application it is part of.
 	add_definitions(-DETH_TRUE)
-
-	# TODO:  Why do we even bother with Olympic support anymore?
-	if (OLYMPIC)
-		add_definitions(-DETH_OLYMPIC)
-	else()
-		add_definitions(-DETH_FRONTIER)
-	endif()
 
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
@@ -123,9 +115,6 @@ if (SUPPORT_FATDB)
 endif()
 if (SUPPORT_ROCKSDB)
 	message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
-endif()
-if (SUPPORT_OLYMPIC)
-	message("-- OLYMPIC          Default to the Olympic network           ${OLYMPIC}")
 endif()
 if (SUPPORT_PARANOID)
 	message("-- PARANOID         -                                        ${PARANOID}")
