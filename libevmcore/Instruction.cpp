@@ -322,9 +322,9 @@ void dev::eth::eachInstruction(
 		u256 data;
 		for (size_t i = 0; i < additional; ++i)
 		{
-		data <<= 8;
-		if (++it < _mem.end())
-		    data |= *it;
+			data <<= 8;
+			if (++it < _mem.end())
+				data |= *it;
 		}
 		_onInstruction(instr, data);
 	}
@@ -335,13 +335,13 @@ string dev::eth::disassemble(bytes const& _mem)
 	stringstream ret;
 	eachInstruction(_mem, [&](Instruction _instr, u256 const& _data) {
 		if (!isValidInstruction(_instr))
-		ret << "0x" << hex << int(_instr) << " ";
+			ret << "0x" << hex << int(_instr) << " ";
 		else
 		{
-		InstructionInfo info = instructionInfo(_instr);
-		ret << info.name << " ";
-		if (info.additional)
-		    ret << "0x" << hex << _data << " ";
+			InstructionInfo info = instructionInfo(_instr);
+			ret << info.name << " ";
+			if (info.additional)
+				ret << "0x" << hex << _data << " ";
 		}
 	});
 	return ret.str();
