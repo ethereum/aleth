@@ -126,10 +126,11 @@ case $(uname -s) in
         # which doesn't like being updated, so we need to uninstall it
         # first, so that the installation step below is a clean install.
         brew uninstall gmp
-        
+
         # And finally install all the external dependencies.
         brew install \
             boost \
+            ccache \
             cmake \
             cryptopp \
             gmp \
