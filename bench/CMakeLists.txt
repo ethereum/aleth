@@ -19,9 +19,5 @@ if (UNIX AND NOT APPLE)
 	target_link_libraries(bench pthread)
 endif()
 
-if (APPLE)
-	install(TARGETS bench DESTINATION bin)
-else()
-	eth_install_executable(bench)
-endif()
+eth_install_executable(bench)
 

@@ -100,12 +100,7 @@ endmacro()
 
 macro(eth_install_executable EXECUTABLE)
 
-	if (APPLE)
-
-		# TODO - Why is this different than the branch Linux below, which has the RUNTIME keyword too?
-		install(TARGETS ${EXECUTABLE} DESTINATION bin)
-
-	elseif (MSVC)
+	if (MSVC)
 
 		set(COMPONENT ${EXECUTABLE})
 

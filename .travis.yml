@@ -107,7 +107,9 @@ install:
 before_script:
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
 script:
-    - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
+    - cd $TRAVIS_BUILD_DIR/build
+      && ../scripts/tests.sh $TRAVIS_TESTS
+      && ../scripts/release.sh $ZIP_SUFFIX $TRAVIS_TESTS
 
 deploy:
     # This is the deploy target for the native build (Linux and macOS)
