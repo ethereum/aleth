@@ -1,7 +1,7 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #------------------------------------------------------------------------------
-# Bash script for installing pre-requisite packages for cpp-ethereum on a
+# Shell script for installing pre-requisite packages for cpp-ethereum on a
 # variety of Linux and other UNIX-derived platforms.
 #
 # This is an "infrastucture-as-code" alternative to the manual build
@@ -12,16 +12,8 @@
 # flow for all supported operating systems:
 #
 # - git clone --recursive
-# - ./install_deps.sh
+# - ./scripts/install_deps.sh
 # - cmake && make
-#
-# At the time of writing we are assuming that 'lsb_release' is present for all
-# Linux distros, which is not a valid assumption.  We will need a variety of
-# approaches to actually get this working across all the distros which people
-# are using.
-#
-# See http://unix.stackexchange.com/questions/92199/how-can-i-reliably-get-the-operating-systems-name
-# for some more background on this common problem.
 #
 # TODO - There is no support here yet for cross-builds in any form, only
 # native builds.  Expanding the functionality here to cover the mobile,
@@ -168,50 +160,55 @@ case $(uname -s) in
 
 #------------------------------------------------------------------------------
 # Linux
+
+
 #------------------------------------------------------------------------------
 
     Linux)
+        case $(detect_linux_distro) in
 
 #------------------------------------------------------------------------------
 # Arch Linux
 #------------------------------------------------------------------------------
 
-        if [ -f "/etc/arch-release" ]; then
+            Arch)
+                #Arch
+                echo "Installing cpp-ethereum dependencies on Arch Linux."
 
-            echo "Installing cpp-ethereum dependencies on Arch Linux."
+                # The majority of our dependencies can be found in the
+                # Arch Linux official repositories.
+                # See https://wiki.archlinux.org/index.php/Official_repositories
+                pacman -Sy --noconfirm \
+                    autoconf \
+                    automake \
+                    gcc \
+                    libtool \
+                    boost \
+                    cmake \
+                    crypto++ \
+                    git \
+                    leveldb \
+                    libcl \
+                    libmicrohttpd \
+                    miniupnpc \
+                    opencl-headers
 
-            # The majority of our dependencies can be found in the
-            # Arch Linux official repositories.
-            # See https://wiki.archlinux.org/index.php/Official_repositories
-            pacman -Sy --noconfirm \
-                autoconf \
-                automake \
-                gcc \
-                libtool \
-                boost \
-                cmake \
-                crypto++ \
-                git \
-                leveldb \
-                libcl \
-                libmicrohttpd \
-                miniupnpc \
-                opencl-headers
+                rm -rf libjson-rpc-cpp-git
+                git clone http://aur.archlinux.org/libjson-rpc-cpp-git.git libjson-rpc-cpp-git
+                cd libjson-rpc-cpp-git
+                makepkg
+                pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
+                cd ../..
 
-            rm -rf libjson-rpc-cpp-git
-            git clone http://aur.archlinux.org/libjson-rpc-cpp-git.git libjson-rpc-cpp-git
-            cd libjson-rpc-cpp-git
-            makepkg
-            pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
-            cd ../..
-
-        fi
-
-        case $(lsb_release -is) in
-
+                ;;
 
 #------------------------------------------------------------------------------
 # Alpine Linux
+#
+# See @rainbeam's https://github.com/rainbeam/eth-static/blob/master/Dockerfile
+# for reference.  Rain builds static executables, which we would like to do
+# as well, but at the current time, the focus here is on builds using dynamic
+# libraries - ie. 'normal' cpp-ethereum build.
 #------------------------------------------------------------------------------
 
             "Alpine Linux")
@@ -222,26 +219,27 @@ case $(uname -s) in
                 echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
                 echo "See also https://github.com/ethereum/cpp-ethereum/issues/3156 where we are working through Alpine support."
 
-                # All our dependencies can be found in the Alpine Linux official repositories.
-                # See https://pkgs.alpinelinux.org/
-
+                # The majority of the dependencies can be found in the Alpine
+                # Linux official repositories.  See https://pkgs.alpinelinux.org/
                 apk update
                 apk add \
                     boost-dev \
                     build-base \
                     cmake \
-                    gmp \
-                    jsoncpp-dev \
-                    leveldb \
-                    libcurl \
-                    libmicrohttpd \
-                    miniupnpc \
+                    curl-dev \
+                    gmp-dev \
+                    libmicrohttpd-dev \
+                    openssl-dev \
                     zlib-dev
 
-                # We still need libjsonrpccpp
+                # TODO - Build the following from source, following Rain's steps.
+                #git clone https://github.com/mmoss/cryptopp.git
+                #git clone https://github.com/open-source-parsers/jsoncpp.git
+                #git clone https://github.com/cinemast/libjson-rpc-cpp
+                #git clone https://github.com/google/leveldb
+                #git clone https://github.com/miniupnp/miniupnp
 
                 ;;
-
 
 #------------------------------------------------------------------------------
 # Debian
