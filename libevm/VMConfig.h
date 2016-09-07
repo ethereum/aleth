@@ -35,7 +35,7 @@ namespace eth
 //
 // EVM_TRACE - provides various levels of tracing that override ETH_VMTRACE
 
-#if false
+#if true
 	#define EVM_SWITCH_DISPATCH
 #elif defined(__GNUG__)
 	#define EVM_JUMP_DISPATCH
@@ -43,11 +43,11 @@ namespace eth
 	#error Gnu C++ required for EVM_JUMP_DISPATCH
 #endif
 
-#if true
+#if false
 	#define EVM_REPLACE_CONST_JUMP
 #endif
 
-#if true
+#if false
 	#define EVM_USE_CONSTANT_POOL
 #endif
 
