@@ -76,21 +76,21 @@ namespace eth
 		#define onOperation()
 	#endif
 	
-	#define TRACE_OP(level, i, op) \
+	#define TRACE_OP(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
-			cerr <<"*** "<< (i) <<" "<< instructionInfo(op).name <<endl;
+			cerr <<"*** "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 			
-	#define TRACE_PRE_OPT(level, i, op) \
+	#define TRACE_PRE_OPT(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
-			cerr <<"@@@ "<< (i) <<" "<< instructionInfo(op).name <<endl;
+			cerr <<"@@@ "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 			
-	#define TRACE_POST_OPT(level, i, op) \
+	#define TRACE_POST_OPT(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
-			cerr <<"... "<< (i) <<" "<< instructionInfo(op).name <<endl;
+			cerr <<"... "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 #else
-	#define TRACE_OP(level, i, op)
-	#define TRACE_PRE_OPT(level, i, op)
-	#define TRACE_POST_OPT(level, i, op)
+	#define TRACE_OP(level, pc, op)
+	#define TRACE_PRE_OPT(level, pc, op)
+	#define TRACE_POST_OPT(level, pc, op)
 #endif
 
 // Executive swallows exceptions in some circumstances
