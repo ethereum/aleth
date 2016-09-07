@@ -58,6 +58,7 @@ namespace eth
 #endif
 
 
+#define ETH_VMTRACE 1 // turn on for now until others catch up
 #if ETH_VMTRACE
 	#define onOperation() doOnOperation()
 #else
