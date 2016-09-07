@@ -37,15 +37,6 @@ const char* WorkChannel::name() { return EthOrange "⚒" EthWhite "  "; }
 
 namespace dev { namespace eth { const u256 c_maxGasEstimate = 50000000; } }
 
-Block ClientBase::asOf(BlockNumber _h) const
-{
-	if (_h == PendingBlock)
-		return postSeal();
-	else if (_h == LatestBlock)
-		return preSeal();
-	return asOf(bc().numberHash(_h));
-}
-
 pair<h256, Address> ClientBase::submitTransaction(TransactionSkeleton const& _t, Secret const& _secret)
 {
 	prepareForTransaction();
@@ -71,7 +62,7 @@ ExecutionResult ClientBase::call(Address const& _from, u256 _value, Address _des
 	ExecutionResult ret;
 	try
 	{
-		Block temp = asOf(_blockNumber);
+		Block temp = block(_blockNumber);
 		u256 nonce = max<u256>(temp.transactionsFrom(_from), m_tq.maxNonce(_from));
 		u256 gas = _gas == Invalid256 ? gasLimitRemaining() : _gas;
 		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
@@ -93,7 +84,7 @@ ExecutionResult ClientBase::create(Address const& _from, u256 _value, bytes cons
 	ExecutionResult ret;
 	try
 	{
-		Block temp = asOf(_blockNumber);
+		Block temp = block(_blockNumber);
 		u256 n = temp.transactionsFrom(_from);
 		//	cdebug << "Nonce at " << toAddress(_secret) << " pre:" << m_preSeal.transactionsFrom(toAddress(_secret)) << " post:" << m_postSeal.transactionsFrom(toAddress(_secret));
 		Transaction t(_value, _gasPrice, _gas, _data, n);
@@ -117,7 +108,7 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 		if (upperBound == Invalid256 || upperBound > c_maxGasEstimate)
 			upperBound = c_maxGasEstimate;
 		u256 lowerBound = (u256)Transaction::gasRequired(!_dest, &_data, EVMSchedule(), 0);
-		Block block = asOf(_blockNumber);
+		Block bk = block(_blockNumber);
 		u256 gasPrice = _gasPrice == Invalid256 ? gasBidPrice() : _gasPrice;
 		ExecutionResult er;
 		ExecutionResult lastGood;
@@ -125,16 +116,16 @@ std::pair<u256, ExecutionResult> ClientBase::estimateGas(Address const& _from, u
 		while (upperBound != lowerBound)
 		{
 			u256 mid = (lowerBound + upperBound) / 2;
-			u256 n = block.transactionsFrom(_from);
+			u256 n = bk.transactionsFrom(_from);
 			Transaction t;
 			if (_dest)
 				t = Transaction(_value, gasPrice, mid, _dest, _data, n);
 			else
 				t = Transaction(_value, gasPrice, mid, _data, n);
 			t.forceSender(_from);
-			EnvInfo env(block.info(), bc().lastHashes(), 0);
-			env.setGasLimit(mid);
-			State tempState(block.state());
+			EnvInfo env(bk.info(), bc().lastHashes(), 0);
+			env.setGasLimit(mid.convert_to<int64_t>());
+			State tempState(bk.state());
 			tempState.addBalance(_from, (u256)(t.gas() * t.gasPrice() + t.value()));
 			er = tempState.execute(env, bc().sealEngine(), t, Permanence::Reverted).first;
 			if (er.excepted == TransactionException::OutOfGas ||
@@ -171,37 +162,37 @@ ImportResult ClientBase::injectBlock(bytes const& _block)
 
 u256 ClientBase::balanceAt(Address _a, BlockNumber _block) const
 {
-	return asOf(_block).balance(_a);
+	return block(_block).balance(_a);
 }
 
 u256 ClientBase::countAt(Address _a, BlockNumber _block) const
 {
-	return asOf(_block).transactionsFrom(_a);
+	return block(_block).transactionsFrom(_a);
 }
 
 u256 ClientBase::stateAt(Address _a, u256 _l, BlockNumber _block) const
 {
-	return asOf(_block).storage(_a, _l);
+	return block(_block).storage(_a, _l);
 }
 
 h256 ClientBase::stateRootAt(Address _a, BlockNumber _block) const
 {
-	return asOf(_block).storageRoot(_a);
+	return block(_block).storageRoot(_a);
 }
 
 bytes ClientBase::codeAt(Address _a, BlockNumber _block) const
 {
-	return asOf(_block).code(_a);
+	return block(_block).code(_a);
 }
 
 h256 ClientBase::codeHashAt(Address _a, BlockNumber _block) const
 {
-	return asOf(_block).codeHash(_a);
+	return block(_block).codeHash(_a);
 }
 
 unordered_map<u256, u256> ClientBase::storageAt(Address _a, BlockNumber _block) const
 {
-	return asOf(_block).storage(_a);
+	return block(_block).storage(_a);
 }
 
 // TODO: remove try/catch, allow exceptions
@@ -516,20 +507,20 @@ BlockDetails ClientBase::pendingDetails() const
 
 StateDiff ClientBase::diff(unsigned _txi, h256 _block) const
 {
-	Block b = asOf(_block);
+	Block b = block(_block);
 	return b.fromPending(_txi).diff(b.fromPending(_txi + 1), true);
 }
 
 StateDiff ClientBase::diff(unsigned _txi, BlockNumber _block) const
 {
-	Block b = asOf(_block);
+	Block b = block(_block);
 	return b.fromPending(_txi).diff(b.fromPending(_txi + 1), true);
 }
 
 Addresses ClientBase::addresses(BlockNumber _block) const
 {
 	Addresses ret;
-	for (auto const& i: asOf(_block).addresses())
+	for (auto const& i: block(_block).addresses())
 		ret.push_back(i.first);
 	return ret;
 }
@@ -598,5 +589,14 @@ bool ClientBase::isKnownTransaction(h256 const& _transactionHash) const
 
 bool ClientBase::isKnownTransaction(h256 const& _blockHash, unsigned _i) const
 {
-	return isKnown(_blockHash) && asOf(_blockHash).pending().size() > _i;
+	return isKnown(_blockHash) && block(_blockHash).pending().size() > _i;
+}
+
+Block ClientBase::block(BlockNumber _h) const
+{
+	if (_h == PendingBlock)
+		return postSeal();
+	else if (_h == LatestBlock)
+		return preSeal();
+	return block(bc().numberHash(_h));
 }

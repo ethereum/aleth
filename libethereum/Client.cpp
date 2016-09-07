@@ -117,22 +117,6 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 	startWorking();
 }
 
-Block Client::asOf(h256 const& _block) const
-{
-	try
-	{
-		Block ret(bc(), m_stateDB);
-		ret.populateFromChain(bc(), _block);
-		return ret;
-	}
-	catch (Exception& ex)
-	{
-		ex << errinfo_block(bc().block(_block));
-		onBadBlock(ex);
-		return Block(bc());
-	}
-}
-
 ImportResult Client::queueBlock(bytes const& _block, bool _isSafe)
 {
 	if (m_bq.status().verified + m_bq.status().verifying + m_bq.status().unverified > 10000)
@@ -750,6 +734,22 @@ void Client::prepareForTransaction()
 	startWorking();
 }
 
+Block Client::block(h256 const& _block) const
+{
+	try
+	{
+		Block ret(bc(), m_stateDB);
+		ret.populateFromChain(bc(), _block);
+		return ret;
+	}
+	catch (Exception& ex)
+	{
+		ex << errinfo_block(bc().block(_block));
+		onBadBlock(ex);
+		return Block(bc());
+	}
+}
+
 Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 {
 	try
@@ -764,7 +764,7 @@ Block Client::block(h256 const& _blockHash, PopulationStatistics* o_stats) const
 	{
 		ex << errinfo_block(bc().block(_blockHash));
 		onBadBlock(ex);
-		return Block(chainParams().accountStartNonce);
+		return Block(bc());
 	}
 }
 

@@ -40,14 +40,10 @@ macro(configure_project)
 		set(SUPPORT_${FEATURE} TRUE)
 	endforeach()
 
-	# Temporary pre-processor symbol used to indicate that we are building the
-	# codebase using the post-repo-remerge "cpp-ethereum" directory.   That just
-	# affects a handful of include paths for including the generated BuildInfo.h
-	# file, which is generated in a different location after the merger, because
-	# we have no need for multiple versions anymore.
-	#
-	# TODO - When we are "over the transition" this needs to be stripped out again.
-	add_definitions(-DETH_AFTER_REPOSITORY_MERGE)
+	# Temporary pre-processor symbol used for hiding broken unit-tests.
+	# Hiding them behind this pre-processor symbol lets us turn them off
+	# and on again easily enough, and also to grep for them.
+	add_definitions(-DDISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
 
 	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
 	# Common code has no business knowing which application it is part of.

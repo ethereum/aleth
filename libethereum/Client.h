@@ -111,7 +111,7 @@ public:
 
 	// [PRIVATE API - only relevant for base clients, not available in general]
 	/// Get the block.
-	dev::eth::Block block(h256 const& _blockHash, PopulationStatistics* o_stats = nullptr) const;
+	dev::eth::Block block(h256 const& _blockHash, PopulationStatistics* o_stats) const;
 	/// Get the state of the given block part way through execution, immediately before transaction
 	/// index @a _txi.
 	dev::eth::State state(unsigned _txi, h256 const& _block) const;
@@ -199,6 +199,9 @@ public:
 	/// Queues a function to be executed in the main thread (that owns the blockchain, etc).
 	void executeInMainThread(std::function<void()> const& _function);
 
+	virtual Block block(h256 const& _block) const override;
+	using ClientBase::block;
+
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
@@ -210,8 +213,6 @@ protected:
 
 	/// Returns the state object for the full block (i.e. the terminal state) for index _h.
 	/// Works properly with LatestBlock and PendingBlock.
-	using ClientBase::asOf;
-	virtual Block asOf(h256 const& _block) const override;
 	virtual Block preSeal() const override { ReadGuard l(x_preSeal); return m_preSeal; }
 	virtual Block postSeal() const override { ReadGuard l(x_postSeal); return m_postSeal; }
 	virtual void prepareForTransaction() override;

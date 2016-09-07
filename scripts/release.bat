@@ -34,9 +34,7 @@ set TESTS=%3
     .\build\ethminer\%CONFIGURATION%\ethminer.exe ^
     .\build\ethvm\%CONFIGURATION%\ethvm.exe ^
     .\build\rlp\%CONFIGURATION%\rlp.exe ^
-    .\build\test\libethereum\test\%CONFIGURATION%\testeth.exe ^
-    .\build\test\libweb3core\test\%CONFIGURATION%\testweb3core.exe ^
-    .\build\test\webthree\test\%CONFIGURATION%\testweb3.exe ^
+    .\build\test\%CONFIGURATION%\testeth.exe ^
     "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\redist\x86\Microsoft.VC140.CRT\msvc*.dll" ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libcurl.dll ^
     %ETHEREUM_DEPS_PATH%\x64\bin\libmicrohttpd-dll.dll ^

@@ -31,35 +31,23 @@ TESTS=$1
 # There is an implicit assumption here that we HAVE to run from build directory.
 BUILD_ROOT=$(pwd)
 
-# TODO Add handling for error codes
 if [[ "$TESTS" == "On" ]]; then
 
+    # Clone the end-to-end test repo, and point environment variable at it.
     cd ../..
     git clone https://github.com/ethereum/tests.git
     export ETHEREUM_TEST_PATH=$(pwd)/tests/
+
+    # Run the tests for the Interpreter
     cd cpp-ethereum/build
+    $BUILD_ROOT/test/testeth
 
-    $BUILD_ROOT/test/libethereum/test/testeth
-    $BUILD_ROOT/test/libweb3core/test/testweb3core
-
-    # Disable testweb3 tests for Ubuntu temporarily.  It looks like they are
-    # hanging.  Maybe some OpenCL configuration issue, or maybe something else?
-    #
-    # See, for example, https://travis-ci.org/ethereum/cpp-ethereum/jobs/152901242
-    #
-    # modprobe: ERROR: could not insert 'fglrx': No such device
-    # Error: Fail to load fglrx kernel module!
-    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
-    # modprobe: ERROR: could not insert 'fglrx': No such device
-    # Error: Fail to load fglrx kernel module!
-    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
-    # modprobe: ERROR: could not insert 'fglrx': No such device
-    # Error: Fail to load fglrx kernel module!
-    # Error! Fail to load fglrx kernel module! Maybe you can switch to root user to load kernel module directly
-    # No output has been received in the last 10m0s, this potentially indicates a stalled build or something wrong with the build itself.
-
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        $BUILD_ROOT/test/webthree/test/testweb3
+    # Run the tests for the JIT (but only for Ubuntu, not macOS)
+    # The whole automation process is too slow for macOS, and we don't have
+    # enough time to build LLVM, build EVMJIT and run the tests twice within
+    # the 48 minute absolute maximum run time for TravisCI.
+    if [[ "$OSTYPE" != "darwin"* ]]; then
+        $BUILD_ROOT/test/testeth -t VMTests,StateTests -- --vm jit
     fi
 
 fi

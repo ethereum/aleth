@@ -95,7 +95,7 @@ evm_variant evm_query(
 		v.uint256 = toEvmC(env.envInfo().difficulty());
 		break;
 	case EVM_GAS_LIMIT:
-		v.uint256 = toEvmC(env.envInfo().gasLimit());
+		v.int64 = env.envInfo().gasLimit();
 		break;
 	case EVM_NUMBER:
 		// TODO: Handle overflow / exception
@@ -248,12 +248,13 @@ class EVM
 {
 public:
 	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn):
-		m_instance(evm_create(_queryFn, _updateFn, _callFn))
+		m_interface(evmjit_get_interface()),
+		m_instance(m_interface.create(_queryFn, _updateFn, _callFn))
 	{}
 
 	~EVM()
 	{
-		evm_destroy(m_instance);
+		m_interface.destroy(m_instance);
 	}
 
 	EVM(EVM const&) = delete;
@@ -262,15 +263,26 @@ public:
 	class Result
 	{
 	public:
-		Result(evm_result const& _result):
-			m_result(_result)
+		Result(evm_result const& _result, evm_release_result_fn _release):
+			m_result(_result),
+			m_release(_release)
 		{}
 
 		~Result()
 		{
-			// TODO: Decide when the result has to be destroyed.
-			evm_destroy_result(m_result);
+			m_release(&m_result);
 		}
+
+		Result(Result&& _other):
+			m_result(_other.m_result)
+		{
+			// FIXME: It is not perfect as we must know what will be released
+			//        by evm_release_result().
+			_other.m_result.internal_memory = nullptr;
+		}
+
+		Result(Result const&) = delete;
+		Result& operator=(Result const&) = delete;
 
 		int64_t gasLeft() const
 		{
@@ -284,6 +296,7 @@ public:
 
 	private:
 		evm_result m_result;
+		evm_release_result_fn m_release;
 	};
 
 	/// Handy wrapper for evm_execute().
@@ -292,26 +305,34 @@ public:
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
 		                                                : EVM_FRONTIER;
-		return evm_execute(
+		return {m_interface.execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
 			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
 			toEvmC(_ext.value)
-		);
+		), m_interface.release_result};
 	}
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
 	{
-		return evmjit_is_code_ready(m_instance, _mode, toEvmC(_codeHash));
+		return m_interface.get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
 	}
 
 	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
 	{
-		evmjit_compile(
+		m_interface.prepare_code(
 			m_instance, _mode, _code.data(), _code.size(), toEvmC(_codeHash)
 		);
 	}
 
 private:
+	/// VM interface -- contains pointers to VM's methods.
+	///
+	/// @internal
+	/// This field does not have initializer because old versions of GCC emit
+	/// invalid warning about `= {}`. The field is initialized in ctors.
+	evm_interface m_interface;
+
+	/// The VM instance created with m_interface.create().
 	evm_instance* m_instance = nullptr;
 };
 

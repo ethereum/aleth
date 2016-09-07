@@ -176,14 +176,14 @@ public:
 
 	virtual SyncStatus syncStatus() const override { BOOST_THROW_EXCEPTION(InterfaceNotSupported("ClientBase::syncStatus")); }
 
-	Block asOf(BlockNumber _h) const;
+	Block block(BlockNumber _h) const;
 
 protected:
 	/// The interface that must be implemented in any class deriving this.
 	/// {
 	virtual BlockChain& bc() = 0;
 	virtual BlockChain const& bc() const = 0;
-	virtual Block asOf(h256 const& _h) const = 0;
+	virtual Block block(h256 const& _h) const = 0;
 	virtual Block preSeal() const = 0;
 	virtual Block postSeal() const = 0;
 	virtual void prepareForTransaction() = 0;
