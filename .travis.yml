@@ -68,15 +68,10 @@ matrix:
 
         # OS X El Capitan (10.11)
         # https://en.wikipedia.org/wiki/OS_X_El_Capitan
-        #
-        # TODO - Tests are currently disabled because they are consistently
-        # running into the 48min timeout.  We need to make this process
-        # quicker.
 
         - os: osx
           osx_image: xcode7.3
           env:
-              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-elcapitan
 
         # macOS Sierra (10.12)
