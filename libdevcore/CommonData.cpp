@@ -37,7 +37,7 @@ using namespace dev;
 
 namespace
 {
-int _fromHex(char _i) noexcept
+int fromHexChar(char _i) noexcept
 {
 	if (_i >= '0' && _i <= '9')
 		return _i - '0';
@@ -54,7 +54,7 @@ bool dev::isHex(string const& _s) noexcept
 	auto it = _s.begin();
 	if (_s.compare(0, 2, "0x") == 0)
 		it += 2;
-	return std::all_of(it, _s.end(), [](char c){ return _fromHex(c) != -1; });
+	return std::all_of(it, _s.end(), [](char c){ return fromHexChar(c) != -1; });
 }
 
 std::string dev::escaped(std::string const& _s, bool _all)
@@ -104,7 +104,7 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 
 	if (_s.size() % 2)
 	{
-		int h = _fromHex(_s[s++]);
+		int h = fromHexChar(_s[s++]);
 		if (h != -1)
 			ret.push_back(h);
 		else if (_throw == WhenError::Throw)
@@ -114,8 +114,8 @@ bytes dev::fromHex(std::string const& _s, WhenError _throw)
 	}
 	for (unsigned i = s; i < _s.size(); i += 2)
 	{
-		int h = _fromHex(_s[i]);
-		int l = _fromHex(_s[i + 1]);
+		int h = fromHexChar(_s[i]);
+		int l = fromHexChar(_s[i + 1]);
 		if (h != -1 && l != -1)
 			ret.push_back((byte)(h * 16 + l));
 		else if (_throw == WhenError::Throw)
