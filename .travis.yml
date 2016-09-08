@@ -100,12 +100,13 @@ git:
 cache:
     ccache: true
     directories:
-        - build
         - ~/.ethash
 install:
     - ./scripts/install_deps.sh
 before_script:
+    - if type ccache; then ccache -M 2G; ccache -s; fi
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
+    - if type ccache; then ccache -s; fi
 script:
     - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
 

@@ -41,4 +41,17 @@ BOOST_AUTO_TEST_CASE(byteRef)
 	BOOST_CHECK_MESSAGE(out.toBytes() == originalSequence, "Error when h256::ref().copyTo(dev::bytesRef out)");
 }
 
+BOOST_AUTO_TEST_CASE(isHex)
+{
+	BOOST_CHECK(dev::isHex("0x"));
+	BOOST_CHECK(dev::isHex("0xA"));
+	BOOST_CHECK(dev::isHex("0xAB"));
+	BOOST_CHECK(dev::isHex("0x0AA"));
+	BOOST_CHECK(!dev::isHex("0x0Ag"));
+	BOOST_CHECK(!dev::isHex("0Ag"));
+	BOOST_CHECK(!dev::isHex(" "));
+	BOOST_CHECK(dev::isHex("aa"));
+	BOOST_CHECK(dev::isHex("003"));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
