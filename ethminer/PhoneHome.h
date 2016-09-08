@@ -18,7 +18,7 @@ class PhoneHome : public jsonrpc::Client
             p.append(param1);
             p.append(param2);
             Json::Value result = this->CallMethod("report_benchmark",p);
-            if (result.isInt())
+            if (result.isIntegral())
                 return result.asInt();
             else
                 throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_CLIENT_INVALID_RESPONSE, result.toStyledString());
