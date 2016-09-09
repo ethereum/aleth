@@ -31,8 +31,6 @@ namespace eth
 //
 // EVM_REPLACE_CONST_JUMP - with pre-verified jumps to save runtime lookup
 //
-// ETH_VMTRACE - set by cmake to enable tracing by testeth, ethvm and others
-//
 // EVM_TRACE - provides various levels of tracing that override ETH_VMTRACE
 
 #if true
@@ -47,35 +45,35 @@ namespace eth
 	#define EVM_REPLACE_CONST_JUMP
 #endif
 
-#if false
+#if true
 	#define EVM_USE_CONSTANT_POOL
 #endif
 
 #if	defined(EVM_USE_CONSTANT_POOL) || \
 	defined(EVM_REPLACE_CONST_JUMP)
-	
 		#define EVM_DO_FIRST_PASS_OPTIMIZATION
 #endif
 
 
-#if ETH_VMTRACE
-	#define onOperation() doOnOperation()
-#else
-	#define onOperation()
-#endif
-
 // set this to 2, 1, or 0 for more, less, or no tracing to cerr
 #define EVM_TRACE 0
-#if EVM_TRACE
+#if EVM_TRACE > 0
 
-	#undef onOperation
+	#undef ON_OP
 	#if EVM_TRACE > 1
-		#define onOperation() \
+		#define ON_OP() \
 			(cerr <<"### "<< ++m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl)
 	#else
-		#define onOperation()
+		#define ON_OP()
 	#endif
 	
+	#define TRACE_STR(level, str) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"$$$ "<< (str) <<endl;
+			
+	#define TRACE_VAL(level, name, val) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"=== "<< (name) <<" "<< (val) <<endl;
 	#define TRACE_OP(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
 			cerr <<"*** "<< (pc) <<" "<< instructionInfo(op).name <<endl;
@@ -88,16 +86,19 @@ namespace eth
 		if ((level) <= EVM_TRACE) \
 			cerr <<"... "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 #else
+	#define TRACE_STR(level, str)
+	#define TRACE_VAL(level, name, val)
 	#define TRACE_OP(level, pc, op)
 	#define TRACE_PRE_OPT(level, pc, op)
 	#define TRACE_POST_OPT(level, pc, op)
+	#define ON_OP() onOperation()
 #endif
 
 // Executive swallows exceptions in some circumstances
 #if 0
 	#undef BOOST_THROW_EXCEPTION
 	#define BOOST_THROW_EXCEPTION(X) \
-		((cerr << "EVM EXCEPTION " << (X).what() << endl), abort())
+		((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), abort())
 #endif
 
 
@@ -386,13 +387,15 @@ namespace eth
 			return;  \
 		}
 
-	#define DO_CASES fetchInstruction(); goto *jumpTable[(byte)m_op];
+	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_op];
 	#define CASE_BEGIN(label) label:
 	#define CASE_END fetchInstruction(); goto *jumpTable[m_code[m_pc]];
 	#define CASE_RETURN return;
 	#define CASE_DEFAULT INVALID:
 	#define END_CASES
 	
+#else
+	#error No opcode dispatch configured
 #endif
 
 }}

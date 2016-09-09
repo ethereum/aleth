@@ -68,16 +68,24 @@ void VM::initEntry()
 
 int VM::poolConstant(const u256& _con)
 {
-	int i = 0, n = m_poolSpace.size();
-	while (i < n)
+	TRACE_VAL(2, "constant to pool", _con);
+	int i = 0, n = m_pool.size();
+	for (; i < n; ++i)
 	{
-		if (m_poolSpace[i] == _con)
+		const u256& pooled = m_pool[i];
+		TRACE_VAL(2, "pooled constant", pooled);
+		if (_con == pooled)
 			return i;
 	}
 	if (i <= 255 )
 	{
-		m_poolSpace.push_back(_con);
+		TRACE_VAL(1, "put constant in pool", _con);
+		m_pool.push_back(_con);
 		return i;
+	}
+	else
+	{
+		TRACE_STR(1, "constant pool overflow");
 	}
 	return -1;
 }
@@ -85,8 +93,10 @@ int VM::poolConstant(const u256& _con)
 void VM::optimize()
 {
 	size_t nBytes = m_codeSpace.size();
-	
+
 	// build a table of jump destinations for use in verifyJumpDest
+	
+	TRACE_STR(1, "Build JUMPDEST table")
 	for (size_t i = 0; i < nBytes; ++i)
 	{
 		Instruction op = Instruction(m_code[i]);
@@ -97,12 +107,12 @@ void VM::optimize()
 		    op == Instruction::JUMPV ||
 		    op == Instruction::JUMPVI)
 		{
+			TRACE_OP(1, i, op);
 			m_code[i] = (byte)Instruction::BAD;
 		}
 
 		if (op == Instruction::JUMPDEST)
 		{
-			TRACE_OP(1, i, op);
 			m_jumpDests.push_back(i);
 		}
 		else if ((byte)Instruction::PUSH1 <= (byte)op &&
@@ -115,35 +125,35 @@ void VM::optimize()
 
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 
+	TRACE_STR(1, "Do first pass optimizations")
 	for (size_t i = 0; i < nBytes; ++i)
 	{
 		Instruction op = Instruction(m_code[i]);
 
 		if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
 		{
-			byte n = (byte)op - (byte)Instruction::PUSH1 + 1;
+			byte nPush = (byte)op - (byte)Instruction::PUSH1 + 1;
 
 			// decode pushed bytes to integral value
 			u256 val = m_code[i+1];
-			for (uint64_t j = i+2, m = n; --m; ++j)
+			for (uint64_t j = i+2, n = nPush; --n; ++j)
 				val = (val << 8) | m_code[j];
 
 		#ifdef EVM_USE_CONSTANT_POOL
-			TRACE_PRE_OPT(1, i, op);
 	
 			// add value to constant pool and replace PUSHn with PUSHC if room
-			if (1 < n)
+			if (1 < nPush)
 			{
+				TRACE_PRE_OPT(1, i, op);
 				int pool_off = poolConstant(val);
 				if (0 <= pool_off && pool_off < 256)
 				{
 					m_code[i] = byte(op = Instruction::PUSHC);
-					m_code[i+1] = (byte)pool_off;
-					m_code[i+2] = n;
+					m_code[i+1] = pool_off;
+					m_code[i+2] = nPush - 1;
 				}
+				TRACE_POST_OPT(1, i, op);
 			}
-			
-			TRACE_POST_OPT(1, i, op);
 		#endif
 
 		#ifdef EVM_REPLACE_CONST_JUMP	
@@ -151,7 +161,7 @@ void VM::optimize()
 			// verifyJumpDest is M = log(number of jump destinations)
 			// outer loop is N = number of bytes in code array
 			// so complexity is N log M, worst case is N log N
-			size_t ii = i + n + 1;
+			size_t ii = i + nPush + 1;
 			op = Instruction(m_code[ii]);
 			if (op == Instruction::JUMP)
 			{
@@ -164,6 +174,7 @@ void VM::optimize()
 			}
 			else if (op == Instruction::JUMPI)
 			{
+				TRACE_STR(1, "REPLACE_CONST_JUMP")
 				TRACE_PRE_OPT(1, ii, op);
 				
 				if (0 <= verifyJumpDest(val, false))
@@ -174,12 +185,9 @@ void VM::optimize()
 
 		#endif
 			
-			i += n;
+			i += nPush;
 		}
 		
 	}	
-#endif
-	
-	m_pool = m_poolSpace.data();
-	
+#endif	
 }

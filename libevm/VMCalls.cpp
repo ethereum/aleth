@@ -102,7 +102,7 @@ void VM::caseCreate()
 	m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 2));
 	m_runGas = toUint64(m_schedule->createGas);
 	updateMem();
-	onOperation();
+	ON_OP();
 	updateIOGas();
 	
 	auto const& endowment = *m_sp--;
@@ -110,7 +110,11 @@ void VM::caseCreate()
 	uint64_t initSize = (uint64_t)*m_sp--;
 	
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
-		*++m_sp = (u160)m_ext->create(endowment, *m_io_gas, bytesConstRef(m_mem.data() + initOff, initSize), *m_onOp);
+	{
+		*io_gas = m_io_gas;
+		*++m_sp = (u160)m_ext->create(endowment, *io_gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		m_io_gas = uint64_t(*io_gas);
+	}
 	else
 		*++m_sp = 0;
 }
@@ -123,7 +127,7 @@ void VM::caseCall()
 		*++m_sp = m_ext->call(*callParams);
 	else
 		*++m_sp = 0;
-	*m_io_gas += callParams->gas;
+	m_io_gas += uint64_t(callParams->gas);
 }
 
 bool VM::caseCallSetup(CallParameters *callParams)
@@ -142,7 +146,7 @@ bool VM::caseCallSetup(CallParameters *callParams)
 		memNeed(m_stack[(1 + m_sp - m_stack) - sizesOffset], m_stack[(1 + m_sp - m_stack) - sizesOffset - 1])
 	);
 	updateMem();
-	onOperation();
+	ON_OP();
 	updateIOGas();
 
 	callParams->gas = *m_sp;
@@ -171,7 +175,7 @@ bool VM::caseCallSetup(CallParameters *callParams)
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{
-		callParams->onOp = *m_onOp;
+		callParams->onOp = m_onOp;
 		callParams->senderAddress = m_op == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
 		callParams->receiveAddress = m_op == Instruction::CALL ? callParams->codeAddress : m_ext->myAddress;
 		callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);

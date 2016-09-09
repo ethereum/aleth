@@ -69,9 +69,10 @@ public:
 
 private:
 
-	u256* m_io_gas = 0;
+	u256* io_gas = 0;
+	uint64_t m_io_gas = 0;
 	ExtVMFace* m_ext = 0;
-	OnOpFunc const* m_onOp = 0;
+	OnOpFunc m_onOp;
 
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
@@ -99,9 +100,8 @@ private:
 	u256s m_stackSpace;
 	u256* m_stack;
 	
-	// space for constant pool and pointer to data
-	u256s m_poolSpace;
-	u256* m_pool;
+	// constant pool
+	u256s m_pool;
 
 	// interpreter state
 	uint64_t    m_pc = 0;
@@ -140,7 +140,7 @@ private:
 
 	int poolConstant(const u256&);
 
-	void doOnOperation();
+	void onOperation();
 	void checkStack(unsigned _n, unsigned _d);
 	uint64_t gasForMem(u512 _size);
 	void updateIOGas();
