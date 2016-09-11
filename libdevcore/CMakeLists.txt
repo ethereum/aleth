@@ -21,4 +21,4 @@ if (NOT EMSCRIPTEN)
     target_link_libraries(devcore ${LEVELDB_LIBRARIES})
 endif()
 
-install(TARGETS devcore RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+eth_install_library(devcore)

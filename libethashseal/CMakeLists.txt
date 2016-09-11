@@ -20,4 +20,4 @@ if (ETHASHCL)
     endif()
 endif()
 
-install(TARGETS ethashseal RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+eth_install_library(ethashseal)
