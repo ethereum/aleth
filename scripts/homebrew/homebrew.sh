@@ -114,7 +114,8 @@ fi
 # And then upload formula to the tap on Github
 echo ">>> Starting the script to upload .rb file to homebrew ethereum"
 rm -rf homebrew-ethereum
-git clone git@github.com:ethereum/homebrew-ethereum.git
+# TODO - Correct this to point to ethereum/homebrew-ethereum prior to merge.
+git clone git@github.com:bobsummerwill/homebrew-ethereum.git
 cp cpp-ethereum.rb homebrew-ethereum
 cd homebrew-ethereum
 git add . -u

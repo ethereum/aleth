@@ -104,6 +104,11 @@ cache:
         - ~/.ethash
 install:
     - ./scripts/install_deps.sh
+    # Set up SSH key for pushing to bobsummerwill/homebrew-ethereum repository.
+    # Using https://github.com/alrra/travis-scripts/blob/master/doc/github-deploy-keys.md
+    # as a reference guide to the required steps.
+    # TODO Update this with new details for ethereum/homebrew-ethereum prior to merge.
+    - openssl aes-256-cbc -K $encrypted_f661e528b66a_key -iv $encrypted_f661e528b66a_iv -in scripts/homebrew/homebrew-ethereum.enc -out ~\/.ssh/homebrew-ethereum -d
 before_script:
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
 script:
