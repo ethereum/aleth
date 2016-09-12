@@ -109,7 +109,7 @@ install:
     # as a reference guide to the required steps.
     # See also https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/.
     # TODO Update this with new details for ethereum/homebrew-ethereum prior to merge.
-    - openssl aes-256-cbc -K $encrypted_51eb69c46f33_key -iv $encrypted_51eb69c46f33_iv -in bobsummerwill-homebrew-ethereum.enc -out ~/.ssh/bobsummerwill-homebrew-ethereum -d
+    - openssl aes-256-cbc -K $encrypted_51eb69c46f33_key -iv $encrypted_51eb69c46f33_iv -in scripts/homebrew/bobsummerwill-homebrew-ethereum.enc -out ~/.ssh/bobsummerwill-homebrew-ethereum -d
     - chmod 600 ~/.ssh/homebrew-ethereum-deploy-key
     - eval `ssh-agent -s`
     - ssh-add ~/.ssh/homebrew-ethereum-deploy-key
