@@ -29,6 +29,7 @@ branches:
     only:
         - develop
         - release
+        - homebrew_install
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
