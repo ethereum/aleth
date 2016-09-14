@@ -106,6 +106,12 @@ evm_variant evm_query(
 		v.uint256be = toEvmC(env.store(key));
 		break;
 	}
+	case EVM_ACCOUNT_EXISTS:
+	{
+		auto addr = fromEvmC(_arg.address);
+		v.int64 = env.exists(addr);
+		break;
+	}
 	}
 	return v;
 }
@@ -179,7 +185,6 @@ int64_t evm_call(
 
 	CallParameters params;
 	auto gas = _gas;
-	auto cost = gas;
 
 	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
 	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
@@ -190,34 +195,19 @@ int64_t evm_call(
 	params.out = {_outputData, _outputSize};
 	params.onOp = {};
 
-	if (params.valueTransfer)
-	{
-		gas += 2300;
-		cost += 9000;
-	}
-	if (_kind == EVM_CALL && !env.exists(params.receiveAddress))
-		cost += 25000;
-
 	auto ret = false;
 	if (env.depth < 1024 && env.balance(env.myAddress) >= params.valueTransfer)
 	{
 		params.gas = gas;
 		ret = env.call(params);
-		gas = static_cast<decltype(_gas)>(params.gas);  // Should not throw.
+		gas = static_cast<decltype(gas)>(params.gas);  // Should not throw.
 	}
-
-	cost -= gas;
-
-	// Saturate cost.
-	// TODO: Move up and handle each +=.
-	if (cost < 0)
-		cost = std::numeric_limits<decltype(cost)>::max();
 
 	// Add failure indicator.
 	if (!ret)
-		cost |= EVM_CALL_FAILURE;
+		gas |= EVM_CALL_FAILURE;
 
-	return cost;
+	return gas;
 }
 
 
