@@ -6,13 +6,12 @@ macro(configure_project)
 		set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING
 			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 	endif()
-	
+
 	# features
 	eth_default_option(VMTRACE OFF)
 	eth_default_option(PROFILING OFF)
 	eth_default_option(FATDB ON)
 	eth_default_option(ROCKSDB OFF)
-	eth_default_option(OLYMPIC OFF)
 	eth_default_option(PARANOID OFF)
 	eth_default_option(MINIUPNPC ON)
 
@@ -21,7 +20,6 @@ macro(configure_project)
 	eth_default_option(TOOLS ON)
 	eth_default_option(ETHASHCL ON)
 	eth_default_option(EVMJIT OFF)
-	eth_default_option(SOLIDITY ON)
 
 	# Resolve any clashes between incompatible options.
 	if ("${CMAKE_BUILD_TYPE}" STREQUAL "Release")
@@ -48,13 +46,6 @@ macro(configure_project)
 	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
 	# Common code has no business knowing which application it is part of.
 	add_definitions(-DETH_TRUE)
-
-	# TODO:  Why do we even bother with Olympic support anymore?
-	if (OLYMPIC)
-		add_definitions(-DETH_OLYMPIC)
-	else()
-		add_definitions(-DETH_FRONTIER)
-	endif()
 
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
@@ -124,9 +115,6 @@ endif()
 if (SUPPORT_ROCKSDB)
 	message("-- ROCKSDB          Prefer rocksdb to leveldb                ${ROCKSDB}")
 endif()
-if (SUPPORT_OLYMPIC)
-	message("-- OLYMPIC          Default to the Olympic network           ${OLYMPIC}")
-endif()
 if (SUPPORT_PARANOID)
 	message("-- PARANOID         -                                        ${PARANOID}")
 endif()
@@ -145,9 +133,6 @@ if (SUPPORT_ETHASHCL)
 endif()
 if (SUPPORT_EVMJIT)
 	message("-- EVMJIT           Build LLVM-based JIT EVM                 ${EVMJIT}")
-endif()
-if (SUPPORT_SOLIDITY)
-	message("-- SOLIDITY         Build Solidity                           ${SOLIDITY}")
 endif()
 	message("------------------------------------------------------------------------")
 	message("")

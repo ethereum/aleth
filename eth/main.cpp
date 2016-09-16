@@ -63,7 +63,6 @@
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Debug.h>
 #include <libweb3jsonrpc/Test.h>
-#include "PhoneHome.h"
 #include "Farm.h"
 #endif // ETH_JSONRPC
 

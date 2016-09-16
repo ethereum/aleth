@@ -34,6 +34,18 @@ namespace dev
 namespace eth
 {
 
+// Convert from a 256-bit integer stack/memory entry into a 160-bit Address hash.
+// Currently we just pull out the right (low-order in BE) 160-bits.
+inline Address asAddress(u256 _item)
+{
+	return right160(h256(_item));
+}
+
+inline u256 fromAddress(Address _a)
+{
+	return (u160)_a;
+}
+
 
 struct InstructionMetric
 {
@@ -51,9 +63,9 @@ public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= m_SP + 1); return u256s(m_stack, m_SP + 1); };
+	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
 
-	VM(): m_stack_vector(1025), m_stack(m_stack_vector.data() + 1) {};
+	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1) {};
 
 private:
 
@@ -63,19 +75,10 @@ private:
 
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
-
-	void makeJumpDestTable(ExtVMFace& _ext);
-	uint64_t verifyJumpDest(u256 const& _dest);
-	void copyDataToMemory(bytesConstRef _data, u256*& m_SP);
-	uint64_t memNeed(u256 _offset, u256 _size);
-	void throwOutOfGas();
-	void throwBadInstruction();
-	void throwBadJumpDestination();
-	void throwBadStack(unsigned _size, unsigned _n, unsigned _d);
-	void reportStackUse();
-
-	std::unordered_set<uint64_t> m_jumpDests;
-
+	const void* const* c_jumpTable = 0;
+	const void* c_invalid = 0;
+	bool m_caseInit = false;
+	
 	typedef void (VM::*MemFnPtr)();
 	MemFnPtr m_bounce = 0;
 	MemFnPtr m_onFail = 0;
@@ -88,27 +91,31 @@ private:
 	// space for memory
 	bytes m_mem;
 
-	// space for stack
-	u256s m_stack_vector;
+	// space for code and pointer to data
+	bytes m_codeSpace;
+	byte* m_code;
+
+	// space for stack and pointer to data
+	u256s m_stackSpace;
 	u256* m_stack;
+	
+	// space for constant pool and pointer to data
+	u256s m_poolSpace;
+	u256* m_pool;
 
 	// interpreter state
-	uint64_t m_PC = 0;
-	u256* m_SP = m_stack - 1;
-	Instruction m_inst;
+	uint64_t    m_pc = 0;
+	u256*       m_sp = m_stack - 1;
+	Instruction m_op;
 
 	// metering and memory state
 	uint64_t m_runGas = 0;
 	uint64_t m_newMemSize = 0;
 	uint64_t m_copyMemSize = 0;
 
-	void onOperation();
-	void checkStack(unsigned _n, unsigned _d);
-	uint64_t gasForMem(u512 _size);
-	void updateIOGas();
-	void updateGas();
-	void updateMem();
-	void logGasMem(Instruction m_inst);
+	// initialize interpreter
+	void initEntry();
+	void optimize();
 
 	// interpreter loop & switch
 	void interpretCases();
@@ -117,6 +124,30 @@ private:
 	void caseCreate();
 	bool caseCallSetup(CallParameters*);
 	void caseCall();
+
+	void copyDataToMemory(bytesConstRef _data, u256*& m_sp);
+	uint64_t memNeed(u256 _offset, u256 _size);
+
+	void throwOutOfGas();
+	void throwBadInstruction();
+	void throwBadJumpDestination();
+	void throwBadStack(unsigned _size, unsigned _n, unsigned _d);
+
+	void reportStackUse();
+
+	std::vector<uint64_t> m_jumpDests;
+	int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
+
+	int poolConstant(const u256&);
+
+	void doOnOperation();
+	void checkStack(unsigned _n, unsigned _d);
+	uint64_t gasForMem(u512 _size);
+	void updateIOGas();
+	void updateGas();
+	void updateMem();
+	void logGasMem();
+	void fetchInstruction();
 
 	template<class T> uint64_t toUint64(T v)
 	{

@@ -7,7 +7,6 @@ eth_simple_add_executable(ethminer ${SRC_LIST} ${HEADERS})
 eth_use(ethminer REQUIRED JsonRpc::Client)
 
 jsonrpcstub_client_create(ethminer minerfarm.json FarmClient ${CMAKE_CURRENT_SOURCE_DIR} FarmClient)
-jsonrpcstub_client_create(ethminer minerphonehome.json PhoneHome ${CMAKE_CURRENT_SOURCE_DIR} PhoneHome)
 
 find_package(Eth)
 

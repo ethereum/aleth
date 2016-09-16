@@ -42,7 +42,7 @@ include(EthDependencies)
 include(EthUtils)
 include(EthOptions)
 
-configure_project(CPUID CURL ETHASHCL EVMJIT FATDB GUI MINIUPNPC OLYMPIC ROCKSDB PARANOID SOLIDITY TESTS VMTRACE)
+configure_project(CPUID CURL ETHASHCL EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
 
 add_subdirectory(eth)
 add_subdirectory(libdevcore)
