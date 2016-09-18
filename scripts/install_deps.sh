@@ -171,7 +171,7 @@ case $(uname -s) in
             # The majority of our dependencies can be found in the
             # Arch Linux official repositories.
             # See https://wiki.archlinux.org/index.php/Official_repositories
-            pacman -Sy --noconfirm \
+            sudo pacman -Sy --noconfirm \
                 autoconf \
                 automake \
                 gcc \
@@ -190,7 +190,7 @@ case $(uname -s) in
             git clone http://aur.archlinux.org/libjson-rpc-cpp-git.git libjson-rpc-cpp-git
             cd libjson-rpc-cpp-git
             makepkg
-            pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
+            sudo pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
             cd ../..
 
         fi
