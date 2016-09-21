@@ -24,6 +24,7 @@
 #include <thread>
 #include <list>
 #include <atomic>
+#include <sstream>
 #include <libdevcore/Common.h>
 #include <libdevcore/Worker.h>
 #include <libethcore/Common.h>
@@ -138,10 +139,18 @@ public:
 	{
 		WorkingProgress p;
 		p.ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - m_lastStart).count();
+		if (p.ms == 0) p.ms = 1;		// avoid divide by zero
 		{
 			ReadGuard l2(x_minerWork);
-			for (auto const& i: m_miners)
-				p.hashes += i->hashCount();
+			for (unsigned i = 0; i < m_miners.size(); i++){
+				auto m = m_miners[i];
+				p.hashes += m->hashCount();
+
+				ostringstream mhs;
+				mhs << std::setprecision(3) << ((float)m->hashCount() / (1000.0f*p.ms));
+				string sep = i < m_miners.size() - 1 ? "+" : "=";
+				p.hashDetail += mhs.str() + sep; 
+			}
 		}
 		ReadGuard l(x_progress);
 		m_progress = p;

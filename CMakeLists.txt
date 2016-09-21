@@ -2,7 +2,7 @@
 cmake_minimum_required(VERSION 2.8.12)
 
 set(PROJECT_VERSION "0.9.41")
-set(GENOIL_VERSION "1.1.7")
+set(GENOIL_VERSION "1.1.9")
 if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 	cmake_policy(SET CMP0042 OLD) 	# fix MACOSX_RPATH
 	cmake_policy(SET CMP0048 NEW) 	# allow VERSION argument in project()
@@ -66,7 +66,7 @@ elseif (BUNDLE STREQUAL "miner")
 	set(D_GUI OFF)
 	set(D_MINER ON)
 	set(D_ETHASHCL ON)
-	set(D_JSONRPC ON)
+	set(D_JSONRPC OFF)
 	set(D_ETHSTRATUM ON)
 elseif (BUNDLE STREQUAL "cudaminer")
 	set(D_GUI OFF)

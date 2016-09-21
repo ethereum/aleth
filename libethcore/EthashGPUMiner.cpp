@@ -107,7 +107,7 @@ int EthashGPUMiner::s_devices[16] = { -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 
 EthashGPUMiner::EthashGPUMiner(ConstructionInfo const& _ci):
 	GenericMiner<EthashProofOfWork>(_ci),
-	Worker("openclminer" + toString(index())),
+	Worker("GPU" + toString(index())),
 	m_hook(new EthashCLHook(this))
 {
 }
@@ -139,7 +139,7 @@ void EthashGPUMiner::workLoop()
 	// take local copy of work since it may end up being overwritten by kickOff/pause.
 	try {
 		WorkPackage w = work();
-		cnote << "set work; seed: " << "#" + w.seedHash.hex().substr(0, 8) + ", target: " << "#" + w.boundary.hex().substr(0, 12);
+		// cnote << "set work; seed: " << "#" + w.seedHash.hex().substr(0, 8) + ", target: " << "#" + w.boundary.hex().substr(0, 12);
 		if (!m_miner || m_minerSeed != w.seedHash)
 		{
 			if (s_dagLoadMode == DAG_LOAD_MODE_SEQUENTIAL)
@@ -183,9 +183,11 @@ void EthashGPUMiner::workLoop()
 		}
 
 		uint64_t upper64OfBoundary = (uint64_t)(u64)((u256)w.boundary >> 192);
-		uint64_t startN;
+		uint64_t startN = 0;
 		if (w.exSizeBits >= 0)
+		{
 			startN = w.startNonce | ((uint64_t)index() << (64 - 4 - w.exSizeBits)); // this can support up to 16 devices
+		}
 		m_miner->search(w.headerHash.data(), upper64OfBoundary, *m_hook, (w.exSizeBits >= 0), startN);
 	}
 	catch (cl::Error const& _e)

@@ -2,7 +2,6 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
-#include <json/json.h>
 #include <libdevcore/Log.h>
 #include <libdevcore/FixedHash.h>
 #include <libdevcore/Worker.h>
@@ -18,6 +17,11 @@ using namespace boost::asio;
 using boost::asio::ip::tcp;
 using namespace dev;
 using namespace dev::eth;
+
+// Json::Value is not part of the public interface 
+namespace Json {
+class Value;
+}
 
 class EthStratumClientV2 : public Worker
 {
@@ -65,11 +69,9 @@ private:
 	string m_response;
 
 	GenericFarm<EthashProofOfWork> * p_farm;
-	mutex x_current;
+	//mutex x_current;
 	EthashProofOfWork::WorkPackage m_current;
 	EthashProofOfWork::WorkPackage m_previous;
-
-	bool m_stale = false;
 
 	string m_job;
 	string m_previousJob;
@@ -81,7 +83,7 @@ private:
 	boost::asio::streambuf m_requestBuffer;
 	boost::asio::streambuf m_responseBuffer;
 
-	boost::asio::deadline_timer * p_worktimer;
+	boost::asio::deadline_timer  m_worktimer;
 
 	int m_protocol;
 	string m_email;
@@ -92,4 +94,5 @@ private:
 	int m_extraNonceHexSize;
 
 	void processExtranonce(std::string& enonce);
+	void jobReport();
 };

@@ -11,6 +11,12 @@ else ()
 endif()
 set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR})
 
+if(ETH_STATIC)
+	if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
+		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .so)
+	endif()
+endif()
+
 # setup directory for cmake generated files and include it globally
 # it's not used yet, but if we have more generated files, consider moving them to ETH_GENERATED_DIR
 set(ETH_GENERATED_DIR "${PROJECT_BINARY_DIR}/gen")
@@ -41,9 +47,9 @@ message(STATUS "ctest path: ${CTEST_COMMAND}")
 
 # Dependencies must have a version number, to ensure reproducible build. The version provided here is the one that is in the extdep repository. If you use system libraries, version numbers may be different.
 
-find_package (CryptoPP 5.6.2 REQUIRED)
-message(" - CryptoPP header: ${CRYPTOPP_INCLUDE_DIRS}")
-message(" - CryptoPP lib   : ${CRYPTOPP_LIBRARIES}")
+#find_package (CryptoPP 5.6.2 REQUIRED)
+#message(" - CryptoPP header: ${CRYPTOPP_INCLUDE_DIRS}")
+#message(" - CryptoPP lib   : ${CRYPTOPP_LIBRARIES}")
 
 find_package (LevelDB REQUIRED)
 message(" - LevelDB header: ${LEVELDB_INCLUDE_DIRS}")
@@ -62,52 +68,10 @@ if (JSONRPC)
 	message (" - json-rpc-cpp lib   : ${JSON_RPC_CPP_LIBRARIES}")
 	add_definitions(-DETH_JSONRPC)
 
- 	find_package(MHD)
-	message(" - microhttpd header: ${MHD_INCLUDE_DIRS}")
-	message(" - microhttpd lib   : ${MHD_LIBRARIES}")
-	message(" - microhttpd dll   : ${MHD_DLLS}")
+	# TODO specify min curl version, on windows we are currently using 7.29
+	find_package (CURL)
+	message(" - curl lib   : ${CURL_LIBRARIES}")
 endif() #JSONRPC
-
-# TODO readline package does not yet check for correct version number
-# TODO make readline package dependent on cmake options
-# TODO get rid of -DETH_READLINE
-find_package (Readline 6.3.8)
-if (READLINE_FOUND)
-	message (" - readline header: ${READLINE_INCLUDE_DIRS}")
-	message (" - readline lib   : ${READLINE_LIBRARIES}")
-	add_definitions(-DETH_READLINE)
-endif ()
-
-# TODO miniupnpc package does not yet check for correct version number
-# TODO make miniupnpc package dependent on cmake options
-# TODO get rid of -DMINIUPNPC
-find_package (Miniupnpc 1.8.2013)
-if (MINIUPNPC_FOUND)
-	message (" - miniupnpc header: ${MINIUPNPC_INCLUDE_DIRS}")
-	message (" - miniupnpc lib   : ${MINIUPNPC_LIBRARIES}")
-	add_definitions(-DETH_MINIUPNPC)
-endif()
-
-# TODO gmp package does not yet check for correct version number
-# TODO it is also not required in msvc build
-find_package (Gmp 6.0.0)
-if (GMP_FOUND)
-	message(" - gmp header: ${GMP_INCLUDE_DIRS}")
-	message(" - gmp lib   : ${GMP_LIBRARIES}")
-endif()
-
-# curl is only requried for tests
-# TODO specify min curl version, on windows we are currently using 7.29
-find_package (CURL)
-message(" - curl header: ${CURL_INCLUDE_DIRS}")
-message(" - curl lib   : ${CURL_LIBRARIES}")
-
-# cpuid required for eth
-find_package (Cpuid)
-if (CPUID_FOUND)
-	message(" - cpuid header: ${CPUID_INCLUDE_DIRS}")
-	message(" - cpuid lib   : ${CPUID_LIBRARIES}")
-endif()
 
 find_package (OpenCL)
 if (OpenCL_FOUND)
@@ -169,22 +133,16 @@ endif() #GUI
 # use multithreaded boost libraries, with -mt suffix
 set(Boost_USE_MULTITHREADED ON)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (ETH_STATIC)
+	set(Boost_USE_STATIC_LIBS ON)
+else()
+	set(Boost_USE_STATIC_LIBS OFF)
+endif()
 
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 # TODO hanlde other msvc versions or it will fail find them
 	set(Boost_COMPILER -vc120)
-# use static boost libraries *.lib
 	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (APPLE)
-
-# use static boost libraries *.a
-	set(Boost_USE_STATIC_LIBS ON)
-
-elseif (UNIX)
-# use dynamic boost libraries .dll
-	set(Boost_USE_STATIC_LIBS OFF)
-
 endif()
 
 find_package(Boost 1.54.0 REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)

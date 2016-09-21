@@ -10,20 +10,20 @@
 #  CURL_FOUND, If false, do not try to use curl.
 
 # only look in default directories
-find_path(
-	CURL_INCLUDE_DIR 
-	NAMES curl/curl.h
-	DOC "curl include dir"
-)
+#find_path(
+#	CURL_INCLUDE_DIR 
+#	NAMES curl/curl.h
+#	DOC "curl include dir"
+#)
 
 find_library(
 	CURL_LIBRARY
 	# names from cmake's FindCURL
-	NAMES curl curllib libcurl_imp curllib_static libcurl
+	NAMES curl curllib libcurl_imp curllib_static libcurl libcurl.so.4
 	DOC "curl library"
 )
 
-set(CURL_INCLUDE_DIRS ${CURL_INCLUDE_DIR})
+#set(CURL_INCLUDE_DIRS ${CURL_INCLUDE_DIR})
 set(CURL_LIBRARIES ${CURL_LIBRARY})
 
 # debug library on windows
@@ -51,7 +51,9 @@ endif()
 # handle the QUIETLY and REQUIRED arguments and set CURL_FOUND to TRUE
 # if all listed variables are TRUE, hide their existence from configuration view
 include(FindPackageHandleStandardArgs)
+#find_package_handle_standard_args(CURL DEFAULT_MSG
+#	CURL_INCLUDE_DIR CURL_LIBRARY)
 find_package_handle_standard_args(CURL DEFAULT_MSG
-	CURL_INCLUDE_DIR CURL_LIBRARY)
-mark_as_advanced (CURL_INCLUDE_DIR CURL_LIBRARY)
+	CURL_LIBRARY)
+mark_as_advanced (CURL_LIBRARY)
 

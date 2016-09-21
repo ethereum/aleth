@@ -71,10 +71,9 @@ struct MineInfo: public WorkingProgress {};
 
 inline std::ostream& operator<<(std::ostream& _out, WorkingProgress _p)
 {
-	float mh = _p.rate() / 1000000.0f;
-	char mhs[16];
-	sprintf(mhs, "%.2f", mh);
-	_out << std::string(mhs) + "MH/s";
+	ostringstream mhs;
+	mhs << std::setprecision(3) << ((float)_p.hashes / (1000.0f*_p.ms));
+	_out << _p.hashDetail + mhs.str() + "MH/s";
 	return _out;
 }
 
@@ -106,7 +105,8 @@ private:
 
 inline std::ostream& operator<<(std::ostream& os, SolutionStats s)
 {
-	return os << "[A" << s.getAccepts() << "+" << s.getAcceptedStales() << ":R" << s.getRejects() << "+" << s.getRejectedStales() << ":F" << s.getFailures() << "]";
+//	return os << "[A" << s.getAccepts() << "+" << s.getAcceptedStales() << ":R" << s.getRejects() << "+" << s.getRejectedStales() << ":F" << s.getFailures() << "]";
+	return os << "A" << s.getAccepts() << "+" << s.getAcceptedStales() << ":R" << s.getRejects() << "+" << s.getRejectedStales();
 }
 
 template <class PoW> class GenericMiner;

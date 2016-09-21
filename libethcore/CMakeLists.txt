@@ -7,10 +7,6 @@ aux_source_directory(. SRC_LIST)
 include_directories(BEFORE ..)
 include_directories(${Boost_INCLUDE_DIRS})
 
-if (CPUID_FOUND)
-	include_directories(${Cpuid_INCLUDE_DIRS})
-endif ()
-
 if (ETHASHCUDA)
 	include_directories(${CUDA_INCLUDE_DIRS})
 endif ()

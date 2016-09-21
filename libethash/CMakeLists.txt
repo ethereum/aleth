@@ -25,10 +25,6 @@ else()
 	list(APPEND FILES io_posix.c)
 endif()
 
-if (NOT CRYPTOPP_FOUND)
-	find_package(CryptoPP 5.6.2)
-endif()
-
 if (CRYPTOPP_FOUND)
 	add_definitions(-DWITH_CRYPTOPP)
 	include_directories( ${CRYPTOPP_INCLUDE_DIRS} )

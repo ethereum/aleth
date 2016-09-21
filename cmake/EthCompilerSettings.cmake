@@ -2,8 +2,12 @@
 
 # C++11 check and activation
 if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-
-	set(CMAKE_CXX_FLAGS "-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Wno-error=parentheses -pedantic -DSHAREDLIB -fPIC ${CMAKE_CXX_FLAGS}")
+	
+	if (ETH_SHARED)
+		set(GCC_SHARED_FLAGS "-DSHAREDLIB -fPIC")
+	endif(ETH_SHARED)
+	set(CMAKE_EXE_LINKER_FLAGS "-flto -Wl,--gc-sections ${CMAKE_EXE_LINKER_FLAGS}")
+	set(CMAKE_CXX_FLAGS "-flto -ffunction-sections -std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Wno-error=parentheses -pedantic ${GCC_SHARED_FLAGS} ${CMAKE_CXX_FLAGS}")
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
@@ -88,8 +92,9 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	endif ()
 endif ()
 
-if(ETH_STATIC)
-	set(BUILD_SHARED_LIBS OFF)
-else()
+if(ETH_SHARED)
 	set(BUILD_SHARED_LIBS ON)
-endif(ETH_STATIC)
+else()
+	set(BUILD_SHARED_LIBS OFF)
+endif(ETH_SHARED)
+
