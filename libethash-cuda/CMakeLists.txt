@@ -1,11 +1,13 @@
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_FORCE_INLINES")
 set(EXECUTABLE ethash-cuda)
+
 
 FIND_PACKAGE(CUDA REQUIRED)
 
 file(GLOB SRC_LIST "*.cpp" "*.cu")
 file(GLOB HEADERS "*.h" "*.cuh")
 
-set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--std=c++11;--disable-warnings;--ptxas-options=-v;-use_fast_math;-lineinfo)
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};--disable-warnings;--ptxas-options=-v;-use_fast_math;-lineinfo)
 
 LIST(APPEND CUDA_NVCC_FLAGS_RELEASE -O3)
 LIST(APPEND CUDA_NVCC_FLAGS_DEBUG -G)

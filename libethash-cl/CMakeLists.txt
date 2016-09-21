@@ -1,5 +1,5 @@
 set(EXECUTABLE ethash-cl)
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
 # A custom command and target to turn the OpenCL kernel into a byte array header
 # The normal build depends on it properly and if the kernel file is changed, then
 # a rebuild of libethash-cl should be triggered
