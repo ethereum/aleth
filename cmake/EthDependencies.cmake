@@ -142,6 +142,7 @@ endif()
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 # TODO hanlde other msvc versions or it will fail find them
 	set(Boost_COMPILER -vc120)
+	set(Boost_USE_STATIC_LIBS ON)
 endif()
 
 find_package(Boost 1.54.0 REQUIRED COMPONENTS thread date_time system regex chrono filesystem unit_test_framework program_options random)
