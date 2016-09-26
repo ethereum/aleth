@@ -112,6 +112,9 @@ evm_variant evm_query(
 		v.int64 = env.exists(addr);
 		break;
 	}
+	case EVM_CALL_DEPTH:
+		v.int64 = env.depth;
+		break;
 	}
 	return v;
 }
