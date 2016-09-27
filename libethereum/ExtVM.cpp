@@ -33,7 +33,7 @@ namespace // anonymous
 static unsigned const c_depthLimit = 1024;
 
 /// Upper bound of stack space needed by single CALL/CREATE execution. Set experimentally.
-static size_t const c_singleExecutionStackSize = 6 * 1024;
+static size_t const c_singleExecutionStackSize = 9 * 1024;
 
 /// Standard thread stack size.
 static size_t const c_defaultStackSize =

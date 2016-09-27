@@ -173,8 +173,6 @@ int64_t evm_call(
 	if (_kind == EVM_CREATE)
 	{
 		assert(_outputSize == 20);
-		if (env.depth >= 1024 || env.balance(env.myAddress) < value)
-			return EVM_CALL_FAILURE;
 		u256 gas = _gas;
 		auto addr = env.create(value, gas, input, {});
 		auto gasLeft = static_cast<decltype(_gas)>(gas);
@@ -187,8 +185,7 @@ int64_t evm_call(
 	}
 
 	CallParameters params;
-	auto gas = _gas;
-
+	params.gas = _gas;
 	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
 	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
@@ -198,19 +195,14 @@ int64_t evm_call(
 	params.out = {_outputData, _outputSize};
 	params.onOp = {};
 
-	auto ret = false;
-	if (env.depth < 1024 && env.balance(env.myAddress) >= params.valueTransfer)
-	{
-		params.gas = gas;
-		ret = env.call(params);
-		gas = static_cast<decltype(gas)>(params.gas);  // Should not throw.
-	}
+	auto ret = env.call(params);
+	auto gasLeft = static_cast<int64_t>(params.gas);
 
 	// Add failure indicator.
 	if (!ret)
-		gas |= EVM_CALL_FAILURE;
+		gasLeft |= EVM_CALL_FAILURE;
 
-	return gas;
+	return gasLeft;
 }
 
 
