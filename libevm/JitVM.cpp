@@ -176,12 +176,11 @@ int64_t evm_call(
 		u256 gas = _gas;
 		auto addr = env.create(value, gas, input, {});
 		auto gasLeft = static_cast<decltype(_gas)>(gas);
-		auto finalCost = _gas - gasLeft;
 		if (addr)
 			std::memcpy(_outputData, addr.data(), 20);
 		else
-			finalCost |= EVM_CALL_FAILURE;
-		return finalCost;
+			gasLeft |= EVM_CALL_FAILURE;
+		return gasLeft;
 	}
 
 	CallParameters params;
