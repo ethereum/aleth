@@ -225,23 +225,21 @@ public:
 	class Result
 	{
 	public:
-		Result(evm_result const& _result, evm_release_result_fn _release):
-			m_result(_result),
-			m_release(_release)
+		explicit Result(evm_result const& _result):
+			m_result(_result)
 		{}
 
 		~Result()
 		{
-			m_release(&m_result);
+			if (m_result.release)
+				m_result.release(&m_result);
 		}
 
 		Result(Result&& _other):
 			m_result(_other.m_result)
 		{
-			// FIXME: It is not perfect as we must know what will be released
-			//        by evm_release_result().
-			_other.m_result.internal_memory = nullptr;
-			_other.m_result.error_message = nullptr;
+			// Disable releaser of the rvalue object.
+			_other.m_result.release = nullptr;
 		}
 
 		Result(Result const&) = delete;
@@ -264,7 +262,6 @@ public:
 
 	private:
 		evm_result m_result;
-		evm_release_result_fn m_release;
 	};
 
 	/// Handy wrapper for evm_execute().
@@ -273,11 +270,11 @@ public:
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
 		                                                : EVM_FRONTIER;
-		return {m_interface.execute(
+		return Result{m_interface.execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
 			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
 			toEvmC(_ext.value)
-		), m_interface.release_result};
+		)};
 	}
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
