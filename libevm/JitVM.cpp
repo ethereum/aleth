@@ -106,6 +106,15 @@ evm_variant evm_query(
 		v.uint256be = toEvmC(env.store(key));
 		break;
 	}
+	case EVM_ACCOUNT_EXISTS:
+	{
+		auto addr = fromEvmC(_arg.address);
+		v.int64 = env.exists(addr);
+		break;
+	}
+	case EVM_CALL_DEPTH:
+		v.int64 = env.depth;
+		break;
 	}
 	return v;
 }
@@ -164,23 +173,18 @@ int64_t evm_call(
 	if (_kind == EVM_CREATE)
 	{
 		assert(_outputSize == 20);
-		if (env.depth >= 1024 || env.balance(env.myAddress) < value)
-			return EVM_CALL_FAILURE;
 		u256 gas = _gas;
 		auto addr = env.create(value, gas, input, {});
 		auto gasLeft = static_cast<decltype(_gas)>(gas);
-		auto finalCost = _gas - gasLeft;
 		if (addr)
 			std::memcpy(_outputData, addr.data(), 20);
 		else
-			finalCost |= EVM_CALL_FAILURE;
-		return finalCost;
+			gasLeft |= EVM_CALL_FAILURE;
+		return gasLeft;
 	}
 
 	CallParameters params;
-	auto gas = _gas;
-	auto cost = gas;
-
+	params.gas = _gas;
 	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
 	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
@@ -190,34 +194,14 @@ int64_t evm_call(
 	params.out = {_outputData, _outputSize};
 	params.onOp = {};
 
-	if (params.valueTransfer)
-	{
-		gas += 2300;
-		cost += 9000;
-	}
-	if (_kind == EVM_CALL && !env.exists(params.receiveAddress))
-		cost += 25000;
-
-	auto ret = false;
-	if (env.depth < 1024 && env.balance(env.myAddress) >= params.valueTransfer)
-	{
-		params.gas = gas;
-		ret = env.call(params);
-		gas = static_cast<decltype(_gas)>(params.gas);  // Should not throw.
-	}
-
-	cost -= gas;
-
-	// Saturate cost.
-	// TODO: Move up and handle each +=.
-	if (cost < 0)
-		cost = std::numeric_limits<decltype(cost)>::max();
+	auto ret = env.call(params);
+	auto gasLeft = static_cast<int64_t>(params.gas);
 
 	// Add failure indicator.
 	if (!ret)
-		cost |= EVM_CALL_FAILURE;
+		gasLeft |= EVM_CALL_FAILURE;
 
-	return cost;
+	return gasLeft;
 }
 
 
@@ -241,23 +225,21 @@ public:
 	class Result
 	{
 	public:
-		Result(evm_result const& _result, evm_release_result_fn _release):
-			m_result(_result),
-			m_release(_release)
+		explicit Result(evm_result const& _result):
+			m_result(_result)
 		{}
 
 		~Result()
 		{
-			m_release(&m_result);
+			if (m_result.release)
+				m_result.release(&m_result);
 		}
 
 		Result(Result&& _other):
 			m_result(_other.m_result)
 		{
-			// FIXME: It is not perfect as we must know what will be released
-			//        by evm_release_result().
-			_other.m_result.internal_memory = nullptr;
-			_other.m_result.error_message = nullptr;
+			// Disable releaser of the rvalue object.
+			_other.m_result.release = nullptr;
 		}
 
 		Result(Result const&) = delete;
@@ -280,7 +262,6 @@ public:
 
 	private:
 		evm_result m_result;
-		evm_release_result_fn m_release;
 	};
 
 	/// Handy wrapper for evm_execute().
@@ -289,11 +270,11 @@ public:
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
 		                                                : EVM_FRONTIER;
-		return {m_interface.execute(
+		return Result{m_interface.execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
 			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
 			toEvmC(_ext.value)
-		), m_interface.release_result};
+		)};
 	}
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
