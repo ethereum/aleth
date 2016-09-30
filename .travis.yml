@@ -63,7 +63,6 @@ matrix:
         - os: osx
           osx_image: xcode7.1
           env:
-              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=osx-yosemite
 
         # OS X El Capitan (10.11)
@@ -76,17 +75,10 @@ matrix:
 
         # macOS Sierra (10.12)
         # https://en.wikipedia.org/wiki/MacOS_Sierra
-        #
-        # TODO - Tests are currently disabled because they are consistently
-        # running into the 48min timeout.  We need to make this process
-        # quicker.
-        #
-        # See https://github.com/ethereum/cpp-ethereum/issues/3268
 
         - os: osx
           osx_image: xcode8
           env:
-              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
 git:
     depth: 2
