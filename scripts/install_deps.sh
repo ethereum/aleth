@@ -120,7 +120,6 @@ case $(uname -s) in
         # Homebrew which are used in the cpp-ethereum build process,
         # either directly or indirectly.
         brew pin cgal
-        brew pin dgal
         brew pin mercurial
         brew pin mpfr
         brew pin node
