@@ -74,12 +74,6 @@ case $(uname -s) in
                 ;;
             10.12)
                 echo "Installing cpp-ethereum dependencies on macOS 10.12 Sierra."
-                echo ""
-                echo "NOTE - You are in unknown territory with this preview OS."
-                echo "Even Homebrew doesn't have official support yet, and there are"
-                echo "known issues (see https://github.com/ethereum/webthree-umbrella/issues/614)."
-                echo "If you would like to partner with us to work through these issues, that"
-                echo "would be fantastic.  Please just comment on that issue.  Thanks!"
                 ;;
             *)
                 echo "Unsupported macOS version."
@@ -91,36 +85,28 @@ case $(uname -s) in
         # Check for Homebrew install and abort if it is not installed.
         brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
-        # In August 2016, the 'carthage' package added a requirement for
-        # a full Xcode 7.3 install, not just command-line build tools,
-        # because it needs Swift 2.2.  This requirement is a complete
-        # non-starter for TravisCI, where we have no ability or desire
-        # to do that installation.  We aren't using 'carthage' ourselves,
-        # so we just pin it here prior to 'brew update'.
-        # https://github.com/Homebrew/homebrew-core/issues/3996
-        brew pin carthage
-
-        # A change was committed to 'brew' on 4th September 2016 which
-        # broke various packages, including 'gnupg' and 'nvm.  We can
-        # work around that issue by pinning the Formula for the time being.
-        # The rolling release pattern strikes again.  Live projects
-        # around the world are the test environment.
-        brew pin gnupg
-        brew pin nvm
-
-        # Update Homebrew formulas and then upgrade any packages which
-        # we have installed using these updated formulas.  This step is
-        # required even within TravisCI, because the Homebrew formulas
-        # are a constant moving target, and we always need to be chasing
-        # those moving targets.  This is a fundamental design decision
-        # made in 'rolling release' package management systems, and one
-        # which makes our macOS builds fundamentally unstable and
-        # unreliable.  We just had to try to react fast when anything
-        # breaks.
+        # Update Homebrew formulas.  We were previously also doing a
+        # blanket `brew upgrade` here too, but that subjects us to
+        # say too many possibilities of breaks and of dreadfully slow
+        # upgrades of packages which we aren't even using, especially
+        # on OS X Mavericks, which many packages within Homebrew no
+        # longer ship matching bottles for.  I *think* that the
+        # later `brew install` command will upgrade any packages
+        # which needs it, if their formulas have been changed by
+        # `brew update`.  If that proves not to be true then we
+        # will need an explicitly constrained `brew update` to be
+        # re-added.
+        #
+        # This step is required even within TravisCI, because the
+        # Homebrew formulas are a constant moving target, and we
+        # always need to be chasing those moving targets.  This is
+        # a fundamental design decision made in 'rolling release'
+        # package management systems, and one which makes our macOS
+        # builds fundamentally unstable and unreliable.  We just
+        # have to try to react fast when anything breaks.
         #
         # See https://github.com/ethereum/cpp-ethereum/issues/3089
         brew update
-        brew upgrade
 
         # Bonus fun - TravisCI image for Yosemite includes a gmp version
         # which doesn't like being updated, so we need to uninstall it
@@ -133,12 +119,15 @@ case $(uname -s) in
             ccache \
             cmake \
             cryptopp \
+            curl \
             gmp \
             jsoncpp \
             leveldb \
             libjson-rpc-cpp \
             libmicrohttpd \
-            miniupnpc
+            miniupnpc \
+            openssl \
+            snappy
 
         ;;
 
