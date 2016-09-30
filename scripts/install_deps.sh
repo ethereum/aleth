@@ -233,16 +233,11 @@ case $(uname -s) in
                     stretch)
                         #stretch
                         echo "Installing cpp-ethereum dependencies on Debian Stretch (9.x)."
-                        echo "ERROR - 'install_deps.sh' doesn't have Debian Stretch support yet."
-                        echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-                        echo "If you would like to get 'install_deps.sh' working for Debian Stretch, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                        exit 1
                         ;;
                     *)
                         #other Debian
                         echo "Installing 'install_deps.sh' dependencies on unknown Debian version."
-                        echo "ERROR - Debian Jessie is the only Debian version which cpp-ethereum has been tested on."
+                        echo "ERROR - Debian Jessie and Debian Stretch are the only Debian versions which cpp-ethereum has been tested on."
                         echo "If you are using a different release and would like to get 'install_deps.sh'"
                         echo "working for that release that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
