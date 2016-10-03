@@ -29,6 +29,7 @@ branches:
     only:
         - develop
         - release
+        - homebrew_install
 env:
     global:
         - TRAVIS_BUILD_TYPE=RelWithDebInfo
@@ -102,13 +103,27 @@ cache:
     directories:
         - ~/.ethash
 install:
+    # Set up SSH key for pushing to bobsummerwill/homebrew-ethereum repository.
+    # Using https://github.com/alrra/travis-scripts/blob/master/doc/github-deploy-keys.md
+    # as a reference guide to the required steps.
+    # See also https://help.github.com/articles/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent/.
+    # TODO Update this with new details for ethereum/homebrew-ethereum prior to merge.
+    - openssl aes-256-cbc -K $encrypted_dca632a1b984_key -iv $encrypted_dca632a1b984_iv -in ./scripts/homebrew/bobsummerwill-homebrew-ethereum.enc -out deploy_key -d
+    - chmod 600 deploy_key
+    - eval `ssh-agent -s`
+    - ssh-add deploy_key
+
+    # Install external dependencies
     - ./scripts/install_deps.sh
+
 before_script:
     - if type ccache; then ccache -M 2G; ccache -s; fi
     - ./scripts/build.sh $TRAVIS_BUILD_TYPE $TRAVIS_TESTS
     - if type ccache; then ccache -s; fi
 script:
-    - cd $TRAVIS_BUILD_DIR/build && ../scripts/tests.sh $TRAVIS_TESTS
+    - cd $TRAVIS_BUILD_DIR/build
+      && ../scripts/tests.sh $TRAVIS_TESTS
+      && ../scripts/release.sh $ZIP_SUFFIX $TRAVIS_TESTS
 
 deploy:
     # This is the deploy target for the native build (Linux and macOS)

@@ -108,9 +108,17 @@ fi
 # being for kernel-level dylibs.
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    python $(pwd)/../homebrew/fix_homebrew_paths_in_standalone_zip.py $ZIP_TEMP_DIR
+    python $(pwd)/../scripts/fix_absolute_paths_in_macos_zip.py $ZIP_TEMP_DIR
 fi
 
 # And ZIP it all up, with a filename suffix passed in on the command-line.
 
-zip -j $(pwd)/../cpp-ethereum-develop-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
+zip -j $(pwd)/../cpp-ethereum-$ZIP_SUFFIX.zip $ZIP_TEMP_DIR/*
+
+# For macOS we also publish binaries to Homebrew (https://brew.sh)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    $(pwd)/../scripts/homebrew/homebrew.sh --version 1.3.1 --number 492
+fi
+
+# TODO - And for Ubuntu we need to add PPA automation as well.
+# chriseth is running that manually at the moment.

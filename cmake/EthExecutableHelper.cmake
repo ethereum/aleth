@@ -100,12 +100,7 @@ endmacro()
 
 macro(eth_install_executable EXECUTABLE)
 
-	if (APPLE)
-
-		# TODO - Why is this different than the branch Linux below, which has the RUNTIME keyword too?
-		install(TARGETS ${EXECUTABLE} DESTINATION bin)
-
-	elseif (MSVC)
+	if (MSVC)
 
 		set(COMPONENT ${EXECUTABLE})
 
@@ -132,6 +127,17 @@ macro(eth_install_executable EXECUTABLE)
 	endif ()
 
 endmacro()
+
+# Macro for the boilerplate required for GNU standard install paths
+# for libraries.
+macro(eth_install_library LIBRARY)
+	include(GNUInstallDirs)
+	install(TARGETS ${LIBRARY}
+	    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+		ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+		LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} )
+endmacro()
+
 
 macro (eth_name KEY VALUE)
 	if (NOT (APPLE OR WIN32))

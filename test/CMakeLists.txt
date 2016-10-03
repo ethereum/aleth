@@ -88,3 +88,4 @@ eth_add_test(JsonRpc
 	ARGS --eth_testfile=BlockTests/bcValidBlockTest
 )
 
+install(TARGETS testeth DESTINATION bin)

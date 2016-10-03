@@ -29,4 +29,4 @@ if (EVMJIT)
 	target_link_libraries(evm ${Eth_EVMJIT_LIBRARIES})
 endif()
 
-install(TARGETS evm RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
+eth_install_library(evm)
