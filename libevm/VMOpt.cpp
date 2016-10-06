@@ -49,20 +49,22 @@ void VM::initMetrics()
 	done = true;
 }
 
-//
-// init interpreter on entry
-//
-
+/// Init interpreter on entry.
 void VM::initEntry()
 {
-	m_bounce = &VM::interpretCases;	
+	m_bounce = &VM::interpretCases;
+
+	// Copy and extend code by 32 bytes to handle virtual push data.
+	auto extendedSize = m_ext->code.size() + 32;
+	m_codeSpace.reserve(extendedSize);
 	m_codeSpace = m_ext->code;
+	m_codeSpace.resize(extendedSize);
 	m_code = m_codeSpace.data();
 
 	interpretCases(); // first time initializes
-	
-	initMetrics();	
-	
+
+	initMetrics();
+
 	optimize();
 }
 
