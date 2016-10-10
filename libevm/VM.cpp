@@ -186,6 +186,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(SUICIDE)
 		{
+			m_runGas += toUint64(m_schedule->suicideGas);
 			onOperation();
 			updateIOGas();
 
@@ -543,6 +544,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(BALANCE)
 		{
+			m_runGas += toUint64(m_schedule->balanceGas);
 			onOperation();
 			updateIOGas();
 
@@ -607,6 +609,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(EXTCODESIZE)
+			m_runGas += toUint64(m_schedule->extcodesizeGas);
 			onOperation();
 			updateIOGas();
 
@@ -638,6 +641,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(EXTCODECOPY)
 		{
+			m_runGas += toUint64(m_schedule->extcodecopyGas);
 			m_copyMemSize = toUint64(*(m_sp - 3));
 			m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 3));
 			updateMem();

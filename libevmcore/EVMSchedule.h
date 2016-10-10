@@ -63,11 +63,33 @@ struct EVMSchedule
 	unsigned txDataZeroGas = 4;
 	unsigned txDataNonZeroGas = 68;
 	unsigned copyGas = 3;
+
+	//EIP150
+	unsigned extcodesizeGas = 0;
+	unsigned extcodecopyGas = 0;
+	unsigned balanceGas = 0;
+	unsigned suicideGas = 0;
+
 };
 
 static const EVMSchedule DefaultSchedule = EVMSchedule();
+static EVMSchedule EVMScheduleDevcon()
+{
+	//EIP150
+	EVMSchedule m_schedule = DefaultSchedule;
+	m_schedule.extcodesizeGas = 700;
+	m_schedule.extcodecopyGas = 700;
+	m_schedule.balanceGas = 400;
+	m_schedule.sloadGas = 200;
+	m_schedule.callGas = 700;
+	m_schedule.suicideGas = 5000;
+	return m_schedule;
+}
+
+
 static const EVMSchedule FrontierSchedule = EVMSchedule(false, false, 21000);
 static const EVMSchedule HomesteadSchedule = EVMSchedule(true, true, 53000);
+static const EVMSchedule DevconSchedule = EVMScheduleDevcon();
 
 }
 }
