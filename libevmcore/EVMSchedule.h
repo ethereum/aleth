@@ -65,9 +65,9 @@ struct EVMSchedule
 	unsigned copyGas = 3;
 
 	//EIP150
-	unsigned extcodesizeGas = 0;
-	unsigned extcodecopyGas = 0;
-	unsigned balanceGas = 0;
+	unsigned extcodesizeGas = 20;
+	unsigned extcodecopyGas = 20;
+	unsigned balanceGas = 20;
 	unsigned suicideGas = 0;
 
 };
