@@ -84,13 +84,13 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 
 EVMSchedule const& Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
-	if (_envInfo.number() >= chainParams().u256Param("devconforkBlock"))
+	if (_envInfo.number() >= chainParams().u256Param("EIP150forkBlock"))
 		return DevconSchedule;
 	else
-	if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
-		return HomesteadSchedule;
-	else
-		return FrontierSchedule;
+		if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
+			return HomesteadSchedule;
+		else
+			return FrontierSchedule;
 }
 
 void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const

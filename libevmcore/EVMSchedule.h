@@ -73,10 +73,13 @@ struct EVMSchedule
 };
 
 static const EVMSchedule DefaultSchedule = EVMSchedule();
-static EVMSchedule EVMScheduleDevcon()
+static const EVMSchedule FrontierSchedule = EVMSchedule(false, false, 21000);
+static const EVMSchedule HomesteadSchedule = EVMSchedule(true, true, 53000);
+
+static EVMSchedule EVMScheduleEIP150()
 {
 	//EIP150
-	EVMSchedule m_schedule = DefaultSchedule;
+	EVMSchedule m_schedule = HomesteadSchedule;
 	m_schedule.extcodesizeGas = 700;
 	m_schedule.extcodecopyGas = 700;
 	m_schedule.balanceGas = 400;
@@ -86,10 +89,7 @@ static EVMSchedule EVMScheduleDevcon()
 	return m_schedule;
 }
 
-
-static const EVMSchedule FrontierSchedule = EVMSchedule(false, false, 21000);
-static const EVMSchedule HomesteadSchedule = EVMSchedule(true, true, 53000);
-static const EVMSchedule DevconSchedule = EVMScheduleDevcon();
+static const EVMSchedule DevconSchedule = EVMScheduleEIP150();
 
 }
 }
