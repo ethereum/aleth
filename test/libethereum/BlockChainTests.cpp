@@ -768,6 +768,12 @@ BOOST_AUTO_TEST_CASE(bcTheDaoTest)
 	dev::test::executeTests("bcTheDaoTest", "/BlockchainTests/TestNetwork",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests);
 }
 
+BOOST_AUTO_TEST_CASE(bcEIP150Test)
+{
+	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::Test;
+	dev::test::executeTests("bcEIP150Test", "/BlockchainTests/TestNetwork",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 ///
@@ -779,6 +785,12 @@ BOOST_AUTO_TEST_CASE(bcForkStressTestHomestead)
 	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest;
 	dev::test::executeTests("bcForkStressTest", "/BlockchainTests/Homestead",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
 }
+
+BOOST_AUTO_TEST_CASE(bcSuicideIssueHomestead)
+ {
+	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest;
+	dev::test::executeTests("bcSuicideIssue", "/BlockchainTests/Homestead",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
+ }
 
 BOOST_AUTO_TEST_CASE(bcTotalDifficultyTestHomestead)
 {
