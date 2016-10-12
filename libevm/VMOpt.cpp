@@ -54,7 +54,8 @@ void VM::initEntry()
 {
 	m_bounce = &VM::interpretCases;
 
-	// Copy and extend code by 32 bytes to handle virtual push data.
+	// Copy and extend code by 32 zero bytes to allow reading virtual push data
+	// at the end of the code without bounds checks.
 	auto extendedSize = m_ext->code.size() + 32;
 	m_codeSpace.reserve(extendedSize);
 	m_codeSpace = m_ext->code;
