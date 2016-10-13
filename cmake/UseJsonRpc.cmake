@@ -1,6 +1,6 @@
 function(eth_apply TARGET REQUIRED SUBMODULE)	
 
-	eth_use(${TARGET} ${REQUIRED} Jsoncpp)
+	target_link_libraries(${TARGET} jsoncpp)
 	find_package (json_rpc_cpp 0.4)
 	find_program(ETH_JSON_RPC_STUB jsonrpcstub)
 	eth_show_dependency(JSON_RPC_CPP json-rpc-cpp)
