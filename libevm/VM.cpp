@@ -771,9 +771,12 @@ void VM::interpretCases()
 			onOperation();
 			updateIOGas();
 
-			int i = (int)m_op - (int)Instruction::PUSH1 + 1;
+			int numBytes = (int)m_op - (int)Instruction::PUSH1 + 1;
 			*++m_sp = 0;
-			for (++m_pc; i--; ++m_pc)
+			// Construct a number out of PUSH bytes.
+			// This requires the code has been copied and extended by 32 zero
+			// bytes to handle "out of code" push data here.
+			for (++m_pc; numBytes--; ++m_pc)
 				*m_sp = (*m_sp << 8) | m_code[m_pc];
 		}
 		CASE_END
