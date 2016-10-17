@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+mkdir -p ~/.ethereum ~/.web3
+
+# check if sudo is necessary
+if ! id -nG $(whoami)|grep -qw "docker"; then SUDO='sudo'; else SUDO=''; fi
+
+$SUDO docker run --rm -it \
+           --net=host \
+           -v ~/.ethereum:/.ethereum \
+           -v ~/.web3:/.web3 \
+           -e HOME=/ \
+           --user $(id -u):$(id -g) \
+           ethereum/client-cpp $@
+
