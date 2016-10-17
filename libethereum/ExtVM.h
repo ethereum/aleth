@@ -57,6 +57,9 @@ public:
 	/// Read address's code.
 	virtual bytes const& codeAt(Address _a) override final { return m_s.code(_a); }
 
+	/// @returns the size of the code in  bytes at the given address.
+	virtual size_t codeSizeAt(Address _a) override final;
+
 	/// Create a new contract.
 	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp = {}) override final;
 

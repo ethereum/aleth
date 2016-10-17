@@ -29,6 +29,7 @@
 #include <libdevcore/OverlayDB.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
+#include <libethereum/CodeSizeCache.h>
 #include <libethereum/GenericMiner.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
@@ -210,6 +211,10 @@ public:
 	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
 	h256 codeHash(Address const& _contract) const;
 
+	/// Get the byte-size of the code of an account.
+	/// @returns code(_contract).size(), but utilizes CodeSizeHash.
+	size_t codeSize(Address const& _contract) const;
+
 	/// Note that the given address is sending a transaction and thus increment the associated ticker.
 	void noteSending(Address const& _id);
 
@@ -300,6 +305,8 @@ AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
 				if (i.second.isFreshCode())
 				{
 					h256 ch = sha3(i.second.code());
+					// Store the size of the code
+					CodeSizeCache::instance().store(ch, i.second.code().size());
 					_state.db()->insert(ch, &i.second.code());
 					s << ch;
 				}

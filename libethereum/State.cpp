@@ -31,6 +31,7 @@
 #include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
+#include "CodeSizeCache.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
@@ -212,7 +213,7 @@ void State::ensureCached(Address const& _a, bool _requireCode, bool _forceCreate
 	ensureCached(m_cache, _a, _requireCode, _forceCreate);
 }
 
-void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Address& _a, bool _requireCode, bool _forceCreate) const
+void State::ensureCached(std::unordered_map<Address, Account>& _cache, Address const& _a, bool _requireCode, bool _forceCreate) const
 {
 	auto it = _cache.find(_a);
 	if (it == _cache.end())
@@ -231,7 +232,10 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Add
 		tie(it, ok) = _cache.insert(make_pair(_a, s));
 	}
 	if (_requireCode && it != _cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
+	{
 		it->second.noteCode(it->second.codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(it->second.codeHash())));
+		CodeSizeCache::instance().store(it->second.codeHash(), it->second.code().size());
+	}
 }
 
 void State::commit()
@@ -426,6 +430,24 @@ h256 State::codeHash(Address const& _contract) const
 	if (m_cache[_contract].isFreshCode())
 		return sha3(code(_contract));
 	return m_cache[_contract].codeHash();
+}
+
+size_t State::codeSize(Address const& _contract) const
+{
+	if (!addressHasCode(_contract))
+		return 0;
+	if (m_cache[_contract].isFreshCode())
+		return code(_contract).size();
+	auto& codeSizeCache = CodeSizeCache::instance();
+	h256 codeHash = m_cache[_contract].codeHash();
+	if (codeSizeCache.contains(codeHash))
+		return codeSizeCache.get(codeHash);
+	else
+	{
+		size_t size = code(_contract).size();
+		codeSizeCache.store(codeHash, size);
+		return size;
+	}
 }
 
 bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const

@@ -106,6 +106,11 @@ bool ExtVM::call(CallParameters& _p)
 	return !e.excepted();
 }
 
+size_t ExtVM::codeSizeAt(dev::Address _a)
+{
+	return m_s.codeSize(_a);
+}
+
 h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
 {
 	// Increment associated nonce for sender.
