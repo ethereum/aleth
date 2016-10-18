@@ -62,7 +62,6 @@ struct ChainOperationParams
 	u256 maximumExtraDataSize = 1024;
 	u256 accountStartNonce = 0;
 	bool tieBreakingGas = true;
-	EVMSchedule evmSchedule;
 
 	/// Precompiled contracts as specified in the chain params.
 	std::unordered_map<Address, PrecompiledContract> precompiled;
