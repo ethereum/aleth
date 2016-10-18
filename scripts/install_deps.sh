@@ -469,6 +469,9 @@ case $(uname -s) in
                     # On Travis CI llvm package conficts with the new to be installed.
                     sudo apt-get -y remove llvm
                 fi
+                sudo apt-get -y update
+                # this installs the add-apt-repository command
+                sudo apt-get install -y --no-install-recommends software-properties-common
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
                 sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
