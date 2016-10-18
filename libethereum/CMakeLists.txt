@@ -5,9 +5,8 @@ aux_source_directory(. SRC_LIST)
 file(GLOB HEADERS "*.h")
 
 add_library(ethereum ${SRC_LIST} ${HEADERS})
-eth_use(ethereum REQUIRED Jsoncpp)
 
-target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES})
+target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES} jsoncpp)
 
 find_package(Boost QUIET REQUIRED COMPONENTS regex)
 find_package(Dev)

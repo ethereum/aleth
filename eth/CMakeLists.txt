@@ -4,8 +4,6 @@ file(GLOB HEADERS "*.h")
 
 eth_simple_add_executable(eth ${SRC_LIST} ${HEADERS})
 
-eth_use(eth REQUIRED JsonRpc::Client)
-
 find_package(Eth)
 find_package(Web3)
 
@@ -13,6 +11,9 @@ target_include_directories(eth PRIVATE ..)
 target_link_libraries(eth ${Eth_EVM_LIBRARIES})
 target_link_libraries(eth ${Web3_WEB3JSONRPC_LIBRARIES})
 target_link_libraries(eth ${Web3_WEBTHREE_LIBRARIES})
+target_link_libraries(eth jsonrpc::client)
+# TODO: Remove.
+target_compile_definitions(eth PRIVATE ETH_JSONRPC)
 
 if (EVMJIT)
 	# Do we need include paths here?

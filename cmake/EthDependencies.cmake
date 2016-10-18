@@ -137,7 +137,6 @@ if (STATIC_LINKING)
 		# the runtime libraries to be statically linked.
 		#
 		# Still TODO:
-		# - jsoncpp
 		# - json-rpc-cpp
 		# - leveldb (which pulls in snappy, for the dylib at ;east)
 		# - miniupnp
