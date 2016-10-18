@@ -479,7 +479,6 @@ case $(uname -s) in
                     libcurl4-openssl-dev \
                     libcryptopp-dev \
                     libgmp-dev \
-                    libjsoncpp-dev \
                     libleveldb-dev \
                     libmicrohttpd-dev \
                     libminiupnpc-dev \

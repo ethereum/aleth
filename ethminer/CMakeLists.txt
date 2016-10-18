@@ -4,14 +4,14 @@ file(GLOB HEADERS "*.h")
 
 eth_simple_add_executable(ethminer ${SRC_LIST} ${HEADERS})
 
-eth_use(ethminer REQUIRED JsonRpc::Client)
-
 jsonrpcstub_client_create(ethminer minerfarm.json FarmClient ${CMAKE_CURRENT_SOURCE_DIR} FarmClient)
 
 find_package(Eth)
 
 target_include_directories(ethminer PRIVATE ..)
-target_link_libraries(ethminer ${Eth_ETHASHSEAL_LIBRARIES})
+target_link_libraries(ethminer ${Eth_ETHASHSEAL_LIBRARIES} jsonrpc::client)
+# TODO: Remove.
+target_compile_definitions(ethminer PRIVATE ETH_JSONRPC)
 
 if (MSVC)
 	find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time)
