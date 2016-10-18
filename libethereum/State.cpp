@@ -329,21 +329,15 @@ void State::subBalance(Address const& _id, bigint const& _amount)
 		it->second.addBalance(-_amount);
 }
 
-Address State::newContract(u256 const& _balance, bytes const& _code)
+void State::createContract(Address const& _address)
 {
-	auto h = sha3(_code);
-	m_db.insert(h, &_code);
-	while (true)
-	{
-		Address ret = Address::random();
-		ensureCached(ret, false, false);
-		auto it = m_cache.find(ret);
-		if (it == m_cache.end())
-		{
-			m_cache[ret] = Account(requireAccountStartNonce(), _balance, EmptyTrie, h, Account::Changed);
-			return ret;
-		}
-	}
+	m_cache[_address] = Account(requireAccountStartNonce(), balance(_address), Account::ContractConception);
+}
+
+void State::kill(Address _a)
+{
+	// Address is present because it executed previously.
+	m_cache.at(_a).kill();
 }
 
 u256 State::transactionsFrom(Address const& _id) const
