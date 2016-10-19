@@ -21,17 +21,28 @@
 */
 #include <stdint.h>
 #include <cryptopp/sha3.h>
+#if (CRYPTOPP_VERSION >= 564)
+#include <cryptopp/keccak.h>
+#endif
 
 extern "C" {
 struct ethash_h256;
 typedef struct ethash_h256 ethash_h256_t;
 void SHA3_256(ethash_h256_t const* ret, uint8_t const* data, size_t size)
 {
+#if (CRYPTOPP_VERSION >= 564)
+	CryptoPP::Keccak_256().CalculateDigest((uint8_t*)ret, data, size);
+#else
 	CryptoPP::SHA3_256().CalculateDigest((uint8_t*)ret, data, size);
+#endif
 }
 
 void SHA3_512(uint8_t* const ret, uint8_t const* data, size_t size)
 {
+#if (CRYPTOPP_VERSION >= 564)
+	CryptoPP::Keccak_512().CalculateDigest(ret, data, size);
+#else
 	CryptoPP::SHA3_512().CalculateDigest(ret, data, size);
+#endif
 }
 }
