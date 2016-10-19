@@ -210,13 +210,8 @@ StateDiff State::diff(State const& _c, bool _quick) const
 
 void State::ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const
 {
-	ensureCached(m_cache, _a, _requireCode, _forceCreate);
-}
-
-void State::ensureCached(std::unordered_map<Address, Account>& _cache, Address const& _a, bool _requireCode, bool _forceCreate) const
-{
-	auto it = _cache.find(_a);
-	if (it == _cache.end())
+	auto it = m_cache.find(_a);
+	if (it == m_cache.end())
 	{
 		// populate basic info.
 		string stateBack = m_state.at(_a);
@@ -229,12 +224,35 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, Address c
 		else
 			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
 		bool ok;
-		tie(it, ok) = _cache.insert(make_pair(_a, s));
+		tie(it, ok) = m_cache.insert(make_pair(_a, s));
+		if (!it->second.isDirty())
+			m_unchangedCacheEntries.insert(_a);
+
+		clearCacheIfTooLarge();
 	}
-	if (_requireCode && it != _cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
+	if (_requireCode && it != m_cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
 	{
 		it->second.noteCode(it->second.codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(it->second.codeHash())));
 		CodeSizeCache::instance().store(it->second.codeHash(), it->second.code().size());
+	}
+}
+
+void State::clearCacheIfTooLarge() const
+{
+	// TODO: Find a good magic number
+	while (m_unchangedCacheEntries.size() > 1000)
+	{
+		// Remove a random element
+		// TODO: This can be exploited, an attacker can only access low-address
+		// accounts whould would result in those never being removed from the cache.
+		auto addr = m_unchangedCacheEntries.lower_bound(Address::random());
+		if (addr == m_unchangedCacheEntries.end())
+			addr = m_unchangedCacheEntries.begin();
+		auto cacheEntry = m_cache.find(*addr);
+		if (cacheEntry == m_cache.end() || cacheEntry->second.isDirty())
+			m_unchangedCacheEntries.erase(addr);
+		else
+			m_cache.erase(cacheEntry);
 	}
 }
 

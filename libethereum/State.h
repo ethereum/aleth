@@ -253,8 +253,8 @@ private:
 	/// exist in the DB.
 	void ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const;
 
-	/// Retrieve all information about a given address into a cache.
-	void ensureCached(std::unordered_map<Address, Account>& _cache, Address const& _a, bool _requireCode, bool _forceCreate) const;
+	/// Purges non-modified entries in m_cache if it grows too large.
+	void clearCacheIfTooLarge() const;
 
 	/// Debugging only. Good for checking the Trie is in shape.
 	bool isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const;
@@ -265,6 +265,7 @@ private:
 	OverlayDB m_db;								///< Our overlay for the state tree.
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
 	mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
+	mutable std::set<Address> m_unchangedCacheEntries;	///< Tracks entries in m_cache that can potentially be purged if it grows too large.
 	AddressHash m_touched;						///< Tracks all addresses touched so far.
 
 	u256 m_accountStartNonce;
