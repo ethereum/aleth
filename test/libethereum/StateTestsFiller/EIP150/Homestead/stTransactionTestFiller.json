@@ -4,7 +4,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -41,7 +41,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -84,7 +84,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -127,7 +127,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -166,7 +166,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -206,7 +206,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -243,7 +243,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -279,7 +279,7 @@
             "currentCoinbase" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1100",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -315,7 +315,7 @@
             "currentCoinbase" : "2adf5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "22000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -369,7 +369,7 @@
             "currentCoinbase" : "2adf5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "47766",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -423,7 +423,7 @@
             "currentCoinbase" : "2adf5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "220000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -478,7 +478,7 @@
             "currentCoinbase" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "21100",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -514,7 +514,7 @@
             "currentCoinbase" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "21100",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -551,7 +551,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -608,7 +608,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -677,7 +677,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -760,7 +760,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -833,7 +833,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -924,7 +924,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1002,7 +1002,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1014,7 +1014,7 @@
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "100000",
+                "balance" : "1000000",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -1023,7 +1023,7 @@
 
             "c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "10",
-                "code" : "{(CALL 0 0x0000000000000000000000000000000000000000 1 0 0 0 0) (SUICIDE 0)}",
+                "code" : "{(CALL 35000 0x0000000000000000000000000000000000000000 1 0 0 0 0) (SUICIDE 0)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -1041,7 +1041,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "50000",
+            "gasLimit" : "250000",
             "gasPrice" : "1",
             "nonce" : "",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -1055,7 +1055,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1068,7 +1068,7 @@
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "100000",
+                "balance" : "1000000",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -1077,7 +1077,7 @@
 
             "c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "10",
-                "code" : "{(CALL 0 0x0000000000000000000000000000000000000000 0 0 0 0 0) (SUICIDE 0)}",
+                "code" : "{(CALL 25000 0x0000000000000000000000000000000000000000 0 0 0 0 0) (SUICIDE 0)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -1095,7 +1095,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "50000",
+            "gasLimit" : "150000",
             "gasPrice" : "1",
             "nonce" : "",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -1109,7 +1109,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1169,7 +1169,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1183,7 +1183,7 @@
         "pre" :
         {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "180000",
+                "balance" : "1800000",
                 "code" : "",
                 "nonce" : "0",
                 "storage" : {
@@ -1192,7 +1192,7 @@
 
             "c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "1000",
-                "code" : "{(CALL 22000 0x0000000000000000000000000000000000000000 1 0 0 0 0) (SUICIDE 0)}",
+                "code" : "{(CALL 32000 0x0000000000000000000000000000000000000000 1 0 0 0 0) (SUICIDE 0)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -1211,7 +1211,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "150000",
+            "gasLimit" : "250000",
             "gasPrice" : "1",
             "nonce" : "",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -1225,7 +1225,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1283,17 +1283,17 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "111488",
+                "balance" : "108988",
                 "nonce" : "1"
             },
             "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
-                "balance" : "10502"
+                "balance" : "13002"
             }
         },
         "pre" :
@@ -1332,7 +1332,7 @@
             "currentCoinbase" : "b94f5374fce5edbc8e2a8697c15331677e6ebf0b",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1380,7 +1380,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1416,7 +1416,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1452,7 +1452,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1489,7 +1489,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1532,7 +1532,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1569,7 +1569,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "10000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1612,7 +1612,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1654,7 +1654,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1736,7 +1736,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1776,7 +1776,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1815,7 +1815,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1853,7 +1853,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "100000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1889,7 +1889,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1926,7 +1926,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -1966,7 +1966,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -2014,7 +2014,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -2064,14 +2064,14 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000000000",
-            "currentNumber" : "1150000",
+            "currentNumber" : "2463000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
             "f1ecf98489fa9ed60a664fc4998db699cfa39d40" : {
                 "storage" : {
-                    "0xfd" : "0x01340b"
+                    "0xfd" : "0x012f3b"
                 }
             }
         },
