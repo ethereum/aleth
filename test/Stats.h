@@ -35,7 +35,8 @@ public:
 	struct Item
 	{
 		clock::duration duration;
-		std::string 	name;
+		int64_t gasUsed;
+		std::string name;
 	};
 
 	static Stats& get();
@@ -44,7 +45,7 @@ public:
 
 	void suiteStarted(std::string const& _name) override;
 	void testStarted(std::string const& _name) override;
-	void testFinished() override;
+	void testFinished(int64_t _gasUsed) override;
 
 private:
 	clock::time_point m_tp;
