@@ -39,6 +39,7 @@ enum class Network
 	Test = 70,				///< Normal Frontier/Homestead chain without all the premine.
 	FrontierTest = 71,		///< Just test the Frontier-era characteristics "forever" (no Homestead portion).
 	HomesteadTest = 72,		///< Just test the Homestead-era characteristics "forever" (no Frontier portion).
+	EIP150Test = 73,		///< EIP150 Rules For BlockchainTests
 	Special = 0xff			///< Something else.
 };
 

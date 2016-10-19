@@ -186,10 +186,16 @@ void VM::interpretCases()
 
 		CASE_BEGIN(SUICIDE)
 		{
+			m_runGas = toUint64(m_schedule->suicideGas);
+			Address dest = asAddress(*m_sp);
+
+			// After EIP150 hard fork charge additional cost of sending
+			// ethers to non-existing account.
+			if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
+				m_runGas += m_schedule->callNewAccountGas;
+
 			onOperation();
 			updateIOGas();
-
-			Address dest = asAddress(*m_sp);
 			m_ext->suicide(dest);
 			m_bounce = 0;
 		}
@@ -543,6 +549,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(BALANCE)
 		{
+			m_runGas = toUint64(m_schedule->balanceGas);
 			onOperation();
 			updateIOGas();
 
@@ -607,6 +614,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(EXTCODESIZE)
+			m_runGas = toUint64(m_schedule->extcodesizeGas);
 			onOperation();
 			updateIOGas();
 
@@ -638,6 +646,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(EXTCODECOPY)
 		{
+			m_runGas = toUint64(m_schedule->extcodecopyGas);
 			m_copyMemSize = toUint64(*(m_sp - 3));
 			m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 3));
 			updateMem();
