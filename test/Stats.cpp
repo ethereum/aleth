@@ -43,9 +43,9 @@ void Stats::testStarted(std::string const& _name)
 	m_tp = clock::now();
 }
 
-void Stats::testFinished()
+void Stats::testFinished(int64_t _gasUsed)
 {
-	m_stats.push_back({clock::now() - m_tp, m_currentSuite + "/" + m_currentTest});
+	m_stats.push_back({clock::now() - m_tp, _gasUsed, m_currentSuite + "/" + m_currentTest});
 }
 
 std::ostream& operator<<(std::ostream& out, Stats::clock::duration const& d)
@@ -78,7 +78,17 @@ Stats::~Stats()
 	if (Options::get().statsOutFile == "out")
 	{
 		for (auto&& s: m_stats)
-			out << "  " << std::setw(40) << std::left << s.name.substr(0, 40) << s.duration << " \n";
+		{
+			auto usecs = std::chrono::duration_cast<std::chrono::microseconds>(s.duration).count();
+			out << "  " << std::setw(40) << std::left << s.name.substr(0, 40) << s.duration;
+			if (s.gasUsed >= 0)
+			{
+				auto gasRate = uint64_t(double(s.gasUsed) * 1000 / usecs);
+				out << "\t" << std::setw(10) << std::right  << gasRate << " gas/ms\n";
+			}
+			else
+				out << "\tOOG\n";
+		}
 		out << "\n";
 	}
 	else if (!Options::get().statsOutFile.empty())
@@ -86,7 +96,17 @@ Stats::~Stats()
 		// Output stats to file
 		std::ofstream file{Options::get().statsOutFile};
 		for (auto&& s: m_stats)
-			file << s.name << "\t" << std::chrono::duration_cast<std::chrono::microseconds>(s.duration).count() << "\n";
+		{
+			auto usecs = std::chrono::duration_cast<std::chrono::microseconds>(s.duration).count();
+			file << s.name << "\t" << usecs;
+			if (s.gasUsed >= 0)
+			{
+				auto gasRate = s.gasUsed / usecs;
+				file << "\t" << gasRate << " gas/us\n";
+			}
+			else
+				file << "\tOOG\n";
+		}
 	}
 
 	out	<< "  tot: " << tot << "\n"

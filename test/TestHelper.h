@@ -133,7 +133,7 @@ public:
 	eth::State m_statePre;
 	eth::State m_statePost;
 	eth::EnvInfo m_envInfo;
-	eth::Transaction m_transaction;	
+	eth::Transaction m_transaction;
 	eth::LogEntries m_logs;
 	eth::LogEntries m_logsExpected;
 
@@ -245,7 +245,7 @@ public:
 	TestOutputHelper() { TestOutputHelper::initTest(); }
 	static void initTest(int _maxTests = 1);
 	static void initTest(json_spirit::mValue& _v);
-	static bool passTest(json_spirit::mObject& _o, std::string& _testName);		
+	static bool passTest(json_spirit::mObject& _o, std::string& _testName);
 	static void setMaxTests(int _count) { m_maxTests = _count; }
 	static void setCurrentTestFileName(std::string _name) { m_currentTestFileName = _name; }
 	static std::string const& testName() { return m_currentTestName; }
@@ -268,21 +268,23 @@ public:
 
 	virtual void suiteStarted(std::string const&) {}
 	virtual void testStarted(std::string const& _name) = 0;
-	virtual void testFinished() = 0;
+	virtual void testFinished(int64_t _gasUsed) = 0;
 
 	static void registerListener(Listener& _listener);
 	static void notifySuiteStarted(std::string const& _name);
 	static void notifyTestStarted(std::string const& _name);
-	static void notifyTestFinished();
+	static void notifyTestFinished(int64_t _gasUsed);
 
 	/// Test started/finished notification RAII helper
 	class ExecTimeGuard
 	{
+		int64_t m_gasUsed = -1;
 	public:
 		ExecTimeGuard(std::string const& _testName) { notifyTestStarted(_testName);	}
-		~ExecTimeGuard() { notifyTestFinished(); }
+		~ExecTimeGuard() { notifyTestFinished(m_gasUsed); }
 		ExecTimeGuard(ExecTimeGuard const&) = delete;
 		ExecTimeGuard& operator=(ExecTimeGuard) = delete;
+		void setGasUsed(int64_t _gas) { m_gasUsed = _gas; }
 	};
 };
 
