@@ -39,8 +39,8 @@ public:
 	void store(h256 const& _hash, size_t size)
 	{
 		UniqueGuard g(x_cache);
-		if (m_cache.size() > c_maxSize)
-			removeElement();
+		if (m_cache.size() >= c_maxSize)
+			removeRandomElement();
 		m_cache[_hash] = size;
 	}
 	bool contains(h256 const& _hash) const
@@ -58,7 +58,7 @@ public:
 
 private:
 	/// Removes a random element from the cache.
-	void removeElement()
+	void removeRandomElement()
 	{
 		if (!m_cache.empty())
 		{
