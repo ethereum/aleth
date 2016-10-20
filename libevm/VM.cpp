@@ -42,6 +42,26 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(s512(_a) % s512(_b));
 }
 
+/// Implementation of EXP.
+///
+/// This implements exponentiation by squaring algorithm.
+/// Is is faster than boost::multiprecision::powm() because avoids explicit
+/// mod operation.
+/// Do not inline it.
+u256 exp256(u256 _base, u256 _exponent)
+{
+	using boost::multiprecision::limb_type;
+	u256 result = 1;
+	while (_exponent)
+	{
+		if (static_cast<limb_type>(_exponent) & 1)  // If exponent is odd.
+			result *= _base;
+		_base *= _base;
+		_exponent >>= 1;
+	}
+	return result;
+}
+
 
 //
 // for tracing, checking, metering, measuring ...
@@ -324,7 +344,7 @@ void VM::interpretCases()
 			updateIOGas();
 
 			auto base = *m_sp--;
-			*m_sp = (u256)boost::multiprecision::powm((bigint)base, (bigint)expon, bigint(1) << 256);
+			*m_sp = exp256(base, expon);
 			++m_pc;
 		}
 		CASE_END
