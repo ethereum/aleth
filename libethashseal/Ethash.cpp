@@ -84,7 +84,9 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 
 EVMSchedule const& Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
-	if (_envInfo.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
+	if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
+		return EIP150Schedule;
+	else if (_envInfo.number() >= chainParams().u256Param("homsteadForkBlock"))
 		return HomesteadSchedule;
 	else
 		return FrontierSchedule;
@@ -163,7 +165,7 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
 {
-	if (_ir & ImportRequirements::TransactionSignatures && _bi.number() >= chainParams().u256Param("frontierCompatibilityModeLimit"))
+	if (_ir & ImportRequirements::TransactionSignatures && _bi.number() >= chainParams().u256Param("homsteadForkBlock"))
 		_t.checkLowS();
 	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
 	if (_ir & ImportRequirements::TransactionBasic && _t.gasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
@@ -197,7 +199,7 @@ u256 Ethash::calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _par
 	auto durationLimit = chainParams().u256Param("durationLimit");
 
 	bigint target;	// stick to a bigint for the target. Don't want to risk going negative.
-	if (_bi.number() < chainParams().u256Param("frontierCompatibilityModeLimit"))
+	if (_bi.number() < chainParams().u256Param("homsteadForkBlock"))
 		// Frontier-era difficulty adjustment
 		target = _bi.timestamp() >= _parent.timestamp() + durationLimit ? _parent.difficulty() - (_parent.difficulty() / difficultyBoundDivisor) : (_parent.difficulty() + (_parent.difficulty() / difficultyBoundDivisor));
 	else

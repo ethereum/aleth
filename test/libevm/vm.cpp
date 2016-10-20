@@ -337,7 +337,10 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 			auto vmtrace = Options::get().vmtrace ? fev.simpleTrace() : OnOpFunc{};
 			{
 				Listener::ExecTimeGuard guard{i.first};
+				auto gas = static_cast<int64_t>(fev.gas);
 				output = vm->exec(fev.gas, fev, vmtrace);
+				gas -= static_cast<int64_t>(fev.gas);
+				guard.setGasUsed(gas);
 			}
 		}
 		catch (VMException const&)

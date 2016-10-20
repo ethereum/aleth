@@ -1,15 +1,26 @@
+# For running this container as non-root user, see
+# https://github.com/ethereum/cpp-ethereum/blob/develop/scripts/docker-eth
+# or call `docker run` like this:
+#
+##    mkdir -p ~/.ethereum ~/.web3
+##    docker run --rm -it --net=host \
+##    -v ~/.ethereum:/.ethereum -v ~/.web3:/.web3 \
+##    -e HOME=/ --user $(id -u):$(id -g) ethereum/client-cpp
+
 FROM ubuntu:xenial
 MAINTAINER chriseth
 ENV DEBIAN_FRONTEND noninteractive
 
-RUN apt-get -y update
-RUN apt-get upgrade -q -y
-RUN apt-get -q -y install git lsb-release sudo software-properties-common
-RUN git clone https://github.com/ethereum/cpp-ethereum.git
-RUN cpp-ethereum/scripts/install_deps.sh
-RUN mkdir cpp-ethereum/build
-RUN cd cpp-ethereum/build && cmake .. && make install
-RUN ldconfig # should actually be part of make install...
+RUN apt-get update &&\
+    apt-get -q -y install git-core sudo lsb-release software-properties-common &&\
+    git clone https://github.com/ethereum/cpp-ethereum.git &&\
+    cpp-ethereum/scripts/install_deps.sh &&\
+    mkdir cpp-ethereum/build &&\
+    cd cpp-ethereum/build &&\
+    cmake .. && \
+    make install && \
+    ldconfig &&\
+    rm -rf /cpp-ethereum
 
 EXPOSE 8545 30303
 

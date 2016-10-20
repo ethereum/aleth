@@ -186,10 +186,16 @@ void VM::interpretCases()
 
 		CASE_BEGIN(SUICIDE)
 		{
+			m_runGas = toUint64(m_schedule->suicideGas);
+			Address dest = asAddress(*m_sp);
+
+			// After EIP150 hard fork charge additional cost of sending
+			// ethers to non-existing account.
+			if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
+				m_runGas += m_schedule->callNewAccountGas;
+
 			onOperation();
 			updateIOGas();
-
-			Address dest = asAddress(*m_sp);
 			m_ext->suicide(dest);
 			m_bounce = 0;
 		}
@@ -543,6 +549,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(BALANCE)
 		{
+			m_runGas = toUint64(m_schedule->balanceGas);
 			onOperation();
 			updateIOGas();
 
@@ -607,6 +614,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(EXTCODESIZE)
+			m_runGas = toUint64(m_schedule->extcodesizeGas);
 			onOperation();
 			updateIOGas();
 
@@ -638,6 +646,7 @@ void VM::interpretCases()
 
 		CASE_BEGIN(EXTCODECOPY)
 		{
+			m_runGas = toUint64(m_schedule->extcodecopyGas);
 			m_copyMemSize = toUint64(*(m_sp - 3));
 			m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 3));
 			updateMem();
@@ -771,9 +780,12 @@ void VM::interpretCases()
 			onOperation();
 			updateIOGas();
 
-			int i = (int)m_op - (int)Instruction::PUSH1 + 1;
+			int numBytes = (int)m_op - (int)Instruction::PUSH1 + 1;
 			*++m_sp = 0;
-			for (++m_pc; i--; ++m_pc)
+			// Construct a number out of PUSH bytes.
+			// This requires the code has been copied and extended by 32 zero
+			// bytes to handle "out of code" push data here.
+			for (++m_pc; numBytes--; ++m_pc)
 				*m_sp = (*m_sp << 8) | m_code[m_pc];
 		}
 		CASE_END

@@ -248,7 +248,7 @@ void replaceLLLinState(json_spirit::mObject& _o)
 }
 
 void ImportTest::importState(json_spirit::mObject const& _o, State& _state, AccountMaskMap& o_mask)
-{		
+{
 	//Compile LLL code of the test Fillers using external call to lllc
 	json_spirit::mObject o = _o;
 	replaceLLLinState(o);
@@ -323,7 +323,7 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 }
 
 void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
-{	
+{
 	importTransaction(o_tr, m_transaction);
 }
 
@@ -372,7 +372,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 		}
 
 		if (_statePost.addressInUse(a.first))
-		{			
+		{
 
 			if (addressOptions.hasBalance())
 				CHECK((_stateExpect.balance(a.first) == _statePost.balance(a.first)),
@@ -428,7 +428,7 @@ int ImportTest::exportTest(bytes const& _output)
 		m_testObject.erase(m_testObject.find("expectOut"));
 	}
 
-	// export logs	
+	// export logs
 	m_testObject["logs"] = exportLog(m_logs);
 
 	// compare expected state with post state
@@ -600,7 +600,7 @@ LogEntries importLog(json_spirit::mArray& _a)
 	LogEntries logEntries;
 	for (auto const& l: _a)
 	{
-		json_spirit::mObject o = l.get_obj();		
+		json_spirit::mObject o = l.get_obj();
 		BOOST_REQUIRE(o.count("address") > 0);
 		BOOST_REQUIRE(o.count("topics") > 0);
 		BOOST_REQUIRE(o.count("data") > 0);
@@ -836,7 +836,7 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 }
 
 Options::Options(int argc, char** argv)
-{	
+{
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -1030,10 +1030,10 @@ void Listener::notifyTestStarted(std::string const& _name)
 		g_listener->testStarted(_name);
 }
 
-void Listener::notifyTestFinished()
+void Listener::notifyTestFinished(int64_t _gasUsed)
 {
 	if (g_listener)
-		g_listener->testFinished();
+		g_listener->testFinished(_gasUsed);
 }
 
 size_t TestOutputHelper::m_currTest = 0;
@@ -1062,12 +1062,12 @@ void TestOutputHelper::initTest(json_spirit::mValue& _v)
 	m_currentTestCaseName = boost::unit_test::framework::current_test_case().p_name;
 	std::cout << "Test Case \"" + m_currentTestCaseName + "\": " << std::endl;
 	m_maxTests = _v.get_obj().size();
-	m_currTest = 0;	
+	m_currTest = 0;
 }
 
 bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName)
 {
-	m_currTest++;	
+	m_currTest++;
 	int m_testsPerProgs = std::max(1, (int)(m_maxTests / 4));
 	if (m_currTest % m_testsPerProgs == 0 || m_currTest ==  m_maxTests)
 	{
