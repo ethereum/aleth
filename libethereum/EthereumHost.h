@@ -117,8 +117,6 @@ private:
 	virtual void onStarting() override { startWorking(); }
 	virtual void onStopping() override { stopWorking(); }
 
-	BlockChainSync* sync();
-
 	BlockChain const& m_chain;
 	OverlayDB const& m_db;					///< References to DB, needed for some of the Ethereum Protocol responses.
 	TransactionQueue& m_tq;					///< Maintains a list of incoming transactions not yet in a block on the blockchain.
@@ -137,7 +135,6 @@ private:
 	mutable RecursiveMutex x_sync;
 	mutable Mutex x_transactions;
 	std::unique_ptr<BlockChainSync> m_sync;
-	std::atomic<time_t> m_syncStart = { 0 };
 	std::atomic<time_t> m_lastTick = { 0 };
 };
 
