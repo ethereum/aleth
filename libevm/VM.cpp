@@ -638,7 +638,7 @@ void VM::interpretCases()
 			onOperation();
 			updateIOGas();
 
-			*m_sp = m_ext->codeAt(asAddress(*m_sp)).size();
+			*m_sp = m_ext->codeSizeAt(asAddress(*m_sp));
 			++m_pc;
 		CASE_END
 

@@ -250,6 +250,9 @@ public:
 	/// Read address's code.
 	virtual bytes const& codeAt(Address) { return NullBytes; }
 
+	/// @returns the size of the code in bytes at the given address.
+	virtual size_t codeSizeAt(Address) { return 0; }
+
 	/// Subtract amount from account's balance.
 	virtual void subBalance(u256) {}
 

@@ -29,6 +29,7 @@
 #include <libdevcore/OverlayDB.h>
 #include <libethcore/Exceptions.h>
 #include <libethcore/BlockHeader.h>
+#include <libethereum/CodeSizeCache.h>
 #include <libethereum/GenericMiner.h>
 #include <libevm/ExtVMFace.h>
 #include "Account.h"
@@ -108,7 +109,6 @@ class State
 	friend class ExtVM;
 	friend class dev::test::ImportTest;
 	friend class dev::test::StateLoader;
-	friend class Executive;
 	friend class BlockChain;
 
 public:
@@ -194,8 +194,14 @@ public:
 	/// Set the value of a storage position of an account.
 	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value) { m_cache[_contract].setStorage(_location, _value); }
 
-	/// Create a new contract.
-	Address newContract(u256 const& _balance, bytes const& _code);
+	/// Create a contract at the given address (with unset code and unchanged balance).
+	void createContract(Address const& _address);
+
+	/// Sets the code of the account. Must only be called during / after contract creation.
+	void setCode(Address const& _address, bytes&& _code) { m_cache[_address].setCode(std::move(_code)); }
+
+	/// Delete an account (used for processing suicides).
+	void kill(Address _a);
 
 	/// Get the storage of an account.
 	/// @note This is expensive. Don't use it unless you need to.
@@ -209,6 +215,10 @@ public:
 	/// Get the code hash of an account.
 	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
 	h256 codeHash(Address const& _contract) const;
+
+	/// Get the byte-size of the code of an account.
+	/// @returns code(_contract).size(), but utilizes CodeSizeHash.
+	size_t codeSize(Address const& _contract) const;
 
 	/// Note that the given address is sending a transaction and thus increment the associated ticker.
 	void noteSending(Address const& _id);
@@ -243,8 +253,8 @@ private:
 	/// exist in the DB.
 	void ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const;
 
-	/// Retrieve all information about a given address into a cache.
-	void ensureCached(std::unordered_map<Address, Account>& _cache, Address const& _a, bool _requireCode, bool _forceCreate) const;
+	/// Purges non-modified entries in m_cache if it grows too large.
+	void clearCacheIfTooLarge() const;
 
 	/// Debugging only. Good for checking the Trie is in shape.
 	bool isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const;
@@ -255,6 +265,7 @@ private:
 	OverlayDB m_db;								///< Our overlay for the state tree.
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
 	mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
+	mutable std::set<Address> m_unchangedCacheEntries;	///< Tracks entries in m_cache that can potentially be purged if it grows too large.
 	AddressHash m_touched;						///< Tracks all addresses touched so far.
 
 	u256 m_accountStartNonce;
@@ -300,6 +311,8 @@ AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
 				if (i.second.isFreshCode())
 				{
 					h256 ch = sha3(i.second.code());
+					// Store the size of the code
+					CodeSizeCache::instance().store(ch, i.second.code().size());
 					_state.db()->insert(ch, &i.second.code());
 					s << ch;
 				}

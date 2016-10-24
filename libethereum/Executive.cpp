@@ -304,11 +304,11 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
 
-	m_s.m_cache[m_newAddress] = Account(m_s.requireAccountStartNonce(), m_s.balance(m_newAddress), Account::ContractConception);
+	m_s.createContract(m_newAddress);
 	m_s.transferBalance(_sender, m_newAddress, _endowment);
 
 	if (_init.empty())
-		m_s.m_cache[m_newAddress].setCode({});
+		m_s.setCode(m_newAddress, {});
 
 	return !m_ext;
 }
@@ -371,7 +371,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out; // copy output to execution result
-				m_s.m_cache[m_newAddress].setCode(std::move(out)); // FIXME: Set only if Success?
+				m_s.setCode(m_newAddress, std::move(out));
 			}
 			else
 			{
@@ -439,7 +439,7 @@ void Executive::finalize()
 	// Suicides...
 	if (m_ext)
 		for (auto a: m_ext->sub.suicides)
-			m_s.m_cache[a].kill();
+			m_s.kill(a);
 
 	// Logs..
 	if (m_ext)

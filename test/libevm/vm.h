@@ -57,6 +57,7 @@ public:
 	virtual u256 txCount(Address _a) override { return std::get<1>(addresses[_a]); }
 	virtual void suicide(Address _a) override { std::get<0>(addresses[_a]) += std::get<0>(addresses[myAddress]); addresses.erase(myAddress); }
 	virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
+	virtual size_t codeSizeAt(Address _a) override { return std::get<3>(addresses[_a]).size(); }
 	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&) override;
 	virtual bool call(eth::CallParameters&) override;
 	void setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data);
