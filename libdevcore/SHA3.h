@@ -68,6 +68,4 @@ extern h256 EmptySHA3;
 
 extern h256 EmptyListSHA3;
 
-extern unsigned g_sha3Counter;
-
 }

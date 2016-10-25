@@ -58,6 +58,9 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_bq		(_bq),
 	m_networkId	(_networkId)
 {
+	// TODO: Composition would be better. Left like that to avoid initialization
+	//       issues as BlockChainSync accesses other EthereumHost members.
+	m_sync.reset(new BlockChainSync(*this));
 	m_latestBlockSent = _ch.currentHash();
 	m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
 }
@@ -84,10 +87,7 @@ bool EthereumHost::ensureInitialised()
 void EthereumHost::reset()
 {
 	RecursiveGuard l(x_sync);
-	if (m_sync)
-		m_sync->abortSync();
-	m_sync.reset();
-	m_syncStart = 0;
+	m_sync->abortSync();
 
 	m_latestBlockSent = h256();
 	Guard tl(x_transactions);
@@ -118,21 +118,6 @@ void EthereumHost::doWork()
 	{
 		m_lastTick = now;
 		foreachPeer([](std::shared_ptr<EthereumPeer> _p) { _p->tick(); return true; });
-	}
-
-	if (m_syncStart)
-	{
-		DEV_RECURSIVE_GUARDED(x_sync)
-			if (!m_sync)
-			{
-				time_t now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
-				if (now - m_syncStart > 10)
-				{
-					m_sync.reset(new BlockChainSync(*this));
-					m_syncStart = 0;
-					m_sync->restartSync();
-				}
-			}
 	}
 
 //	return netChange;
@@ -280,116 +265,78 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 	}
 }
 
-BlockChainSync* EthereumHost::sync()
-{
-	if (m_sync)
-		return m_sync.get(); // We only chose sync strategy once
-
-	bool pv63 = false;
-	foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
-	{
-		if (_p->m_protocolVersion == protocolVersion())
-			pv63 = true;
-		return !pv63;
-	});
-	if (pv63)
-	{
-		m_syncStart = 0;
-		m_sync.reset(new BlockChainSync(*this));
-	}
-	else if (!m_syncStart)
-		m_syncStart = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
-
-	return m_sync.get();
-}
-
 void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 {
 	RecursiveGuard l(x_sync);
-	if (sync())
+	try
 	{
-		try
-		{
-			sync()->onPeerStatus(_peer);
-		}
-		catch (FailedInvariant const&)
-		{
-			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			sync()->restartSync();
-		}
+		m_sync->onPeerStatus(_peer);
+	}
+	catch (FailedInvariant const&)
+	{
+		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+		clog(NetWarn) << "Failed invariant during sync, restarting sync";
+		m_sync->restartSync();
 	}
 }
 
 void EthereumHost::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
 {
 	RecursiveGuard l(x_sync);
-	if (sync())
+	try
 	{
-		try
-		{
-			sync()->onPeerBlockHeaders(_peer, _headers);
-		}
-		catch (FailedInvariant const&)
-		{
-			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			sync()->restartSync();
-		}
+		m_sync->onPeerBlockHeaders(_peer, _headers);
+	}
+	catch (FailedInvariant const&)
+	{
+		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+		clog(NetWarn) << "Failed invariant during sync, restarting sync";
+		m_sync->restartSync();
 	}
 }
 
 void EthereumHost::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
-	if (sync())
+	try
 	{
-		try
-		{
-			sync()->onPeerBlockBodies(_peer, _r);
-		}
-		catch (FailedInvariant const&)
-		{
-			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			sync()->restartSync();
-		}
+		m_sync->onPeerBlockBodies(_peer, _r);
+	}
+	catch (FailedInvariant const&)
+	{
+		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+		clog(NetWarn) << "Failed invariant during sync, restarting sync";
+		m_sync->restartSync();
 	}
 }
 
 void EthereumHost::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
 {
 	RecursiveGuard l(x_sync);
-	if (sync())
+	try
 	{
-		try
-		{
-			sync()->onPeerNewHashes(_peer, _hashes);
-		}
-		catch (FailedInvariant const&)
-		{
-			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			sync()->restartSync();
-		}
+		m_sync->onPeerNewHashes(_peer, _hashes);
+	}
+	catch (FailedInvariant const&)
+	{
+		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+		clog(NetWarn) << "Failed invariant during sync, restarting sync";
+		m_sync->restartSync();
 	}
 }
 
 void EthereumHost::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
 {
 	RecursiveGuard l(x_sync);
-	if (sync())
+	try
 	{
-		try
-		{
-			sync()->onPeerNewBlock(_peer, _r);
-		}
-		catch (FailedInvariant const&)
-		{
-			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-			clog(NetWarn) << "Failed invariant during sync, restarting sync";
-			sync()->restartSync();
-		}
+		m_sync->onPeerNewBlock(_peer, _r);
+	}
+	catch (FailedInvariant const&)
+	{
+		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+		clog(NetWarn) << "Failed invariant during sync, restarting sync";
+		m_sync->restartSync();
 	}
 }
 
@@ -405,8 +352,7 @@ void EthereumHost::onPeerAborting()
 	RecursiveGuard l(x_sync);
 	try
 	{
-		if (m_sync)
-			m_sync->onPeerAborting();
+		m_sync->onPeerAborting();
 	}
 	catch (Exception&)
 	{
@@ -416,16 +362,12 @@ void EthereumHost::onPeerAborting()
 
 bool EthereumHost::isSyncing() const
 {
-	if (!m_sync)
-		return false;
 	return m_sync->isSyncing();
 }
 
 SyncStatus EthereumHost::status() const
 {
 	RecursiveGuard l(x_sync);
-	if (!m_sync)
-		return SyncStatus();
 	return m_sync->status();
 }
 

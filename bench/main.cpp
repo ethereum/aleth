@@ -181,14 +181,13 @@ int main(int argc, char** argv)
 			t.init();
 
 			auto map = sm.second.make();
-			g_sha3Counter = 0;
 			Timer timer;
 			for (unsigned i = 0; i < trials; ++i)
 				for (auto const& i: map)
 					t.insert(&i.first, &i.second);
 			auto e = timer.elapsed() / trials;
 
-			cout << sm.first << ": " << e * 1000000 << " us, " << g_sha3Counter / trials << " sha3s, root=" << t.root() << endl;
+			cout << sm.first << ": " << e * 1000000 << " us, root=" << t.root() << endl;
 		}
 	}
 	else if (mode == Mode::SHA3)
