@@ -142,6 +142,10 @@ public:
 	/// to the trie later.
 	void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }
 
+	/// Set a key/value pair in the account's storage to a value that is already present inside the
+	/// database.
+	void setStorageCache(u256 _p, u256 _v) const { const_cast<decltype(m_storageOverlay)&>(m_storageOverlay)[_p] = _v; }
+
 	/// @returns true if we are in the contract-conception state and setCode is valid to call.
 	bool isFreshCode() const { return m_codeHash == c_contractConceptionCodeHash; }
 

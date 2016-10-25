@@ -45,7 +45,7 @@ public:
 	ExtVM(State& _s, EnvInfo const& _envInfo, SealEngineFace* _sealEngine, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, h256 const& _codeHash, unsigned _depth = 0):
 		ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(), _codeHash, _depth), m_s(_s), m_origCache(_s.m_cache), m_sealEngine(_sealEngine)
 	{
-		m_s.ensureCached(_myAddress, true, true);
+		m_s.ensureAccountExists(_myAddress);
 	}
 
 	/// Read storage location.
