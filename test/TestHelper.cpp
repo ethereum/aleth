@@ -452,7 +452,7 @@ int ImportTest::exportTest(bytes const& _output)
 	return err;
 }
 
-json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
+json_spirit::mObject fillJsonWithTransaction(Transaction const& _txn)
 {
 	json_spirit::mObject txObject;
 	txObject["nonce"] = toCompactHex(_txn.nonce(), HexPrefix::Add, 1);
@@ -467,7 +467,7 @@ json_spirit::mObject fillJsonWithTransaction(Transaction _txn)
 	return txObject;
 }
 
-json_spirit::mObject fillJsonWithState(State _state)
+json_spirit::mObject fillJsonWithState(State const& _state)
 {
 	json_spirit::mObject oState;
 	for (auto const& a: _state.addresses())
