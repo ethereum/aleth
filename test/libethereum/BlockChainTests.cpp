@@ -881,6 +881,24 @@ BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(BlockChainTestsHomestead)
 
+BOOST_AUTO_TEST_CASE(bcExploitTestHomestead)
+{
+	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest;
+	dev::test::executeTests("bcExploitTest", "/BlockchainTests/Homestead",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcSuicideIssueHomestead)
+{
+	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest;
+	dev::test::executeTests("bcSuicideIssue", "/BlockchainTests/Homestead",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
+}
+
+BOOST_AUTO_TEST_CASE(bcShanghaiLoveHomestead)
+{
+	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest;
+	dev::test::executeTests("bcShanghaiLove", "/BlockchainTests/Homestead",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
+}
+
 BOOST_AUTO_TEST_CASE(bcForkStressTestHomestead)
 {
 	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest;
