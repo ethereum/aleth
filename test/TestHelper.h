@@ -182,8 +182,8 @@ void executeTests(const std::string& _name, const std::string& _testPathAppendix
 void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
-json_spirit::mObject fillJsonWithState(eth::State _state);
-json_spirit::mObject fillJsonWithTransaction(eth::Transaction _txn);
+json_spirit::mObject fillJsonWithState(eth::State const& _state);
+json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
 int createRandomTest(std::vector<char*> const& _parameters);
