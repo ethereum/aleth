@@ -197,6 +197,9 @@ public:
 	/// Create a contract at the given address (with unset code and unchanged balance).
 	void createContract(Address const& _address);
 
+	/// Similar to `createContract`, but used in a normal transaction that targets _address.
+	void ensureAccountExists(Address const& _address);
+
 	/// Sets the code of the account. Must only be called during / after contract creation.
 	void setCode(Address const& _address, bytes&& _code) { m_cache[_address].setCode(std::move(_code)); }
 
@@ -247,11 +250,18 @@ public:
 	void noteAccountStartNonce(u256 const& _actual);
 
 private:
-	/// Retrieve all information about a given address into the cache.
-	/// If _requireMemory is true, grab the full memory should it be a contract item.
-	/// If _forceCreate is true, then insert a default item into the cache, in the case it doesn't
-	/// exist in the DB.
-	void ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const;
+	/// @returns the account at the given address or a null pointer if it does not exist.
+	/// The pointer is valid until the next access to the state or account.
+	Account const* account(Address const& _a, bool _requireCode = false) const;
+
+	/// @returns the account at the given address or a null pointer if it does not exist.
+	/// The pointer is valid until the next access to the state or account.
+	Account* account(Address const& _a, bool _requireCode = false);
+
+	/// Retrieve certain information about a given address into the cache and return
+	/// a pointer to the relevant account (or a null pointer if it does not exist).
+	/// If _requireCode is true, also load the code.
+	Account* ensureCached(Address const& _a, bool _requireCode) const;
 
 	/// Purges non-modified entries in m_cache if it grows too large.
 	void clearCacheIfTooLarge() const;
