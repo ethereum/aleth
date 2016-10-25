@@ -217,6 +217,9 @@ void State::ensureCached(Address const& _a, bool _requireCode, bool _forceCreate
 		string stateBack = m_state.at(_a);
 		if (stateBack.empty() && !_forceCreate)
 			return;
+
+		clearCacheIfTooLarge();
+
 		RLP state(stateBack);
 		Account s;
 		if (state.isNull())
@@ -227,8 +230,6 @@ void State::ensureCached(Address const& _a, bool _requireCode, bool _forceCreate
 		tie(it, ok) = m_cache.insert(make_pair(_a, s));
 		if (!it->second.isDirty())
 			m_unchangedCacheEntries.insert(_a);
-
-		clearCacheIfTooLarge();
 	}
 	if (_requireCode && it != m_cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
 	{
