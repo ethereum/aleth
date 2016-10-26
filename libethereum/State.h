@@ -159,6 +159,10 @@ public:
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 
+	/// Check if the account does not exist in the state or is empty (nonce == 0, balance == 0, code empty).
+	/// These two notions are equivalent after EIP158.
+	bool accountNonemptyOrExisting(Address const& _address) const;
+
 	/// Check if the address contains executable code.
 	bool addressHasCode(Address const& _address) const;
 

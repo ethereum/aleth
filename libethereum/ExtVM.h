@@ -70,7 +70,13 @@ public:
 	virtual u256 balance(Address _a) override final { return m_s.balance(_a); }
 
 	/// Does the account exist?
-	virtual bool exists(Address _a) override final { return m_s.addressInUse(_a); }
+	virtual bool exists(Address _a) override final
+	{
+		if (evmSchedule().emptinessIsNonexistence())
+			return m_s.accountNonemptyOrExisting(_a);
+		else
+			return m_s.addressInUse(_a);
+	}
 
 	/// Suicide the associated contract to the given address.
 	virtual void suicide(Address _a) override final
