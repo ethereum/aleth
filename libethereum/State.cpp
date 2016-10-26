@@ -259,9 +259,8 @@ void State::clearCacheIfTooLarge() const
 		if (addr == m_unchangedCacheEntries.end())
 			addr = m_unchangedCacheEntries.begin();
 		auto cacheEntry = m_cache.find(*addr);
-		if (cacheEntry == m_cache.end() || cacheEntry->second.isDirty())
-			m_unchangedCacheEntries.erase(addr);
-		else
+		m_unchangedCacheEntries.erase(addr);
+		if (cacheEntry != m_cache.end() && !cacheEntry->second.isDirty())
 			m_cache.erase(cacheEntry);
 	}
 }
