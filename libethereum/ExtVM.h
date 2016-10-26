@@ -79,7 +79,7 @@ public:
 	virtual bool exists(Address _a) override final
 	{
 		if (evmSchedule().emptinessIsNonexistence())
-			return m_s.accountNonemptyOrExisting(_a);
+			return m_s.accountNonemptyAndExisting(_a);
 		else
 			return m_s.addressInUse(_a);
 	}
