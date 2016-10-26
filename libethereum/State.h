@@ -159,9 +159,9 @@ public:
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 
-	/// Check if the account does not exist in the state or is empty (nonce == 0, balance == 0, code empty).
+	/// Check if the account exists in the state and is non empty (nonce > 0 || balance > 0 || code nonempty).
 	/// These two notions are equivalent after EIP158.
-	bool accountNonemptyOrExisting(Address const& _address) const;
+	bool accountNonemptyAndExisting(Address const& _address) const;
 
 	/// Check if the address contains executable code.
 	bool addressHasCode(Address const& _address) const;
@@ -243,7 +243,8 @@ public:
 	StateDiff diff(State const& _c, bool _quick = false) const;
 
 	/// Commit all changes waiting in the address cache to the DB.
-	void commit();
+	/// @param _killEmptyAccounts if true, will remove all "touched" empty accounts from the state.
+	void commit(bool _killEmptyAccounts);
 
 	/// Resets any uncommitted changes to the cache.
 	void setRoot(h256 const& _root);
@@ -254,6 +255,9 @@ public:
 	void noteAccountStartNonce(u256 const& _actual);
 
 private:
+	/// Turns all "touched" empty accounts into non-alive accounts.
+	void killEmptyAccounts();
+
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
 	Account const* account(Address const& _a, bool _requireCode = false) const;

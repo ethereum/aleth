@@ -192,10 +192,12 @@ void VM::interpretCases()
 			m_runGas = toUint64(m_schedule->suicideGas);
 			Address dest = asAddress(*m_sp);
 
-			// After EIP150 hard fork charge additional cost of sending
-			// ethers to non-existing account.
-			if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
-				m_runGas += m_schedule->callNewAccountGas;
+			// After EIP158 zero-value suicides do not have to pay account creation gas.
+			if (m_ext->balance(m_ext->myAddress) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
+				// After EIP150 hard fork charge additional cost of sending
+				// ethers to non-existing account.
+				if (m_schedule->suicideChargesNewAccountGas() && !m_ext->exists(dest))
+					m_runGas += m_schedule->callNewAccountGas;
 
 			ON_OP();
 			updateIOGas();

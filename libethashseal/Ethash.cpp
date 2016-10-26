@@ -86,7 +86,7 @@ EVMSchedule const& Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
 	if (_envInfo.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		return EIP158Schedule;
-	if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
+	else if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
 		return EIP150Schedule;
 	else if (_envInfo.number() >= chainParams().u256Param("homsteadForkBlock"))
 		return HomesteadSchedule;

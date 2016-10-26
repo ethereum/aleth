@@ -166,10 +166,11 @@ bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 {
 	ExecutionResult res;
 	eth::State tmpState = m_statePre;
+	unique_ptr<SealEngineFace> se;
 	try
 	{
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
-		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, *se, m_transaction);
+		se.reset(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
+		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();
 	}
@@ -182,7 +183,8 @@ bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 		cnote << "state execution exception: " << _e.what();
 	}
 
-	m_statePre.commit();
+	bool killEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
+	m_statePre.commit(killEmptyAccounts);
 	m_statePost = m_statePre;
 	m_statePre = tmpState;
 
