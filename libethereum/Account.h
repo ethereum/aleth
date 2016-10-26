@@ -111,6 +111,9 @@ public:
 	/// @returns true if the account is unchanged from creation.
 	bool isDirty() const { return !m_isUnchanged; }
 
+	/// @returns true if the nonce, balance and code is zero / empty. Code is considered empty
+	/// during creation phase.
+	bool isEmpty() const { return nonce() == 0 && balance() == 0 && ((isFreshCode() && code().empty()) || codeHash() == EmptySHA3); }
 
 	/// @returns the balance of this account. Can be altered in place.
 	u256& balance() { return m_balance; }
