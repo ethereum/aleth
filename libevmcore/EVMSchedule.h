@@ -74,6 +74,7 @@ struct EVMSchedule
 	bool staticCallDepthLimit() const { return !eip150Mode; }
 	bool suicideChargesNewAccountGas() const { return eip150Mode; }
 	bool emptinessIsNonexistence() const { return eip158Mode; }
+	bool zeroValueTransferChargesNewAccountGas() const { return !eip158Mode; }
 };
 
 static const EVMSchedule DefaultSchedule = EVMSchedule();
