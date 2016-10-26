@@ -358,10 +358,11 @@ void State::ensureAccountExists(const Address& _address)
 		m_cache[_address] = Account(requireAccountStartNonce(), 0, Account::NormalCreation);
 }
 
-void State::kill(Address _a)
+void State::kill(Address _addr)
 {
-	// Address is present because it executed previously.
-	m_cache.at(_a).kill();
+	if (auto a = account(_addr))
+		a->kill();
+	// If the account is not in the db, nothing to kill.
 }
 
 u256 State::transactionsFrom(Address const& _id) const
