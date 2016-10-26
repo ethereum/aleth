@@ -36,6 +36,7 @@ struct EVMSchedule
 	bool exceptionalFailedCodeDeposit = true;
 	bool haveDelegateCall = true;
 	bool eip150Mode = false;
+	bool eip158Mode = false;
 	unsigned stackLimit = 1024;
 	std::array<unsigned, 8> tierStepGas;
 	unsigned expGas = 10;
@@ -72,6 +73,7 @@ struct EVMSchedule
 
 	bool staticCallDepthLimit() const { return !eip150Mode; }
 	bool suicideChargesNewAccountGas() const { return eip150Mode; }
+	bool emptinessIsNonexistence() const { return eip158Mode; }
 };
 
 static const EVMSchedule DefaultSchedule = EVMSchedule();
@@ -95,6 +97,7 @@ static const EVMSchedule EIP158Schedule = []
 {
 	EVMSchedule schedule = EIP150Schedule;
 	schedule.expByteGas = 50;
+	schedule.eip158Mode = true;
 	return schedule;
 }();
 
