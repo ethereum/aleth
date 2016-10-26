@@ -80,7 +80,6 @@ static const EVMSchedule HomesteadSchedule = EVMSchedule(true, true, 53000);
 
 static const EVMSchedule EIP150Schedule = []
 {
-	//EIP150
 	EVMSchedule schedule = HomesteadSchedule;
 	schedule.eip150Mode = true;
 	schedule.extcodesizeGas = 700;
@@ -89,6 +88,13 @@ static const EVMSchedule EIP150Schedule = []
 	schedule.sloadGas = 200;
 	schedule.callGas = 700;
 	schedule.suicideGas = 5000;
+	return schedule;
+}();
+
+static const EVMSchedule EIP158Schedule = []
+{
+	EVMSchedule schedule = EIP150Schedule;
+	schedule.expByteGas = 50;
 	return schedule;
 }();
 
