@@ -121,7 +121,7 @@ void BlockQueue::verifierBody()
 		{
 			res.verified = m_bc->verifyBlock(&res.blockData, m_onBad, ImportRequirements::OutOfOrderChecks);
 		}
-		catch (...)
+		catch (std::exception const& _ex)
 		{
 			// bad block.
 			// has to be this order as that's how invariants() assumes.
@@ -135,7 +135,7 @@ void BlockQueue::verifierBody()
 					m_verifying.erase(it);
 					goto OK1;
 				}
-			cwarn << "BlockQueue missing our job: was there a GM?";
+			cwarn << "Unexpected exception when verifying block: " << _ex.what();
 			OK1:;
 			drainVerified_WITH_BOTH_LOCKS();
 			continue;
