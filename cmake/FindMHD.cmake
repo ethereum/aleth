@@ -39,11 +39,11 @@ if (MSVC)
 	set(MHD_LIBRARIES optimized ${MHD_LIBRARIES} debug ${MHD_LIBRARY_DEBUG})
 
 	# prepare dlls
-	string(REPLACE ".lib" ".dll" MHD_DLL ${MHD_LIBRARY})
-	string(REPLACE "/lib/" "/bin/" MHD_DLL ${MHD_DLL})
-	string(REPLACE ".lib" ".dll" MHD_DLL_DEBUG ${MHD_LIBRARY_DEBUG})
-	string(REPLACE "/lib/" "/bin/" MHD_DLL_DEBUG ${MHD_DLL_DEBUG})
-	set(MHD_DLLS optimized ${MHD_DLL} debug ${MHD_DLL_DEBUG})
+	string(REPLACE ".lib" ".dll" MHD_DLL "${MHD_LIBRARY}")
+	string(REPLACE "/lib/" "/bin/" MHD_DLL "${MHD_DLL}")
+	string(REPLACE ".lib" ".dll" MHD_DLL_DEBUG "${MHD_LIBRARY_DEBUG}")
+	string(REPLACE "/lib/" "/bin/" MHD_DLL_DEBUG "${MHD_DLL_DEBUG}")
+	set(MHD_DLLS optimized ${MHD_DLL} debug "${MHD_DLL_DEBUG}")
 
 endif()
 

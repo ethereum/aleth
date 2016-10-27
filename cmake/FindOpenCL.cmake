@@ -126,9 +126,9 @@ set(OpenCL_INCLUDE_DIRS ${OpenCL_INCLUDE_DIR})
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
 	# prepare dlls
-	string(REPLACE ".lib" ".dll" OpenCL_DLL ${OpenCL_LIBRARY})
-	string(REPLACE "/lib/" "/bin/" OpenCL_DLL ${OpenCL_DLL})
-	set(OpenCL_DLLS optimized ${OpenCL_DLL} debug ${OpenCL_DLL})
+	string(REPLACE ".lib" ".dll" OpenCL_DLL "${OpenCL_LIBRARY}")
+	string(REPLACE "/lib/" "/bin/" OpenCL_DLL "${OpenCL_DLL}")
+	set(OpenCL_DLLS optimized ${OpenCL_DLL} debug "${OpenCL_DLL}")
 endif()
 
 include(${CMAKE_CURRENT_LIST_DIR}/FindPackageHandleStandardArgs.cmake)

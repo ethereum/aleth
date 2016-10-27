@@ -14,8 +14,8 @@ if ("${CONF}" STREQUAL "Debug")
 	# hack, copy it twice. with and without d.dll suffix
 	# at first let's get the file name part
 	get_filename_component(DLL_DEBUG_D_NAME ${DLL_DEBUG} NAME)
-	string(REPLACE "d.dll" ".dll" DLL_DEBUG_D_NAME ${DLL_DEBUG_D_NAME})
-	string(REPLACE "_.dll" ".dll" DLL_DEBUG_D_NAME ${DLL_DEBUG_D_NAME})
+	string(REPLACE "d.dll" ".dll" DLL_DEBUG_D_NAME "${DLL_DEBUG_D_NAME}")
+	string(REPLACE "_.dll" ".dll" DLL_DEBUG_D_NAME "${DLL_DEBUG_D_NAME}")
 	
 	set(DESTINATION_D "${DESTINATION}/${DLL_DEBUG_D_NAME}")
 	execute_process(COMMAND ${CMAKE_COMMAND} -E copy "${DLL_DEBUG}" "${DESTINATION_D}")
