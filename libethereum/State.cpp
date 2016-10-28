@@ -117,7 +117,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 void State::populateFrom(AccountMap const& _map)
 {
 	eth::commit(_map, m_state);
-	commit(false);
+	commit(State::CommitBehaviour::KeepEmptyAccounts);
 }
 
 u256 const& State::requireAccountStartNonce() const
@@ -135,7 +135,7 @@ void State::noteAccountStartNonce(u256 const& _actual)
 		BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
 }
 
-void State::killEmptyAccounts()
+void State::removeEmptyAccounts()
 {
 	for (auto& i: m_cache)
 		if (i.second.isDirty() && i.second.isEmpty())
@@ -269,10 +269,10 @@ void State::clearCacheIfTooLarge() const
 	}
 }
 
-void State::commit(bool _killEmptyAccounts)
+void State::commit(CommitBehaviour _commitBehaviour)
 {
-	if (_killEmptyAccounts)
-		killEmptyAccounts();
+	if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)
+		removeEmptyAccounts();
 	m_touched += dev::eth::commit(m_cache, m_state);
 	m_cache.clear();
 }
@@ -556,8 +556,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		m_cache.clear();
 	else
 	{
-		bool killEmptyAccounts = _envInfo.number() >= _sealEngine->chainParams().u256Param("EIP158ForkBlock");
-		commit(killEmptyAccounts);
+		bool removeEmptyAccounts = _envInfo.number() >= _sealEngine->chainParams().u256Param("EIP158ForkBlock");
+		commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
 #if ETH_PARANOIA && !ETH_FATDB
 		ctrace << "Executed; now" << rootHash();
