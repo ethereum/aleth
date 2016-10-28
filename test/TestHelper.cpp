@@ -183,8 +183,8 @@ bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 		cnote << "state execution exception: " << _e.what();
 	}
 
-	bool killEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
-	m_statePre.commit(killEmptyAccounts);
+	bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
+	m_statePre.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 	m_statePost = m_statePre;
 	m_statePre = tmpState;
 
