@@ -112,6 +112,12 @@ class State
 	friend class BlockChain;
 
 public:
+	enum class CommitBehaviour
+	{
+		KeepEmptyAccounts,
+		RemoveEmptyAccounts
+	};
+
 	/// Default constructor; creates with a blank database prepopulated with the genesis block.
 	explicit State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
 
@@ -243,8 +249,8 @@ public:
 	StateDiff diff(State const& _c, bool _quick = false) const;
 
 	/// Commit all changes waiting in the address cache to the DB.
-	/// @param _killEmptyAccounts if true, will remove all "touched" empty accounts from the state.
-	void commit(bool _killEmptyAccounts);
+	/// @param _commitBehaviour whether or not to remove empty accounts during commit.
+	void commit(CommitBehaviour _commitBehaviour);
 
 	/// Resets any uncommitted changes to the cache.
 	void setRoot(h256 const& _root);
@@ -256,7 +262,7 @@ public:
 
 private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
-	void killEmptyAccounts();
+	void removeEmptyAccounts();
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
