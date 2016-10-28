@@ -258,11 +258,6 @@ private:
 	/// The pointer is valid until the next access to the state or account.
 	Account* account(Address const& _a, bool _requireCode = false);
 
-	/// Retrieve certain information about a given address into the cache and return
-	/// a pointer to the relevant account (or a null pointer if it does not exist).
-	/// If _requireCode is true, also load the code.
-	Account* ensureCached(Address const& _a, bool _requireCode) const;
-
 	/// Purges non-modified entries in m_cache if it grows too large.
 	void clearCacheIfTooLarge() const;
 
