@@ -359,9 +359,13 @@ void State::subBalance(Address const& _id, bigint const& _amount)
 		a->addBalance(-_amount);
 }
 
-void State::createContract(Address const& _address)
+void State::createContract(Address const& _address, bool _incrementNonce)
 {
-	m_cache[_address] = Account(requireAccountStartNonce(), balance(_address), Account::ContractConception);
+	m_cache[_address] = Account(
+		requireAccountStartNonce() + (_incrementNonce ? 1 : 0),
+		balance(_address),
+		Account::ContractConception
+	);
 }
 
 void State::ensureAccountExists(const Address& _address)

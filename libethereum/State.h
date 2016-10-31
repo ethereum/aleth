@@ -205,7 +205,8 @@ public:
 	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value) { m_cache[_contract].setStorage(_location, _value); }
 
 	/// Create a contract at the given address (with unset code and unchanged balance).
-	void createContract(Address const& _address);
+	/// If @a _incrementNonce is true, increment the nonce upon creation.
+	void createContract(Address const& _address, bool _incrementNonce);
 
 	/// Similar to `createContract`, but used in a normal transaction that targets _address.
 	void ensureAccountExists(Address const& _address);
