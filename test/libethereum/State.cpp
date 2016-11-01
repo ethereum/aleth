@@ -130,7 +130,6 @@ BOOST_AUTO_TEST_CASE(stMemExpandingEIPCallsEIP150)
 {
 	dev::test::executeTests("stMemExpandingEIPCalls", "/StateTests/EIP158/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
 }
-
 BOOST_AUTO_TEST_CASE(stBoundsTestEIP)
 {
 	dev::test::executeTests("stBoundsTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
@@ -179,8 +178,6 @@ BOOST_AUTO_TEST_CASE(stInitCodeTestEIP)
 {
 	dev::test::executeTests("stInitCodeTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
-
-//>>>>
 BOOST_AUTO_TEST_CASE(stTransactionTestEIP)
 {
 	dev::test::executeTests("stTransactionTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);

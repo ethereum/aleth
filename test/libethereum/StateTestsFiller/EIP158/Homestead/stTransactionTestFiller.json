@@ -1077,7 +1077,7 @@
 
             "c94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "10",
-                "code" : "{(CALL 45000 0x0000000000000000000000000000000000000000 0 0 0 0 0) (SUICIDE 0)}",
+                "code" : "{(CALL 5000 0x0000000000000000000000000000000000000000 0 0 0 0 0) (SUICIDE 0)}",
                 "nonce" : "0",
                 "storage" : {
                 }
@@ -1095,7 +1095,7 @@
         "transaction" :
         {
             "data" : "",
-            "gasLimit" : "600000",
+            "gasLimit" : "150000",
             "gasPrice" : "1",
             "nonce" : "",
             "secretKey" : "45a915e4d060149eb4365960e6a7a45f334393093061116b197e3240065ff2d8",
@@ -1494,9 +1494,6 @@
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
-            "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                "balance" : "0"
-            },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "42100",
                 "nonce" : "1"
@@ -1574,9 +1571,6 @@
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
 	"expect" : {
-            "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                "balance" : "0"
-            },
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "nonce" : "1"
             },

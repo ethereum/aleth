@@ -101,7 +101,7 @@
         }
     },
 
-    "ZeroValue_DELEGATECODE" : {
+    "ZeroValue_DELEGATECALL" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
@@ -117,8 +117,8 @@
             "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "storage" : {
                     "0x00" : "0x08d5b6",
-                    "0x01" : "0x80",
-                    "0x64" : "0x08396b"
+                    "0x01" : "0x01",
+                    "0x64" : "0x0836a0"
                 }
             }
         },
@@ -134,7 +134,7 @@
 	    "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "0",
 		"nonce" : "0",
-		"code" : "{ [[0]](GAS) [[1]] (DELEGATECODE 60000 0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 0 0) [[100]] (GAS) }",
+		"code" : "{ [[0]](GAS) [[1]] (DELEGATECALL 60000 0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 0 0) [[100]] (GAS) }",
 		"storage": {
 		}
             }
@@ -394,7 +394,7 @@
         }
     },
 
-    "ZeroValue_DELEGATECODE_ToEmpty" : {
+    "ZeroValue_DELEGATECALL_ToEmpty" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
@@ -414,8 +414,8 @@
 	    "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "storage" : {
                     "0x00" : "0x08d5b6",
-                    "0x01" : "0x80",
-                    "0x64" : "0x08396b"
+                    "0x01" : "0x01",
+                    "0x64" : "0x0836a0"
                 }
             }
         },
@@ -431,7 +431,7 @@
 	    "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "0",
 		"nonce" : "0",
-		"code" : "{ [[0]](GAS) [[1]] (DELEGATECODE 60000 0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 0 0) [[100]] (GAS) }",
+		"code" : "{ [[0]](GAS) [[1]] (DELEGATECALL 60000 0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 0 0) [[100]] (GAS) }",
 		"storage": {
 		}
             },
@@ -709,7 +709,7 @@
         }
     },
 
-    "ZeroValue_DELEGATECODE_ToNonZeroBalance" : {
+    "ZeroValue_DELEGATECALL_ToNonZeroBalance" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
@@ -725,8 +725,8 @@
             "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "storage" : {
                     "0x00" : "0x08d5b6",
-                    "0x01" : "0x80",
-                    "0x64" : "0x08396b"
+                    "0x01" : "0x01",
+                    "0x64" : "0x0836a0"
                 }
             }
         },
@@ -742,7 +742,7 @@
 	    "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "balance" : "0",
 		"nonce" : "0",
-		"code" : "{ [[0]](GAS) [[1]] (DELEGATECODE 60000 0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 0 0) [[100]] (GAS) }",
+		"code" : "{ [[0]](GAS) [[1]] (DELEGATECALL 60000 0xc94f5374fce5edbc8e2a8697c15331677e6ebf0b 0 0 0 0) [[100]] (GAS) }",
 		"storage": {
 		}
             },
@@ -1024,7 +1024,7 @@
         }
     },
 
-    "ZeroValue_DELEGATECODE_ToOneStorageKey" : {
+    "ZeroValue_DELEGATECALL_ToOneStorageKey" : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
