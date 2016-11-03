@@ -210,6 +210,11 @@ StateDiff State::diff(State const& _c, bool _quick) const
 
 Account const* State::account(Address const& _a, bool _requireCode) const
 {
+	return const_cast<State*>(this)->account(_a, _requireCode);
+}
+
+Account* State::account(Address const& _a, bool _requireCode)
+{
 	Account *a = nullptr;
 	auto it = m_cache.find(_a);
 	if (it != m_cache.end())
@@ -235,12 +240,6 @@ Account const* State::account(Address const& _a, bool _requireCode) const
 	}
 	return a;
 }
-
-Account* State::account(Address const& _a, bool _requireCode)
-{
-	return const_cast<Account*>(account(_a, _requireCode));
-}
-
 
 void State::clearCacheIfTooLarge() const
 {
