@@ -756,8 +756,10 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_sp = m_pool[m_code[++m_pc]];
-			m_pc += m_code[++m_pc];
+			++m_pc;
+			*++m_sp = m_pool[m_code[m_pc]];
+			++m_pc;
+			m_pc += m_code[m_pc];
 		}
 #else
 			throwBadInstruction();
