@@ -210,16 +210,6 @@ StateDiff State::diff(State const& _c, bool _quick) const
 
 Account const* State::account(Address const& _a, bool _requireCode) const
 {
-	return ensureCached(_a, _requireCode);
-}
-
-Account* State::account(Address const& _a, bool _requireCode)
-{
-	return ensureCached(_a, _requireCode);
-}
-
-Account* State::ensureCached(Address const& _a, bool _requireCode) const
-{
 	Account *a = nullptr;
 	auto it = m_cache.find(_a);
 	if (it != m_cache.end())
@@ -233,7 +223,6 @@ Account* State::ensureCached(Address const& _a, bool _requireCode) const
 
 		clearCacheIfTooLarge();
 
-
 		RLP state(stateBack);
 		m_cache[_a] = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
 		m_unchangedCacheEntries.insert(_a);
@@ -246,6 +235,12 @@ Account* State::ensureCached(Address const& _a, bool _requireCode) const
 	}
 	return a;
 }
+
+Account* State::account(Address const& _a, bool _requireCode)
+{
+	return const_cast<Account*>(account(_a, _requireCode));
+}
+
 
 void State::clearCacheIfTooLarge() const
 {
