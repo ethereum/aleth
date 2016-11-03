@@ -764,12 +764,6 @@ BOOST_AUTO_TEST_CASE(bcSimpleTransition)
 	dev::test::executeTests("bcSimpleTransitionTest", "/BlockchainTests/TestNetwork",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests);
 }
 
-BOOST_AUTO_TEST_CASE(bcTheDaoTest)
-{
-	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::Test;
-	dev::test::executeTests("bcTheDaoTest", "/BlockchainTests/TestNetwork",dev::test::getFolder(__FILE__) + "/BlockchainTestsFiller/TestNetwork", dev::test::doBlockchainTests);
-}
-
 BOOST_AUTO_TEST_CASE(bcEIP150Test)
 {
 	dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::Test;
