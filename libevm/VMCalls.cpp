@@ -58,19 +58,19 @@ void VM::throwBadJumpDestination()
 	BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
-void VM::throwBadStack(unsigned _size, unsigned _n, unsigned _d)
+void VM::throwBadStack(unsigned _size, unsigned _removed, unsigned _added)
 {
-	if (_size < _n)
+	if (_size < _removed)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_n, (bigint)_size));
+		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, (bigint)_size));
 	}
-	if (_size - _n + _d > 1024)
+	if (_size - _removed + _added > 1024)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)_size));
+		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), (bigint)_size));
 	}
 }
 

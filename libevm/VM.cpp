@@ -103,14 +103,14 @@ void VM::logGasMem()
 
 void VM::fetchInstruction()
 {
-		m_op = Instruction(m_pc < m_codeSpace.size() ? m_code[m_pc] : 0);
-		const InstructionMetric& metric = c_metrics[static_cast<size_t>(m_op)];
-		checkStack(metric.args, metric.ret);
+	m_op = Instruction(m_code[m_pc]);
+	const InstructionMetric& metric = c_metrics[static_cast<size_t>(m_op)];
+	checkStack(metric.args, metric.ret);
 
-		// FEES...
-		m_runGas = toUint64(m_schedule->tierStepGas[metric.gasPriceTier]);
-		m_newMemSize = m_mem.size();
-		m_copyMemSize = 0;
+	// FEES...
+	m_runGas = toUint64(m_schedule->tierStepGas[metric.gasPriceTier]);
+	m_newMemSize = m_mem.size();
+	m_copyMemSize = 0;
 }
 
 

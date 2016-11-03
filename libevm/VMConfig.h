@@ -33,19 +33,17 @@ namespace eth
 //
 // EVM_TRACE - provides various levels of tracing that override ETH_VMTRACE
 
-#if true
-	#define EVM_SWITCH_DISPATCH
-#elif defined(__GNUG__)
+#if false && defined(__GNUG__)
 	#define EVM_JUMP_DISPATCH
 #else
-	#error Gnu C++ required for EVM_JUMP_DISPATCH
+	#define EVM_SWITCH_DISPATCH
 #endif
 
 #if false
 	#define EVM_REPLACE_CONST_JUMP
 #endif
 
-#if true
+#if false
 	#define EVM_USE_CONSTANT_POOL
 #endif
 
@@ -62,9 +60,10 @@ namespace eth
 	#undef ON_OP
 	#if EVM_TRACE > 1
 		#define ON_OP() \
-			(cerr <<"### "<< ++m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl)
+			(onOperation(), \
+			(cerr <<"### "<< m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl))
 	#else
-		#define ON_OP()
+		#define ON_OP() onOperation()
 	#endif
 	
 	#define TRACE_STR(level, str) \
@@ -73,7 +72,7 @@ namespace eth
 			
 	#define TRACE_VAL(level, name, val) \
 		if ((level) <= EVM_TRACE) \
-			cerr <<"=== "<< (name) <<" "<< (val) <<endl;
+			cerr <<"=== "<< (name) <<" "<<hex<< (val) <<endl;
 	#define TRACE_OP(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
 			cerr <<"*** "<< (pc) <<" "<< instructionInfo(op).name <<endl;
@@ -96,9 +95,15 @@ namespace eth
 
 // Executive swallows exceptions in some circumstances
 #if 0
-	#undef BOOST_THROW_EXCEPTION
-	#define BOOST_THROW_EXCEPTION(X) \
+	#define THROW_EXCEPTION(X) \
 		((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), abort())
+#else
+	#if EVM_TRACE > 0
+		#define THROW_EXCEPTION(X) \
+			((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), BOOST_THROW_EXCEPTION(X))
+	#else
+		#define THROW_EXCEPTION(X) BOOST_THROW_EXCEPTION(X)
+	#endif
 #endif
 
 
@@ -382,7 +387,6 @@ namespace eth
 		};  \
 		if (!m_caseInit) {  \
 			c_jumpTable = jumpTable;  \
-			c_invalid = &&INVALID; \
 			m_caseInit = true;  \
 			return;  \
 		}

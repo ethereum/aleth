@@ -56,10 +56,16 @@ void VM::initMetrics()
 void VM::initEntry()
 {
 	m_bounce = &VM::interpretCases;	
+
+	// Copy and extend code by 33 zero bytes to allow reading virtual push data
+	// at the end of the code without bounds checks.
+	auto extendedSize = m_ext->code.size() + 33;
+	m_codeSpace.reserve(extendedSize);
 	m_codeSpace = m_ext->code;
+	m_codeSpace.resize(extendedSize);
 	m_code = m_codeSpace.data();
 
-	interpretCases(); // first time initializes
+	interpretCases(); // first call initializes jump table
 	
 	initMetrics();	
 	
@@ -68,7 +74,7 @@ void VM::initEntry()
 
 int VM::poolConstant(const u256& _con)
 {
-	TRACE_VAL(2, "constant to pool", _con);
+	TRACE_VAL(2, "pool constant", _con);
 	int i = 0, n = m_pool.size();
 	for (; i < n; ++i)
 	{
@@ -79,13 +85,9 @@ int VM::poolConstant(const u256& _con)
 	}
 	if (i <= 255 )
 	{
-		TRACE_VAL(1, "put constant in pool", _con);
+		TRACE_VAL(1, "constant pooled", _con);
 		m_pool.push_back(_con);
 		return i;
-	}
-	else
-	{
-		TRACE_STR(1, "constant pool overflow");
 	}
 	return -1;
 }
@@ -165,6 +167,7 @@ void VM::optimize()
 			op = Instruction(m_code[ii]);
 			if (op == Instruction::JUMP)
 			{
+				TRACE_STR(1, "Replace const JUMPV")
 				TRACE_PRE_OPT(1, ii, op);
 				
 				if (0 <= verifyJumpDest(val, false))
@@ -174,7 +177,7 @@ void VM::optimize()
 			}
 			else if (op == Instruction::JUMPI)
 			{
-				TRACE_STR(1, "REPLACE_CONST_JUMP")
+				TRACE_STR(1, "Replace const JUMPVI")
 				TRACE_PRE_OPT(1, ii, op);
 				
 				if (0 <= verifyJumpDest(val, false))
@@ -188,6 +191,7 @@ void VM::optimize()
 			i += nPush;
 		}
 		
-	}	
+	}
+	TRACE_STR(1, "Finished optimizations")
 #endif	
 }

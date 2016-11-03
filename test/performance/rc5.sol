@@ -1,0 +1,135 @@
+// Transcribed from https://people.csail.mit.edu/rivest/Rivest-rc5rev.pdf
+
+contract rc5 {
+
+	// don't I wish we had opcodes and operators for these
+	
+	function shift_left(uint v, uint n) returns (uint) {
+		return v *= 2**n;
+	}
+
+	function shift_right(uint v, uint n) returns (uint) {
+		return v /= 2**n;
+	}
+	
+	function rotate_left(uint v, uint n) returns (uint) {
+		return v << n | v >> (256 - n);
+	}
+	
+	function rotate_right(uint v, uint n) returns (uint) {
+		return v >> n | v << (256 - n);
+	}
+
+	function encrypt(uint[512] key_box, uint[32] msg) {
+		for (uint i = 0; i < msg.length; i += 2) {
+			uint A = msg[i];
+			uint B = msg[i+1];
+			A += key_box[0];
+			B += key_box[1];
+			for (uint j = 1; j <= 15; ++j) {
+				A = rotate_left((A ^ B), B) + key_box[2 * j];
+				B = rotate_left((B ^ A), A) + key_box[2 * j + 1];
+			}
+			msg[i] = A;
+			msg[i+1] = B;
+		}
+	}
+
+	function decrypt(uint[512] key_box, uint[32] msg) {
+		for (uint i = 0; i < msg.length; i += 2) {
+			uint A = msg[i];
+			uint B = msg[i+1];
+			for (int j = 15; j > 0; --j) {
+				B = rotate_right(B - key_box[2 * i + 1], A) ^ A;
+				A = rotate_right(A - key_box[2 * i], B) ^ B;
+			}
+			B -= key_box[1];
+			A -= key_box[0];
+			msg[i] = A;
+			msg[i+1] = B;
+		}
+	}
+	
+	// expand key L into S box using magic numbers derived from e and phi
+	
+	function expand(uint[2] L, uint[512] S) {
+		uint A = 0;
+		uint B = 0;
+		uint i;
+		uint j;
+		S[0] = 0xb7e15163;
+		uint n = L.length > 512 ? L.length : 512;
+		n *= 3;
+		for (i = 1; i < 512; ++i)
+			S[i] = S[i - 1] + 0x9e3779b9;
+		i = j = 0;
+		while (n-- > 0) {
+			A = S[i] = rotate_left((S[i] + A + B), 3);
+			B = L[j] = rotate_left((L[j] + A + B), A + B);
+			i = ++i % 512;
+			j = ++j % L.length;
+		}
+	}
+
+	// decrypt of encrypt should be the same
+	function test(uint[512] S, uint[32] msg) {
+		uint[32] memory tmp = msg;
+		for (uint i = 0; i < 7; ++i)
+			encrypt(S, tmp);
+		for (uint j = 0; j < 7; ++j)
+			decrypt(S, tmp);
+
+		// decrypt of encrypt should be the same
+		for (uint k = 0; k < msg.length; ++k) {
+			if (msg[j] != tmp[j])
+				throw;
+		}
+	}
+
+	function rc5() {
+	
+		uint[2] memory hh = [
+			0x243F6A8885A308D313198A2E03707344A4093822299F31D0082EFA98EC4E6C89,
+			0x452821E638D01377BE5466CF34E90C6CC0AC29B7C97C50DD3F84D5B5B5470917];
+		uint[512] memory S;
+		
+		expand(key, S);
+		
+		uint[32] memory msg = [
+			0x9216D5D98979FB1BD1310BA698DFB5AC2FFD72DBD01ADFB7B8E1AFED6A267E96,
+			0xBA7C9045F12C7F9924A19947B3916CF70801F2E2858EFC16636920D871574E69,
+			0xA458FEA3F4933D7E0D95748F728EB658718BCD5882154AEE7B54A41DC25A59B5,
+			0x9C30D5392AF26013C5D1B023286085F0CA417918B8DB38EF8E79DCB0603A180E,
+			0x6C9E0E8BB01E8A3ED71577C1BD314B2778AF2FDA55605C60E65525F3AA55AB94,
+			0x5748986263E8144055CA396A2AAB10B6B4CC5C341141E8CEA15486AF7C72E993,
+			0xB3EE1411636FBC2A2BA9C55D741831F6CE5C3E169B87931EAFD6BA336C24CF5C,
+			0x7A325381289586773B8F48986B4BB9AFC4BFE81B6628219361D809CCFB21A991,
+			0x9216D5D98979FB1BD1310BA698DFB5AC2FFD72DBD01ADFB7B8E1AFED6A267E96,
+			0xBA7C9045F12C7F9924A19947B3916CF70801F2E2858EFC16636920D871574E69,
+			0xA458FEA3F4933D7E0D95748F728EB658718BCD5882154AEE7B54A41DC25A59B5,
+			0x9C30D5392AF26013C5D1B023286085F0CA417918B8DB38EF8E79DCB0603A180E,
+			0x6C9E0E8BB01E8A3ED71577C1BD314B2778AF2FDA55605C60E65525F3AA55AB94,
+			0x5748986263E8144055CA396A2AAB10B6B4CC5C341141E8CEA15486AF7C72E993,
+			0xB3EE1411636FBC2A2BA9C55D741831F6CE5C3E169B87931EAFD6BA336C24CF5C,
+			0x7A325381289586773B8F48986B4BB9AFC4BFE81B6628219361D809CCFB21A991,
+			0x487CAC605DEC8032EF845D5DE98575B1DC262302EB651B8823893E81D396ACC5,
+			0x0F6D6FF383F442392E0B4482A484200469C8F04A9E1F9B5E21C66842F6E96C9A,
+			0x670C9C61ABD388F06A51A0D2D8542F68960FA728AB5133A36EEF0B6C137A3BE4,
+			0xBA3BF0507EFB2A98A1F1651D39AF017666CA593E82430E888CEE8619456F9FB4,
+			0x7D84A5C33B8B5EBEE06F75D885C12073401A449F56C16AA64ED3AA62363F7706,
+			0x1BFEDF72429B023D37D0D724D00A1248DB0FEAD349F1C09B075372C980991B7B,
+			0x25D479D8F6E8DEF7E3FE501AB6794C3B976CE0BD04C006BAC1A94FB6409F60C4,
+			0x5E5C9EC2196A246368FB6FAF3E6C53B51339B2EB3B52EC6F6DFC511F9B30952C,
+			0xCC814544AF5EBD09BEE3D004DE334AFD660F2807192E4BB3C0CBA85745C8740F,
+			0xD20B5F39B9D3FBDB5579C0BD1A60320AD6A100C6402C7279679F25FEFB1FA3CC,
+			0x8EA5E9F8DB3222F83C7516DFFD616B152F501EC8AD0552AB323DB5FAFD238760,
+			0x53317B483E00DF829E5C57BBCA6F8CA01A87562EDF1769DBD542A8F6287EFFC3,
+			0xAC6732C68C4F5573695B27B0BBCA58C8E1FFA35DB8F011A010FA3D98FD2183B8,
+			0x4AFCB56C2DD1D35B9A53E479B6F84565D28E49BC4BFB9790E1DDF2DAA4CB7E33,
+			0x62FB1341CEE4C6E8EF20CADA36774C01D07E9EFE2BF11FB495DBDA4DAE909198,
+			0xEAAD8E716B93D5A0D08ED1D0AFC725E08E3C5B2F8E7594B78FF6E2FBF2122B64];
+
+		for (int i = 0; i < 31; ++i)
+			test(S, msg);
+	}
+}

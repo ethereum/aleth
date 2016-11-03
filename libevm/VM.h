@@ -77,7 +77,6 @@ private:
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
 	const void* const* c_jumpTable = 0;
-	const void* c_invalid = 0;
 	bool m_caseInit = false;
 	
 	typedef void (VM::*MemFnPtr)();
