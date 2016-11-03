@@ -49,10 +49,7 @@ void VM::initMetrics()
 	done = true;
 }
 
-//
-// init interpreter on entry
-//
-
+/// Init interpreter on entry.
 void VM::initEntry()
 {
 	m_bounce = &VM::interpretCases;	
@@ -67,7 +64,7 @@ void VM::initEntry()
 
 	interpretCases(); // first call initializes jump table
 	
-	initMetrics();	
+	initMetrics();
 	
 	optimize();
 }

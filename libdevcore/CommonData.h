@@ -60,17 +60,13 @@ std::string toHex(T const& _data, int _w = 2, HexPrefix _prefix = HexPrefix::Don
 	return (_prefix == HexPrefix::Add) ? "0x" + ret.str() : ret.str();
 }
 
-/// Converts a (printable) ASCII hex character into the correspnding integer value.
-/// @example fromHex('A') == 10 && fromHex('f') == 15 && fromHex('5') == 5
-int fromHex(char _i, WhenError _throw);
-
 /// Converts a (printable) ASCII hex string into the corresponding byte stream.
 /// @example fromHex("41626261") == asBytes("Abba")
 /// If _throw = ThrowType::DontThrow, it replaces bad hex characters with 0's, otherwise it will throw an exception.
 bytes fromHex(std::string const& _s, WhenError _throw = WhenError::DontThrow);
 
 /// @returns true if @a _s is a hex string.
-bool isHex(std::string const& _s);
+bool isHex(std::string const& _s) noexcept;
 
 /// @returns true if @a _hash is a hash conforming to FixedHash type @a T.
 template <class T> static bool isHash(std::string const& _hash)
@@ -129,7 +125,7 @@ inline T fromBigEndian(_In const& _bytes)
 {
 	T ret = (T)0;
 	for (auto i: _bytes)
-		ret = (T)((ret << 8) | (byte)(typename std::make_unsigned<typename _In::value_type>::type)i);
+		ret = (T)((ret << 8) | (byte)(typename std::make_unsigned<decltype(i)>::type)i);
 	return ret;
 }
 

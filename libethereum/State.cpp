@@ -31,6 +31,7 @@
 #include <libethcore/Exceptions.h>
 #include <libevm/VMFactory.h>
 #include "BlockChain.h"
+#include "CodeSizeCache.h"
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
@@ -209,13 +210,8 @@ StateDiff State::diff(State const& _c, bool _quick) const
 
 void State::ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const
 {
-	ensureCached(m_cache, _a, _requireCode, _forceCreate);
-}
-
-void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Address& _a, bool _requireCode, bool _forceCreate) const
-{
-	auto it = _cache.find(_a);
-	if (it == _cache.end())
+	auto it = m_cache.find(_a);
+	if (it == m_cache.end())
 	{
 		// populate basic info.
 		string stateBack = m_state.at(_a);
@@ -228,10 +224,36 @@ void State::ensureCached(std::unordered_map<Address, Account>& _cache, const Add
 		else
 			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
 		bool ok;
-		tie(it, ok) = _cache.insert(make_pair(_a, s));
+		tie(it, ok) = m_cache.insert(make_pair(_a, s));
+		if (!it->second.isDirty())
+			m_unchangedCacheEntries.insert(_a);
+
+		clearCacheIfTooLarge();
 	}
-	if (_requireCode && it != _cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
+	if (_requireCode && it != m_cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
+	{
 		it->second.noteCode(it->second.codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(it->second.codeHash())));
+		CodeSizeCache::instance().store(it->second.codeHash(), it->second.code().size());
+	}
+}
+
+void State::clearCacheIfTooLarge() const
+{
+	// TODO: Find a good magic number
+	while (m_unchangedCacheEntries.size() > 1000)
+	{
+		// Remove a random element
+		// TODO: This can be exploited, an attacker can only access low-address
+		// accounts whould would result in those never being removed from the cache.
+		auto addr = m_unchangedCacheEntries.lower_bound(Address::random());
+		if (addr == m_unchangedCacheEntries.end())
+			addr = m_unchangedCacheEntries.begin();
+		auto cacheEntry = m_cache.find(*addr);
+		if (cacheEntry == m_cache.end() || cacheEntry->second.isDirty())
+			m_unchangedCacheEntries.erase(addr);
+		else
+			m_cache.erase(cacheEntry);
+	}
 }
 
 void State::commit()
@@ -325,21 +347,15 @@ void State::subBalance(Address const& _id, bigint const& _amount)
 		it->second.addBalance(-_amount);
 }
 
-Address State::newContract(u256 const& _balance, bytes const& _code)
+void State::createContract(Address const& _address)
 {
-	auto h = sha3(_code);
-	m_db.insert(h, &_code);
-	while (true)
-	{
-		Address ret = Address::random();
-		ensureCached(ret, false, false);
-		auto it = m_cache.find(ret);
-		if (it == m_cache.end())
-		{
-			m_cache[ret] = Account(requireAccountStartNonce(), _balance, EmptyTrie, h, Account::Changed);
-			return ret;
-		}
-	}
+	m_cache[_address] = Account(requireAccountStartNonce(), balance(_address), Account::ContractConception);
+}
+
+void State::kill(Address _a)
+{
+	// Address is present because it executed previously.
+	m_cache.at(_a).kill();
 }
 
 u256 State::transactionsFrom(Address const& _id) const
@@ -426,6 +442,24 @@ h256 State::codeHash(Address const& _contract) const
 	if (m_cache[_contract].isFreshCode())
 		return sha3(code(_contract));
 	return m_cache[_contract].codeHash();
+}
+
+size_t State::codeSize(Address const& _contract) const
+{
+	if (!addressHasCode(_contract))
+		return 0;
+	if (m_cache[_contract].isFreshCode())
+		return code(_contract).size();
+	auto& codeSizeCache = CodeSizeCache::instance();
+	h256 codeHash = m_cache[_contract].codeHash();
+	if (codeSizeCache.contains(codeHash))
+		return codeSizeCache.get(codeHash);
+	else
+	{
+		size_t size = code(_contract).size();
+		codeSizeCache.store(codeHash, size);
+		return size;
+	}
 }
 
 bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const

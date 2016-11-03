@@ -745,6 +745,7 @@ void BlockChainSync::resetSync()
 
 void BlockChainSync::restartSync()
 {
+	RecursiveGuard l(x_sync);
 	resetSync();
 	m_highestBlock = 0;
 	m_haveCommonHeader = false;

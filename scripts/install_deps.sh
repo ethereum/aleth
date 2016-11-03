@@ -126,16 +126,15 @@ case $(uname -s) in
         # which doesn't like being updated, so we need to uninstall it
         # first, so that the installation step below is a clean install.
         brew uninstall gmp
-        
+
         # And finally install all the external dependencies.
         brew install \
             boost \
+            ccache \
             cmake \
             cryptopp \
             gmp \
-            jsoncpp \
             leveldb \
-            libjson-rpc-cpp \
             libmicrohttpd \
             miniupnpc
 
@@ -185,13 +184,6 @@ case $(uname -s) in
                 miniupnpc \
                 opencl-headers
 
-            rm -rf libjson-rpc-cpp-git
-            git clone http://aur.archlinux.org/libjson-rpc-cpp-git.git libjson-rpc-cpp-git
-            cd libjson-rpc-cpp-git
-            makepkg
-            pacman -U libjson-rpc-cpp-git-*.pkg.tar.xz
-            cd ../..
-
         fi
 
         case $(lsb_release -is) in
@@ -232,16 +224,11 @@ case $(uname -s) in
                     stretch)
                         #stretch
                         echo "Installing cpp-ethereum dependencies on Debian Stretch (9.x)."
-                        echo "ERROR - 'install_deps.sh' doesn't have Debian Stretch support yet."
-                        echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-                        echo "If you would like to get 'install_deps.sh' working for Debian Stretch, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                        exit 1
                         ;;
                     *)
                         #other Debian
                         echo "Installing 'install_deps.sh' dependencies on unknown Debian version."
-                        echo "ERROR - Debian Jessie is the only Debian version which cpp-ethereum has been tested on."
+                        echo "ERROR - Debian Jessie and Debian Stretch are the only Debian versions which cpp-ethereum has been tested on."
                         echo "If you are using a different release and would like to get 'install_deps.sh'"
                         echo "working for that release that would be fantastic."
                         echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
@@ -260,7 +247,6 @@ case $(uname -s) in
                     libboost-all-dev \
                     libcurl4-openssl-dev \
                     libgmp-dev \
-                    libjsoncpp-dev \
                     libleveldb-dev \
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
@@ -308,21 +294,6 @@ case $(uname -s) in
                 rm -rf cmake-3.5.2
                 rm cmake-3.5.2.tar.gz
 
-                # Build libjsonrpccpp-v0.6.0 from source.
-                # Rationale for this is given in the Ubuntu comments lower down this file.
-
-                sudo apt-get -y install libargtable2-dev libedit-dev
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
-
                 ;;
 
 #------------------------------------------------------------------------------
@@ -351,20 +322,6 @@ case $(uname -s) in
                     mesa-dri-drivers \
                     miniupnpc-devel \
                     snappy-devel
-
-                # Build libjsonrpccpp-v0.6.0 from source.
-                # Rationale for this is given in the Ubuntu comments lower down this file.
-                sudo apt-get -y install libargtable2-dev libedit-dev
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
 
                 ;;
 
@@ -473,6 +430,9 @@ case $(uname -s) in
                     # On Travis CI llvm package conficts with the new to be installed.
                     sudo apt-get -y remove llvm
                 fi
+                sudo apt-get -y update
+                # this installs the add-apt-repository command
+                sudo apt-get install -y --no-install-recommends software-properties-common
                 sudo add-apt-repository -y ppa:ethereum/ethereum
                 sudo apt-get -y update
                 sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
@@ -483,7 +443,6 @@ case $(uname -s) in
                     libcurl4-openssl-dev \
                     libcryptopp-dev \
                     libgmp-dev \
-                    libjsoncpp-dev \
                     libleveldb-dev \
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
@@ -492,42 +451,6 @@ case $(uname -s) in
                     mesa-common-dev \
                     ocl-icd-libopencl1 \
                     opencl-headers
-
-                # The PPA also contains binaries for libjson-rpc-cpp-0.4.2, but we aren't actually using them.
-                # Again, I think that will have been a workaround for libjsonrpccpp-dev not being
-                # consistently available across Ubuntu releases.   Again, the package name differs
-                # between our PPA and the official package repositories.
-                #
-                # - Not available for Trusty.
-                # - http://packages.ubuntu.com/wily/libjsonrpccpp-dev (0.6.0-2)
-                # - http://packages.ubuntu.com/xenial/libjsonrpccpp-dev (0.6.0-2)
-                # - http://packages.ubuntu.com/yakkety/libjsonrpccpp-dev (0.6.0-2)
-                #
-                # Instead, we are building from source, grabbing the v0.6.0 tag from Github.
-                #
-                # That build-from-source appears to be an effective workaround for jsonrpcstub
-                # silent failures at least within TravisCI runs on Ubuntu Trusty, but ...
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/513
-                #
-                # Hmm.   Arachnid is still getting this issue on OS X, which already has v0.6.0, so
-                # it isn't as simple as just updating all our builds to that version, though that is
-                # sufficient for us to get CircleCI and TravisCI working.   We still haven't got to
-                # the bottom of this issue, and are going to need to debug it in some scenario where
-                # we can reproduce it 100%, which MIGHT end up being within our automation here, but
-                # against a build-from-source-with-extra-printfs() of v0.4.2.
-
-                sudo apt-get -y install libargtable2-dev libedit-dev
-                git clone git://github.com/cinemast/libjson-rpc-cpp.git
-                cd libjson-rpc-cpp
-                git checkout v0.6.0
-                mkdir build
-                cd build
-                cmake .. -DCOMPILE_TESTS=NO
-                make
-                sudo make install
-                sudo ldconfig
-                cd ../..
 
                 ;;
             *)

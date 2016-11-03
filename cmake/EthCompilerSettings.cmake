@@ -65,12 +65,12 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 
 	# Build everything as shared libraries (.so files)
 	add_definitions(-DSHAREDLIB)
-	
+
 	# If supported for the target machine, emit position-independent code, suitable for dynamic
 	# linking and avoiding any limit on the size of the global offset table.
 	add_compile_options(-fPIC)
 
-	# Configuration-specific compiler settings.	
+	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
@@ -103,7 +103,7 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		# or newer (AppleClang 7.0+).  We should be able to re-enable this setting
 		# on non-Apple Clang as well, if we can work out what expression to use for
 		# the version detection.
-		
+
 		# The fact that the version-reporting for AppleClang loses the original
 		# Clang versioning is rather annoying.  Ideally we could just have
 		# a single cross-platform "if version >= 3.4.1" check.
@@ -132,20 +132,20 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		# testing on at least OS X and Ubuntu.
 		add_compile_options(-Wno-unused-function)
 		add_compile_options(-Wno-dangling-else)
-		
+
 		# Some Linux-specific Clang settings.  We don't want these for OS X.
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-		
+
 			# TODO - Is this even necessary?  Why?
 			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
 			add_compile_options(-stdlib=libstdc++)
-			
+
 			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
 			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
-			
+
 			# Use fancy colors in the compiler diagnostics
 			add_compile_options(-fcolor-diagnostics)
-			
+
 			# See "How to silence unused command line argument error with clang without disabling it?"
 			# When using -Werror with clang, it transforms "warning: argument unused during compilation" messages
 			# into errors, which makes sense.
@@ -180,12 +180,12 @@ elseif (MSVC)
 	# Always use Release variant of C++ runtime.
 	# We don't want to provide Debug variants of all dependencies. Some default
 	# flags set by CMake must be tweaked.
-	string(REPLACE "/MDd" "/MD" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-	string(REPLACE "/D_DEBUG" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG ${CMAKE_CXX_FLAGS_DEBUG})
-	string(REPLACE "/MDd" "/MD" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
-	string(REPLACE "/D_DEBUG" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
-	string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
+	string(REPLACE "/MDd" "/MD" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+	string(REPLACE "/D_DEBUG" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+	string(REPLACE "/RTC1" "" CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG}")
+	string(REPLACE "/MDd" "/MD" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+	string(REPLACE "/D_DEBUG" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
+	string(REPLACE "/RTC1" "" CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG}")
 	set_property(GLOBAL PROPERTY DEBUG_CONFIGURATIONS OFF)
 
 	# disable empty object file warning
@@ -200,7 +200,7 @@ elseif (MSVC)
 		message("Forcing static linkage for MSVC.")
 		set(ETH_STATIC 1)
 	endif ()
-	
+
 # If you don't have GCC, Clang or VC++ then you are on your own.  Good luck!
 else ()
 	message(WARNING "Your compiler is not tested, if you run into any issues, we'd welcome any patches.")

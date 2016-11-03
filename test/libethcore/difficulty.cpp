@@ -44,7 +44,7 @@ std::string const c_testDifficulty = R"(
 void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _parent, Network _n, ChainOperationParams const& _p, string const& _testName = "")
 {
 	u256 difficulty = _bi.difficulty();
-	u256 frontierDiff = _p.u256Param("frontierCompatibilityModeLimit");
+	u256 frontierDiff = _p.u256Param("homsteadForkBlock");
 
 	//The ultimate formula (Homestead)
 	if (_bi.number() > frontierDiff)

@@ -75,7 +75,7 @@ public:
 	ChainOperationParams const& chainParams() const { return m_params; }
 	void setChainParams(ChainOperationParams const& _params) { m_params = _params; }
 	SealEngineFace* withChainParams(ChainOperationParams const& _params) { setChainParams(_params); return this; }
-	virtual EVMSchedule const& evmSchedule(EnvInfo const&) const { return m_params.evmSchedule; }
+	virtual EVMSchedule const& evmSchedule(EnvInfo const&) const { return DefaultSchedule; }
 
 	virtual bool isPrecompiled(Address const& _a) const { return m_params.precompiled.count(_a); }
 	virtual bigint costOfPrecompiled(Address const& _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).cost(_in); }

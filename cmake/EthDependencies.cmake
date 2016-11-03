@@ -137,7 +137,6 @@ if (STATIC_LINKING)
 		# the runtime libraries to be statically linked.
 		#
 		# Still TODO:
-		# - jsoncpp
 		# - json-rpc-cpp
 		# - leveldb (which pulls in snappy, for the dylib at ;east)
 		# - miniupnp
@@ -189,7 +188,7 @@ function(eth_use TARGET REQUIRED)
 	endif()
 
 	foreach(MODULE ${ARGN})
-		string(REPLACE "::" ";" MODULE_PARTS ${MODULE})
+		string(REPLACE "::" ";" MODULE_PARTS "${MODULE}")
 		list(GET MODULE_PARTS 0 MODULE_MAIN)
 		list(LENGTH MODULE_PARTS MODULE_LENGTH)
 		if (MODULE_LENGTH GREATER 1)

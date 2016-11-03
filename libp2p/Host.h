@@ -221,7 +221,7 @@ public:
 	ReputationManager& repMan() { return m_repMan; }
 
 	/// @returns if network is started and interactive.
-	bool haveNetwork() const { return m_run && !!m_nodeTable; }
+	bool haveNetwork() const { Guard l(x_runTimer); return m_run && !!m_nodeTable; }
 	
 	/// Validates and starts peer session, taking ownership of _io. Disconnects and returns false upon error.
 	void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
@@ -288,7 +288,7 @@ private:
 	bytes m_restoreNetwork;										///< Set by constructor and used to set Host key and restore network peers & nodes.
 
 	bool m_run = false;													///< Whether network is running.
-	std::mutex x_runTimer;												///< Start/stop mutex.
+	mutable std::mutex x_runTimer;	///< Start/stop mutex.
 
 	std::string m_clientVersion;											///< Our version string.
 

@@ -371,6 +371,7 @@ pair<TransactionReceipts, bool> Block::sync(BlockChain const& _bc, TransactionQu
 					else
 					{
 						clog(StateTrace) << t.sha3() << "Temporarily no gas left in current block (txs gas > block's gas limit)";
+						//_tq.drop(t.sha3());
 						// Temporarily no gas left in current block.
 						// OPTIMISE: could note this and then we don't evaluate until a block that does have the gas left.
 						// for now, just leave alone.

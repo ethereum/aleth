@@ -35,7 +35,6 @@
 
 #if ETH_JSONRPC
 	#include <jsonrpccpp/client/connectors/httpclient.h>
-	#include "PhoneHome.h"
 	#include "FarmClient.h"
 #endif // ETH_JSONRPC
 
@@ -186,19 +185,6 @@ public:
 			m_clAllowCPU = true;
 		else if (arg == "--cl-extragpu-mem" && i + 1 < argc)
 			m_extraGPUMemory = 1000000 * stol(argv[++i]);
-		else if (arg == "--phone-home" && i + 1 < argc)
-		{
-			string m = argv[++i];
-			if (isTrue(m))
-				m_phoneHome = true;
-			else if (isFalse(m))
-				m_phoneHome = false;
-			else
-			{
-				cerr << "Bad " << arg << " option: " << m << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-		}
 		else if (arg == "--benchmark-warmup" && i + 1 < argc)
 			try {
 				m_benchmarkWarmup = stol(argv[++i]);
@@ -343,7 +329,7 @@ public:
 		if (mode == OperationMode::DAGInit)
 			doInitDAG(m_initDAG);
 		else if (mode == OperationMode::Benchmark)
-			doBenchmark(m_minerType, m_phoneHome, m_benchmarkWarmup, m_benchmarkTrial, m_benchmarkTrials);
+			doBenchmark(m_minerType, m_benchmarkWarmup, m_benchmarkTrial, m_benchmarkTrials);
 		else if (mode == OperationMode::Farm)
 			doFarm(m_minerType, m_farmURL, m_farmRecheckPeriod);
 	}
@@ -407,7 +393,7 @@ private:
 		exit(0);
 	}
 
-	void doBenchmark(std::string _m, bool _phoneHome, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
+	void doBenchmark(std::string _m, unsigned _warmupDuration = 15, unsigned _trialDuration = 3, unsigned _trials = 5)
 	{
 		BlockHeader genesis;
 		genesis.setDifficulty(1 << 18);
@@ -466,24 +452,6 @@ private:
 		innerMean /= (_trials - 2);
 		cout << "min/mean/max: " << results.begin()->second.rate() << "/" << (mean / _trials) << "/" << results.rbegin()->second.rate() << " H/s" << endl;
 		cout << "inner mean: " << innerMean << " H/s" << endl;
-
-		(void)_phoneHome;
-#if ETH_JSONRPC
-		if (_phoneHome)
-		{
-			cout << "Phoning home to find world ranking..." << endl;
-			jsonrpc::HttpClient client("http://gav.ethdev.com:3000");
-			PhoneHome rpc(client);
-			try
-			{
-				unsigned ranking = rpc.report_benchmark(platformInfo, (int)innerMean);
-				cout << "Ranked: " << ranking << " of all benchmarks." << endl;
-			}
-			catch (...)
-			{
-			}
-		}
-#endif // ETH_JSONRPC
 		exit(0);
 	}
 
@@ -626,7 +594,6 @@ private:
 	unsigned m_initDAG = 0;
 
 	/// Benchmarking params
-	bool m_phoneHome = true;
 	unsigned m_benchmarkWarmup = 3;
 	unsigned m_benchmarkTrial = 3;
 	unsigned m_benchmarkTrials = 5;

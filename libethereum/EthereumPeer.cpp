@@ -149,7 +149,7 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
 	setAsking(Asking::BlockHeaders);
 	RLPStream s;
 	prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
-	clog(NetMessageDetail) << "Requesting " << _count << " block headers staring from " << _startNumber << (_reverse ? " in reverse" : "");
+	clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
 	m_syncHashNumber = _startNumber;
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);
@@ -164,7 +164,7 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
 	setAsking(Asking::BlockHeaders);
 	RLPStream s;
 	prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
-	clog(NetMessageDetail) << "Requesting " << _count << " block headers staring from " << _startHash << (_reverse ? " in reverse" : "");
+	clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
 	m_syncHash = _startHash;
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);

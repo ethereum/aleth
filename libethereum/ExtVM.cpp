@@ -33,7 +33,7 @@ namespace // anonymous
 static unsigned const c_depthLimit = 1024;
 
 /// Upper bound of stack space needed by single CALL/CREATE execution. Set experimentally.
-static size_t const c_singleExecutionStackSize = 6 * 1024;
+static size_t const c_singleExecutionStackSize = 9 * 1024;
 
 /// Standard thread stack size.
 static size_t const c_defaultStackSize =
@@ -104,6 +104,11 @@ bool ExtVM::call(CallParameters& _p)
 	_p.gas = e.gas();
 
 	return !e.excepted();
+}
+
+size_t ExtVM::codeSizeAt(dev::Address _a)
+{
+	return m_s.codeSize(_a);
 }
 
 h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)

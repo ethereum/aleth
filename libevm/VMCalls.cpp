@@ -104,15 +104,20 @@ void VM::caseCreate()
 	updateMem();
 	ON_OP();
 	updateIOGas();
-	
+
 	auto const& endowment = *m_sp--;
 	uint64_t initOff = (uint64_t)*m_sp--;
 	uint64_t initSize = (uint64_t)*m_sp--;
-	
+
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
 	{
 		*io_gas = m_io_gas;
-		*++m_sp = (u160)m_ext->create(endowment, *io_gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		u256 createGas = *io_gas;
+		if (!m_schedule->staticCallDepthLimit())
+			createGas -= createGas / 64;
+		u256 gas = createGas;
+		*++m_sp = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		*io_gas -= (createGas - gas);
 		m_io_gas = uint64_t(*io_gas);
 	}
 	else
@@ -132,7 +137,7 @@ void VM::caseCall()
 
 bool VM::caseCallSetup(CallParameters *callParams)
 {
-	m_runGas = toUint64(u512(*m_sp) + m_schedule->callGas);
+	m_runGas = toUint64(m_schedule->callGas);
 
 	if (m_op == Instruction::CALL && !m_ext->exists(asAddress(*(m_sp - 1))))
 		m_runGas += toUint64(m_schedule->callNewAccountGas);
@@ -146,10 +151,23 @@ bool VM::caseCallSetup(CallParameters *callParams)
 		memNeed(m_stack[(1 + m_sp - m_stack) - sizesOffset], m_stack[(1 + m_sp - m_stack) - sizesOffset - 1])
 	);
 	updateMem();
+	updateIOGas();
+
+	// "Static" costs already applied. Calculate call gas.
+	if (m_schedule->staticCallDepthLimit())
+		// With static call depth limit we just charge the provided gas amount.
+		callParams->gas = *m_sp;
+	else
+	{
+		// Apply "all but one 64th" rule.
+		u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
+		callParams->gas = std::min(*m_sp, maxAllowedCallGas);
+	}
+
+	m_runGas = toUint64(callParams->gas);
 	ON_OP();
 	updateIOGas();
 
-	callParams->gas = *m_sp;
 	if (m_op != Instruction::DELEGATECALL && *(m_sp - 2) > 0)
 		callParams->gas += m_schedule->callStipend;
 	--m_sp;
