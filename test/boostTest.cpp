@@ -82,10 +82,13 @@ void createRandomTest()
 static std::atomic_bool stopTravisOut;
 void travisOut()
 {
+	int tickCounter = 0;
 	while (!stopTravisOut)
 	{
-		std::this_thread::sleep_for(std::chrono::seconds(10));
-		std::cout << ".";
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		++tickCounter;
+		if (tickCounter % 10 == 0)
+			std::cout << "." << std::endl;  // Output dot every 10s.
 	}
 }
 
