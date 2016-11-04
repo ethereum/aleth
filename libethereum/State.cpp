@@ -208,33 +208,37 @@ StateDiff State::diff(State const& _c, bool _quick) const
 	return ret;
 }
 
-void State::ensureCached(Address const& _a, bool _requireCode, bool _forceCreate) const
+Account const* State::account(Address const& _a, bool _requireCode) const
 {
+	return const_cast<State*>(this)->account(_a, _requireCode);
+}
+
+Account* State::account(Address const& _a, bool _requireCode)
+{
+	Account *a = nullptr;
 	auto it = m_cache.find(_a);
-	if (it == m_cache.end())
+	if (it != m_cache.end())
+		a = &it->second;
+	else
 	{
 		// populate basic info.
 		string stateBack = m_state.at(_a);
-		if (stateBack.empty() && !_forceCreate)
-			return;
-		RLP state(stateBack);
-		Account s;
-		if (state.isNull())
-			s = Account(requireAccountStartNonce(), 0, Account::NormalCreation);
-		else
-			s = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
-		bool ok;
-		tie(it, ok) = m_cache.insert(make_pair(_a, s));
-		if (!it->second.isDirty())
-			m_unchangedCacheEntries.insert(_a);
+		if (stateBack.empty())
+			return nullptr;
 
 		clearCacheIfTooLarge();
+
+		RLP state(stateBack);
+		m_cache[_a] = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
+		m_unchangedCacheEntries.insert(_a);
+		a = &m_cache[_a];
 	}
-	if (_requireCode && it != m_cache.end() && !it->second.isFreshCode() && !it->second.codeCacheValid())
+	if (_requireCode && a && !a->isFreshCode() && !a->codeCacheValid())
 	{
-		it->second.noteCode(it->second.codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(it->second.codeHash())));
-		CodeSizeCache::instance().store(it->second.codeHash(), it->second.code().size());
+		a->noteCode(a->codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(a->codeHash())));
+		CodeSizeCache::instance().store(a->codeHash(), a->code().size());
 	}
+	return a;
 }
 
 void State::clearCacheIfTooLarge() const
@@ -244,14 +248,13 @@ void State::clearCacheIfTooLarge() const
 	{
 		// Remove a random element
 		// TODO: This can be exploited, an attacker can only access low-address
-		// accounts whould would result in those never being removed from the cache.
+		// accounts which would result in those never being removed from the cache.
 		auto addr = m_unchangedCacheEntries.lower_bound(Address::random());
 		if (addr == m_unchangedCacheEntries.end())
 			addr = m_unchangedCacheEntries.begin();
 		auto cacheEntry = m_cache.find(*addr);
-		if (cacheEntry == m_cache.end() || cacheEntry->second.isDirty())
-			m_unchangedCacheEntries.erase(addr);
-		else
+		m_unchangedCacheEntries.erase(addr);
+		if (cacheEntry != m_cache.end() && !cacheEntry->second.isDirty())
 			m_cache.erase(cacheEntry);
 	}
 }
@@ -288,63 +291,53 @@ void State::setRoot(h256 const& _r)
 
 bool State::addressInUse(Address const& _id) const
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
-		return false;
-	return true;
+	return !!account(_id);
 }
 
 bool State::addressHasCode(Address const& _id) const
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
+	if (auto a = account(_id))
+		return a->isFreshCode() || a->codeHash() != EmptySHA3;
+	else
 		return false;
-	return it->second.isFreshCode() || it->second.codeHash() != EmptySHA3;
 }
 
 u256 State::balance(Address const& _id) const
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
+	if (auto a = account(_id))
+		return a->balance();
+	else
 		return 0;
-	return it->second.balance();
 }
 
 void State::noteSending(Address const& _id)
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (asserts(it != m_cache.end()))
+	Account* a = account(_id);
+	if (asserts(a != nullptr))
 	{
 		cwarn << "Sending from non-existant account. How did it pay!?!";
 		// this is impossible. but we'll continue regardless...
 		m_cache[_id] = Account(requireAccountStartNonce() + 1, 0);
 	}
 	else
-		it->second.incNonce();
+		a->incNonce();
 }
 
 void State::addBalance(Address const& _id, u256 const& _amount)
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
-		m_cache[_id] = Account(requireAccountStartNonce(), _amount, Account::NormalCreation);
+	if (Account* a = account(_id))
+		a->addBalance(_amount);
 	else
-		it->second.addBalance(_amount);
+		m_cache[_id] = Account(requireAccountStartNonce(), _amount, Account::NormalCreation);
 }
 
 void State::subBalance(Address const& _id, bigint const& _amount)
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it == m_cache.end() || (bigint)it->second.balance() < _amount)
+	Account* a = account(_id);
+	if (!a || a->balance() < _amount)
 		BOOST_THROW_EXCEPTION(NotEnoughCash());
 	else
-		it->second.addBalance(-_amount);
+		a->addBalance(-_amount);
 }
 
 void State::createContract(Address const& _address)
@@ -352,62 +345,62 @@ void State::createContract(Address const& _address)
 	m_cache[_address] = Account(requireAccountStartNonce(), balance(_address), Account::ContractConception);
 }
 
-void State::kill(Address _a)
+void State::ensureAccountExists(const Address& _address)
 {
-	// Address is present because it executed previously.
-	m_cache.at(_a).kill();
+	if (!addressInUse(_address))
+		m_cache[_address] = Account(requireAccountStartNonce(), 0, Account::NormalCreation);
+}
+
+void State::kill(Address _addr)
+{
+	if (auto a = account(_addr))
+		a->kill();
+	// If the account is not in the db, nothing to kill.
 }
 
 u256 State::transactionsFrom(Address const& _id) const
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it == m_cache.end())
-		return m_accountStartNonce;
+	if (auto a = account(_id))
+		return a->nonce();
 	else
-		return it->second.nonce();
+		return m_accountStartNonce;
 }
 
-u256 State::storage(Address const& _id, u256 const& _memory) const
+u256 State::storage(Address const& _id, u256 const& _key) const
 {
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
+	if (Account const* a = account(_id))
+	{
+		auto mit = a->storageOverlay().find(_key);
+		if (mit != a->storageOverlay().end())
+			return mit->second;
 
-	// Account doesn't exist - exit now.
-	if (it == m_cache.end())
+		// Not in the storage cache - go to the DB.
+		SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), a->baseRoot());			// promise we won't change the overlay! :)
+		string payload = memdb.at(_key);
+		u256 ret = payload.size() ? RLP(payload).toInt<u256>() : 0;
+		a->setStorageCache(_key, ret);
+		return ret;
+	}
+	else
 		return 0;
-
-	// See if it's in the account's storage cache.
-	auto mit = it->second.storageOverlay().find(_memory);
-	if (mit != it->second.storageOverlay().end())
-		return mit->second;
-
-	// Not in the storage cache - go to the DB.
-	SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), it->second.baseRoot());			// promise we won't change the overlay! :)
-	string payload = memdb.at(_memory);
-	u256 ret = payload.size() ? RLP(payload).toInt<u256>() : 0;
-	it->second.setStorage(_memory, ret);
-	return ret;
 }
 
 unordered_map<u256, u256> State::storage(Address const& _id) const
 {
 	unordered_map<u256, u256> ret;
 
-	ensureCached(_id, false, false);
-	auto it = m_cache.find(_id);
-	if (it != m_cache.end())
+	if (Account const* a = account(_id))
 	{
 		// Pull out all values from trie storage.
-		if (it->second.baseRoot())
+		if (h256 root = a->baseRoot())
 		{
-			SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), it->second.baseRoot());		// promise we won't alter the overlay! :)
+			SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), root);		// promise we won't alter the overlay! :)
 			for (auto const& i: memdb)
 				ret[i.first] = RLP(i.second).toInt<u256>();
 		}
 
 		// Then merge cached storage over the top.
-		for (auto const& i: it->second.storageOverlay())
+		for (auto const& i: a->storageOverlay())
 			if (i.second)
 				ret[i.first] = i.second;
 			else
@@ -427,39 +420,45 @@ h256 State::storageRoot(Address const& _id) const
 	return EmptyTrie;
 }
 
-bytes const& State::code(Address const& _contract) const
+bytes const& State::code(Address const& _a) const
 {
-	if (!addressHasCode(_contract))
+	if (!addressHasCode(_a))
 		return NullBytes;
-	ensureCached(_contract, true, false);
-	return m_cache[_contract].code();
+	return account(_a, true)->code();
 }
 
-h256 State::codeHash(Address const& _contract) const
+h256 State::codeHash(Address const& _a) const
 {
-	if (!addressHasCode(_contract))
-		return EmptySHA3;
-	if (m_cache[_contract].isFreshCode())
-		return sha3(code(_contract));
-	return m_cache[_contract].codeHash();
-}
-
-size_t State::codeSize(Address const& _contract) const
-{
-	if (!addressHasCode(_contract))
-		return 0;
-	if (m_cache[_contract].isFreshCode())
-		return code(_contract).size();
-	auto& codeSizeCache = CodeSizeCache::instance();
-	h256 codeHash = m_cache[_contract].codeHash();
-	if (codeSizeCache.contains(codeHash))
-		return codeSizeCache.get(codeHash);
-	else
+	if (Account const* a = account(_a))
 	{
-		size_t size = code(_contract).size();
-		codeSizeCache.store(codeHash, size);
-		return size;
+		if (a->isFreshCode())
+			return sha3(a->code());
+		else
+			return a->codeHash();
 	}
+	else
+		return EmptySHA3;
+}
+
+size_t State::codeSize(Address const& _a) const
+{
+	if (Account const* a = account(_a))
+	{
+		if (a->isFreshCode())
+			return code(_a).size();
+		auto& codeSizeCache = CodeSizeCache::instance();
+		h256 codeHash = a->codeHash();
+		if (codeSizeCache.contains(codeHash))
+			return codeSizeCache.get(codeHash);
+		else
+		{
+			size_t size = code(_a).size();
+			codeSizeCache.store(codeHash, size);
+			return size;
+		}
+	}
+	else
+		return 0;
 }
 
 bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
