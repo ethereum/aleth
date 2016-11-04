@@ -64,9 +64,14 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("transaction data RLP must be an array"));
 
 		m_data = rlp[field = 5].toBytes();
-		byte v = rlp[field = 6].toInt<byte>() - 27;
+
+		byte v = rlp[field = 6].toInt<byte>();
 		h256 r = rlp[field = 7].toInt<u256>();
 		h256 s = rlp[field = 8].toInt<u256>();
+
+		m_chainId = std::floor((float)(v - 35)/2);
+		if(m_chainId == -4 || m_chainId == 1)
+			v = rlp[field = 6].toInt<byte>() - m_chainId*2 - 35;
 
 		if (rlp.itemCount() > 9)
 			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));
@@ -127,8 +132,9 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig) const
 	else
 		_s << "";
 	_s << m_value << m_data;
+
 	if (_sig)
-		_s << (m_vrs.v + 27) << (u256)m_vrs.r << (u256)m_vrs.s;
+		_s << (m_vrs.v + m_chainId*2 + 35) << (u256)m_vrs.r << (u256)m_vrs.s;
 }
 
 static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279074904382605163141518161494337");
@@ -147,3 +153,29 @@ bigint TransactionBase::gasRequired(bool _contractCreation, bytesConstRef _data,
 	return ret;
 }
 
+h256 TransactionBase::sha3(IncludeSignature _sig) const
+{
+	if (_sig == WithSignature && m_hashWith)
+		return m_hashWith;
+
+	RLPStream s;
+	if (m_chainId == -4 && _sig == WithSignature && m_type != NullTransaction) //EIP155 is On
+	{
+		//!!! code copy from streamRLP!  cant change streamRLP because it should not be affected by EIP155 proposal (it affects only hash)
+		s.appendList(9);
+		s << m_nonce << m_gasPrice << m_gas;
+		if (m_type == MessageCall)
+			s << m_receiveAddress;
+		else
+			s << "";
+		s << m_value << m_data;
+		s << (m_vrs.v + m_chainId*2 + 35) << (u256)0 << (u256)0;
+	}
+	else
+		streamRLP(s, _sig);
+
+	auto ret = dev::sha3(s.out());
+	if (_sig == WithSignature)
+		m_hashWith = ret;
+	return ret;
+}
