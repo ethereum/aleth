@@ -159,7 +159,8 @@ h256 TransactionBase::sha3(IncludeSignature _sig) const
 		return m_hashWith;
 
 	RLPStream s;
-	if (m_chainId == -4 && _sig == WithSignature && m_type != NullTransaction) //EIP155 is On
+
+	if (m_chainId == 1 /*&& _sig == WithSignature*/ && m_type != NullTransaction) //EIP155 is On
 	{
 		//!!! code copy from streamRLP!  cant change streamRLP because it should not be affected by EIP155 proposal (it affects only hash)
 		s.appendList(9);

@@ -73,6 +73,11 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
 
+				if (o.count("sender") > 0)
+				{
+					string expectSender = toString(o["sender"].get_str());
+					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test: expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+				}
 				o["sender"] = toString(txFromFields.sender());
 				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
 				o["hash"] = toString(txFromFields.sha3());
@@ -161,6 +166,11 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
+
+BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
+{
+	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+}
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VCheck)
 {
