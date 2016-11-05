@@ -4126,7 +4126,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "{ [i] 1 ( if (> @i 0) { (return 39) [i] 2 } (return 1) ) }",
+            "code" : "{ (def 'i 0x80) [i] 1 ( if (> @i 0) { (return 39) [i] 2 } (return 1) ) }",
             "storage": {}
         }
         },
@@ -4189,7 +4189,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "{    [[69]] (caller)   (return 0 (lll     (when (= (caller) @@69)       (for {} (< @i (calldatasize)) [i](+ @i 64)         [[ (calldataload @i) ]] (calldataload (+ @i 32))       )     )   0))}",
+            "code" : "{    [[69]] (caller)   (return 0 (lll     (when (= (caller) @@69)       (def 'i 0x80)       (for {} (< @i (calldatasize)) [i](+ @i 64)         [[ (calldataload @i) ]] (calldataload (+ @i 32))       )     )   0))}",
             "storage": {}
         }
         },
@@ -4302,7 +4302,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "(for [i]:10 (> @i 0) [i](- @i 1) [j](+ @i @j))",
+            "code" : "{ (def 'i 0x80) (def 'j 0xA0) (for [i]:10 (> @i 0) [i](- @i 1) [j](+ @i @j)) }",
             "storage": {}
         }
         },
@@ -4330,7 +4330,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "(for [i]:0 (< @i 10) [i](+ @i 1) [j](+ @i @j))",
+            "code" : "{ (def 'i 0x80) (def 'j 0xA0) (for [i]:0 (< @i 10) [i](+ @i 1) [j](+ @i @j)) }",
             "storage": {}
         }
         },
@@ -4498,7 +4498,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "100000000000000000000000",
             "nonce" : "0",
-            "code" : "(when (> 1 0) [i] 13)",
+            "code" : "{ (def 'i 0x80) (when (> 1 0) [i] 13) }",
             "storage": {}
         }
         },
