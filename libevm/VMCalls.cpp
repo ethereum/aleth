@@ -58,19 +58,19 @@ void VM::throwBadJumpDestination()
 	BOOST_THROW_EXCEPTION(BadJumpDestination());
 }
 
-void VM::throwBadStack(unsigned _size, unsigned _n, unsigned _d)
+void VM::throwBadStack(unsigned _size, unsigned _removed, unsigned _added)
 {
-	if (_size < _n)
+	if (_size < _removed)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_n, (bigint)_size));
+		BOOST_THROW_EXCEPTION(StackUnderflow() << RequirementError((bigint)_removed, (bigint)_size));
 	}
-	if (_size - _n + _d > 1024)
+	if (_size - _removed + _added > 1024)
 	{
 		if (m_onFail)
 			(this->*m_onFail)();
-		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_d - _n), (bigint)_size));
+		BOOST_THROW_EXCEPTION(OutOfStack() << RequirementError((bigint)(_added - _removed), (bigint)_size));
 	}
 }
 
@@ -102,7 +102,7 @@ void VM::caseCreate()
 	m_newMemSize = memNeed(*(m_sp - 1), *(m_sp - 2));
 	m_runGas = toUint64(m_schedule->createGas);
 	updateMem();
-	onOperation();
+	ON_OP();
 	updateIOGas();
 
 	auto const& endowment = *m_sp--;
@@ -111,12 +111,14 @@ void VM::caseCreate()
 
 	if (m_ext->balance(m_ext->myAddress) >= endowment && m_ext->depth < 1024)
 	{
-		u256 createGas = *m_io_gas;
+		*io_gas = m_io_gas;
+		u256 createGas = *io_gas;
 		if (!m_schedule->staticCallDepthLimit())
 			createGas -= createGas / 64;
 		u256 gas = createGas;
-		*++m_sp = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), *m_onOp);
-		*m_io_gas -= (createGas - gas);
+		*++m_sp = (u160)m_ext->create(endowment, gas, bytesConstRef(m_mem.data() + initOff, initSize), m_onOp);
+		*io_gas -= (createGas - gas);
+		m_io_gas = uint64_t(*io_gas);
 	}
 	else
 		*++m_sp = 0;
@@ -130,7 +132,7 @@ void VM::caseCall()
 		*++m_sp = m_ext->call(*callParams);
 	else
 		*++m_sp = 0;
-	*m_io_gas += callParams->gas;
+	m_io_gas += uint64_t(callParams->gas);
 }
 
 bool VM::caseCallSetup(CallParameters *callParams)
@@ -158,12 +160,12 @@ bool VM::caseCallSetup(CallParameters *callParams)
 	else
 	{
 		// Apply "all but one 64th" rule.
-		u256 maxAllowedCallGas = *m_io_gas - *m_io_gas / 64;
+		u256 maxAllowedCallGas = m_io_gas - m_io_gas / 64;
 		callParams->gas = std::min(*m_sp, maxAllowedCallGas);
 	}
 
 	m_runGas = toUint64(callParams->gas);
-	onOperation();
+	ON_OP();
 	updateIOGas();
 
 	if (m_op != Instruction::DELEGATECALL && *(m_sp - 2) > 0)
@@ -191,7 +193,7 @@ bool VM::caseCallSetup(CallParameters *callParams)
 
 	if (m_ext->balance(m_ext->myAddress) >= callParams->valueTransfer && m_ext->depth < 1024)
 	{
-		callParams->onOp = *m_onOp;
+		callParams->onOp = m_onOp;
 		callParams->senderAddress = m_op == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
 		callParams->receiveAddress = m_op == Instruction::CALL ? callParams->codeAddress : m_ext->myAddress;
 		callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);

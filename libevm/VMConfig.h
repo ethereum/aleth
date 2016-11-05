@@ -31,16 +31,12 @@ namespace eth
 //
 // EVM_REPLACE_CONST_JUMP - with pre-verified jumps to save runtime lookup
 //
-// ETH_VMTRACE - set by cmake to enable tracing by testeth, ethvm and others
-//
 // EVM_TRACE - provides various levels of tracing that override ETH_VMTRACE
 
-#if true
-	#define EVM_SWITCH_DISPATCH
-#elif defined(__GNUG__)
+#if false && defined(__GNUG__)
 	#define EVM_JUMP_DISPATCH
 #else
-	#error Gnu C++ required for EVM_JUMP_DISPATCH
+	#define EVM_SWITCH_DISPATCH
 #endif
 
 #if false
@@ -53,30 +49,30 @@ namespace eth
 
 #if	defined(EVM_USE_CONSTANT_POOL) || \
 	defined(EVM_REPLACE_CONST_JUMP)
-	
 		#define EVM_DO_FIRST_PASS_OPTIMIZATION
 #endif
 
 
-#define ETH_VMTRACE 1 // turn on for now until others catch up
-#if ETH_VMTRACE
-	#define onOperation() doOnOperation()
-#else
-	#define onOperation()
-#endif
-
 // set this to 2, 1, or 0 for more, less, or no tracing to cerr
 #define EVM_TRACE 0
-#if EVM_TRACE
+#if EVM_TRACE > 0
 
-	#undef onOperation
+	#undef ON_OP
 	#if EVM_TRACE > 1
-		#define onOperation() \
-			(cerr <<"### "<< ++m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl)
+		#define ON_OP() \
+			(onOperation(), \
+			(cerr <<"### "<< m_nSteps <<" @"<< m_pc <<" "<< instructionInfo(m_op).name <<endl))
 	#else
-		#define onOperation()
+		#define ON_OP() onOperation()
 	#endif
 	
+	#define TRACE_STR(level, str) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"$$$ "<< (str) <<endl;
+			
+	#define TRACE_VAL(level, name, val) \
+		if ((level) <= EVM_TRACE) \
+			cerr <<"=== "<< (name) <<" "<<hex<< (val) <<endl;
 	#define TRACE_OP(level, pc, op) \
 		if ((level) <= EVM_TRACE) \
 			cerr <<"*** "<< (pc) <<" "<< instructionInfo(op).name <<endl;
@@ -89,16 +85,25 @@ namespace eth
 		if ((level) <= EVM_TRACE) \
 			cerr <<"... "<< (pc) <<" "<< instructionInfo(op).name <<endl;
 #else
+	#define TRACE_STR(level, str)
+	#define TRACE_VAL(level, name, val)
 	#define TRACE_OP(level, pc, op)
 	#define TRACE_PRE_OPT(level, pc, op)
 	#define TRACE_POST_OPT(level, pc, op)
+	#define ON_OP() onOperation()
 #endif
 
 // Executive swallows exceptions in some circumstances
 #if 0
-	#undef BOOST_THROW_EXCEPTION
-	#define BOOST_THROW_EXCEPTION(X) \
-		((cerr << "EVM EXCEPTION " << (X).what() << endl), abort())
+	#define THROW_EXCEPTION(X) \
+		((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), abort())
+#else
+	#if EVM_TRACE > 0
+		#define THROW_EXCEPTION(X) \
+			((cerr << "!!! EVM EXCEPTION " << (X).what() << endl), BOOST_THROW_EXCEPTION(X))
+	#else
+		#define THROW_EXCEPTION(X) BOOST_THROW_EXCEPTION(X)
+	#endif
 #endif
 
 
@@ -382,18 +387,19 @@ namespace eth
 		};  \
 		if (!m_caseInit) {  \
 			c_jumpTable = jumpTable;  \
-			c_invalid = &&INVALID; \
 			m_caseInit = true;  \
 			return;  \
 		}
 
-	#define DO_CASES fetchInstruction(); goto *jumpTable[(byte)m_op];
+	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_op];
 	#define CASE_BEGIN(label) label:
 	#define CASE_END fetchInstruction(); goto *jumpTable[m_code[m_pc]];
 	#define CASE_RETURN return;
 	#define CASE_DEFAULT INVALID:
 	#define END_CASES
 	
+#else
+	#error No opcode dispatch configured
 #endif
 
 }}
