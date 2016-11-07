@@ -69,9 +69,12 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		h256 r = rlp[field = 7].toInt<u256>();
 		h256 s = rlp[field = 8].toInt<u256>();
 
-		m_chainId = std::floor((float)(v - 35)/2);
-		if(m_chainId == -4 || m_chainId == 1)
-			v = rlp[field = 6].toInt<byte>() - m_chainId*2 - 35;
+		if (v == 27 || v == 28)
+			m_chainId = -4;
+		else if (v == 37 || v == 38)
+			m_chainId = 1;
+
+		v = v - (m_chainId * 2 + 35);
 
 		if (rlp.itemCount() > 9)
 			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));
@@ -159,8 +162,7 @@ h256 TransactionBase::sha3(IncludeSignature _sig) const
 		return m_hashWith;
 
 	RLPStream s;
-
-	if (m_chainId == 1 /*&& _sig == WithSignature*/ && m_type != NullTransaction) //EIP155 is On
+	if (m_chainId == 1 && m_type != NullTransaction) //EIP155 is On
 	{
 		//!!! code copy from streamRLP!  cant change streamRLP because it should not be affected by EIP155 proposal (it affects only hash)
 		s.appendList(9);
@@ -170,7 +172,7 @@ h256 TransactionBase::sha3(IncludeSignature _sig) const
 		else
 			s << "";
 		s << m_value << m_data;
-		s << (m_vrs.v + m_chainId*2 + 35) << (u256)0 << (u256)0;
+		s << m_chainId << (u256)0 << (u256)0;
 	}
 	else
 		streamRLP(s, _sig);
