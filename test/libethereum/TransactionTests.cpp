@@ -76,7 +76,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (o.count("sender") > 0)
 				{
 					string expectSender = toString(o["sender"].get_str());
-					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test: expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
 				}
 				o["sender"] = toString(txFromFields.sender());
 				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
