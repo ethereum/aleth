@@ -99,7 +99,7 @@ public:
 	bool isMessageCall() const { return m_type == MessageCall; }
 
 	/// Serialises this transaction to an RLPStream.
-	void streamRLP(RLPStream& _s, IncludeSignature _sig = WithSignature) const;
+	void streamRLP(RLPStream& _s, IncludeSignature _sig = WithSignature, bool _forEip155hash = false) const;
 
 	/// @returns the RLP serialisation of this transaction.
 	bytes rlp(IncludeSignature _sig = WithSignature) const { RLPStream s; streamRLP(s, _sig); return s.out(); }
@@ -169,7 +169,7 @@ protected:
 	u256 m_gas;							///< The total gas to convert, paid for from sender's account. Any unused gas gets refunded once the contract is ended.
 	bytes m_data;						///< The data associated with the transaction, or the initialiser if it's a creation transaction.
 	SignatureStruct m_vrs;				///< The signature of the transaction. Encodes the sender.
-	int m_chainId;						///< EIP155 value
+	int m_chainId = 0;					///< EIP155 value for calculating transaction hash https://github.com/ethereum/EIPs/issues/155
 
 	mutable h256 m_hashWith;			///< Cached hash of transaction with signature.
 	mutable Address m_sender;			///< Cached sender, determined from signature.
