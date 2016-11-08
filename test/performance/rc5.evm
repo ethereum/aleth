@@ -216,13 +216,13 @@ tag6:
   MSTORE			uint32[4] memory msg = [0xdeadbeef, 0xdeadbeef, 0xdeadbeef, 0xdeadbeef]
   PUSH1 0x0		
 tag8: 
-  JUMPDEST		for (int i = 0; i < 2000; ++i)...
-  PUSH2 0x7D0		2000
+  JUMPDEST		for (int i = 0; i < 10000; ++i)...
+  PUSH2 0x2710		10000
   DUP2			i
-  SLT			i < 2000
-  ISZERO			for (int i = 0; i < 2000; ++i)...
-  PUSH [tag9]		for (int i = 0; i < 2000; ++i)...
-  JUMPI			for (int i = 0; i < 2000; ++i)...
+  SLT			i < 10000
+  ISZERO			for (int i = 0; i < 10000; ++i)...
+  PUSH [tag9]		for (int i = 0; i < 10000; ++i)...
+  JUMPI			for (int i = 0; i < 10000; ++i)...
   PUSH [tag11]		test(box, msg)
   DUP4			box
   DUP4			msg
@@ -358,10 +358,10 @@ tag41:
   DUP6			A ^ B
   XOR			A ^ B
   DUP5			B
-  PUSH [tag20]		rotate_left
+  PUSH [tag20]		rotate_right
   JUMP	[in]		rotate_left((A ^ B), B)
 tag9: 
-  JUMPDEST		for (int i = 0; i < 2000; ++i)...
+  JUMPDEST		for (int i = 0; i < 10000; ++i)...
   POP			function rc5() {...
   POP			function rc5() {...
   POP			function rc5() {...
@@ -377,8 +377,8 @@ tag11:
   JUMPDEST		test(box, msg)
   PUSH1 0x1		uint32[4] memory key
   ADD			++i
-  PUSH [tag8]		for (int i = 0; i < 2000; ++i)...
-  JUMP			for (int i = 0; i < 2000; ++i)...
+  PUSH [tag8]		for (int i = 0; i < 10000; ++i)...
+  JUMP			for (int i = 0; i < 10000; ++i)...
 tag15: 
   JUMPDEST		for (i = 1; i < 26; ++i)...
   POP			
@@ -435,28 +435,22 @@ tag20:
   SUB			32 - n
 tag34: 
   JUMPDEST		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  PUSH1 0x0		
-  PUSH1 0x1		uint32[4] memory key
-tag57: 
-  JUMPDEST		while (n-- > 0) e *= 2
-  PUSH1 0x0		0
-  DUP4			n--
-  DUP1			n--
-  PUSH1 0x1		n--
-  SWAP1			n--
-  SUB			n--
-  SWAP5			n--
-  POP			n--
-  PUSH4 0xFFFFFFFF		n-- > 0
-  AND			n-- > 0
-  GT			n-- > 0
-  ISZERO			while (n-- > 0) e *= 2
-  PUSH [tag58]		while (n-- > 0) e *= 2
-  JUMPI			while (n-- > 0) e *= 2
   PUSH1 0x2		++i
-  MUL			e *= 2
-  PUSH [tag57]		while (n-- > 0) e *= 2
-  JUMP			while (n-- > 0) e *= 2
+  DUP2			2**n
+  SWAP1			2**n
+  EXP			2**n
+  SWAP1			v *= 2**n
+  SWAP2			v *= 2**n
+  MUL			v *= 2**n
+  SWAP1			v *= 2**n
+  DUP2			v *= 2**n
+tag32: 
+  JUMPDEST		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+  SWAP3			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+  SWAP2			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+  POP			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+  POP			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+  JUMP	[out]		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
 tag18: 
   JUMPDEST		while (n-- > 0) {...
   POP			function expand(uint32[4] L, uint32[26] S) {...
@@ -520,7 +514,7 @@ tag19:
   DUP7			A + B
   DUP7			A + B
   ADD			A + B
-  PUSH [tag20]		rotate_left
+  PUSH [tag20]		rotate_right
   JUMP	[in]		rotate_left((L[j] + A + B), A + B)
 tag21: 
   JUMPDEST		rotate_left((L[j] + A + B), A + B)
@@ -658,19 +652,8 @@ tag50:
   DUP5			B - S[2 * i + 1]
   SUB			B - S[2 * i + 1]
   DUP6			inout
-tag54: 
-  JUMPDEST		function rotate_right(uint32 v, uint32 n) returns (uint32) {...
-  PUSH1 0x1F		0x1f
-  AND			n &= 0x1f
-  PUSH1 0x0		
-  PUSH [tag63]		shift_left(v, 32 - n)
-  DUP4			S[i - 1]
-  PUSH1 0x20		uint32[4] memory key
-  DUP5			32 - n
-  SWAP1			32 - n
-  SUB			32 - n
-  PUSH [tag36]		shift_left
-  JUMP	[in]		shift_left(v, 32 - n)
+  PUSH [tag20]		rotate_right
+  JUMP	[in]		rotate_right(B - S[2 * i + 1], A)
 tag26: 
   JUMPDEST		decrypt(S, tmp)
   POP			
@@ -734,39 +717,15 @@ tag33:
   PUSH [tag35]		shift_left(v, n)
   DUP5			v
   DUP5			n
-tag36: 
-  JUMPDEST		function shift_left(uint32 v, uint32 n) returns (uint32) {...
-  PUSH1 0x0		
-  PUSH1 0x1		uint32[4] memory key
-tag60: 
-  JUMPDEST		while (n-- > 0) e *= 2
-  PUSH1 0x0		0
-  DUP4			n--
-  DUP1			n--
-  PUSH1 0x1		n--
-  SWAP1			n--
-  SUB			n--
-  SWAP5			n--
-  POP			n--
-  PUSH4 0xFFFFFFFF		n-- > 0
-  AND			n-- > 0
-  GT			n-- > 0
-  ISZERO			while (n-- > 0) e *= 2
-  PUSH [tag61]		while (n-- > 0) e *= 2
-  JUMPI			while (n-- > 0) e *= 2
-  PUSH1 0x2		++i
-  MUL			e *= 2
-  PUSH [tag60]		while (n-- > 0) e *= 2
-  JUMP			while (n-- > 0) e *= 2
+  PUSH [tag34]		shift_left
+  JUMP	[in]		shift_left(v, n)
 tag35: 
   JUMPDEST		shift_left(v, n)
   OR			shift_left(v, n) | shift_right(v, 32 - n)
-  SWAP4			shift_left(v, n) | shift_right(v, 32 - n)
-  SWAP3			S
-  POP			
-  POP			
-  POP			
-  JUMP	[out]		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+  SWAP1			return shift_left(v, n) | shift_right(v, 32 - n)
+  POP			return shift_left(v, n) | shift_right(v, 32 - n)
+  PUSH [tag32]		return shift_left(v, n) | shift_right(v, 32 - n)
+  JUMP			return shift_left(v, n) | shift_right(v, 32 - n)
 tag39: 
   JUMPDEST		for (uint32 i = 0; i < 4; i += 2) {...
   POP			function encrypt(uint32[26] S, uint32[4] inout) {...
@@ -864,7 +823,7 @@ tag44:
   DUP5			B ^ A
   XOR			B ^ A
   DUP6			rotate_left((B ^ A), A) + S[2 * i + 1]
-  PUSH [tag20]		rotate_left
+  PUSH [tag20]		rotate_right
   JUMP	[in]		rotate_left((B ^ A), A)
 tag45: 
   JUMPDEST		rotate_left((B ^ A), A)
@@ -975,7 +934,7 @@ tag53:
   DUP6			A - S[2 * i]
   SUB			A - S[2 * i]
   DUP3			rotate_right(A - S[2 * i], B) ^ B
-  PUSH [tag54]		rotate_right
+  PUSH [tag20]		rotate_right
   JUMP	[in]		rotate_right(A - S[2 * i], B)
 tag55: 
   JUMPDEST		rotate_right(A - S[2 * i], B)
@@ -987,46 +946,6 @@ tag55:
   ADD			i - 1
   PUSH [tag50]		for (int j = 12; j > 0; --j) {...
   JUMP			for (int j = 12; j > 0; --j) {...
-tag61: 
-  JUMPDEST		while (n-- > 0) e *= 2
-  SWAP3			v *= e
-  DUP4			v *= e
-  MUL			v *= e
-  SWAP3			v *= e
-  DUP4			v *= e
-  SWAP2			v *= e
-  POP			
-tag56: 
-  JUMPDEST		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  POP			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  SWAP3			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  SWAP2			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  POP			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  POP			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  JUMP	[out]		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-tag58: 
-  JUMPDEST		while (n-- > 0) e *= 2
-  DUP1			e
-  DUP5			v /= e
-  DUP2			v /= e
-  ISZERO			v /= e
-  PUSH [ErrorTag]		v /= e
-  JUMPI			v /= e
-  DIV			v /= e
-  SWAP4			v /= e
-  POP			v /= e
-  DUP4			v /= e
-  SWAP2			return v /= e
-  POP			return v /= e
-  PUSH [tag56]		return v /= e
-  JUMP			return v /= e
-tag63: 
-  JUMPDEST		shift_left(v, 32 - n)
-  PUSH [tag35]		shift_right(v, n)
-  DUP5			v
-  DUP5			n
-  PUSH [tag34]		shift_right
-  JUMP	[in]		shift_right(v, n)
 .data:
   0: 
   .code:
@@ -1066,7 +985,7 @@ tag63:
     DUP1			contract rc5 {...
     PUSH4 0x66AC777E		contract rc5 {...
     EQ			contract rc5 {...
-    PUSH [tag6]		contract rc5 {...
+    PUSH [tag2]		contract rc5 {...
     JUMPI			contract rc5 {...
     DUP1			contract rc5 {...
     PUSH4 0xA8E553F5		contract rc5 {...
@@ -1076,7 +995,7 @@ tag63:
     DUP1			contract rc5 {...
     PUSH4 0xD924C660		contract rc5 {...
     EQ			contract rc5 {...
-    PUSH [tag8]		contract rc5 {...
+    PUSH [tag5]		contract rc5 {...
     JUMPI			contract rc5 {...
     DUP1			contract rc5 {...
     PUSH4 0xED25E6C2		contract rc5 {...
@@ -1092,11 +1011,11 @@ tag63:
     CALLVALUE			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH [ErrorTag]		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
     JUMPI			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [tag10]		function shift_right(uint32 v, uint32 n) returns (uint32) {...
+    PUSH [tag10]		function shift_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH1 0x4		function expand(uint32[4] L, uint32[26] S) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x24		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
+    CALLDATALOAD			function shift_left(uint32 v, uint32 n) returns (uint32) {...
+    PUSH1 0x24		function shift_left(uint32 v, uint32 n) returns (uint32) {...
+    CALLDATALOAD			function shift_left(uint32 v, uint32 n) returns (uint32) {...
   tag11: 
     JUMPDEST		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH1 0x1F		0x1f
@@ -1108,30 +1027,24 @@ tag63:
     DUP5			32 - n
     SWAP1			32 - n
     SUB			32 - n
-  tag23: 
-    JUMPDEST		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x0		contract rc5 {...
-    PUSH1 0x1		S[0]
-  tag62: 
-    JUMPDEST		while (n-- > 0) e *= 2
-    PUSH1 0x0		0
-    DUP4			n--
-    DUP1			n--
-    PUSH1 0x1		n--
-    SWAP1			n--
-    SUB			n--
-    SWAP5			n--
-    POP			n--
-    PUSH4 0xFFFFFFFF		n-- > 0
-    AND			n-- > 0
-    GT			n-- > 0
-    ISZERO			while (n-- > 0) e *= 2
-    PUSH [tag63]		while (n-- > 0) e *= 2
-    JUMPI			while (n-- > 0) e *= 2
+  tag17: 
+    JUMPDEST		function shift_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH1 0x2		++i
-    MUL			e *= 2
-    PUSH [tag62]		while (n-- > 0) e *= 2
-    JUMP			while (n-- > 0) e *= 2
+    DUP2			2**n
+    SWAP1			2**n
+    EXP			2**n
+    SWAP1			v *= 2**n
+    SWAP2			v *= 2**n
+    MUL			v *= 2**n
+    SWAP1			v *= 2**n
+    DUP2			v *= 2**n
+  tag26: 
+    JUMPDEST		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+    SWAP3			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+    SWAP2			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+    POP			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+    POP			function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+    JUMP	[out]		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
   tag3: 
     JUMPDEST		function test(uint32[26] S, uint32[4] msg) {...
     CALLVALUE			function test(uint32[26] S, uint32[4] msg) {...
@@ -1429,58 +1342,13 @@ tag63:
     CALLVALUE			function shift_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH [ErrorTag]		function shift_left(uint32 v, uint32 n) returns (uint32) {...
     JUMPI			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [tag10]		function shift_right(uint32 v, uint32 n) returns (uint32) {...
+    PUSH [tag10]		function shift_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH1 0x4		function expand(uint32[4] L, uint32[26] S) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x24		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
+    CALLDATALOAD			function shift_left(uint32 v, uint32 n) returns (uint32) {...
+    PUSH1 0x24		function shift_left(uint32 v, uint32 n) returns (uint32) {...
+    CALLDATALOAD			function shift_left(uint32 v, uint32 n) returns (uint32) {...
     PUSH [tag17]		shift_left
     JUMP			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-  tag6: 
-    JUMPDEST		function rotate_right(uint32 v, uint32 n) returns (uint32) {...
-    CALLVALUE			function rotate_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [ErrorTag]		function rotate_right(uint32 v, uint32 n) returns (uint32) {...
-    JUMPI			function rotate_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [tag10]		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x4		function expand(uint32[4] L, uint32[26] S) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x24		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-  tag19: 
-    JUMPDEST		function rotate_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x1F		0x1f
-    AND			n &= 0x1f
-    PUSH1 0x0		contract rc5 {...
-    PUSH [tag50]		shift_left(v, 32 - n)
-    DUP4			S[i - 1]
-    PUSH1 0x20		function expand(uint32[4] L, uint32[26] S) {...
-    DUP5			32 - n
-    SWAP1			32 - n
-    SUB			32 - n
-  tag17: 
-    JUMPDEST		function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x0		contract rc5 {...
-    PUSH1 0x1		S[0]
-  tag47: 
-    JUMPDEST		while (n-- > 0) e *= 2
-    PUSH1 0x0		0
-    DUP4			n--
-    DUP1			n--
-    PUSH1 0x1		n--
-    SWAP1			n--
-    SUB			n--
-    SWAP5			n--
-    POP			n--
-    PUSH4 0xFFFFFFFF		n-- > 0
-    AND			n-- > 0
-    GT			n-- > 0
-    ISZERO			while (n-- > 0) e *= 2
-    PUSH [tag48]		while (n-- > 0) e *= 2
-    JUMPI			while (n-- > 0) e *= 2
-    PUSH1 0x2		++i
-    MUL			e *= 2
-    PUSH [tag47]		while (n-- > 0) e *= 2
-    JUMP			while (n-- > 0) e *= 2
   tag7: 
     JUMPDEST		function decrypt(uint32[26] S, uint32[4] inout) {...
     CALLVALUE			function decrypt(uint32[26] S, uint32[4] inout) {...
@@ -1561,18 +1429,6 @@ tag63:
     POP			
     POP			
     JUMP			function decrypt(uint32[26] S, uint32[4] inout) {...
-  tag8: 
-    JUMPDEST		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    CALLVALUE			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [ErrorTag]		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    JUMPI			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [tag10]		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x4		function expand(uint32[4] L, uint32[26] S) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH1 0x24		function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    CALLDATALOAD			function shift_right(uint32 v, uint32 n) returns (uint32) {...
-    PUSH [tag23]		shift_right
-    JUMP			function shift_right(uint32 v, uint32 n) returns (uint32) {...
   tag9: 
     JUMPDEST		function expand(uint32[4] L, uint32[26] S) {...
     CALLVALUE			function expand(uint32[4] L, uint32[26] S) {...
@@ -1672,7 +1528,7 @@ tag63:
     PUSH1 0x1		S[0]
     SWAP3			S[0]
     POP			
-  tag65: 
+  tag61: 
     JUMPDEST		for (i = 1; i < 26; ++i)...
     PUSH1 0x1A		26
     DUP4			i
@@ -1680,7 +1536,7 @@ tag63:
     AND			i < 26
     LT			i < 26
     ISZERO			for (i = 1; i < 26; ++i)...
-    PUSH [tag66]		for (i = 1; i < 26; ++i)...
+    PUSH [tag62]		for (i = 1; i < 26; ++i)...
     JUMPI			for (i = 1; i < 26; ++i)...
     DUP6			S
     PUSH1 0x1		1
@@ -1728,7 +1584,7 @@ tag63:
     SWAP3			++i
     ADD			++i
     SWAP2			++i
-    PUSH [tag65]		for (i = 1; i < 26; ++i)...
+    PUSH [tag61]		for (i = 1; i < 26; ++i)...
     JUMP			for (i = 1; i < 26; ++i)...
   tag10: 
     JUMPDEST		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
@@ -1765,7 +1621,7 @@ tag63:
     DUP1			contract rc5 {...
     DUP1			contract rc5 {...
     DUP1			contract rc5 {...
-  tag53: 
+  tag51: 
     JUMPDEST		for (uint32 i = 0; i < 4; i += 2) {...
     PUSH1 0x4		4
     DUP5			i
@@ -1812,16 +1668,16 @@ tag63:
     PUSH1 0xC		12
     SWAP1			12
     POP			
-  tag56: 
+  tag54: 
     JUMPDEST		for (int j = 12; j > 0; --j) {...
     PUSH1 0x0		0
     DUP2			j
     SGT			j > 0
     ISZERO			for (int j = 12; j > 0; --j) {...
-    PUSH [tag57]		for (int j = 12; j > 0; --j) {...
+    PUSH [tag55]		for (int j = 12; j > 0; --j) {...
     JUMPI			for (int j = 12; j > 0; --j) {...
     DUP3			A
-    PUSH [tag59]		rotate_right(B - S[2 * i + 1], A)
+    PUSH [tag57]		rotate_right(B - S[2 * i + 1], A)
     DUP8			S
     DUP7			i
     PUSH1 0x2		2
@@ -1843,7 +1699,7 @@ tag63:
     DUP5			B - S[2 * i + 1]
     SUB			B - S[2 * i + 1]
     DUP6			S
-    PUSH [tag19]		rotate_right
+    PUSH [tag11]		rotate_left
     JUMP	[in]		rotate_right(B - S[2 * i + 1], A)
   tag27: 
     JUMPDEST		shift_right(v, 32 - n)
@@ -1855,12 +1711,10 @@ tag63:
   tag28: 
     JUMPDEST		shift_left(v, n)
     OR			shift_left(v, n) | shift_right(v, 32 - n)
-    SWAP4			shift_left(v, n) | shift_right(v, 32 - n)
-    SWAP3			S
-    POP			
-    POP			
-    POP			
-    JUMP	[out]		function rotate_left(uint32 v, uint32 n) returns (uint32) {...
+    SWAP1			return shift_left(v, n) | shift_right(v, 32 - n)
+    POP			return shift_left(v, n) | shift_right(v, 32 - n)
+    PUSH [tag26]		return shift_left(v, n) | shift_right(v, 32 - n)
+    JUMP			return shift_left(v, n) | shift_right(v, 32 - n)
   tag32: 
     JUMPDEST		decrypt(S, tmp)
     POP			
@@ -2027,31 +1881,7 @@ tag63:
     ADD			++i
     PUSH [tag41]		for (int j = 12; j <= 4; ++j) {...
     JUMP			for (int j = 12; j <= 4; ++j) {...
-  tag48: 
-    JUMPDEST		while (n-- > 0) e *= 2
-    SWAP3			v *= e
-    DUP4			v *= e
-    MUL			v *= e
-    SWAP3			v *= e
-    DUP4			v *= e
-    SWAP2			v *= e
-    POP			
-  tag46: 
-    JUMPDEST		function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    POP			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    SWAP3			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    SWAP2			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    POP			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    POP			function shift_left(uint32 v, uint32 n) returns (uint32) {...
-    JUMP	[out]		function shift_left(uint32 v, uint32 n) returns (uint32) {...
-  tag50: 
-    JUMPDEST		shift_left(v, 32 - n)
-    PUSH [tag28]		shift_right(v, n)
-    DUP5			v
-    DUP5			n
-    PUSH [tag23]		shift_right
-    JUMP	[in]		shift_right(v, n)
-  tag57: 
+  tag55: 
     JUMPDEST		for (int j = 12; j > 0; --j) {...
     PUSH1 0x20		function expand(uint32[4] L, uint32[26] S) {...
     DUP7			S[i - 1]
@@ -2123,15 +1953,15 @@ tag63:
     SWAP4			i += 2
     ADD			i += 2
     SWAP3			i += 2
-    PUSH [tag53]		for (uint32 i = 0; i < 4; i += 2) {...
+    PUSH [tag51]		for (uint32 i = 0; i < 4; i += 2) {...
     JUMP			for (uint32 i = 0; i < 4; i += 2) {...
-  tag59: 
+  tag57: 
     JUMPDEST		rotate_right(B - S[2 * i + 1], A)
     XOR			rotate_right(A - S[2 * i], B) ^ B
     SWAP2			rotate_right(A - S[2 * i], B) ^ B
     POP			
     DUP2			rotate_right(A - S[2 * i], B) ^ B
-    PUSH [tag60]		rotate_right(A - S[2 * i], B)
+    PUSH [tag58]		rotate_right(A - S[2 * i], B)
     DUP8			S
     PUSH1 0x2		++i
     DUP8			2 * i
@@ -2151,9 +1981,9 @@ tag63:
     DUP6			A - S[2 * i]
     SUB			A - S[2 * i]
     DUP3			rotate_right(A - S[2 * i], B) ^ B
-    PUSH [tag19]		rotate_right
+    PUSH [tag11]		rotate_left
     JUMP	[in]		rotate_right(A - S[2 * i], B)
-  tag60: 
+  tag58: 
     JUMPDEST		rotate_right(A - S[2 * i], B)
     XOR			rotate_right(A - S[2 * i], B) ^ B
     SWAP3			rotate_right(A - S[2 * i], B) ^ B
@@ -2161,25 +1991,9 @@ tag63:
     PUSH1 0x0		
     NOT			
     ADD			i - 1
-    PUSH [tag56]		for (int j = 12; j > 0; --j) {...
+    PUSH [tag54]		for (int j = 12; j > 0; --j) {...
     JUMP			for (int j = 12; j > 0; --j) {...
-  tag63: 
-    JUMPDEST		while (n-- > 0) e *= 2
-    DUP1			e
-    DUP5			v /= e
-    DUP2			v /= e
-    ISZERO			v /= e
-    PUSH [ErrorTag]		v /= e
-    JUMPI			v /= e
-    DIV			v /= e
-    SWAP4			v /= e
-    POP			v /= e
-    DUP4			v /= e
-    SWAP2			return v /= e
-    POP			return v /= e
-    PUSH [tag46]		return v /= e
-    JUMP			return v /= e
-  tag66: 
+  tag62: 
     JUMPDEST		for (i = 1; i < 26; ++i)...
     POP			
     PUSH1 0x0		contract rc5 {...
@@ -2189,7 +2003,7 @@ tag63:
     SWAP1			contract rc5 {...
     POP			
     PUSH1 0x4E		3*26
-  tag68: 
+  tag64: 
     JUMPDEST		while (n-- > 0) {...
     PUSH1 0x0		
     NOT			
@@ -2200,9 +2014,9 @@ tag63:
     SWAP1			n-- > 0
     SGT			n-- > 0
     ISZERO			while (n-- > 0) {...
-    PUSH [tag69]		while (n-- > 0) {...
+    PUSH [tag65]		while (n-- > 0) {...
     JUMPI			while (n-- > 0) {...
-    PUSH [tag70]		rotate_left((S[i] + A + B), 3)
+    PUSH [tag66]		rotate_left((S[i] + A + B), 3)
     DUP5			B
     DUP7			A
     DUP9			S
@@ -2224,7 +2038,7 @@ tag63:
     PUSH1 0x3		3
     PUSH [tag11]		rotate_left
     JUMP	[in]		rotate_left((S[i] + A + B), 3)
-  tag69: 
+  tag65: 
     JUMPDEST		while (n-- > 0) {...
     POP			function expand(uint32[4] L, uint32[26] S) {...
     POP			function expand(uint32[4] L, uint32[26] S) {...
@@ -2234,7 +2048,7 @@ tag63:
     POP			function expand(uint32[4] L, uint32[26] S) {...
     POP			function expand(uint32[4] L, uint32[26] S) {...
     JUMP	[out]		function expand(uint32[4] L, uint32[26] S) {...
-  tag70: 
+  tag66: 
     JUMPDEST		rotate_left((S[i] + A + B), 3)
     DUP7			S
     DUP5			i
@@ -2265,7 +2079,7 @@ tag63:
     POP			A = S[i] = rotate_left((S[i] + A + B), 3)
     DUP5			A = S[i] = rotate_left((S[i] + A + B), 3)
     POP			A = S[i] = rotate_left((S[i] + A + B), 3)
-    PUSH [tag71]		rotate_left((L[j] + A + B), A + B)
+    PUSH [tag67]		rotate_left((L[j] + A + B), A + B)
     DUP5			B
     DUP7			A
     DUP10			L
@@ -2289,7 +2103,7 @@ tag63:
     ADD			A + B
     PUSH [tag11]		rotate_left
     JUMP	[in]		rotate_left((L[j] + A + B), A + B)
-  tag71: 
+  tag67: 
     JUMPDEST		rotate_left((L[j] + A + B), A + B)
     DUP8			L
     DUP4			j
@@ -2336,5 +2150,5 @@ tag63:
     SWAP2			++j % 4
     MOD			++j % 4
     SWAP1			++j % 4
-    PUSH [tag68]		while (n-- > 0) {...
+    PUSH [tag64]		while (n-- > 0) {...
     JUMP			while (n-- > 0) {...
