@@ -65,7 +65,7 @@ public:
 	bytes const& memory() const { return m_mem; }
 	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
 
-	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1) {};
+	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1), m_pool(256) {};
 
 private:
 
@@ -76,6 +76,8 @@ private:
 
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
+	static u256 exp256(u256 _base, u256 _exponent);
+	static void copyCode();
 	const void* const* c_jumpTable = 0;
 	bool m_caseInit = false;
 	
