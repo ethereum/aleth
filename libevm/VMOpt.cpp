@@ -49,7 +49,7 @@ void VM::initMetrics()
 	done = true;
 }
 
-int VM::copyCode()
+void VM::copyCode()
 {
 	// Copy code so that it can be safely modified and extend code by
 	// 33 zero bytes to allow reading virtual data at the end of the
