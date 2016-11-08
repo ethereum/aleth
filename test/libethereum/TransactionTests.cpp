@@ -73,8 +73,14 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 					BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "transaction from RLP signature is invalid") );
 				se->verifyTransaction(ImportRequirements::Everything, txFromFields, bh);
 
-				o["sender"] = toString(txFromFields.sender());				
+				if (o.count("sender") > 0)
+				{
+					string expectSender = toString(o["sender"].get_str());
+					BOOST_CHECK_MESSAGE(toString(txFromFields.sender()) == expectSender, "Error filling transaction test " + TestOutputHelper::testName() + ": expected another sender address! (got: " + toString(txFromFields.sender()) + "), expected: (" + expectSender + ")");
+				}
+				o["sender"] = toString(txFromFields.sender());
 				o["transaction"] = ImportTest::makeAllFieldsHex(tObj);
+				o["hash"] = toString(txFromFields.sha3());
 			}
 			catch(Exception const& _e)
 			{
@@ -134,6 +140,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "Expected a valid transaction!");
 
 			mObject tObj = o["transaction"].get_obj();
+			h256 txSha3Expected = h256(o["hash"].get_str());
 			Transaction txFromFields(createRLPStreamFromTransactionFields(tObj).out(), CheckTransaction::Everything);
 
 			//Check the fields restored from RLP to original fields
@@ -144,6 +151,8 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_CHECK_MESSAGE(txFromFields.nonce() == txFromRlp.nonce(), testname + "Nonce in given RLP not matching the Transaction nonce!");
 			BOOST_CHECK_MESSAGE(txFromFields.receiveAddress() == txFromRlp.receiveAddress(), testname + "Receive address in given RLP not matching the Transaction 'to' address!");
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == txFromRlp.sender(), testname + "Transaction sender address in given RLP not matching the Transaction 'vrs' signature!");
+			BOOST_CHECK_MESSAGE(txFromFields.sha3() == txFromRlp.sha3(), testname + "Transaction sha3 hash in given RLP not matching the Transaction 'vrs' signature!");
+			BOOST_CHECK_MESSAGE(txFromFields.sha3() == txSha3Expected, testname + "Expected different transaction hash!");
 			BOOST_CHECK_MESSAGE(txFromFields == txFromRlp, testname + "However, txFromFields != txFromRlp!");
 			BOOST_REQUIRE (o.count("sender") > 0);
 
@@ -157,6 +166,21 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
+
+BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
+{
+	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+}
+
+BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VCheck)
+{
+	dev::test::executeTests("ttTransactionTestVRule", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+}
+
+BOOST_AUTO_TEST_CASE(ttTransactionTestEip155)
+{
+	dev::test::executeTests("ttTransactionTest", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+}
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestHomestead)
 {
