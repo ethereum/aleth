@@ -66,7 +66,7 @@ public:
 	RLPXFrameWriter(RLPXFrameWriter const& _s): m_protocolId(_s.m_protocolId) {}
 	
 	/// Returns total number of queued packets. Thread-safe.
-	size_t size() const { size_t l; size_t h; DEV_GUARDED(m_q.first.x) h = m_q.first.q.size(); DEV_GUARDED(m_q.second.x) l = m_q.second.q.size(); return l + h; }
+	size_t size() const { size_t l = 0; size_t h = 0; DEV_GUARDED(m_q.first.x) h = m_q.first.q.size(); DEV_GUARDED(m_q.second.x) l = m_q.second.q.size(); return l + h; }
 	
 	/// Moves @_payload output to queue, to be muxed into frames by mux() when network buffer is ready for writing. Thread-safe.
 	void enque(uint8_t _packetType, RLPStream& _payload, PacketPriority _priority = PriorityLow);

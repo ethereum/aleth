@@ -670,7 +670,7 @@ void Client::doWork(bool _doWait)
 	}
 
 	t = true;
-	bool isSealed;
+	bool isSealed = false;
 	DEV_READ_GUARDED(x_working)
 		isSealed = m_working.isSealed();
 	if (!isSealed && !isSyncing() && !m_remoteWorking && m_syncTransactionQueue.compare_exchange_strong(t, false))

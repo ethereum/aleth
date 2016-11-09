@@ -310,7 +310,7 @@ void NodeTable::evict(shared_ptr<NodeEntry> _leastSeen, shared_ptr<NodeEntry> _n
 	if (!m_socketPointer->isOpen())
 		return;
 	
-	unsigned evicts;
+	unsigned evicts = 0;
 	DEV_GUARDED(x_evictions)
 	{
 		m_evictions.push_back(EvictionTimeout(make_pair(_leastSeen->id,chrono::steady_clock::now()), _new->id));

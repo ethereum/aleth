@@ -51,6 +51,9 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, SyncStatus const& _sync)
 	return _out;
 }
 
+namespace  // Helper functions.
+{
+
 template<typename T> bool haveItem(std::map<unsigned, T>& _container, unsigned _number)
 {
 	if (_container.empty())
@@ -106,7 +109,7 @@ template<typename T> void removeAllStartingWith(std::map<unsigned, std::vector<T
 		_container.erase(lower, _container.end());
 		return;
 	}
-	if (lower == _container.begin()) 
+	if (lower == _container.begin())
 	{
 		_container.clear();
 		return;
@@ -150,8 +153,9 @@ template<typename T> void mergeInto(std::map<unsigned, std::vector<T>>& _contain
 			_container.erase(next);
 		}
 	}
-
 }
+
+}  // Anonymous namespace -- helper functions.
 
 BlockChainSync::BlockChainSync(EthereumHost& _host):
 	m_host(_host),
@@ -725,8 +729,6 @@ SyncStatus BlockChainSync::status() const
 	res.startBlockNumber = m_startingBlock;
 	res.currentBlockNumber = host().chain().number();
 	res.highestBlockNumber = m_highestBlock;
-	res.blocksReceived = m_lastImportedBlock - m_startingBlock;
-	res.blocksTotal = m_highestBlock - m_startingBlock;
 	return res;
 }
 

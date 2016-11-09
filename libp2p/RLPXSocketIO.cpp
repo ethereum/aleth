@@ -62,7 +62,7 @@ void RLPXSocketIO::doWrite()
 {
 	m_toSend.clear();
 
-	size_t capacity;
+	size_t capacity = 0;
 	DEV_GUARDED(x_queued)
 		capacity = min(m_egressCapacity, MaxPacketSize);
 
