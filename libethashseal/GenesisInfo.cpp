@@ -88,7 +88,8 @@ R"ETHEREUM(
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
 		"registrar": "",
-		"networkID" : "0x2"
+		"networkID" : "0x2",
+		"chainID": "0x2"
 	},
 	"genesis": {
 		"nonce": "0x00006d6f7264656e",
@@ -297,7 +298,8 @@ R"E(
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
 		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
-		"networkID" : "0x1"
+		"networkID" : "0x1",
+		"chainID": "0x1"
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",

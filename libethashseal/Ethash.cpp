@@ -167,8 +167,18 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
 {
-	if (_ir & ImportRequirements::TransactionSignatures && _bi.number() >= chainParams().u256Param("homsteadForkBlock"))
-		_t.checkLowS();
+	if (_ir & ImportRequirements::TransactionSignatures)
+	{
+		if (_bi.number() >= chainParams().u256Param("homsteadForkBlock"))
+			_t.checkLowS();
+		if (_bi.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		{
+			int chainID(chainParams().u256Param("chainID"));
+			if (chainID == 0)
+				chainID = -4;
+			_t.checkChainId(chainID);
+		}
+	}
 	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
 	if (_ir & ImportRequirements::TransactionBasic && _t.gasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());
