@@ -55,8 +55,8 @@ size_t RLPXFrameWriter::mux(RLPXFrameCoder& _coder, unsigned _size, deque<bytes>
 	bool swapQueues = false;
 	while (frameLen >= c_overhead + c_blockSize)
 	{
-		bool highPending;
-		bool lowPending;
+		bool highPending = false;
+		bool lowPending = false;
 		DEV_GUARDED(m_q.first.x)
 			highPending = !!m_q.first.q.size();
 		DEV_GUARDED(m_q.second.x)
