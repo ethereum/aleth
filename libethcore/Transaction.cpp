@@ -74,12 +74,9 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 		else if (v == 27 || v == 28)
 			m_chainId = -4;
 		else
-			m_chainId = 0;
-
-		if (m_chainId == -4 || m_chainId == 1) //v = 27|28 or 37|38
-			v = v - (m_chainId * 2 + 35);
-		else
 			BOOST_THROW_EXCEPTION(InvalidSignature());
+
+		v = v - (m_chainId * 2 + 35);
 
 		if (rlp.itemCount() > 9)
 			BOOST_THROW_EXCEPTION(InvalidTransactionFormat() << errinfo_comment("to many fields in the transaction RLP"));
@@ -155,6 +152,12 @@ static const u256 c_secp256k1n("115792089237316195423570985008687907852837564279
 void TransactionBase::checkLowS() const
 {
 	if (m_vrs.s > c_secp256k1n / 2)
+		BOOST_THROW_EXCEPTION(InvalidSignature());
+}
+
+void TransactionBase::checkChainId(int chainId) const
+{
+	if (m_chainId != chainId && m_chainId != -4)
 		BOOST_THROW_EXCEPTION(InvalidSignature());
 }
 
