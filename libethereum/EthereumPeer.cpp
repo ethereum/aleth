@@ -306,9 +306,9 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		else // block id is a number
 		{
 			auto n = blockId.toInt<bigint>();
-			clog(NetMessageSummary) << "GetBlockHeaders (block (number): " << n
-			<< ", maxHeaders: " << maxHeaders
-			<< ", skip: " << skip << ", reverse: " << reverse << ")";
+			clog(NetMessageSummary) << "GetBlockHeaders (" << n
+			<< "max: " << maxHeaders
+			<< "skip: " << skip << (reverse ? "reverse" : "") << ")";
 
 			if (!reverse)
 			{
