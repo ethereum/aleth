@@ -89,6 +89,11 @@ public:
 	/// @throws InvalidSValue if the signature has an invalid S value.
 	void checkLowS() const;
 
+	/// @throws InvalidSValue if the chain id is neither -4 nor equal to @a chainId
+	/// Note that "-4" is the chain ID of the pre-155 rules, which should also be considered valid
+	/// after EIP155
+	void checkChainId(int chainId = -4) const;
+
 	/// @returns true if transaction is non-null.
 	explicit operator bool() const { return m_type != NullTransaction; }
 
