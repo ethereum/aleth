@@ -167,6 +167,11 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
 
+BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTestsHomestead)
+{
+	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
+}
+
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
 {
 	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
