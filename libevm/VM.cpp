@@ -180,7 +180,6 @@ void VM::interpretCases()
 		
 		CASE_BEGIN(CREATE)
 			m_bounce = &VM::caseCreate;
-			++m_pc;
 		CASE_RETURN;
 
 		CASE_BEGIN(DELEGATECALL)
@@ -192,7 +191,6 @@ void VM::interpretCases()
 		CASE_BEGIN(CALL)
 		CASE_BEGIN(CALLCODE)
 			m_bounce = &VM::caseCall;
-			++m_pc;
 		CASE_RETURN
 
 		CASE_BEGIN(RETURN)

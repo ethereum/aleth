@@ -122,6 +122,7 @@ void VM::caseCreate()
 	}
 	else
 		*++m_sp = 0;
+	++m_pc;
 }
 
 void VM::caseCall()
@@ -133,6 +134,7 @@ void VM::caseCall()
 	else
 		*++m_sp = 0;
 	m_io_gas += uint64_t(callParams->gas);
+	++m_pc;
 }
 
 bool VM::caseCallSetup(CallParameters *callParams)
