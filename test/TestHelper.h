@@ -130,6 +130,7 @@ public:
 	bytes executeTest();
 	int exportTest(bytes const& _output);
 	static int compareStates(eth::State const& _stateExpect, eth::State const& _statePost, eth::AccountMaskMap const _expectedStateOptions = eth::AccountMaskMap(), WhenError _throw = WhenError::Throw);
+	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network="") const;
 
 	eth::State m_statePre;
 	eth::State m_statePost;
@@ -139,7 +140,6 @@ public:
 private:
 	typedef std::pair<eth::ExecutionResult, eth::TransactionReceipt> execOutput;
 	std::pair<eth::State, execOutput> executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr);
-	void checkGeneralTestSection(json_spirit::mObject const& _expects, std::vector<size_t>& errorTransactions) const;
 
 	eth::EnvInfo m_envInfo;
 	eth::Transaction m_transaction;

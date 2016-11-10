@@ -75,11 +75,14 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 		{
 			BOOST_REQUIRE(o.count("post") > 0);
 
-			// check addresses
-#if ETH_FATDB
-			ImportTest::compareStates(importer.m_statePost, importedStatePost);
-#endif
-			BOOST_CHECK_MESSAGE(importer.m_statePost.rootHash() == h256(o["postStateRoot"].get_str()), testname + "wrong post state root");
+			//check post hashes against cpp client on all networks
+			mObject post = o["post"].get_obj();
+			vector<size_t> wrongTransactionsIndexes;
+			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
+			{
+				for (auto const& exp: i->second.get_array())
+					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
+			}
 		}
 	}
 }
