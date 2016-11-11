@@ -120,6 +120,7 @@ void VM::fetchInstruction()
 
 bytesConstRef VM::execImpl(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
+	io_gas = &_io_gas;
 	m_io_gas = uint64_t(_io_gas);
 	m_ext = &_ext;
 	m_schedule = &m_ext->evmSchedule();
@@ -137,11 +138,11 @@ bytesConstRef VM::execImpl(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp
 	}
 	catch (...)
 	{
-		_io_gas = m_io_gas;
+		*io_gas = m_io_gas;
 		throw;
 	}
 
-	_io_gas = m_io_gas;
+	*io_gas = m_io_gas;
 	return m_bytes;
 }
 
@@ -734,8 +735,10 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_sp = m_pool[m_code[++m_pc]];
-			m_pc += m_code[++m_pc];
+			++m_pc;
+			*++m_sp = m_pool[m_code[m_pc]];
+			++m_pc;
+			m_pc += m_code[m_pc];
 		}
 #else
 			throwBadInstruction();
