@@ -27315,6 +27315,7 @@ std::string const& dev::eth::genesisInfo(Network _n)
 	case Network::FrontierTest: return c_genesisInfoFrontierTest;
 	case Network::HomesteadTest: return c_genesisInfoHomesteadTest;
 	case Network::EIP150Test: return c_genesisInfoEIP150Test;
+	case Network::EIP158Test: return c_genesisInfoEIP158Test;
 	default:
 		throw std::invalid_argument("Invalid network value");
 	}

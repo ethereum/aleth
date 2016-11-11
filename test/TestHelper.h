@@ -241,6 +241,7 @@ public:
 	bool singleTest = false;
 	std::string singleTestFile;
 	std::string singleTestName;
+	std::string singleTestNet;
 	bool performance = false;
 	bool nonetwork = false;///< For libp2p
 	bool quadratic = false;

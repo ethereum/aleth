@@ -82,6 +82,19 @@ void printHelp()
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments" << std::endl;
 }
 
+string netIdToString(eth::Network _netId)
+{
+	switch(_netId)
+	{
+		case eth::Network::FrontierTest: return "Frontier";
+		case eth::Network::HomesteadTest: return "Homestead";
+		case eth::Network::EIP150Test: return "EIP150";
+		case eth::Network::EIP158Test: return "EIP158";
+		default: return "other";
+	}
+	return "unknown";
+}
+
 void mine(Client& c, int numBlocks)
 {
 	auto startBlock = c.blockChain().details().number;
@@ -178,10 +191,24 @@ bytes ImportTest::executeTest()
 	else if (m_testType == testType::GeneralStateTest)
 	{
 		vector<eth::Network> networks;
-		networks.push_back(eth::Network::FrontierTest);
-		networks.push_back(eth::Network::HomesteadTest);
-		networks.push_back(eth::Network::EIP150Test);
-		networks.push_back(eth::Network::EIP158Test);
+		if (!Options::get().singleTestNet.empty())
+		{
+			if (netIdToString(eth::Network::FrontierTest) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::FrontierTest);
+			else if (netIdToString(eth::Network::HomesteadTest) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::HomesteadTest);
+			else if (netIdToString(eth::Network::EIP150Test) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::EIP150Test);
+			else if (netIdToString(eth::Network::EIP158Test) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::EIP158Test);
+		}
+		else
+		{
+			networks.push_back(eth::Network::FrontierTest);
+			networks.push_back(eth::Network::HomesteadTest);
+			networks.push_back(eth::Network::EIP150Test);
+			networks.push_back(eth::Network::EIP158Test);
+		}
 
 		vector<transactionToExecute> transactionResults;
 		for (size_t j = 0; j < networks.size(); j++)
@@ -474,35 +501,69 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 	return wasError;
 }
 
-string netIdToString(eth::Network _netId)
+void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
 {
-	switch(_netId)
+	if (_json.type() == json_spirit::array_type)
 	{
-		case eth::Network::FrontierTest: return "Frontier";
-		case eth::Network::HomesteadTest: return "Homestead";
-		case eth::Network::EIP150Test: return "EIP150";
-		case eth::Network::EIP158Test: return "EIP158";
-		default: return "other";
+		for (auto const& val: _json.get_array())
+			_out.push_back(val.get_str());
 	}
-	return "unknown";
+	else
+		_out.push_back(_json.get_str());
+}
+
+void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& _out)
+{
+	if (_json.type() == json_spirit::array_type)
+	{
+		for (auto const& val: _json.get_array())
+			_out.push_back(val.get_int());
+	}
+	else
+		_out.push_back(_json.get_int());
+}
+
+template<class T>
+bool inArray(vector<T> const& _array, const T _val)
+{
+	for (size_t i = 0; i  < _array.size(); i++)
+		if (_array[i] == _val)
+			return true;
+	return false;
 }
 
 void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
 {
-	json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
-	int d = indexes.at("data").get_int();
-	int g = indexes.at("gas").get_int();
-	int v = indexes.at("value").get_int();
-	string network = _network.empty() ? _expects.at("network").get_str() : _network;
+	vector<int> d;
+	vector<int> g;
+	vector<int> v;
+	vector<string> network;
+	if (_network.empty())
+		parseJsonStrValueIntoVector(_expects.at("network"), network);
+	else
+		network.push_back(_network);
+
+	BOOST_CHECK_MESSAGE(network.size() > 0, "Network array not set!");
+
+	if (_expects.count("indexes"))
+	{
+		json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
+		parseJsonIntValueIntoVector(indexes.at("data"), d);
+		parseJsonIntValueIntoVector(indexes.at("gas"), g);
+		parseJsonIntValueIntoVector(indexes.at("value"), v);
+		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, "Indexes arrays not set!");
+	}
+	else
+		BOOST_ERROR("indexes section not set!");
 
 	bool foundResults = false;
 	for(size_t i = 0; i < m_transactions.size(); i++)
 	{
 		transactionToExecute t = m_transactions[i];
-		if (netIdToString(t.netId) == network)
-		if(t.dataInd == d && t.gasInd == g && t.valInd == v)
+		if (inArray(network, netIdToString(t.netId)) || network[0] == "ALL")
+		if ((inArray(d, t.dataInd) || d[0] == -1) && (inArray(g, t.gasInd) || g[0] == -1) && (inArray(v, t.valInd) || v[0] == -1))
 		{
-			string trInfo = netIdToString(t.netId) + " data: " + toString(d) + " gas: " + toString(g) + " val: " + toString(v);
+			string trInfo = netIdToString(t.netId) + " data: " + toString(t.dataInd) + " gas: " + toString(t.gasInd) + " val: " + toString(t.valInd);
 			if (_expects.count("result"))
 			{
 				State postState = t.postState;
@@ -522,7 +583,8 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 				BOOST_ERROR("Expect section or postState missing some fields!");
 
 			foundResults = true;
-			break;
+			if (network[0] != "ALL")
+				break;
 		}
 	}
 	BOOST_CHECK_MESSAGE(foundResults, "Expect results was not found in test execution!");
@@ -1076,6 +1138,8 @@ Options::Options(int argc, char** argv)
 			else
 				singleTestName = std::move(name1);
 		}
+		else if (arg == "--singlenet" && i + 1 < argc)
+			singleTestNet = std::string{argv[i + 1]};
 		else if (arg == "--fulloutput")
 			fulloutput = true;
 		else if (arg == "--sealengine")

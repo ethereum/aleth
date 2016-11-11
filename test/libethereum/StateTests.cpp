@@ -90,9 +90,9 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(StateTestsGeneral)
 
-BOOST_AUTO_TEST_CASE(stExampleTest)
+BOOST_AUTO_TEST_CASE(stBlockHashTests)
 {
-	dev::test::executeTests("stExample", "/GeneralStateTests",dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller", dev::test::doStateTests2);
+	dev::test::executeTests("blockhash0", "/GeneralStateTests/stBlockHashTests",dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller/stBlockHashTests", dev::test::doStateTests2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
