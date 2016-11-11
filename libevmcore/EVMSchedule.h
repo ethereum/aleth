@@ -69,6 +69,7 @@ struct EVMSchedule
 	unsigned extcodecopyGas = 20;
 	unsigned balanceGas = 20;
 	unsigned suicideGas = 0;
+	unsigned maxCodeSize = unsigned(-1);
 
 	bool staticCallDepthLimit() const { return !eip150Mode; }
 	bool suicideChargesNewAccountGas() const { return eip150Mode; }
@@ -89,6 +90,7 @@ static const EVMSchedule EIP150Schedule = []
 	schedule.sloadGas = 200;
 	schedule.callGas = 700;
 	schedule.suicideGas = 5000;
+	schedule.maxCodeSize = 23999;
 	return schedule;
 }();
 
