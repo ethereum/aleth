@@ -92,7 +92,7 @@ static const EVMSchedule EIP150Schedule = []
 	schedule.sloadGas = 200;
 	schedule.callGas = 700;
 	schedule.suicideGas = 5000;
-	schedule.maxCodeSize = 0x5fff;
+	schedule.maxCodeSize = 0x6000;
 	return schedule;
 }();
 
