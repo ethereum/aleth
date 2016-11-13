@@ -130,6 +130,7 @@ void TransactionBase::streamRLP(RLPStream& _s, IncludeSignature _sig, bool _forE
 {
 	if (m_type == NullTransaction)
 		return;
+
 	_s.appendList((_sig || _forEip155hash ? 3 : 0) + 6);
 	_s << m_nonce << m_gasPrice << m_gas;
 	if (m_type == MessageCall)
@@ -175,7 +176,7 @@ h256 TransactionBase::sha3(IncludeSignature _sig) const
 		return m_hashWith;
 
 	RLPStream s;
-	streamRLP(s, _sig, m_chainId > 0);
+	streamRLP(s, _sig, m_chainId > 0 && _sig == WithoutSignature);
 
 	auto ret = dev::sha3(s.out());
 	if (_sig == WithSignature)
