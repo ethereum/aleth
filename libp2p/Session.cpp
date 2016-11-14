@@ -301,7 +301,7 @@ void Session::send(bytes&& _msg, uint16_t _protocolID)
 
 void Session::write()
 {
-	bytes const* out;
+	bytes const* out = nullptr;
 	DEV_GUARDED(x_framing)
 	{
 		m_io->writeSingleFramePacket(&m_writeQueue[0], m_writeQueue[0]);
