@@ -42,26 +42,6 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(s512(_a) % s512(_b));
 }
 
-/// Implementation of EXP.
-///
-/// This implements exponentiation by squaring algorithm.
-/// Is is faster than boost::multiprecision::powm() because avoids explicit
-/// mod operation.
-/// Do not inline it.
-u256 exp256(u256 _base, u256 _exponent)
-{
-	using boost::multiprecision::limb_type;
-	u256 result = 1;
-	while (_exponent)
-	{
-		if (static_cast<limb_type>(_exponent) & 1)  // If exponent is odd.
-			result *= _base;
-		_base *= _base;
-		_exponent >>= 1;
-	}
-	return result;
-}
-
 
 //
 // for tracing, checking, metering, measuring ...
@@ -340,13 +320,12 @@ void VM::interpretCases()
 
 		CASE_BEGIN(EXP)
 		{
-			auto expon = *(m_sp - 1);
+			u256 expon = *(m_sp - 1);
 			m_runGas = toUint64(m_schedule->expGas + m_schedule->expByteGas * (32 - (h256(expon).firstBitSet() / 8)));
-			updateMem();
 			ON_OP();
 			updateIOGas();
 
-			auto base = *m_sp--;
+			u256 base = *m_sp--;
 			*m_sp = exp256(base, expon);
 			++m_pc;
 		}
@@ -542,7 +521,7 @@ void VM::interpretCases()
 
 			if (*m_sp < 31)
 			{
-				auto testBit = static_cast<unsigned>(*m_sp) * 8 + 7;
+				unsigned testBit = static_cast<unsigned>(*m_sp) * 8 + 7;
 				u256& number = *(m_sp - 1);
 				u256 mask = ((u256(1) << testBit) - 1);
 				if (boost::multiprecision::bit_test(number, testBit))
@@ -676,7 +655,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			auto a = asAddress(*m_sp);
+			Address a = asAddress(*m_sp);
 			--m_sp;
 			copyDataToMemory(&m_ext->codeAt(a), m_sp);
 			++m_pc;
@@ -754,8 +733,10 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			*++m_sp = m_pool[m_code[++m_pc]];
-			m_pc += m_code[++m_pc];
+			++m_pc;
+			*++m_sp = m_pool[m_code[m_pc]];
+			++m_pc;
+			m_pc += m_code[m_pc];
 		}
 #else
 			throwBadInstruction();
@@ -907,8 +888,8 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 
-			auto n = (unsigned)m_op - (unsigned)Instruction::SWAP1 + 2;
-			auto d = *m_sp;
+			unsigned n = (unsigned)m_op - (unsigned)Instruction::SWAP1 + 2;
+			u256 d = *m_sp;
 			*m_sp = m_stack[(1 + m_sp - m_stack) - n];
 			m_stack[(1 + m_sp - m_stack) - n] = d;
 			++m_pc;

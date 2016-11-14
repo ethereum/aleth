@@ -49,23 +49,52 @@ void VM::initMetrics()
 	done = true;
 }
 
-/// Init interpreter on entry.
-void VM::initEntry()
+void VM::copyCode()
 {
-	m_bounce = &VM::interpretCases;	
-
-	// Copy and extend code by 33 zero bytes to allow reading virtual push data
-	// at the end of the code without bounds checks.
+	// Copy code so that it can be safely modified and extend code by
+	// 33 zero bytes to allow reading virtual data at the end of the
+	// code without bounds checks.
 	auto extendedSize = m_ext->code.size() + 33;
 	m_codeSpace.reserve(extendedSize);
 	m_codeSpace = m_ext->code;
 	m_codeSpace.resize(extendedSize);
 	m_code = m_codeSpace.data();
+}
 
+// Implementation of EXP.
+//
+// This implements exponentiation by squaring algorithm.
+// Is is faster than boost::multiprecision::powm() because avoids explicit
+// mod operation.
+// Do not inline it.
+u256 VM::exp256(u256 _base, u256 _exponent)
+{
+	using boost::multiprecision::limb_type;
+	u256 result = 1;
+	while (_exponent)
+	{
+		if (static_cast<limb_type>(_exponent) & 1)  // If exponent is odd.
+			result *= _base;
+		_base *= _base;
+		_exponent >>= 1;
+	}
+	return result;
+}
+
+
+//
+// Init interpreter on entry.
+//
+void VM::initEntry()
+{
+	m_bounce = &VM::interpretCases;	
+	
 	interpretCases(); // first call initializes jump table
 	
 	initMetrics();
 	
+	copyCode();
+
 	optimize();
 }
 
