@@ -98,6 +98,10 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 } }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(StateTestsEIP158)
+BOOST_AUTO_TEST_CASE(stCodeSizeLimitEIP158)
+{
+	dev::test::executeTests("stCodeSizeLimit", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+}
 BOOST_AUTO_TEST_CASE(stCreateTestEIP158)
 {
 	dev::test::executeTests("stCreateTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
