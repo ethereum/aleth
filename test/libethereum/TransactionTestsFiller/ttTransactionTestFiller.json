@@ -2,7 +2,6 @@
     "RightVRSTest" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "fa7f04899691becd07dd3081d0a2f3ee7640af52",
         "transaction" :
         {
             "data" : "0x",
@@ -221,7 +220,7 @@
     },
 
     "SenderTest" : {
-        "sender" : "0f65fe9276bc9a24ae7083ae28e2660ef72df99e",
+        "senderExpect" : "sender 0f65fe9276bc9a24ae7083ae28e2660ef72df99e",
 	"expect" : "valid",
 	"blocknumber" : "0",
         "transaction" :
@@ -260,7 +259,6 @@
     "DataTestEnoughGAS" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "ce26839c9bd0e87e38897bb97fca8b340fd12a53",
         "transaction" :
         {
             "data" : "0x0358ac39584bc98a7c979f984b03",
@@ -279,7 +277,6 @@
     "DataTestZeroBytes" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "b7ab01c0f092d30aeed17e23adb7aa5a9b2ee077",
         "transaction" :
         {
             "data" : "0x000000000000000000000000000000000000000000000000000000000",
@@ -298,7 +295,6 @@
     "DataTestLastZeroBytes" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "58a93c8f40f721b21dd44c10bfa5d39a3ced78f6",
         "transaction" :
         {
             "data" : "0x0100000000000000000000000000000000000000000000000000000000",
@@ -317,7 +313,6 @@
     "DataTestFirstZeroBytes" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "8131688854fe0dca411aa19572a01fe3e3e4fa74",
         "transaction" :
         {
             "data" : "0x0000000000000000000000000001000000000000000000000000000000",
@@ -369,7 +364,6 @@
     "TransactionWithHihghValue" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "396bd0363e26195eeacfedbe54c44f16fbe470b6",
         "transaction" :
         {
             "data" : "",
@@ -405,7 +399,6 @@
     "TransactionWithSvalueHigh" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "474869ba435affa1f45aaada48520880921c0887",
         "transaction" :
         {
             "data" : "",
@@ -423,7 +416,6 @@
     "TransactionWithSvalueLessThan_c_secp256k1n_x05" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "33e931e187e9cb5b6f8560755519d54560dd63e8",
         "transaction" :
         {
             "data" : "",
@@ -441,7 +433,6 @@
     "TransactionWithSvalueEqual_c_secp256k1n_x05" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "b284109d8e781949638d995c19f8feba0268191c",
         "transaction" :
         {
             "data" : "",
@@ -459,7 +450,6 @@
     "TransactionWithSvalueLargerThan_c_secp256k1n_x05" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "5ced92a94a7bfd7853b12d33ee59dd10ae94eb86",
         "transaction" :
         {
             "data" : "",
@@ -494,7 +484,6 @@
     "TransactionWithSvalue1" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "e115cf6bb5656786569dd273705242ca72d84bc0",
         "transaction" :
         {
             "data" : "",
@@ -614,7 +603,6 @@
     "TransactionWithRvalue1" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "421ba7ba39c1c2ddb98308deca3af1dd9e461740",
         "transaction" :
         {
             "data" : "",
@@ -632,7 +620,6 @@
     "TransactionWithRvaluePrefixed00" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "0dd0dcb6502a463fa90ecaa59ca29a5e6571deef",
         "transaction" :
         {
             "data" : "",
@@ -667,7 +654,6 @@
     "TransactionWithRSvalue1" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "98c188f183d4e93ff2bffadd145f39b4a792ed85",
         "transaction" :
         {
             "data" : "",
@@ -685,7 +671,6 @@
    "TransactionWithSvaluePrefixed00" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "a825d77f343f31619c991cd7db5aaa6adbe9452e",
         "transaction" :
         {
             "data" : "",
@@ -703,7 +688,6 @@
     "TransactionWithHihghNonce256" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "9b96002788562fefd5ac08d5af877fa738272dc7",
         "transaction" :
         {
             "data" : "",
@@ -720,8 +704,7 @@
 
     "TransactionWithHihghNonce32" : {
 	"expect" : "valid",
-	"blocknumber" : "0",
-	"sender" : "e86dc346fd8debf719486ff2f9c4c629fe58fc46",
+	"blocknumber" : "0",	
         "transaction" :
         {
             "data" : "",
@@ -756,7 +739,6 @@
     "TransactionWithHihghGas" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "03a3ce84aa05891249cde4fff6c82acb009af03f",
         "transaction" :
         {
             "data" : "",
@@ -775,7 +757,6 @@
    "TransactionWithHihghGasPrice" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "b10eac078276dc8dbf1753715396d480156236f8",
         "transaction" :
         {
             "data" : "",
@@ -793,7 +774,6 @@
    "TransactionWithHihghGasPrice2" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "d45c1531bf3d368879a474400d1b1f8a0a31b95c",
         "transaction" :
         {
             "data" : "",
@@ -811,7 +791,6 @@
     "TransactionWithGasLimitxPriceOverflow" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "700764607c82cf3e9cf4ecbd49185f8914f1a361",
         "transaction" :
         {
             "data" : "",
@@ -829,7 +808,6 @@
    "TransactionWithGasLimitxPriceOverflow2" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "05af62c0a8db23608f68370e503617b32a6ac0d0",
         "transaction" :
         {
             "data" : "",
@@ -881,7 +859,6 @@
    "TransactionWithGasLimitOverflow63" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "6986b102a5375abef1f739a3b5d9baa228a4fca4",
 	"transaction" :
 	{
 		"data" : "",
@@ -899,7 +876,6 @@
     "TransactionWithGasLimitOverflow63_1" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "41cc818b2cd4606ff8981a38daf7c4f12d40ed28",
 	"transaction" :
 	{
 		"data" : "",
@@ -917,7 +893,6 @@
     "TransactionWithGasLimitOverflow2" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "6986b102a5375abef1f739a3b5d9baa228a4fca4",
         "transaction" :
         {
             "data" : "",
@@ -1004,7 +979,6 @@
     "AddressLessThan20Prefixed0" : {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "31bb58672e8bf7684108feeacf424ab62b873824",
         "transaction" :
         {
             "data" : "",
@@ -1022,7 +996,6 @@
     "unpadedRValue": {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "c1584838993ee7a9581cba0bced81785e8bb581d",
         "transaction": {
             "nonce": "13",
             "gasPrice": "0x09184e72a000",
@@ -1039,7 +1012,6 @@
     "libsecp256k1test": {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "170ad78f26da62f591fa3fe3d54c30016167cbbf",
         "transaction": {
             "nonce": "0",
             "gasPrice": "0x09184e72a000",
@@ -1056,7 +1028,6 @@
     "dataTx_bcValidBlockTest": {
 	"expect" : "valid",
 	"blocknumber" : "0",
-	"sender" : "a94f5374fce5edbc8e2a8697c15331677e6ebf0b",
         "transaction": {
             "nonce": "0",
             "gasPrice": "50",
