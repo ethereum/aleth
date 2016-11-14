@@ -583,7 +583,10 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 				BOOST_ERROR("Expect section or postState missing some fields!");
 
 			foundResults = true;
-			if (network[0] != "ALL")
+
+			//if a single transaction check then stop once found
+			if (network[0] != "ALL" && d[0] != -1 && g[0] != -1 && v[0] != -1)
+			if (d.size() == 1 && g.size() == 1 && v.size() == 1)
 				break;
 		}
 	}
