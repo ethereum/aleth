@@ -352,7 +352,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->gasForDeposit = m_gas;
 					m_res->depositSize = out.size();
 				}
-				if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
+				if (out.size() > m_ext->evmSchedule().maxCodeSize)
+					BOOST_THROW_EXCEPTION(OutOfGas());
+				else if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
 				{
 					if (m_res)
 						m_res->codeDeposit = CodeDeposit::Success;
