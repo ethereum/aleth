@@ -1547,7 +1547,7 @@
         "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
             "balance" : "1000000000000000000",
             "nonce" : "0",
-            "code" : "{ asm PUSH1 0x05 PUSH1 0x09 PUSH1 0x00 SUB SDIV DUP PUSH1 0 SSTORE }",
+            "code" : "(asm PUSH1 0x05 PUSH1 0x09 PUSH1 0x00 SUB SDIV DUP PUSH1 0 SSTORE)",
             "storage": {}
         }
         },
