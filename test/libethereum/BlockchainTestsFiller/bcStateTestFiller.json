@@ -32,7 +32,7 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "balance" : "100000",
                 "nonce" : "0",
-                "code" : "{ (SUICIDE a94f5374fce5edbc8e2a8697c15331677e6ebf0b) }",
+                "code" : "{ (SUICIDE 0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b) }",
                 "storage": {}
             }
         },
