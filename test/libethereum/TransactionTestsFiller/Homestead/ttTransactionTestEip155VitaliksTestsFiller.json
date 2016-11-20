@@ -184,5 +184,113 @@
             "r" : "0x52f8f61201b2b11a78d6e866abc9c3db2ae8631fa656bfe5cb53668255367afb",
             "s" : "0x52f8f61201b2b11a78d6e866abc9c3db2ae8631fa656bfe5cb53668255367afb"
         }
+    },
+
+    "Vitalik_12" : {
+	"expect" : "valid",
+	"blocknumber" : "1150000",
+	"sender" : "874b54a8bd152966d63f706bae1ffeb0411921e5",
+        "transaction" :
+        {
+            "data" : "0x60f2ff61000080610011600039610011565b6000f3",
+            "gasLimit" : "0x0493e0",
+            "gasPrice" : "",
+            "nonce" : "0x0e",
+            "to" : "",
+            "value" : "",
+            "v" : "0x1c",
+            "r" : "0xa310f4d0b26207db76ba4e1e6e7cf1857ee3aa8559bcbc399a6b09bfea2d30b4",
+            "s" : "0x6dff38c645a1486651a717ddf3daccb4fd9a630871ecea0758ddfcf2774f9bc6"
+        }
+    },
+
+    "Vitalik_13" : {
+	"expect" : "valid",
+	"blocknumber" : "1150000",
+	"sender" : "874b54a8bd152966d63f706bae1ffeb0411921e5",
+        "transaction" :
+        {
+            "data" : "0x646f6e6b6579",
+            "gasLimit" : "0x0493e0",
+            "gasPrice" : "",
+            "nonce" : "0x0f",
+            "to" : "00000000000000000000000000000000000000c0",
+            "value" : "",
+            "v" : "0x1b",
+            "r" : "0x9f00c6da4f2e4b5f3316e70c7669f9df71fa21d533afa63450065731132ba7b6",
+            "s" : "0x3886c27a8b3515ab9e2e04492f8214718621421e92d3b6954d9e3fb409ead788"
+        }
+    },
+
+    "Vitalik_14" : {
+	"expect" : "valid",
+	"blocknumber" : "1150000",
+	"sender" : "874b54a8bd152966d63f706bae1ffeb0411921e5",
+        "transaction" :
+        {
+            "data" : "0x60f3ff61000080610011600039610011565b6000f3",
+            "gasLimit" : "0x0493e0",
+            "gasPrice" : "",
+            "nonce" : "0x0f",
+            "to" : "",
+            "value" : "0x01",
+            "v" : "0x1b",
+            "r" : "0xaf2944b645e280a35789aacfce7e16a8d57b43a0076dfd564bdc0395e3576324",
+            "s" : "0x5272a0013f198713128bb0e3da43bb03ec7224c5509d4cabbe39fd31c36b5786"
+        }
+    },
+
+    "Vitalik_15" : {
+	"expect" : "invalid",
+	"blocknumber" : "1150000",
+	"sender" : "3c24d7329e92f84f08556ceb6df1cdb0104ca49f",
+        "transaction" :
+        {
+            "data" : "0x6d6f6f7365",
+            "gasLimit" : "0x0493e0",
+            "gasPrice" : "",
+            "nonce" : "0x12",
+            "to" : "0000000000000000000000000000000000000001",
+            "value" : "0x00",
+            "v" : "0x29",
+            "r" : "0x376d0277dd3a2a9229dbcb5530b532c7e4cb0f821e0ca27d9acb940970d500d8",
+            "s" : "0x0ab2798f9d9c2f7551eb29d56878f8e342b45ca45f413b0fcba793d094f36f2b"
+        }
+    },
+
+    "Vitalik_16" : {
+	"expect" : "invalid",
+	"blocknumber" : "1150000",
+	"sender" : "3c24d7329e92f84f08556ceb6df1cdb0104ca49f",
+        "transaction" :
+        {
+            "data" : "0x6d6f6f7365",
+            "gasLimit" : "0x0493e0",
+            "gasPrice" : "",
+            "nonce" : "0x13",
+            "to" : "0000000000000000000000000000000000000012",
+            "value" : "0x00",
+            "v" : "0x2a",
+            "r" : "0xd0e340578f9d733986f6a55c5401953c90f7ccd46fe72d5588592dd9cbdf1e03",
+            "s" : "0x01d8d63149bd986f363084ac064e8387850d80e5238cc16ed4d30fd0a5af7261"
+        }
+    },
+
+    "Vitalik_17" : {
+	"expect" : "invalid",
+	"blocknumber" : "1150000",
+	"sender" : "3c24d7329e92f84f08556ceb6df1cdb0104ca49f",
+        "transaction" :
+        {
+            "data" : "0x6d6f6f7365",
+            "gasLimit" : "0x0493e0",
+            "gasPrice" : "",
+            "nonce" : "0x14",
+            "to" : "0000000000000000000000000000000000000022",
+            "value" : "0x00",
+            "v" : "0x2a",
+            "r" : "0x4bc84887af29d2b159ee290dee793bdba34079428f48699e9fc92a7e12d4aeaf",
+            "s" : "0x63b9d78c5a36f96454fe2d5c1eb7c0264f6273afdc0ba28dd9a8f00eadaf7476"
+        }
     }
 }
