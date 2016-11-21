@@ -69,12 +69,6 @@ public:
 	/// Read address's balance.
 	virtual u256 balance(Address _a) override final { return m_s.balance(_a); }
 
-	/// Subtract amount from account's balance.
-	virtual void subBalance(u256 _a) override final { m_s.subBalance(myAddress, _a); }
-
-	/// Determine account's TX count.
-	virtual u256 txCount(Address _a) override final { return m_s.transactionsFrom(_a); }
-
 	/// Does the account exist?
 	virtual bool exists(Address _a) override final { return m_s.addressInUse(_a); }
 
