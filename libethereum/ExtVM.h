@@ -42,7 +42,7 @@ class ExtVM: public ExtVMFace
 {
 public:
 	/// Full constructor.
-	ExtVM(State& _s, EnvInfo const& _envInfo, SealEngineFace* _sealEngine, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, h256 const& _codeHash, unsigned _depth = 0):
+	ExtVM(State& _s, EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, h256 const& _codeHash, unsigned _depth = 0):
 		ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(), _codeHash, _depth), m_s(_s), m_origCache(_s.m_cache), m_sealEngine(_sealEngine)
 	{
 		m_s.ensureAccountExists(_myAddress);
@@ -89,14 +89,14 @@ public:
 	}
 
 	/// Return the EVM gas-price schedule for this execution context.
-	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine->evmSchedule(envInfo()); }
+	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo()); }
 
-	State& state() const { return m_s; }
+	State const& state() const { return m_s; }
 
 private:
 	State& m_s;											///< A reference to the base state.
 	std::unordered_map<Address, Account> m_origCache;	///< The cache of the address states (i.e. the externalities) as-was prior to the execution.
-	SealEngineFace* m_sealEngine;
+	SealEngineFace const& m_sealEngine;
 };
 
 }

@@ -169,7 +169,7 @@ bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 	try
 	{
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
-		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, se.get(), m_transaction);
+		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, *se, m_transaction);
 		res = execOut.first;
 		m_logs = execOut.second.log();
 	}
