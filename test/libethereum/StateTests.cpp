@@ -41,9 +41,6 @@ namespace dev {  namespace test {
 
 void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 {
-	if (string(boost::unit_test::framework::current_test_case().p_name) != "stRandom")
-		TestOutputHelper::initTest(_v);
-
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
@@ -88,11 +85,49 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 }
 } }// Namespace Close
 
-BOOST_AUTO_TEST_SUITE(StateTestsGeneral)
-
-BOOST_AUTO_TEST_CASE(stBlockHashTests)
+class generaltestfixture
 {
-	dev::test::executeTests("blockhash0", "/GeneralStateTests/stBlockHashTests",dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller/stBlockHashTests", dev::test::doStateTests2);
-}
+public:
+	generaltestfixture()
+	{
+		fillAllFilesInFolder(boost::unit_test::framework::current_test_case().p_name);
+	}
 
+	void fillAllFilesInFolder(string _folder)
+	{
+		std::string fillersPath = dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller/" + _folder;
+
+		boost::filesystem::directory_iterator iterator_tmp(fillersPath);
+		int fileCount = 0;
+		for(; iterator_tmp != boost::filesystem::directory_iterator(); ++iterator_tmp)
+			if (boost::filesystem::is_regular_file(iterator_tmp->path()) && iterator_tmp->path().extension() == ".json")
+				fileCount++;
+		if (dev::test::Options::get().fillTests)
+			fileCount *= 2; //tests are checked when filled and after they been filled
+		dev::test::TestOutputHelper::initTest(fileCount);
+
+		boost::filesystem::directory_iterator iterator(fillersPath);
+		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
+			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
+			{
+				string fileboost = iterator->path().filename().string();
+				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder,dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests2);
+			}
+	}
+};
+
+BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
+BOOST_AUTO_TEST_CASE(stBlockHashTest){}
+BOOST_AUTO_TEST_CASE(stCallCodes){}
+BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
+BOOST_AUTO_TEST_CASE(stExample){}
+BOOST_AUTO_TEST_CASE(stInitCodeTest){}
+BOOST_AUTO_TEST_CASE(stLogTests){}
+BOOST_AUTO_TEST_CASE(stPreCompiledContracts){}
+BOOST_AUTO_TEST_CASE(stRandom){}
+BOOST_AUTO_TEST_CASE(stRefundTest){}
+BOOST_AUTO_TEST_CASE(stSolidityTest){}
+BOOST_AUTO_TEST_CASE(stSpecialTest){}
+BOOST_AUTO_TEST_CASE(stSystemOperationsTest){}
+BOOST_AUTO_TEST_CASE(stTransactionTest){}
 BOOST_AUTO_TEST_SUITE_END()

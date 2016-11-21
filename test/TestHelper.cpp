@@ -966,6 +966,10 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
 
+	string name;
+	if (_name.rfind("Filler.json") != std::string::npos)
+		name = _name.substr(0, _name.rfind("Filler.json"));
+
 	if (Options::get().fillTests)
 	{
 		try
@@ -975,12 +979,12 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 			boost::filesystem::path p(__FILE__);
 
 			string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
-			string 	s = asString(dev::contents(_pathToFiller.string() + "/" + _name + nameEnding));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + nameEnding + " is empty.");
+			string 	s = asString(dev::contents(_pathToFiller.string() + "/" + name + nameEnding));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + name + nameEnding + " is empty.");
 
 			json_spirit::read_string(s, v);
 			doTests(v, true);
-			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
 		}
 		catch (Exception const& _e)
 		{
@@ -994,12 +998,12 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 
 	try
 	{
-		cnote << "TEST " << _name << ":";
+		cnote << "TEST " << name << ":";
 		json_spirit::mValue v;
-		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		string s = asString(dev::contents(testPath + "/" + name + ".json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
-		Listener::notifySuiteStarted(_name);
+		Listener::notifySuiteStarted(name);
 		doTests(v, false);
 	}
 	catch (Exception const& _e)
@@ -1316,7 +1320,7 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 	}
 
 	cnote << _testName;
-	_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
+	//_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
 	m_currentTestName = _testName;
 	return true;
 }
