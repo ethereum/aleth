@@ -966,7 +966,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
 
-	string name;
+	string name = _name;
 	if (_name.rfind("Filler.json") != std::string::npos)
 		name = _name.substr(0, _name.rfind("Filler.json"));
 
@@ -995,7 +995,6 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << _e.what());
 		}
 	}
-
 	try
 	{
 		cnote << "TEST " << name << ":";

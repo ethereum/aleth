@@ -90,7 +90,12 @@ class generaltestfixture
 public:
 	generaltestfixture()
 	{
-		fillAllFilesInFolder(boost::unit_test::framework::current_test_case().p_name);
+		string casename = boost::unit_test::framework::current_test_case().p_name;
+		if (casename == "stMemoryStressTest" && (!test::Options::get().memory || 1))
+			return;
+		if (casename == "stQuadraticComplexityTest" && (!test::Options::get().quadratic || 1))
+			return;
+		fillAllFilesInFolder(casename);
 	}
 
 	void fillAllFilesInFolder(string _folder)
@@ -123,11 +128,15 @@ BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
 BOOST_AUTO_TEST_CASE(stExample){}
 BOOST_AUTO_TEST_CASE(stInitCodeTest){}
 BOOST_AUTO_TEST_CASE(stLogTests){}
+BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
+BOOST_AUTO_TEST_CASE(stMemoryTest){}
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts){}
+BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
 BOOST_AUTO_TEST_CASE(stRandom){}
 BOOST_AUTO_TEST_CASE(stRefundTest){}
 BOOST_AUTO_TEST_CASE(stSolidityTest){}
 BOOST_AUTO_TEST_CASE(stSpecialTest){}
 BOOST_AUTO_TEST_CASE(stSystemOperationsTest){}
 BOOST_AUTO_TEST_CASE(stTransactionTest){}
+BOOST_AUTO_TEST_CASE(stWalletTest){}
 BOOST_AUTO_TEST_SUITE_END()

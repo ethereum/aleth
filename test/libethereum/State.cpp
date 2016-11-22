@@ -66,7 +66,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			//automatic test convertation
-			json_spirit::mObject obj;
+			/*json_spirit::mObject obj;
 			json_spirit::mObject& tr = o["transaction"].get_obj();
 			json_spirit::mArray d = json_spirit::mArray();
 			d.push_back(tr["data"].get_str());
@@ -78,22 +78,32 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			g.push_back(tr["gasLimit"].get_str());
 			tr["gasLimit"] = g;
 
-			json_spirit::mObject ex = o["expect"].get_obj();
-			json_spirit::mArray nex;
-			json_spirit::mObject expect;
-			expect["network"] = "Frontier";
-			json_spirit::mObject indexes;
-			indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
-			expect["indexes"] = indexes;
-			expect["result"] = ex;
-			nex.push_back(expect);
-			o["expect"] = nex;
+			if (o.count("expect")>0)
+			{
+				json_spirit::mObject ex = o["expect"].get_obj();
+				json_spirit::mArray nex;
+				json_spirit::mObject expect;
+				expect["network"] = "Frontier";
+				json_spirit::mObject indexes;
+				indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
+				expect["indexes"] = indexes;
+				expect["result"] = ex;
+				nex.push_back(expect);
+				o["expect"] = nex;
+			}
+
+			string testNumber="";
+			static int randomtest = 0;
+			if (TestOutputHelper::testName() == "randomStatetest")
+				testNumber = toString(randomtest++);
 
 			obj[TestOutputHelper::testName()] = o;
 			std::cerr << TestOutputHelper::caseName() << " || " << TestOutputHelper::testName() << std::endl;
 			writeFile("/home/wins/Ethereum/cpp-ethereum/test/libethereum/GeneralStateTestsFiller/" + TestOutputHelper::caseName() + "/"
-					  + TestOutputHelper::testName() + "Filler.json", asBytes(json_spirit::write_string((json_spirit::mValue)obj, true)));
+					  + TestOutputHelper::testName() + testNumber + "Filler.json", asBytes(json_spirit::write_string((json_spirit::mValue)obj, true)));
+			*/
 			//automatic test convertation
+
 
 #if ETH_FATDB
 			//if (importer.exportTest(output))
@@ -413,11 +423,11 @@ BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
 		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
 }
 
-BOOST_AUTO_TEST_CASE(stMemoryStressTest)
-{
-	if (test::Options::get().memory)
-		dev::test::executeTests("stMemoryStressTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
-}
+//BOOST_AUTO_TEST_CASE(stMemoryStressTest)
+//{
+//	if (test::Options::get().memory)
+//		dev::test::executeTests("stMemoryStressTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+//}
 
 BOOST_AUTO_TEST_CASE(stSolidityTest)
 {
