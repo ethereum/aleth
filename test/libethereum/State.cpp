@@ -65,15 +65,46 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 
 		if (_fillin)
 		{
+			//automatic test convertation
+			json_spirit::mObject obj;
+			json_spirit::mObject& tr = o["transaction"].get_obj();
+			json_spirit::mArray d = json_spirit::mArray();
+			d.push_back(tr["data"].get_str());
+			tr["data"] = d;
+			json_spirit::mArray v = json_spirit::mArray();
+			v.push_back(tr["value"].get_str());
+			tr["value"] = v;
+			json_spirit::mArray g = json_spirit::mArray();
+			g.push_back(tr["gasLimit"].get_str());
+			tr["gasLimit"] = g;
+
+			json_spirit::mObject ex = o["expect"].get_obj();
+			json_spirit::mArray nex;
+			json_spirit::mObject expect;
+			expect["network"] = "Frontier";
+			json_spirit::mObject indexes;
+			indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
+			expect["indexes"] = indexes;
+			expect["result"] = ex;
+			nex.push_back(expect);
+			o["expect"] = nex;
+
+			obj[TestOutputHelper::testName()] = o;
+			std::cerr << TestOutputHelper::caseName() << " || " << TestOutputHelper::testName() << std::endl;
+			writeFile("/home/wins/Ethereum/cpp-ethereum/test/libethereum/GeneralStateTestsFiller/" + TestOutputHelper::caseName() + "/"
+					  + TestOutputHelper::testName() + "Filler.json", asBytes(json_spirit::write_string((json_spirit::mValue)obj, true)));
+			//automatic test convertation
+
 #if ETH_FATDB
-			if (importer.exportTest(output))
-				cerr << testname << endl;
+			//if (importer.exportTest(output))
+			//	cerr << testname << endl;
 #else
 			BOOST_THROW_EXCEPTION(Exception() << errinfo_comment(testname + "You can not fill tests when FATDB is switched off"));
 #endif
 		}
 		else
 		{
+			return;
 			BOOST_REQUIRE(o.count("post") > 0);
 			BOOST_REQUIRE(o.count("out") > 0);
 
