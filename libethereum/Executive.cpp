@@ -237,9 +237,6 @@ bool Executive::execute()
 {
 	// Entry point for a user-executed transaction.
 
-	// Increment associated nonce for sender.
-	m_s.noteSending(m_t.sender());
-
 	// Pay...
 	clog(StateDetail) << "Paying" << formatBalance(u256(m_gasCost)) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
 	m_s.subBalance(m_t.sender(), m_gasCost);
@@ -259,6 +256,12 @@ bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _valu
 bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address const& _origin)
 {
 	m_isCreation = false;
+
+	// If external transaction.
+	if (m_t)
+		// Increment associated nonce for sender.
+		m_s.noteSending(_p.senderAddress);
+
 	if (m_sealEngine.isPrecompiled(_p.codeAddress))
 	{
 		bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data);
@@ -294,6 +297,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	m_isCreation = true;
+
+	// Increment associated nonce for sender.
+	m_s.noteSending(_sender);
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_newAddress, since
 	// we delete it explicitly if we decide we need to revert.
