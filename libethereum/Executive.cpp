@@ -145,7 +145,7 @@ Executive::Executive(Block& _s, BlockChain const& _bc, unsigned _level):
 	m_s(_s.mutableState()),
 	m_envInfo(_s.info(), _bc.lastHashes(_s.info().parentHash())),
 	m_depth(_level),
-	m_sealEngine(_bc.sealEngine())
+	m_sealEngine(*_bc.sealEngine())
 {
 }
 
@@ -153,7 +153,7 @@ Executive::Executive(Block& _s, LastHashes const& _lh, unsigned _level):
 	m_s(_s.mutableState()),
 	m_envInfo(_s.info(), _lh),
 	m_depth(_level),
-	m_sealEngine(_s.sealEngine())
+	m_sealEngine(*_s.sealEngine())
 {
 }
 
@@ -161,7 +161,7 @@ Executive::Executive(State& _s, Block const& _block, unsigned _txIndex, BlockCha
 	m_s(_s = _block.fromPending(_txIndex)),
 	m_envInfo(_block.info(), _bc.lastHashes(_block.info().parentHash()), _txIndex ? _block.receipt(_txIndex - 1).gasUsed() : 0),
 	m_depth(_level),
-	m_sealEngine(_bc.sealEngine())
+	m_sealEngine(*_bc.sealEngine())
 {
 }
 
@@ -195,7 +195,7 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Check gas cost is enough.
-	m_baseGasRequired = m_t.gasRequired(m_sealEngine->evmSchedule(m_envInfo));
+	m_baseGasRequired = m_t.gasRequired(m_sealEngine.evmSchedule(m_envInfo));
 	if (m_baseGasRequired > m_t.gas())
 	{
 		clog(ExecutiveWarnChannel) << "Not enough gas to pay for the transaction: Require >" << m_baseGasRequired << " Got" << m_t.gas();
@@ -237,9 +237,6 @@ bool Executive::execute()
 {
 	// Entry point for a user-executed transaction.
 
-	// Increment associated nonce for sender.
-	m_s.noteSending(m_t.sender());
-
 	// Pay...
 	clog(StateDetail) << "Paying" << formatBalance(u256(m_gasCost)) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
 	m_s.subBalance(m_t.sender(), m_gasCost);
@@ -259,9 +256,15 @@ bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _valu
 bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address const& _origin)
 {
 	m_isCreation = false;
-	if (m_sealEngine->isPrecompiled(_p.codeAddress))
+
+	// If external transaction.
+	if (m_t)
+		// Increment associated nonce for sender.
+		m_s.noteSending(_p.senderAddress);
+
+	if (m_sealEngine.isPrecompiled(_p.codeAddress))
 	{
-		bigint g = m_sealEngine->costOfPrecompiled(_p.codeAddress, _p.data);
+		bigint g = m_sealEngine.costOfPrecompiled(_p.codeAddress, _p.data);
 		if (_p.gas < g)
 		{
 			m_excepted = TransactionException::OutOfGasBase;
@@ -271,7 +274,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		else
 		{
 			m_gas = (u256)(_p.gas - g);
-			m_sealEngine->executePrecompiled(_p.codeAddress, _p.data, _p.out);
+			m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, _p.out);
 		}
 	}
 	else
@@ -294,6 +297,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	m_isCreation = true;
+
+	// Increment associated nonce for sender.
+	m_s.noteSending(_sender);
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_newAddress, since
 	// we delete it explicitly if we decide we need to revert.

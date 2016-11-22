@@ -253,12 +253,6 @@ public:
 	/// @returns the size of the code in bytes at the given address.
 	virtual size_t codeSizeAt(Address) { return 0; }
 
-	/// Subtract amount from account's balance.
-	virtual void subBalance(u256) {}
-
-	/// Determine account's TX count.
-	virtual u256 txCount(Address) { return 0; }
-
 	/// Does the account exist?
 	virtual bool exists(Address) { return false; }
 
