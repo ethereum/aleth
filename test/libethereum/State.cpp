@@ -66,7 +66,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			//automatic test convertation
-			/*json_spirit::mObject obj;
+/*			json_spirit::mObject obj;
 			json_spirit::mObject& tr = o["transaction"].get_obj();
 			json_spirit::mArray d = json_spirit::mArray();
 			d.push_back(tr["data"].get_str());
@@ -101,7 +101,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			std::cerr << TestOutputHelper::caseName() << " || " << TestOutputHelper::testName() << std::endl;
 			writeFile("/home/wins/Ethereum/cpp-ethereum/test/libethereum/GeneralStateTestsFiller/" + TestOutputHelper::caseName() + "/"
 					  + TestOutputHelper::testName() + testNumber + "Filler.json", asBytes(json_spirit::write_string((json_spirit::mValue)obj, true)));
-			*/
+*/
 			//automatic test convertation
 
 
