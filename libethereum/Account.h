@@ -111,6 +111,9 @@ public:
 	/// @returns true if the account is unchanged from creation.
 	bool isDirty() const { return !m_isUnchanged; }
 
+	/// @returns true if the nonce, balance and code is zero / empty. Code is considered empty
+	/// during creation phase.
+	bool isEmpty() const { return nonce() == 0 && balance() == 0 && (isFreshCode() ? code().empty() : codeHash() == EmptySHA3); }
 
 	/// @returns the balance of this account. Can be altered in place.
 	u256& balance() { return m_balance; }
@@ -119,7 +122,7 @@ public:
 	u256 const& balance() const { return m_balance; }
 
 	/// Increments the balance of this account by the given amount. It's a bigint, so can be negative.
-	void addBalance(bigint _i) { if (!_i) return; m_balance = (u256)((bigint)m_balance + _i); changed(); }
+	void addBalance(bigint _i) { m_balance = (u256)((bigint)m_balance + _i); changed(); }
 
 	/// @returns the nonce of the account. Can be altered in place.
 	u256& nonce() { return m_nonce; }

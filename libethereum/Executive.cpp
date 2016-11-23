@@ -310,7 +310,8 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
 
-	m_s.createContract(m_newAddress);
+	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
+	m_s.createContract(m_newAddress, incrementNonce);
 	m_s.transferBalance(_sender, m_newAddress, _endowment);
 
 	if (_init.empty())
@@ -358,7 +359,9 @@ bool Executive::go(OnOpFunc const& _onOp)
 					m_res->gasForDeposit = m_gas;
 					m_res->depositSize = out.size();
 				}
-				if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
+				if (out.size() > m_ext->evmSchedule().maxCodeSize)
+					BOOST_THROW_EXCEPTION(OutOfGas());
+				else if (out.size() * m_ext->evmSchedule().createDataGas <= m_gas)
 				{
 					if (m_res)
 						m_res->codeDeposit = CodeDeposit::Success;

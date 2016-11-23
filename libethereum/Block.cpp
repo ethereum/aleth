@@ -625,8 +625,9 @@ u256 Block::enact(VerifiedBlockRef const& _block, BlockChain const& _bc)
 		applyRewards(rewarded, _bc.chainParams().blockReward);
 
 	// Commit all cached state changes to the state trie.
+	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock");
 	DEV_TIMED_ABOVE("commit", 500)
-		m_state.commit();
+		m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
 	// Hash the state trie and check against the state_root hash in m_currentBlock.
 	if (m_currentBlock.stateRoot() != m_previousBlock.stateRoot() && m_currentBlock.stateRoot() != rootHash())
@@ -688,7 +689,7 @@ void Block::performIrregularModifications()
 		Addresses allDAOs = childDaos();
 		for (Address const& dao: allDAOs)
 			m_state.transferBalance(dao, recipient, m_state.balance(dao));
-		m_state.commit();
+		m_state.commit(State::CommitBehaviour::KeepEmptyAccounts);
 	}
 }
 
@@ -768,7 +769,9 @@ void Block::commitToSeal(BlockChain const& _bc, bytes const& _extraData)
 	applyRewards(uncleBlockHeaders, _bc.chainParams().blockReward);
 
 	// Commit any and all changes to the trie that are in the cache, then update the state root accordingly.
-	m_state.commit();
+	bool removeEmptyAccounts = m_currentBlock.number() >= _bc.chainParams().u256Param("EIP158ForkBlock");
+	DEV_TIMED_ABOVE("commit", 500)
+		m_state.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
 	clog(StateDetail) << "Post-reward stateRoot:" << m_state.rootHash();
 	clog(StateDetail) << m_state;

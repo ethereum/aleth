@@ -66,6 +66,7 @@ State::State(State const& _s):
 	m_db(_s.m_db),
 	m_state(&m_db, _s.m_state.root(), Verification::Skip),
 	m_cache(_s.m_cache),
+	m_unchangedCacheEntries(_s.m_unchangedCacheEntries),
 	m_touched(_s.m_touched),
 	m_accountStartNonce(_s.m_accountStartNonce)
 {
@@ -116,7 +117,7 @@ OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, 
 void State::populateFrom(AccountMap const& _map)
 {
 	eth::commit(_map, m_state);
-	commit();
+	commit(State::CommitBehaviour::KeepEmptyAccounts);
 }
 
 u256 const& State::requireAccountStartNonce() const
@@ -132,6 +133,13 @@ void State::noteAccountStartNonce(u256 const& _actual)
 		m_accountStartNonce = _actual;
 	else if (m_accountStartNonce != _actual)
 		BOOST_THROW_EXCEPTION(IncorrectAccountStartNonceInState());
+}
+
+void State::removeEmptyAccounts()
+{
+	for (auto& i: m_cache)
+		if (i.second.isDirty() && i.second.isEmpty())
+			i.second.kill();
 }
 
 void State::paranoia(std::string const& _when, bool _enforceRefs) const
@@ -158,6 +166,7 @@ State& State::operator=(State const& _s)
 	m_db = _s.m_db;
 	m_state.open(&m_db, _s.m_state.root(), Verification::Skip);
 	m_cache = _s.m_cache;
+	m_unchangedCacheEntries = _s.m_unchangedCacheEntries;
 	m_touched = _s.m_touched;
 	m_accountStartNonce = _s.m_accountStartNonce;
 	paranoia("after state cloning (assignment op)", true);
@@ -259,8 +268,10 @@ void State::clearCacheIfTooLarge() const
 	}
 }
 
-void State::commit()
+void State::commit(CommitBehaviour _commitBehaviour)
 {
+	if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)
+		removeEmptyAccounts();
 	m_touched += dev::eth::commit(m_cache, m_state);
 	m_cache.clear();
 }
@@ -292,6 +303,14 @@ void State::setRoot(h256 const& _r)
 bool State::addressInUse(Address const& _id) const
 {
 	return !!account(_id);
+}
+
+bool State::accountNonemptyAndExisting(Address const& _address) const
+{
+	if (Account const* a = account(_address))
+		return !a->isEmpty();
+	else
+		return false;
 }
 
 bool State::addressHasCode(Address const& _id) const
@@ -340,9 +359,13 @@ void State::subBalance(Address const& _id, bigint const& _amount)
 		a->addBalance(-_amount);
 }
 
-void State::createContract(Address const& _address)
+void State::createContract(Address const& _address, bool _incrementNonce)
 {
-	m_cache[_address] = Account(requireAccountStartNonce(), balance(_address), Account::ContractConception);
+	m_cache[_address] = Account(
+		requireAccountStartNonce() + (_incrementNonce ? 1 : 0),
+		balance(_address),
+		Account::ContractConception
+	);
 }
 
 void State::ensureAccountExists(const Address& _address)
@@ -536,7 +559,8 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		m_cache.clear();
 	else
 	{
-		commit();
+		bool removeEmptyAccounts = _envInfo.number() >= _sealEngine.chainParams().u256Param("EIP158ForkBlock");
+		commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
 
 #if ETH_PARANOIA && !ETH_FATDB
 		ctrace << "Executed; now" << rootHash();

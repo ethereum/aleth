@@ -112,6 +112,12 @@ class State
 	friend class BlockChain;
 
 public:
+	enum class CommitBehaviour
+	{
+		KeepEmptyAccounts,
+		RemoveEmptyAccounts
+	};
+
 	/// Default constructor; creates with a blank database prepopulated with the genesis block.
 	explicit State(u256 const& _accountStartNonce): State(_accountStartNonce, OverlayDB(), BaseState::Empty) {}
 
@@ -159,6 +165,10 @@ public:
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 
+	/// Check if the account exists in the state and is non empty (nonce > 0 || balance > 0 || code nonempty).
+	/// These two notions are equivalent after EIP158.
+	bool accountNonemptyAndExisting(Address const& _address) const;
+
 	/// Check if the address contains executable code.
 	bool addressHasCode(Address const& _address) const;
 
@@ -195,7 +205,8 @@ public:
 	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value) { m_cache[_contract].setStorage(_location, _value); }
 
 	/// Create a contract at the given address (with unset code and unchanged balance).
-	void createContract(Address const& _address);
+	/// If @a _incrementNonce is true, increment the nonce upon creation.
+	void createContract(Address const& _address, bool _incrementNonce);
 
 	/// Similar to `createContract`, but used in a normal transaction that targets _address.
 	void ensureAccountExists(Address const& _address);
@@ -239,7 +250,8 @@ public:
 	StateDiff diff(State const& _c, bool _quick = false) const;
 
 	/// Commit all changes waiting in the address cache to the DB.
-	void commit();
+	/// @param _commitBehaviour whether or not to remove empty accounts during commit.
+	void commit(CommitBehaviour _commitBehaviour);
 
 	/// Resets any uncommitted changes to the cache.
 	void setRoot(h256 const& _root);
@@ -250,6 +262,9 @@ public:
 	void noteAccountStartNonce(u256 const& _actual);
 
 private:
+	/// Turns all "touched" empty accounts into non-alive accounts.
+	void removeEmptyAccounts();
+
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
 	Account const* account(Address const& _a, bool _requireCode = false) const;

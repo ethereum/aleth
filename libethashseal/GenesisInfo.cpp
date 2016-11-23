@@ -41,7 +41,7 @@ R"ETHEREUM(
 		"durationLimit": "0x08",
 		"blockReward": "0x14D1120D7B160000",
 		"registrar": "5e70c0bbcd5636e0f9f9316e9f8633feb64d4050",
-		"networkID" : "0x0"
+		"networkID" : "0x00"
 	},
 	"genesis": {
 		"nonce": "0x000000000000002a",
@@ -88,7 +88,8 @@ R"ETHEREUM(
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
 		"registrar": "",
-		"networkID" : "0x2"
+		"networkID" : "0x02",
+		"chainID": "0x02"
 	},
 	"genesis": {
 		"nonce": "0x00006d6f7264656e",
@@ -120,6 +121,9 @@ R"E(
 		"homsteadForkBlock": "0xffffffffffffffff",
 		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0xfffffffffffffff",
+		"EIP158ForkBlock": "0xfffffffffffffff",
+		"networkID" : "0x01",
+		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
@@ -129,8 +133,7 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
-		"networkID" : "0x1"
+		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b"
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",
@@ -161,6 +164,9 @@ R"E(
 		"homsteadForkBlock": "0x05",
 		"daoHardforkBlock": "0x08",
 		"EIP150ForkBlock": "0x0a",
+		"EIP158ForkBlock": "0x0e",
+		"networkID" : "0x01",
+		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
@@ -170,8 +176,7 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
-		"networkID" : "0x1"
+		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b"
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",
@@ -202,6 +207,9 @@ R"E(
 		"maximumExtraDataSize": "0x20",
 		"daoHardforkBlock": "0x1d4c00",
 		"EIP150ForkBlock": "0x259518",
+		"EIP158ForkBlock": "0x28d138",
+		"networkID" : "0x01",
+		"chainID": "0x01",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,
@@ -210,8 +218,7 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
-		"networkID" : "0x1"
+		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b"
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",
@@ -240,8 +247,11 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"maximumExtraDataSize": "0x20",
-		"daoHardforkBlock": "0xfffffff",
+		"daoHardforkBlock": "0xfffffffffffffff",
 		"EIP150ForkBlock": "0x00",
+		"EIP158ForkBlock": "0xfffffffffffffff",
+		"networkID" : "0x01",
+		"chainID": "0x01",
 		"minGasLimit": "0x1388",
 		"maxGasLimit": "7fffffffffffffff",
 		"tieBreakingGas": false,
@@ -250,8 +260,7 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
-		"networkID" : "0x1"
+		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b"
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",
@@ -282,6 +291,9 @@ R"E(
 		"homsteadForkBlock": "0x118c30",
 		"daoHardforkBlock": "0x1d4c00",
 		"EIP150ForkBlock": "0xfffffffffffffff",
+		"EIP158ForkBlock": "0xfffffffffffffff",
+		"networkID" : "0x01",
+		"chainID": "0x01",
 		"maximumExtraDataSize": "0x20",
 		"tieBreakingGas": false,
 		"minGasLimit": "0x1388",
@@ -291,8 +303,7 @@ R"E(
 		"difficultyBoundDivisor": "0x0800",
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
-		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b",
-		"networkID" : "0x1"
+		"registrar" : "0xc6d9d2cd449a754c494264e1809c50e34d64562b"
 	},
 	"genesis": {
 		"nonce": "0x0000000000000042",

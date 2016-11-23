@@ -220,7 +220,6 @@
     },
 
     "SenderTest" : {
-        "senderExpect" : "sender 0f65fe9276bc9a24ae7083ae28e2660ef72df99e",
 	"expect" : "valid",
 	"blocknumber" : "0",
         "transaction" :

@@ -55,7 +55,7 @@ TestBlock::TestBlock(mObject const& _blockObj, mObject const& _stateObj):
 
 	m_state = std::unique_ptr<State>(new State(0, OverlayDB(State::openDB(m_tempDirState.get()->path(), h256{}, WithExisting::Kill)), BaseState::Empty));
 	ImportTest::importState(_stateObj, *m_state.get());
-	m_state.get()->commit();
+	m_state.get()->commit(State::CommitBehaviour::KeepEmptyAccounts);
 
 	json_spirit::mObject state = _stateObj;
 	dev::test::replaceLLLinState(state);

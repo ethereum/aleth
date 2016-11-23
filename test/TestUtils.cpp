@@ -102,7 +102,7 @@ void ClientBaseFixture::enumerateClients(std::function<void(Json::Value const&, 
 	enumerateBlockchains([&callback](Json::Value const& _json, BlockChain const& _bc, State _state) -> void
 	{
 		cerr << "void ClientBaseFixture::enumerateClients. FixedClient now accepts block not sate!" << endl;
-		_state.commit(); //unused variable. remove this line
+		_state.commit(State::CommitBehaviour::KeepEmptyAccounts); //unused variable. remove this line
 		eth::Block b(Block::Null);
 		b.noteChain(_bc);
 		FixedClient client(_bc, b);

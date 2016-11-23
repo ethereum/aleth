@@ -142,7 +142,8 @@ bool VM::caseCallSetup(CallParameters *callParams)
 	m_runGas = toUint64(m_schedule->callGas);
 
 	if (m_op == Instruction::CALL && !m_ext->exists(asAddress(*(m_sp - 1))))
-		m_runGas += toUint64(m_schedule->callNewAccountGas);
+		if (*(m_sp - 2) > 0 || m_schedule->zeroValueTransferChargesNewAccountGas())
+			m_runGas += toUint64(m_schedule->callNewAccountGas);
 
 	if (m_op != Instruction::DELEGATECALL && *(m_sp - 2) > 0)
 		m_runGas += toUint64(m_schedule->callValueTransferGas);

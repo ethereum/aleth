@@ -84,7 +84,9 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 
 EVMSchedule const& Ethash::evmSchedule(EnvInfo const& _envInfo) const
 {
-	if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
+	if (_envInfo.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		return EIP158Schedule;
+	else if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
 		return EIP150Schedule;
 	else if (_envInfo.number() >= chainParams().u256Param("homsteadForkBlock"))
 		return HomesteadSchedule;
@@ -165,8 +167,18 @@ void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _p
 
 void Ethash::verifyTransaction(ImportRequirements::value _ir, TransactionBase const& _t, BlockHeader const& _bi) const
 {
-	if (_ir & ImportRequirements::TransactionSignatures && _bi.number() >= chainParams().u256Param("homsteadForkBlock"))
-		_t.checkLowS();
+	if (_ir & ImportRequirements::TransactionSignatures)
+	{
+		if (_bi.number() >= chainParams().u256Param("homsteadForkBlock"))
+			_t.checkLowS();
+		if (_bi.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		{
+			int chainID(chainParams().u256Param("chainID"));
+			_t.checkChainId(chainID);
+		}
+		else
+			_t.checkChainId(-4);
+	}
 	// Unneeded as it's checked again in Executive. Keep it here since tests assume it's checked.
 	if (_ir & ImportRequirements::TransactionBasic && _t.gasRequired(evmSchedule(EnvInfo(_bi))) > _t.gas())
 		BOOST_THROW_EXCEPTION(OutOfGasIntrinsic());

@@ -4014,7 +4014,7 @@
             "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6" : {
                 "balance" : "100000000000000000000000",
                 "nonce" : "0",
-                "code" : "(asm PUSH1 0x03 JUMPDEST PUSH1 0x01 SAWP1 SUB DUP1 PUSH1 0x02 JUMPI PUSH9 0x010000000000000016 JUMP JUMPDEST PUSH4 0xbadf000d PUSH1 0x11 SSTORE STOP )",
+                "code" : "(asm PUSH1 0x03 JUMPDEST PUSH1 0x01 SWAP1 SUB DUP1 PUSH1 0x02 JUMPI PUSH9 0x010000000000000016 JUMP JUMPDEST PUSH4 0xbadf000d PUSH1 0x11 SSTORE STOP )",
                 "storage": {}
             }
         },

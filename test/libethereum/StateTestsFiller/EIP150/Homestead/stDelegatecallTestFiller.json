@@ -111,7 +111,7 @@
             "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
                 "storage" : {
                     "0x00" : "0x01",
-                    "0x01" : "0x80"
+                    "0x01" : "0x17"
                 }
             }
     },
@@ -124,7 +124,7 @@
             },
             "945304eb96065b2a98b57a48a06ae28d285a71b5" : {
                 "balance" : "23",
-                "code" : "{[[ 1 ]] CALLVALUE}",
+                "code" : "{[[ 1 ]] (CALLVALUE)}",
                 "nonce" : "0",
                 "storage" : {
                 }
