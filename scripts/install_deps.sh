@@ -108,6 +108,25 @@ case $(uname -s) in
         brew pin gnupg
         brew pin nvm
 
+        # Directory changes made around the Homebrew 1.0.0 release in
+        # September 2016 are disasterous for turnaround time for
+        # `brew update`, especially on OS X Mavericks, which is missing
+        # prebuilt bottles for nearly all packages.  These changes
+        # plain broke our TravisCI automation.  This is a
+        # quick-and-dirty attempt at a workaround to get us working
+        # again.  A long-term sustainable solution will likely see us
+        # replacing the bare `brew update` with something which is
+        # tightly targeted to only update the subset of packages in
+        # Homebrew which are used in the cpp-ethereum build process,
+        # either directly or indirectly.
+        brew pin cgal
+        brew pin mercurial
+        brew pin mpfr
+        brew pin node
+        brew pin openssl
+        brew pin python
+        brew pin sqlite
+
         # Update Homebrew formulas and then upgrade any packages which
         # we have installed using these updated formulas.  This step is
         # required even within TravisCI, because the Homebrew formulas
