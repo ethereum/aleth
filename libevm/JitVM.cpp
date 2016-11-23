@@ -268,8 +268,7 @@ public:
 	Result execute(ExtVMFace& _ext, int64_t gas)
 	{
 		auto env = reinterpret_cast<evm_env*>(&_ext);
-		auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD
-		                                                : EVM_FRONTIER;
+		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
 		return Result{m_interface.execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
 			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
@@ -337,6 +336,13 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	auto output = r.output();
 	m_output.assign(output.begin(), output.end());
 	return {m_output.data(), m_output.size()};
+}
+
+evm_mode JitVM::scheduleToMode(EVMSchedule const& _schedule)
+{
+	if (_schedule.eip150Mode)
+		return EVM_ANTI_DOS;
+	return _schedule.haveDelegateCall ? EVM_HOMESTEAD : EVM_FRONTIER;
 }
 
 bool JitVM::isCodeReady(evm_mode _mode, h256 _codeHash)
