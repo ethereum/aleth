@@ -2,7 +2,7 @@
    "refund_getEtherBack" : {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "228500",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -52,7 +52,7 @@
     "refund_changeNonZeroStorage" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -103,7 +103,7 @@
     "refund_OOG" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -154,7 +154,7 @@
     "refund_NoOOG_1" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -203,7 +203,7 @@
     "refund50_1" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -256,7 +256,7 @@
     "refund50_2" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -311,7 +311,7 @@
     "refund50percentCap" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -366,7 +366,7 @@
     "refund600" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -420,7 +420,7 @@
     "refundSuicide50procentCap" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "10000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -486,7 +486,7 @@
     "refund_CallToSuicideStorage" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "10000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -546,7 +546,7 @@
     "refund_CallToSuicideNoStorage" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "10000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -604,7 +604,7 @@
     "refund_TxToSuicide" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "10000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -654,7 +654,7 @@
     "refund_TxToSuicideOOG" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "10000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -705,7 +705,7 @@
     "refund_CallToSuicideTwice" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "10000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -765,7 +765,7 @@
     "refund_CallA" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -829,7 +829,7 @@
     "refund_CallA_notEnoughGasInCall" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -893,7 +893,7 @@
     "refund_CallA_OOG" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -957,7 +957,7 @@
     "refund_multimpleSuicide" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,
@@ -1012,7 +1012,7 @@
     "refund_singleSuicide" : {
          "env" : {
              "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-             "currentNumber" : "3500000",
+             "currentNumber" : "2675000",
              "currentGasLimit" : "1000000",
              "currentDifficulty" : "256",
              "currentTimestamp" : 1,

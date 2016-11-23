@@ -4,7 +4,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : "1",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -57,7 +57,7 @@
     "callcallcallcode_001_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -152,7 +152,7 @@
     "callcallcodecall_010_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -238,7 +238,7 @@
     "callcodecallcall_100_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -328,7 +328,7 @@
     "callcodecallcallcode_101_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -420,7 +420,7 @@
     "callcodecallcodecall_110_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -510,7 +510,7 @@
     "callcodecallcodecallcode_111_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -599,7 +599,7 @@
     "callcodecallcodecallcode_111_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -688,7 +688,7 @@
     "callcallcallcode_001_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -779,7 +779,7 @@
     "callcallcodecall_010_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -868,7 +868,7 @@
     "callcallcodecallcode_011_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -957,7 +957,7 @@
     "callcodecallcall_100_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1046,7 +1046,7 @@
     "callcodecallcallcode_101_OOGMAfter_3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1135,7 +1135,7 @@
     "callcodecallcodecall_110_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1224,7 +1224,7 @@
     "callcodecallcodecallcode_111_OOGMAfter_3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1313,7 +1313,7 @@
     "callcall_00_OOGE_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1369,7 +1369,7 @@
     "callcall_00_OOGE_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1425,7 +1425,7 @@
    "callcall_00_OOGE_valueTransfer": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1484,7 +1484,7 @@
     "callcallcallcode_001_OOGMAfter_3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1567,7 +1567,7 @@
     "callcallcall_000_OOGMAfter": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1650,7 +1650,7 @@
     "callcallcodecall_010_OOGMAfter_3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1735,7 +1735,7 @@
     "callcallcodecallcode_011_OOGMAfter_2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1819,7 +1819,7 @@
     "callcodecallcall_100_OOGMAfter_3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1901,7 +1901,7 @@
     "callcodecallcallcode_101_OOGMAfter_1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1982,7 +1982,7 @@
     "callcodecallcodecall_110_OOGMAfter_3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2068,7 +2068,7 @@
     "callcodecallcodecallcode_111_OOGMAfter": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2143,7 +2143,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -2200,7 +2200,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -2259,7 +2259,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -2313,7 +2313,7 @@
     "createInitFail_OOGduringInit": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "100000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,

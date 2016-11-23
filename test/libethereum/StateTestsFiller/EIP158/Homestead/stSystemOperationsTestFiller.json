@@ -2,7 +2,7 @@
     "createNameRegistrator": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "100000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -46,7 +46,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : "2",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -88,7 +88,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "115792089237316195423570985008687907853269984665640564039457584007913129639935",
             "currentGasLimit" : "1000000",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : "2",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -127,7 +127,7 @@
     "createNameRegistratorOOG_MemExpansionInsufficientBalance": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -168,7 +168,7 @@
     "createNameRegistratorZeroMem": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -210,7 +210,7 @@
     "createNameRegistratorZeroMem2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -252,7 +252,7 @@
     "createNameRegistratorZeroMemExpansion": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -294,7 +294,7 @@
     "createNameRegistratorValueTooHigh": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -333,7 +333,7 @@
     "createNameRegistratorOutOfMemoryBonds0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -374,7 +374,7 @@
     "createNameRegistratorOutOfMemoryBonds1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -415,7 +415,7 @@
     "balanceInputAddressTooBig": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -456,7 +456,7 @@
     "CallToNameRegistrator0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -505,7 +505,7 @@
     "CallToNameRegistratorMemOOGAndInsufficientBalance": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -553,7 +553,7 @@
     "CallToNameRegistratorAddressTooBigLeft": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -601,7 +601,7 @@
     "CallToNameRegistratorAddressTooBigRight": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -650,7 +650,7 @@
     "CallToNameRegistratorZeorSizeMemExpansion": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -699,7 +699,7 @@
     "CallToReturn1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -747,7 +747,7 @@
     "CallToReturn1ForDynamicJump0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -795,7 +795,7 @@
     "CallToReturn1ForDynamicJump1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -843,7 +843,7 @@
     "CALLToReturn1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -893,7 +893,7 @@
     "DELEGATECALLToReturn1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -943,7 +943,7 @@
     "callcodeToReturn1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -993,7 +993,7 @@
     "callcodeTo0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "30000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : "1",
@@ -1035,7 +1035,7 @@
     "CallToNameRegistratorOutOfGas": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1084,7 +1084,7 @@
     "CallToNameRegistratorTooMuchMemory0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1132,7 +1132,7 @@
     "CallToNameRegistratorTooMuchMemory1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1180,7 +1180,7 @@
     "CallToNameRegistratorTooMuchMemory2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1229,7 +1229,7 @@
     "CallToNameRegistratorNotMuchMemory0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1277,7 +1277,7 @@
     "CallToNameRegistratorNotMuchMemory1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1325,7 +1325,7 @@
     "CallRecursiveBomb0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1376,7 +1376,7 @@
     "CallRecursiveBombLog": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1427,7 +1427,7 @@
     "CallRecursiveBombLog2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1478,7 +1478,7 @@
     "CallRecursiveBomb0_OOG_atMaxCallDepth": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "100000000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1520,7 +1520,7 @@
     "CallRecursiveBomb1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "100000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1562,7 +1562,7 @@
     "CallRecursiveBomb2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "100000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1604,7 +1604,7 @@
     "CallRecursiveBomb3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1646,7 +1646,7 @@
     "suicideCoinbase": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1686,7 +1686,7 @@
     "suicideCaller": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1726,7 +1726,7 @@
     "suicideCallerAddresTooBigLeft": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1766,7 +1766,7 @@
     "suicideCallerAddresTooBigRight": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1805,7 +1805,7 @@
     "suicideOrigin": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1844,7 +1844,7 @@
     "suicideAddress": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1883,7 +1883,7 @@
     "suicideNotExistingAccount": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1922,7 +1922,7 @@
     "suicideSendEtherToMe": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1962,7 +1962,7 @@
     "return0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -1997,7 +1997,7 @@
     "return1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2032,7 +2032,7 @@
     "return2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2067,7 +2067,7 @@
     "callcodeToNameRegistrator0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2114,7 +2114,7 @@
     "callcodeToNameRegistratorAddresTooBigLeft": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2161,7 +2161,7 @@
     "callcodeToNameRegistratorAddresTooBigRight": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2209,7 +2209,7 @@
     "callcodeToNameRegistratorZeroMemExpanion": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2256,7 +2256,7 @@
     "TestNameRegistrator": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2297,7 +2297,7 @@
     "ABAcalls0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2350,7 +2350,7 @@
     "ABAcalls1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2403,7 +2403,7 @@
     "ABAcalls2": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "1000000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2456,7 +2456,7 @@
     "ABAcalls3": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2509,7 +2509,7 @@
     "ABAcallsSuicide0": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2557,7 +2557,7 @@
     "ABAcallsSuicide1": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2608,7 +2608,7 @@
     "callValue": {
         "env" : {
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit" : "10000000",
             "currentDifficulty" : "256",
             "currentTimestamp" : 1,
@@ -2649,7 +2649,7 @@
     "currentAccountBalance": {
         "env": {
             "previousHash": "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit": "10000000",
             "currentDifficulty": "256",
             "currentTimestamp": 1,
@@ -2690,7 +2690,7 @@
     "callerAccountBalance": {
         "env": {
             "previousHash": "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit": "10000000",
             "currentDifficulty": "256",
             "currentTimestamp": 1,
@@ -2731,7 +2731,7 @@
     "CreateHashCollision": {
         "env": {
             "previousHash": "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentGasLimit": "10000000",
             "currentDifficulty": "256",
             "currentTimestamp": 1,
@@ -2788,7 +2788,7 @@
             "currentDifficulty" : "45678256",
 	    "currentGasLimit" : "2^63-1",
             "currentGasLimit" : "0x7fffffffffffffff",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
@@ -2843,7 +2843,7 @@
                "currentCoinbase" : "4401fcaf7d64d53fb1cfc5c9045c32aa919a8c82",
                "currentDifficulty" : "0x7fb7d889155ce8c6",
                "currentGasLimit" : "0x58272e28",
-               "currentNumber" : "3500000",
+               "currentNumber" : "2675000",
                "currentTimestamp" : "0xa4befad141d51c4f",
                "previousHash" : "d30f77155de00f207ad60109897e790f73e9f3431be25717bf3651d91949f041"
            },
@@ -2886,7 +2886,7 @@
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "0x0100",
             "currentGasLimit" : "0x989680",
-            "currentNumber" : "3500000",
+            "currentNumber" : "2675000",
             "currentTimestamp" : "0x01",
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
