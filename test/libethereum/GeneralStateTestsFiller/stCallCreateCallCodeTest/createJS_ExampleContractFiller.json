@@ -8,6 +8,23 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+	"expect" : [
+            {
+                "indexes" : { "data" : -1, "gas" : -1, "value" : -1 },
+                "network" : ["Frontier", "Homestead"],
+                "result" : {
+            	    "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
+                	"storage" : {
+                    	    "0x00" : "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+                    	    "0x01" : "0x42",
+                    	    "0x02" : "0x23",
+                    	    "0x03" : "0xa94f5374fce5edbc8e2a8697c15331677e6ebf0b",
+                    	    "0x05" : "0x01"
+                	}
+                     }
+            	}
+	    }
+        ],
         "pre" : {
             "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
                 "balance" : "100000",
