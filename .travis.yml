@@ -93,7 +93,6 @@ matrix:
         - os: osx
           osx_image: xcode8.2
           env:
-              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
 git:
     depth: 2
