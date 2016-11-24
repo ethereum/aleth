@@ -10,12 +10,8 @@
         },
         "expect" : [
             {
-                "indexes" : {
-                    "data" : -1,
-                    "gas" : -1,
-                    "value" : -1
-                },
-                "network" : "Frontier",
+                "indexes" : { "data" : -1, "gas" : -1, "value" : -1 },
+                "network" : ["Frontier"],
                 "result" : {
                     "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
                         "balance" : "0x0a",
@@ -23,6 +19,19 @@
                     },
                     "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                         "balance" : "99972878"
+                    }
+                }
+            },
+	    {
+                "indexes" : { "data" : -1, "gas" : -1, "value" : -1 },
+                "network" : ["Homestead"],
+                "result" : {
+                    "6295ee1b4f6dd65047762f924ecd367c17eabf8f" : {
+                        "balance" : "0x0a",
+                        "code" : "0x600060006000600060003060405a03f1"
+                    },
+                    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                        "balance" : "99940878"
                     }
                 }
             }
