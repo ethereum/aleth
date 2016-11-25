@@ -36,7 +36,7 @@ macro(configure_project)
 	endif ()
 
 	if (STATIC_BUILD)
-		set(STATIC_LINKING 0)
+		set(STATIC_LINKING 1)
 		set(BUILD_SHARED_LIBS 0)
 	endif ()
 
