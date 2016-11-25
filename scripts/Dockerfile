@@ -15,7 +15,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update &&\
     apt-get -q -y install git-core sudo lsb-release software-properties-common &&\
-    git clone https://github.com/ethereum/cpp-ethereum.git &&\
+    git clone --depth 1 --recursive https://github.com/ethereum/cpp-ethereum.git &&\
     cpp-ethereum/scripts/install_deps.sh &&\
     mkdir cpp-ethereum/build &&\
     cd cpp-ethereum/build &&\
