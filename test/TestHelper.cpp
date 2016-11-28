@@ -543,7 +543,11 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 	else
 		network.push_back(_network);
 
-	BOOST_CHECK_MESSAGE(network.size() > 0, "Network array not set!");
+	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + "Network array not set!");
+	vector<string> allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
+									netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test)};
+	for(size_t i=0; i<network.size(); i++)
+		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + "Specified Network not found: " + network.at(i));
 
 	if (_expects.count("indexes"))
 	{
@@ -551,10 +555,10 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 		parseJsonIntValueIntoVector(indexes.at("data"), d);
 		parseJsonIntValueIntoVector(indexes.at("gas"), g);
 		parseJsonIntValueIntoVector(indexes.at("value"), v);
-		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, "Indexes arrays not set!");
+		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + "Indexes arrays not set!");
 	}
 	else
-		BOOST_ERROR("indexes section not set!");
+		BOOST_ERROR(TestOutputHelper::testName() + "indexes section not set!");
 
 	bool foundResults = false;
 	for(size_t i = 0; i < m_transactions.size(); i++)
@@ -578,9 +582,9 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 				}
 			}
 			else if (_expects.count("hash"))
-				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes()), "Expected another postState hash! " + trInfo);
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes()), TestOutputHelper::testName() + "Expected another postState hash! " + trInfo);
 			else
-				BOOST_ERROR("Expect section or postState missing some fields!");
+				BOOST_ERROR(TestOutputHelper::testName() + "Expect section or postState missing some fields!");
 
 			foundResults = true;
 
@@ -590,7 +594,7 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 				break;
 		}
 	}
-	BOOST_CHECK_MESSAGE(foundResults, "Expect results was not found in test execution!");
+	BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + "Expect results was not found in test execution!");
 }
 
 int ImportTest::exportTest(bytes const& _output)
@@ -1321,7 +1325,7 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 
 	cnote << _testName;
 	//_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
-	m_currentTestName = _testName;
+	m_currentTestName = _testName + " ";
 	return true;
 }
 

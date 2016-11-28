@@ -66,7 +66,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		if (_fillin)
 		{
 			//automatic test convertation
-/*			json_spirit::mObject obj;
+			json_spirit::mObject obj;
 			json_spirit::mObject& tr = o["transaction"].get_obj();
 			json_spirit::mArray d = json_spirit::mArray();
 			d.push_back(tr["data"].get_str());
@@ -78,17 +78,28 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			g.push_back(tr["gasLimit"].get_str());
 			tr["gasLimit"] = g;
 
-			if (o.count("expect")>0)
+			if (o.count("expect")>0 || 1)
 			{
-				json_spirit::mObject ex = o["expect"].get_obj();
+				json_spirit::mObject ex = fillJsonWithState(importer.m_statePost);//o["expect"].get_obj();
 				json_spirit::mArray nex;
-				json_spirit::mObject expect;
-				expect["network"] = "Frontier";
-				json_spirit::mObject indexes;
-				indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
-				expect["indexes"] = indexes;
-				expect["result"] = ex;
-				nex.push_back(expect);
+				{
+					json_spirit::mObject expect;
+					expect["network"] = "Frontier";
+					json_spirit::mObject indexes;
+					indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
+					expect["indexes"] = indexes;
+					expect["result"] = ex;
+					nex.push_back(expect);
+				}
+				{
+					json_spirit::mObject expect;
+					expect["network"] = "Homestead";
+					json_spirit::mObject indexes;
+					indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
+					expect["indexes"] = indexes;
+					expect["result"] = ex;
+					nex.push_back(expect);
+				}
 				o["expect"] = nex;
 			}
 
@@ -101,7 +112,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			std::cerr << TestOutputHelper::caseName() << " || " << TestOutputHelper::testName() << std::endl;
 			writeFile("/home/wins/Ethereum/cpp-ethereum/test/libethereum/GeneralStateTestsFiller/" + TestOutputHelper::caseName() + "/"
 					  + TestOutputHelper::testName() + testNumber + "Filler.json", asBytes(json_spirit::write_string((json_spirit::mValue)obj, true)));
-*/
+
 			//automatic test convertation
 
 
@@ -134,6 +145,11 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 }
 } }// Namespace Close
 
+
+BOOST_AUTO_TEST_SUITE(StateTests)
+BOOST_AUTO_TEST_SUITE_END()
+
+/*
 BOOST_AUTO_TEST_SUITE(StateTestsEIP)
 
 BOOST_AUTO_TEST_CASE(stChangedOnEIPTest)
@@ -572,4 +588,4 @@ BOOST_AUTO_TEST_CASE(userDefinedFileState)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
+*/

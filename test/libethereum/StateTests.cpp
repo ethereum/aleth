@@ -122,6 +122,12 @@ public:
 };
 
 BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
+
+BOOST_AUTO_TEST_CASE(stHomesteadSpecific){}
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead){}
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead){}
+BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead){}
+
 BOOST_AUTO_TEST_CASE(stBlockHashTest){}
 BOOST_AUTO_TEST_CASE(stCallCodes){}
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest){}
