@@ -15,7 +15,7 @@
                     "gas" : -1,
                     "value" : -1
                 },
-                "network" : "Frontier",
+                "network" : ["Frontier", "Homestead"],
                 "result" : {
                     "00000000002147c39fd6b5c19b7b89fc003e6b16" : {
                         "balance" : "0x2a6bb607",

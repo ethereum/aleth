@@ -15,10 +15,13 @@
                     "gas" : -1,
                     "value" : -1
                 },
-                "network" : "Frontier",
+                "network" : ["Frontier", "Homestead"],
                 "result" : {
                     "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
-                        "balance" : "45149"
+                        "balance" : "45216"
+                    },
+		    "095e7baea6a6c7c4c2dfeb977efac326af552d87" : {
+                        "storage" : {}
                     }
                 }
             }
