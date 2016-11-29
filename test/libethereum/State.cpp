@@ -98,6 +98,10 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 } }// Namespace Close
 
 BOOST_AUTO_TEST_SUITE(StateTestsEIP158)
+BOOST_AUTO_TEST_CASE(stZeroCallsRevertTestEIP158)
+{
+	dev::test::executeTests("stZeroCallsRevertTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+}
 BOOST_AUTO_TEST_CASE(stCodeSizeLimitEIP158)
 {
 	dev::test::executeTests("stCodeSizeLimit", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
@@ -313,6 +317,10 @@ BOOST_AUTO_TEST_CASE(stWalletTestEIP)
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(StateTestsHomestead)
+BOOST_AUTO_TEST_CASE(stZeroCallsRevertTest)
+{
+	dev::test::executeTests("stZeroCallsRevertTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+}
 BOOST_AUTO_TEST_CASE(stBoundsTestHomestead)
 {
 	dev::test::executeTests("stBoundsTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
