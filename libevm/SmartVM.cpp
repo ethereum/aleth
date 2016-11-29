@@ -90,8 +90,8 @@ namespace
 bytesConstRef SmartVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	auto vmKind = VMKind::Interpreter; // default VM
+	auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
 	// Jitted EVM code already in memory?
-	auto mode = _ext.evmSchedule().haveDelegateCall ? EVM_HOMESTEAD : EVM_FRONTIER;
 	if (JitVM::isCodeReady(mode, _ext.codeHash))
 	{
 		clog(JitInfo) << "JIT:           " << _ext.codeHash;
