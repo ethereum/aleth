@@ -129,7 +129,7 @@ case $(uname -s) in
             # The majority of our dependencies can be found in the
             # Arch Linux official repositories.
             # See https://wiki.archlinux.org/index.php/Official_repositories
-            pacman -Sy --noconfirm \
+            sudo pacman -Sy --noconfirm \
                 autoconf \
                 automake \
                 gcc \
