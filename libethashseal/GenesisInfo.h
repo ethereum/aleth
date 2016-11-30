@@ -33,9 +33,10 @@ namespace eth
 /// The network id.
 enum class Network
 {
-	Olympic = 0,			///< Normal Olympic chain.
+	//Olympic = 0,			///< Normal Olympic chain.
 	Frontier = 1,			///< Normal Frontier/Homestead chain.
-	Morden = 2,				///< Normal Morden chain.
+	//Morden = 2,				///< Normal Morden chain.
+	Ropsten = 3,			///< New Ropsten Test Network
 	Test = 70,				///< Normal Frontier/Homestead chain without all the premine.
 	FrontierTest = 71,		///< Just test the Frontier-era characteristics "forever" (no Homestead portion).
 	HomesteadTest = 72,		///< Just test the Homestead-era characteristics "forever" (no Frontier portion).
