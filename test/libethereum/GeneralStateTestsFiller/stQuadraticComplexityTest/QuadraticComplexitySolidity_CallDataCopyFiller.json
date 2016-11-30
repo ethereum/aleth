@@ -1,5 +1,5 @@
 {
-    "QuadraticComplexitySolidity_CallDataCopy" : {
+    "QuadraticComplexitySolidity_CallDataCopy " : {
         "env" : {
             "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
             "currentDifficulty" : "45678256",
@@ -8,6 +8,39 @@
             "currentTimestamp" : 1,
             "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
         },
+        "expect" : [
+            {
+                "indexes" : {
+                    "data" : -1,
+                    "gas" : -1,
+                    "value" : -1
+                },
+                "network" : ["Frontier", "Homestead"],
+                "result" : {
+                    "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba" : {
+                        "balance" : "0x14dc9380",
+                        "code" : "0x",
+                        "nonce" : "0x00",
+                        "storage" : {
+                        }
+                    },
+                    "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                        "balance" : "0x08f0d180",
+                        "code" : "0x60003560e060020a9004806361a4770614601557005b601e6004356024565b60006000f35b60008160008190555073b94f5374fce5edbc8e2a8697c15331677e6ebf0b90505b600082131560bf5780600160a060020a03166000600060007f6a7573740000000000000000000000000000000000000000000000000000000081526004017f63616c6c000000000000000000000000000000000000000000000000000000008152602001600060008560155a03f150506001820391506045565b505056",
+                        "nonce" : "0x01",
+                        "storage" : {
+                        }
+                    },
+                    "b94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
+                        "balance" : "0x4c4b40",
+                        "code" : "0x61c3506000600037",
+                        "nonce" : "0x00",
+                        "storage" : {
+                        }
+                    }
+                }
+            }
+        ],
         "pre" : {
             "a94f5374fce5edbc8e2a8697c15331677e6ebf0b" : {
                 "//" : "}\t\t\t\t\t\t\t\t\t",

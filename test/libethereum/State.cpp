@@ -84,14 +84,14 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 				json_spirit::mArray nex;
 				{
 					json_spirit::mObject expect;
-					expect["network"] = "Frontier";
+					expect["network"] = "[REPLACE]";
 					json_spirit::mObject indexes;
 					indexes["data"] = -1; indexes["gas"] = -1; indexes["value"] = -1;
 					expect["indexes"] = indexes;
 					expect["result"] = ex;
 					nex.push_back(expect);
 				}
-				{
+				/*{
 					json_spirit::mObject expect;
 					expect["network"] = "Homestead";
 					json_spirit::mObject indexes;
@@ -99,7 +99,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 					expect["indexes"] = indexes;
 					expect["result"] = ex;
 					nex.push_back(expect);
-				}
+				}*/
 				o["expect"] = nex;
 			}
 
@@ -147,6 +147,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 
 
 BOOST_AUTO_TEST_SUITE(StateTests)
+
 BOOST_AUTO_TEST_SUITE_END()
 
 /*

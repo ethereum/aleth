@@ -93,7 +93,7 @@ public:
 		string casename = boost::unit_test::framework::current_test_case().p_name;
 		if (casename == "stMemoryStressTest" && (!test::Options::get().memory || 1))
 			return;
-		if (casename == "stQuadraticComplexityTest" && (!test::Options::get().quadratic || 1))
+		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
 			return;
 		fillAllFilesInFolder(casename);
 	}
