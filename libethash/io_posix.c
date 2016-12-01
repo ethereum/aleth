@@ -96,6 +96,8 @@ bool ethash_get_default_dirname(char* strbuf, size_t buffsize)
 		struct passwd* pwd = getpwuid(getuid());
 		if (pwd)
 			home_dir = pwd->pw_dir;
+		if (!home_dir)
+			return false;
 	}
 	
 	size_t len = strlen(home_dir);
