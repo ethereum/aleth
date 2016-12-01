@@ -904,7 +904,7 @@ int main(int argc, char** argv)
 		catch (...)
 		{
 			cerr << "provided configuration is not well formatted" << endl;
-			cerr << "sample: " << endl << genesisInfo(eth::Network::Frontier) << endl;
+			cerr << "sample: " << endl << genesisInfo(eth::Network::Ropsten) << endl;
 			return 0;
 		}
 	}
