@@ -89,9 +89,8 @@ void help()
 		<< endl;
 	cout
 		<< "Client mode (default):" << endl
-		<< "    --olympic  Use the Olympic (0.9) protocol." << endl
 		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
-		<< "    --morden  Use the Morden testnet." << endl
+		<< "    --ropsten  Use the Ropsten testnet." << endl
 		<< "    --private <name>  Use a private chain." << endl
 		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
 		<< "    --config <file>  Configure specialised blockchain using given JSON information." << endl
@@ -630,10 +629,8 @@ int main(int argc, char** argv)
 			gasFloor = u256(argv[++i]);
 		else if (arg == "--frontier")
 			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
-		else if (arg == "--olympic")
-			chainParams = ChainParams(genesisInfo(eth::Network::Olympic));
-		else if (arg == "--morden" || arg == "--testnet")
-			chainParams = ChainParams(genesisInfo(eth::Network::Morden), genesisStateRoot(eth::Network::Morden));
+		else if (arg == "--ropsten" || arg == "--testnet")
+			chainParams = ChainParams(genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
 		else if (arg == "--oppose-dao-fork")
 		{
 			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
@@ -907,7 +904,7 @@ int main(int argc, char** argv)
 		catch (...)
 		{
 			cerr << "provided configuration is not well formatted" << endl;
-			cerr << "sample: " << endl << genesisInfo(eth::Network::Olympic) << endl;
+			cerr << "sample: " << endl << genesisInfo(eth::Network::Ropsten) << endl;
 			return 0;
 		}
 	}

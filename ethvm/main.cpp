@@ -188,12 +188,10 @@ int main(int argc, char** argv)
 		else if (arg == "--network" && i + 1 < argc)
 		{
 			string network = argv[++i];
-			if (network == "Olympic")
-				networkName = Network::Olympic;
-			else if (network == "Frontier")
+			if (network == "Frontier")
 				networkName = Network::FrontierTest;
-			else if (network == "Morden")
-				networkName = Network::Morden;
+			else if (network == "Ropsten")
+				networkName = Network::Ropsten;
 			else if (network == "Homestead")
 				networkName = Network::HomesteadTest;
 			else

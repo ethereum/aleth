@@ -72,14 +72,9 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 	case Network::Frontier:
 	case Network::FrontierTest:
 	case Network::HomesteadTest:
-	case Network::Morden:
+	case Network::Ropsten:
 	case Network::Test:
 		durationLimit = 13;
-		minimumDifficulty = 131072;
-		difficultyBoundDivisor = 2048;
-	break;
-	case Network::Olympic:
-		durationLimit = 8;
 		minimumDifficulty = 131072;
 		difficultyBoundDivisor = 2048;
 	break;
@@ -193,20 +188,6 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 
 BOOST_AUTO_TEST_SUITE(DifficultyTests)
 
-BOOST_AUTO_TEST_CASE(difficultyTestsOlympic)
-{	
-	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyOlimpic.json";
-
-	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Olympic)));
-
-	if (dev::test::Options::get().fillTests)
-		fillDifficulty(testFileFullName, sealEngine);
-
-	testDifficulty(testFileFullName, sealEngine, Network::Olympic);
-}
-
 BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 {
 	string testFileFullName = test::getTestPath();
@@ -221,18 +202,18 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 	testDifficulty(testFileFullName, sealEngine, Network::Frontier);
 }
 
-BOOST_AUTO_TEST_CASE(difficultyTestsMorden)
+BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 {
 	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyMorden.json";
+	testFileFullName += "/BasicTests/difficultyRopsten.json";
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Morden)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Ropsten)));
 
 	if (dev::test::Options::get().fillTests)
 		fillDifficulty(testFileFullName, sealEngine);
 
-	testDifficulty(testFileFullName, sealEngine, Network::Morden);
+	testDifficulty(testFileFullName, sealEngine, Network::Ropsten);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
