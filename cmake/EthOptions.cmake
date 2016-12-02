@@ -7,6 +7,8 @@ macro(configure_project)
 			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 	endif()
 
+	eth_default_option(STATIC_BUILD OFF)
+
 	# features
 	eth_default_option(VMTRACE OFF)
 	eth_default_option(PROFILING OFF)
@@ -31,6 +33,11 @@ macro(configure_project)
 			message("VM Tracing requires debug - disabling for release build.")
 			set (VMTRACE OFF)
 		endif ()
+	endif ()
+
+	if (STATIC_BUILD)
+		set(STATIC_LINKING 1)
+		set(BUILD_SHARED_LIBS 0)
 	endif ()
 
 	# Define a matching property name of each of the "features".
@@ -98,6 +105,7 @@ macro(print_config NAME)
 	message("--                  CMake Version                            ${CMAKE_VERSION}")
 	message("-- CMAKE_BUILD_TYPE Build type                               ${CMAKE_BUILD_TYPE}")
 	message("-- TARGET_PLATFORM  Target platform                          ${CMAKE_SYSTEM_NAME}")
+	message("-- STATIC BUILD                                              ${STATIC_BUILD}")
 	message("--------------------------------------------------------------- features")
 if (SUPPORT_CPUID)
 	message("--                  Hardware identification support          ${CPUID_FOUND}")
