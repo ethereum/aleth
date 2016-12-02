@@ -171,6 +171,7 @@ elseif (MSVC)
 	add_compile_options(/wd4267)					# disable conversion from 'size_t' to 'type', possible loss of data (4267)
 	add_compile_options(/wd4180)					# disable qualifier applied to function type has no meaning; ignored (4180)
 	add_compile_options(/wd4290)					# disable C++ exception specification ignored except to indicate a function is not __declspec(nothrow) (4290)
+	add_compile_options(/wd4297)					# disable <vector>'s function assumed not to throw an exception but does (4297)
 	add_compile_options(/wd4244)					# disable conversion from 'type1' to 'type2', possible loss of data (4244)
 	add_compile_options(/wd4800)					# disable forcing value to bool 'true' or 'false' (performance warning) (4800)
 	add_compile_options(-D_WIN32_WINNT=0x0600)		# declare Windows Vista API requirement
