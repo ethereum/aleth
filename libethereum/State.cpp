@@ -332,10 +332,10 @@ u256 State::balance(Address const& _id) const
 void State::noteSending(Address const& _id)
 {
 	Account* a = account(_id);
-	if (asserts(a != nullptr))
+	if (a == nullptr)
 	{
 		cwarn << "Sending from non-existant account. How did it pay!?!";
-		// this is impossible. but we'll continue regardless...
+		// this is only possible if transaction has gaspirce = 0
 		m_cache[_id] = Account(requireAccountStartNonce() + 1, 0);
 	}
 	else
@@ -352,7 +352,10 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 
 void State::subBalance(Address const& _id, bigint const& _amount)
 {
-	Account* a = account(_id);
+	if (_amount == 0)
+		return;
+
+	Account* a = account(_id);	
 	if (!a || a->balance() < _amount)
 		BOOST_THROW_EXCEPTION(NotEnoughCash());
 	else
