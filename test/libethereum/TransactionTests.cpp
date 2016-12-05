@@ -169,40 +169,39 @@ BOOST_AUTO_TEST_SUITE(TransactionTests)
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
 {
-	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VCheck)
 {
-	dev::test::executeTests("ttTransactionTestVRule", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+	dev::test::executeTests("ttTransactionTestVRule", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155)
 {
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests/EIP155",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
+	dev::test::executeTests("ttTransactionTest", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTestsHomestead)
 {
-	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
+	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/Homestead", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestHomestead)
 {
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
+	dev::test::executeTests("ttTransactionTest", "/TransactionTests/Homestead", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttTransactionTest)
 {
-	dev::test::executeTests("ttTransactionTest", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
+	dev::test::executeTests("ttTransactionTest", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
 }
 
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 {
-	std::string fillersPath = dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead";
-
+	std::string fillersPath =  dev::test::getTestPath() + "/src/TransactionTestsFiller/Homestead";
 	if (!dev::test::Options::get().fillTests)
-		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", fillersPath, dev::test::doTransactionTests);
+		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 	else
 	{
 		dev::test::TestOutputHelper::initTest();
@@ -212,10 +211,9 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 {
-	std::string fillersPath = dev::test::getFolder(__FILE__) + "/TransactionTestsFiller";
-
+	std::string fillersPath = dev::test::getTestPath() + "/src/TransactionTestsFiller";
 	if (!dev::test::Options::get().fillTests)
-		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", fillersPath, dev::test::doTransactionTests);
+		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
 	else
 	{
 		dev::test::TestOutputHelper::initTest();
@@ -229,7 +227,7 @@ BOOST_AUTO_TEST_CASE(tt10mbDataFieldHomestead)
 	{
 		auto start = chrono::steady_clock::now();
 
-		dev::test::executeTests("tt10mbDataField", "/TransactionTests/Homestead",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
+		dev::test::executeTests("tt10mbDataField", "/TransactionTests/Homestead", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 
 		auto end = chrono::steady_clock::now();
 		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
@@ -243,45 +241,11 @@ BOOST_AUTO_TEST_CASE(tt10mbDataField)
 	{
 		auto start = chrono::steady_clock::now();
 
-		dev::test::executeTests("tt10mbDataField", "/TransactionTests",dev::test::getFolder(__FILE__) + "/TransactionTestsFiller", dev::test::doTransactionTests);
+		dev::test::executeTests("tt10mbDataField", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
 
 		auto end = chrono::steady_clock::now();
 		auto duration(chrono::duration_cast<chrono::milliseconds>(end - start));
 		cnote << "test duration: " << duration.count() << " milliseconds.\n";
-	}
-}
-
-BOOST_AUTO_TEST_CASE(ttCreateTest)
-{
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--createtest")
-		{
-			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
-			{
-				cnote << "usage: ./testeth --createtest <PathToConstructor> <PathToDestiny>\n";
-				return;
-			}
-			try
-			{
-				cnote << "Populating tests...";
-				json_spirit::mValue v;
-				string s = asString(dev::contents(boost::unit_test::framework::master_test_suite().argv[i + 1]));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + (string)boost::unit_test::framework::master_test_suite().argv[i + 1] + " is empty.");
-				json_spirit::read_string(s, v);
-				dev::test::doTransactionTests(v, true);
-				writeFile(boost::unit_test::framework::master_test_suite().argv[i + 2], asBytes(json_spirit::write_string(v, true)));
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed transaction test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed transaction test with Exception: " << _e.what());
-			}
-		}
 	}
 }
 

@@ -460,70 +460,70 @@ BOOST_AUTO_TEST_SUITE(VMTests)
 
 BOOST_AUTO_TEST_CASE(vmtests)
 {
-	dev::test::executeTests("vmtests", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmtests", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmArithmeticTest)
 {
-	dev::test::executeTests("vmArithmeticTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmArithmeticTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmBitwiseLogicOperationTest)
 {
-	dev::test::executeTests("vmBitwiseLogicOperationTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmBitwiseLogicOperationTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmSha3Test)
 {
-	dev::test::executeTests("vmSha3Test", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmSha3Test", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmEnvironmentalInfoTest)
 {
-	dev::test::executeTests("vmEnvironmentalInfoTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmEnvironmentalInfoTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmBlockInfoTest)
 {
-	dev::test::executeTests("vmBlockInfoTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmBlockInfoTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmIOandFlowOperationsTest)
 {
-	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmIOandFlowOperationsTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmPushDupSwapTest)
 {
-	dev::test::executeTests("vmPushDupSwapTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmPushDupSwapTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmLogTest)
 {
-	dev::test::executeTests("vmLogTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmLogTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmSystemOperationsTest)
 {
-	dev::test::executeTests("vmSystemOperationsTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+	dev::test::executeTests("vmSystemOperationsTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmPerformanceTest)
 {
 	if (test::Options::get().performance)
-		dev::test::executeTests("vmPerformanceTest", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+		dev::test::executeTests("vmPerformanceTest", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsTest)
 {
 	if (test::Options::get().inputLimits)
-		dev::test::executeTests("vmInputLimits", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+		dev::test::executeTests("vmInputLimits", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmInputLimitsLightTest)
 {
 	if (test::Options::get().inputLimits)
-		dev::test::executeTests("vmInputLimitsLight", "/VMTests",dev::test::getFolder(__FILE__) + "/VMTestsFiller", dev::test::doVMTests);
+		dev::test::executeTests("vmInputLimitsLight", "/VMTests", "/VMTestsFiller", dev::test::doVMTests);
 }
 
 BOOST_AUTO_TEST_CASE(vmRandom)

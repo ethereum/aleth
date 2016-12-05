@@ -100,7 +100,7 @@ public:
 
 	void fillAllFilesInFolder(string _folder)
 	{
-		std::string fillersPath = dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller/" + _folder;
+		std::string fillersPath = dev::test::getTestPath() + "/src/GeneralStateTestsFiller/" + _folder;
 
 		boost::filesystem::directory_iterator iterator_tmp(fillersPath);
 		int fileCount = 0;
@@ -116,7 +116,7 @@ public:
 			if (boost::filesystem::is_regular_file(iterator->path()) && iterator->path().extension() == ".json")
 			{
 				string fileboost = iterator->path().filename().string();
-				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder,dev::test::getFolder(__FILE__) + "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests2);
+				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests2);
 			}
 	}
 };

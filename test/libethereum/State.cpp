@@ -96,321 +96,321 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 BOOST_AUTO_TEST_SUITE(StateTestsEIP158)
 BOOST_AUTO_TEST_CASE(stZeroCallsRevertTestEIP158)
 {
-	dev::test::executeTests("stZeroCallsRevertTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+	dev::test::executeTests("stZeroCallsRevertTest", "/StateTests/EIP158", "/StateTestsFiller/EIP158", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCodeSizeLimitEIP158)
 {
-	dev::test::executeTests("stCodeSizeLimit", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+	dev::test::executeTests("stCodeSizeLimit", "/StateTests/EIP158", "/StateTestsFiller/EIP158", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCreateTestEIP158)
 {
-	dev::test::executeTests("stCreateTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+	dev::test::executeTests("stCreateTest", "/StateTests/EIP158", "/StateTestsFiller/EIP158", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stEIP158SpecificTest)
 {
-	dev::test::executeTests("stEIP158SpecificTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+	dev::test::executeTests("stEIP158SpecificTest", "/StateTests/EIP158", "/StateTestsFiller/EIP158", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stNonZeroCallsTest)
 {
-	dev::test::executeTests("stNonZeroCallsTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+	dev::test::executeTests("stNonZeroCallsTest", "/StateTests/EIP158", "/StateTestsFiller/EIP158", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stZeroCallsTest)
 {
-	dev::test::executeTests("stZeroCallsTest", "/StateTests/EIP158",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158", dev::test::doStateTests);
+	dev::test::executeTests("stZeroCallsTest", "/StateTests/EIP158", "/StateTestsFiller/EIP158", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stChangedTestsEIP150)
 {
-	dev::test::executeTests("stChangedTests", "/StateTests/EIP158/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stChangedTests", "/StateTests/EIP158/EIP150", "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stEIPsingleCodeGasPricesEIP150)
 {
-	dev::test::executeTests("stEIPsingleCodeGasPrices", "/StateTests/EIP158/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stEIPsingleCodeGasPrices", "/StateTests/EIP158/EIP150", "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stEIPSpecificTestEIP150)
 {
-	dev::test::executeTests("stEIPSpecificTest", "/StateTests/EIP158/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stEIPSpecificTest", "/StateTests/EIP158/EIP150", "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stMemExpandingEIPCallsEIP150)
 {
-	dev::test::executeTests("stMemExpandingEIPCalls", "/StateTests/EIP158/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stMemExpandingEIPCalls", "/StateTests/EIP158/EIP150", "/StateTestsFiller/EIP158/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stBoundsTestEIP)
 {
-	dev::test::executeTests("stBoundsTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stBoundsTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stHomeSteadSpecificEIP)
 {
-	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeEIP)
 {
-	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallDelegateCodesEIP)
 {
-	dev::test::executeTests("stCallDelegateCodes", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stDelegatecallTestEIP)
 {
-	dev::test::executeTests("stDelegatecallTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stDelegatecallTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallCodesEIP)
 {
-	dev::test::executeTests("stCallCodes", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallCodes", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stSystemOperationsTestEIP)
 {
-	dev::test::executeTests("stSystemOperationsTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stSystemOperationsTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestEIP)
 {
-	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stPreCompiledContractsEIP)
 {
-	dev::test::executeTests("stPreCompiledContracts", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stPreCompiledContracts", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stLogTestsEIP)
 {
-	dev::test::executeTests("stLogTests", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stLogTests", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stRecursiveCreateEIP)
 {
-	dev::test::executeTests("stRecursiveCreate", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stRecursiveCreate", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stInitCodeTestEIP)
 {
-	dev::test::executeTests("stInitCodeTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stInitCodeTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stTransactionTestEIP)
 {
-	dev::test::executeTests("stTransactionTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stTransactionTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stSpecialTestEIP)
 {
-	dev::test::executeTests("stSpecialTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stSpecialTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stRefundTestEIP)
 {
-	dev::test::executeTests("stRefundTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stRefundTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestEIP)
 {
 	if (test::Options::get().quadratic)
-		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stMemoryStressTestEIP)
 {
 	if (test::Options::get().memory)
-		dev::test::executeTests("stMemoryStressTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+		dev::test::executeTests("stMemoryStressTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stMemoryTestEIP)
 {
-	dev::test::executeTests("stMemoryTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stMemoryTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stWalletTestEIP)
 {
-	dev::test::executeTests("stWalletTest", "/StateTests/EIP158/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stWalletTest", "/StateTests/EIP158/Homestead", "/StateTestsFiller/EIP158/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(StateTestsEIP)
 BOOST_AUTO_TEST_CASE(stChangedOnEIPTest)
 {
-	dev::test::executeTests("stChangedTests", "/StateTests/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stChangedTests", "/StateTests/EIP150", "/StateTestsFiller/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stEIPSpecificTest)
 {
-	dev::test::executeTests("stEIPSpecificTest", "/StateTests/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stEIPSpecificTest", "/StateTests/EIP150", "/StateTestsFiller/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stEIPsingleCodeGasPrices)
 {
-	dev::test::executeTests("stEIPsingleCodeGasPrices", "/StateTests/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stEIPsingleCodeGasPrices", "/StateTests/EIP150", "/StateTestsFiller/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stMemExpandingEIPCalls)
 {
-	dev::test::executeTests("stMemExpandingEIPCalls", "/StateTests/EIP150",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150", dev::test::doStateTests);
+	dev::test::executeTests("stMemExpandingEIPCalls", "/StateTests/EIP150", "/StateTestsFiller/EIP150", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stBoundsTestEIP)
 {
-	dev::test::executeTests("stBoundsTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stBoundsTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stHomeSteadSpecificEIP)
 {
-	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeEIP)
 {
-	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallDelegateCodesEIP)
 {
-	dev::test::executeTests("stCallDelegateCodes", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stDelegatecallTestEIP)
 {
-	dev::test::executeTests("stDelegatecallTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stDelegatecallTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallCodesEIP)
 {
-	dev::test::executeTests("stCallCodes", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallCodes", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stSystemOperationsTestEIP)
 {
-	dev::test::executeTests("stSystemOperationsTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stSystemOperationsTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestEIP)
 {
-	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stPreCompiledContractsEIP)
 {
-	dev::test::executeTests("stPreCompiledContracts", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stPreCompiledContracts", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stLogTestsEIP)
 {
-	dev::test::executeTests("stLogTests", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stLogTests", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stRecursiveCreateEIP)
 {
-	dev::test::executeTests("stRecursiveCreate", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stRecursiveCreate", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stInitCodeTestEIP)
 {
-	dev::test::executeTests("stInitCodeTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stInitCodeTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stTransactionTestEIP)
 {
-	dev::test::executeTests("stTransactionTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stTransactionTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stSpecialTestEIP)
 {
-	dev::test::executeTests("stSpecialTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stSpecialTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stRefundTestEIP)
 {
-	dev::test::executeTests("stRefundTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stRefundTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestEIP)
 {
 	if (test::Options::get().quadratic)
-		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stMemoryStressTestEIP)
 {
 	if (test::Options::get().memory)
-		dev::test::executeTests("stMemoryStressTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+		dev::test::executeTests("stMemoryStressTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stMemoryTestEIP)
 {
-	dev::test::executeTests("stMemoryTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stMemoryTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stWalletTestEIP)
 {
-	dev::test::executeTests("stWalletTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stWalletTest", "/StateTests/EIP150/Homestead", "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(StateTestsHomestead)
 BOOST_AUTO_TEST_CASE(stZeroCallsRevertTest)
 {
-	dev::test::executeTests("stZeroCallsRevertTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stZeroCallsRevertTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 BOOST_AUTO_TEST_CASE(stBoundsTestHomestead)
 {
-	dev::test::executeTests("stBoundsTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stBoundsTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stHomeSteadSpecific)
 {
-	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stHomeSteadSpecific", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead)
 {
-	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodesCallCode", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead)
 {
-	dev::test::executeTests("stCallDelegateCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallDelegateCodes", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead)
 {
-	dev::test::executeTests("stDelegatecallTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stDelegatecallTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallCodesHomestead)
 {
-	dev::test::executeTests("stCallCodes", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallCodes", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stSystemOperationsTestHomestead)
 {
-	dev::test::executeTests("stSystemOperationsTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stSystemOperationsTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTestHomestead)
 {
-	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stPreCompiledContractsHomestead)
 {
-	dev::test::executeTests("stPreCompiledContracts", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stPreCompiledContracts", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stLogTestsHomestead)
 {
-	dev::test::executeTests("stLogTests", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stLogTests", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stRecursiveCreateHomestead)
 {
-	dev::test::executeTests("stRecursiveCreate", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stRecursiveCreate", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stInitCodeTestHomestead)
 {
-	dev::test::executeTests("stInitCodeTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stInitCodeTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stTransactionTestHomestead)
 {
-	dev::test::executeTests("stTransactionTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stTransactionTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stSpecialTestHomestead)
 {
-	dev::test::executeTests("stSpecialTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stSpecialTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stRefundTestHomestead)
 {
-	dev::test::executeTests("stRefundTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stRefundTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTestHomestead)
 {
 	if (test::Options::get().quadratic)
-		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryStressTestHomestead)
 {
 	if (test::Options::get().memory)
-		dev::test::executeTests("stMemoryStressTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+		dev::test::executeTests("stMemoryStressTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryTestHomestead)
 {
-	dev::test::executeTests("stMemoryTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stMemoryTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stWalletTestHomestead)
 {
-	dev::test::executeTests("stWalletTest", "/StateTests/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/Homestead", dev::test::doStateTests);
+	dev::test::executeTests("stWalletTest", "/StateTests/Homestead", "/StateTestsFiller/Homestead", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
@@ -419,106 +419,106 @@ BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE(StateTests)
 BOOST_AUTO_TEST_CASE(stCallCodes)
 {
-	dev::test::executeTests("stCallCodes", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stCallCodes", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stExample)
 {
-	dev::test::executeTests("stExample", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stExample", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stSystemOperationsTest)
 {
-	dev::test::executeTests("stSystemOperationsTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stSystemOperationsTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stCallCreateCallCodeTest)
 {
-	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stCallCreateCallCodeTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stPreCompiledContracts)
 {
-	dev::test::executeTests("stPreCompiledContracts", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stPreCompiledContracts", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stLogTests)
 {
-	dev::test::executeTests("stLogTests", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stLogTests", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stRecursiveCreate)
 {
-	dev::test::executeTests("stRecursiveCreate", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stRecursiveCreate", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stInitCodeTest)
 {
-	dev::test::executeTests("stInitCodeTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stInitCodeTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stTransactionTest)
 {
-	dev::test::executeTests("stTransactionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stTransactionTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stSpecialTest)
 {
-	dev::test::executeTests("stSpecialTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stSpecialTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stRefundTest)
 {
-	dev::test::executeTests("stRefundTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stRefundTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stBlockHashTest)
 {
-	dev::test::executeTests("stBlockHashTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stBlockHashTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest)
 {
 	if (test::Options::get().quadratic)
-		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+		dev::test::executeTests("stQuadraticComplexityTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryStressTest)
 {
 	if (test::Options::get().memory)
-		dev::test::executeTests("stMemoryStressTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+		dev::test::executeTests("stMemoryStressTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stSolidityTest)
 {
-	dev::test::executeTests("stSolidityTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stSolidityTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stMemoryTest)
 {
-	dev::test::executeTests("stMemoryTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stMemoryTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stWalletTest)
 {
-	dev::test::executeTests("stWalletTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stWalletTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 BOOST_AUTO_TEST_CASE(stTransitionTest)
 {
-	dev::test::executeTests("stTransitionTest", "/StateTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller", dev::test::doStateTests);
+	dev::test::executeTests("stTransitionTest", "/StateTests", "/StateTestsFiller", dev::test::doStateTests);
 }
 
 //todo: Force stRandom to be tested on Homestead Seal Engine ?
 BOOST_AUTO_TEST_CASE(stRandom)
 {
 	test::Options::get(); // parse command line options, e.g. to enable JIT
+	string testPath = dev::test::getTestPath() + "/StateTests/RandomTests";
+	string fillersPath = dev::test::getTestPath() + "/src/StateTestsFiller/RandomTests";
 
 	if (dev::test::Options::get().fillTests)
 	{
 		test::TestOutputHelper::initTest();
-		std::string fillersPath = dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests";
-
 		vector<boost::filesystem::path> testFiles;
 		boost::filesystem::directory_iterator iterator(fillersPath);
 		for(; iterator != boost::filesystem::directory_iterator(); ++iterator)
@@ -541,13 +541,10 @@ BOOST_AUTO_TEST_CASE(stRandom)
 			std::string filename = path.filename().string();
 			test::TestOutputHelper::setCurrentTestFileName(filename);
 			filename = filename.substr(0, filename.length() - 5); //without .json
-			dev::test::executeTests(filename, "/StateTests/RandomTests",dev::test::getFolder(__FILE__) + "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
+			dev::test::executeTests(filename, "/StateTests/RandomTests", "/StateTestsFiller/RandomTests", dev::test::doStateTests, false);
 		}
 		return; //executeTests has already run test after filling
 	}
-
-	string testPath = dev::test::getTestPath();
-	testPath += "/StateTests/RandomTests";
 
 	vector<boost::filesystem::path> testFiles;
 	boost::filesystem::directory_iterator iterator(testPath);
@@ -588,40 +585,6 @@ BOOST_AUTO_TEST_CASE(stRandom)
 		catch (std::exception const& _e)
 		{
 			BOOST_ERROR(path.filename().string() + "Failed test with Exception: " << _e.what());
-		}
-	}
-}
-
-BOOST_AUTO_TEST_CASE(stCreateTest)
-{
-	for (int i = 1; i < boost::unit_test::framework::master_test_suite().argc; ++i)
-	{
-		string arg = boost::unit_test::framework::master_test_suite().argv[i];
-		if (arg == "--createtest")
-		{
-			if (boost::unit_test::framework::master_test_suite().argc <= i + 2)
-			{
-				cnote << "usage: ./testeth --createtest <PathToConstructor> <PathToDestiny>\n";
-				return;
-			}
-			try
-			{
-				cnote << "Populating tests...";
-				json_spirit::mValue v;
-				string s = asString(dev::contents(boost::unit_test::framework::master_test_suite().argv[i + 1]));
-				BOOST_REQUIRE_MESSAGE(s.length() > 0, "Content of " + (string)boost::unit_test::framework::master_test_suite().argv[i + 1] + " is empty.");
-				json_spirit::read_string(s, v);
-				dev::test::doStateTests(v, true);
-				writeFile(boost::unit_test::framework::master_test_suite().argv[i + 2], asBytes(json_spirit::write_string(v, true)));
-			}
-			catch (Exception const& _e)
-			{
-				BOOST_ERROR("Failed state test with Exception: " << diagnostic_information(_e));
-			}
-			catch (std::exception const& _e)
-			{
-				BOOST_ERROR("Failed state test with Exception: " << _e.what());
-			}
 		}
 	}
 }

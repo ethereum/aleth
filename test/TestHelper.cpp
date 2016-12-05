@@ -962,10 +962,10 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 	}
 }
 
-void executeTests(const string& _name, const string& _testPathAppendix, const boost::filesystem::path _pathToFiller, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix)
+void executeTests(const string& _name, const string& _testPathAppendix, const string& _fillerPathAppendix, std::function<void(json_spirit::mValue&, bool)> doTests, bool _addFillerSuffix)
 {
-	string testPath = getTestPath();
-	testPath += _testPathAppendix;
+	string testPath = getTestPath() + _testPathAppendix;
+	string testFillerPath = getTestPath() + "/src/" + _fillerPathAppendix;
 
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
@@ -983,8 +983,9 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 			boost::filesystem::path p(__FILE__);
 
 			string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
-			string 	s = asString(dev::contents(_pathToFiller.string() + "/" + name + nameEnding));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + name + nameEnding + " is empty.");
+			string testfilename = testFillerPath + "/" + name + nameEnding;
+			string 	s = asString(dev::contents(testfilename));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testfilename + " is empty.");
 
 			json_spirit::read_string(s, v);
 			doTests(v, true);
