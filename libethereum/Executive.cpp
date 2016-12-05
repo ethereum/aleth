@@ -207,7 +207,7 @@ void Executive::initialize(Transaction const& _transaction)
 	u256 nonceReq;
 	try
 	{
-		nonceReq = m_s.transactionsFrom(m_t.sender());
+		nonceReq = m_s.getNonce(m_t.sender());
 	}
 	catch (...)
 	{
@@ -260,7 +260,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 	// If external transaction.
 	if (m_t)
 		// Increment associated nonce for sender.
-		m_s.noteSending(_p.senderAddress);
+		m_s.incNonce(_p.senderAddress);
 
 	if (m_sealEngine.isPrecompiled(_p.codeAddress))
 	{
@@ -297,13 +297,12 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	m_isCreation = true;
-
-	// Increment associated nonce for sender.
-	m_s.noteSending(_sender);
+	u256 nonce = m_s.getNonce(_sender);
+	m_s.incNonce(_sender);
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_newAddress, since
 	// we delete it explicitly if we decide we need to revert.
-	m_newAddress = right160(sha3(rlpList(_sender, m_s.transactionsFrom(_sender) - 1)));
+	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
 	m_gas = _gas;
 
 	// Execute _init.

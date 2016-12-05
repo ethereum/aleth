@@ -475,8 +475,8 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect balance " << _statePost.balance(a.first) << ", expected " << _stateExpect.balance(a.first));
 
 			if (addressOptions.hasNonce())
-				CHECK((_stateExpect.transactionsFrom(a.first) == _statePost.transactionsFrom(a.first)),
-				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect nonce " << _statePost.transactionsFrom(a.first) << ", expected " << _stateExpect.transactionsFrom(a.first));
+				CHECK((_stateExpect.getNonce(a.first) == _statePost.getNonce(a.first)),
+				TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect nonce " << _statePost.getNonce(a.first) << ", expected " << _stateExpect.getNonce(a.first));
 
 			if (addressOptions.hasStorage())
 			{
@@ -706,7 +706,7 @@ json_spirit::mObject fillJsonWithState(State const& _state)
 	{
 		json_spirit::mObject o;
 		o["balance"] = toCompactHex(_state.balance(a.first), HexPrefix::Add, 1);
-		o["nonce"] = toCompactHex(_state.transactionsFrom(a.first), HexPrefix::Add, 1);
+		o["nonce"] = toCompactHex(_state.getNonce(a.first), HexPrefix::Add, 1);
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))

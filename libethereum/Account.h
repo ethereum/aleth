@@ -124,14 +124,15 @@ public:
 	/// Increments the balance of this account by the given amount. It's a bigint, so can be negative.
 	void addBalance(bigint _i) { m_balance = (u256)((bigint)m_balance + _i); changed(); }
 
-	/// @returns the nonce of the account. Can be altered in place.
-	u256& nonce() { return m_nonce; }
-
 	/// @returns the nonce of the account.
-	u256 const& nonce() const { return m_nonce; }
+	u256 nonce() const { return m_nonce; }
 
 	/// Increment the nonce of the account by one.
-	void incNonce() { m_nonce++; changed(); }
+	void incNonce() { ++m_nonce; changed(); }
+
+	/// Set nonce to a new value. This is used when reverting changes made to
+	/// the account.
+	void setNonce(u256 const& _nonce) { m_nonce = _nonce; changed(); }
 
 
 	/// @returns the root of the trie (whose nodes are stored in the state db externally to this class)
