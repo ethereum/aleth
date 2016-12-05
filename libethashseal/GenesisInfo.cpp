@@ -27187,7 +27187,7 @@ static std::string const c_genesisInfoRopsten = std::string() +
 {
 		"sealEngine": "Ethash",
 		"params": {
-		"accountStartNonce": "0x0100000",
+		"accountStartNonce": "0x00",
 		"homsteadForkBlock": "0x00",
 		"EIP150ForkBlock": "0x00",
 		"EIP158ForkBlock": "0x0a",
@@ -27202,7 +27202,7 @@ static std::string const c_genesisInfoRopsten = std::string() +
 		"durationLimit": "0x0d",
 		"blockReward": "0x4563918244F40000",
 		"registrar": "",
-		"networkID" : "0x02"
+		"networkID" : "0x03"
 		},
 		"genesis": {
 		"nonce": "0x0000000000000042",
@@ -27219,7 +27219,6 @@ static std::string const c_genesisInfoRopsten = std::string() +
 		"0000000000000000000000000000000000000002": { "wei": "1", "precompiled": { "name": "sha256", "linear": { "base": 60, "word": 12 } } },
 		"0000000000000000000000000000000000000003": { "wei": "1", "precompiled": { "name": "ripemd160", "linear": { "base": 600, "word": 120 } } },
 		"0000000000000000000000000000000000000004": { "wei": "1", "precompiled": { "name": "identity", "linear": { "base": 15, "word": 3 } } },
-		"102e61f5d8f9bc71d0ad4a084df4e65e05ce0e1c": { "wei": "1606938044258990275541962092341162602522202993782792835301376" }
 		)E" + R"E(
 		"0x0000000000000000000000000000000000000011": {
 			"balance": "0"
