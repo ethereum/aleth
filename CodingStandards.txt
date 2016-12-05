@@ -212,7 +212,7 @@ b. Document the interface, not the implementation.
 
 12. Include Headers
 
-Includes should go in increasing order of generality (libethereum -> libethcodre -> libdevcrypto -> libdevcore -> boost -> STL).  For example:
+Includes should go in increasing order of generality (libethereum -> libethcore -> libdevcrypto -> libdevcore -> boost -> STL).  For example:
 
 #include <libethereum/Defaults.h>
 #include <libdevcrypto/SHA3.h>
