@@ -212,19 +212,18 @@ b. Document the interface, not the implementation.
 
 12. Include Headers
 
-a. Includes should go in order of lower level (STL -> boost -> libdevcore -> libdevcrypto -> libethcore -> libethereum) to higher level. Lower levels are basically dependencies to the higher levels. For example:
+Includes should go in increasing order of generality (libethereum -> libethcore -> libdevcrypto -> libdevcore -> boost -> STL).  For example:
 
-#include <string>
-#include <boost/filesystem.hpp>
-
-#include <libdevcore/Common.h>
-#include <libdevcore/CommonData.h>
-#include <libdevcore/Exceptions.h>
-#include <libdevcore/Log.h>
-#include <libdevcrypto/SHA3.h>
 #include <libethereum/Defaults.h>
+#include <libdevcrypto/SHA3.h>
+#include <libdevcore/Log.h>
+#include <libdevcore/Exceptions.h>
+#include <libdevcore/CommonData.h>
+#include <libdevcore/Common.h>
+#include <boost/filesystem.hpp>
+#include <string>
 
-b. The only exception to the above rule is the top of a .cpp file where its corresponding header should be located.
+See http://stackoverflow.com/questions/614302/c-header-order/614333#614333 for the reason: this makes it easier to find missing includes in header files.
 
 
 
