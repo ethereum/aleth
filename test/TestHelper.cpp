@@ -82,6 +82,19 @@ void printHelp()
 	cout << setw(30) << "--help" << setw(25) << "Display list of command arguments" << std::endl;
 }
 
+string netIdToString(eth::Network _netId)
+{
+	switch(_netId)
+	{
+		case eth::Network::FrontierTest: return "Frontier";
+		case eth::Network::HomesteadTest: return "Homestead";
+		case eth::Network::EIP150Test: return "EIP150";
+		case eth::Network::EIP158Test: return "EIP158";
+		default: return "other";
+	}
+	return "unknown";
+}
+
 void mine(Client& c, int numBlocks)
 {
 	auto startBlock = c.blockChain().details().number;
@@ -143,14 +156,15 @@ bigint const c_max256plus1 = bigint(1) << 256;
 ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTemplate):
 	m_statePre(0, OverlayDB(), eth::BaseState::Empty),
 	m_statePost(0, OverlayDB(), eth::BaseState::Empty),
-	m_testObject(_o)
+	m_testObject(_o),
+	m_testType(testTemplate)
 {
-	if (testTemplate == testType::StateTests)
+	if (testTemplate == testType::StateTests || m_testType == testType::GeneralStateTest)
 	{
 		importEnv(_o["env"].get_obj());
 		importTransaction(_o["transaction"].get_obj());
 		importState(_o["pre"].get_obj(), m_statePre);
-		if (!isFiller)
+		if (!isFiller && m_testType == testType::StateTests)
 		{
 			if (_o.count("post"))
 				importState(_o["post"].get_obj(), m_statePost);
@@ -161,18 +175,72 @@ ImportTest::ImportTest(json_spirit::mObject& _o, bool isFiller, testType testTem
 	}
 }
 
-//executes an imported transacton on preState
-bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
+bytes ImportTest::executeTest()
 {
-	ExecutionResult res;
-	eth::State tmpState = m_statePre;
-	unique_ptr<SealEngineFace> se;
+	if (m_testType == testType::StateTests)
+	{
+		eth::Network network = eth::Network::FrontierTest;
+		if (m_envInfo.number() >= dev::test::c_testHomesteadBlock)
+			network = eth::Network::HomesteadTest;
+
+		std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
+		m_statePost = out.first;
+		m_logs = out.second.second.log();
+		return out.second.first.output;
+	}
+	else if (m_testType == testType::GeneralStateTest)
+	{
+		vector<eth::Network> networks;
+		if (!Options::get().singleTestNet.empty())
+		{
+			if (netIdToString(eth::Network::FrontierTest) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::FrontierTest);
+			else if (netIdToString(eth::Network::HomesteadTest) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::HomesteadTest);
+			else if (netIdToString(eth::Network::EIP150Test) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::EIP150Test);
+			else if (netIdToString(eth::Network::EIP158Test) == Options::get().singleTestNet)
+				networks.push_back(eth::Network::EIP158Test);
+		}
+		else
+		{
+			networks.push_back(eth::Network::FrontierTest);
+			networks.push_back(eth::Network::HomesteadTest);
+			networks.push_back(eth::Network::EIP150Test);
+			networks.push_back(eth::Network::EIP158Test);
+		}
+
+		vector<transactionToExecute> transactionResults;
+		for (size_t j = 0; j < networks.size(); j++)
+		{
+			for (size_t i = 0; i < m_transactions.size(); i++)
+			{
+				eth::Network network = networks[j];
+				std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transactions[i].transaction);
+				m_transactions[i].postState = out.first;
+				m_transactions[i].netId = network;
+				transactionResults.push_back(m_transactions[i]);
+			}
+		}
+		m_transactions.clear();
+		m_transactions = transactionResults;
+		return bytes();
+	}
+
+	BOOST_ERROR("Error when executing test ImportTest::executeTest()");
+	return bytes();
+}
+
+std::pair<eth::State, ImportTest::execOutput> ImportTest::executeTransaction(eth::Network const _sealEngineNetwork, eth::EnvInfo const& _env, eth::State const& _preState, eth::Transaction const& _tr)
+{
+	eth::State initialState = _preState;
 	try
 	{
-		se.reset(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
-		std::pair<ExecutionResult, TransactionReceipt>  execOut = m_statePre.execute(m_envInfo, *se.get(), m_transaction);
-		res = execOut.first;
-		m_logs = execOut.second.log();
+		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(_sealEngineNetwork)).createSealEngine());
+		bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
+		ImportTest::execOutput execOut = initialState.execute(_env, *se.get(), _tr);
+		initialState.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
+		return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
 	}
 	catch (Exception const& _e)
 	{
@@ -183,12 +251,11 @@ bytes ImportTest::executeTest(eth::Network _sealEngineNetwork)
 		cnote << "state execution exception: " << _e.what();
 	}
 
-	bool removeEmptyAccounts = m_envInfo.number() >= se->chainParams().u256Param("EIP158ForkBlock");
-	m_statePre.commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
-	m_statePost = m_statePre;
-	m_statePre = tmpState;
-
-	return res.output;
+	initialState.commit(State::CommitBehaviour::KeepEmptyAccounts);
+	ExecutionResult emptyRes;
+	LogEntries emptyLogs;
+	ImportTest::execOutput execOut = make_pair(emptyRes, TransactionReceipt(h256(), u256(), emptyLogs));
+	return std::pair<eth::State, ImportTest::execOutput>(initialState, execOut);
 }
 
 json_spirit::mObject& ImportTest::makeAllFieldsHex(json_spirit::mObject& _o)
@@ -326,7 +393,34 @@ void ImportTest::importTransaction (json_spirit::mObject const& _o, eth::Transac
 
 void ImportTest::importTransaction(json_spirit::mObject const& o_tr)
 {
-	importTransaction(o_tr, m_transaction);
+	if (m_testType == testType::StateTests)				//Import a single transaction
+		importTransaction(o_tr, m_transaction);
+	else if (m_testType == testType::GeneralStateTest)	//Parse extended transaction
+	{
+		BOOST_REQUIRE(o_tr.count("gasLimit") > 0);
+		size_t dataVectorSize = o_tr.at("data").get_array().size();
+		size_t gasVectorSize = o_tr.at("gasLimit").get_array().size();
+		size_t valueVectorSize = o_tr.at("value").get_array().size();
+
+		for (size_t d = 0; d < dataVectorSize; d++)
+			for (size_t g = 0; g < gasVectorSize; g++)
+				for (size_t v = 0; v < valueVectorSize; v++)
+				{
+					json_spirit::mValue gas = o_tr.at("gasLimit").get_array().at(g);
+					json_spirit::mValue value = o_tr.at("value").get_array().at(v);
+					json_spirit::mValue data = o_tr.at("data").get_array().at(d);
+
+					json_spirit::mObject o_tr_tmp = o_tr;
+					o_tr_tmp["data"] = data;
+					o_tr_tmp["gasLimit"] = gas;
+					o_tr_tmp["value"] = value;
+
+					importTransaction(o_tr_tmp, m_transaction);
+
+					transactionToExecute execData(d, g, v, m_transaction);
+					m_transactions.push_back(execData);
+				}
+	}
 }
 
 int ImportTest::compareStates(State const& _stateExpect, State const& _statePost, AccountMaskMap const _expectedStateOptions, WhenError _throw)
@@ -407,45 +501,181 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 	return wasError;
 }
 
+void parseJsonStrValueIntoVector(json_spirit::mValue const& _json, vector<string>& _out)
+{
+	if (_json.type() == json_spirit::array_type)
+	{
+		for (auto const& val: _json.get_array())
+			_out.push_back(val.get_str());
+	}
+	else
+		_out.push_back(_json.get_str());
+}
+
+void parseJsonIntValueIntoVector(json_spirit::mValue const& _json, vector<int>& _out)
+{
+	if (_json.type() == json_spirit::array_type)
+	{
+		for (auto const& val: _json.get_array())
+			_out.push_back(val.get_int());
+	}
+	else
+		_out.push_back(_json.get_int());
+}
+
+template<class T>
+bool inArray(vector<T> const& _array, const T _val)
+{
+	for (size_t i = 0; i  < _array.size(); i++)
+		if (_array[i] == _val)
+			return true;
+	return false;
+}
+
+void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network) const
+{
+	vector<int> d;
+	vector<int> g;
+	vector<int> v;
+	vector<string> network;
+	if (_network.empty())
+		parseJsonStrValueIntoVector(_expects.at("network"), network);
+	else
+		network.push_back(_network);
+
+	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + "Network array not set!");
+	vector<string> allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
+									netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), "ALL"};
+	for(size_t i=0; i<network.size(); i++)
+		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + "Specified Network not found: " + network.at(i));
+
+	if (_expects.count("indexes"))
+	{
+		json_spirit::mObject const& indexes = _expects.at("indexes").get_obj();
+		parseJsonIntValueIntoVector(indexes.at("data"), d);
+		parseJsonIntValueIntoVector(indexes.at("gas"), g);
+		parseJsonIntValueIntoVector(indexes.at("value"), v);
+		BOOST_CHECK_MESSAGE(d.size() > 0 && g.size() > 0 && v.size() > 0, TestOutputHelper::testName() + "Indexes arrays not set!");
+	}
+	else
+		BOOST_ERROR(TestOutputHelper::testName() + "indexes section not set!");
+
+	bool foundResults = false;
+	for(size_t i = 0; i < m_transactions.size(); i++)
+	{
+		transactionToExecute t = m_transactions[i];
+		if (inArray(network, netIdToString(t.netId)) || network[0] == "ALL")
+		if ((inArray(d, t.dataInd) || d[0] == -1) && (inArray(g, t.gasInd) || g[0] == -1) && (inArray(v, t.valInd) || v[0] == -1))
+		{
+			string trInfo = netIdToString(t.netId) + " data: " + toString(t.dataInd) + " gas: " + toString(t.gasInd) + " val: " + toString(t.valInd);
+			if (_expects.count("result"))
+			{
+				State postState = t.postState;
+				eth::AccountMaskMap stateMap;
+				State expectState(0, OverlayDB(), eth::BaseState::Empty);
+				importState(_expects.at("result").get_obj(), expectState, stateMap);
+				int errcode = compareStates(expectState, postState, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+				if (errcode > 0)
+				{
+					cerr << trInfo << std::endl;
+					_errorTransactions.push_back(i);
+				}
+			}
+			else if (_expects.count("hash"))
+				BOOST_CHECK_MESSAGE(_expects.at("hash").get_str() == toHex(t.postState.rootHash().asBytes()), TestOutputHelper::testName() + "Expected another postState hash! " + trInfo);
+			else
+				BOOST_ERROR(TestOutputHelper::testName() + "Expect section or postState missing some fields!");
+
+			foundResults = true;
+
+			//if a single transaction check then stop once found
+			if (network[0] != "ALL" && d[0] != -1 && g[0] != -1 && v[0] != -1)
+			if (d.size() == 1 && g.size() == 1 && v.size() == 1)
+				break;
+		}
+	}
+	BOOST_CHECK_MESSAGE(foundResults, TestOutputHelper::testName() + "Expect results was not found in test execution!");
+}
+
 int ImportTest::exportTest(bytes const& _output)
 {
 	int err = 0;
-	// export output
-	m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
-
-	// compare expected output with post output
-	if (m_testObject.count("expectOut") > 0)
+	if (m_testType == testType::GeneralStateTest)
 	{
-		std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
-		if (Options::get().checkState)
+		vector<size_t> stateIndexesToPrint;
+		if (m_testObject.count("expect") > 0)
 		{
-			bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
-			BOOST_CHECK_MESSAGE(statement, warning);
-			if (!statement)
-				err = 1;
+			for (auto const& exp: m_testObject["expect"].get_array())
+				checkGeneralTestSection(exp.get_obj(), stateIndexesToPrint);
+			m_testObject.erase(m_testObject.find("expect"));
 		}
-		else
-			BOOST_WARN_MESSAGE(m_testObject["out"].get_str() == m_testObject["expectOut"].get_str(), warning);
 
-		m_testObject.erase(m_testObject.find("expectOut"));
+		size_t k = 0;
+		std::map<string, json_spirit::mArray> postState;
+		for(size_t i = 0; i < m_transactions.size(); i++)
+		{
+			json_spirit::mObject obj;
+			json_spirit::mObject obj2;
+			obj["data"] = m_transactions[i].dataInd;
+			obj["gas"] = m_transactions[i].gasInd;
+			obj["value"] = m_transactions[i].valInd;
+			obj2["indexes"] = obj;
+			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes());
+			if (stateIndexesToPrint.size())
+			if (i == stateIndexesToPrint[k] && Options::get().checkState)
+			{
+				obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
+				k++;
+			}
+			postState[netIdToString(m_transactions[i].netId)].push_back(obj2);
+		}
+
+		json_spirit::mObject obj;
+		for(std::map<string, json_spirit::mArray>::iterator it = postState.begin(); it != postState.end(); ++it)
+			obj[it->first] = it->second;
+
+		m_testObject["post"] = obj;
 	}
-
-	// export logs
-	m_testObject["logs"] = exportLog(m_logs);
-
-	// compare expected state with post state
-	if (m_testObject.count("expect") > 0)
+	else
 	{
-		eth::AccountMaskMap stateMap;
-		State expectState(0, OverlayDB(), eth::BaseState::Empty);
-		importState(m_testObject["expect"].get_obj(), expectState, stateMap);
-		compareStates(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
-		m_testObject.erase(m_testObject.find("expect"));
-	}
 
-	// export post state
-	m_testObject["post"] = fillJsonWithState(m_statePost);
-	m_testObject["postStateRoot"] = toHex(m_statePost.rootHash().asBytes());
+		// export output
+		m_testObject["out"] = (_output.size() > 4096 && !Options::get().fulloutput) ? "#" + toString(_output.size()) : toHex(_output, 2, HexPrefix::Add);
+
+		// compare expected output with post output
+		if (m_testObject.count("expectOut") > 0)
+		{
+			std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
+			if (Options::get().checkState)
+			{
+				bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
+				BOOST_CHECK_MESSAGE(statement, warning);
+				if (!statement)
+					err = 1;
+			}
+			else
+				BOOST_WARN_MESSAGE(m_testObject["out"].get_str() == m_testObject["expectOut"].get_str(), warning);
+
+			m_testObject.erase(m_testObject.find("expectOut"));
+		}
+
+		// export logs
+		m_testObject["logs"] = exportLog(m_logs);
+
+		// compare expected state with post state
+		if (m_testObject.count("expect") > 0)
+		{
+			eth::AccountMaskMap stateMap;
+			State expectState(0, OverlayDB(), eth::BaseState::Empty);
+			importState(m_testObject["expect"].get_obj(), expectState, stateMap);
+			compareStates(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+			m_testObject.erase(m_testObject.find("expect"));
+		}
+
+		// export post state
+		m_testObject["post"] = fillJsonWithState(m_statePost);
+		m_testObject["postStateRoot"] = toHex(m_statePost.rootHash().asBytes());
+	}
 
 	// export pre state
 	m_testObject["pre"] = fillJsonWithState(m_statePre);
@@ -740,6 +970,10 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 	if (Options::get().stats)
 		Listener::registerListener(Stats::get());
 
+	string name = _name;
+	if (_name.rfind("Filler.json") != std::string::npos)
+		name = _name.substr(0, _name.rfind("Filler.json"));
+
 	if (Options::get().fillTests)
 	{
 		try
@@ -749,12 +983,12 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 			boost::filesystem::path p(__FILE__);
 
 			string nameEnding = _addFillerSuffix ? "Filler.json" : ".json";
-			string 	s = asString(dev::contents(_pathToFiller.string() + "/" + _name + nameEnding));
-			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + _name + nameEnding + " is empty.");
+			string 	s = asString(dev::contents(_pathToFiller.string() + "/" + name + nameEnding));
+			BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + _pathToFiller.string() + "/" + name + nameEnding + " is empty.");
 
 			json_spirit::read_string(s, v);
 			doTests(v, true);
-			writeFile(testPath + "/" + _name + ".json", asBytes(json_spirit::write_string(v, true)));
+			writeFile(testPath + "/" + name + ".json", asBytes(json_spirit::write_string(v, true)));
 		}
 		catch (Exception const& _e)
 		{
@@ -765,15 +999,14 @@ void executeTests(const string& _name, const string& _testPathAppendix, const bo
 			BOOST_ERROR(TestOutputHelper::testName() + "Failed filling test with Exception: " << _e.what());
 		}
 	}
-
 	try
 	{
-		cnote << "TEST " << _name << ":";
+		cnote << "TEST " << name << ":";
 		json_spirit::mValue v;
-		string s = asString(dev::contents(testPath + "/" + _name + ".json"));
-		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + _name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
+		string s = asString(dev::contents(testPath + "/" + name + ".json"));
+		BOOST_REQUIRE_MESSAGE(s.length() > 0, "Contents of " + testPath + "/" + name + ".json is empty. Have you cloned the 'tests' repo branch develop and set ETHEREUM_TEST_PATH to its path?");
 		json_spirit::read_string(s, v);
-		Listener::notifySuiteStarted(_name);
+		Listener::notifySuiteStarted(name);
 		doTests(v, false);
 	}
 	catch (Exception const& _e)
@@ -915,6 +1148,8 @@ Options::Options(int argc, char** argv)
 			else
 				singleTestName = std::move(name1);
 		}
+		else if (arg == "--singlenet" && i + 1 < argc)
+			singleTestNet = std::string{argv[i + 1]};
 		else if (arg == "--fulloutput")
 			fulloutput = true;
 		else if (arg == "--sealengine")
@@ -1088,8 +1323,8 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 	}
 
 	cnote << _testName;
-	_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
-	m_currentTestName = _testName;
+	//_testName = (m_currentTestFileName == "n/a") ? "(" + _testName + ") " : "(" + m_currentTestFileName + "/" +  _testName + ") ";
+	m_currentTestName = _testName + " ";
 	return true;
 }
 

@@ -56,16 +56,12 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "transaction not set!");
 
-		ImportTest importer(o, _fillin);
+		ImportTest importer(o, _fillin, testType::StateTests);
 		const State importedStatePost = importer.m_statePost;
 		bytes output;
 
 		Listener::ExecTimeGuard guard{i.first};
-
-		if (importer.m_envInfo.number() >= dev::test::c_testHomesteadBlock)
-			output = importer.executeTest(eth::Network::HomesteadTest);
-		else
-			output = importer.executeTest(eth::Network::FrontierTest);
+		output = importer.executeTest();
 
 		if (_fillin)
 		{
@@ -313,7 +309,6 @@ BOOST_AUTO_TEST_CASE(stWalletTestEIP)
 {
 	dev::test::executeTests("stWalletTest", "/StateTests/EIP150/Homestead",dev::test::getFolder(__FILE__) + "/StateTestsFiller/EIP150/Homestead", dev::test::doStateTests);
 }
-
 BOOST_AUTO_TEST_SUITE_END()
 
 BOOST_AUTO_TEST_SUITE(StateTestsHomestead)
