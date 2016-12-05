@@ -85,7 +85,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 
 			// check addresses
 #if ETH_FATDB
-			ImportTest::compareStates(importer.m_statePost, importedStatePost);
+			ImportTest::compareStates(importedStatePost, importer.m_statePost);
 #endif
 			BOOST_CHECK_MESSAGE(importer.m_statePost.rootHash() == h256(o["postStateRoot"].get_str()), testname + "wrong post state root");
 		}
