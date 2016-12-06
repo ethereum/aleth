@@ -91,6 +91,12 @@ evm_variant evm_query(
 		v.data_size = code.size();
 		break;
 	}
+	case EVM_CODE_SIZE:
+	{
+		auto addr = fromEvmC(_arg.address);
+		v.int64 = env.codeSizeAt(addr);
+		break;
+	}
 	case EVM_BALANCE:
 	{
 		auto addr = fromEvmC(_arg.address);
