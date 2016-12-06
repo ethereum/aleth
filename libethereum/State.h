@@ -141,9 +141,6 @@ public:
 	/// Copy state object.
 	State& operator=(State const& _s);
 
-	/// Stream into a JSON representation.
-	void streamJSON(std::ostream& _f) const;
-
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
 	static OverlayDB openDB(std::string const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
 	static OverlayDB openDB(h256 const& _genesisHash, WithExisting _we = WithExisting::Trust) { return openDB(std::string(), _genesisHash, _we); }
@@ -234,12 +231,16 @@ public:
 	/// @returns code(_contract).size(), but utilizes CodeSizeHash.
 	size_t codeSize(Address const& _contract) const;
 
-	/// Note that the given address is sending a transaction and thus increment the associated ticker.
-	void noteSending(Address const& _id);
+	/// Increament the account nonce.
+	void incNonce(Address const& _id);
 
-	/// Get the number of transactions a particular address has sent (used for the transaction nonce).
+	/// Set the account nonce to the given value. Is used to revert account
+	/// changes.
+	void setNonce(Address const& _addr, u256 const& _nonce);
+
+	/// Get the account nonce -- the number of transactions it has sent.
 	/// @returns 0 if the address has never been used.
-	u256 transactionsFrom(Address const& _address) const;
+	u256 getNonce(Address const& _addr) const;
 
 	/// The hash of the root of our state tree.
 	h256 rootHash() const { return m_state.root(); }
@@ -289,8 +290,6 @@ private:
 	AddressHash m_touched;						///< Tracks all addresses touched so far.
 
 	u256 m_accountStartNonce;
-
-	static std::string c_defaultPath;
 
 	friend std::ostream& operator<<(std::ostream& _out, State const& _s);
 };

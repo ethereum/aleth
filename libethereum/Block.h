@@ -136,7 +136,7 @@ public:
 
 	/// Get the number of transactions a particular address has sent (used for the transaction nonce).
 	/// @returns 0 if the address has never been used.
-	u256 transactionsFrom(Address const& _address) const { return m_state.transactionsFrom(_address); }
+	u256 transactionsFrom(Address const& _address) const { return m_state.getNonce(_address); }
 
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const { return m_state.addressInUse(_address); }
