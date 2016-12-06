@@ -411,9 +411,9 @@ u256 State::storage(Address const& _id, u256 const& _key) const
 		return 0;
 }
 
-unordered_map<u256, u256> State::storage(Address const& _id) const
+map<u256, u256> State::storage(Address const& _id) const
 {
-	unordered_map<u256, u256> ret;
+	map<u256, u256> ret;
 
 	if (Account const* a = account(_id))
 	{

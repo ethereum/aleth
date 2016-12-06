@@ -480,7 +480,7 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 			if (addressOptions.hasStorage())
 			{
-				unordered_map<u256, u256> stateStorage = _statePost.storage(a.first);
+				map<u256, u256> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
 					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
