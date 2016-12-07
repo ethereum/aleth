@@ -89,6 +89,11 @@ std::pair<Topics, Public> toWatch(Json::Value const& _json);
 
 }
 
+namespace rpc
+{
+u256 u256fromHex(std::string const& _s);
+}
+
 template <class T>
 Json::Value toJson(std::vector<T> const& _es)
 {

@@ -30,7 +30,7 @@ public:
 	virtual Json::Value debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options) override;
 	virtual Json::Value debug_traceBlockByNumber(int _blockNumber, Json::Value const& _json) override;
 	virtual Json::Value debug_traceBlockByHash(std::string const& _blockHash, Json::Value const& _json) override;
-	virtual Json::Value debug_storageAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address) override;
+	virtual Json::Value debug_storageRangeAt(std::string const& _blockHashOrNumber, int _txIndex, std::string const& _address, std::string const& _begin, std::string const& _end, int _maxResults) override;
 	virtual Json::Value debug_traceBlock(std::string const& _blockRlp, Json::Value const& _json);
 
 private:

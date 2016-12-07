@@ -30,6 +30,7 @@
 #include <libethcore/ICAP.h>
 #include <libwhisper/Message.h>
 #include <libwhisper/WhisperHost.h>
+#include <jsonrpccpp/common/exception.h>
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -533,6 +534,25 @@ pair<shh::Topics, Public> toWatch(Json::Value const& _json)
 	return make_pair(bt, to);
 }
 
+}
+
+// ////////////////////////////////////////////////////////////////////////////////////
+// rpc
+// ////////////////////////////////////////////////////////////////////////////////////
+
+namespace rpc
+{
+u256 u256fromHex(string const& _s)
+{
+	try
+	{
+		return u256(_s);
+	}
+	catch (runtime_error const&)
+	{
+		throw jsonrpc::JsonRpcException("Invalid hex-encoded string: " + _s);
+	}
+}
 }
 
 }

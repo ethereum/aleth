@@ -120,19 +120,53 @@ Json::Value Debug::debug_traceBlockByNumber(int _blockNumber, Json::Value const&
 	return ret;
 }
 
-Json::Value Debug::debug_storageAt(string const& _blockHashOrNumber, int _txIndex, string const& _address)
+Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, string const& _end, int _maxResults)
 {
 	Json::Value ret(Json::objectValue);
+	ret["complete"] = true;
+	ret["storage"] = Json::Value(Json::objectValue);
 
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
-	Block block = m_eth.block(blockHash(_blockHashOrNumber));
+	if (_maxResults <= 0)
+		throw jsonrpc::JsonRpcException("Nonpositive maxResults");
 
-	unsigned i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
-	State state = block.fromPending(i);
+	u256 const begin(u256fromHex(_begin));
+	u256 const end(u256fromHex(_end));
+	if (begin > end)
+		throw jsonrpc::JsonRpcException("Begin is greater than end");
 
-	for (auto const& i: state.storage(Address(_address)))
-		ret[toHex(toCompactBigEndian(i.first, 1), 2, HexPrefix::Add)] = toHex(toCompactBigEndian(i.second, 1), 2, HexPrefix::Add);
+	try
+	{
+		Block block = m_eth.block(blockHash(_blockHashOrNumber));
+
+		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
+		State state = block.fromPending(i);
+
+		map<u256, u256> const storage(state.storage(Address(_address)));
+
+		// begin is inclusive
+		auto itBegin = storage.lower_bound(begin);
+		// end is inclusive, too, so find the element following it
+		auto itEnd = storage.upper_bound(end);
+
+		for (auto it = itBegin; it != itEnd; ++it)
+		{
+			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
+			{
+				ret["complete"] = false;
+				break;
+			}
+
+			ret["storage"][toCompactHex(it->first, HexPrefix::Add, 1)] = toCompactHex(it->second, HexPrefix::Add, 1);
+		}
+	}
+	catch (Exception const& _e)
+	{
+		cwarn << diagnostic_information(_e);
+		throw jsonrpc::JsonRpcException(jsonrpc::Errors::ERROR_RPC_INVALID_PARAMS);
+	}
+
 	return ret;
 }
 
