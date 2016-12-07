@@ -941,6 +941,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	{
 		cnote << "SLOW IMPORT:" << _block.info.hash() << " #" << _block.info.number();
 		cnote << "  Import took:" << total.elapsed();
+		cnote << "  gas per second:" << static_cast<double>(_block.info.gasUsed()) / enactment;
 		cnote << "  preliminaryChecks:" << preliminaryChecks;
 		cnote << "  enactment:" << enactment;
 		cnote << "  collation:" << collation;
