@@ -78,7 +78,11 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 			for (mObject::const_iterator i = post.begin(); i != post.end(); ++i)
 			{
 				for (auto const& exp: i->second.get_array())
+				{
+					if (!Options::get().singleTestNet.empty() && i->first != Options::get().singleTestNet)
+						continue;
 					importer.checkGeneralTestSection(exp.get_obj(), wrongTransactionsIndexes, i->first);
+				}
 			}
 		}
 	}
