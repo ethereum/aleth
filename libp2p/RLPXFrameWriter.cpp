@@ -138,7 +138,7 @@ size_t RLPXFrameWriter::mux(RLPXFrameCoder& _coder, unsigned _size, deque<bytes>
 		if (!payload.empty())
 		{
 			if (qs.multiFrame)
-				if (offset == 0)
+				if (offset == 0 && qs.writing)
 					// 1st frame of segmented packet writes total-size of packet
 					_coder.writeFrame(m_protocolId, qs.sequence, qs.writing->size(), &payload, payload);
 				else

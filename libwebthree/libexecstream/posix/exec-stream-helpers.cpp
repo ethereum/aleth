@@ -514,6 +514,7 @@ void thread_buffer_t::get( exec_stream_t::stream_kind_t kind, char * dst, std::s
             }
         }
     }
+    no_more=false;
 }
 
 void thread_buffer_t::put( char * src, std::size_t & size, bool & no_more )
@@ -571,6 +572,7 @@ void thread_buffer_t::put( char * src, std::size_t & size, bool & no_more )
             }
         }
     }
+    no_more=false;
 }
 
 void thread_buffer_t::close_in()
