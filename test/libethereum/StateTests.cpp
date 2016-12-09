@@ -150,4 +150,5 @@ BOOST_AUTO_TEST_CASE(stSpecialTest){}
 BOOST_AUTO_TEST_CASE(stSystemOperationsTest){}
 BOOST_AUTO_TEST_CASE(stTransactionTest){}
 BOOST_AUTO_TEST_CASE(stWalletTest){}
+BOOST_AUTO_TEST_CASE(stAttackTest){}
 BOOST_AUTO_TEST_SUITE_END()
