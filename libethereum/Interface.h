@@ -29,7 +29,6 @@
 #include "GasPricer.h"
 #include "LogFilter.h"
 #include "Transaction.h"
-#include "AccountDiff.h"
 #include "BlockDetails.h"
 
 namespace dev
@@ -199,11 +198,6 @@ public:
 	/// @TODO: Remove in favour of transactions().
 	virtual Transactions pending() const = 0;
 	virtual h256s pendingHashes() const = 0;
-
-	/// Differences between transactions.
-	StateDiff diff(unsigned _txi) const { return diff(_txi, m_default); }
-	virtual StateDiff diff(unsigned _txi, h256 _block) const = 0;
-	virtual StateDiff diff(unsigned _txi, BlockNumber _block) const = 0;
 
 	/// Get a list of all active addresses.
 	/// NOTE: This only works when compiled with ETH_FATDB; otherwise will throw InterfaceNotSupported.

@@ -35,7 +35,6 @@
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
-#include "CachedAddressState.h"
 #include "BlockChain.h"
 #include "TransactionQueue.h"
 #include "GenesisInfo.h"

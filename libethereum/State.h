@@ -35,7 +35,6 @@
 #include "Account.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"
-#include "AccountDiff.h"
 #include "GasPricer.h"
 
 namespace dev
@@ -244,11 +243,6 @@ public:
 
 	/// The hash of the root of our state tree.
 	h256 rootHash() const { return m_state.root(); }
-
-	/// @return the difference between this state (origin) and @a _c (destination).
-	/// @param _quick if true doesn't check all addresses possible (/very/ slow for a full chain)
-	/// but rather only those touched by the transactions in creating the two States.
-	StateDiff diff(State const& _c, bool _quick = false) const;
 
 	/// Commit all changes waiting in the address cache to the DB.
 	/// @param _commitBehaviour whether or not to remove empty accounts during commit.

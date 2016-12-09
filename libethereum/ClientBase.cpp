@@ -505,18 +505,6 @@ BlockDetails ClientBase::pendingDetails() const
 	return BlockDetails((unsigned)pm.number(), li.totalDifficulty + pm.difficulty(), pm.parentHash(), h256s{});
 }
 
-StateDiff ClientBase::diff(unsigned _txi, h256 _block) const
-{
-	Block b = block(_block);
-	return b.fromPending(_txi).diff(b.fromPending(_txi + 1), true);
-}
-
-StateDiff ClientBase::diff(unsigned _txi, BlockNumber _block) const
-{
-	Block b = block(_block);
-	return b.fromPending(_txi).diff(b.fromPending(_txi + 1), true);
-}
-
 Addresses ClientBase::addresses(BlockNumber _block) const
 {
 	Addresses ret;
