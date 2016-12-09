@@ -237,7 +237,7 @@ Account* State::account(Address const& _a, bool _requireCode)
 
 		RLP state(stateBack);
 		m_cache[_a] = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
-		m_unchangedCacheEntries.insert(_a);
+		m_unchangedCacheEntries.push_back(_a);
 		a = &m_cache[_a];
 	}
 	if (_requireCode && a && !a->isFreshCode() && !a->codeCacheValid())
@@ -254,13 +254,13 @@ void State::clearCacheIfTooLarge() const
 	while (m_unchangedCacheEntries.size() > 1000)
 	{
 		// Remove a random element
-		// TODO: This can be exploited, an attacker can only access low-address
-		// accounts which would result in those never being removed from the cache.
-		auto addr = m_unchangedCacheEntries.lower_bound(Address::random());
-		if (addr == m_unchangedCacheEntries.end())
-			addr = m_unchangedCacheEntries.begin();
-		auto cacheEntry = m_cache.find(*addr);
-		m_unchangedCacheEntries.erase(addr);
+		size_t const randomIndex = boost::random::uniform_int_distribution<size_t>(0, m_unchangedCacheEntries.size() - 1)(dev::s_fixedHashEngine);
+
+		Address const addr = m_unchangedCacheEntries[randomIndex];
+		swap(m_unchangedCacheEntries[randomIndex], m_unchangedCacheEntries.back());
+		m_unchangedCacheEntries.pop_back();
+
+		auto cacheEntry = m_cache.find(addr);
 		if (cacheEntry != m_cache.end() && !cacheEntry->second.isDirty())
 			m_cache.erase(cacheEntry);
 	}
@@ -272,6 +272,7 @@ void State::commit(CommitBehaviour _commitBehaviour)
 		removeEmptyAccounts();
 	m_touched += dev::eth::commit(m_cache, m_state);
 	m_cache.clear();
+	m_unchangedCacheEntries.clear();
 }
 
 unordered_map<Address, u256> State::addresses() const
@@ -293,6 +294,7 @@ unordered_map<Address, u256> State::addresses() const
 void State::setRoot(h256 const& _r)
 {
 	m_cache.clear();
+	m_unchangedCacheEntries.clear();
 //	m_touched.clear();
 	m_state.setRoot(_r);
 	paranoia("begin setRoot", true);
