@@ -34,7 +34,6 @@
 #include "Account.h"
 #include "Transaction.h"
 #include "TransactionReceipt.h"
-#include "AccountDiff.h"
 #include "GasPricer.h"
 #include "State.h"
 
@@ -213,9 +212,6 @@ public:
 	/// If (_i == 0) returns the initial state of the block.
 	/// If (_i == pending().size()) returns the final state of the block, prior to rewards.
 	State fromPending(unsigned _i) const;
-
-	/// @returns the StateDiff caused by the pending transaction of index @a _i.
-	StateDiff pendingDiff(unsigned _i) const { return fromPending(_i).diff(fromPending(_i + 1), true); }
 
 	// State-change operations
 

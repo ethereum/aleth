@@ -35,7 +35,6 @@
 #include "Defaults.h"
 #include "ExtVM.h"
 #include "Executive.h"
-#include "CachedAddressState.h"
 #include "BlockChain.h"
 #include "TransactionQueue.h"
 
@@ -169,50 +168,6 @@ State& State::operator=(State const& _s)
 	m_accountStartNonce = _s.m_accountStartNonce;
 	paranoia("after state cloning (assignment op)", true);
 	return *this;
-}
-
-StateDiff State::diff(State const& _c, bool _quick) const
-{
-	StateDiff ret;
-
-	std::unordered_set<Address> ads;
-	std::unordered_set<Address> trieAds;
-	std::unordered_set<Address> trieAdsD;
-
-	auto trie = SecureTrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&m_db), rootHash());
-	auto trieD = SecureTrieDB<Address, OverlayDB>(const_cast<OverlayDB*>(&_c.m_db), _c.rootHash());
-
-	if (_quick)
-	{
-		trieAds = m_touched;
-		trieAdsD = _c.m_touched;
-		(ads += m_touched) += _c.m_touched;
-	}
-	else
-	{
-		for (auto const& i: trie)
-			ads.insert(i.first), trieAds.insert(i.first);
-		for (auto const& i: trieD)
-			ads.insert(i.first), trieAdsD.insert(i.first);
-	}
-
-	for (auto const& i: m_cache)
-		ads.insert(i.first);
-	for (auto const& i: _c.m_cache)
-		ads.insert(i.first);
-
-	for (auto const& i: ads)
-	{
-		auto it = m_cache.find(i);
-		auto itD = _c.m_cache.find(i);
-		CachedAddressState source(trieAds.count(i) ? trie.at(i) : "", it != m_cache.end() ? &it->second : nullptr, &m_db);
-		CachedAddressState dest(trieAdsD.count(i) ? trieD.at(i) : "", itD != _c.m_cache.end() ? &itD->second : nullptr, &_c.m_db);
-		AccountDiff acd = source.diff(dest);
-		if (acd.changed())
-			ret.accounts[i] = acd;
-	}
-
-	return ret;
 }
 
 Account const* State::account(Address const& _a, bool _requireCode) const

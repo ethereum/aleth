@@ -153,10 +153,6 @@ public:
 	virtual ImportResult injectTransaction(bytes const& _rlp, IfDropped _id = IfDropped::Ignore) override { prepareForTransaction(); return m_tq.import(_rlp, _id); }
 	virtual ImportResult injectBlock(bytes const& _block) override;
 
-	using Interface::diff;
-	virtual StateDiff diff(unsigned _txi, h256 _block) const override;
-	virtual StateDiff diff(unsigned _txi, BlockNumber _block) const override;
-
 	using Interface::addresses;
 	virtual Addresses addresses(BlockNumber _block) const override;
 	virtual u256 gasLimitRemaining() const override;
