@@ -939,15 +939,19 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	checkBest = t.elapsed();
 	if (total.elapsed() > 0.5)
 	{
-		cnote << "SLOW IMPORT:" << _block.info.hash() << " #" << _block.info.number();
-		cnote << "  Import took:" << total.elapsed();
-		cnote << "  preliminaryChecks:" << preliminaryChecks;
-		cnote << "  enactment:" << enactment;
-		cnote << "  collation:" << collation;
-		cnote << "  writing:" << writing;
-		cnote << "  checkBest:" << checkBest;
-		cnote << "  " << _block.transactions.size() << " transactions";
-		cnote << "  " << _block.info.gasUsed() << " gas used";
+		unsigned const gasPerSecond = static_cast<double>(_block.info.gasUsed()) / enactment;
+		cnote << "SLOW IMPORT: " 
+			<< "{ \"blockHash\": \"" << _block.info.hash() << "\", "
+			<< "\"blockNumber\": " << _block.info.number() << ", " 
+			<< "\"importTime\": " << total.elapsed() << ", "
+			<< "\"gasPerSecond\": " << gasPerSecond << ", "
+			<< "\"preliminaryChecks\":" << preliminaryChecks << ", "
+			<< "\"enactment\":" << enactment << ", "
+			<< "\"collation\":" << collation << ", "
+			<< "\"writing\":" << writing << ", "
+			<< "\"checkBest\":" << checkBest << ", "
+			<< "\"transactions\":" << _block.transactions.size() << ", "
+			<< "\"gasUsed\":" << _block.info.gasUsed() << " }";
 	}
 #endif // ETH_TIMED_IMPORTS
 
