@@ -482,10 +482,10 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
 
 				//Check for unexpected storage values
-				stateStorage = _stateExpect.storage(a.first);
+				map<u256, u256> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
-					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(stateStorage[s.first]));
+					CHECK((expectedStorage[s.first] == s.second),
+					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(expectedStorage[s.first]));
 			}
 
 			if (addressOptions.hasCode())
