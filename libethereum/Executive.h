@@ -79,6 +79,16 @@ private:
 };
 
 
+struct AccountSnapshot
+{
+	bool exists = false;
+	Address address;
+	Address caller;
+	u256 transfer;
+};
+static_assert(sizeof(AccountSnapshot) < 4*32, "AccountSnapshot is too big");
+
+
 /**
  * @brief Message-call/contract-creation executor; useful for executing transactions.
  *
@@ -174,7 +184,7 @@ public:
 	u256 gas() const { return m_gas; }
 
 	/// @returns the new address for the created contract in the CREATE operation.
-	h160 newAddress() const { return m_newAddress; }
+	h160 newAddress() const { return m_orig.address; }
 	/// @returns true iff the operation ended with a VM exception.
 	bool excepted() const { return m_excepted != TransactionException::None; }
 
@@ -191,7 +201,6 @@ private:
 	std::shared_ptr<ExtVM> m_ext;		///< The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference. This field does *NOT* survive this object.
 	bytesRef m_outRef;					///< Reference to "expected output" buffer.
 	ExecutionResult* m_res = nullptr;	///< Optional storage for execution results.
-	Address m_newAddress;				///< The address of the created contract in the case of create() being called.
 
 	unsigned m_depth = 0;				///< The context's call-depth.
 	bool m_isCreation = false;			///< True if the transaction creates a contract, or if create() is called.
@@ -206,11 +215,7 @@ private:
 	bigint m_gasCost;
 	SealEngineFace const& m_sealEngine;
 
-	Address m_sender;
-	Address m_receiver;
-	u256 m_valueTransfer;
-	bool m_alive = false;
-	bool m_receiverExisted = false;
+	AccountSnapshot m_orig;
 };
 
 }
