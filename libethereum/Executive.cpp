@@ -257,6 +257,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 {
 	m_isCreation = false;
 
+	// Always remember the sender, needed for revert.
+	m_sender = _p.senderAddress;
+
 	// If external transaction.
 	if (m_t)
 		// Increment associated nonce for sender.
@@ -282,6 +285,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		m_gas = _p.gas;
 		if (m_s.addressHasCode(_p.codeAddress))
 		{
+//			clog(ExecutiveWarnChannel) << "Call " << _p.receiveAddress;
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
@@ -289,7 +293,19 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		}
 	}
 
-	m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.valueTransfer);
+	// Remember the transfer params in case revert is needed.
+	m_receiver = _p.receiveAddress;
+	m_valueTransfer = _p.valueTransfer;
+//	m_receiverExisted = m_s.isTouched(m_receiver);
+	if (m_sealEngine.evmSchedule(m_envInfo).emptinessIsNonexistence())
+		m_receiverExisted = m_s.accountNonemptyAndExisting(m_receiver);
+	else
+		m_receiverExisted = m_s.addressInUse(m_receiver);
+
+	// Transfer ether.
+//	clog(ExecutiveWarnChannel) << "Transfer " <<  m_sender << m_receiver << m_valueTransfer;
+	m_s.transferBalance(m_sender, _p.receiveAddress, _p.valueTransfer);
+
 
 	return !m_ext;
 }
@@ -297,12 +313,17 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
 	m_isCreation = true;
+
+	// Always remember the sender, needed for revert.
+	m_sender = _sender;
+
 	u256 nonce = m_s.getNonce(_sender);
 	m_s.incNonce(_sender);
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_newAddress, since
 	// we delete it explicitly if we decide we need to revert.
 	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
+	m_alive = m_s.isAlive(m_newAddress);
 	m_gas = _gas;
 
 	// Execute _init.
@@ -311,11 +332,18 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
 	m_s.createContract(m_newAddress, incrementNonce);
-	m_s.transferBalance(_sender, m_newAddress, _endowment);
+
+	// Remember the transfer params in case revert is needed.
+	m_receiver = m_newAddress;  // FIXME: Merge m_receiver and m_newAddress
+	m_valueTransfer = _endowment;
+
+	// Transfer ether.
+	m_s.transferBalance(m_sender, m_receiver, m_valueTransfer);
 
 	if (_init.empty())
 		m_s.setCode(m_newAddress, {});
 
+//	clog(ExecutiveWarnChannel) << "Create " << m_sender << m_newAddress << m_valueTransfer;
 	return !m_ext;
 }
 
@@ -397,10 +425,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 			clog(StateSafeExceptions) << "Safe VM Exception. " << diagnostic_information(_e);
 			m_gas = 0;
 			m_excepted = toTransactionException(_e);
-			m_ext->revert();
-
-			if (m_isCreation)
-				m_newAddress = Address();
+			revert();
 		}
 		catch (Exception const& _e)
 		{
@@ -461,5 +486,41 @@ void Executive::finalize()
 		m_res->excepted = m_excepted; // TODO: m_except is used only in ExtVM::call
 		m_res->newAddress = m_newAddress;
 		m_res->gasRefunded = m_ext ? m_ext->sub.refunds : 0;
+	}
+}
+
+void Executive::revert()
+{
+////	clog(ExecutiveWarnChannel) << "Reverting call" << (int)m_ext->myAddress[19];
+	if (m_ext)
+		m_ext->revert();
+	if (m_valueTransfer)
+	{
+		// FIXME: In case of CREATE, not need to revert transfer and storage,
+		// as we are going to kill the whole account.
+		auto b = m_s.balance(m_receiver);
+		m_s.transferBalance(m_receiver, m_sender, m_valueTransfer);
+		clog(ExecutiveWarnChannel) << "Revert Transfer " << m_receiver << b << m_sender << m_valueTransfer;
+	}
+	if (m_isCreation)
+	{
+		if (m_alive)
+		{
+			// The the account was alive before CREATE (prefund) we have to
+			// reset some params. This is not very precise but should work in
+			// real live networks where we don't anticipate hash collisions.
+			m_s.setNonce(m_newAddress, 0);
+			m_s.setCode(m_newAddress, {});
+			m_s.clearStorage(m_newAddress);
+		}
+		else
+			// If the account was not existing before we can safely kill it.
+			m_s.kill(m_newAddress);
+		m_newAddress = {};
+	}
+	else if (!m_receiverExisted)
+	{
+//		clog(ExecutiveWarnChannel) << "Kill " << m_receiver;
+		m_s.untouch(m_receiver);
 	}
 }

@@ -47,7 +47,7 @@ class SealEngineFace;
 struct Manifest;
 
 struct VMTraceChannel: public LogChannel { static const char* name(); static const int verbosity = 11; };
-struct ExecutiveWarnChannel: public LogChannel { static const char* name(); static const int verbosity = 6; };
+struct ExecutiveWarnChannel: public LogChannel { static const char* name(); static const int verbosity = 1; };
 
 class StandardTrace
 {
@@ -77,6 +77,7 @@ private:
 	Json::Value m_trace;
 	DebugOptions m_options;
 };
+
 
 /**
  * @brief Message-call/contract-creation executor; useful for executing transactions.
@@ -123,6 +124,7 @@ public:
 	 */
 	Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
 
+	Executive(Executive&&) = default;
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;
 
@@ -179,6 +181,9 @@ public:
 	/// Collect execution results in the result storage provided.
 	void setResultRecipient(ExecutionResult& _res) { m_res = &_res; }
 
+	/// Revert all changes made to the state by this execution.
+	void revert();
+
 private:
 	State& m_s;							///< The state to which this operation/transaction is applied.
 	// TODO: consider changign to EnvInfo const& to avoid LastHashes copy at every CALL/CREATE
@@ -200,6 +205,12 @@ private:
 
 	bigint m_gasCost;
 	SealEngineFace const& m_sealEngine;
+
+	Address m_sender;
+	Address m_receiver;
+	u256 m_valueTransfer;
+	bool m_alive = false;
+	bool m_receiverExisted = false;
 };
 
 }

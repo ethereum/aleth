@@ -111,6 +111,8 @@ public:
 	/// @returns true if the account is unchanged from creation.
 	bool isDirty() const { return !m_isUnchanged; }
 
+	void untouch() { m_isUnchanged = true; }
+
 	/// @returns true if the nonce, balance and code is zero / empty. Code is considered empty
 	/// during creation phase.
 	bool isEmpty() const { return nonce() == 0 && balance() == 0 && (isFreshCode() ? code().empty() : codeHash() == EmptySHA3); }
@@ -142,6 +144,8 @@ public:
 	/// @returns the storage overlay as a simple hash map.
 	std::unordered_map<u256, u256> const& storageOverlay() const { return m_storageOverlay; }
 
+	void clearStorage() { m_storageOverlay.clear(); }
+
 	/// Set a key/value pair in the account's storage. This actually goes into the overlay, for committing
 	/// to the trie later.
 	void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }
@@ -161,7 +165,7 @@ public:
 	h256 codeHash() const { assert(!isFreshCode()); return m_codeHash; }
 
 	/// Sets the code of the account. Must only be called when isFreshCode() returns true.
-	void setCode(bytes&& _code) { assert(isFreshCode()); m_codeCache = std::move(_code); changed(); }
+	void setCode(bytes&& _code) { m_codeCache = std::move(_code); changed(); }
 
 	/// @returns true if the account's code is available through code().
 	bool codeCacheValid() const { return m_codeHash == EmptySHA3 || m_codeHash == c_contractConceptionCodeHash || m_codeCache.size(); }
