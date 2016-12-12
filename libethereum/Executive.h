@@ -85,8 +85,8 @@ struct AccountSnapshot
 	Address address;
 	Address caller;
 	u256 transfer;
+	std::unordered_map<u256, u256> storage;
 };
-static_assert(sizeof(AccountSnapshot) < 4*32, "AccountSnapshot is too big");
 
 
 /**
@@ -134,7 +134,6 @@ public:
 	 */
 	Executive(State& _s, Block const& _block, unsigned _txIndex, BlockChain const& _bc, unsigned _level = 0);
 
-	Executive(Executive&&) = default;
 	Executive(Executive const&) = delete;
 	void operator=(Executive) = delete;
 

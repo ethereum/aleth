@@ -289,7 +289,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_orig, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
@@ -327,7 +327,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// Execute _init.
 	if (!_init.empty())
-		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_orig.address, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+		m_ext = make_shared<ExtVM>(m_s, m_orig, m_envInfo, m_sealEngine, m_orig.address, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
 
 	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
 	m_s.createContract(m_orig.address, incrementNonce);
@@ -497,7 +497,7 @@ void Executive::revert()
 		// FIXME: In case of CREATE, not need to revert transfer and storage,
 		// as we are going to kill the whole account.
 		m_s.transferBalance(m_orig.address, m_orig.caller, m_orig.transfer);
-		clog(ExecutiveWarnChannel) << "Revert Transfer " << m_orig.address << m_orig.caller << m_orig.transfer;
+//		clog(ExecutiveWarnChannel) << "Revert Transfer " << m_orig.address << m_orig.caller << m_orig.transfer;
 	}
 	if (m_isCreation)
 	{

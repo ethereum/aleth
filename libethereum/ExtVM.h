@@ -43,8 +43,9 @@ class ExtVM: public ExtVMFace
 {
 public:
 	/// Full constructor.
-	ExtVM(State& _s, EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, h256 const& _codeHash, unsigned _depth = 0):
-		ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(), _codeHash, _depth), m_s(_s), m_sealEngine(_sealEngine)
+	ExtVM(State& _s, AccountSnapshot& _orig, EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Address _myAddress, Address _caller, Address _origin, u256 _value, u256 _gasPrice, bytesConstRef _data, bytesConstRef _code, h256 const& _codeHash, unsigned _depth = 0):
+		ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(), _codeHash, _depth), m_s(_s), m_sealEngine(_sealEngine),
+		m_orig(_orig)
 	{
 		m_s.ensureAccountExists(_myAddress);
 	}
@@ -94,8 +95,8 @@ public:
 private:
 	State& m_s;  ///< A reference to the base state.
 	SealEngineFace const& m_sealEngine;
-	std::unordered_map<u256, u256> m_origStorage;
-	std::vector<Executive> m_successfulCalls;
+	AccountSnapshot& m_orig;
+	std::vector<std::unique_ptr<Executive>> m_successfulCalls;
 	int m_nonceInc = 0;
 	Address m_selfdestructBeneficiary;
 };

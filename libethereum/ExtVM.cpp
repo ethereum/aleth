@@ -95,8 +95,8 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 
 bool ExtVM::call(CallParameters& _p)
 {
-	m_successfulCalls.emplace_back(m_s, envInfo(), m_sealEngine, depth + 1);
-	auto& e = m_successfulCalls.back();
+	m_successfulCalls.emplace_back(new Executive{m_s, envInfo(), m_sealEngine, depth + 1});
+	auto& e = *m_successfulCalls.back();
 	if (!e.call(_p, gasPrice, origin))
 	{
 		go(depth, e, _p.onOp);
@@ -119,10 +119,10 @@ size_t ExtVM::codeSizeAt(dev::Address _a)
 
 void ExtVM::setStore(u256 _n, u256 _v)
 {
-	if (!m_origStorage.count(_n))
+	if (!m_orig.storage.count(_n))
 	{
-		m_origStorage.emplace(_n, store(_n));
-//		clog(ExecutiveWarnChannel) << "ORIG STORAGE " << myAddress << _n << _v;
+		m_orig.storage.emplace(_n, store(_n));
+//		clog(ExecutiveWarnChannel) << "ORIG STORAGE " << myAddress << _n << _v << &m_orig;
 	}
 	m_s.setStorage(myAddress, _n, _v);
 }
@@ -132,8 +132,8 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	// Every CREATE increases this account nonce, no matter if it succeeds.
 	++m_nonceInc;
 
-	m_successfulCalls.emplace_back(m_s, envInfo(), m_sealEngine, depth + 1);
-	auto& e = m_successfulCalls.back();
+	m_successfulCalls.emplace_back(new Executive{m_s, envInfo(), m_sealEngine, depth + 1});
+	auto& e = *m_successfulCalls.back();
 	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
 	{
 		go(depth, e, _onOp);
@@ -141,7 +141,10 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	}
 	io_gas = e.gas();
 	if (!e.newAddress())
+	{
 		m_successfulCalls.pop_back();
+		return {};
+	}
 	return e.newAddress();
 }
 
@@ -162,11 +165,10 @@ void ExtVM::revert()
 {
 //	clog(ExecutiveWarnChannel) << "Reverting " << myAddress;
 	for (auto it = m_successfulCalls.rbegin(); it != m_successfulCalls.rend(); ++it)
-		it->revert();
+		(*it)->revert();
 
 	// Restore original storage for this account. The order does not matter.
-//	clog(ExecutiveWarnChannel) << "Reverting storage " << myAddress;
-	for (auto& item: m_origStorage)
+	for (auto& item: m_orig.storage)
 	{
 		m_s.setStorage(myAddress, item.first, item.second);
 //		clog(ExecutiveWarnChannel) << "REVERT STORAGE " << myAddress << item.first << item.second;
