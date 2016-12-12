@@ -21,7 +21,7 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#ifndef WIN32
+#if !defined(_WIN32)
 
 #include <string>
 #include <thread>
