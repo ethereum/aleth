@@ -82,12 +82,14 @@ private:
 struct AccountSnapshot
 {
 	bool exists = false;
+	bool isCreation = false;
 	int nonceInc = 0;
 	Address address;
 	Address caller;
 	u256 transfer;
 	std::unordered_map<u256, u256> storage;
 	Address selfdestructBeneficiary;
+	std::vector<AccountSnapshot> children;
 };
 
 
@@ -195,6 +197,8 @@ public:
 	/// Revert all changes made to the state by this execution.
 	void revert();
 
+	AccountSnapshot takeSnapshot() { return std::move(m_orig); }
+
 private:
 	State& m_s;							///< The state to which this operation/transaction is applied.
 	// TODO: consider changign to EnvInfo const& to avoid LastHashes copy at every CALL/CREATE
@@ -204,7 +208,6 @@ private:
 	ExecutionResult* m_res = nullptr;	///< Optional storage for execution results.
 
 	unsigned m_depth = 0;				///< The context's call-depth.
-	bool m_isCreation = false;			///< True if the transaction creates a contract, or if create() is called.
 	TransactionException m_excepted = TransactionException::None;	///< Details if the VM's execution resulted in an exception.
 	bigint m_baseGasRequired;				///< The base amount of gas requried for executing this transactions.
 	u256 m_gas = 0;						///< The gas for EVM code execution. Initial amount before go() execution, final amount after go() execution.
@@ -218,6 +221,8 @@ private:
 
 	AccountSnapshot m_orig;
 };
+
+void revert(State& _state, AccountSnapshot const& _changes);
 
 }
 }

@@ -83,10 +83,6 @@ public:
 	/// Suicide the associated contract to the given address.
 	virtual void suicide(Address _a) override final;
 
-	/// Revert any changes made (by any of the other calls).
-	/// @TODO check call site for the parent manifest being discarded.
-	virtual void revert() override final;
-
 	/// Return the EVM gas-price schedule for this execution context.
 	virtual EVMSchedule const& evmSchedule() const override final { return m_sealEngine.evmSchedule(envInfo()); }
 
@@ -96,7 +92,6 @@ private:
 	State& m_s;  ///< A reference to the base state.
 	SealEngineFace const& m_sealEngine;
 	AccountSnapshot& m_orig;
-	std::vector<std::unique_ptr<Executive>> m_successfulCalls;
 };
 
 }

@@ -255,8 +255,6 @@ bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _valu
 
 bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address const& _origin)
 {
-	m_isCreation = false;
-
 	// Always remember the sender, needed for revert.
 	m_orig.caller = _p.senderAddress;
 
@@ -311,7 +309,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
-	m_isCreation = true;
+	m_orig.isCreation = true;
 
 	// Always remember the sender, needed for revert.
 	m_orig.caller = _sender;
@@ -376,7 +374,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 		{
 			// Create VM instance. Force Interpreter if tracing requested.
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
-			if (m_isCreation)
+			if (m_orig.isCreation)
 			{
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
@@ -489,49 +487,56 @@ void Executive::finalize()
 
 void Executive::revert()
 {
-////	clog(ExecutiveWarnChannel) << "Reverting call" << (int)m_ext->myAddress[19];
 	if (m_ext)
-		m_ext->revert();
+		m_ext->sub.clear();
 
-	if (m_orig.transfer)
+	eth::revert(m_s, m_orig);
+	m_orig.address = {};
+}
+
+void dev::eth::revert(State& _state, AccountSnapshot const& _changes)
+{
+	// Firstly, revert attached successful calls.
+	for (auto it = _changes.children.rbegin(); it != _changes.children.rend(); ++it)
+		revert(_state, *it);
+
+	if (_changes.transfer)
 	{
 		// FIXME: In case of CREATE, not need to revert transfer and storage,
 		// as we are going to kill the whole account.
 		// TODO: Split transfer on sender and receiver parts.
-		m_s.transferBalance(m_orig.address, m_orig.caller, m_orig.transfer);
-//		clog(ExecutiveWarnChannel) << "Revert Transfer " << m_orig.address << m_orig.caller << m_orig.transfer;
+		_state.transferBalance(_changes.address, _changes.caller, _changes.transfer);
 	}
 
 	// Revert nonce if dumped.
-	if (m_orig.nonceInc > 0)
-		m_s.setNonce(m_orig.address, m_s.getNonce(m_orig.address) - m_orig.nonceInc);
+	if (_changes.nonceInc > 0)
+		_state.setNonce(_changes.address, _state.getNonce(_changes.address) - _changes.nonceInc);
 
-	if (m_isCreation)
+	if (_changes.isCreation)
 	{
-		if (m_orig.exists)
+		if (_changes.exists)
 		{
 			// The the account was alive before CREATE (prefund) we have to
 			// reset some params. This is not very precise but should work in
 			// real live networks where we don't anticipate hash collisions.
-			m_s.setNonce(m_orig.address, 0);
-			m_s.setCode(m_orig.address, {});
-			m_s.clearStorage(m_orig.address);
+			_state.setNonce(_changes.address, 0);
+			_state.setCode(_changes.address, {});
+			_state.clearStorage(_changes.address);
 		}
 		else
 			// If the account was not existing before we can safely kill it.
-			m_s.kill(m_orig.address);
-		m_orig.address = {};
+			_state.kill(_changes.address);
 	}
 	else
 	{
 		// Restore original storage for this account. The order does not matter.
-		for (auto& item: m_orig.storage)
-			m_s.setStorage(m_orig.address, item.first, item.second);
+		for (auto& item: _changes.storage)
+			_state.setStorage(_changes.address, item.first, item.second);
 
-		if (!m_orig.exists)
-			m_s.untouch(m_orig.address);
+		if (!_changes.exists)
+			_state.untouch(_changes.address);
 	}
 
-	if (m_orig.selfdestructBeneficiary)
-		m_s.untouch(m_orig.selfdestructBeneficiary);
+	if (_changes.selfdestructBeneficiary)
+		_state.untouch(_changes.selfdestructBeneficiary);
 }

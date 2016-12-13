@@ -95,8 +95,7 @@ void go(unsigned _depth, Executive& _e, OnOpFunc const& _onOp)
 
 bool ExtVM::call(CallParameters& _p)
 {
-	m_successfulCalls.emplace_back(new Executive{m_s, envInfo(), m_sealEngine, depth + 1});
-	auto& e = *m_successfulCalls.back();
+	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
 	if (!e.call(_p, gasPrice, origin))
 	{
 		go(depth, e, _p.onOp);
@@ -105,10 +104,10 @@ bool ExtVM::call(CallParameters& _p)
 	_p.gas = e.gas();
 
 	if (e.excepted())
-	{
-		m_successfulCalls.pop_back();
 		return false;
-	}
+
+	// FIXME: Make sure move constructor is really used.
+	m_orig.children.emplace_back(e.takeSnapshot());
 	return true;
 }
 
@@ -132,18 +131,17 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 	// Every CREATE increases this account nonce, no matter if it succeeds.
 	++m_orig.nonceInc;
 
-	m_successfulCalls.emplace_back(new Executive{m_s, envInfo(), m_sealEngine, depth + 1});
-	auto& e = *m_successfulCalls.back();
+	Executive e{m_s, envInfo(), m_sealEngine, depth + 1};
 	if (!e.create(myAddress, _endowment, gasPrice, io_gas, _code, origin))
 	{
 		go(depth, e, _onOp);
 		e.accrueSubState(sub);
 	}
 	io_gas = e.gas();
-	if (e.newAddress())
-		return e.newAddress();
-	m_successfulCalls.pop_back();
-	return {};
+	if (!e.newAddress())
+		return {};
+	m_orig.children.emplace_back(e.takeSnapshot());
+	return e.newAddress();
 }
 
 void ExtVM::suicide(Address _a)
@@ -155,13 +153,4 @@ void ExtVM::suicide(Address _a)
 	m_s.addBalance(_a, m_s.balance(myAddress));
 	m_s.subBalance(myAddress, m_s.balance(myAddress));
 	ExtVMFace::suicide(_a);
-}
-
-void ExtVM::revert()
-{
-	for (auto it = m_successfulCalls.rbegin(); it != m_successfulCalls.rend(); ++it)
-		(*it)->revert();
-
-	// Drop substate.
-	sub.clear();
 }
