@@ -130,7 +130,7 @@ void ExtVM::setStore(u256 _n, u256 _v)
 h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc const& _onOp)
 {
 	// Every CREATE increases this account nonce, no matter if it succeeds.
-	++m_nonceInc;
+	++m_orig.nonceInc;
 
 	m_successfulCalls.emplace_back(new Executive{m_s, envInfo(), m_sealEngine, depth + 1});
 	auto& e = *m_successfulCalls.back();
@@ -140,22 +140,18 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 		e.accrueSubState(sub);
 	}
 	io_gas = e.gas();
-	if (!e.newAddress())
-	{
-		m_successfulCalls.pop_back();
-		return {};
-	}
-	return e.newAddress();
+	if (e.newAddress())
+		return e.newAddress();
+	m_successfulCalls.pop_back();
+	return {};
 }
 
 void ExtVM::suicide(Address _a)
 {
 	// FIXME: What if _a is 0?
 	if (!m_s.isTouched(_a))
-	{
-//		clog(ExecutiveWarnChannel) << "Log SELFDESTRUCT  " << myAddress << _a;
-		m_selfdestructBeneficiary = _a;
-	}
+		m_orig.selfdestructBeneficiary = _a;
+	// TODO: Why transfer is no used here?
 	m_s.addBalance(_a, m_s.balance(myAddress));
 	m_s.subBalance(myAddress, m_s.balance(myAddress));
 	ExtVMFace::suicide(_a);
@@ -163,28 +159,9 @@ void ExtVM::suicide(Address _a)
 
 void ExtVM::revert()
 {
-//	clog(ExecutiveWarnChannel) << "Reverting " << myAddress;
 	for (auto it = m_successfulCalls.rbegin(); it != m_successfulCalls.rend(); ++it)
 		(*it)->revert();
 
-	// Restore original storage for this account. The order does not matter.
-	for (auto& item: m_orig.storage)
-	{
-		m_s.setStorage(myAddress, item.first, item.second);
-//		clog(ExecutiveWarnChannel) << "REVERT STORAGE " << myAddress << item.first << item.second;
-	}
-
-	// Revert nonce if dumped.
-	if (m_nonceInc > 0)
-		m_s.setNonce(myAddress, m_s.getNonce(myAddress) - m_nonceInc);
-
-	if (m_selfdestructBeneficiary)
-	{
-//		clog(ExecutiveWarnChannel) << "REVERT SELFDESTRUCT touch " << myAddress << m_selfdestructBeneficiary;
-		m_s.untouch(m_selfdestructBeneficiary);
-	}
-
 	// Drop substate.
 	sub.clear();
-//	clog(ExecutiveWarnChannel) << "Reverted storage " << myAddress;
 }

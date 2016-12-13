@@ -97,8 +97,6 @@ private:
 	SealEngineFace const& m_sealEngine;
 	AccountSnapshot& m_orig;
 	std::vector<std::unique_ptr<Executive>> m_successfulCalls;
-	int m_nonceInc = 0;
-	Address m_selfdestructBeneficiary;
 };
 
 }

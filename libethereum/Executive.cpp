@@ -492,13 +492,20 @@ void Executive::revert()
 ////	clog(ExecutiveWarnChannel) << "Reverting call" << (int)m_ext->myAddress[19];
 	if (m_ext)
 		m_ext->revert();
+
 	if (m_orig.transfer)
 	{
 		// FIXME: In case of CREATE, not need to revert transfer and storage,
 		// as we are going to kill the whole account.
+		// TODO: Split transfer on sender and receiver parts.
 		m_s.transferBalance(m_orig.address, m_orig.caller, m_orig.transfer);
 //		clog(ExecutiveWarnChannel) << "Revert Transfer " << m_orig.address << m_orig.caller << m_orig.transfer;
 	}
+
+	// Revert nonce if dumped.
+	if (m_orig.nonceInc > 0)
+		m_s.setNonce(m_orig.address, m_s.getNonce(m_orig.address) - m_orig.nonceInc);
+
 	if (m_isCreation)
 	{
 		if (m_orig.exists)
@@ -515,9 +522,16 @@ void Executive::revert()
 			m_s.kill(m_orig.address);
 		m_orig.address = {};
 	}
-	else if (!m_orig.exists)
+	else
 	{
-//		clog(ExecutiveWarnChannel) << "Kill " << m_orig.address;
-		m_s.untouch(m_orig.address);
+		// Restore original storage for this account. The order does not matter.
+		for (auto& item: m_orig.storage)
+			m_s.setStorage(m_orig.address, item.first, item.second);
+
+		if (!m_orig.exists)
+			m_s.untouch(m_orig.address);
 	}
+
+	if (m_orig.selfdestructBeneficiary)
+		m_s.untouch(m_orig.selfdestructBeneficiary);
 }

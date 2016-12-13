@@ -82,10 +82,12 @@ private:
 struct AccountSnapshot
 {
 	bool exists = false;
+	int nonceInc = 0;
 	Address address;
 	Address caller;
 	u256 transfer;
 	std::unordered_map<u256, u256> storage;
+	Address selfdestructBeneficiary;
 };
 
 
