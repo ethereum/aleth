@@ -38,7 +38,7 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-static const int64_t MaxBlockGasLimit = ChainParams(genesisInfo(Network::HomesteadTest)).u256Param("maxGasLimit").convert_to<int64_t>();
+static const int64_t MaxBlockGasLimit = ChainParams(genesisInfo(Network::MainNetwork)).u256Param("maxGasLimit").convert_to<int64_t>();
 
 void help()
 {
@@ -59,7 +59,7 @@ void help()
 		<< "    --vm <vm-kind>  Select VM. Options are: interpreter, jit, smart. (default: interpreter)" << endl
 #endif // ETH_EVMJIT
 		<< "Network options:" << endl
-		<< "    --network Olympic|Frontier|Morden|Homestead" << endl
+		<< "    --network Main|Ropsten|Homestead|Frontier" << endl
 		<< endl
 		<< "Options for trace:" << endl
 		<< "    --flat  Minimal whitespace in the JSON." << endl
@@ -129,7 +129,7 @@ int main(int argc, char** argv)
 	bool styledJson = true;
 	StandardTrace st;
 	EnvInfo envInfo;
-	Network networkName = Network::HomesteadTest;
+	Network networkName = Network::MainNetwork;
 	envInfo.setGasLimit(MaxBlockGasLimit);
 	bytes data;
 	bytes code;
@@ -194,6 +194,8 @@ int main(int argc, char** argv)
 				networkName = Network::Ropsten;
 			else if (network == "Homestead")
 				networkName = Network::HomesteadTest;
+			else if (network == "Main")
+				networkName = Network::MainNetwork;
 			else
 			{
 				cerr << "Unknown network type: " << network << endl;

@@ -48,10 +48,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		eth::Network sealEngineNet;
 		BOOST_REQUIRE(o.count("blocknumber") > 0);
 		u256 transactionBlock = toInt(o["blocknumber"].get_str());
-		if (transactionBlock >= dev::test::c_testHomesteadBlock)
-			sealEngineNet = eth::Network::HomesteadTest;
-		else
-			sealEngineNet = eth::Network::FrontierTest;
+		sealEngineNet = eth::Network::MainNetwork;
 
 		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(sealEngineNet)).createSealEngine());
 		BlockHeader bh;

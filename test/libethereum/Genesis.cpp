@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(genesis_tests)
 
 	js::mObject o = v.get_obj();
 
-	ChainParams p(genesisInfo(eth::Network::Frontier), genesisStateRoot(Network::Frontier));
+	ChainParams p(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(Network::MainNetwork));
 	BOOST_CHECK_EQUAL(p.calculateStateRoot(), h256(o["genesis_state_root"].get_str()));
 	BOOST_CHECK_EQUAL(toHex(p.genesisBlock()), toHex(fromHex(o["genesis_rlp_hex"].get_str())));
 	BOOST_CHECK_EQUAL(BlockHeader(p.genesisBlock()).hash(), h256(o["genesis_hash"].get_str()));

@@ -72,7 +72,7 @@ struct ChainBranch
 		else if (chainname == "EIP150")
 			dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::EIP150Test;
 		else if (chainname == "TestFtoH5")
-			dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::Test;
+			dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::TransitionnetTest;
 	}
 
 	static void resetBlockchain()
@@ -84,7 +84,7 @@ private:
 	static eth::Network s_tempBlockchainNetwork;
 };
 
-eth::Network ChainBranch::s_tempBlockchainNetwork = eth::Network::Test;
+eth::Network ChainBranch::s_tempBlockchainNetwork = eth::Network::MainNetwork;
 
 //Functions that working with test json
 void compareBlocks(TestBlock const& _a, TestBlock const& _b);

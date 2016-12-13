@@ -89,7 +89,7 @@ void help()
 		<< endl;
 	cout
 		<< "Client mode (default):" << endl
-		<< "    --frontier  Use the Frontier (1.0) protocol." << endl
+		<< "    --mainnet  Use the main network protocol." << endl
 		<< "    --ropsten  Use the Ropsten testnet." << endl
 		<< "    --private <name>  Use a private chain." << endl
 		<< "    --test  Testing mode: Disable PoW and provide test rpc interface." << endl
@@ -352,7 +352,7 @@ int main(int argc, char** argv)
 #endif // ETH_JSONRPC
 
 	string jsonAdmin;
-	ChainParams chainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
+	ChainParams chainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 	u256 gasFloor = Invalid256;
 	string privateChain;
 
@@ -615,13 +615,13 @@ int main(int argc, char** argv)
 		}
 		else if (arg == "--gas-floor" && i + 1 < argc)
 			gasFloor = u256(argv[++i]);
-		else if (arg == "--frontier")
-			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
+		else if (arg == "--mainnet")
+			chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 		else if (arg == "--ropsten" || arg == "--testnet")
 			chainParams = ChainParams(genesisInfo(eth::Network::Ropsten), genesisStateRoot(eth::Network::Ropsten));
 		else if (arg == "--oppose-dao-fork")
 		{
-			chainParams = ChainParams(genesisInfo(eth::Network::Frontier), genesisStateRoot(eth::Network::Frontier));
+			chainParams = ChainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
 			chainParams.otherParams["daoHardforkBlock"] = toHex(u256(-1) - 10, HexPrefix::Add);
 		}
 		else if (arg == "--support-dao-fork")

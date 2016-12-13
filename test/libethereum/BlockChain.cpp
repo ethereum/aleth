@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(opendb)
 {
 	TestBlock genesis = TestBlockChain::defaultGenesisBlock();
 	TransientDirectory tempDirBlockchain;
-	ChainParams p(genesisInfo(Network::Test), genesis.bytes(), genesis.accountMap());
+	ChainParams p(genesisInfo(Network::TransitionnetTest), genesis.bytes(), genesis.accountMap());
 	BlockChain bc(p, tempDirBlockchain.path(), WithExisting::Kill);
 	auto is_critical = []( std::exception const& _e) { return string(_e.what()).find("DatabaseAlreadyOpen") != string::npos; };
 	BOOST_CHECK_EXCEPTION(BlockChain bc2(p, tempDirBlockchain.path(), WithExisting::Verify), DatabaseAlreadyOpen, is_critical);
