@@ -148,7 +148,7 @@ private:
 	struct transactionToExecute
 	{
 		transactionToExecute(int d, int g, int v, eth::Transaction const& t):
-			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::Test) {}
+			dataInd(d), gasInd(g), valInd(v), transaction(t), postState(0), netId(eth::Network::MainNetwork) {}
 		int dataInd;
 		int gasInd;
 		int valInd;
@@ -234,7 +234,6 @@ public:
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;
-	eth::Network sealEngineNetwork = eth::Network::Test; ///< set seal engine (Frontier, Homestead, ...)
 
 	/// Test selection
 	/// @{

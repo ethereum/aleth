@@ -1,3 +1,4 @@
+
 /*
 		This file is part of cpp-ethereum.
 
@@ -33,9 +34,9 @@ std::string const& dev::eth::genesisInfo(Network _n)
 {
 	switch (_n)
 	{
-	case Network::Frontier: return c_genesisInfoFrontier;
+	case Network::MainNetwork: return c_genesisInfoFrontier;
 	case Network::Ropsten: return c_genesisInfoRopsten;
-	case Network::Test: return c_genesisInfoTest;
+	case Network::TransitionnetTest: return c_genesisInfoTest;
 	case Network::FrontierTest: return c_genesisInfoFrontierTest;
 	case Network::HomesteadTest: return c_genesisInfoHomesteadTest;
 	case Network::EIP150Test: return c_genesisInfoEIP150Test;
@@ -49,9 +50,9 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
 {
 	switch (_n)
 	{
-	case Network::Frontier: return c_genesisStateRootFrontier;
+	case Network::MainNetwork: return c_genesisStateRootFrontier;
 	case Network::Ropsten: return c_genesisStateRootRopsten;
-	case Network::Test: return c_genesisStateRootTest;
+	case Network::TransitionnetTest: return c_genesisStateRootTest;
 	case Network::FrontierTest: return c_genesisStateRootFrontierTest;
 	case Network::HomesteadTest: return c_genesisStateRootHomesteadTest;
 	case Network::EIP150Test: return c_genesisStateRootEIP150Test;

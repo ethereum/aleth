@@ -75,7 +75,6 @@ void printHelp()
 	cout << std::endl << "Test Creation" << std::endl;
 	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers" << std::endl;
 	cout << setw(30) << "--checkstate" << setw(25) << "Enable expect section state checks" << std::endl;
-	cout << setw(30) << "--sealengine <Frontier|Homestead>" << setw(25) << "Set internal seal engine" << std::endl;
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console" << std::endl;
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field" << std::endl;
 
@@ -179,10 +178,7 @@ bytes ImportTest::executeTest()
 {
 	if (m_testType == testType::StateTests)
 	{
-		eth::Network network = eth::Network::FrontierTest;
-		if (m_envInfo.number() >= dev::test::c_testHomesteadBlock)
-			network = eth::Network::HomesteadTest;
-
+		eth::Network network = eth::Network::MainNetwork;
 		std::pair<eth::State, ImportTest::execOutput> out = executeTransaction(network, m_envInfo, m_statePre, m_transaction);
 		m_statePost = out.first;
 		m_logs = out.second.second.log();
@@ -1153,16 +1149,6 @@ Options::Options(int argc, char** argv)
 			singleTestNet = std::string{argv[i + 1]};
 		else if (arg == "--fulloutput")
 			fulloutput = true;
-		else if (arg == "--sealengine")
-		{
-			if (std::string{argv[i + 1]} == "Frontier")
-				sealEngineNetwork = eth::Network::FrontierTest;
-			else if (std::string{argv[i + 1]} == "Homestead")
-				sealEngineNetwork = eth::Network::HomesteadTest;
-			else
-				sealEngineNetwork = eth::Network::Test;
-			++i;
-		}
 		else if (arg == "--verbosity" && i + 1 < argc)
 		{
 			static std::ostringstream strCout; //static string to redirect logs to

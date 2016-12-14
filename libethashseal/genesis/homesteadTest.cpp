@@ -25,9 +25,10 @@ R"E(
 	"params": {
 		"accountStartNonce": "0x00",
 		"maximumExtraDataSize": "0x20",
-		"daoHardforkBlock": "0x1d4c00",
-		"EIP150ForkBlock": "0x259518",
-		"EIP158ForkBlock": "0x28d138",
+		"homsteadForkBlock": "0x00",
+		"daoHardforkBlock": "0xfffffffffffffff",
+		"EIP150ForkBlock": "0xfffffffffffffff",
+		"EIP158ForkBlock": "0xfffffffffffffff",
 		"networkID" : "0x01",
 		"chainID": "0x01",
 		"minGasLimit": "0x1388",

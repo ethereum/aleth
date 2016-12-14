@@ -28,7 +28,7 @@
 
 class frontierFixture { public:	frontierFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::FrontierTest; } };
 class homesteadFixture { public:	homesteadFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::HomesteadTest; } };
-class transitionFixture { public: 	transitionFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::Test; } };
+class transitionFixture { public: 	transitionFixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::TransitionnetTest; } };
 class eip150Fixture { public:	eip150Fixture() { dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::EIP150Test; } };
 
 
@@ -158,7 +158,6 @@ BOOST_AUTO_TEST_CASE(bcWalletTest)
 BOOST_AUTO_TEST_CASE(bcStateTest) {	dev::test::executeTests("bcStateTest", "/BlockchainTests", "/BlockchainTestsFiller", dev::test::doBlockchainTests); }
 BOOST_AUTO_TEST_CASE(userDefinedFile)
 {
-	dev::test::TestBlockChain::s_sealEngineNetwork = dev::test::Options::get().sealEngineNetwork;
 	dev::test::userDefinedTest(dev::test::doBlockchainTests);
 }
 BOOST_AUTO_TEST_SUITE_END()

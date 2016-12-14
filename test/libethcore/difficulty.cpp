@@ -69,11 +69,11 @@ void checkCalculatedDifficulty(BlockHeader const& _bi, BlockHeader const& _paren
 	u256 difficultyBoundDivisor;
 	switch(_n)
 	{
-	case Network::Frontier:
+	case Network::MainNetwork:
 	case Network::FrontierTest:
 	case Network::HomesteadTest:
 	case Network::Ropsten:
-	case Network::Test:
+	case Network::TransitionnetTest:
 		durationLimit = 13;
 		minimumDifficulty = 131072;
 		difficultyBoundDivisor = 2048;
@@ -194,12 +194,12 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 	testFileFullName += "/BasicTests/difficultyFrontier.json";
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Frontier)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));
 
 	if (dev::test::Options::get().fillTests)
 		fillDifficulty(testFileFullName, sealEngine);
 
-	testDifficulty(testFileFullName, sealEngine, Network::Frontier);
+	testDifficulty(testFileFullName, sealEngine, Network::FrontierTest);
 }
 
 BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
@@ -230,13 +230,27 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 	testDifficulty(testFileFullName, sealEngine, Network::HomesteadTest);
 }
 
-BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
+BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 {
 	string testFileFullName = test::getTestPath();
-	testFileFullName += "/BasicTests/difficultyCustomHomestead.json";
+	testFileFullName += "/BasicTests/difficultyMainNetwork.json";
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::HomesteadTest)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));
+
+	if (dev::test::Options::get().fillTests)
+		fillDifficulty(testFileFullName, sealEngine);
+
+	testDifficulty(testFileFullName, sealEngine, Network::MainNetwork);
+}
+
+BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
+{
+	string testFileFullName = test::getTestPath();
+	testFileFullName += "/BasicTests/difficultyCustomMainNetwork.json";
+
+	Ethash sealEngine;
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));
 
 	if (dev::test::Options::get().fillTests)
 	{
@@ -290,7 +304,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomHomestead)
 		writeFile(testFileFullName, asBytes(testFile));
 	}
 
-	testDifficulty(testFileFullName, sealEngine, Network::HomesteadTest);
+	testDifficulty(testFileFullName, sealEngine, Network::MainNetwork);
 }
 
 BOOST_AUTO_TEST_CASE(basicDifficultyTest)
@@ -299,9 +313,9 @@ BOOST_AUTO_TEST_CASE(basicDifficultyTest)
 	testPath += "/BasicTests/difficulty.json";
 
 	Ethash sealEngine;
-	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Frontier)));
+	sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));
 
-	testDifficulty(testPath, sealEngine, Network::Frontier);
+	testDifficulty(testPath, sealEngine, Network::MainNetwork);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

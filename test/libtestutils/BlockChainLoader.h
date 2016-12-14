@@ -39,7 +39,7 @@ namespace test
 class BlockChainLoader
 {
 public:
-	BlockChainLoader(Json::Value const& _json, eth::Network _sealEngineNetwork = eth::Network::Test);
+	BlockChainLoader(Json::Value const& _json, eth::Network _sealEngineNetwork = eth::Network::TransitionnetTest);
 	eth::BlockChain const& bc() const { return *m_bc; }
 	eth::State const& state() const { return m_block.state(); }	// TODO remove?
 	eth::Block const& block() const { return m_block; }
