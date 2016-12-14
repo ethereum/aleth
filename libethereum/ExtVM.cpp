@@ -22,7 +22,6 @@
 #include "ExtVM.h"
 #include <exception>
 #include <boost/thread.hpp>
-#include "Executive.h"
 
 using namespace dev;
 using namespace dev::eth;
@@ -146,7 +145,6 @@ h160 ExtVM::create(u256 _endowment, u256& io_gas, bytesConstRef _code, OnOpFunc 
 
 void ExtVM::suicide(Address _a)
 {
-	// FIXME: What if _a is 0?
 	if (!m_s.isTouched(_a))
 		m_orig.selfdestructBeneficiary = _a;
 	// TODO: Why transfer is no used here?

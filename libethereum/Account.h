@@ -144,7 +144,8 @@ public:
 	/// @returns the storage overlay as a simple hash map.
 	std::unordered_map<u256, u256> const& storageOverlay() const { return m_storageOverlay; }
 
-	void clearStorage() { m_storageOverlay.clear(); }
+	/// Clear all changes made to the storage since last commit.
+	void clearStorageChanges() { m_storageOverlay.clear(); }
 
 	/// Set a key/value pair in the account's storage. This actually goes into the overlay, for committing
 	/// to the trie later.
@@ -164,7 +165,8 @@ public:
 	/// @returns the hash of the account's code. Must only be called when isFreshCode() returns false.
 	h256 codeHash() const { assert(!isFreshCode()); return m_codeHash; }
 
-	/// Sets the code of the account. Must only be called when isFreshCode() returns true.
+	/// Sets the code of the account.
+	/// Used by "create" transactions and for reverting changes.
 	void setCode(bytes&& _code) { m_codeCache = std::move(_code); changed(); }
 
 	/// @returns true if the account's code is available through code().

@@ -222,7 +222,5 @@ private:
 	AccountSnapshot m_orig;
 };
 
-void revert(State& _state, AccountSnapshot const& _changes);
-
 }
 }

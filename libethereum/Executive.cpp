@@ -485,20 +485,13 @@ void Executive::finalize()
 	}
 }
 
-void Executive::revert()
+namespace
 {
-	if (m_ext)
-		m_ext->sub.clear();
-
-	eth::revert(m_s, m_orig);
-	m_orig.address = {};
-}
-
-void dev::eth::revert(State& _state, AccountSnapshot const& _changes)
+void revertAccountChanges(State& _state, AccountSnapshot const& _changes)
 {
 	// Firstly, revert attached successful calls.
 	for (auto it = _changes.children.rbegin(); it != _changes.children.rend(); ++it)
-		revert(_state, *it);
+		revertAccountChanges(_state, *it);
 
 	if (_changes.transfer)
 	{
@@ -516,12 +509,12 @@ void dev::eth::revert(State& _state, AccountSnapshot const& _changes)
 	{
 		if (_changes.exists)
 		{
-			// The the account was alive before CREATE (prefund) we have to
+			// The account was alive before CREATE (prefund) we have to
 			// reset some params. This is not very precise but should work in
 			// real live networks where we don't anticipate hash collisions.
 			_state.setNonce(_changes.address, 0);
 			_state.setCode(_changes.address, {});
-			_state.clearStorage(_changes.address);
+			_state.clearStorageChanges(_changes.address);
 		}
 		else
 			// If the account was not existing before we can safely kill it.
@@ -539,4 +532,14 @@ void dev::eth::revert(State& _state, AccountSnapshot const& _changes)
 
 	if (_changes.selfdestructBeneficiary)
 		_state.untouch(_changes.selfdestructBeneficiary);
+}
+}
+
+void Executive::revert()
+{
+	if (m_ext)
+		m_ext->sub.clear();
+
+	revertAccountChanges(m_s, m_orig);
+	m_orig.address = {};
 }
