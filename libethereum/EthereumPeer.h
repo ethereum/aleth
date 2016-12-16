@@ -76,6 +76,12 @@ public:
 	/// Request specified blocks from peer.
 	void requestBlockBodies(h256s const& _blocks);
 
+	/// Request values for specified keys from peer.
+	void requestNodeData(h256s const& _hashes);
+
+	/// Request receipts for specified blocks from peer.
+	void requestReceipts(h256s const& _blocks);
+
 	/// Check if this node is rude.
 	bool isRude() const;
 
@@ -101,6 +107,9 @@ private:
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
 
+	// Request of type _packetType with _hashes as input parameters
+	void requestByHashes(h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType);
+		
 	/// Update our asking state.
 	void setAsking(Asking _g);
 
