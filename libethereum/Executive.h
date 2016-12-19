@@ -78,18 +78,20 @@ private:
 	DebugOptions m_options;
 };
 
-
-struct AccountSnapshot
+/// Keeps unmodified account data for future changes revertion.
+struct AccountRevertLog
 {
-	bool exists = false;
+	bool existed = false;
 	bool isCreation = false;
 	int nonceInc = 0;
-	Address address;
-	Address caller;
+	Address address;  ///< The address of the account.
+	Address caller;   ///< The address of the message caller making the changes.
 	u256 transfer;
 	std::unordered_map<u256, u256> storage;
 	Address selfdestructBeneficiary;
-	std::vector<AccountSnapshot> children;
+
+	/// Other accounts changed by CALL/CREATEs.
+	std::vector<AccountRevertLog> children;
 };
 
 
@@ -187,7 +189,7 @@ public:
 	u256 gas() const { return m_gas; }
 
 	/// @returns the new address for the created contract in the CREATE operation.
-	h160 newAddress() const { return m_orig.address; }
+	h160 newAddress() const { return m_revertLog.address; }
 	/// @returns true iff the operation ended with a VM exception.
 	bool excepted() const { return m_excepted != TransactionException::None; }
 
@@ -197,7 +199,9 @@ public:
 	/// Revert all changes made to the state by this execution.
 	void revert();
 
-	AccountSnapshot takeSnapshot() { return std::move(m_orig); }
+	/// Take the account revert log. This makes the revert log in the Executive
+	/// object invalid so no further changes should be made to it.
+	AccountRevertLog takeRevertLog() { return std::move(m_revertLog); }
 
 private:
 	State& m_s;							///< The state to which this operation/transaction is applied.
@@ -219,7 +223,7 @@ private:
 	bigint m_gasCost;
 	SealEngineFace const& m_sealEngine;
 
-	AccountSnapshot m_orig;
+	AccountRevertLog m_revertLog;       ///< The account revert log.
 };
 
 }

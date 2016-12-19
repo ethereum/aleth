@@ -256,7 +256,7 @@ bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _valu
 bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address const& _origin)
 {
 	// Always remember the sender, needed for revert.
-	m_orig.caller = _p.senderAddress;
+	m_revertLog.caller = _p.senderAddress;
 
 	// If external transaction.
 	if (m_t)
@@ -287,21 +287,21 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_orig, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
 	// Remember the transfer params in case revert is needed.
-	m_orig.address = _p.receiveAddress;
-	m_orig.transfer = _p.valueTransfer;
+	m_revertLog.address = _p.receiveAddress;
+	m_revertLog.transfer = _p.valueTransfer;
 	if (m_sealEngine.evmSchedule(m_envInfo).emptinessIsNonexistence())
-		m_orig.exists = m_s.accountNonemptyAndExisting(m_orig.address);
+		m_revertLog.existed = m_s.accountNonemptyAndExisting(m_revertLog.address);
 	else
-		m_orig.exists = m_s.addressInUse(m_orig.address);
+		m_revertLog.existed = m_s.addressInUse(m_revertLog.address);
 
 	// Transfer ether.
 //	clog(ExecutiveWarnChannel) << "Transfer " <<  m_orig.caller << m_orig.address << m_orig.transfer;
-	m_s.transferBalance(m_orig.caller, _p.receiveAddress, _p.valueTransfer);
+	m_s.transferBalance(m_revertLog.caller, _p.receiveAddress, _p.valueTransfer);
 
 
 	return !m_ext;
@@ -309,35 +309,35 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
-	m_orig.isCreation = true;
+	m_revertLog.isCreation = true;
 
 	// Always remember the sender, needed for revert.
-	m_orig.caller = _sender;
+	m_revertLog.caller = _sender;
 
 	u256 nonce = m_s.getNonce(_sender);
 	m_s.incNonce(_sender);
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	m_orig.address = right160(sha3(rlpList(_sender, nonce)));
-	m_orig.exists = m_s.isAlive(m_orig.address);
+	m_revertLog.address = right160(sha3(rlpList(_sender, nonce)));
+	m_revertLog.existed = m_s.isAlive(m_revertLog.address);
 	m_gas = _gas;
 
 	// Execute _init.
 	if (!_init.empty())
-		m_ext = make_shared<ExtVM>(m_s, m_orig, m_envInfo, m_sealEngine, m_orig.address, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+		m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, m_revertLog.address, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
 
 	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
-	m_s.createContract(m_orig.address, incrementNonce);
+	m_s.createContract(m_revertLog.address, incrementNonce);
 
 	// Remember the transfer params in case revert is needed.
-	m_orig.transfer = _endowment;
+	m_revertLog.transfer = _endowment;
 
 	// Transfer ether.
-	m_s.transferBalance(m_orig.caller, m_orig.address, m_orig.transfer);
+	m_s.transferBalance(m_revertLog.caller, m_revertLog.address, m_revertLog.transfer);
 
 	if (_init.empty())
-		m_s.setCode(m_orig.address, {});
+		m_s.setCode(m_revertLog.address, {});
 
 //	clog(ExecutiveWarnChannel) << "Create " << m_orig.caller << m_orig.address << m_orig.transfer;
 	return !m_ext;
@@ -374,7 +374,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 		{
 			// Create VM instance. Force Interpreter if tracing requested.
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
-			if (m_orig.isCreation)
+			if (m_revertLog.isCreation)
 			{
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
@@ -403,7 +403,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out; // copy output to execution result
-				m_s.setCode(m_orig.address, std::move(out));
+				m_s.setCode(m_revertLog.address, std::move(out));
 			}
 			else
 			{
@@ -480,14 +480,14 @@ void Executive::finalize()
 	{
 		m_res->gasUsed = gasUsed();
 		m_res->excepted = m_excepted; // TODO: m_except is used only in ExtVM::call
-		m_res->newAddress = m_orig.address;
+		m_res->newAddress = m_revertLog.address;
 		m_res->gasRefunded = m_ext ? m_ext->sub.refunds : 0;
 	}
 }
 
 namespace
 {
-void revertAccountChanges(State& _state, AccountSnapshot const& _changes)
+void revertAccountChanges(State& _state, AccountRevertLog const& _changes)
 {
 	// Firstly, revert attached successful calls.
 	for (auto it = _changes.children.rbegin(); it != _changes.children.rend(); ++it)
@@ -507,7 +507,7 @@ void revertAccountChanges(State& _state, AccountSnapshot const& _changes)
 
 	if (_changes.isCreation)
 	{
-		if (_changes.exists)
+		if (_changes.existed)
 		{
 			// The account was alive before CREATE (prefund) we have to
 			// reset some params. This is not very precise but should work in
@@ -526,7 +526,7 @@ void revertAccountChanges(State& _state, AccountSnapshot const& _changes)
 		for (auto& item: _changes.storage)
 			_state.setStorage(_changes.address, item.first, item.second);
 
-		if (!_changes.exists)
+		if (!_changes.existed)
 			_state.untouch(_changes.address);
 	}
 
@@ -540,6 +540,6 @@ void Executive::revert()
 	if (m_ext)
 		m_ext->sub.clear();
 
-	revertAccountChanges(m_s, m_orig);
-	m_orig.address = {};
+	revertAccountChanges(m_s, m_revertLog);
+	m_revertLog.address = {};
 }
