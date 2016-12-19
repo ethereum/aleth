@@ -24,6 +24,7 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcore/Hash.h>
 #include <libdevcrypto/Common.h>
+#include <libdevcrypto/LibSnark.h>
 #include <libethcore/Common.h>
 using namespace std;
 using namespace dev;
@@ -89,5 +90,20 @@ ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
 {
 	return {true, _in.toBytes()};
 }
+
+ETH_REGISTER_PRECOMPILED(alt_bn128_pairing_product)(bytesConstRef _in, bytesRef _out)
+{
+	dev::snark::alt_bn128_pairing_product(_in, _out);
+}
+
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_add)(bytesConstRef _in, bytesRef _out)
+{
+	dev::snark::alt_bn128_G1_add(_in, _out);
+}
+ETH_REGISTER_PRECOMPILED(alt_bn128_G1_mul)(bytesConstRef _in, bytesRef _out)
+{
+	dev::snark::alt_bn128_G1_mul(_in, _out);
+}
+
 
 }
