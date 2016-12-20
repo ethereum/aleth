@@ -44,12 +44,12 @@ public:
 	static u256 version() { return 0; }
 	static unsigned messageCount() { return 0; }
 */
+protected:
 	std::shared_ptr<Session> session() const { return m_session.lock(); }
 	HostCapabilityFace* hostCapability() const { return m_hostCap; }
 	Host* host() const { return m_hostCap->host(); }
 	ReputationManager& repMan() const;
 
-protected:
 	virtual bool interpret(unsigned _id, RLP const&) = 0;
 
 	void disable(std::string const& _problem);
