@@ -26,6 +26,7 @@
 #include <libevmcore/EVMSchedule.h>
 #include <libethcore/Exceptions.h>
 #include "Transaction.h"
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
@@ -89,7 +90,7 @@ TransactionBase::TransactionBase(bytesConstRef _rlpData, CheckTransaction _check
 	}
 	catch (Exception& _e)
 	{
-		_e << errinfo_name("invalid transaction format") << BadFieldError(field, toHex(rlp[field].data().toBytes()));
+		_e << errinfo_name("invalid transaction format: " + toString(rlp) + " RLP: " + toHex(rlp.data()));
 		throw;
 	}
 }
