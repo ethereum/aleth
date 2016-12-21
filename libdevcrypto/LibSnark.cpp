@@ -19,25 +19,45 @@
  */
 
 #include <libdevcrypto/LibSnark.h>
+#define BINARY_OUTPUT 1
+#define MONTGOMERY_OUTPUT 1
 
 #include <libsnark/algebra/curves/alt_bn128/alt_bn128_g1.hpp>
 #include <libsnark/algebra/curves/alt_bn128/alt_bn128_g2.hpp>
 #include <libsnark/algebra/curves/alt_bn128/alt_bn128_pairing.hpp>
+#include <libsnark/algebra/curves/alt_bn128/alt_bn128_pp.hpp>
+#include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 
 #include <libdevcore/CommonIO.h>
 #include <libdevcore/FixedHash.h>
 
+#include <fstream>
 
 using namespace std;
 using namespace dev;
 using namespace dev::snark;
+
+namespace
+{
+
+void initLibSnark()
+{
+	static bool initialized = 0;
+	if (!initialized)
+	{
+		libsnark::alt_bn128_pp::init_public_params();
+		initialized = true;
+	}
+}
+
+}
 
 libsnark::bigint<libsnark::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 {
 	libsnark::bigint<libsnark::alt_bn128_q_limbs> x;
 	for (unsigned i = 0; i < 4; i++)
 		for (unsigned j = 0; j < 8; j++)
-			x.data[i] |= uint64_t(_x[i * 8 + j]) << j;
+			x.data[i] |= uint64_t(_x[i * 8 + j]) << (8 * (7 - j));
 	return x;
 }
 
@@ -46,7 +66,7 @@ h256 fromLibsnarkBigint(libsnark::bigint<libsnark::alt_bn128_q_limbs> _x)
 	h256 x;
 	for (unsigned i = 0; i < 4; i++)
 		for (unsigned j = 0; j < 8; j++)
-			x[i * 8 + j] = uint8_t(uint64_t(_x.data[i]) >> j);
+			x[i * 8 + j] = uint8_t(uint64_t(_x.data[i]) >> (8 * (7 - j)));
 	return x;
 }
 
@@ -66,9 +86,11 @@ libsnark::alt_bn128_G1 decodePointG1(dev::bytesConstRef _data)
 
 void encodePointG1(libsnark::alt_bn128_G1 _p, dev::bytesRef _out)
 {
-	fromLibsnarkBigint(_p.X.as_bigint()).ref().copyTo(_out);
-	fromLibsnarkBigint(_p.Y.as_bigint()).ref().copyTo(_out.cropped(32));
-	fromLibsnarkBigint(_p.Z.as_bigint()).ref().copyTo(_out.cropped(64));
+	libsnark::alt_bn128_G1 p_norm = _p;
+	p_norm.to_affine_coordinates();
+	fromLibsnarkBigint(p_norm.X.as_bigint()).ref().copyTo(_out);
+	fromLibsnarkBigint(p_norm.Y.as_bigint()).ref().copyTo(_out.cropped(32));
+	fromLibsnarkBigint(p_norm.Z.as_bigint()).ref().copyTo(_out.cropped(64));
 }
 
 libsnark::alt_bn128_Fq2 decodeFq2Element(dev::bytesConstRef _data)
@@ -94,6 +116,7 @@ libsnark::alt_bn128_G2 decodePointG2(dev::bytesConstRef _data)
 
 void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef _out)
 {
+	initLibSnark();
 	// Input: list of pairs of G1 and G2 points
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
 
@@ -118,6 +141,7 @@ void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef
 
 void dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in, dev::bytesRef _out)
 {
+	initLibSnark();
 	// Elliptic curve point addition in Jacobian, big endian encoding:
 	// (P1.X: 256 bits, P1.Y: 256 bits, P1.Z: 256 bits,
 	//  P2.X: 256 bits, P2.Y: 256 bits, P2.Z: 256 bits)
@@ -132,6 +156,7 @@ void dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in, dev::bytesRef _out)
 
 void dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in, dev::bytesRef _out)
 {
+	initLibSnark();
 	// Scalar multiplication with a curve point in Jacobian encoding, big endian:
 	// (s: u256, X: 256 bits, Y: 256 bits, Z: 256 bits)
 
@@ -142,12 +167,48 @@ void dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in, dev::bytesRef _out)
 
 	libsnark::alt_bn128_G1 result = libsnark::alt_bn128_G1::zero();
 
-	for (unsigned i = 0; i < 256; i++)
+	cout << "multiply by " << s << endl;
+	for (int i = 255; i >= 0; --i)
 	{
 		result = result.dbl();
 		if (boost::multiprecision::bit_test(s, i))
+		{
+			cout <<" Bit " << i << " is set" << endl;
 			result = result + p;
+		}
 	}
 
 	encodePointG1(result, _out);
+}
+
+void hexOutputPointG1(libsnark::alt_bn128_G1 _p)
+{
+	cout <<
+		"{\n" <<
+		"  X: hex\"" << fromLibsnarkBigint(_p.X.as_bigint()).hex() << "\", \n" <<
+		"  Y: hex\"" << fromLibsnarkBigint(_p.Y.as_bigint()).hex() << "\", \n" <<
+		"  Z: hex\"" << fromLibsnarkBigint(_p.Z.as_bigint()).hex() << "\", \n" <<
+		"}";
+}
+
+
+void dev::snark::exportVK(string const& _VKFilename)
+{
+	initLibSnark();
+
+	std::stringstream ss;
+	std::ifstream fh(_VKFilename, std::ios::binary);
+
+	if (!fh.is_open())
+		throw std::runtime_error((boost::format("could not load param file at %s") % _VKFilename).str());
+
+	ss << fh.rdbuf();
+	fh.close();
+
+	ss.rdbuf()->pubseekpos(0, std::ios_base::in);
+
+	libsnark::r1cs_ppzksnark_verification_key<libsnark::alt_bn128_pp> obj;
+	ss >> obj;
+
+	hexOutputPointG1(obj.alphaB_g1);
 }

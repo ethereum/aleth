@@ -31,5 +31,7 @@ void alt_bn128_pairing_product(bytesConstRef _in, bytesRef _out);
 void alt_bn128_G1_add(bytesConstRef _in, bytesRef _out);
 void alt_bn128_G1_mul(bytesConstRef _in, bytesRef _out);
 
+void exportVK(std::string const& _VKFilename);
+
 }
 }

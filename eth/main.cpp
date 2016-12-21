@@ -43,6 +43,8 @@
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
 
+#include <libdevcrypto/LibSnark.h>
+
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
@@ -424,6 +426,8 @@ int main(int argc, char** argv)
 		if (m.interpretOption(i, argc, argv))
 		{
 		}
+		else if (arg == "--exportVK" && i + 1 < argc)
+			dev::snark::exportVK(argv[++i]);
 		else if (arg == "--listen-ip" && i + 1 < argc)
 		{
 			listenIP = argv[++i];
