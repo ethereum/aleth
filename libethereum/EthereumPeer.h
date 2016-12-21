@@ -37,6 +37,30 @@ namespace dev
 namespace eth
 {
 
+class EthereumPeerObserverFace
+{
+public:
+	virtual ~EthereumPeerObserverFace() {}
+
+	virtual void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) = 0;
+
+	virtual void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
+
+	virtual void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers) = 0;
+
+	virtual void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
+
+	virtual void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes) = 0;
+
+	virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
+
+	virtual void onPeerNodeData(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
+	
+	virtual void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
+
+	virtual void onPeerAborting() = 0;
+};
+
 /**
  * @brief The EthereumPeer class
  * @todo Document fully.
@@ -62,6 +86,8 @@ public:
 
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
+
+	void init(std::shared_ptr<EthereumPeerObserverFace> _observer) { m_observer = _observer; }
 
 	/// Abort sync and reset fetch
 	void setIdle();
@@ -141,7 +167,7 @@ private:
 	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
 	h256 m_genesisHash;						///< Peer's genesis hash
 
-	u256 m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
+	u256 const m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?
 	bool m_requireTransactions = false;
 
@@ -151,6 +177,8 @@ private:
 	h256Hash m_knownTransactions;			///< Transactions that the peer already knows of.
 	unsigned m_unknownNewBlocks = 0;		///< Number of unknown NewBlocks received from this peer
 	unsigned m_lastAskedHeaders = 0;		///< Number of hashes asked
+
+	std::shared_ptr<EthereumPeerObserverFace> m_observer;
 };
 
 }

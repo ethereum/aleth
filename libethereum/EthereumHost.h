@@ -48,6 +48,7 @@ namespace eth
 class TransactionQueue;
 class BlockQueue;
 class BlockChainSync;
+class EthereumPeerObserverFace;
 
 struct EthereumHostTrace: public LogChannel { static const char* name(); static const int verbosity = 6; };
 
@@ -98,6 +99,9 @@ public:
 	void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerAborting();
 
+protected:
+	std::shared_ptr<p2p::Capability> newPeerCapability(std::shared_ptr<p2p::SessionFace> const& _s, unsigned _idOffset, p2p::CapDesc const& _cap, uint16_t _capID) override;
+
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 
@@ -138,6 +142,8 @@ private:
 	mutable Mutex x_transactions;
 	std::unique_ptr<BlockChainSync> m_sync;
 	std::atomic<time_t> m_lastTick = { 0 };
+
+	std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
 };
 
 }
