@@ -63,10 +63,6 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	// TODO make this private
-	/// What is the ethereum subprotocol host object.
-	EthereumHost* host() const;
-
 	/// Abort sync and reset fetch
 	void setIdle();
 
@@ -94,6 +90,9 @@ public:
 
 private:
 	using p2p::Capability::sealAndSend;
+
+	/// What is the ethereum subprotocol host object.
+	EthereumHost* host() const;
 
 	/// Figure out the amount of blocks we should be asking for.
 	unsigned askOverride() const;
@@ -141,12 +140,6 @@ private:
 	h256 m_latestHash;						///< Peer's latest block's hash that we know about or default null value if no need to sync.
 	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
 	h256 m_genesisHash;						///< Peer's genesis hash
-
-	/// This is built as we ask for hashes. Once no more hashes are given, we present this to the
-	/// host who initialises the DownloadMan and m_sub becomes active for us to begin asking for blocks.
-	u256 m_syncHashNumber = 0;				///< Number of latest hash we sync to (PV61+)
-	u256 m_height = 0;						///< Chain height
-	h256 m_syncHash;						///< Latest hash we sync to (PV60)
 
 	u256 m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?

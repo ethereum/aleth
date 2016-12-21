@@ -59,8 +59,6 @@ EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, HostCapabilityFace* 
 	m_peerCapabilityVersion(_cap.second)
 {
 	session()->addNote("manners", isRude() ? "RUDE" : "nice");
-	// TODO probably not used, remove
-	m_syncHashNumber = host()->chain().number() + 1;
 	requestStatus();
 }
 
@@ -151,7 +149,6 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
 	RLPStream s;
 	prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
 	clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
-	m_syncHashNumber = _startNumber;
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);
 }
@@ -166,7 +163,6 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
 	RLPStream s;
 	prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
 	clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
-	m_syncHash = _startHash;
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);
 }

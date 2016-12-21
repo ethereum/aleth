@@ -87,10 +87,9 @@ public:
  */
 class Session: public SessionFace, public std::enable_shared_from_this<SessionFace>
 {
-	friend class Host;
-	friend class HostCapabilityFace;
-
 public:
+	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
+
 	Session(Host* _server, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~Session();
 
@@ -126,10 +125,6 @@ private:
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
 
 	ReputationManager& repMan() const;
-
-	// TODO these two look unused, remove
-	void ensureNodesRequested();
-	void serviceNodesRequest();
 
 	void send(bytes&& _msg, uint16_t _protocolID);
 
@@ -193,7 +188,6 @@ private:
 	std::map<uint16_t, std::shared_ptr<Framing> > m_framing;
 	std::deque<bytes> m_encFrames;
 
-	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
 	bool isFramingEnabled() const { return isFramingAllowedForVersion(m_info.protocolVersion); }
 	unsigned maxFrameSize() const { return 1024; }
 	std::shared_ptr<Framing> getFraming(uint16_t _protocolID);

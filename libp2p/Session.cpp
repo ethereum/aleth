@@ -111,50 +111,6 @@ template <class T> vector<T> randomSelection(vector<T> const& _t, unsigned _n)
 	return ret;
 }
 
-// TODO: P2P integration: replace w/asio post -> serviceNodesRequest()
-void Session::ensureNodesRequested()
-{
-	if (isConnected() && !m_weRequestedNodes)
-	{
-		m_weRequestedNodes = true;
-		RLPStream s;
-		sealAndSend(prep(s, GetPeersPacket), 0);
-	}
-}
-
-void Session::serviceNodesRequest()
-{
-	ThreadContext tc(info().id.abridged() + "/" + info().clientVersion);
-
-	if (!m_theyRequestedNodes)
-		return;
-
-// TODO: P2P reimplement, as per TCP "close nodes" gossip specifications (WiP)
-//	auto peers = m_server->potentialPeers(m_knownNodes);
-	Peers peers;
-	if (peers.empty())
-	{
-		addNote("peers", "requested");
-		return;
-	}
-
-	// note this should cost them...
-	RLPStream s;
-	prep(s, PeersPacket, min<unsigned>(10, peers.size()));
-	auto rs = randomSelection(peers, 10);
-	for (auto const& i: rs)
-	{
-		clog(NetTriviaDetail) << "Sending peer " << i.id << i.endpoint;
-		if (i.endpoint.address.is_v4())
-			s.appendList(3) << bytesConstRef(i.endpoint.address.to_v4().to_bytes().data(), 4) << i.endpoint.tcpPort << i.id;
-		else// if (i.second.address().is_v6()) - assumed
-			s.appendList(3) << bytesConstRef(i.endpoint.address.to_v6().to_bytes().data(), 16) << i.endpoint.tcpPort << i.id;
-	}
-	sealAndSend(s, 0);
-	m_theyRequestedNodes = false;
-	addNote("peers", "done");
-}
-
 bool Session::readPacket(uint16_t _capId, PacketType _t, RLP const& _r)
 {
 	m_lastReceived = chrono::steady_clock::now();
