@@ -215,14 +215,15 @@ int64_t evm_call(
 class EVM
 {
 public:
-	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn):
-		m_interface(evmjit_get_interface()),
-		m_instance(m_interface.create(_queryFn, _updateFn, _callFn))
-	{}
+	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn)
+	{
+		auto factory = evmjit_get_factory();
+		m_instance = factory.create(_queryFn, _updateFn, _callFn);
+	}
 
 	~EVM()
 	{
-		m_interface.destroy(m_instance);
+		m_instance->destroy(m_instance);
 	}
 
 	EVM(EVM const&) = delete;
@@ -275,7 +276,7 @@ public:
 	{
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
-		return Result{m_interface.execute(
+		return Result{m_instance->execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
 			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
 			toEvmC(_ext.value)
@@ -284,24 +285,17 @@ public:
 
 	bool isCodeReady(evm_mode _mode, h256 _codeHash)
 	{
-		return m_interface.get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
+		return m_instance->get_code_status(m_instance, _mode, toEvmC(_codeHash)) == EVM_READY;
 	}
 
 	void compile(evm_mode _mode, bytesConstRef _code, h256 _codeHash)
 	{
-		m_interface.prepare_code(
+		m_instance->prepare_code(
 			m_instance, _mode, toEvmC(_codeHash), _code.data(), _code.size()
 		);
 	}
 
 private:
-	/// VM interface -- contains pointers to VM's methods.
-	///
-	/// @internal
-	/// This field does not have initializer because old versions of GCC emit
-	/// invalid warning about `= {}`. The field is initialized in ctors.
-	evm_interface m_interface;
-
 	/// The VM instance created with m_interface.create().
 	evm_instance* m_instance = nullptr;
 };
