@@ -93,6 +93,8 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 }
 } }// Namespace Close
 
+//Disable OLD StateTests. Use GeneralStateTests at StateTests.cpp instead
+/*
 BOOST_AUTO_TEST_SUITE(StateTestsEIP158)
 BOOST_AUTO_TEST_CASE(stZeroCallsRevertTestEIP158)
 {
@@ -595,4 +597,4 @@ BOOST_AUTO_TEST_CASE(userDefinedFileState)
 }
 
 BOOST_AUTO_TEST_SUITE_END()
-
+*/
