@@ -95,10 +95,10 @@ class ReputationManager
 public:
 	ReputationManager();
 
-	void noteRude(Session const& _s, std::string const& _sub = std::string());
-	bool isRude(Session const& _s, std::string const& _sub = std::string()) const;
-	void setData(Session const& _s, std::string const& _sub, bytes const& _data);
-	bytes data(Session const& _s, std::string const& _subs) const;
+	void noteRude(SessionFace const& _s, std::string const& _sub = std::string());
+	bool isRude(SessionFace const& _s, std::string const& _sub = std::string()) const;
+	void setData(SessionFace const& _s, std::string const& _sub, bytes const& _data);
+	bytes data(SessionFace const& _s, std::string const& _subs) const;
 
 private:
 	std::unordered_map<std::pair<p2p::NodeID, std::string>, Reputation> m_nodes;	///< Nodes that were impolite while syncing. We avoid syncing from these if possible.
@@ -227,7 +227,7 @@ public:
 	void startPeerSession(Public const& _id, RLP const& _hello, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s);
 
 	/// Get session by id
-	std::shared_ptr<Session> peerSession(NodeID const& _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<Session>(); }
+	std::shared_ptr<SessionFace> peerSession(NodeID const& _id) { RecursiveGuard l(x_sessions); return m_sessions.count(_id) ? m_sessions[_id].lock() : std::shared_ptr<SessionFace>(); }
 
 	/// Get our current node ID.
 	NodeID id() const { return m_alias.pub(); }
@@ -321,7 +321,7 @@ private:
 
 	/// The nodes to which we are currently connected. Used by host to service peer requests and keepAlivePeers and for shutdown. (see run())
 	/// Mutable because we flush zombie entries (null-weakptrs) as regular maintenance from a const method.
-	mutable std::unordered_map<NodeID, std::weak_ptr<Session>> m_sessions;
+	mutable std::unordered_map<NodeID, std::weak_ptr<SessionFace>> m_sessions;
 	mutable RecursiveMutex x_sessions;
 	
 	std::list<std::weak_ptr<RLPXHandshake>> m_connecting;					///< Pending connections.
