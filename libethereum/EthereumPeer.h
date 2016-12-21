@@ -49,7 +49,7 @@ class EthereumPeer: public p2p::Capability
 
 public:
 	/// Basic constructor.
-	EthereumPeer(std::shared_ptr<p2p::Session> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap, uint16_t _capID);
+	EthereumPeer(std::shared_ptr<p2p::SessionFace> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap, uint16_t _capID);
 
 	/// Basic destructor.
 	virtual ~EthereumPeer();
@@ -63,6 +63,7 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
+	// TODO make this private
 	/// What is the ethereum subprotocol host object.
 	EthereumHost* host() const;
 

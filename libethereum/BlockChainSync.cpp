@@ -191,7 +191,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
-	std::shared_ptr<Session> session = _peer->session();
+	std::shared_ptr<SessionFace> session = _peer->session();
 	if (!session)
 		return; // Expired
 	if (_peer->m_genesisHash != host().chain().genesisHash())

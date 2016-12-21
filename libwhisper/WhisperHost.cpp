@@ -103,7 +103,7 @@ void WhisperHost::inject(Envelope const& _m, WhisperPeer* _p)
 	// TODO p2p: capability-based rating
 	for (auto i: peerSessions())
 	{
-		auto w = i.first->cap<WhisperPeer>().get();
+		auto w = capabilityFromSession<WhisperPeer>(*i.first).get();
 		if (w == _p)
 			w->addRating(rating);
 		else
@@ -202,7 +202,7 @@ h256s WhisperHost::checkWatch(unsigned _watchId)
 void WhisperHost::doWork()
 {
 	for (auto i: peerSessions())
-		i.first->cap<WhisperPeer>()->sendMessages();
+		capabilityFromSession<WhisperPeer>(*i.first)->sendMessages();
 	cleanup();
 }
 
@@ -219,7 +219,7 @@ void WhisperHost::cleanup()
 void WhisperHost::noteAdvertiseTopicsOfInterest()
 {
 	for (auto i: peerSessions())
-		i.first->cap<WhisperPeer>()->noteAdvertiseTopicsOfInterest();
+		capabilityFromSession<WhisperPeer>(*i.first)->noteAdvertiseTopicsOfInterest();
 }
 
 bool WhisperHost::isWatched(Envelope const& _e) const

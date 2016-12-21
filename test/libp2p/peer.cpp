@@ -42,7 +42,7 @@ struct P2PFixture: public TestOutputHelper
 class TestCap: public Capability
 {
 public:
-	TestCap(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _idOffset, CapDesc const&, uint16_t _capID): Capability(_s, _h, _idOffset, _capID) {}
+	TestCap(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _idOffset, CapDesc const&, uint16_t _capID): Capability(_s, _h, _idOffset, _capID) {}
 	virtual ~TestCap() {}
 	static std::string name() { return "p2pTestCapability"; }
 	static u256 version() { return 2; }

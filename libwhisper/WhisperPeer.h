@@ -38,7 +38,7 @@ namespace dev
 namespace shh
 {
 
-using p2p::Session;
+using p2p::SessionFace;
 using p2p::HostCapabilityFace;
 using p2p::HostCapability;
 using p2p::Capability;
@@ -49,7 +49,7 @@ class WhisperPeer: public Capability
 	friend class WhisperHost;
 
 public:
-	WhisperPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID);
+	WhisperPeer(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID);
 	virtual ~WhisperPeer();
 	WhisperHost* host() const;
 	static std::string name() { return "shh"; }

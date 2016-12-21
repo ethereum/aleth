@@ -54,11 +54,12 @@ static string toString(Asking _a)
 	return "?";
 }
 
-EthereumPeer::EthereumPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID):
+EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID):
 	Capability(_s, _h, _i, _capID),
 	m_peerCapabilityVersion(_cap.second)
 {
 	session()->addNote("manners", isRude() ? "RUDE" : "nice");
+	// TODO probably not used, remove
 	m_syncHashNumber = host()->chain().number() + 1;
 	requestStatus();
 }
