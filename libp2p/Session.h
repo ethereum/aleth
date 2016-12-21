@@ -127,10 +127,6 @@ private:
 
 	ReputationManager& repMan() const;
 
-	// TODO these two look unused, remove
-	void ensureNodesRequested();
-	void serviceNodesRequest();
-
 	void send(bytes&& _msg, uint16_t _protocolID);
 
 	/// Drop the connection for the reason @a _r.
