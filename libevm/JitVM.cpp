@@ -44,85 +44,84 @@ inline h256 asHash(evm_uint256be _n)
 	return h256(&_n.bytes[0], h256::ConstructFromPointer);
 }
 
-evm_variant evm_query(
+void evm_query(
+	evm_variant* o_result,
 	evm_env* _opaqueEnv,
 	evm_query_key _key,
 	evm_variant const* _arg
 ) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	evm_variant v;
 	switch (_key)
 	{
 	case EVM_ADDRESS:
-		v.address = toEvmC(env.myAddress);
+		o_result->address = toEvmC(env.myAddress);
 		break;
 	case EVM_CALLER:
-		v.address = toEvmC(env.caller);
+		o_result->address = toEvmC(env.caller);
 		break;
 	case EVM_ORIGIN:
-		v.address = toEvmC(env.origin);
+		o_result->address = toEvmC(env.origin);
 		break;
 	case EVM_GAS_PRICE:
-		v.uint256be = toEvmC(env.gasPrice);
+		o_result->uint256be = toEvmC(env.gasPrice);
 		break;
 	case EVM_COINBASE:
-		v.address = toEvmC(env.envInfo().author());
+		o_result->address = toEvmC(env.envInfo().author());
 		break;
 	case EVM_DIFFICULTY:
-		v.uint256be = toEvmC(env.envInfo().difficulty());
+		o_result->uint256be = toEvmC(env.envInfo().difficulty());
 		break;
 	case EVM_GAS_LIMIT:
-		v.int64 = env.envInfo().gasLimit();
+		o_result->int64 = env.envInfo().gasLimit();
 		break;
 	case EVM_NUMBER:
 		// TODO: Handle overflow / exception
-		v.int64 = static_cast<int64_t>(env.envInfo().number());
+		o_result->int64 = static_cast<int64_t>(env.envInfo().number());
 		break;
 	case EVM_TIMESTAMP:
 		// TODO: Handle overflow / exception
-		v.int64 = static_cast<int64_t>(env.envInfo().timestamp());
+		o_result->int64 = static_cast<int64_t>(env.envInfo().timestamp());
 		break;
 	case EVM_CODE_BY_ADDRESS:
 	{
 		auto addr = fromEvmC(_arg->address);
 		auto &code = env.codeAt(addr);
-		v.data = code.data();
-		v.data_size = code.size();
+		o_result->data = code.data();
+		o_result->data_size = code.size();
 		break;
 	}
 	case EVM_CODE_SIZE:
 	{
 		auto addr = fromEvmC(_arg->address);
-		v.int64 = env.codeSizeAt(addr);
+		o_result->int64 = env.codeSizeAt(addr);
 		break;
 	}
 	case EVM_BALANCE:
 	{
 		auto addr = fromEvmC(_arg->address);
-		v.uint256be = toEvmC(env.balance(addr));
+		o_result->uint256be = toEvmC(env.balance(addr));
 		break;
 	}
 	case EVM_BLOCKHASH:
-		v.uint256be = toEvmC(env.blockHash(_arg->int64));
+		o_result->uint256be = toEvmC(env.blockHash(_arg->int64));
 		break;
 	case EVM_SLOAD:
 	{
 		auto key = asUint(_arg->uint256be);
-		v.uint256be = toEvmC(env.store(key));
+		o_result->uint256be = toEvmC(env.store(key));
 		break;
 	}
 	case EVM_ACCOUNT_EXISTS:
 	{
 		auto addr = fromEvmC(_arg->address);
-		v.int64 = env.exists(addr);
+		o_result->int64 = env.exists(addr);
 		break;
 	}
 	case EVM_CALL_DEPTH:
-		v.int64 = env.depth;
+		o_result->int64 = env.depth;
 		break;
 	}
-	return v;
 }
 
 void evm_update(
