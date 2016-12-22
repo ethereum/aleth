@@ -59,7 +59,6 @@ EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, HostCapabilityFace* 
 	m_peerCapabilityVersion(_cap.second)
 {
 	session()->addNote("manners", isRude() ? "RUDE" : "nice");
-	requestStatus();
 }
 
 EthereumPeer::~EthereumPeer()
@@ -70,6 +69,12 @@ EthereumPeer::~EthereumPeer()
 		setRude();
 	}
 	abortSync();
+}
+
+void EthereumPeer::init(std::shared_ptr<EthereumPeerObserverFace> _observer)
+{ 
+	m_observer = _observer;
+	requestStatus();
 }
 
 bool EthereumPeer::isRude() const

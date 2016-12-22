@@ -87,7 +87,7 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	void init(std::shared_ptr<EthereumPeerObserverFace> _observer) { m_observer = _observer; }
+	void init(std::shared_ptr<EthereumPeerObserverFace> _observer);
 
 	/// Abort sync and reset fetch
 	void setIdle();
