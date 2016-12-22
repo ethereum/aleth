@@ -47,7 +47,7 @@ inline h256 asHash(evm_uint256be _n)
 evm_variant evm_query(
 	evm_env* _opaqueEnv,
 	evm_query_key _key,
-	evm_variant _arg
+	evm_variant const* _arg
 ) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
@@ -85,7 +85,7 @@ evm_variant evm_query(
 		break;
 	case EVM_CODE_BY_ADDRESS:
 	{
-		auto addr = fromEvmC(_arg.address);
+		auto addr = fromEvmC(_arg->address);
 		auto &code = env.codeAt(addr);
 		v.data = code.data();
 		v.data_size = code.size();
@@ -93,28 +93,28 @@ evm_variant evm_query(
 	}
 	case EVM_CODE_SIZE:
 	{
-		auto addr = fromEvmC(_arg.address);
+		auto addr = fromEvmC(_arg->address);
 		v.int64 = env.codeSizeAt(addr);
 		break;
 	}
 	case EVM_BALANCE:
 	{
-		auto addr = fromEvmC(_arg.address);
+		auto addr = fromEvmC(_arg->address);
 		v.uint256be = toEvmC(env.balance(addr));
 		break;
 	}
 	case EVM_BLOCKHASH:
-		v.uint256be = toEvmC(env.blockHash(_arg.int64));
+		v.uint256be = toEvmC(env.blockHash(_arg->int64));
 		break;
 	case EVM_SLOAD:
 	{
-		auto key = asUint(_arg.uint256be);
+		auto key = asUint(_arg->uint256be);
 		v.uint256be = toEvmC(env.store(key));
 		break;
 	}
 	case EVM_ACCOUNT_EXISTS:
 	{
-		auto addr = fromEvmC(_arg.address);
+		auto addr = fromEvmC(_arg->address);
 		v.int64 = env.exists(addr);
 		break;
 	}
@@ -128,8 +128,8 @@ evm_variant evm_query(
 void evm_update(
 	evm_env* _opaqueEnv,
 	evm_update_key _key,
-	evm_variant _arg1,
-	evm_variant _arg2
+	evm_variant const* _arg1,
+	evm_variant const* _arg2
 ) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
@@ -137,8 +137,8 @@ void evm_update(
 	{
 	case EVM_SSTORE:
 	{
-		auto index = asUint(_arg1.uint256be);
-		auto value = asUint(_arg2.uint256be);
+		auto index = asUint(_arg1->uint256be);
+		auto value = asUint(_arg2->uint256be);
 		if (value == 0 && env.store(index) != 0)                   // If delete
 			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
@@ -147,14 +147,14 @@ void evm_update(
 	}
 	case EVM_LOG:
 	{
-		size_t numTopics = _arg2.data_size / sizeof(h256);
-		h256 const* pTopics = reinterpret_cast<h256 const*>(_arg2.data);
-		env.log({pTopics, pTopics + numTopics}, {_arg1.data, _arg1.data_size});
+		size_t numTopics = _arg2->data_size / sizeof(h256);
+		h256 const* pTopics = reinterpret_cast<h256 const*>(_arg2->data);
+		env.log({pTopics, pTopics + numTopics}, {_arg1->data, _arg1->data_size});
 		break;
 	}
 	case EVM_SELFDESTRUCT:
 		// Register selfdestruction beneficiary.
-		env.suicide(fromEvmC(_arg1.address));
+		env.suicide(fromEvmC(_arg1->address));
 		break;
 	}
 }
@@ -163,8 +163,8 @@ int64_t evm_call(
 	evm_env* _opaqueEnv,
 	evm_call_kind _kind,
 	int64_t _gas,
-	evm_uint160be _address,
-	evm_uint256be _value,
+	evm_uint160be const* _address,
+	evm_uint256be const* _value,
 	uint8_t const* _inputData,
 	size_t _inputSize,
 	uint8_t* _outputData,
@@ -173,7 +173,7 @@ int64_t evm_call(
 {
 	assert(_gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	auto value = asUint(_value);
+	auto value = asUint(*_value);
 	bytesConstRef input{_inputData, _inputSize};
 
 	if (_kind == EVM_CREATE)
@@ -194,7 +194,7 @@ int64_t evm_call(
 	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
 	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
-	params.codeAddress = fromEvmC(_address);
+	params.codeAddress = fromEvmC(*_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
 	params.out = {_outputData, _outputSize};
