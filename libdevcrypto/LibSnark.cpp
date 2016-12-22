@@ -122,7 +122,8 @@ void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef
 	// Input: list of pairs of G1 and G2 points
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
 
-	cout << "Pairng for input: " << toHex(_in) << endl;
+	// TODO catch exceptions from assertions
+	// TODO check that the second points are part of the correct subgroup
 
 	size_t const pairSize = 3 * 32 + 3 * 64;
 	// TODO this does not round correctly
@@ -133,9 +134,6 @@ void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef
 	for (size_t i = 0; i < pairs; ++i)
 	{
 		dev::bytesConstRef pair = _in.cropped(i * pairSize, pairSize);
-		cout << "Pair: ";
-		decodePointG1(pair).print();
-		decodePointG2(pair.cropped(3 * 32)).print();
 		x = x * libsnark::alt_bn128_miller_loop(
 			libsnark::alt_bn128_precompute_G1(decodePointG1(pair)),
 			libsnark::alt_bn128_precompute_G2(decodePointG2(pair.cropped(3 * 32)))
@@ -176,38 +174,43 @@ void dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in, dev::bytesRef _out)
 
 	libsnark::alt_bn128_G1 result = libsnark::alt_bn128_G1::zero();
 
-	cout << "multiply by " << s << endl;
 	for (int i = 255; i >= 0; --i)
 	{
 		result = result.dbl();
 		if (boost::multiprecision::bit_test(s, i))
-		{
-			cout <<" Bit " << i << " is set" << endl;
 			result = result + p;
-		}
 	}
 
 	encodePointG1(result, _out);
 }
 
-void hexOutputPointG1(libsnark::alt_bn128_G1 _p)
+std::string outputPointG1Affine(libsnark::alt_bn128_G1 _p)
 {
-	cout <<
-		"{\n" <<
-		"  X: hex\"" << fromLibsnarkBigint(_p.X.as_bigint()).hex() << "\", \n" <<
-		"  Y: hex\"" << fromLibsnarkBigint(_p.Y.as_bigint()).hex() << "\", \n" <<
-		"  Z: hex\"" << fromLibsnarkBigint(_p.Z.as_bigint()).hex() << "\", \n" <<
-		"}";
+	libsnark::alt_bn128_G1 aff = _p;
+	aff.to_affine_coordinates();
+	return
+		"Pairing.g1FromAffine(0x" +
+		fromLibsnarkBigint(aff.X.as_bigint()).hex() +
+		", 0x" +
+		fromLibsnarkBigint(aff.Y.as_bigint()).hex() +
+		")";
 }
 
+std::string outputPointG2Affine(libsnark::alt_bn128_G2 _p)
+{
+	libsnark::alt_bn128_G2 aff = _p;
+	aff.to_affine_coordinates();
+	return
+		"Pairing.g2FromAffine([0x" +
+		fromLibsnarkBigint(aff.X.c1.as_bigint()).hex() + ", 0x" +
+		fromLibsnarkBigint(aff.X.c0.as_bigint()).hex() + "], [0x" +
+		fromLibsnarkBigint(aff.Y.c1.as_bigint()).hex() + ", 0x" +
+		fromLibsnarkBigint(aff.Y.c0.as_bigint()).hex() + "])";
+}
 
 void dev::snark::exportVK(string const& _VKFilename)
 {
 	initLibSnark();
-
-	libsnark::alt_bn128_G2 five(libsnark::bigint<libsnark::alt_bn128_q_limbs>(5) * libsnark::alt_bn128_G2::one());
-	five.to_affine_coordinates();
-	five.print_coordinates();
 
 	std::stringstream ss;
 	std::ifstream fh(_VKFilename, std::ios::binary);
@@ -220,8 +223,44 @@ void dev::snark::exportVK(string const& _VKFilename)
 
 	ss.rdbuf()->pubseekpos(0, std::ios_base::in);
 
-	libsnark::r1cs_ppzksnark_verification_key<libsnark::alt_bn128_pp> obj;
-	ss >> obj;
+	libsnark::r1cs_ppzksnark_verification_key<libsnark::alt_bn128_pp> verificationKey;
+	ss >> verificationKey;
 
-	hexOutputPointG1(obj.alphaB_g1);
+	unsigned icLength = verificationKey.encoded_IC_query.rest.indices.size() + 1;
+
+
+	cout << "\tfunction verifyingKey() internal returns (VerifyingKey vk) {" << endl;
+	cout << "\t\tvk.A = " << outputPointG2Affine(verificationKey.alphaA_g2) << ";" << endl;
+	cout << "\t\tvk.B = " << outputPointG1Affine(verificationKey.alphaB_g1) << ";" << endl;
+	cout << "\t\tvk.C = " << outputPointG2Affine(verificationKey.alphaC_g2) << ";" << endl;
+	cout << "\t\tvk.gamma = " << outputPointG2Affine(verificationKey.gamma_g2) << ";" << endl;
+	cout << "\t\tvk.gammaBeta1 = " << outputPointG1Affine(verificationKey.gamma_beta_g1) << ";" << endl;
+	cout << "\t\tvk.gammaBeta2 = " << outputPointG2Affine(verificationKey.gamma_beta_g2) << ";" << endl;
+	cout << "\t\tvk.Z = " << outputPointG2Affine(verificationKey.rC_Z_g2) << ";" << endl;
+	cout << "\t\tvk.IC = new Pairing.G1Point[](" << icLength << ");" << endl;
+	cout << "\t\tvk.IC[0] = " << outputPointG1Affine(verificationKey.encoded_IC_query.first) << ";" << endl;
+	for (size_t i = 1; i < icLength; ++i)
+	{
+		auto vkICi = outputPointG1Affine(verificationKey.encoded_IC_query.rest.values[i - 1]);
+		cout << "\t\tvk.IC[" << i << "] = " << vkICi << ";" << endl;
+	}
+	cout << "\t\t}" << endl;
+	cout << "\tfunction verify(uint[] input, Proof proof) internal returns (bool) {" << endl;
+	cout << "\t\tVerifyingKey memory vk = verifyingKey();" << endl;
+	cout << "\t\tif (input.length + 1 != vk.IC.length) throw;" << endl;
+	cout << "\t\t// Compute the linear combination vk_x" << endl;
+	cout << "\t\tPairing.G1Point memory vk_x = vk.IC[0];" << endl;
+	for (size_t i = 0; i < verificationKey.encoded_IC_query.rest.indices.size(); ++i)
+		cout << "\t\tvk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[" << (i + 1) << "], input[" << i << "]));" << endl;
+	cout << "\t\tif (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return false;" << endl;
+	cout << "\t\tif (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return false;" << endl;
+	cout << "\t\tif (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return false;" << endl;
+	cout << "\t\tif (!Pairing.pairingProd3(proof.K, vk.gamma, Pairing.negate(Pairing.add(vk_x, Pairing.add(proof.A, proof.C))), vk.gammaBeta2, Pairing.negate(vk.gammaBeta1), proof.B)) return false;" << endl;
+	cout << "\t\tif (!Pairing.pairingProd3(" << endl;
+	cout << "\t\t\t\tPairing.add(vk_x, proof.A), proof.B," << endl;
+	cout << "\t\t\t\tPairing.negate(proof.H), vk.Z," << endl;
+	cout << "\t\t\t\tPairing.negate(proof.C), Pairing.P2()" << endl;
+	cout << "\t\t)) return false;" << endl;
+	cout << "\t\treturn true;" << endl;
+	cout << "\t}" << endl;
 }
