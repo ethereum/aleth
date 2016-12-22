@@ -19,8 +19,10 @@
  */
 
 #include <libdevcrypto/LibSnark.h>
+// These also need to be defined when compiling libsnark
 #define BINARY_OUTPUT 1
 #define MONTGOMERY_OUTPUT 1
+#define NO_PT_COMPRESSION 1
 
 #include <libsnark/algebra/curves/alt_bn128/alt_bn128_g1.hpp>
 #include <libsnark/algebra/curves/alt_bn128/alt_bn128_g2.hpp>
@@ -57,7 +59,7 @@ libsnark::bigint<libsnark::alt_bn128_q_limbs> toLibsnarkBigint(h256 const& _x)
 	libsnark::bigint<libsnark::alt_bn128_q_limbs> x;
 	for (unsigned i = 0; i < 4; i++)
 		for (unsigned j = 0; j < 8; j++)
-			x.data[i] |= uint64_t(_x[i * 8 + j]) << (8 * (7 - j));
+			x.data[3 - i] |= uint64_t(_x[i * 8 + j]) << (8 * (7 - j));
 	return x;
 }
 
@@ -66,7 +68,7 @@ h256 fromLibsnarkBigint(libsnark::bigint<libsnark::alt_bn128_q_limbs> _x)
 	h256 x;
 	for (unsigned i = 0; i < 4; i++)
 		for (unsigned j = 0; j < 8; j++)
-			x[i * 8 + j] = uint8_t(uint64_t(_x.data[i]) >> (8 * (7 - j)));
+			x[i * 8 + j] = uint8_t(uint64_t(_x.data[3 - i]) >> (8 * (7 - j)));
 	return x;
 }
 
@@ -120,13 +122,20 @@ void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef
 	// Input: list of pairs of G1 and G2 points
 	// Output: 1 if pairing evaluates to 1, 0 otherwise (left-padded to 32 bytes)
 
+	cout << "Pairng for input: " << toHex(_in) << endl;
+
 	size_t const pairSize = 3 * 32 + 3 * 64;
 	// TODO this does not round correctly
 	size_t const pairs = _in.size() / pairSize;
 	libsnark::alt_bn128_Fq12 x = libsnark::alt_bn128_Fq12::one();
+	cout << "P2: ";
+	libsnark::alt_bn128_G2::one().print();
 	for (size_t i = 0; i < pairs; ++i)
 	{
-		dev::bytesRef pair = _out.cropped(i * pairSize, pairSize);
+		dev::bytesConstRef pair = _in.cropped(i * pairSize, pairSize);
+		cout << "Pair: ";
+		decodePointG1(pair).print();
+		decodePointG2(pair.cropped(3 * 32)).print();
 		x = x * libsnark::alt_bn128_miller_loop(
 			libsnark::alt_bn128_precompute_G1(decodePointG1(pair)),
 			libsnark::alt_bn128_precompute_G2(decodePointG2(pair.cropped(3 * 32)))
@@ -195,6 +204,10 @@ void hexOutputPointG1(libsnark::alt_bn128_G1 _p)
 void dev::snark::exportVK(string const& _VKFilename)
 {
 	initLibSnark();
+
+	libsnark::alt_bn128_G2 five(libsnark::bigint<libsnark::alt_bn128_q_limbs>(5) * libsnark::alt_bn128_G2::one());
+	five.to_affine_coordinates();
+	five.print_coordinates();
 
 	std::stringstream ss;
 	std::ifstream fh(_VKFilename, std::ios::binary);
