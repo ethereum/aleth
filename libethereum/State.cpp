@@ -293,6 +293,13 @@ void State::incNonce(Address const& _addr)
 		m_cache[_addr] = Account(requireAccountStartNonce() + 1, 0);
 }
 
+void State::setNonce(Address const& _addr, u256 const& _nonce)
+{
+	Account* a = account(_addr);
+	assert(a);
+	a->setNonce(_nonce);
+}
+
 void State::addBalance(Address const& _id, u256 const& _amount)
 {
 	if (Account* a = account(_id))

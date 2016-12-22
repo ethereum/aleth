@@ -161,6 +161,13 @@ public:
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 
+	bool isTouched(Address const& _address) const { auto a = account(_address); return !a || a->isDirty(); }
+	void untouch(Address const& _address)
+	{
+		m_cache[_address].untouch();
+		m_unchangedCacheEntries.emplace_back(_address);
+	}
+
 	/// Check if the account exists in the state and is non empty (nonce > 0 || balance > 0 || code nonempty).
 	/// These two notions are equivalent after EIP158.
 	bool accountNonemptyAndExisting(Address const& _address) const;
@@ -210,8 +217,12 @@ public:
 	/// Sets the code of the account. Must only be called during / after contract creation.
 	void setCode(Address const& _address, bytes&& _code) { m_cache[_address].setCode(std::move(_code)); }
 
+	void clearStorageChanges(Address const& _addr) { m_cache[_addr].clearStorageChanges(); }
+
 	/// Delete an account (used for processing suicides).
 	void kill(Address _a);
+
+	bool isAlive(Address const& _addr) const { auto a = account(_addr); return a && a->isAlive(); }
 
 	/// Get the storage of an account.
 	/// @note This is expensive. Don't use it unless you need to.

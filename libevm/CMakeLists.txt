@@ -20,9 +20,9 @@ add_library(evm ${SOURCES} ${HEADERS})
 
 find_package(Eth)
 
-target_include_directories(evm PRIVATE ..)
 target_link_libraries(evm ${Eth_ETHCORE_LIBRARIES})
 target_link_libraries(evm ${Eth_EVMCORE_LIBRARIES})
+target_include_directories(evm PRIVATE .. ${JSONCPP_INCLUDE_DIR})
 
 if (EVMJIT)
 	target_include_directories(evm PRIVATE ../evmjit/include)
