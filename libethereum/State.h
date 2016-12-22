@@ -282,6 +282,8 @@ private:
 	/// Purges non-modified entries in m_cache if it grows too large.
 	void clearCacheIfTooLarge() const;
 
+	void createAccount(Address const& _address, Account const&& _account);
+
 	/// Debugging only. Good for checking the Trie is in shape.
 	bool isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const;
 
@@ -292,6 +294,7 @@ private:
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
 	mutable std::unordered_map<Address, Account> m_cache;	///< Our address cache. This stores the states of each address that has (or at least might have) been changed.
 	mutable std::vector<Address> m_unchangedCacheEntries;	///< Tracks entries in m_cache that can potentially be purged if it grows too large.
+	mutable std::set<Address> m_nonExistingAccountsCache;	///< Tracks addresses that are known to not exist.
 	AddressHash m_touched;						///< Tracks all addresses touched so far.
 
 	u256 m_accountStartNonce;

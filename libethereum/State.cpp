@@ -64,6 +64,7 @@ State::State(State const& _s):
 	m_state(&m_db, _s.m_state.root(), Verification::Skip),
 	m_cache(_s.m_cache),
 	m_unchangedCacheEntries(_s.m_unchangedCacheEntries),
+	m_nonExistingAccountsCache(_s.m_nonExistingAccountsCache),
 	m_touched(_s.m_touched),
 	m_accountStartNonce(_s.m_accountStartNonce)
 {
@@ -164,6 +165,7 @@ State& State::operator=(State const& _s)
 	m_state.open(&m_db, _s.m_state.root(), Verification::Skip);
 	m_cache = _s.m_cache;
 	m_unchangedCacheEntries = _s.m_unchangedCacheEntries;
+	m_nonExistingAccountsCache = _s.m_nonExistingAccountsCache;
 	m_touched = _s.m_touched;
 	m_accountStartNonce = _s.m_accountStartNonce;
 	paranoia("after state cloning (assignment op)", true);
@@ -183,10 +185,16 @@ Account* State::account(Address const& _a, bool _requireCode)
 		a = &it->second;
 	else
 	{
+		if (m_nonExistingAccountsCache.find(_a) != m_nonExistingAccountsCache.end())
+			return nullptr;
+
 		// populate basic info.
 		string stateBack = m_state.at(_a);
 		if (stateBack.empty())
+		{
+			m_nonExistingAccountsCache.insert(_a);
 			return nullptr;
+		}
 
 		clearCacheIfTooLarge();
 
@@ -250,6 +258,7 @@ void State::setRoot(h256 const& _r)
 {
 	m_cache.clear();
 	m_unchangedCacheEntries.clear();
+	m_nonExistingAccountsCache.clear();
 //	m_touched.clear();
 	m_state.setRoot(_r);
 	paranoia("begin setRoot", true);
@@ -290,7 +299,7 @@ void State::incNonce(Address const& _addr)
 		a->incNonce();
 	else
 		// This is possible if a transaction has gas price 0.
-		m_cache[_addr] = Account(requireAccountStartNonce() + 1, 0);
+		createAccount(_addr, Account(requireAccountStartNonce() + 1, 0));
 }
 
 void State::setNonce(Address const& _addr, u256 const& _nonce)
@@ -305,7 +314,7 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 	if (Account* a = account(_id))
 		a->addBalance(_amount);
 	else
-		m_cache[_id] = Account(requireAccountStartNonce(), _amount, Account::NormalCreation);
+		createAccount(_id, Account(requireAccountStartNonce(), _amount, Account::NormalCreation));
 }
 
 void State::subBalance(Address const& _id, bigint const& _amount)
@@ -322,17 +331,23 @@ void State::subBalance(Address const& _id, bigint const& _amount)
 
 void State::createContract(Address const& _address, bool _incrementNonce)
 {
-	m_cache[_address] = Account(
+	createAccount(_address, Account(
 		requireAccountStartNonce() + (_incrementNonce ? 1 : 0),
 		balance(_address),
 		Account::ContractConception
-	);
+	));
 }
 
 void State::ensureAccountExists(const Address& _address)
 {
 	if (!addressInUse(_address))
-		m_cache[_address] = Account(requireAccountStartNonce(), 0, Account::NormalCreation);
+		createAccount(_address, Account(requireAccountStartNonce(), 0, Account::NormalCreation));
+}
+
+void State::createAccount(Address const& _address, Account const&& _account)
+{
+	m_cache[_address] = std::move(_account);
+	m_nonExistingAccountsCache.erase(_address);
 }
 
 void State::kill(Address _addr)
