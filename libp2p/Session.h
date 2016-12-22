@@ -160,15 +160,11 @@ private:
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
 
-	unsigned m_protocolVersion = 0;			///< The protocol version of the peer.
 	std::shared_ptr<Peer> m_peer;			///< The Peer object.
 	bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 
 	mutable Mutex x_info;
 	PeerSessionInfo m_info;						///< Dynamic information about this peer.
-
-	bool m_theyRequestedNodes = false;		///< Has the peer requested nodes from us without receiveing an answer from us?
-	bool m_weRequestedNodes = false;		///< Have we requested nodes from the peer and not received an answer yet?
 
 	std::chrono::steady_clock::time_point m_connect;		///< Time point of connection.
 	std::chrono::steady_clock::time_point m_ping;			///< Time point of last ping.
