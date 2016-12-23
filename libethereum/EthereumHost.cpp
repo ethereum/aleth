@@ -51,10 +51,10 @@ const char* EthereumHostTrace::name() { return EthPurple "⧫" EthGray " "; }
 
 namespace
 {
-class EthereumPeerObserver : public EthereumPeerObserverFace
+class EthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
-	explicit EthereumPeerObserver(EthereumHost& _host) : m_host(_host) {}
+	explicit EthereumPeerObserver(EthereumHost& _host): m_host(_host) {}
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
 	{
@@ -104,6 +104,211 @@ public:
 private:
 	EthereumHost& m_host;
 };
+
+class EthereumHostData: public EthereumHostDataFace
+{
+public:
+	EthereumHostData(BlockChain const& _chain, OverlayDB const& _db): m_chain(_chain), m_db(_db) {}
+
+	pair<bytes, unsigned> blockHeaders(RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse) const override
+	{
+		auto numHeadersToSend = _maxHeaders;
+
+		auto step = static_cast<unsigned>(_skip) + 1;
+		assert(step > 0 && "step must not be 0");
+
+		h256 blockHash;
+		if (_blockId.size() == 32) // block id is a hash
+		{
+			blockHash = _blockId.toHash<h256>();
+			//blockNumber = host()->chain().number(blockHash);
+			clog(NetMessageSummary) << "GetBlockHeaders (block (hash): " << blockHash
+			<< ", maxHeaders: " << _maxHeaders
+			<< ", skip: " << _skip << ", reverse: " << _reverse << ")";
+
+			if (!_reverse)
+			{
+				auto n = m_chain.number(blockHash);
+				if (numHeadersToSend == 0)
+					blockHash = {};
+				else if (n != 0 || blockHash == m_chain.genesisHash())
+				{
+					auto top = n + uint64_t(step) * numHeadersToSend - 1;
+					auto lastBlock = m_chain.number();
+					if (top > lastBlock)
+					{
+						numHeadersToSend = (lastBlock - n) / step + 1;
+						top = n + step * (numHeadersToSend - 1);
+					}
+					assert(top <= lastBlock && "invalid top block calculated");
+					blockHash = m_chain.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+				}
+				else
+					blockHash = {};
+			}
+			else if (!m_chain.isKnown(blockHash))
+				blockHash = {};
+		}
+		else // block id is a number
+		{
+			auto n = _blockId.toInt<bigint>();
+			clog(NetMessageSummary) << "GetBlockHeaders (" << n
+			<< "max: " << _maxHeaders
+			<< "skip: " << _skip << (_reverse ? "reverse" : "") << ")";
+
+			if (!_reverse)
+			{
+				auto lastBlock = m_chain.number();
+				if (n > lastBlock || numHeadersToSend == 0)
+					blockHash = {};
+				else
+				{
+					bigint top = n + uint64_t(step) * (numHeadersToSend - 1);
+					if (top > lastBlock)
+					{
+						numHeadersToSend = (lastBlock - static_cast<unsigned>(n)) / step + 1;
+						top = n + step * (numHeadersToSend - 1);
+					}
+					assert(top <= lastBlock && "invalid top block calculated");
+					blockHash = m_chain.numberHash(static_cast<unsigned>(top)); // override start block hash with the hash of the top block we have
+				}
+			}
+			else if (n <= std::numeric_limits<unsigned>::max())
+				blockHash = m_chain.numberHash(static_cast<unsigned>(n));
+			else
+				blockHash = {};
+		}
+
+		auto nextHash = [this](h256 _h, unsigned _step)
+		{
+			static const unsigned c_blockNumberUsageLimit = 1000;
+
+			const auto lastBlock = m_chain.number();
+			const auto limitBlock = lastBlock > c_blockNumberUsageLimit ? lastBlock - c_blockNumberUsageLimit : 0; // find the number of the block below which we don't expect BC changes.
+
+			while (_step) // parent hash traversal
+			{
+				auto details = m_chain.details(_h);
+				if (details.number < limitBlock)
+					break; // stop using parent hash traversal, fallback to using block numbers
+				_h = details.parent;
+				--_step;
+			}
+
+			if (_step) // still need lower block
+			{
+				auto n = m_chain.number(_h);
+				if (n >= _step)
+					_h = m_chain.numberHash(n - _step);
+				else
+					_h = {};
+			}
+
+
+			return _h;
+		};
+
+		bytes rlp;
+		unsigned itemCount = 0;
+		vector<h256> hashes;
+		for (unsigned i = 0; i != numHeadersToSend; ++i)
+		{
+			if (!blockHash || !m_chain.isKnown(blockHash))
+				break;
+
+			hashes.push_back(blockHash);
+			++itemCount;
+
+			blockHash = nextHash(blockHash, step);
+		}
+
+		for (unsigned i = 0; i < hashes.size() && rlp.size() < c_maxPayload; ++i)
+			rlp += m_chain.headerData(hashes[_reverse ? i : hashes.size() - 1 - i]);
+
+		return make_pair(rlp, itemCount);
+	}
+
+	pair<bytes, unsigned> blockBodies(RLP const& _blockHashes) const override
+	{
+		unsigned const count = static_cast<unsigned>(_blockHashes.itemCount());
+
+		bytes rlp;
+		unsigned n = 0;
+		auto numBodiesToSend = std::min(count, c_maxBlocks);
+		for (unsigned i = 0; i < numBodiesToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			auto h = _blockHashes[i].toHash<h256>();
+			if (m_chain.isKnown(h))
+			{
+				bytes blockBytes = m_chain.block(h);
+				RLP block{blockBytes};
+				RLPStream body;
+				body.appendList(2);
+				body.appendRaw(block[1].data()); // transactions
+				body.appendRaw(block[2].data()); // uncles
+				auto bodyBytes = body.out();
+				rlp.insert(rlp.end(), bodyBytes.begin(), bodyBytes.end());
+				++n;
+			}
+		}
+		if (count > 20 && n == 0)
+			clog(NetWarn) << "all" << count << "unknown blocks requested; peer on different chain?";
+		else
+			clog(NetMessageSummary) << n << "blocks known and returned;" << (numBodiesToSend - n) << "blocks unknown;" << (count > c_maxBlocks ? count - c_maxBlocks : 0) << "blocks ignored";
+
+		return make_pair(rlp, n);
+	}
+
+	strings nodeData(RLP const& _dataHashes) const override
+	{
+		unsigned const count = static_cast<unsigned>(_dataHashes.itemCount());
+
+		strings data;
+		size_t payloadSize = 0;
+		auto numItemsToSend = std::min(count, c_maxNodes);
+		for (unsigned i = 0; i < numItemsToSend && payloadSize < c_maxPayload; ++i)
+		{
+			auto h = _dataHashes[i].toHash<h256>();
+			auto node = m_db.lookup(h);
+			if (!node.empty())
+			{
+				payloadSize += node.length();
+				data.push_back(move(node));
+			}
+		}
+		clog(NetMessageSummary) << data.size() << " nodes known and returned;" << (numItemsToSend - data.size()) << " unknown;" << (count > c_maxNodes ? count - c_maxNodes : 0) << " ignored";
+
+		return data;
+	}
+
+	pair<bytes, unsigned> receipts(RLP const& _blockHashes) const override
+	{
+		unsigned const count = static_cast<unsigned>(_blockHashes.itemCount());
+
+		bytes rlp;
+		unsigned n = 0;
+		auto numItemsToSend = std::min(count, c_maxReceipts);
+		for (unsigned i = 0; i < numItemsToSend && rlp.size() < c_maxPayload; ++i)
+		{
+			auto h = _blockHashes[i].toHash<h256>();
+			if (m_chain.isKnown(h))
+			{
+				auto const receipts = m_chain.receipts(h);
+				auto receiptsRlpList = receipts.rlp();
+				rlp.insert(rlp.end(), receiptsRlpList.begin(), receiptsRlpList.end());
+				++n;
+			}
+		}
+		clog(NetMessageSummary) << n << " receipt lists known and returned;" << (numItemsToSend - n) << " unknown;" << (count > c_maxReceipts ? count - c_maxReceipts : 0) << " ignored";
+
+		return make_pair(rlp, n);
+	}
+
+private:
+	BlockChain const& m_chain;
+	OverlayDB const& m_db;
+};
+
 }
 
 EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
@@ -114,6 +319,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_tq		(_tq),
 	m_bq		(_bq),
 	m_networkId	(_networkId),
+	m_hostData(make_shared<EthereumHostData>(m_chain, m_db)),
 	m_peerObserver(make_shared<EthereumPeerObserver>(*this))
 {
 	// TODO: Composition would be better. Left like that to avoid initialization
@@ -250,7 +456,7 @@ tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector
 	vector<shared_ptr<EthereumPeer>> chosen;
 	vector<shared_ptr<EthereumPeer>> allowed;
 	vector<shared_ptr<SessionFace>> sessions;
-	
+
 	size_t peerCount = 0;
 	foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
 	{
@@ -483,6 +689,7 @@ shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> c
 		m_chain.details().totalDifficulty,
 		m_chain.currentHash(),
 		m_chain.genesisHash(),
+		m_hostData,
 		m_peerObserver
 	);
 

@@ -55,10 +55,24 @@ public:
 	virtual void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
 
 	virtual void onPeerNodeData(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
-	
+
 	virtual void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
 
 	virtual void onPeerAborting() = 0;
+};
+
+class EthereumHostDataFace
+{
+public:
+	virtual ~EthereumHostDataFace() {}
+
+	virtual std::pair<bytes, unsigned> blockHeaders(RLP const& _blockId, unsigned _maxHeaders, u256 _skip, bool _reverse) const = 0;
+
+	virtual std::pair<bytes, unsigned> blockBodies(RLP const& _blockHashes) const = 0;
+
+	virtual strings nodeData(RLP const& _dataHashes) const = 0;
+
+	virtual std::pair<bytes, unsigned>receipts(RLP const& _blockHashes) const = 0;
 };
 
 /**
@@ -87,7 +101,7 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<EthereumPeerObserverFace> _observer);
+	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<EthereumHostDataFace> _hostData, std::shared_ptr<EthereumPeerObserverFace> _observer);
 
 	/// Abort sync and reset fetch
 	void setIdle();
@@ -117,9 +131,6 @@ public:
 private:
 	using p2p::Capability::sealAndSend;
 
-	/// What is the ethereum subprotocol host object.
-	EthereumHost* host() const;
-
 	/// Figure out the amount of blocks we should be asking for.
 	unsigned askOverride() const;
 
@@ -127,15 +138,14 @@ private:
 	virtual bool interpret(unsigned _id, RLP const& _r);
 
 	/// Request status. Called from constructor
-	void requestStatus(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);
-
+	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);
 
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
 
 	// Request of type _packetType with _hashes as input parameters
 	void requestByHashes(h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType);
-		
+
 	/// Update our asking state.
 	void setAsking(Asking _g);
 
@@ -150,6 +160,8 @@ private:
 
 	/// Runs period checks to check up on the peer.
 	void tick();
+
+	unsigned m_hostProtocolVersion = 0;
 
 	/// Peer's protocol version.
 	unsigned m_protocolVersion;
@@ -179,6 +191,7 @@ private:
 	unsigned m_lastAskedHeaders = 0;		///< Number of hashes asked
 
 	std::shared_ptr<EthereumPeerObserverFace> m_observer;
+	std::shared_ptr<EthereumHostDataFace> m_hostData;
 };
 
 }
