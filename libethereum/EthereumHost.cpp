@@ -477,7 +477,14 @@ shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> c
 {
 	auto ret = HostCapability<EthereumPeer>::newPeerCapability(_s, _idOffset, _cap, _capID);
 
-	capabilityFromSession<EthereumPeer>(*_s)->init(m_peerObserver);
+	capabilityFromSession<EthereumPeer>(*_s)->init(
+		protocolVersion(),
+		m_networkId,
+		m_chain.details().totalDifficulty,
+		m_chain.currentHash(),
+		m_chain.genesisHash(),
+		m_peerObserver
+	);
 
 	return ret;
 }

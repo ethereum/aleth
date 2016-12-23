@@ -87,7 +87,7 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	void init(std::shared_ptr<EthereumPeerObserverFace> _observer);
+	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<EthereumPeerObserverFace> _observer);
 
 	/// Abort sync and reset fetch
 	void setIdle();
@@ -127,7 +127,7 @@ private:
 	virtual bool interpret(unsigned _id, RLP const& _r);
 
 	/// Request status. Called from constructor
-	void requestStatus();
+	void requestStatus(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);
 
 
 	/// Clear all known transactions.

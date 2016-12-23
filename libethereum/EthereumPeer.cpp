@@ -30,7 +30,6 @@
 #include "EthereumHost.h"
 #include "TransactionQueue.h"
 #include "BlockQueue.h"
-#include "BlockChainSync.h"
 
 using namespace std;
 using namespace dev;
@@ -71,10 +70,10 @@ EthereumPeer::~EthereumPeer()
 	abortSync();
 }
 
-void EthereumPeer::init(std::shared_ptr<EthereumPeerObserverFace> _observer)
+void EthereumPeer::init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<EthereumPeerObserverFace> _observer)
 { 
 	m_observer = _observer;
-	requestStatus();
+	requestStatus(_hostProtocolVersion, _hostNetworkId, _chainTotalDifficulty, _chainCurrentHash, _chainGenesisHash);
 }
 
 bool EthereumPeer::isRude() const
@@ -129,19 +128,19 @@ void EthereumPeer::setIdle()
 	setAsking(Asking::Nothing);
 }
 
-void EthereumPeer::requestStatus()
+void EthereumPeer::requestStatus(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash)
 {
 	assert(m_asking == Asking::Nothing);
 	setAsking(Asking::State);
 	m_requireTransactions = true;
 	RLPStream s;
-	bool latest = m_peerCapabilityVersion == host()->protocolVersion();
+	bool latest = m_peerCapabilityVersion == _hostProtocolVersion;
 	prep(s, StatusPacket, 5)
-					<< (latest ? host()->protocolVersion() : EthereumHost::c_oldProtocolVersion)
-					<< host()->networkId()
-					<< host()->chain().details().totalDifficulty
-					<< host()->chain().currentHash()
-					<< host()->chain().genesisHash();
+					<< (latest ? _hostProtocolVersion : EthereumHost::c_oldProtocolVersion)
+					<< _hostNetworkId
+					<< _chainTotalDifficulty
+					<< _chainCurrentHash
+					<< _chainGenesisHash;
 	sealAndSend(s);
 }
 
