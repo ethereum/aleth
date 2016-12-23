@@ -16,8 +16,8 @@
 */
 #include "../GenesisInfo.h"
 
-static dev::h256 const c_genesisStateRootFrontier("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544");
-static std::string const c_genesisInfoFrontier = std::string() +
+static dev::h256 const c_genesisStateRootMainNetwork("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544");
+static std::string const c_genesisInfoMainNetwork = std::string() +
 R"E(
 {
 	"sealEngine": "Ethash",

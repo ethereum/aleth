@@ -37,6 +37,7 @@ enum class Network
 	MainNetwork = 1,		///< Normal Frontier/Homestead/DAO/EIP150/EIP158 chain.
 	//Morden = 2,			///< Normal Morden chain.
 	Ropsten = 3,			///< New Ropsten Test Network
+	MainNetworkTest = 69,	///< MainNetwork rules but without genesis accounts (for transaction tests).
 	TransitionnetTest = 70,	///< Normal Frontier/Homestead/DAO/EIP150/EIP158 chain without all the premine.
 	FrontierTest = 71,		///< Just test the Frontier-era characteristics "forever" (no Homestead portion).
 	HomesteadTest = 72,		///< Just test the Homestead-era characteristics "forever" (no Frontier portion).

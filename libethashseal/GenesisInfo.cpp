@@ -24,6 +24,7 @@ using namespace dev;
 #include "genesis/ropsten.cpp"
 
 //Test configurations
+#include "genesis/mainNetworkTest.cpp"
 #include "genesis/frontierTest.cpp"
 #include "genesis/homesteadTest.cpp"
 #include "genesis/eip150Test.cpp"
@@ -34,7 +35,8 @@ std::string const& dev::eth::genesisInfo(Network _n)
 {
 	switch (_n)
 	{
-	case Network::MainNetwork: return c_genesisInfoFrontier;
+	case Network::MainNetwork: return c_genesisInfoMainNetwork;
+	case Network::MainNetworkTest: return c_genesisInfoMainNetworkTest;
 	case Network::Ropsten: return c_genesisInfoRopsten;
 	case Network::TransitionnetTest: return c_genesisInfoTest;
 	case Network::FrontierTest: return c_genesisInfoFrontierTest;
@@ -50,8 +52,9 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
 {
 	switch (_n)
 	{
-	case Network::MainNetwork: return c_genesisStateRootFrontier;
+	case Network::MainNetwork: return c_genesisStateRootMainNetwork;
 	case Network::Ropsten: return c_genesisStateRootRopsten;
+	case Network::MainNetworkTest: return c_genesisStateRootMainNetworkTest;
 	case Network::TransitionnetTest: return c_genesisStateRootTest;
 	case Network::FrontierTest: return c_genesisStateRootFrontierTest;
 	case Network::HomesteadTest: return c_genesisStateRootHomesteadTest;

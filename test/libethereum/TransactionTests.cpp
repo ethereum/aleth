@@ -37,6 +37,7 @@ namespace dev {  namespace test {
 void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 {
 	TestOutputHelper::initTest(_v);
+	unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(eth::Network::MainNetworkTest)).createSealEngine());
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
@@ -45,12 +46,8 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
-		eth::Network sealEngineNet;
 		BOOST_REQUIRE(o.count("blocknumber") > 0);
 		u256 transactionBlock = toInt(o["blocknumber"].get_str());
-		sealEngineNet = eth::Network::MainNetwork;
-
-		unique_ptr<SealEngineFace> se(ChainParams(genesisInfo(sealEngineNet)).createSealEngine());
 		BlockHeader bh;
 		bh.setNumber(transactionBlock);
 
@@ -157,6 +154,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
 		}
 	}//for
+
 }//doTransactionTests
 
 } }// Namespace Close
