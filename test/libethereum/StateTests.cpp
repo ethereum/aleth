@@ -127,11 +127,7 @@ public:
 
 BOOST_FIXTURE_TEST_SUITE(StateTestsGeneral, generaltestfixture)
 
-BOOST_AUTO_TEST_CASE(stHomesteadSpecific){}
-BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead){}
-BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead){}
-BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead){}
-
+//Frontier Tests
 BOOST_AUTO_TEST_CASE(stBlockHashTest){}
 BOOST_AUTO_TEST_CASE(stBoundsTest){}
 BOOST_AUTO_TEST_CASE(stCallCodes){}
@@ -151,8 +147,28 @@ BOOST_AUTO_TEST_CASE(stTransactionTest){}
 BOOST_AUTO_TEST_CASE(stTransitionTest){}
 BOOST_AUTO_TEST_CASE(stWalletTest){}
 
-BOOST_AUTO_TEST_CASE(stCodeSizeLimit){}
+//Homestead Tests
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesCallCodeHomestead){}
+BOOST_AUTO_TEST_CASE(stCallDelegateCodesHomestead){}
+BOOST_AUTO_TEST_CASE(stHomesteadSpecific){}
+BOOST_AUTO_TEST_CASE(stDelegatecallTestHomestead){}
 
+//EIP150 Tests
+BOOST_AUTO_TEST_CASE(stChangedEIP150){}
+BOOST_AUTO_TEST_CASE(stEIP150singleCodeGasPrices){}
+BOOST_AUTO_TEST_CASE(stMemExpandingEIP150Calls){}
+BOOST_AUTO_TEST_CASE(stEIP150Specific){}
+
+//EIP158 Tests
+BOOST_AUTO_TEST_CASE(stEIP158Specific){}
+BOOST_AUTO_TEST_CASE(stNonZeroCallsTest){}
+BOOST_AUTO_TEST_CASE(stZeroCallsTest){}
+BOOST_AUTO_TEST_CASE(stZeroCallsRevert){}
+BOOST_AUTO_TEST_CASE(stCodeSizeLimit){}
+BOOST_AUTO_TEST_CASE(stCreateTest){}
+BOOST_AUTO_TEST_CASE(stRevertTest){}
+
+//Stress Tests
 BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
 BOOST_AUTO_TEST_SUITE_END()
