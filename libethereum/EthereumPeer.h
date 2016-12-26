@@ -49,7 +49,7 @@ class EthereumPeer: public p2p::Capability
 
 public:
 	/// Basic constructor.
-	EthereumPeer(std::shared_ptr<p2p::Session> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap, uint16_t _capID);
+	EthereumPeer(std::shared_ptr<p2p::SessionFace> _s, p2p::HostCapabilityFace* _h, unsigned _i, p2p::CapDesc const& _cap, uint16_t _capID);
 
 	/// Basic destructor.
 	virtual ~EthereumPeer();
@@ -63,9 +63,6 @@ public:
 	/// How many message types do we have?
 	static unsigned messageCount() { return PacketCount; }
 
-	/// What is the ethereum subprotocol host object.
-	EthereumHost* host() const;
-
 	/// Abort sync and reset fetch
 	void setIdle();
 
@@ -75,6 +72,12 @@ public:
 
 	/// Request specified blocks from peer.
 	void requestBlockBodies(h256s const& _blocks);
+
+	/// Request values for specified keys from peer.
+	void requestNodeData(h256s const& _hashes);
+
+	/// Request receipts for specified blocks from peer.
+	void requestReceipts(h256s const& _blocks);
 
 	/// Check if this node is rude.
 	bool isRude() const;
@@ -87,6 +90,9 @@ public:
 
 private:
 	using p2p::Capability::sealAndSend;
+
+	/// What is the ethereum subprotocol host object.
+	EthereumHost* host() const;
 
 	/// Figure out the amount of blocks we should be asking for.
 	unsigned askOverride() const;
@@ -101,6 +107,9 @@ private:
 	/// Clear all known transactions.
 	void clearKnownTransactions() { std::lock_guard<std::mutex> l(x_knownTransactions); m_knownTransactions.clear(); }
 
+	// Request of type _packetType with _hashes as input parameters
+	void requestByHashes(h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType);
+		
 	/// Update our asking state.
 	void setAsking(Asking _g);
 
@@ -131,12 +140,6 @@ private:
 	h256 m_latestHash;						///< Peer's latest block's hash that we know about or default null value if no need to sync.
 	u256 m_totalDifficulty;					///< Peer's latest block's total difficulty.
 	h256 m_genesisHash;						///< Peer's genesis hash
-
-	/// This is built as we ask for hashes. Once no more hashes are given, we present this to the
-	/// host who initialises the DownloadMan and m_sub becomes active for us to begin asking for blocks.
-	u256 m_syncHashNumber = 0;				///< Number of latest hash we sync to (PV61+)
-	u256 m_height = 0;						///< Chain height
-	h256 m_syncHash;						///< Latest hash we sync to (PV60)
 
 	u256 m_peerCapabilityVersion;			///< Protocol version this peer supports received as capability
 	/// Have we received a GetTransactions packet that we haven't yet answered?

@@ -94,12 +94,14 @@ public:
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
 	void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerNodeData(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerAborting();
 
 private:
 	static char const* const s_stateNames[static_cast<int>(SyncState::Size)];
 
-	std::tuple<std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<p2p::Session>>> randomSelection(unsigned _percent = 25, std::function<bool(EthereumPeer*)> const& _allow = [](EthereumPeer const*){ return true; });
+	std::tuple<std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<EthereumPeer>>, std::vector<std::shared_ptr<p2p::SessionFace>>> randomSelection(unsigned _percent = 25, std::function<bool(EthereumPeer*)> const& _allow = [](EthereumPeer const*){ return true; });
 
 	/// Sync with the BlockChain. It might contain one of our mined blocks, we might have new candidates from the network.
 	virtual void doWork() override;

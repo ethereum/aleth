@@ -47,15 +47,15 @@ public:
 
 	Host* host() const { return m_host; }
 
-	std::vector<std::pair<std::shared_ptr<Session>, std::shared_ptr<Peer>>> peerSessions() const;
-	std::vector<std::pair<std::shared_ptr<Session>, std::shared_ptr<Peer>>> peerSessions(u256 const& _version) const;
+	std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions() const;
+	std::vector<std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>>> peerSessions(u256 const& _version) const;
 
 protected:
 	virtual std::string name() const = 0;
 	virtual u256 version() const = 0;
 	CapDesc capDesc() const { return std::make_pair(name(), version()); }
 	virtual unsigned messageCount() const = 0;
-	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID) = 0;
+	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID) = 0;
 
 	virtual void onStarting() {}
 	virtual void onStopping() {}
@@ -80,7 +80,7 @@ protected:
 	virtual u256 version() const { return PeerCap::version(); }
 	virtual unsigned messageCount() const { return PeerCap::messageCount(); }
 
-	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<Session> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID)
+	virtual std::shared_ptr<Capability> newPeerCapability(std::shared_ptr<SessionFace> const& _s, unsigned _idOffset, CapDesc const& _cap, uint16_t _capID)
 	{
 		_s->registerFraming(_capID);
 		auto p = std::make_shared<PeerCap>(_s, this, _idOffset, _cap, _capID);

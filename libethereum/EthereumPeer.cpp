@@ -54,12 +54,11 @@ static string toString(Asking _a)
 	return "?";
 }
 
-EthereumPeer::EthereumPeer(std::shared_ptr<Session> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID):
+EthereumPeer::EthereumPeer(std::shared_ptr<SessionFace> _s, HostCapabilityFace* _h, unsigned _i, CapDesc const& _cap, uint16_t _capID):
 	Capability(_s, _h, _i, _capID),
 	m_peerCapabilityVersion(_cap.second)
 {
 	session()->addNote("manners", isRude() ? "RUDE" : "nice");
-	m_syncHashNumber = host()->chain().number() + 1;
 	requestStatus();
 }
 
@@ -150,7 +149,6 @@ void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, u
 	RLPStream s;
 	prep(s, GetBlockHeadersPacket, 4) << _startNumber << _count << _skip << (_reverse ? 1 : 0);
 	clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startNumber << (_reverse ? " in reverse" : "");
-	m_syncHashNumber = _startNumber;
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);
 }
@@ -165,7 +163,6 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
 	RLPStream s;
 	prep(s, GetBlockHeadersPacket, 4) << _startHash << _count << _skip << (_reverse ? 1 : 0);
 	clog(NetMessageDetail) << "Requesting " << _count << " block headers starting from " << _startHash << (_reverse ? " in reverse" : "");
-	m_syncHash = _startHash;
 	m_lastAskedHeaders = _count;
 	sealAndSend(s);
 }
@@ -173,16 +170,31 @@ void EthereumPeer::requestBlockHeaders(h256 const& _startHash, unsigned _count, 
 
 void EthereumPeer::requestBlockBodies(h256s const& _blocks)
 {
+	requestByHashes(_blocks, Asking::BlockBodies, GetBlockBodiesPacket);
+}
+
+void EthereumPeer::requestNodeData(h256s const& _hashes)
+{
+	requestByHashes(_hashes, Asking::NodeData, GetNodeDataPacket);
+}
+
+void EthereumPeer::requestReceipts(h256s const& _blocks)
+{
+	requestByHashes(_blocks, Asking::Receipts, GetReceiptsPacket);
+}
+
+void EthereumPeer::requestByHashes(h256s const& _hashes, Asking _asking, SubprotocolPacketType _packetType)
+{
 	if (m_asking != Asking::Nothing)
 	{
-		clog(NetWarn) << "Asking headers while requesting " << ::toString(m_asking);
+		clog(NetWarn) << "Asking "<< ::toString(_asking) << " while requesting " << ::toString(m_asking);
 	}
-	setAsking(Asking::BlockBodies);
-	if (_blocks.size())
+	setAsking(_asking);
+	if (_hashes.size())
 	{
 		RLPStream s;
-		prep(s, GetBlockBodiesPacket, _blocks.size());
-		for (auto const& i: _blocks)
+		prep(s, _packetType, _hashes.size());
+		for (auto const& i : _hashes)
 			s << i;
 		sealAndSend(s);
 	}
@@ -388,7 +400,7 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 	case BlockHeadersPacket:
 	{
 		if (m_asking != Asking::BlockHeaders)
-			clog(NetImpolite) << "Peer giving us blocks when we didn't ask for them.";
+			clog(NetImpolite) << "Peer giving us block headers when we didn't ask for them.";
 		else
 		{
 			setIdle();
@@ -542,6 +554,28 @@ bool EthereumPeer::interpret(unsigned _id, RLP const& _r)
 		RLPStream s;
 		prep(s, ReceiptsPacket, n).appendRaw(rlp, n);
 		sealAndSend(s);
+		break;
+	}
+	case NodeDataPacket:
+	{
+		if (m_asking != Asking::NodeData)
+			clog(NetImpolite) << "Peer giving us node data when we didn't ask for them.";
+		else
+		{
+			setIdle();
+			host()->onPeerNodeData(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+		}
+		break;
+	}
+	case ReceiptsPacket:
+	{
+		if (m_asking != Asking::Receipts)
+			clog(NetImpolite) << "Peer giving us receipts when we didn't ask for them.";
+		else
+		{
+			setIdle();
+			host()->onPeerReceipts(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), _r);
+		}
 		break;
 	}
 	default:

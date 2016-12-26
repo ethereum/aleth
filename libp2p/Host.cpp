@@ -58,13 +58,13 @@ ReputationManager::ReputationManager()
 {
 }
 
-void ReputationManager::noteRude(Session const& _s, std::string const& _sub)
+void ReputationManager::noteRude(SessionFace const& _s, std::string const& _sub)
 {
 	DEV_WRITE_GUARDED(x_nodes)
 		m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].isRude = true;
 }
 
-bool ReputationManager::isRude(Session const& _s, std::string const& _sub) const
+bool ReputationManager::isRude(SessionFace const& _s, std::string const& _sub) const
 {
 	DEV_READ_GUARDED(x_nodes)
 	{
@@ -78,13 +78,13 @@ bool ReputationManager::isRude(Session const& _s, std::string const& _sub) const
 	return false;
 }
 
-void ReputationManager::setData(Session const& _s, std::string const& _sub, bytes const& _data)
+void ReputationManager::setData(SessionFace const& _s, std::string const& _sub, bytes const& _data)
 {
 	DEV_WRITE_GUARDED(x_nodes)
 		m_nodes[make_pair(_s.id(), _s.info().clientVersion)].subs[_sub].data = _data;
 }
 
-bytes ReputationManager::data(Session const& _s, std::string const& _sub) const
+bytes ReputationManager::data(SessionFace const& _s, std::string const& _sub) const
 {
 	DEV_READ_GUARDED(x_nodes)
 	{
@@ -280,7 +280,7 @@ void Host::startPeerSession(Public const& _id, RLP const& _rlp, unique_ptr<RLPXF
 	clog(NetMessageSummary) << "Hello: " << clientVersion << "V[" << protocolVersion << "]" << _id << showbase << capslog.str() << dec << listenPort;
 	
 	// create session so disconnects are managed
-	auto ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));
+	shared_ptr<SessionFace> ps = make_shared<Session>(this, move(_io), _s, p, PeerSessionInfo({_id, clientVersion, p->endpoint.address.to_string(), listenPort, chrono::steady_clock::duration(), _rlp[2].toSet<CapDesc>(), 0, map<string, string>(), protocolVersion}));
 	if (protocolVersion < dev::p2p::c_protocolVersion - 1)
 	{
 		ps->disconnect(IncompatibleProtocol);
@@ -631,8 +631,7 @@ PeerSessionInfos Host::peerSessionInfo() const
 	for (auto& i: m_sessions)
 		if (auto j = i.second.lock())
 			if (j->isConnected())
-				DEV_GUARDED(j->x_info)
-					ret.push_back(j->m_info);
+				ret.push_back(j->info());
 	return ret;
 }
 
@@ -641,7 +640,7 @@ size_t Host::peerCount() const
 	unsigned retCount = 0;
 	RecursiveGuard l(x_sessions);
 	for (auto& i: m_sessions)
-		if (std::shared_ptr<Session> j = i.second.lock())
+		if (std::shared_ptr<SessionFace> j = i.second.lock())
 			if (j->isConnected())
 				retCount++;
 	return retCount;
@@ -804,7 +803,7 @@ void Host::disconnectLatePeers()
 	RecursiveGuard l(x_sessions);
 	for (auto p: m_sessions)
 		if (auto pp = p.second.lock())
-			if (now - c_keepAliveTimeOut > m_lastPing && pp->m_lastReceived < m_lastPing)
+			if (now - c_keepAliveTimeOut > m_lastPing && pp->lastReceived() < m_lastPing)
 				pp->disconnect(PingTimeout);
 }
 

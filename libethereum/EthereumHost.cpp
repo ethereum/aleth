@@ -172,26 +172,26 @@ void EthereumHost::foreachPeer(std::function<bool(std::shared_ptr<EthereumPeer>)
 {
 	//order peers by protocol, rating, connection age
 	auto sessions = peerSessions();
-	auto sessionLess = [](std::pair<std::shared_ptr<Session>, std::shared_ptr<Peer>> const& _left, std::pair<std::shared_ptr<Session>, std::shared_ptr<Peer>> const& _right)
+	auto sessionLess = [](std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _left, std::pair<std::shared_ptr<SessionFace>, std::shared_ptr<Peer>> const& _right)
 		{ return _left.first->rating() == _right.first->rating() ? _left.first->connectionTime() < _right.first->connectionTime() : _left.first->rating() > _right.first->rating(); };
 
 	std::sort(sessions.begin(), sessions.end(), sessionLess);
 	for (auto s: sessions)
-		if (!_f(s.first->cap<EthereumPeer>()))
+		if (!_f(capabilityFromSession<EthereumPeer>(*s.first)))
 			return;
 
 	sessions = peerSessions(c_oldProtocolVersion); //TODO: remove once v61+ is common
 	std::sort(sessions.begin(), sessions.end(), sessionLess);
 	for (auto s: sessions)
-		if (!_f(s.first->cap<EthereumPeer>(c_oldProtocolVersion)))
+		if (!_f(capabilityFromSession<EthereumPeer>(*s.first, c_oldProtocolVersion)))
 			return;
 }
 
-tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<Session>>> EthereumHost::randomSelection(unsigned _percent, std::function<bool(EthereumPeer*)> const& _allow)
+tuple<vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<EthereumPeer>>, vector<shared_ptr<SessionFace>>> EthereumHost::randomSelection(unsigned _percent, std::function<bool(EthereumPeer*)> const& _allow)
 {
 	vector<shared_ptr<EthereumPeer>> chosen;
 	vector<shared_ptr<EthereumPeer>> allowed;
-	vector<shared_ptr<Session>> sessions;
+	vector<shared_ptr<SessionFace>> sessions;
 	
 	size_t peerCount = 0;
 	foreachPeer([&](std::shared_ptr<EthereumPeer> _p)
@@ -347,6 +347,18 @@ void EthereumHost::onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP c
 	m_tq.enqueue(_r, _peer->session()->id());
 }
 
+void EthereumHost::onPeerNodeData(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r)
+{
+	unsigned itemCount = _r.itemCount();
+	clog(EthereumHostTrace) << "Node Data (" << dec << itemCount << "entries)";
+}
+
+void EthereumHost::onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r)
+{
+	unsigned itemCount = _r.itemCount();
+	clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
+}
+
 void EthereumHost::onPeerAborting()
 {
 	RecursiveGuard l(x_sync);
@@ -377,9 +389,9 @@ void EthereumHost::onTransactionImported(ImportResult _ir, h256 const& _h, h512 
 	if (!session)
 		return;
 
-	std::shared_ptr<EthereumPeer> peer = session->cap<EthereumPeer>();
+	std::shared_ptr<EthereumPeer> peer = capabilityFromSession<EthereumPeer>(*session);
 	if (!peer)
-		peer = session->cap<EthereumPeer>(c_oldProtocolVersion);
+		peer = capabilityFromSession<EthereumPeer>(*session, c_oldProtocolVersion);
 	if (!peer)
 		return;
 
