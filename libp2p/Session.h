@@ -79,6 +79,8 @@ public:
 	virtual std::shared_ptr<Peer> peer() const = 0;
 
 	virtual std::chrono::steady_clock::time_point lastReceived() const = 0;
+
+	virtual ReputationManager& repMan() = 0;
 };
 
 /**
@@ -121,10 +123,10 @@ public:
 
 	std::chrono::steady_clock::time_point lastReceived() const override { return m_lastReceived; }
 
+	ReputationManager& repMan() override;
+
 private:
 	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
-
-	ReputationManager& repMan() const;
 
 	void send(bytes&& _msg, uint16_t _protocolID);
 

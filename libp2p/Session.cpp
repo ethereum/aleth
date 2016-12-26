@@ -71,7 +71,7 @@ Session::~Session()
 	catch (...){}
 }
 
-ReputationManager& Session::repMan() const
+ReputationManager& Session::repMan()
 {
 	return m_server->repMan();
 }

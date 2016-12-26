@@ -58,8 +58,3 @@ void Capability::addRating(int _r)
 	if (session)
 		session->addRating(_r);
 }
-
-ReputationManager& Capability::repMan() const
-{
-	return host()->repMan();
-}

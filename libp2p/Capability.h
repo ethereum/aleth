@@ -47,8 +47,6 @@ public:
 protected:
 	std::shared_ptr<SessionFace> session() const { return m_session.lock(); }
 	HostCapabilityFace* hostCapability() const { return m_hostCap; }
-	Host* host() const { return m_hostCap->host(); }
-	ReputationManager& repMan() const;
 
 	virtual bool interpret(unsigned _id, RLP const&) = 0;
 

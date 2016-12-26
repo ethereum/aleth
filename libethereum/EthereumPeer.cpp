@@ -79,7 +79,7 @@ bool EthereumPeer::isRude() const
 {
 	auto s = session();
 	if (s)
-		return repMan().isRude(*s, name());
+		return s->repMan().isRude(*s, name());
 	return false;
 }
 
@@ -91,7 +91,7 @@ unsigned EthereumPeer::askOverride() const
 		return c_maxBlocksAsk;
 	if (s->info().clientVersion.substr(0, badGeth.size()) == badGeth)
 		return 1;
-	bytes const& d = repMan().data(*s, name());
+	bytes const& d = s->repMan().data(*s, name());
 	return d.empty() ? c_maxBlocksAsk : RLP(d).toInt<unsigned>(RLP::LaissezFaire);
 }
 
@@ -101,9 +101,9 @@ void EthereumPeer::setRude()
 	if (!s)
 		return;
 	auto old = askOverride();
-	repMan().setData(*s, name(), rlp(askOverride() / 2 + 1));
+	s->repMan().setData(*s, name(), rlp(askOverride() / 2 + 1));
 	cnote << "Rude behaviour; askOverride now" << askOverride() << ", was" << old;
-	repMan().noteRude(*s, name());
+	s->repMan().noteRude(*s, name());
 	session()->addNote("manners", "RUDE");
 }
 
