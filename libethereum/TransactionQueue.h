@@ -211,7 +211,7 @@ private:
 	std::vector<std::thread> m_verifiers;
 	std::deque<UnverifiedTransaction> m_unverified;								///< Pending verification queue
 	mutable Mutex x_queue;														///< Verification queue mutex
-	bool m_aborting = false;													///< Exit condition for verifier.
+	std::atomic<bool> m_aborting = {false};										///< Exit condition for verifier.
 };
 
 }
