@@ -349,14 +349,10 @@ string dev::eth::disassemble(bytes const& _mem)
 
 InstructionInfo dev::eth::instructionInfo(Instruction _inst)
 {
-	try
-	{
-		return c_instructionInfo.at(_inst);
-	}
-	catch (...)
-	{
-		return InstructionInfo({"<INVALID_INSTRUCTION: " + toString((unsigned)_inst) + ">", 0, 0, 0, false, InvalidTier});
-	}
+	auto it = c_instructionInfo.find(_inst);
+	if (it != c_instructionInfo.end())
+		return it->second;
+	return InstructionInfo({{}, 0, 0, 0, false, InvalidTier});
 }
 
 bool dev::eth::isValidInstruction(Instruction _inst)
