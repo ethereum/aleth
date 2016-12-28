@@ -226,8 +226,9 @@ class Options
 public:
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool fillTests = false; ///< Create JSON test files from execution results
-	bool stats = false;		///< Execution time stats
+	bool stats = false;		///< Execution time and stats for state tests
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	bool exectimelog = false; ///< Print execution time for each test suite
 	std::string rCheckTest;   ///< Test Input (for random tests)
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
 	bool checkState = false;///< Throw error when checking test states
@@ -259,7 +260,6 @@ private:
 	Options(Options const&) = delete;
 };
 
-
 class TestOutputHelper
 {
 public:
@@ -272,12 +272,18 @@ public:
 	static std::string const& testName() { return m_currentTestName; }
 	static std::string const& caseName() { return m_currentTestCaseName; }
 	static std::string const& testFileName() { return m_currentTestFileName; }
+	static void finishTest();
+	static void printTestExecStats();
+	~TestOutputHelper() { TestOutputHelper::finishTest(); }
 private:
+	static Timer m_timer;
 	static size_t m_currTest;
 	static size_t m_maxTests;
 	static std::string m_currentTestName;
 	static std::string m_currentTestCaseName;
 	static std::string m_currentTestFileName;
+	typedef std::pair<double, std::string> execTimeName;
+	static std::vector<execTimeName> m_execTimeResults;
 };
 
 /// Allows observing test execution process.
