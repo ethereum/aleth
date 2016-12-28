@@ -164,7 +164,7 @@ private:
 	std::deque<UnverifiedBlock> m_unverified;							///< List of <block hash, parent hash, block data> in correct order, ready for verification.
 
 	std::vector<std::thread> m_verifiers;								///< Threads who only verify.
-	bool m_deleting = false;											///< Exit condition for verifiers.
+	std::atomic<bool> m_deleting = {false};								///< Exit condition for verifiers.
 
 	std::function<void(Exception&)> m_onBad;							///< Called if we have a block that doesn't verify.
 	std::atomic<size_t> m_unknownSize;									///< Tracks total size in bytes of all unknown blocks
