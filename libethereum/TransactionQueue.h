@@ -142,12 +142,12 @@ private:
 		Transaction transaction; ///< Transaction data
 	};
 
-	/// Trasnaction pending verification
+	/// Transaction pending verification
 	struct UnverifiedTransaction
 	{
 		UnverifiedTransaction() {}
 		UnverifiedTransaction(bytesConstRef const& _t, h512 const& _nodeId): transaction(_t.toBytes()), nodeId(_nodeId) {}
-		UnverifiedTransaction(UnverifiedTransaction&& _t): transaction(std::move(_t.transaction)) {}
+		UnverifiedTransaction(UnverifiedTransaction&& _t): transaction(std::move(_t.transaction)), nodeId(std::move(_t.nodeId)) {}
 		UnverifiedTransaction& operator=(UnverifiedTransaction&& _other)
 		{
 			assert(&_other != this);
