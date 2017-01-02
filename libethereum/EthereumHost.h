@@ -94,6 +94,8 @@ public:
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes);
 	void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerNodeData(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
 	void onPeerAborting();
 
 private:

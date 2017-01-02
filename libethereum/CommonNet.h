@@ -57,7 +57,7 @@ class TransactionQueue;
 class EthereumHost;
 class EthereumPeer;
 
-enum: byte
+enum SubprotocolPacketType: byte
 {
 	StatusPacket = 0x00,
 	NewBlockHashesPacket = 0x01,

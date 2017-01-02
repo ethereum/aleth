@@ -347,6 +347,18 @@ void EthereumHost::onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP c
 	m_tq.enqueue(_r, _peer->session()->id());
 }
 
+void EthereumHost::onPeerNodeData(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r)
+{
+	unsigned itemCount = _r.itemCount();
+	clog(EthereumHostTrace) << "Node Data (" << dec << itemCount << "entries)";
+}
+
+void EthereumHost::onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r)
+{
+	unsigned itemCount = _r.itemCount();
+	clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
+}
+
 void EthereumHost::onPeerAborting()
 {
 	RecursiveGuard l(x_sync);
