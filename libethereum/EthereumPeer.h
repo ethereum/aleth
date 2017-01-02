@@ -72,7 +72,7 @@ public:
 
 	virtual strings nodeData(RLP const& _dataHashes) const = 0;
 
-	virtual std::pair<bytes, unsigned>receipts(RLP const& _blockHashes) const = 0;
+	virtual std::pair<bytes, unsigned> receipts(RLP const& _blockHashes) const = 0;
 };
 
 /**
@@ -102,6 +102,8 @@ public:
 	static unsigned messageCount() { return PacketCount; }
 
 	void init(unsigned _hostProtocolVersion, u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash, std::shared_ptr<EthereumHostDataFace> _hostData, std::shared_ptr<EthereumPeerObserverFace> _observer);
+
+	p2p::NodeID id() const { return session()->id(); }
 
 	/// Abort sync and reset fetch
 	void setIdle();

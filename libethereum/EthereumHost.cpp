@@ -54,55 +54,119 @@ namespace
 class EthereumPeerObserver: public EthereumPeerObserverFace
 {
 public:
-	explicit EthereumPeerObserver(EthereumHost& _host): m_host(_host) {}
+	EthereumPeerObserver(BlockChainSync& _sync, RecursiveMutex& _syncMutex, TransactionQueue& _tq): m_sync(_sync), m_syncMutex(_syncMutex), m_tq(_tq) {}
 
 	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer) override
 	{
-		m_host.onPeerStatus(_peer);
+		RecursiveGuard l(m_syncMutex);
+		try
+		{
+			m_sync.onPeerStatus(_peer);
+		}
+		catch (FailedInvariant const&)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			m_sync.restartSync();
+		}
 	}
 
 	void onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
 	{
-		m_host.onPeerTransactions(_peer, _r);
+		unsigned itemCount = _r.itemCount();
+		clog(EthereumHostTrace) << "Transactions (" << dec << itemCount << "entries)";
+		m_tq.enqueue(_r, _peer->id());
 	}
 
 	void onPeerAborting() override
 	{
-		m_host.onPeerAborting();
+		RecursiveGuard l(m_syncMutex);
+		try
+		{
+			m_sync.onPeerAborting();
+		}
+		catch (Exception&)
+		{
+			cwarn << "Exception on peer destruciton: " << boost::current_exception_diagnostic_information();
+		}
 	}
 
 	void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers) override
 	{
-		m_host.onPeerBlockBodies(_peer, _headers);
+		RecursiveGuard l(m_syncMutex);
+		try
+		{
+			m_sync.onPeerBlockHeaders(_peer, _headers);
+		}
+		catch (FailedInvariant const&)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			m_sync.restartSync();
+		}
 	}
 
 	void onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
 	{
-		m_host.onPeerBlockBodies(_peer, _r);
+		RecursiveGuard l(m_syncMutex);
+		try
+		{
+			m_sync.onPeerBlockBodies(_peer, _r);
+		}
+		catch (FailedInvariant const&)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			m_sync.restartSync();
+		}
 	}
 
 	void onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes) override
 	{
-		m_host.onPeerNewHashes(_peer, _hashes);
+		RecursiveGuard l(m_syncMutex);
+		try
+		{
+			m_sync.onPeerNewHashes(_peer, _hashes);
+		}
+		catch (FailedInvariant const&)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			m_sync.restartSync();
+		}
 	}
 
 	void onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
 	{
-		m_host.onPeerNewBlock(_peer, _r);
+		RecursiveGuard l(m_syncMutex);
+		try
+		{
+			m_sync.onPeerNewBlock(_peer, _r);
+		}
+		catch (FailedInvariant const&)
+		{
+			// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
+			clog(NetWarn) << "Failed invariant during sync, restarting sync";
+			m_sync.restartSync();
+		}
 	}
 
-	void onPeerNodeData(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
+	void onPeerNodeData(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r) override
 	{
-		m_host.onPeerNodeData(_peer, _r);
+		unsigned itemCount = _r.itemCount();
+		clog(EthereumHostTrace) << "Node Data (" << dec << itemCount << "entries)";
 	}
 
-	void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) override
+	void onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r) override
 	{
-		m_host.onPeerReceipts(_peer, _r);
+		unsigned itemCount = _r.itemCount();
+		clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
 	}
 
 private:
-	EthereumHost& m_host;
+	BlockChainSync& m_sync;
+	RecursiveMutex& m_syncMutex;
+	TransactionQueue& m_tq;
 };
 
 class EthereumHostData: public EthereumHostDataFace
@@ -319,12 +383,12 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_tq		(_tq),
 	m_bq		(_bq),
 	m_networkId	(_networkId),
-	m_hostData(make_shared<EthereumHostData>(m_chain, m_db)),
-	m_peerObserver(make_shared<EthereumPeerObserver>(*this))
+	m_hostData(make_shared<EthereumHostData>(m_chain, m_db))
 {
 	// TODO: Composition would be better. Left like that to avoid initialization
 	//       issues as BlockChainSync accesses other EthereumHost members.
 	m_sync.reset(new BlockChainSync(*this));
+	m_peerObserver = make_shared<EthereumPeerObserver>(*m_sync, x_sync, m_tq);
 	m_latestBlockSent = _ch.currentHash();
 	m_tq.onImport([this](ImportResult _ir, h256 const& _h, h512 const& _nodeId) { onTransactionImported(_ir, _h, _nodeId); });
 }
@@ -526,113 +590,6 @@ void EthereumHost::maintainBlocks(h256 const& _currentHash)
 			}
 		}
 		m_latestBlockSent = _currentHash;
-	}
-}
-
-void EthereumHost::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
-{
-	RecursiveGuard l(x_sync);
-	try
-	{
-		m_sync->onPeerStatus(_peer);
-	}
-	catch (FailedInvariant const&)
-	{
-		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-		clog(NetWarn) << "Failed invariant during sync, restarting sync";
-		m_sync->restartSync();
-	}
-}
-
-void EthereumHost::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _headers)
-{
-	RecursiveGuard l(x_sync);
-	try
-	{
-		m_sync->onPeerBlockHeaders(_peer, _headers);
-	}
-	catch (FailedInvariant const&)
-	{
-		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-		clog(NetWarn) << "Failed invariant during sync, restarting sync";
-		m_sync->restartSync();
-	}
-}
-
-void EthereumHost::onPeerBlockBodies(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
-{
-	RecursiveGuard l(x_sync);
-	try
-	{
-		m_sync->onPeerBlockBodies(_peer, _r);
-	}
-	catch (FailedInvariant const&)
-	{
-		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-		clog(NetWarn) << "Failed invariant during sync, restarting sync";
-		m_sync->restartSync();
-	}
-}
-
-void EthereumHost::onPeerNewHashes(std::shared_ptr<EthereumPeer> _peer, std::vector<std::pair<h256, u256>> const& _hashes)
-{
-	RecursiveGuard l(x_sync);
-	try
-	{
-		m_sync->onPeerNewHashes(_peer, _hashes);
-	}
-	catch (FailedInvariant const&)
-	{
-		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-		clog(NetWarn) << "Failed invariant during sync, restarting sync";
-		m_sync->restartSync();
-	}
-}
-
-void EthereumHost::onPeerNewBlock(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
-{
-	RecursiveGuard l(x_sync);
-	try
-	{
-		m_sync->onPeerNewBlock(_peer, _r);
-	}
-	catch (FailedInvariant const&)
-	{
-		// "fix" for https://github.com/ethereum/webthree-umbrella/issues/300
-		clog(NetWarn) << "Failed invariant during sync, restarting sync";
-		m_sync->restartSync();
-	}
-}
-
-void EthereumHost::onPeerTransactions(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
-{
-	unsigned itemCount = _r.itemCount();
-	clog(EthereumHostTrace) << "Transactions (" << dec << itemCount << "entries)";
-	m_tq.enqueue(_r, _peer->session()->id());
-}
-
-void EthereumHost::onPeerNodeData(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r)
-{
-	unsigned itemCount = _r.itemCount();
-	clog(EthereumHostTrace) << "Node Data (" << dec << itemCount << "entries)";
-}
-
-void EthereumHost::onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& _r)
-{
-	unsigned itemCount = _r.itemCount();
-	clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
-}
-
-void EthereumHost::onPeerAborting()
-{
-	RecursiveGuard l(x_sync);
-	try
-	{
-		m_sync->onPeerAborting();
-	}
-	catch (Exception&)
-	{
-		cwarn << "Exception on peer destruciton: " << boost::current_exception_diagnostic_information();
 	}
 }
 
