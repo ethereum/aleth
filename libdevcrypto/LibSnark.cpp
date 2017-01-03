@@ -131,8 +131,6 @@ void dev::snark::alt_bn128_pairing_product(dev::bytesConstRef _in, dev::bytesRef
 	// TODO this does not round correctly
 	size_t const pairs = _in.size() / pairSize;
 	libsnark::alt_bn128_Fq12 x = libsnark::alt_bn128_Fq12::one();
-	cout << "P2: ";
-	libsnark::alt_bn128_G2::one().print();
 	for (size_t i = 0; i < pairs; ++i)
 	{
 		dev::bytesConstRef pair = _in.cropped(i * pairSize, pairSize);
@@ -160,11 +158,6 @@ void dev::snark::alt_bn128_G1_add(dev::bytesConstRef _in, dev::bytesRef _out)
 	libsnark::alt_bn128_G1 p1 = decodePointG1(_in);
 	libsnark::alt_bn128_G1 p2 = decodePointG1(_in.cropped(32 * 3));
 
-	cout << "ADDING ";
-	p1.print();
-	cout << " + ";
-	p2.print();
-
 	encodePointG1(p1 + p2, _out);
 }
 
@@ -179,12 +172,7 @@ void dev::snark::alt_bn128_G1_mul(dev::bytesConstRef _in, dev::bytesRef _out)
 	u256 s = h256(_in.cropped(0, 32));
 	libsnark::alt_bn128_G1 p = decodePointG1(_in.cropped(32));
 
-	cout << "MULTIPLYING ";
-	p.print();
-	cout << " BY " << s << endl;
-
 	libsnark::alt_bn128_G1 result = libsnark::bigint<libsnark::alt_bn128_q_limbs>(s.str().c_str()) * p;
-	result.print();
 
 	encodePointG1(result, _out);
 }
