@@ -47,55 +47,87 @@ namespace p2p
 class Peer;
 class ReputationManager;
 
+class SessionFace
+{
+public:
+	virtual ~SessionFace() {}
+
+	virtual void start() = 0;
+	virtual void disconnect(DisconnectReason _reason) = 0;
+
+	virtual void ping() = 0;
+
+	virtual bool isConnected() const = 0;
+
+	virtual NodeID id() const = 0;
+
+	virtual void sealAndSend(RLPStream& _s, uint16_t _protocolID) = 0;
+
+	virtual int rating() const = 0;
+	virtual void addRating(int _r) = 0;
+
+	virtual void addNote(std::string const& _k, std::string const& _v) = 0;
+
+	virtual PeerSessionInfo info() const = 0;
+	virtual std::chrono::steady_clock::time_point connectionTime() = 0;
+
+	virtual void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p) = 0;
+	virtual void registerFraming(uint16_t _id) = 0;
+
+	virtual std::map<CapDesc, std::shared_ptr<Capability>> const&  capabilities() const = 0;
+
+	virtual std::shared_ptr<Peer> peer() const = 0;
+
+	virtual std::chrono::steady_clock::time_point lastReceived() const = 0;
+
+	virtual ReputationManager& repMan() = 0;
+};
+
 /**
  * @brief The Session class
  * @todo Document fully.
  */
-class Session: public std::enable_shared_from_this<Session>
+class Session: public SessionFace, public std::enable_shared_from_this<SessionFace>
 {
-	friend class Host;
-	friend class HostCapabilityFace;
-
 public:
+	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
+
 	Session(Host* _server, std::unique_ptr<RLPXFrameCoder>&& _io, std::shared_ptr<RLPXSocket> const& _s, std::shared_ptr<Peer> const& _n, PeerSessionInfo _info);
 	virtual ~Session();
 
-	void start();
-	void disconnect(DisconnectReason _reason);
+	void start() override;
+	void disconnect(DisconnectReason _reason) override;
 
-	void ping();
+	void ping() override;
 
-	bool isConnected() const { return m_socket->ref().is_open(); }
+	bool isConnected() const override { return m_socket->ref().is_open(); }
 
-	NodeID id() const;
-	unsigned socketId() const { Guard l(x_info); return m_info.socketId; }
+	NodeID id() const override;
 
-	template <class PeerCap>
-	std::shared_ptr<PeerCap> cap() const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), PeerCap::version()))); } catch (...) { return nullptr; } }
-	template <class PeerCap>
-	std::shared_ptr<PeerCap> cap(u256 const& _version) const { try { return std::static_pointer_cast<PeerCap>(m_capabilities.at(std::make_pair(PeerCap::name(), _version))); } catch (...) { return nullptr; } }
+	void sealAndSend(RLPStream& _s, uint16_t _protocolID) override;
 
-	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
-	void sealAndSend(RLPStream& _s, uint16_t _protocolID);
+	int rating() const override;
+	void addRating(int _r) override;
 
-	ReputationManager& repMan() const;
-	int rating() const;
-	void addRating(int _r);
+	void addNote(std::string const& _k, std::string const& _v) override { Guard l(x_info); m_info.notes[_k] = _v; }
 
-	void addNote(std::string const& _k, std::string const& _v) { Guard l(x_info); m_info.notes[_k] = _v; }
+	PeerSessionInfo info() const override { Guard l(x_info); return m_info; }
+	std::chrono::steady_clock::time_point connectionTime() override { return m_connect; }
 
-	PeerSessionInfo info() const { Guard l(x_info); return m_info; }
-	std::chrono::steady_clock::time_point connectionTime() { return m_connect; }
+	void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p) override;
+	void registerFraming(uint16_t _id) override;
 
-	void ensureNodesRequested();
-	void serviceNodesRequest();
+	std::map<CapDesc, std::shared_ptr<Capability>> const& capabilities() const override { return m_capabilities; }
 
-	void registerCapability(CapDesc const& _desc, std::shared_ptr<Capability> _p);
-	void registerFraming(uint16_t _id);
+	std::shared_ptr<Peer> peer() const override { return m_peer; }
 
-	static bool isFramingAllowedForVersion(unsigned _version) { return _version > 4; }
+	std::chrono::steady_clock::time_point lastReceived() const override { return m_lastReceived; }
+
+	ReputationManager& repMan() override;
 
 private:
+	static RLPStream& prep(RLPStream& _s, PacketType _t, unsigned _args = 0);
+
 	void send(bytes&& _msg, uint16_t _protocolID);
 
 	/// Drop the connection for the reason @a _r.
@@ -130,15 +162,11 @@ private:
 	std::vector<byte> m_data;			    ///< Buffer for ingress packet data.
 	bytes m_incoming;						///< Read buffer for ingress bytes.
 
-	unsigned m_protocolVersion = 0;			///< The protocol version of the peer.
 	std::shared_ptr<Peer> m_peer;			///< The Peer object.
 	bool m_dropped = false;					///< If true, we've already divested ourselves of this peer. We're just waiting for the reads & writes to fail before the shared_ptr goes OOS and the destructor kicks in.
 
 	mutable Mutex x_info;
 	PeerSessionInfo m_info;						///< Dynamic information about this peer.
-
-	bool m_theyRequestedNodes = false;		///< Has the peer requested nodes from us without receiveing an answer from us?
-	bool m_weRequestedNodes = false;		///< Have we requested nodes from the peer and not received an answer yet?
 
 	std::chrono::steady_clock::time_point m_connect;		///< Time point of connection.
 	std::chrono::steady_clock::time_point m_ping;			///< Time point of last ping.
@@ -163,6 +191,19 @@ private:
 	std::shared_ptr<Framing> getFraming(uint16_t _protocolID);
 	void multiplexAll();
 };
+
+template <class PeerCap>
+std::shared_ptr<PeerCap> capabilityFromSession(SessionFace const& _session, u256 const& _version = PeerCap::version())
+{ 
+	try 
+	{ 
+		return std::static_pointer_cast<PeerCap>(_session.capabilities().at(std::make_pair(PeerCap::name(), _version)));
+	}
+	catch (...)
+	{
+		return nullptr;
+	}
+}
 
 }
 }
