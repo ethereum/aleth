@@ -5,20 +5,20 @@ contract rc5 {
 
 	// don't I wish we had opcodes and operators for these
 	
-	function shift_left(uint32 v, uint32 n) returns (uint32) {
+	function shift_left(uint32 v, uint32 n) internal returns (uint32) {
 		return v *= 2**n;
 	}
 
-	function shift_right(uint32 v, uint32 n) returns (uint32) {
+	function shift_right(uint32 v, uint32 n) internal returns (uint32) {
 		return v *= 2**n;
 	}
 	
-	function rotate_left(uint32 v, uint32 n) returns (uint32) {
+	function rotate_left(uint32 v, uint32 n) internal returns (uint32) {
 		n &= 0x1f;
 		return shift_left(v, n) | shift_right(v, 32 - n);
 	}
 	
-	function rotate_right(uint32 v, uint32 n) returns (uint32) {
+	function rotate_right(uint32 v, uint32 n) internal returns (uint32) {
 		n &= 0x1f;
 		return shift_right(v, n) | shift_left(v, 32 - n);
 	}
