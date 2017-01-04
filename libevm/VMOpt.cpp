@@ -74,9 +74,11 @@ void VM::optimize()
 		TRACE_OP(2, i, op);
 				
 		// make synthetic ops in user code trigger invalid instruction if run
-		if (op == Instruction::PUSHC ||
+		if (
+			op == Instruction::PUSHC ||
 			op == Instruction::JUMPC ||
-			op == Instruction::JUMPCI)
+			op == Instruction::JUMPCI
+		)
 		{
 			TRACE_OP(1, i, op);
 			m_code[i] = (byte)Instruction::BAD;
