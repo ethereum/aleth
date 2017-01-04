@@ -515,6 +515,8 @@ void revertAccountChanges(State& _state, AccountRevertLog const& _changes)
 			_state.setNonce(_changes.address, 0);
 			_state.setCode(_changes.address, {});
 			_state.clearStorageChanges(_changes.address);
+			// Also untouch it because it classify for being cleared any more.
+			_state.untouch(_changes.address);
 		}
 		else
 			// If the account was not existing before we can safely kill it.
