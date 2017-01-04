@@ -116,16 +116,16 @@ namespace eth
 //
 // make these evaluate true to disable instructions
 //
-template <enum Instruction> struct isDisabled         { operator bool() { return false; } };
+template <enum Instruction> struct isDisabled { operator bool() { return false; } };
 
-template <> struct isDisabled <Instruction::JUMPTO>    { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::JUMPIF>    { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::JUMPV>     { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::JUMPSUB>   { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::JUMPSUBV>  { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::RETURNSUB> { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::BEGINSUB>  { operator bool() { return true; } };
-template <> struct isDisabled <Instruction::BEGINDATA> { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::JUMPTO>    { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::JUMPIF>    { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::JUMPV>     { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::JUMPSUB>   { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::JUMPSUBV>  { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::RETURNSUB> { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::BEGINSUB>  { operator bool() { return true; } };
+template <> struct isDisabled <dev::eth::Instruction::BEGINDATA> { operator bool() { return true; } };
 
 
 ///////////////////////////////////////////////////////////////////////////////

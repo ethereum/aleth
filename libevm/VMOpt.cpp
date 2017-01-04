@@ -196,12 +196,8 @@ void VM::initEntry()
 	
 	initMetrics();
 	
-//for (int i = 0; i < 1000000; ++i)
-{
 	copyCode();
 	optimize();
-}
-//abort();
 }
 
 
