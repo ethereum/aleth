@@ -42,31 +42,40 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(s512(_a) % s512(_b));
 }
 
+
 //
 // for decoding destinations of JUMPTO, JUMPV, JUMPSUB and JUMPSUBV
 //
-uint64_t VM::decode_jump_dest()
+
+uint64_t VM::decode_jump_dest(const byte* const _code, uint64_t& _pc)
 {
-	uint64_t dest   = m_code[m_pc++];
-	dest = (dest << 8) | m_code[m_pc++];
-	dest = (dest << 8) | m_code[m_pc++];
-	dest = (dest << 8) | m_code[m_pc];
+	// turn 4 MSB-first bytes in the code into a native-order integer
+	uint64_t dest      = _code[_pc++];
+	dest = (dest << 8) | _code[_pc++];
+	dest = (dest << 8) | _code[_pc++];
+	dest = (dest << 8) | _code[_pc++];
 	return dest;
 }
 
-uint64_t VM::decode_jumpv_dest()
+uint64_t VM::decode_jumpv_dest(const byte* const _code, uint64_t& _pc, u256*& _sp)
 {
-	// byte on stack specifies index of destination in jump table
-	// first byte after PC specifies number of destinations in table
-	// if index is too large use last (default) destination
-	// adjust m_pc to index into table
-	uint64_t i = uint64_t(*m_sp--);
-	byte n = m_code[++m_pc];
-	if (i >= n) i = n - 1;
-	m_pc = 1 + i * 4;
+	// Layout of jump table in bytecode...
+	//     byte opcode
+	//     byte n_jumps
+	//     byte table[n_jumps][4]
+	//	
+	uint64_t i = uint64_t(*_sp--);  // byte on stack indexes into jump table
+	uint64_t pc = _pc;
+	byte n = _code[++pc];           // byte after opcode is number of jumps
+	if (i >= n) i = n - 1;          // if index overflow use default jump
+	pc += 1 + i * 4;                // adjust pc to index destination in table
 	
-	return decode_jump_dest();
+	uint64_t dest = decode_jump_dest(_code, pc);
+	
+	_pc += 1 + n * 4;               // adust input _pc to opcode after table 
+	return dest;
 }
+
 
 //
 // for tracing, checking, metering, measuring ...
@@ -839,11 +848,11 @@ void VM::interpretCases()
 			m_sp -= 2;
 		CASE_END
 
-#if EVM_JUMPS_AND_SUBS
+#ifdef EVM_JUMPS_AND_SUBS
 		CASE_BEGIN(JUMPTO)
 			ON_OP();
 			updateIOGas();
-			m_pc = decode_jump_dest();
+			m_pc = decode_jump_dest(m_code, m_pc);
 		CASE_END
 
 		CASE_BEGIN(JUMPIF)
@@ -851,7 +860,7 @@ void VM::interpretCases()
 			updateIOGas();
 			if (*m_sp)
 			{
-				m_pc = decode_jump_dest();
+				m_pc = decode_jump_dest(m_code, m_pc);
 			}
 			else
 				++m_pc;
@@ -861,7 +870,7 @@ void VM::interpretCases()
 		CASE_BEGIN(JUMPV)
 			ON_OP();
 			updateIOGas();			
-			m_pc = decode_jumpv_dest();
+			m_pc = decode_jumpv_dest(m_code, m_pc, m_sp);
 		CASE_END
 
 		CASE_BEGIN(JUMPSUB)
@@ -869,7 +878,7 @@ void VM::interpretCases()
 			updateIOGas();
 			{
 				*++m_rp = m_pc++;
-				m_pc = decode_jump_dest();
+				m_pc = decode_jump_dest(m_code, m_pc);
 			}
 		CASE_END
 
@@ -878,7 +887,7 @@ void VM::interpretCases()
 			updateIOGas();
 			{
 				*++m_rp = m_pc;
-				m_pc = decode_jumpv_dest();
+				m_pc = decode_jumpv_dest(m_code, m_pc, m_sp);
 			}
 		CASE_END
 
@@ -1042,7 +1051,7 @@ void VM::interpretCases()
 			++m_pc;
 		CASE_END
 
-#if EVM_JUMPS_AND_SUBS
+#ifdef EVM_JUMPS_AND_SUBS
 		CASE_BEGIN(BEGINSUB)
 			m_runGas = 1;
 			ON_OP();

@@ -68,10 +68,10 @@ void VM::optimize()
 	// build a table of jump destinations for use in verifyJumpDest
 	
 	TRACE_STR(1, "Build JUMPDEST table")
-	for (size_t i = 0; i < nBytes; ++i)
+	for (size_t pc = 0; pc < nBytes; ++pc)
 	{
-		Instruction op = Instruction(m_code[i]);
-		TRACE_OP(2, i, op);
+		Instruction op = Instruction(m_code[pc]);
+		TRACE_OP(2, pc, op);
 				
 		// make synthetic ops in user code trigger invalid instruction if run
 		if (
@@ -80,20 +80,38 @@ void VM::optimize()
 			op == Instruction::JUMPCI
 		)
 		{
-			TRACE_OP(1, i, op);
-			m_code[i] = (byte)Instruction::BAD;
+			TRACE_OP(1, pc, op);
+			m_code[pc] = (byte)Instruction::BAD;
 		}
 
 		if (op == Instruction::JUMPDEST)
 		{
-			m_jumpDests.push_back(i);
+			m_jumpDests.push_back(pc);
 		}
 		else if ((byte)Instruction::PUSH1 <= (byte)op &&
 				 (byte)op <= (byte)Instruction::PUSH32)
 		{
-			i += (byte)op - (byte)Instruction::PUSH1 + 1;
+			pc += (byte)op - (byte)Instruction::PUSH1 + 1;
 		}
-		
+#ifdef EVM_JUMPS_AND_SUBS
+		else if (op == Instruction::JUMPTO || op == Instruction::JUMPIF || op == Instruction::JUMPSUB)
+		{
+			pc += 4 + 1;
+		}
+		else if (op == Instruction::JUMPV || op == Instruction::JUMPSUBV)
+		{
+			++pc;
+			pc += 4 * m_code[pc];  // number of 4-byte dests followed by table
+		}
+		else if (op == Instruction::BEGINSUB)
+		{
+			m_beginSubs.push_back(pc);
+		}
+		else if (op == Instruction::BEGINDATA)
+		{
+			break;
+		}
+#endif
 	}
 
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
@@ -119,15 +137,16 @@ void VM::optimize()
 		#ifndef EVM_REPLACE_CONST_JUMP 
 			if (1 < nPush)
 		#endif
-			// decode pushed bytes to integral value, FNV hash if needed
+			// decode pushed bytes to integral value
 			{
 				val = m_code[i+1];
 				for (uint64_t j = i+2, n = nPush; --n; ++j) {
 					val = (val << 8) | m_code[j];
 		#ifdef EVM_USE_CONSTANT_POOL
+		
+					// index table with FNV hash
 					hash ^= m_code[j];
 					hash *= 16777619;
-		#endif
 				}
 			}
 		
@@ -147,6 +166,10 @@ void VM::optimize()
 				}
 				TRACE_POST_OPT(1, i, op);
 			}
+		#else
+				}
+			}
+		#endif
 
 		#ifdef EVM_REPLACE_CONST_JUMP	
 			// replace JUMP or JUMPI to constant location with JUMPC or JUMPCI

@@ -143,6 +143,7 @@ private:
 
 	void reportStackUse();
 
+	std::vector<uint64_t> m_beginSubs;
 	std::vector<uint64_t> m_jumpDests;
 	int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
@@ -157,8 +158,8 @@ private:
 	void logGasMem();
 	void fetchInstruction();
 	
-	uint64_t decode_jump_dest();
-	uint64_t decode_jumpv_dest();
+	uint64_t decode_jump_dest(const byte* const _code, uint64_t& _pc);
+	uint64_t decode_jumpv_dest(const byte* const _code, uint64_t& _pc, u256*& _sp);
 
 	template<class T> uint64_t toUint64(T v)
 	{

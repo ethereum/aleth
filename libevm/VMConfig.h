@@ -52,7 +52,7 @@ namespace eth
 		#define EVM_DO_FIRST_PASS_OPTIMIZATION
 #endif
 
-#define JUMPS_AND_SUBS false
+#undef EVM_JUMPS_AND_SUBS
 
 
 
