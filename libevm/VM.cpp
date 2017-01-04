@@ -815,7 +815,87 @@ void VM::interpretCases()
 			m_sp -= 2;
 		CASE_END
 
+		CASE_BEGIN(JUMPTO)
+			ON_OP();
+			updateIOGas();
+			{
+				uint64_t dest       = m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				m_pc =    dest;
+			}
+		CASE_END
+
+		CASE_BEGIN(JUMPIF)
+			ON_OP();
+			updateIOGas();
+			if (*m_sp--) {
+				uint64_t dest       = m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				m_pc =   dest;
+			} else
+				++m_pc;
+			--m_sp;
+		CASE_END
+
 		CASE_BEGIN(JUMPV)
+			ON_OP();
+			updateIOGas();			
+			{
+				byte n = *(byte*)m_pc;
+				uint64_t i = uint64_t(*m_sp--);
+				if (i >= n) i = n - 1;
+				i = 1 + i * 4;
+				uint64_t dest       = m_code[i++];
+				dest =  (dest << 8) | m_code[i++];
+				dest =  (dest << 8) | m_code[i++];
+				dest =  (dest << 8) | m_code[i];
+				m_pc =   dest;
+			}
+		CASE_END
+
+		CASE_BEGIN(JUMPSUB)
+			ON_OP();
+			updateIOGas();
+			{
+				*++m_rp = m_pc;
+				uint64_t dest       = m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc++];
+				dest =  (dest << 8) | m_code[m_pc];
+				m_pc =   dest;
+			}
+		CASE_END
+
+		CASE_BEGIN(JUMPSUBV)
+			ON_OP();
+			updateIOGas();
+			{
+				*++m_rp = m_pc;
+				byte n = *(byte*)m_pc;
+				uint64_t i = uint64_t(*m_sp--);
+				if (i >= n) i = n - 1;
+				i = 1 + i * 4;
+				uint64_t dest       = m_code[i++];
+				dest =  (dest << 8) | m_code[i++];
+				dest =  (dest << 8) | m_code[i++];
+				dest =  (dest << 8) | m_code[i];
+				m_pc =   dest;
+			}
+		CASE_END
+
+		CASE_BEGIN(RETURNSUB)
+			ON_OP();
+			updateIOGas();
+			
+			m_pc = *m_rp--;
+			++m_pc;
+		CASE_END
+
+		CASE_BEGIN(JUMPC)
 #ifdef EVM_REPLACE_CONST_JUMP
 			ON_OP();
 			updateIOGas();
@@ -827,7 +907,7 @@ void VM::interpretCases()
 #endif
 		CASE_END
 
-		CASE_BEGIN(JUMPVI)
+		CASE_BEGIN(JUMPCI)
 #ifdef EVM_REPLACE_CONST_JUMP
 			ON_OP();
 			updateIOGas();
@@ -955,6 +1035,17 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 			++m_pc;
+		CASE_END
+
+		CASE_BEGIN(BEGINSUB)
+			m_runGas = 1;
+			ON_OP();
+			updateIOGas();
+			++m_pc;
+		CASE_END
+
+		CASE_BEGIN(BEGINDATA)
+			throwBadInstruction();
 		CASE_END
 
 		CASE_BEGIN(BAD)

@@ -65,7 +65,9 @@ public:
 	bytes const& memory() const { return m_mem; }
 	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
 
-	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1), m_pool(256) {};
+	VM():
+		m_stackSpace(1025), m_stack(m_stackSpace.data() + 1),
+		m_returnSpace(1025), m_return(m_returnSpace.data() + 1) {};
 
 private:
 
@@ -101,13 +103,18 @@ private:
 	u256s m_stackSpace;
 	u256* m_stack;
 	
+	// space for return stack and pointer to data
+	std::vector<uint64_t> m_returnSpace;
+	uint64_t* m_return;
+	
 	// constant pool
-	u256s m_pool;
+	u256 m_pool[256];
 
 	// interpreter state
-	uint64_t    m_pc = 0;
-	u256*       m_sp = m_stack - 1;
-	Instruction m_op;
+	uint64_t    m_pc = 0;               // program counter
+	uint64_t*   m_rp = m_return - 1;    // return pointer
+	u256*       m_sp = m_stack - 1;     // stack pointer
+	Instruction m_op;                   // current operator
 
 	// metering and memory state
 	uint64_t m_runGas = 0;

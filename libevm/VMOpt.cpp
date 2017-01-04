@@ -61,63 +61,6 @@ void VM::copyCode()
 	m_code = m_codeSpace.data();
 }
 
-// Implementation of EXP.
-//
-// This implements exponentiation by squaring algorithm.
-// Is is faster than boost::multiprecision::powm() because avoids explicit
-// mod operation.
-// Do not inline it.
-u256 VM::exp256(u256 _base, u256 _exponent)
-{
-	using boost::multiprecision::limb_type;
-	u256 result = 1;
-	while (_exponent)
-	{
-		if (static_cast<limb_type>(_exponent) & 1)  // If exponent is odd.
-			result *= _base;
-		_base *= _base;
-		_exponent >>= 1;
-	}
-	return result;
-}
-
-
-//
-// Init interpreter on entry.
-//
-void VM::initEntry()
-{
-	m_bounce = &VM::interpretCases;	
-	
-	interpretCases(); // first call initializes jump table
-	
-	initMetrics();
-	
-	copyCode();
-
-	optimize();
-}
-
-int VM::poolConstant(const u256& _con)
-{
-	TRACE_VAL(2, "pool constant", _con);
-	int i = 0, n = m_pool.size();
-	for (; i < n; ++i)
-	{
-		const u256& pooled = m_pool[i];
-		TRACE_VAL(2, "pooled constant", pooled);
-		if (_con == pooled)
-			return i;
-	}
-	if (i <= 255 )
-	{
-		TRACE_VAL(1, "constant pooled", _con);
-		m_pool.push_back(_con);
-		return i;
-	}
-	return -1;
-}
-
 void VM::optimize()
 {
 	size_t nBytes = m_codeSpace.size();
@@ -132,8 +75,8 @@ void VM::optimize()
 				
 		// make synthetic ops in user code trigger invalid instruction if run
 		if (op == Instruction::PUSHC ||
-		    op == Instruction::JUMPV ||
-		    op == Instruction::JUMPVI)
+			op == Instruction::JUMPC ||
+			op == Instruction::JUMPCI)
 		{
 			TRACE_OP(1, i, op);
 			m_code[i] = (byte)Instruction::BAD;
@@ -144,7 +87,7 @@ void VM::optimize()
 			m_jumpDests.push_back(i);
 		}
 		else if ((byte)Instruction::PUSH1 <= (byte)op &&
-		         (byte)op <= (byte)Instruction::PUSH32)
+				 (byte)op <= (byte)Instruction::PUSH32)
 		{
 			i += (byte)op - (byte)Instruction::PUSH1 + 1;
 		}
@@ -153,39 +96,58 @@ void VM::optimize()
 
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 
+	#ifdef EVM_USE_CONSTANT_POOL
+		for (int i = 0; i < 256; ++i)
+			m_pool[i] = 0;
+	#endif
+
 	TRACE_STR(1, "Do first pass optimizations")
 	for (size_t i = 0; i < nBytes; ++i)
 	{
+		u256 val = 0;
 		Instruction op = Instruction(m_code[i]);
 
 		if ((byte)Instruction::PUSH1 <= (byte)op && (byte)op <= (byte)Instruction::PUSH32)
 		{
 			byte nPush = (byte)op - (byte)Instruction::PUSH1 + 1;
 
-			// decode pushed bytes to integral value
-			u256 val = m_code[i+1];
-			for (uint64_t j = i+2, n = nPush; --n; ++j)
-				val = (val << 8) | m_code[j];
-
 		#ifdef EVM_USE_CONSTANT_POOL
-	
+			uint32_t hash = 2166136261;
+		#endif
+		#ifndef EVM_REPLACE_CONST_JUMP 
+			if (1 < nPush)
+		#endif
+			// decode pushed bytes to integral value, FNV hash if needed
+			{
+				val = m_code[i+1];
+				for (uint64_t j = i+2, n = nPush; --n; ++j) {
+					val = (val << 8) | m_code[j];
+		#ifdef EVM_USE_CONSTANT_POOL
+					hash ^= m_code[j];
+					hash *= 16777619;
+		#endif
+				}
+			}
+		
 			// add value to constant pool and replace PUSHn with PUSHC if room
 			if (1 < nPush)
 			{
 				TRACE_PRE_OPT(1, i, op);
-				int pool_off = poolConstant(val);
-				if (0 <= pool_off && pool_off < 256)
+				byte h = ((hash >> 8) ^ hash) & 0xff;
+				if (m_pool[h] == 0)
+					m_pool[h] = val;
+				if (m_pool[h] == val)
 				{
-					m_code[i] = byte(op = Instruction::PUSHC);
-					m_code[i+1] = pool_off;
+					m_code[i] = (byte)Instruction::PUSHC;
+					m_code[i+1] = h;
 					m_code[i+2] = nPush - 1;
+					TRACE_VAL(1, "constant pooled", val);
 				}
 				TRACE_POST_OPT(1, i, op);
 			}
-		#endif
 
 		#ifdef EVM_REPLACE_CONST_JUMP	
-			// replace JUMP or JUMPI to constant location with JUMPV or JUMPVI
+			// replace JUMP or JUMPI to constant location with JUMPC or JUMPCI
 			// verifyJumpDest is M = log(number of jump destinations)
 			// outer loop is N = number of bytes in code array
 			// so complexity is N log M, worst case is N log N
@@ -193,21 +155,21 @@ void VM::optimize()
 			op = Instruction(m_code[ii]);
 			if (op == Instruction::JUMP)
 			{
-				TRACE_STR(1, "Replace const JUMPV")
+				TRACE_STR(1, "Replace const JUMPC")
 				TRACE_PRE_OPT(1, ii, op);
 				
 				if (0 <= verifyJumpDest(val, false))
-					m_code[ii] = byte(op = Instruction::JUMPV);
+					m_code[ii] = byte(op = Instruction::JUMPC);
 				
 				TRACE_POST_OPT(1, ii, op);
 			}
 			else if (op == Instruction::JUMPI)
 			{
-				TRACE_STR(1, "Replace const JUMPVI")
+				TRACE_STR(1, "Replace const JUMPCI")
 				TRACE_PRE_OPT(1, ii, op);
 				
 				if (0 <= verifyJumpDest(val, false))
-					m_code[ii] = byte(op = Instruction::JUMPVI);
+					m_code[ii] = byte(op = Instruction::JUMPCI);
 				
 				TRACE_POST_OPT(1, ii, op);
 			}
@@ -221,3 +183,45 @@ void VM::optimize()
 	TRACE_STR(1, "Finished optimizations")
 #endif	
 }
+
+
+//
+// Init interpreter on entry.
+//
+void VM::initEntry()
+{
+	m_bounce = &VM::interpretCases; 
+	
+	interpretCases(); // first call initializes jump table
+	
+	initMetrics();
+	
+//for (int i = 0; i < 1000000; ++i)
+{
+	copyCode();
+	optimize();
+}
+//abort();
+}
+
+
+// Implementation of EXP.
+//
+// This implements exponentiation by squaring algorithm.
+// Is faster than boost::multiprecision::powm() because it avoids explicit
+// mod operation.
+// Do not inline it.
+u256 VM::exp256(u256 _base, u256 _exponent)
+{
+	using boost::multiprecision::limb_type;
+	u256 result = 1;
+	while (_exponent)
+	{
+		if (static_cast<limb_type>(_exponent) & 1)	// If exponent is odd.
+			result *= _base;
+		_base *= _base;
+		_exponent >>= 1;
+	}
+	return result;
+}
+
