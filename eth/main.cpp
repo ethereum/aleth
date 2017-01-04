@@ -130,9 +130,6 @@ void help()
 		<< "    -m,--mining <on/off/number>  Enable mining, optionally for a specified number of blocks (default: off)." << endl
 		<< "    -f,--force-mining  Mine even when there are no transactions to mine (default: off)." << endl
 		<< "    -C,--cpu  When mining, use the CPU." << endl
-		<< "    -G,--opencl  When mining, use the GPU via OpenCL." << endl
-		<< "    --opencl-platform <n>  When mining using -G/--opencl, use OpenCL platform n (default: 0)." << endl
-		<< "    --opencl-device <n>  When mining using -G/--opencl, use OpenCL device n (default: 0)." << endl
 		<< "    -t, --mining-threads <n>  Limit number of CPU/GPU miners to n (default: use everything available on selected platform)." << endl
 		<< endl
 		<< "Client networking:" << endl

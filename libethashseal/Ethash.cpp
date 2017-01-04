@@ -26,7 +26,6 @@
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/CommonJS.h>
 #include "EthashCPUMiner.h"
-#include "EthashGPUMiner.h"
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -40,9 +39,6 @@ Ethash::Ethash()
 {
 	map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
 	sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
-#if ETH_ETHASHCL
-	sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
-#endif
 	m_farm.setSealers(sealers);
 	m_farm.onSolutionFound([=](EthashProofOfWork::Solution const& sol)
 	{
@@ -64,12 +60,7 @@ Ethash::Ethash()
 
 strings Ethash::sealers() const
 {
-	return {
-		"cpu"
-#if ETH_ETHASHCL
-		, "opencl"
-#endif
-	};
+	return {"cpu"};
 }
 
 h256 Ethash::seedHash(BlockHeader const& _bi)

@@ -139,10 +139,8 @@ case $(uname -s) in
                 crypto++ \
                 git \
                 leveldb \
-                ocl-icd \
                 libmicrohttpd \
-                miniupnpc \
-                opencl-headers
+                miniupnpc
 
         fi
 
@@ -212,8 +210,6 @@ case $(uname -s) in
                     libminiupnpc-dev \
                     libz-dev \
                     mesa-common-dev \
-                    ocl-icd-libopencl1 \
-                    opencl-headers \
                     unzip
 
                 # All the Debian releases until Stretch have shipped with CryptoPP 5.6.1,
@@ -408,10 +404,7 @@ case $(uname -s) in
                     libminiupnpc-dev \
                     libz-dev \
                     llvm-3.9-dev \
-                    mesa-common-dev \
-                    ocl-icd-libopencl1 \
-                    opencl-headers
-
+                    mesa-common-dev
                 ;;
             *)
 

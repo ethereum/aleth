@@ -20,7 +20,6 @@ macro(configure_project)
 	# components
 	eth_default_option(TESTS ON)
 	eth_default_option(TOOLS ON)
-	eth_default_option(ETHASHCL ON)
 	eth_default_option(EVMJIT OFF)
 
 	# Resolve any clashes between incompatible options.
@@ -135,9 +134,6 @@ if (SUPPORT_TESTS)
 endif()
 if (SUPPORT_TOOLS)
 	message("-- TOOLS            Build tools                              ${TOOLS}")
-endif()
-if (SUPPORT_ETHASHCL)
-	message("-- ETHASHCL         Build OpenCL components                  ${ETHASHCL}")
 endif()
 if (SUPPORT_EVMJIT)
 	message("-- EVMJIT           Build LLVM-based JIT EVM                 ${EVMJIT}")
