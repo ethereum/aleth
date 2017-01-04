@@ -816,6 +816,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(JUMPTO)
+		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			{
@@ -828,6 +829,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(JUMPIF)
+		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			if (*m_sp--) {
@@ -842,6 +844,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(JUMPV)
+		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();			
 			{
@@ -858,6 +861,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(JUMPSUB)
+		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			{
@@ -871,6 +875,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(JUMPSUBV)
+		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			{
@@ -888,6 +893,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(RETURNSUB)
+		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			
@@ -1038,6 +1044,7 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(BEGINSUB)
+		THROW_IF_SUBS_DISABLED();
 			m_runGas = 1;
 			ON_OP();
 			updateIOGas();

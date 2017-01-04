@@ -116,16 +116,12 @@ namespace eth
 //
 // make these evaluate true to disable instructions
 //
-template <enum Instruction> struct isDisabled { operator bool() { return false; } };
+#ifdef EVM_JUMPS_AND_SUBS
+	#define THROW_IF_SUBS_DISABLED()
+#else
+	#define THROW_IF_SUBS_DISABLED() throwBadInstruction()
+#endif
 
-template <> struct isDisabled <dev::eth::Instruction::JUMPTO>    { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::JUMPIF>    { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::JUMPV>     { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::JUMPSUB>   { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::JUMPSUBV>  { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::RETURNSUB> { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::BEGINSUB>  { operator bool() { return true; } };
-template <> struct isDisabled <dev::eth::Instruction::BEGINDATA> { operator bool() { return true; } };
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,10 +132,7 @@ template <> struct isDisabled <dev::eth::Instruction::BEGINDATA> { operator bool
 
 	#define INIT_CASES if (!m_caseInit) { m_caseInit = true; return; }
 	#define DO_CASES for(;;) { fetchInstruction(); switch(m_op) {
-	#define CASE_BEGIN(name) \
-		case Instruction::name: \
-			if (isDisabled<Instruction::name>()) \
-				throwBadInstruction();
+	#define CASE_BEGIN(name) case Instruction::name:
 	#define CASE_END break;
 	#define CASE_RETURN return;
 	#define CASE_DEFAULT default:
@@ -421,10 +414,7 @@ template <> struct isDisabled <dev::eth::Instruction::BEGINDATA> { operator bool
 		}
 
 	#define DO_CASES fetchInstruction(); goto *jumpTable[(int)m_op];
-	#define CASE_BEGIN(name) \
-		name: \
-			if (isDisabled<Instruction::name>()) \
-				throwBadInstruction();
+	#define CASE_BEGIN(name) name:
 	#define CASE_END fetchInstruction(); goto *jumpTable[m_code[m_pc]];
 	#define CASE_RETURN return;
 	#define CASE_DEFAULT INVALID:
