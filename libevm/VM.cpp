@@ -42,6 +42,31 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 	return (S)(s512(_a) % s512(_b));
 }
 
+//
+// for decoding destinations of JUMPTO, JUMPV, JUMPSUB and JUMPSUBV
+//
+uint64_t VM::decode_jump_dest()
+{
+	uint64_t dest   = m_code[m_pc++];
+	dest = (dest << 8) | m_code[m_pc++];
+	dest = (dest << 8) | m_code[m_pc++];
+	dest = (dest << 8) | m_code[m_pc];
+	return dest;
+}
+
+uint64_t VM::decode_jumpv_dest()
+{
+	// byte on stack specifies index of destination in jump table
+	// first byte after PC specifies number of destinations in table
+	// if index is too large use last (default) destination
+	// adjust m_pc to index into table
+	uint64_t i = uint64_t(*m_sp--);
+	byte n = m_code[++m_pc];
+	if (i >= n) i = n - 1;
+	m_pc = 1 + i * 4;
+	
+	return decode_jump_dest();
+}
 
 //
 // for tracing, checking, metering, measuring ...
@@ -53,7 +78,6 @@ void VM::onOperation()
 			m_newMemSize > m_mem.size() ? (m_newMemSize - m_mem.size()) / 32 : uint64_t(0),
 			m_runGas, m_io_gas, this, m_ext);
 }
-
 
 void VM::checkStack(unsigned _removed, unsigned _added)
 {
@@ -815,30 +839,19 @@ void VM::interpretCases()
 			m_sp -= 2;
 		CASE_END
 
+#if EVM_JUMPS_AND_SUBS
 		CASE_BEGIN(JUMPTO)
-		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
-			{
-				uint64_t dest       = m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				m_pc =    dest;
-			}
+			m_pc = decode_jump_dest();
 		CASE_END
 
 		CASE_BEGIN(JUMPIF)
-		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			if (*m_sp)
 			{
-				uint64_t dest       = m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				m_pc =   dest;
+				m_pc = decode_jump_dest();
 			}
 			else
 				++m_pc;
@@ -846,62 +859,46 @@ void VM::interpretCases()
 		CASE_END
 
 		CASE_BEGIN(JUMPV)
-		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();			
-			{
-				byte n = *(byte*)m_pc;
-				uint64_t i = uint64_t(*m_sp--);
-				if (i >= n) i = n - 1;
-				i = 1 + i * 4;
-				uint64_t dest       = m_code[i++];
-				dest =  (dest << 8) | m_code[i++];
-				dest =  (dest << 8) | m_code[i++];
-				dest =  (dest << 8) | m_code[i];
-				m_pc =   dest;
-			}
+			m_pc = decode_jumpv_dest();
 		CASE_END
 
 		CASE_BEGIN(JUMPSUB)
-		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			{
-				*++m_rp = m_pc;
-				uint64_t dest       = m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc++];
-				dest =  (dest << 8) | m_code[m_pc];
-				m_pc =   dest;
+				*++m_rp = m_pc++;
+				m_pc = decode_jump_dest();
 			}
 		CASE_END
 
 		CASE_BEGIN(JUMPSUBV)
-		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			{
 				*++m_rp = m_pc;
-				byte n = *(byte*)m_pc;
-				uint64_t i = uint64_t(*m_sp--);
-				if (i >= n) i = n - 1;
-				i = 1 + i * 4;
-				uint64_t dest       = m_code[i++];
-				dest =  (dest << 8) | m_code[i++];
-				dest =  (dest << 8) | m_code[i++];
-				dest =  (dest << 8) | m_code[i];
-				m_pc =   dest;
+				m_pc = decode_jumpv_dest();
 			}
 		CASE_END
 
 		CASE_BEGIN(RETURNSUB)
-		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
 			
 			m_pc = *m_rp--;
 			++m_pc;
 		CASE_END
+#else
+		CASE_BEGIN(JUMPTO)
+		CASE_BEGIN(JUMPIF)
+		CASE_BEGIN(JUMPV)
+		CASE_BEGIN(JUMPSUB)
+		CASE_BEGIN(JUMPSUBV)
+		CASE_BEGIN(RETURNSUB)
+			throwBadInstruction();
+		CASE_END
+#endif
 
 		CASE_BEGIN(JUMPC)
 #ifdef EVM_REPLACE_CONST_JUMP
@@ -1045,8 +1042,8 @@ void VM::interpretCases()
 			++m_pc;
 		CASE_END
 
+#if EVM_JUMPS_AND_SUBS
 		CASE_BEGIN(BEGINSUB)
-		THROW_IF_SUBS_DISABLED();
 			m_runGas = 1;
 			ON_OP();
 			updateIOGas();
@@ -1056,6 +1053,12 @@ void VM::interpretCases()
 		CASE_BEGIN(BEGINDATA)
 			throwBadInstruction();
 		CASE_END
+#else
+		CASE_BEGIN(BEGINSUB)
+		CASE_BEGIN(BEGINDATA)
+			throwBadInstruction();
+		CASE_END
+#endif
 
 		CASE_BEGIN(BAD)
 			throwBadInstruction();

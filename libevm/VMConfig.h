@@ -52,6 +52,9 @@ namespace eth
 		#define EVM_DO_FIRST_PASS_OPTIMIZATION
 #endif
 
+#define JUMPS_AND_SUBS false
+
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -110,18 +113,6 @@ namespace eth
 		#define THROW_EXCEPTION(X) BOOST_THROW_EXCEPTION(X)
 	#endif
 #endif
-
-
-///////////////////////////////////////////////////////////////////////////////
-//
-// make these evaluate true to disable instructions
-//
-#ifdef EVM_JUMPS_AND_SUBS
-	#define THROW_IF_SUBS_DISABLED()
-#else
-	#define THROW_IF_SUBS_DISABLED() throwBadInstruction()
-#endif
-
 
 
 ///////////////////////////////////////////////////////////////////////////////

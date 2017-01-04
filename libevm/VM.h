@@ -156,6 +156,9 @@ private:
 	void updateMem();
 	void logGasMem();
 	void fetchInstruction();
+	
+	uint64_t decode_jump_dest();
+	uint64_t decode_jumpv_dest();
 
 	template<class T> uint64_t toUint64(T v)
 	{
