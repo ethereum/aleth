@@ -832,13 +832,15 @@ void VM::interpretCases()
 		THROW_IF_SUBS_DISABLED();
 			ON_OP();
 			updateIOGas();
-			if (*m_sp--) {
+			if (*m_sp)
+			{
 				uint64_t dest       = m_code[m_pc++];
 				dest =  (dest << 8) | m_code[m_pc++];
 				dest =  (dest << 8) | m_code[m_pc++];
 				dest =  (dest << 8) | m_code[m_pc++];
 				m_pc =   dest;
-			} else
+			}
+			else
 				++m_pc;
 			--m_sp;
 		CASE_END
