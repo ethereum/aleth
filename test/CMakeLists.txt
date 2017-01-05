@@ -50,7 +50,6 @@ find_package(Eth)
 find_package(Web3)
 
 target_include_directories(testeth PRIVATE ..)
-target_include_directories(testeth PRIVATE ../..)
 target_include_directories(testeth PRIVATE ../utils)
 
 target_link_libraries(testeth ${Boost_UNIT_TEST_FRAMEWORK_LIBRARIES})

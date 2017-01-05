@@ -2,8 +2,6 @@ aux_source_directory(. SRC_LIST)
 
 add_executable(rlp ${SRC_LIST})
 
-eth_use(rlp REQUIRED Cryptopp)
-
 if (NOT EMSCRIPTEN AND NOT MSVC)
 	eth_use(rlp ${REQUIRED} Utils::secp256k1)
 endif()

@@ -25,10 +25,6 @@ else()
 	list(APPEND FILES io_posix.c)
 endif()
 
-if (NOT CRYPTOPP_FOUND)
-	find_package(CryptoPP 5.6.2)
-endif()
-
 list(APPEND FILES sha3.c sha3.h)
 
 add_library(ethash ${FILES})

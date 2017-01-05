@@ -44,6 +44,7 @@ include(EthOptions)
 
 include(deps/jsoncpp.cmake)
 include(deps/jsonrpc.cmake)
+include(deps/cryptopp.cmake)
 
 configure_project(CPUID CURL ETHASHCL EVMJIT FATDB MINIUPNPC ROCKSDB PARANOID TESTS VMTRACE)
 
