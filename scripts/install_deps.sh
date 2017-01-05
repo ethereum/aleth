@@ -139,7 +139,7 @@ case $(uname -s) in
                 crypto++ \
                 git \
                 leveldb \
-                libcl \
+                ocl-icd \
                 libmicrohttpd \
                 miniupnpc \
                 opencl-headers
