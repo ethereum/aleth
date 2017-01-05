@@ -190,39 +190,9 @@ bool RLPXFrameCoder::authAndDecryptFrame(bytesRef io)
 	return true;
 }
 
-#if defined(__GNUC__)
-    // Do not warn about uses of functions (see Function Attributes), variables
-    // (see Variable Attributes), and types (see Type Attributes) marked as
-    // deprecated by using the deprecated attribute.
-    //
-    // Specifically we are suppressing the warnings from the deprecation
-    // attributes added to the SHA3_256 and SHA3_512 classes in CryptoPP
-    // after the 5.6.3 release.
-    //
-    // From that header file ...
-    //
-    // "The Crypto++ SHA-3 implementation dates back to January 2013 when NIST
-    // selected Keccak as SHA-3. In August 2015 NIST finalized SHA-3, and it
-    // was a modified version of the Keccak selection. Crypto++ 5.6.2 through
-    // 5.6.4 provides the pre-FIPS 202 version of SHA-3; while Crypto++ 5.7
-    // and above provides the FIPS 202 version of SHA-3.
-    //
-    // See also http://en.wikipedia.org/wiki/SHA-3
-    //
-    // This means that we will never be able to move to the CryptoPP-5.7.x
-    // series of releases, because Ethereum requires Keccak, not the final
-    // SHA-3 standard algorithm.   We are planning to migrate cpp-ethereum
-    // off CryptoPP anyway, so this is unlikely to be a long-standing issue.
-    //
-    // https://github.com/ethereum/cpp-ethereum/issues/3088
-    //
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif // defined(__GNUC__)
-
 h128 RLPXFrameCoder::egressDigest()
 {
-	SHA3_256 h(m_egressMac);
+	Keccak_256 h(m_egressMac);
 	h128 digest;
 	h.TruncatedFinal(digest.data(), h128::size);
 	return digest;
@@ -230,7 +200,7 @@ h128 RLPXFrameCoder::egressDigest()
 
 h128 RLPXFrameCoder::ingressDigest()
 {
-	SHA3_256 h(m_ingressMac);
+	Keccak_256 h(m_ingressMac);
 	h128 digest;
 	h.TruncatedFinal(digest.data(), h128::size);
 	return digest;
@@ -258,12 +228,12 @@ void RLPXFrameCoder::updateIngressMACWithFrame(bytesConstRef _cipher)
 	updateMAC(m_ingressMac);
 }
 
-void RLPXFrameCoder::updateMAC(SHA3_256& _mac, bytesConstRef _seed)
+void RLPXFrameCoder::updateMAC(Keccak_256& _mac, bytesConstRef _seed)
 {
 	if (_seed.size() && _seed.size() != h128::size)
 		asserts(false);
 
-	SHA3_256 prevDigest(_mac);
+	Keccak_256 prevDigest(_mac);
 	h128 encDigest(h128::size);
 	prevDigest.TruncatedFinal(encDigest.data(), h128::size);
 	h128 prevDigestOut = encDigest;

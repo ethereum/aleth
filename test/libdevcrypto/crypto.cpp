@@ -112,36 +112,6 @@ BOOST_AUTO_TEST_CASE(common_encrypt_decrypt)
 	BOOST_REQUIRE(plain == asBytes(message));
 }
 
-#if defined(__GNUC__)
-    // Do not warn about uses of functions (see Function Attributes), variables
-    // (see Variable Attributes), and types (see Type Attributes) marked as
-    // deprecated by using the deprecated attribute.
-    //
-    // Specifically we are suppressing the warnings from the deprecation
-    // attributes added to the SHA3_256 and SHA3_512 classes in CryptoPP
-    // after the 5.6.3 release.
-    //
-    // From that header file ...
-    //
-    // "The Crypto++ SHA-3 implementation dates back to January 2013 when NIST
-    // selected Keccak as SHA-3. In August 2015 NIST finalized SHA-3, and it
-    // was a modified version of the Keccak selection. Crypto++ 5.6.2 through
-    // 5.6.4 provides the pre-FIPS 202 version of SHA-3; while Crypto++ 5.7
-    // and above provides the FIPS 202 version of SHA-3.
-    //
-    // See also http://en.wikipedia.org/wiki/SHA-3
-    //
-    // This means that we will never be able to move to the CryptoPP-5.7.x
-    // series of releases, because Ethereum requires Keccak, not the final
-    // SHA-3 standard algorithm.   We are planning to migrate cpp-ethereum
-    // off CryptoPP anyway, so this is unlikely to be a long-standing issue.
-    //
-    // https://github.com/ethereum/cpp-ethereum/issues/3088
-    //
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif // defined(__GNUC__)
-
 BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 {
 #if ETH_HAVE_SECP256K1
@@ -152,7 +122,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 	Secret secret(sha3("privacy"));
 	
 	// we get ec params from signer
-	ECDSA<ECP, SHA3_256>::Signer signer;
+	ECDSA<ECP, Keccak_256>::Signer signer;
 	
 	// e := sha3(msg)
 	bytes e(fromHex("0x01"));
@@ -290,10 +260,10 @@ BOOST_AUTO_TEST_CASE(cryptopp_ecdsa_sipaseckp256k1)
 
 BOOST_AUTO_TEST_CASE(sha3_norestart)
 {
-	CryptoPP::SHA3_256 ctx;
+	CryptoPP::Keccak_256 ctx;
 	bytes input(asBytes("test"));
 	ctx.Update(input.data(), 4);
-	CryptoPP::SHA3_256 ctxCopy(ctx);
+	CryptoPP::Keccak_256 ctxCopy(ctx);
 	bytes interimDigest(32);
 	ctx.Final(interimDigest.data());
 	ctx.Update(input.data(), 4);
@@ -309,7 +279,7 @@ BOOST_AUTO_TEST_CASE(sha3_norestart)
 	// we can do this another way -- copy the context for final
 	ctxCopy.Update(input.data(), 4);
 	ctxCopy.Update(input.data(), 4);
-	CryptoPP::SHA3_256 finalCtx(ctxCopy);
+	CryptoPP::Keccak_256 finalCtx(ctxCopy);
 	bytes finalDigest2(32);
 	finalCtx.Final(finalDigest2.data());
 	BOOST_REQUIRE(finalDigest2 == interimDigest);
@@ -826,7 +796,7 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	Secret secret(sha3("privacy"));
 
 	// we get ec params from signer
-	ECDSA<ECP, SHA3_256>::Signer signer;
+	ECDSA<ECP, Keccak_256>::Signer signer;
 
 	// e := sha3(msg)
 	bytes e(fromHex("0x01"));

@@ -52,7 +52,7 @@
 #endif // defined(__GNUC__)
 
 #include <cryptopp/sha.h>
-#include <cryptopp/sha3.h>
+#include <cryptopp/keccak.h>
 #include <cryptopp/ripemd.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>

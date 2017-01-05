@@ -52,36 +52,6 @@ static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
 static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP>::EllipticCurve s_curve(s_params.GetCurve());
 
-#if defined(__GNUC__)
-    // Do not warn about uses of functions (see Function Attributes), variables
-    // (see Variable Attributes), and types (see Type Attributes) marked as
-    // deprecated by using the deprecated attribute.
-    //
-    // Specifically we are suppressing the warnings from the deprecation
-    // attributes added to the SHA3_256 and SHA3_512 classes in CryptoPP
-    // after the 5.6.3 release.
-    //
-    // From that header file ...
-    //
-    // "The Crypto++ SHA-3 implementation dates back to January 2013 when NIST
-    // selected Keccak as SHA-3. In August 2015 NIST finalized SHA-3, and it
-    // was a modified version of the Keccak selection. Crypto++ 5.6.2 through
-    // 5.6.4 provides the pre-FIPS 202 version of SHA-3; while Crypto++ 5.7
-    // and above provides the FIPS 202 version of SHA-3.
-    //
-    // See also http://en.wikipedia.org/wiki/SHA-3
-    //
-    // This means that we will never be able to move to the CryptoPP-5.7.x
-    // series of releases, because Ethereum requires Keccak, not the final
-    // SHA-3 standard algorithm.   We are planning to migrate cpp-ethereum
-    // off CryptoPP anyway, so this is unlikely to be a long-standing issue.
-    //
-    // https://github.com/ethereum/cpp-ethereum/issues/3088
-    //
-    #pragma GCC diagnostic push
-    #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif // defined(__GNUC__)
-
 BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 {
 	KeyPair init(Secret(sha3("initiator")));
@@ -98,8 +68,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameEnc;
 	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameDec;
 	CryptoPP::ECB_Mode<CryptoPP::AES>::Encryption m_macEnc;
-	CryptoPP::SHA3_256 m_egressMac;
-	CryptoPP::SHA3_256 m_ingressMac;
+	CryptoPP::Keccak_256 m_egressMac;
+	CryptoPP::Keccak_256 m_ingressMac;
 	
 	// when originated is true, agreement is with init secrets
 	// when originated is true, remoteNonce = recvNonce
@@ -128,8 +98,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	// test that keyMaterial = ecdhe-shared-secret || sha3(nonce || initiator-nonce)
 	{
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
-		
-		SHA3_256 ctx;
+
+		Keccak_256 ctx;
 		ctx.Update(leftNonce.data(), h256::size);
 		ctx.Update(rightNonce.data(), h256::size);
 		bytes expected(32);
@@ -150,8 +120,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	// test that keyMaterial = ecdhe-shared-secret || shared-secret
 	{
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
-		
-		SHA3_256 ctx;
+
+		Keccak_256 ctx;
 		ctx.Update(preImage.data(), preImage.size());
 		bytes expected(32);
 		ctx.Final(expected.data());
@@ -194,7 +164,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	
 	{
 		bytes egressMac;
-		SHA3_256 h(m_egressMac);
+		Keccak_256 h(m_egressMac);
 		bytes digest(16);
 		h.TruncatedFinal(digest.data(), 16);
 		BOOST_REQUIRE(digest == fromHex("23e5e8efb6e3765ecae1fca9160b18df"));
@@ -210,7 +180,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 	
 	{
 		bytes ingressMac;
-		SHA3_256 h(m_ingressMac);
+		Keccak_256 h(m_ingressMac);
 		bytes digest(16);
 		h.TruncatedFinal(digest.data(), 16);
 		BOOST_REQUIRE(digest == fromHex("ceed64135852064cbdde86e7ea05e8f5"));
@@ -241,8 +211,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameEnc;
 	CryptoPP::CTR_Mode<CryptoPP::AES>::Encryption m_frameDec;
 	CryptoPP::ECB_Mode<CryptoPP::AES>::Encryption m_macEnc;
-	CryptoPP::SHA3_256 m_egressMac;
-	CryptoPP::SHA3_256 m_ingressMac;
+	CryptoPP::Keccak_256 m_egressMac;
+	CryptoPP::Keccak_256 m_ingressMac;
 	
 	// when originated is true, agreement is with init secrets
 	// when originated is true, remoteNonce = recvNonce
@@ -272,7 +242,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	{
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
 		
-		SHA3_256 ctx;
+		Keccak_256 ctx;
 		ctx.Update(leftNonce.data(), h256::size);
 		ctx.Update(rightNonce.data(), h256::size);
 		bytes expected(32);
@@ -291,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	{
 		BOOST_REQUIRE(ephemeralShared == *(Secret*)keyMaterialBytes.data());
 		
-		SHA3_256 ctx;
+		Keccak_256 ctx;
 		ctx.Update(preImage.data(), preImage.size());
 		bytes expected(32);
 		ctx.Final(expected.data());
@@ -334,7 +304,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	
 	{
 		bytes egressMac;
-		SHA3_256 h(m_egressMac);
+		Keccak_256 h(m_egressMac);
 		bytes digest(32);
 		h.Final(digest.data());
 		BOOST_REQUIRE(digest == fromHex("0x09771e93b1a6109e97074cbe2d2b0cf3d3878efafe68f53c41bb60c0ec49097e"));
@@ -354,7 +324,7 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 
 	{
 		bytes ingressMac;
-		SHA3_256 h(m_ingressMac);
+		Keccak_256 h(m_ingressMac);
 		bytes digest(32);
 		h.Final(digest.data());
 		BOOST_CHECK(digest == fromHex("0x75823d96e23136c89666ee025fb21a432be906512b3dd4a3049e898adb433847"));
@@ -366,8 +336,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 
 	/// test macs of frame headers
 	{
-		SHA3_256 egressmac(m_egressMac);
-		SHA3_256 prevDigest(egressmac);
+		Keccak_256 egressmac(m_egressMac);
+		Keccak_256 prevDigest(egressmac);
 		h128 prevDigestOut;
 		prevDigest.TruncatedFinal(prevDigestOut.data(), h128::size);
 		h128 encDigest;
@@ -382,8 +352,8 @@ BOOST_AUTO_TEST_CASE(test_secrets_from_go)
 	}
 	
 	{
-		SHA3_256 ingressmac(m_ingressMac);
-		SHA3_256 prevDigest(ingressmac);
+		Keccak_256 ingressmac(m_ingressMac);
+		Keccak_256 prevDigest(ingressmac);
 		h128 prevDigestOut;
 		prevDigest.TruncatedFinal(prevDigestOut.data(), h128::size);
 		h128 encDigest;
