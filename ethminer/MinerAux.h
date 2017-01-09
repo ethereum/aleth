@@ -261,9 +261,6 @@ public:
 			<< "    --benchmark-warmup <seconds>  Set the duration of warmup for the benchmark tests (default: 3)." << endl
 			<< "    --benchmark-trial <seconds>  Set the duration for each trial for the benchmark tests (default: 3)." << endl
 			<< "    --benchmark-trials <n>  Set the number of trials for the benchmark tests (default: 5)." << endl
-#if ETH_JSONRPC
-			<< "    --phone-home <on/off>  When benchmarking, publish results (default: on)" << endl
-#endif // ETH_JSONRPC
 			<< "DAG creation mode:" << endl
 			<< "    -D,--create-dag <number>  Create the DAG in preparation for mining on given block and exit." << endl
 			<< "Mining configuration:" << endl
