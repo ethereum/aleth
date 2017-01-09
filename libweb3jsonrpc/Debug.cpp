@@ -124,7 +124,7 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 {
 	Json::Value ret(Json::objectValue);
 	ret["complete"] = true;
-	ret["storage"] = Json::Value(Json::objectValue);
+	ret["storage"] = Json::Value(Json::arrayValue);
 
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
@@ -143,7 +143,7 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
 		State state = block.fromPending(i);
 
-		map<u256, u256> const storage(state.storage(Address(_address)));
+		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
 		// begin is inclusive
 		auto itBegin = storage.lower_bound(begin);
@@ -158,7 +158,12 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 				break;
 			}
 
-			ret["storage"][toCompactHex(it->first, HexPrefix::Add, 1)] = toCompactHex(it->second, HexPrefix::Add, 1);
+			Json::Value keyValue(Json::objectValue);
+			keyValue["hashedKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
+			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
+			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
+
+			ret["storage"].append(keyValue);
 		}
 	}
 	catch (Exception const& _e)

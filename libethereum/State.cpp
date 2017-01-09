@@ -384,9 +384,9 @@ u256 State::storage(Address const& _id, u256 const& _key) const
 		return 0;
 }
 
-map<u256, u256> State::storage(Address const& _id) const
+map<h256, pair<u256, u256>> State::storage(Address const& _id) const
 {
-	map<u256, u256> ret;
+	map<h256, pair<u256, u256>> ret;
 
 	if (Account const* a = account(_id))
 	{
@@ -394,16 +394,26 @@ map<u256, u256> State::storage(Address const& _id) const
 		if (h256 root = a->baseRoot())
 		{
 			SecureTrieDB<h256, OverlayDB> memdb(const_cast<OverlayDB*>(&m_db), root);		// promise we won't alter the overlay! :)
-			for (auto const& i: memdb)
-				ret[i.first] = RLP(i.second).toInt<u256>();
+
+			for (auto it = memdb.hashedBegin(); it != memdb.hashedEnd(); ++it)
+			{
+				h256 const hashedKey((*it).first);
+				u256 const key = h256(it.key());
+				u256 const value = RLP((*it).second).toInt<u256>();
+				ret[hashedKey] = make_pair(key, value);
+			}
 		}
 
 		// Then merge cached storage over the top.
-		for (auto const& i: a->storageOverlay())
+		for (auto const& i : a->storageOverlay())
+		{
+			h256 const key = i.first;
+			h256 const hashedKey = sha3(key);
 			if (i.second)
-				ret[i.first] = i.second;
+				ret[hashedKey] = i;
 			else
-				ret.erase(i.first);
+				ret.erase(hashedKey);
+		}
 	}
 	return ret;
 }
