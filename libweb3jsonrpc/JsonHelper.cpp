@@ -542,11 +542,11 @@ pair<shh::Topics, Public> toWatch(Json::Value const& _json)
 
 namespace rpc
 {
-u256 u256fromHex(string const& _s)
+h256 h256fromHex(string const& _s)
 {
 	try
 	{
-		return u256(_s);
+		return h256(_s);
 	}
 	catch (runtime_error const&)
 	{

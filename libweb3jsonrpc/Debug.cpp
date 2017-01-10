@@ -120,7 +120,7 @@ Json::Value Debug::debug_traceBlockByNumber(int _blockNumber, Json::Value const&
 	return ret;
 }
 
-Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, string const& _end, int _maxResults)
+Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, int _maxResults)
 {
 	Json::Value ret(Json::objectValue);
 	ret["complete"] = true;
@@ -130,11 +130,6 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		throw jsonrpc::JsonRpcException("Negative index");
 	if (_maxResults <= 0)
 		throw jsonrpc::JsonRpcException("Nonpositive maxResults");
-
-	u256 const begin(u256fromHex(_begin));
-	u256 const end(u256fromHex(_end));
-	if (begin > end)
-		throw jsonrpc::JsonRpcException("Begin is greater than end");
 
 	try
 	{
@@ -146,11 +141,9 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
 		// begin is inclusive
-		auto itBegin = storage.lower_bound(begin);
-		// end is inclusive, too, so find the element following it
-		auto itEnd = storage.upper_bound(end);
+		auto itBegin = storage.lower_bound(h256fromHex(_begin));
 
-		for (auto it = itBegin; it != itEnd; ++it)
+		for (auto it = itBegin; it != storage.end(); ++it)
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
