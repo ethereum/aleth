@@ -26,12 +26,7 @@
 #include <libdevcore/CommonJS.h>
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
-#include <libethashseal/EthashGPUMiner.h>
 #include <libethashseal/EthashCPUMiner.h>
-
-#if ETH_ETHASHCL
-	#include <libethash-cl/ethash_cl_miner.h>
-#endif // ETH_ETHASHCL
 
 #if ETH_JSONRPC
 	#include <jsonrpccpp/client/connectors/httpclient.h>
@@ -131,60 +126,6 @@ public:
 				cerr << "Bad " << arg << " option: " << argv[i] << endl;
 				BOOST_THROW_EXCEPTION(BadArgument());
 			}
-		else if (arg == "--opencl-platform" && i + 1 < argc)
-			try {
-				m_openclPlatform = stol(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-		else if (arg == "--opencl-device" && i + 1 < argc)
-			try {
-				m_openclDevice = stol(argv[++i]);
-				m_miningThreads = 1;
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-#if ETH_ETHASHCL
-		else if (arg == "--cl-global-work" && i + 1 < argc)
-			try {
-				m_globalWorkSizeMultiplier = stol(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-		else if (arg == "--cl-local-work" && i + 1 < argc)
-			try {
-				m_localWorkSize = stol(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-		else if (arg == "--cl-ms-per-batch" && i + 1 < argc)
-			try {
-				m_msPerBatch = stol(argv[++i]);
-			}
-			catch (...)
-			{
-				cerr << "Bad " << arg << " option: " << argv[i] << endl;
-				BOOST_THROW_EXCEPTION(BadArgument());
-			}
-#endif // ETH_ETHASHCL
-		else if (arg == "--list-devices")
-			m_shouldListDevices = true;
-		else if (arg == "--allow-opencl-cpu")
-			m_clAllowCPU = true;
-		else if (arg == "--cl-extragpu-mem" && i + 1 < argc)
-			m_extraGPUMemory = 1000000 * stol(argv[++i]);
 		else if (arg == "--benchmark-warmup" && i + 1 < argc)
 			try {
 				m_benchmarkWarmup = stol(argv[++i]);
@@ -214,8 +155,6 @@ public:
 			}
 		else if (arg == "-C" || arg == "--cpu")
 			m_minerType = "cpu";
-		else if (arg == "-G" || arg == "--opencl")
-			m_minerType = "opencl";
 		else if (arg == "--current-block" && i + 1 < argc)
 			m_currentBlock = stol(argv[++i]);
 		else if (arg == "--no-precompute")
@@ -295,37 +234,8 @@ public:
 
 	void execute()
 	{
-		if (m_shouldListDevices)
-		{
-#if ETH_ETHASHCL
-			EthashGPUMiner::listDevices();
-#endif // ETH_ETHASHCL
-
-			exit(0);
-		}
-
 		if (m_minerType == "cpu")
 			EthashCPUMiner::setNumInstances(m_miningThreads);
-		else if (m_minerType == "opencl")
-		{
-#if ETH_ETHASHCL
-			if (!EthashGPUMiner::configureGPU(
-					m_localWorkSize,
-					m_globalWorkSizeMultiplier,
-					m_msPerBatch,
-					m_openclPlatform,
-					m_openclDevice,
-					m_clAllowCPU,
-					m_extraGPUMemory,
-					m_currentBlock
-				))
-				exit(1);
-			EthashGPUMiner::setNumInstances(m_miningThreads);
-#else
-			cerr << "Selected GPU mining without having compiled with -DETHASHCL=1" << endl;
-			exit(1);
-#endif // ETH_ETHASHCL
-		}
 		if (mode == OperationMode::DAGInit)
 			doInitDAG(m_initDAG);
 		else if (mode == OperationMode::Benchmark)
@@ -351,35 +261,14 @@ public:
 			<< "    --benchmark-warmup <seconds>  Set the duration of warmup for the benchmark tests (default: 3)." << endl
 			<< "    --benchmark-trial <seconds>  Set the duration for each trial for the benchmark tests (default: 3)." << endl
 			<< "    --benchmark-trials <n>  Set the number of trials for the benchmark tests (default: 5)." << endl
-#if ETH_JSONRPC
-			<< "    --phone-home <on/off>  When benchmarking, publish results (default: on)" << endl
-#endif // ETH_JSONRPC
 			<< "DAG creation mode:" << endl
 			<< "    -D,--create-dag <number>  Create the DAG in preparation for mining on given block and exit." << endl
 			<< "Mining configuration:" << endl
 			<< "    -C,--cpu  When mining, use the CPU." << endl
-			<< "    -G,--opencl  When mining use the GPU via OpenCL." << endl
-			<< "    --opencl-platform <n>  When mining using -G/--opencl use OpenCL platform n (default: 0)." << endl
-			<< "    --opencl-device <n>  When mining using -G/--opencl use OpenCL device n (default: 0)." << endl
 			<< "    -t, --mining-threads <n> Limit number of CPU/GPU miners to n (default: use everything available on selected platform)" << endl
-			<< "    --allow-opencl-cpu Allows CPU to be considered as an OpenCL device if the OpenCL platform supports it." << endl
-			<< "    --list-devices List the detected OpenCL devices and exit." << endl
 			<< "    --current-block Let the miner know the current block number at configuration time. Will help determine DAG size and required GPU memory." << endl
-			<< "    --disable-submit-hashrate  When mining, don't submit hashrate to node." << endl
-#if ETH_ETHASHCL
-			<< "    --cl-extragpu-mem Set the memory (in MB) you believe your GPU requires for stuff other than mining. Windows rendering e.t.c.." << endl
-			<< "    --cl-local-work Set the OpenCL local work size. Default is " << toString(ethash_cl_miner::c_defaultLocalWorkSize) << endl
-			<< "    --cl-global-work Set the OpenCL global work size as a multiple of the local work size. Default is " << toString(ethash_cl_miner::c_defaultGlobalWorkSizeMultiplier) << " * " << toString(ethash_cl_miner::c_defaultLocalWorkSize) << endl
-			<< "    --cl-ms-per-batch Set the OpenCL target milliseconds per batch (global workgroup size). Default is " << toString(ethash_cl_miner::c_defaultMSPerBatch) << ". If 0 is given then no autoadjustment of global work size will happen" << endl
-#endif // ETH_ETHASHCL
-			;
+			<< "    --disable-submit-hashrate  When mining, don't submit hashrate to node." << endl;
 	}
-
-	enum class MinerType
-	{
-		CPU,
-		GPU
-	};
 
 	std::string minerType() const { return m_minerType; }
 	bool shouldPrecompute() const { return m_precompute; }
@@ -402,18 +291,10 @@ private:
 		GenericFarm<EthashProofOfWork> f;
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
 		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
-#if ETH_ETHASHCL
-		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
-#endif // ETH_ETHASHCL
 		f.setSealers(sealers);
 		f.onSolutionFound([&](EthashProofOfWork::Solution) { return false; });
 
-		string platformInfo =
-			_m == "cpu" ? EthashCPUMiner::platformInfo() :
-#if ETH_ETHASHCL
-			_m == "opencl" ? EthashGPUMiner::platformInfo() :
-#endif // ETH_ETHASHCL
-			"";
+		string platformInfo = EthashCPUMiner::platformInfo();
 		cout << "Benchmarking on platform: " << platformInfo << endl;
 
 		cout << "Preparing DAG..." << endl;
@@ -461,9 +342,6 @@ private:
 	{
 		map<string, GenericFarm<EthashProofOfWork>::SealerDescriptor> sealers;
 		sealers["cpu"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashCPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashCPUMiner(ci); }};
-#if ETH_ETHASHCL
-		sealers["opencl"] = GenericFarm<EthashProofOfWork>::SealerDescriptor{&EthashGPUMiner::instances, [](GenericMiner<EthashProofOfWork>::ConstructionInfo ci){ return new EthashGPUMiner(ci); }};
-#endif // ETH_ETHASHCL
 		(void)_m;
 		(void)_remote;
 		(void)_recheckPeriod;
@@ -576,19 +454,8 @@ private:
 
 	/// Mining options
 	std::string m_minerType = "cpu";
-	unsigned m_openclPlatform = 0;
-	unsigned m_openclDevice = 0;
 	unsigned m_miningThreads = UINT_MAX;
-	bool m_shouldListDevices = false;
-	bool m_clAllowCPU = false;
-#if ETH_ETHASHCL
-	unsigned m_globalWorkSizeMultiplier = ethash_cl_miner::c_defaultGlobalWorkSizeMultiplier;
-	unsigned m_localWorkSize = ethash_cl_miner::c_defaultLocalWorkSize;
-	unsigned m_msPerBatch = ethash_cl_miner::c_defaultMSPerBatch;
-#endif // ETH_ETHASHCL
 	uint64_t m_currentBlock = 0;
-	// default value is 350MB of GPU memory for other stuff (windows system rendering, e.t.c.)
-	unsigned m_extraGPUMemory = 350000000;
 
 	/// DAG initialisation param.
 	unsigned m_initDAG = 0;
