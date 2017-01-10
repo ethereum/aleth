@@ -93,7 +93,6 @@ case $(uname -s) in
 
         # And finally install all the external dependencies.
         brew install \
-            cryptopp \
             leveldb \
             libmicrohttpd \
             miniupnpc
@@ -136,7 +135,6 @@ case $(uname -s) in
                 libtool \
                 boost \
                 cmake \
-                crypto++ \
                 git \
                 leveldb \
                 libmicrohttpd \
@@ -212,21 +210,6 @@ case $(uname -s) in
                     mesa-common-dev \
                     unzip
 
-                # All the Debian releases until Stretch have shipped with CryptoPP 5.6.1,
-                # but we need 5.6.2 or newer, so we build it from source.
-                #
-                # - https://packages.debian.org/wheezy/libcrypto++-dev (5.6.1)
-                # - https://packages.debian.org/jessie/libcrypto++-dev (5.6.1)
-                # - https://packages.debian.org/stretch/libcrypto++-dev (5.6.3)
-
-                mkdir cryptopp && cd cryptopp
-                wget https://www.cryptopp.com/cryptopp563.zip
-                unzip -a cryptopp563.zip
-                make dynamic
-                make libcryptopp.so
-                sudo make install PREFIX=/usr/local
-                cd ..
-
                 # All the Debian releases until Stretch have shipped with versions of CMake
                 # which are too old for cpp-ethereum to build successfully.  CMake v3.0.x
                 # should be the minimum version, but the v3.0.2 which comes with Jessie
@@ -267,7 +250,6 @@ case $(uname -s) in
                     automake \
                     boost-devel \
                     cmake \
-                    cryptopp-devel \
                     curl-devel \
                     gcc \
                     gcc-c++ \
@@ -397,7 +379,6 @@ case $(uname -s) in
                     git \
                     libboost-all-dev \
                     libcurl4-openssl-dev \
-                    libcryptopp-dev \
                     libgmp-dev \
                     libleveldb-dev \
                     libmicrohttpd-dev \
