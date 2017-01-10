@@ -143,15 +143,15 @@ void VM::optimize()
 				val = m_code[i+1];
 				for (uint64_t j = i+2, n = nPush; --n; ++j) {
 					val = (val << 8) | m_code[j];
-		#ifdef EVM_USE_CONSTANT_POOL
-		
-					// index table with FNV hash
+		#ifdef EVM_USE_CONSTANT_POOL		
+					// compute FNV hash of constant
 					hash ^= m_code[j];
 					hash *= 16777619;
 				}
 			}
 		
-			// add value to constant pool and replace PUSHn with PUSHC if room
+			// add value to constant pool by folding hash to one byye and indexing into table
+			// if there is no collision replace PUSHn with PUSHC
 			if (1 < nPush)
 			{
 				TRACE_PRE_OPT(1, i, op);
