@@ -159,8 +159,8 @@ private:
 	void logGasMem();
 	void fetchInstruction();
 	
-	uint64_t decode_jump_dest(const byte* const _code, uint64_t& _pc);
-	uint64_t decode_jumpv_dest(const byte* const _code, uint64_t& _pc, u256*& _sp);
+	uint64_t decodeJumpDest(const byte* const _code, uint64_t& _pc);
+	uint64_t decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp);
 
 	template<class T> uint64_t toUint64(T v)
 	{
