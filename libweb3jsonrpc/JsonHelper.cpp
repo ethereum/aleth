@@ -548,7 +548,7 @@ h256 h256fromHex(string const& _s)
 	{
 		return h256(_s);
 	}
-	catch (runtime_error const&)
+	catch (boost::exception const&)
 	{
 		throw jsonrpc::JsonRpcException("Invalid hex-encoded string: " + _s);
 	}
