@@ -859,9 +859,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 			if (*m_sp)
-			{
 				m_pc = decodeJumpDest(m_code, m_pc);
-			}
 			else
 				++m_pc;
 			--m_sp;
