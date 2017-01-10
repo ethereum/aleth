@@ -67,7 +67,8 @@ public:
 
 	VM():
 		m_stackSpace(1025), m_stack(m_stackSpace.data() + 1),
-		m_returnSpace(1025), m_return(m_returnSpace.data() + 1) {};
+		m_returnSpace(1025), m_return(m_returnSpace.data() + 1)
+	{};
 
 private:
 
