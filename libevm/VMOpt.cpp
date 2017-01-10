@@ -96,7 +96,8 @@ void VM::optimize()
 #ifdef EVM_JUMPS_AND_SUBS
 		else if (op == Instruction::JUMPTO || op == Instruction::JUMPIF || op == Instruction::JUMPSUB)
 		{
-			pc += 4 + 1;
+			++pc;
+			pc += 4;
 		}
 		else if (op == Instruction::JUMPV || op == Instruction::JUMPSUBV)
 		{
