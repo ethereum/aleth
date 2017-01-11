@@ -207,7 +207,6 @@ case $(uname -s) in
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
                     libz-dev \
-                    mesa-common-dev \
                     unzip
 
                 # All the Debian releases until Stretch have shipped with versions of CMake
@@ -257,7 +256,6 @@ case $(uname -s) in
                     gmp-devel \
                     leveldb-devel \
                     libtool \
-                    mesa-dri-drivers \
                     miniupnpc-devel \
                     snappy-devel
 
@@ -384,8 +382,7 @@ case $(uname -s) in
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
                     libz-dev \
-                    llvm-3.9-dev \
-                    mesa-common-dev
+                    llvm-3.9-dev
                 ;;
             *)
 
