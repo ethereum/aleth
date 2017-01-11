@@ -29,9 +29,6 @@ namespace dev
 namespace eth
 {
 
-extern KeyPair const FluidityTreasure;
-
-extern std::string const c_genesisInfoFluidity;
 extern std::string const c_genesisInfoTestBasicAuthority;
 extern dev::Addresses childDaos();
 
