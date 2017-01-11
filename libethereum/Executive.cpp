@@ -323,8 +323,9 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	m_revertLog.existed = m_s.isAlive(m_revertLog.address);
 	m_gas = _gas;
 
-	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
-	m_s.createContract(m_revertLog.address, incrementNonce);
+	m_s.createContract(m_revertLog.address);
+	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock"))
+		m_s.incNonce(m_revertLog.address);
 
 	// Execute _init.
 	if (!_init.empty())

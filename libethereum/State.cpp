@@ -329,10 +329,10 @@ void State::subBalance(Address const& _id, bigint const& _amount)
 		a->addBalance(-_amount);
 }
 
-void State::createContract(Address const& _address, bool _incrementNonce)
+void State::createContract(Address const& _address)
 {
 	createAccount(_address, Account(
-		requireAccountStartNonce() + (_incrementNonce ? 1 : 0),
+		requireAccountStartNonce(),
 		balance(_address),
 		Account::ContractConception
 	));
