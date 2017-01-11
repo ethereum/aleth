@@ -80,7 +80,7 @@ private:
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
 	static u256 exp256(u256 _base, u256 _exponent);
-	void copyCode();
+	void copyCode(int);
 	const void* const* c_jumpTable = 0;
 	bool m_caseInit = false;
 	
