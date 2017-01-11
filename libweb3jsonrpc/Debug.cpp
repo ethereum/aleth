@@ -120,21 +120,16 @@ Json::Value Debug::debug_traceBlockByNumber(int _blockNumber, Json::Value const&
 	return ret;
 }
 
-Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, string const& _end, int _maxResults)
+Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _txIndex, string const& _address, string const& _begin, int _maxResults)
 {
 	Json::Value ret(Json::objectValue);
 	ret["complete"] = true;
-	ret["storage"] = Json::Value(Json::objectValue);
+	ret["storage"] = Json::Value(Json::arrayValue);
 
 	if (_txIndex < 0)
 		throw jsonrpc::JsonRpcException("Negative index");
 	if (_maxResults <= 0)
 		throw jsonrpc::JsonRpcException("Nonpositive maxResults");
-
-	u256 const begin(u256fromHex(_begin));
-	u256 const end(u256fromHex(_end));
-	if (begin > end)
-		throw jsonrpc::JsonRpcException("Begin is greater than end");
 
 	try
 	{
@@ -143,14 +138,12 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 		unsigned const i = ((unsigned)_txIndex < block.pending().size()) ? (unsigned)_txIndex : block.pending().size();
 		State state = block.fromPending(i);
 
-		map<u256, u256> const storage(state.storage(Address(_address)));
+		map<h256, pair<u256, u256>> const storage(state.storage(Address(_address)));
 
 		// begin is inclusive
-		auto itBegin = storage.lower_bound(begin);
-		// end is inclusive, too, so find the element following it
-		auto itEnd = storage.upper_bound(end);
+		auto itBegin = storage.lower_bound(h256fromHex(_begin));
 
-		for (auto it = itBegin; it != itEnd; ++it)
+		for (auto it = itBegin; it != storage.end(); ++it)
 		{
 			if (ret["storage"].size() == static_cast<unsigned>(_maxResults))
 			{
@@ -158,7 +151,12 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 				break;
 			}
 
-			ret["storage"][toCompactHex(it->first, HexPrefix::Add, 1)] = toCompactHex(it->second, HexPrefix::Add, 1);
+			Json::Value keyValue(Json::objectValue);
+			keyValue["hashedKey"] = toCompactHex(it->first, HexPrefix::Add, 1);
+			keyValue["key"] = toCompactHex(it->second.first, HexPrefix::Add, 1);
+			keyValue["value"] = toCompactHex(it->second.second, HexPrefix::Add, 1);
+
+			ret["storage"].append(keyValue);
 		}
 	}
 	catch (Exception const& _e)
@@ -168,6 +166,14 @@ Json::Value Debug::debug_storageRangeAt(string const& _blockHashOrNumber, int _t
 	}
 
 	return ret;
+}
+
+std::string Debug::debug_preimage(std::string const& _hashedKey)
+{
+	h256 const hashedKey(h256fromHex(_hashedKey));
+	bytes const key = m_eth.stateDB().lookupAux(hashedKey);
+
+	return key.empty() ? std::string() : toCompactHex(u256(h256(key)), HexPrefix::Add, 1);
 }
 
 Json::Value Debug::debug_traceCall(Json::Value const& _call, std::string const& _blockNumber, Json::Value const& _options)

@@ -46,11 +46,11 @@ Json::Value toJson(unordered_map<u256, u256> const& _storage)
 	return res;
 }
 
-Json::Value toJson(map<u256, u256> const& _storage)
+Json::Value toJson(map<h256, pair<u256, u256>> const& _storage)
 {
 	Json::Value res(Json::objectValue);
 	for (auto i: _storage)
-		res[toJS(i.first)] = toJS(i.second);
+		res[toJS(u256(i.second.first))] = toJS(i.second.second);
 	return res;
 }
 
@@ -542,13 +542,13 @@ pair<shh::Topics, Public> toWatch(Json::Value const& _json)
 
 namespace rpc
 {
-u256 u256fromHex(string const& _s)
+h256 h256fromHex(string const& _s)
 {
 	try
 	{
-		return u256(_s);
+		return h256(_s);
 	}
-	catch (runtime_error const&)
+	catch (boost::exception const&)
 	{
 		throw jsonrpc::JsonRpcException("Invalid hex-encoded string: " + _s);
 	}

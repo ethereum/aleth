@@ -190,7 +190,7 @@ h256 ClientBase::codeHashAt(Address _a, BlockNumber _block) const
 	return block(_block).codeHash(_a);
 }
 
-map<u256, u256> ClientBase::storageAt(Address _a, BlockNumber _block) const
+map<h256, pair<u256, u256>> ClientBase::storageAt(Address _a, BlockNumber _block) const
 {
 	return block(_block).storage(_a);
 }

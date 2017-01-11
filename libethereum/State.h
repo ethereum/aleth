@@ -226,8 +226,8 @@ public:
 
 	/// Get the storage of an account.
 	/// @note This is expensive. Don't use it unless you need to.
-	/// @returns std::map<u256, u256> if no account exists at that address.
-	std::map<u256, u256> storage(Address const& _contract) const;
+	/// @returns map of hashed keys to key-value pairs or empty map if no account exists at that address.
+	std::map<h256, std::pair<u256, u256>> storage(Address const& _contract) const;
 
 	/// Get the code of an account.
 	/// @returns bytes() if no account exists at that address.

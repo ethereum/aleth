@@ -476,16 +476,16 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 
 			if (addressOptions.hasStorage())
 			{
-				map<u256, u256> stateStorage = _statePost.storage(a.first);
+				map<h256, pair<u256, u256>> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(stateStorage[s.first]) << ", expected [" << s.first << "] = " << toHex(s.second));
+					TestOutputHelper::testName() + "Check State: " << a.first << ": incorrect storage [" << s.second.first << "] = " << toHex(stateStorage[s.first].second) << ", expected [" << s.second.first << "] = " << toHex(s.second.second));
 
 				//Check for unexpected storage values
-				map<u256, u256> expectedStorage = _stateExpect.storage(a.first);
+				map<h256, pair<u256, u256>> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((expectedStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.first << "] = " << toHex(s.second) << ", expected [" << s.first << "] = " << toHex(expectedStorage[s.first]));
+					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.second.first << "] = " << toHex(s.second.second) << ", expected [" << s.second.first << "] = " << toHex(expectedStorage[s.first].second));
 			}
 
 			if (addressOptions.hasCode())
@@ -706,7 +706,7 @@ json_spirit::mObject fillJsonWithState(State const& _state)
 		{
 			json_spirit::mObject store;
 			for (auto const& s: _state.storage(a.first))
-				store[toCompactHex(s.first, HexPrefix::Add, 1)] = toCompactHex(s.second, HexPrefix::Add, 1);
+				store[toCompactHex(s.second.first, HexPrefix::Add, 1)] = toCompactHex(s.second.second, HexPrefix::Add, 1);
 			o["storage"] = store;
 		}
 		o["code"] = toHex(_state.code(a.first), 2, HexPrefix::Add);

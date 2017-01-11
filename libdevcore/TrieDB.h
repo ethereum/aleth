@@ -452,15 +452,14 @@ public:
 
 	void remove(bytesConstRef _key) { Super::remove(sha3(_key)); }
 
-	//friend class iterator;
-
-	class iterator : public GenericTrieDB<_DB>::iterator
+	// iterates over <key, value> pairs
+	class iterator: public GenericTrieDB<_DB>::iterator
 	{
 	public:
 		using Super = typename GenericTrieDB<_DB>::iterator;
 
 		iterator() { }
-		iterator(FatGenericTrieDB const* _trie): Super(_trie) { }
+		iterator(FatGenericTrieDB const* _trie) : Super(_trie) { }
 
 		typename Super::value_type at() const
 		{
@@ -472,8 +471,28 @@ public:
 	private:
 		mutable bytes m_key;
 	};
+
 	iterator begin() const { return iterator(); }
 	iterator end() const { return iterator(); }
+
+	// iterates over <hashedKey, value> pairs
+	class HashedIterator: public GenericTrieDB<_DB>::iterator
+	{
+	public:
+		using Super = typename GenericTrieDB<_DB>::iterator;
+
+		HashedIterator() {}
+		HashedIterator(FatGenericTrieDB const* _trie) : Super(_trie) {}
+
+		bytes key() const
+		{
+			auto hashed = Super::at();
+			return static_cast<FatGenericTrieDB const*>(Super::m_that)->db()->lookupAux(h256(hashed.first));
+		}
+	};
+
+	HashedIterator hashedBegin() const { return HashedIterator(this); }
+	HashedIterator hashedEnd() const { return HashedIterator(); }
 };
 
 template <class KeyType, class DB> using TrieDB = SpecificTrieDB<GenericTrieDB<DB>, KeyType>;
