@@ -323,12 +323,12 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	m_revertLog.existed = m_s.isAlive(m_revertLog.address);
 	m_gas = _gas;
 
+	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
+	m_s.createContract(m_revertLog.address, incrementNonce);
+
 	// Execute _init.
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, m_revertLog.address, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
-
-	bool incrementNonce = m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock");
-	m_s.createContract(m_revertLog.address, incrementNonce);
 
 	// Remember the transfer params in case revert is needed.
 	m_revertLog.transfer = _endowment;

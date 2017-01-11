@@ -338,12 +338,6 @@ void State::createContract(Address const& _address, bool _incrementNonce)
 	));
 }
 
-void State::ensureAccountExists(const Address& _address)
-{
-	if (!addressInUse(_address))
-		createAccount(_address, Account(requireAccountStartNonce(), 0, Account::NormalCreation));
-}
-
 void State::createAccount(Address const& _address, Account const&& _account)
 {
 	m_cache[_address] = std::move(_account);

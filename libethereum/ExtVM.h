@@ -47,7 +47,10 @@ public:
 		ExtVMFace(_envInfo, _myAddress, _caller, _origin, _value, _gasPrice, _data, _code.toBytes(), _codeHash, _depth), m_s(_s), m_sealEngine(_sealEngine),
 		m_revertLog(_orig)
 	{
-		m_s.ensureAccountExists(_myAddress);
+		// Contract: processing account must exist. In case of CALL, the ExtVM
+		// is created only if an account has code (so exist). In case of CREATE
+		// the account must be created first.
+		assert(m_s.addressInUse(_myAddress));
 	}
 
 	/// Read storage location.
