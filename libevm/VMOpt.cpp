@@ -63,14 +63,14 @@ void VM::copyCode(int _extraBytes)
 
 void VM::optimize()
 {
-	size_t pc, nBytes = m_codeSpace.size();
+	size_t pc, nBytes = m_ext->code.size();
 
 	// build a table of jump destinations for use in verifyJumpDest
 	
 	TRACE_STR(1, "Build JUMPDEST table")
 	for (pc = 0; pc < nBytes; ++pc)
 	{
-		Instruction op = Instruction(m_code[pc]);
+		Instruction op = Instruction(m_ext->code[pc]);
 		TRACE_OP(2, pc, op);
 				
 		// make synthetic ops in user code trigger invalid instruction if run
@@ -81,20 +81,25 @@ void VM::optimize()
 		)
 		{
 			TRACE_OP(1, pc, op);
-			m_code[pc] = (byte)Instruction::BAD;
+			m_ext->code[pc] = (byte)Instruction::BAD;
 		}
 
 		if (op == Instruction::JUMPDEST)
 		{
 			m_jumpDests.push_back(pc);
 		}
-		else if ((byte)Instruction::PUSH1 <= (byte)op &&
-				 (byte)op <= (byte)Instruction::PUSH32)
+		else if (
+			(byte)Instruction::PUSH1 <= (byte)op &&
+			(byte)op <= (byte)Instruction::PUSH32
+		)
 		{
 			pc += (byte)op - (byte)Instruction::PUSH1 + 1;
 		}
 #ifdef EVM_JUMPS_AND_SUBS
-		else if (op == Instruction::JUMPTO || op == Instruction::JUMPIF || op == Instruction::JUMPSUB)
+		else if (
+			op == Instruction::JUMPTO ||
+			op == Instruction::JUMPIF ||
+			op == Instruction::JUMPSUB)
 		{
 			++pc;
 			pc += 4;
@@ -102,7 +107,7 @@ void VM::optimize()
 		else if (op == Instruction::JUMPV || op == Instruction::JUMPSUBV)
 		{
 			++pc;
-			pc += 4 * m_code[pc];  // number of 4-byte dests followed by table
+			pc += 4 * m_ext->code[pc];  // number of 4-byte dests followed by table
 		}
 		else if (op == Instruction::BEGINSUB)
 		{
@@ -120,10 +125,56 @@ void VM::optimize()
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 	
 	#ifdef EVM_USE_CONSTANT_POOL
-		// start out FNV hash at magic number
-		uint32_t hash = 2166136261;
-		for (int i = 0; i < 256; ++i)
-			m_pool[i] = hash;
+	
+		// maintain constant pool as a hash table of up to 256 u256 constants
+		struct hash256
+		{
+			// FNV chosen as good, fast, and byte-at-a-time
+			const uint32_t FNV_PRIME1 = 2166136261;
+			const uint32_t FNV_PRIME2 = 16777619;
+			uint32_t hash = FNV_PRIME1;
+			
+			u256 (&table)[256];
+			bool empty[256];
+			
+			hash256(u256 (&table)[256]) : table(table)
+			{
+				for (int i = 0; i < 256; ++i)
+				{
+					table[i] = 0;
+					empty[i] = true;
+				}
+			}
+			
+			void hashInit() { hash = FNV_PRIME1; }
+
+			// hash in successive bytes
+			void hashByte(byte b) { hash ^= (b), hash *= FNV_PRIME2; }
+		
+			// fold hash into 1 byte
+			byte getHash() { return ((hash >> 8) ^ hash) & 0xff; }
+		
+			// insert value at byte index in table, false if collision
+			bool insertVal(byte hash, u256& val)
+			{
+				if (empty[hash])
+				{
+					empty[hash] = false;
+					table[hash] = val;
+					return true;
+				}
+				return table[hash] == val;
+			}
+		} constantPool(m_pool);
+		#define CONST_POOL_HASH_INIT() constantPool.hashInit()
+		#define CONST_POOL_HASH_BYTE(b) constantPool.hashByte(b)
+		#define CONST_POOL_GET_HASH() constantPool.getHash()
+		#define CONST_POOL_INSERT_VAL(hash, val) constantPool.insertVal((hash), (val))
+	#else
+		#define CONST_POOL_HASH_INIT()
+		#define CONST_POOL_HASH_BYTE(b)
+		#define CONST_POOL_GET_HASH() 0
+		#define CONST_POOL_INSERT_VAL(hash, val) false
 	#endif
 
 	TRACE_STR(1, "Do first pass optimizations")
@@ -136,30 +187,26 @@ void VM::optimize()
 		{
 			byte nPush = (byte)op - (byte)Instruction::PUSH1 + 1;
 
-		#ifdef EVM_USE_CONSTANT_POOL
 
 			// decode pushed bytes to integral value
+			CONST_POOL_HASH_INIT();
 			val = m_code[pc+1];
 			for (uint64_t i = pc+2, n = nPush; --n; ++i) {
 				val = (val << 8) | m_code[i];
-				
-				// maintain FNV hash of constant
-				hash ^= m_code[i];
-				hash *= 16777619;
+				CONST_POOL_HASH_BYTE(m_code[i]);
 			}
 
-			// index into constant pool by folding hash to one byte
-			// if there is no collision replace PUSHn with PUSHC
+		#ifdef EVM_USE_CONSTANT_POOL
 			if (1 < nPush)
 			{
+				// try to put value in constant pool at hash index
+				// if there is no collision replace PUSHn with PUSHC
 				TRACE_PRE_OPT(1, pc, op);
-				byte h = ((hash >> 8) ^ hash) & 0xff;
-				if (m_pool[h] == 0)
-					m_pool[h] = val;
-				if (m_pool[h] == val)
+				byte hash = CONST_POOL_GET_HASH();
+				if (CONST_POOL_INSERT_VAL(hash, val))
 				{
 					m_code[pc] = (byte)Instruction::PUSHC;
-					m_code[pc+1] = h;
+					m_code[pc+1] = hash;
 					m_code[pc+2] = nPush - 1;
 					TRACE_VAL(1, "constant pooled", val);
 				}
