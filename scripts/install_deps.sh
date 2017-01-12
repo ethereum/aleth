@@ -207,31 +207,18 @@ case $(uname -s) in
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
                     libz-dev \
-                    mesa-common-dev \
                     unzip
 
                 # All the Debian releases until Stretch have shipped with versions of CMake
-                # which are too old for cpp-ethereum to build successfully.  CMake v3.0.x
-                # should be the minimum version, but the v3.0.2 which comes with Jessie
-                # doesn't work properly, so maybe our minimum version should actually be
-                # CMake v3.1.x?  Anyway - we just build and install CMake from source
-                # here, so that it works on any distro.
+                # which are too old for cpp-ethereum to build successfully.
+                # We just download and install latest version.
                 #
                 # - https://packages.debian.org/wheezy/cmake (2.8.9)
                 # - https://packages.debian.org/jessie/cmake (3.0.2)
                 # - https://packages.debian.org/stretch/cmake (3.5.2)
 
-                wget https://cmake.org/files/v3.5/cmake-3.5.2.tar.gz
-                tar -xf cmake-3.5.2.tar.gz
-                cd cmake-3.5.2/
-                cmake .
-                ./bootstrap --prefix=/usr --system-curl
-                make -j 2
-                sudo make install
-                source ~/.profile
-                cd ..
-                rm -rf cmake-3.5.2
-                rm cmake-3.5.2.tar.gz
+                wget -O- https://cmake.org/files/v3.7/cmake-3.7.1-Linux-x86_64.tar.gz \
+                    | sudo tar xz -C /usr/local --strip 1
 
                 ;;
 
@@ -257,7 +244,6 @@ case $(uname -s) in
                     gmp-devel \
                     leveldb-devel \
                     libtool \
-                    mesa-dri-drivers \
                     miniupnpc-devel \
                     snappy-devel
 
@@ -384,8 +370,7 @@ case $(uname -s) in
                     libmicrohttpd-dev \
                     libminiupnpc-dev \
                     libz-dev \
-                    llvm-3.9-dev \
-                    mesa-common-dev
+                    llvm-3.9-dev
                 ;;
             *)
 
