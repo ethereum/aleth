@@ -848,7 +848,7 @@ void VM::interpretCases()
 			m_sp -= 2;
 		CASE_END
 
-#ifdef EVM_JUMPS_AND_SUBS
+#if EVM_JUMPS_AND_SUBS
 		CASE_BEGIN(JUMPTO)
 			ON_OP();
 			updateIOGas();
@@ -1050,7 +1050,7 @@ void VM::interpretCases()
 			++m_pc;
 		CASE_END
 
-#ifdef EVM_JUMPS_AND_SUBS
+#if EVM_JUMPS_AND_SUBS
 		CASE_BEGIN(BEGINSUB)
 			m_runGas = 1;
 			ON_OP();

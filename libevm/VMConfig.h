@@ -39,11 +39,11 @@ namespace eth
 	#define EVM_SWITCH_DISPATCH
 #endif
 
-#if true
+#if false
 	#define EVM_REPLACE_CONST_JUMP
 #endif
 
-#if true
+#if false
 	#define EVM_USE_CONSTANT_POOL
 #endif
 
