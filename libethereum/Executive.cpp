@@ -223,14 +223,15 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Avoid unaffordable transactions.
-	m_gasCost = (bigint)m_t.gas() * m_t.gasPrice();
-	bigint totalCost = m_t.value() + m_gasCost;
+	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
+	bigint totalCost = m_t.value() + gasCost;
 	if (m_s.balance(m_t.sender()) < totalCost)
 	{
 		clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
 		m_excepted = TransactionException::NotEnoughCash;
 		BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
 	}
+	m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 }
 
 bool Executive::execute()
@@ -238,7 +239,7 @@ bool Executive::execute()
 	// Entry point for a user-executed transaction.
 
 	// Pay...
-	clog(StateDetail) << "Paying" << formatBalance(u256(m_gasCost)) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
+	clog(StateDetail) << "Paying" << formatBalance(m_gasCost) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
 	m_s.subBalance(m_t.sender(), m_gasCost);
 
 	if (m_t.isCreation())

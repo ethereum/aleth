@@ -220,7 +220,7 @@ private:
 	Transaction m_t;					///< The original transaction. Set by setup().
 	LogEntries m_logs;					///< The log entries created by this transaction. Set by finalize().
 
-	bigint m_gasCost;
+	u256 m_gasCost;
 	SealEngineFace const& m_sealEngine;
 
 	AccountRevertLog m_revertLog;       ///< The account revert log.

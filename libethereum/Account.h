@@ -123,8 +123,8 @@ public:
 	/// @returns the balance of this account.
 	u256 const& balance() const { return m_balance; }
 
-	/// Increments the balance of this account by the given amount. It's a bigint, so can be negative.
-	void addBalance(bigint _i) { m_balance = (u256)((bigint)m_balance + _i); changed(); }
+	/// Increments the balance of this account by the given amount.
+	void addBalance(u256 _value) { m_balance += _value; changed(); }
 
 	/// @returns the nonce of the account.
 	u256 nonce() const { return m_nonce; }

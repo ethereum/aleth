@@ -183,11 +183,10 @@ public:
 	/// Will initialise the address if it has never been used.
 	void addBalance(Address const& _id, u256 const& _amount);
 
-	/** Subtract some amount from balance.
-	 * @throws NotEnoughCash if balance of @a _id is less than @a _value (or has never been used).
-	 * @note We use bigint here as we don't want any accidental problems with negative numbers.
-	 */
-	void subBalance(Address const& _id, bigint const& _value);
+	/// Subtract the @p _value amount from the balance of @p _addr account.
+	/// @throws NotEnoughCash if the balance of the account is less than the
+	/// amount to be subtrackted (also in case the account does not exist).
+	void subBalance(Address const& _addr, u256 const& _value);
 
 	/**
 	 * @brief Transfers "the balance @a _value between two accounts.

@@ -317,16 +317,17 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 		createAccount(_id, Account(requireAccountStartNonce(), _amount, Account::NormalCreation));
 }
 
-void State::subBalance(Address const& _id, bigint const& _amount)
+void State::subBalance(Address const& _addr, u256 const& _value)
 {
-	if (_amount == 0)
+	if (_value == 0)
 		return;
 
-	Account* a = account(_id);
-	if (!a || a->balance() < _amount)
+	Account* a = account(_addr);
+	if (!a || a->balance() < _value)
+		// TODO: I expect this never happens.
 		BOOST_THROW_EXCEPTION(NotEnoughCash());
 	else
-		a->addBalance(-_amount);
+		a->addBalance(0 - _value);
 }
 
 void State::createContract(Address const& _address)
