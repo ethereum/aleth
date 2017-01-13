@@ -98,6 +98,40 @@ DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 
 class SealEngineFace;
 
+
+
+namespace detail
+{
+struct Change
+{
+	enum Kind: int
+	{
+		balance,
+		storage,
+		nonce,
+		touched,
+		create,
+		prefund_create
+	};
+
+	Kind kind;        ///< The kind of the change.
+	Address address;  ///< Changed account address.
+	u256 value;       ///< Change value, e.g. balance, storage.
+	u256 key;         ///< Storage key. Last because used only in one case.
+
+	/// Helper constructor to make change log update more readable.
+	Change(Kind _kind, Address const& _addr, u256 const& _value = 0):
+			kind(_kind), address(_addr), value(_value)
+	{}
+
+	/// Helper constructor especially for storage change log.
+	Change(Address const& _addr, u256 const& _key, u256 const& _value):
+			kind(storage), address(_addr), value(_value), key(_key)
+	{}
+};
+}
+
+
 /**
  * @brief Model of an Ethereum state, essentially a facade for the trie.
  * Allows you to query the state of accounts, and has built-in caching for various aspects of the
@@ -161,13 +195,6 @@ public:
 	/// Check if the address is in use.
 	bool addressInUse(Address const& _address) const;
 
-	bool isTouched(Address const& _address) const { auto a = account(_address); return !a || a->isDirty(); }
-	void untouch(Address const& _address)
-	{
-		m_cache[_address].untouch();
-		m_unchangedCacheEntries.emplace_back(_address);
-	}
-
 	/// Check if the account exists in the state and is non empty (nonce > 0 || balance > 0 || code nonempty).
 	/// These two notions are equivalent after EIP158.
 	bool accountNonemptyAndExisting(Address const& _address) const;
@@ -204,7 +231,7 @@ public:
 	u256 storage(Address const& _contract, u256 const& _memory) const;
 
 	/// Set the value of a storage position of an account.
-	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value) { m_cache[_contract].setStorage(_location, _value); }
+	void setStorage(Address const& _contract, u256 const& _location, u256 const& _value);
 
 	/// Create a contract at the given address (with unset code and unchanged balance).
 	void createContract(Address const& _address);
@@ -212,12 +239,8 @@ public:
 	/// Sets the code of the account. Must only be called during / after contract creation.
 	void setCode(Address const& _address, bytes&& _code) { m_cache[_address].setCode(std::move(_code)); }
 
-	void clearStorageChanges(Address const& _addr) { m_cache[_addr].clearStorageChanges(); }
-
 	/// Delete an account (used for processing suicides).
 	void kill(Address _a);
-
-	bool isAlive(Address const& _addr) const { auto a = account(_addr); return a && a->isAlive(); }
 
 	/// Get the storage of an account.
 	/// @note This is expensive. Don't use it unless you need to.
@@ -239,10 +262,6 @@ public:
 	/// Increament the account nonce.
 	void incNonce(Address const& _id);
 
-	/// Set the account nonce to the given value. Is used to revert account
-	/// changes.
-	void setNonce(Address const& _addr, u256 const& _nonce);
-
 	/// Get the account nonce -- the number of transactions it has sent.
 	/// @returns 0 if the address has never been used.
 	u256 getNonce(Address const& _addr) const;
@@ -261,6 +280,9 @@ public:
 	u256 const& accountStartNonce() const { return m_accountStartNonce; }
 	u256 const& requireAccountStartNonce() const;
 	void noteAccountStartNonce(u256 const& _actual);
+
+	size_t savepoint() const;
+	void revert(size_t _savepoint);
 
 private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
@@ -295,6 +317,7 @@ private:
 	u256 m_accountStartNonce;
 
 	friend std::ostream& operator<<(std::ostream& _out, State const& _s);
+	std::vector<detail::Change> m_changeLog;
 };
 
 std::ostream& operator<<(std::ostream& _out, State const& _s);

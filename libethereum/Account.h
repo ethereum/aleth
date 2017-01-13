@@ -144,9 +144,6 @@ public:
 	/// @returns the storage overlay as a simple hash map.
 	std::unordered_map<u256, u256> const& storageOverlay() const { return m_storageOverlay; }
 
-	/// Clear all changes made to the storage since last commit.
-	void clearStorageChanges() { m_storageOverlay.clear(); }
-
 	/// Set a key/value pair in the account's storage. This actually goes into the overlay, for committing
 	/// to the trie later.
 	void setStorage(u256 _p, u256 _v) { m_storageOverlay[_p] = _v; changed(); }

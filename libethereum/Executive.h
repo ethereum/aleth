@@ -81,17 +81,7 @@ private:
 /// Keeps unmodified account data for future changes revertion.
 struct AccountRevertLog
 {
-	bool existed = false;
 	bool isCreation = false;
-	int nonceInc = 0;
-	Address address;  ///< The address of the account.
-	Address caller;   ///< The address of the message caller making the changes.
-	u256 transfer;
-	std::unordered_map<u256, u256> storage;
-	Address selfdestructBeneficiary;
-
-	/// Other accounts changed by CALL/CREATEs.
-	std::vector<AccountRevertLog> children;
 };
 
 
@@ -189,7 +179,7 @@ public:
 	u256 gas() const { return m_gas; }
 
 	/// @returns the new address for the created contract in the CREATE operation.
-	h160 newAddress() const { return m_revertLog.address; }
+	Address newAddress() const { return m_newAddress; }
 	/// @returns true iff the operation ended with a VM exception.
 	bool excepted() const { return m_excepted != TransactionException::None; }
 
@@ -224,6 +214,8 @@ private:
 	SealEngineFace const& m_sealEngine;
 
 	AccountRevertLog m_revertLog;       ///< The account revert log.
+	Address m_newAddress;
+	size_t m_savepoint;
 };
 
 }

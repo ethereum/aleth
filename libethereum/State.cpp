@@ -41,6 +41,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::eth::detail;
 namespace fs = boost::filesystem;
 
 const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
@@ -234,6 +235,7 @@ void State::commit(CommitBehaviour _commitBehaviour)
 	if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)
 		removeEmptyAccounts();
 	m_touched += dev::eth::commit(m_cache, m_state);
+	m_changeLog.clear();
 	m_cache.clear();
 	m_unchangedCacheEntries.clear();
 }
@@ -296,25 +298,28 @@ u256 State::balance(Address const& _id) const
 void State::incNonce(Address const& _addr)
 {
 	if (Account* a = account(_addr))
+	{
 		a->incNonce();
+		m_changeLog.emplace_back(Change::nonce, _addr);
+	}
 	else
 		// This is possible if a transaction has gas price 0.
 		createAccount(_addr, Account(requireAccountStartNonce() + 1, 0));
 }
 
-void State::setNonce(Address const& _addr, u256 const& _nonce)
-{
-	Account* a = account(_addr);
-	assert(a);
-	a->setNonce(_nonce);
-}
-
 void State::addBalance(Address const& _id, u256 const& _amount)
 {
 	if (Account* a = account(_id))
+	{
+		if (!a->isDirty())
+			m_changeLog.emplace_back(Change::touched, _id);
 		a->addBalance(_amount);
+	}
 	else
-		createAccount(_id, Account(requireAccountStartNonce(), _amount, Account::NormalCreation));
+		createAccount(_id, {requireAccountStartNonce(), _amount, Account::NormalCreation});
+
+	if (_amount)
+		m_changeLog.emplace_back(Change::balance, _id, _amount);
 }
 
 void State::subBalance(Address const& _addr, u256 const& _value)
@@ -326,8 +331,9 @@ void State::subBalance(Address const& _addr, u256 const& _value)
 	if (!a || a->balance() < _value)
 		// TODO: I expect this never happens.
 		BOOST_THROW_EXCEPTION(NotEnoughCash());
-	else
-		a->addBalance(0 - _value);
+
+	// Fall back to addBalance().
+	addBalance(_addr, 0 - _value);
 }
 
 void State::createContract(Address const& _address)
@@ -341,8 +347,10 @@ void State::createContract(Address const& _address)
 
 void State::createAccount(Address const& _address, Account const&& _account)
 {
+	auto kind = addressInUse(_address) ? Change::prefund_create : Change::create;
 	m_cache[_address] = std::move(_account);
 	m_nonExistingAccountsCache.erase(_address);
+	m_changeLog.emplace_back(kind, _address);
 }
 
 void State::kill(Address _addr)
@@ -377,6 +385,12 @@ u256 State::storage(Address const& _id, u256 const& _key) const
 	}
 	else
 		return 0;
+}
+
+void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _value)
+{
+	m_changeLog.emplace_back(_contract, _key, storage(_contract, _key));
+	m_cache[_contract].setStorage(_key, _value);
 }
 
 map<h256, pair<u256, u256>> State::storage(Address const& _id) const
@@ -498,6 +512,47 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 			return false;
 		}
 	return true;
+}
+
+size_t State::savepoint() const
+{
+	return m_changeLog.size();
+}
+
+void State::revert(size_t _savepoint)
+{
+	while (_savepoint != m_changeLog.size())
+	{
+		auto& change = m_changeLog.back();
+		auto& account = m_cache[change.address];
+
+		// Public State API cannot be used here because it will add another
+		// change log entry.
+		switch (change.kind)
+		{
+		case Change::storage:
+			account.setStorage(change.key, change.value);
+			break;
+		case Change::balance:
+			account.addBalance(0 - change.value);
+			break;
+		case Change::nonce:
+			account.setNonce(m_cache[change.address].nonce() - 1);
+			break;
+		case Change::create:
+			account.kill();
+			break;
+		case Change::prefund_create:
+			// FIXME: add prefound and CREATE revert in single transaction.
+			account.setCode({});
+			// fall through
+		case Change::touched:
+			account.untouch();
+			m_unchangedCacheEntries.emplace_back(change.address);
+			break;
+		}
+		m_changeLog.pop_back();
+	}
 }
 
 std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
