@@ -275,10 +275,13 @@ public:
 	{
 		auto env = reinterpret_cast<evm_env*>(&_ext);
 		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
+		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
+						   toEvmC(_ext.value), _ext.data.data(),
+						   _ext.data.size(), gas,
+						   static_cast<int32_t>(_ext.depth)};
 		return Result{m_instance->execute(
 			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
-			_ext.code.size(), gas, _ext.data.data(), _ext.data.size(),
-			toEvmC(_ext.value)
+			_ext.code.size(), msg
 		)};
 	}
 
