@@ -95,7 +95,7 @@ void VM::optimize()
 		{
 			pc += (byte)op - (byte)Instruction::PUSH1 + 1;
 		}
-#ifdef EVM_JUMPS_AND_SUBS
+#if EVM_JUMPS_AND_SUBS
 		else if (
 			op == Instruction::JUMPTO ||
 			op == Instruction::JUMPIF ||
@@ -120,7 +120,7 @@ void VM::optimize()
 #endif
 	}
 	
-	copyCode(pc - nBytes);
+	copyCode(pc - nBytes + 33);
 
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 	
