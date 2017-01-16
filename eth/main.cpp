@@ -421,6 +421,7 @@ int main(int argc, char** argv)
 
 	MinerCLI m(MinerCLI::OperationMode::None);
 
+	bool listenSet = false;
 	string configJSON;
 	string genesisJSON;
 	for (int i = 1; i < argc; ++i)
@@ -430,10 +431,14 @@ int main(int argc, char** argv)
 		{
 		}
 		else if (arg == "--listen-ip" && i + 1 < argc)
+		{
 			listenIP = argv[++i];
+			listenSet = true;
+		}
 		else if ((arg == "--listen" || arg == "--listen-port") && i + 1 < argc)
 		{
 			listenPort = (short)atoi(argv[++i]);
+			listenSet = true;
 		}
 		else if ((arg == "--public-ip" || arg == "--public") && i + 1 < argc)
 		{
@@ -871,6 +876,7 @@ int main(int argc, char** argv)
 			testingMode = true;
 			enableDiscovery = false;
 			disableDiscovery = true;
+			noPinning = true;
 			bootstrap = false;
 		}
 		else
@@ -1181,7 +1187,7 @@ int main(int argc, char** argv)
 	if (author)
 		cout << "Mining Beneficiary: " << renderFullAddress(author) << endl;
 
-	if (bootstrap || !remoteHost.empty() || enableDiscovery)
+	if (bootstrap || !remoteHost.empty() || enableDiscovery || listenSet)
 	{
 		web3.startNetwork();
 		cout << "Node ID: " << web3.enode() << endl;
