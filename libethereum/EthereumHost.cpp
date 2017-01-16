@@ -640,7 +640,9 @@ shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> c
 {
 	auto ret = HostCapability<EthereumPeer>::newPeerCapability(_s, _idOffset, _cap, _capID);
 
-	capabilityFromSession<EthereumPeer>(*_s)->init(
+	auto cap = capabilityFromSession<EthereumPeer>(*_s, _cap.second);
+	assert(cap);
+	cap->init(
 		protocolVersion(),
 		m_networkId,
 		m_chain.details().totalDifficulty,
