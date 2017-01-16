@@ -476,5 +476,5 @@ void Executive::revert()
 
 	// Set result address to the null one.
 	m_newAddress = {};
-	m_s.revert(m_savepoint);
+	m_s.rollback(m_savepoint);
 }

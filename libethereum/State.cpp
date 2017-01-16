@@ -300,7 +300,7 @@ void State::incNonce(Address const& _addr)
 	if (Account* a = account(_addr))
 	{
 		a->incNonce();
-		m_changeLog.emplace_back(Change::nonce, _addr);
+		m_changeLog.emplace_back(Change::Nonce, _addr);
 	}
 	else
 		// This is possible if a transaction has gas price 0.
@@ -311,15 +311,25 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 {
 	if (Account* a = account(_id))
 	{
-		if (!a->isDirty())
-			m_changeLog.emplace_back(Change::touched, _id);
+		// Log empty account being touched. Empty touched accounts are cleared
+		// after the transaction, so this event must be also reverted.
+		// We only log the first touch (not dirty yet), and only for empty
+		// accounts, as other accounts does not matter.
+		// TODO: to save space we can combine this event with Balance by having
+		//       Balance and Balance+Touch events.
+		if (!a->isDirty() && a->isEmpty())
+			m_changeLog.emplace_back(Change::Touch, _id);
+
+		// Increase the account balance. This also is done for value 0 to mark
+		// the account as dirty. Dirty account are not removed from the cache
+		// and are cleared if empty at the end of the transaction.
 		a->addBalance(_amount);
 	}
 	else
 		createAccount(_id, {requireAccountStartNonce(), _amount, Account::NormalCreation});
 
 	if (_amount)
-		m_changeLog.emplace_back(Change::balance, _id, _amount);
+		m_changeLog.emplace_back(Change::Balance, _id, _amount);
 }
 
 void State::subBalance(Address const& _addr, u256 const& _value)
@@ -347,10 +357,9 @@ void State::createContract(Address const& _address)
 
 void State::createAccount(Address const& _address, Account const&& _account)
 {
-	auto kind = addressInUse(_address) ? Change::prefund_create : Change::create;
 	m_cache[_address] = std::move(_account);
 	m_nonExistingAccountsCache.erase(_address);
-	m_changeLog.emplace_back(kind, _address);
+	m_changeLog.emplace_back(Change::Create, _address);
 }
 
 void State::kill(Address _addr)
@@ -519,7 +528,7 @@ size_t State::savepoint() const
 	return m_changeLog.size();
 }
 
-void State::revert(size_t _savepoint)
+void State::rollback(size_t _savepoint)
 {
 	while (_savepoint != m_changeLog.size())
 	{
@@ -530,23 +539,22 @@ void State::revert(size_t _savepoint)
 		// change log entry.
 		switch (change.kind)
 		{
-		case Change::storage:
+		case Change::Storage:
 			account.setStorage(change.key, change.value);
 			break;
-		case Change::balance:
+		case Change::Balance:
 			account.addBalance(0 - change.value);
 			break;
-		case Change::nonce:
+		case Change::Nonce:
 			account.setNonce(m_cache[change.address].nonce() - 1);
 			break;
-		case Change::create:
-			account.kill();
-			break;
-		case Change::prefund_create:
-			// FIXME: add prefound and CREATE revert in single transaction.
+		case Change::Create:
+			// Clear the deployed code (if any) and mark as not dirty.
+			// FIXME: probably wrong for accounts prefunded in the same
+			//        transaction. Separate Create and SetCode events.
 			account.setCode({});
 			// fall through
-		case Change::touched:
+		case Change::Touch:
 			account.untouch();
 			m_unchangedCacheEntries.emplace_back(change.address);
 			break;

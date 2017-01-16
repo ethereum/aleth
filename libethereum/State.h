@@ -102,16 +102,17 @@ class SealEngineFace;
 
 namespace detail
 {
+
+/// An atomic state changelog entry.
 struct Change
 {
 	enum Kind: int
 	{
-		balance,
-		storage,
-		nonce,
-		touched,
-		create,
-		prefund_create
+		Balance,
+		Storage,
+		Nonce,
+		Create,
+		Touch
 	};
 
 	Kind kind;        ///< The kind of the change.
@@ -126,9 +127,10 @@ struct Change
 
 	/// Helper constructor especially for storage change log.
 	Change(Address const& _addr, u256 const& _key, u256 const& _value):
-			kind(storage), address(_addr), value(_value), key(_key)
+			kind(Storage), address(_addr), value(_value), key(_key)
 	{}
 };
+
 }
 
 
@@ -281,8 +283,12 @@ public:
 	u256 const& requireAccountStartNonce() const;
 	void noteAccountStartNonce(u256 const& _actual);
 
+	/// Create a savepoint in the state changelog.	///
+	/// @return The savepoint index that can be used in rollback() function.
 	size_t savepoint() const;
-	void revert(size_t _savepoint);
+
+	/// Revert all recent changes up to the given @p _savepoint savepoint.
+	void rollback(size_t _savepoint);
 
 private:
 	/// Turns all "touched" empty accounts into non-alive accounts.
