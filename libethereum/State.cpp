@@ -314,7 +314,7 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 	if (Account* a = account(_id))
 		a->addBalance(_amount);
 	else
-		createAccount(_id, Account(requireAccountStartNonce(), _amount, Account::NormalCreation));
+		createAccount(_id, Account(requireAccountStartNonce(), _amount));
 }
 
 void State::subBalance(Address const& _id, bigint const& _amount)
@@ -333,8 +333,7 @@ void State::createContract(Address const& _address)
 {
 	createAccount(_address, Account(
 		requireAccountStartNonce(),
-		balance(_address),
-		Account::ContractConception
+		balance(_address)
 	));
 }
 

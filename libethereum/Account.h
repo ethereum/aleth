@@ -67,16 +67,6 @@ namespace eth
 class Account
 {
 public:
-	/// Type of account to create.
-	enum NewAccountType
-	{
-		/// Normal account.
-		NormalCreation,
-		/// Contract account - we place this object into the contract-creation state (and as such we
-		/// expect setCode(), but codeHash() won't work).
-		ContractConception
-	};
-
 	/// Changedness of account to create.
 	enum Changedness
 	{
@@ -92,7 +82,7 @@ public:
 	/// Construct an alive Account, with given endowment, for either a normal (non-contract) account or for a
 	/// contract account in the
 	/// conception phase, where the code is not yet known.
-	Account(u256 _nonce, u256 _balance, NewAccountType _t, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance), m_codeHash(_t == NormalCreation ? EmptySHA3 : c_contractConceptionCodeHash) {}
+//	Account(u256 _nonce, u256 _balance, NewAccountType _t, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance), m_codeHash(_t == NormalCreation ? EmptySHA3 : c_contractConceptionCodeHash) {}
 	/// Explicit constructor for wierd cases of construction of a normal account.
 	Account(u256 _nonce, u256 _balance, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance) {}
 

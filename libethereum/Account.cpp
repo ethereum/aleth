@@ -82,7 +82,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 
 			if (haveCode)
 			{
-				ret[a] = Account(nonce, balance, Account::ContractConception);
+				ret[a] = Account(nonce, balance);
 				if (o["code"].type() == json_spirit::str_type)
 				{
 					if (o["code"].get_str().find("0x") != 0)
@@ -94,7 +94,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 					cerr << "Error importing code of account " << a << "! Code field needs to be a string";
 			}
 			else
-				ret[a] = Account(nonce, balance, Account::NormalCreation);
+				ret[a] = Account(nonce, balance);
 
 			if (haveStorage)
 				for (pair<string, js::mValue> const& j: o["storage"].get_obj())
@@ -105,7 +105,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 		{
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage, shouldNotExists);
 			if (!haveStorage && !haveCode && !haveNonce && !haveBalance && shouldNotExists) //defined only shouldNotExists field
-				ret[a] = Account(0, 0, Account::NormalCreation);
+				ret[a] = Account(0, 0);
 		}
 
 		if (o_precompiled && o.count("precompiled"))
