@@ -108,11 +108,24 @@ struct Change
 {
 	enum Kind: int
 	{
+		/// Account balance changed. Change::value contains the amount the
+		/// balance was increased by.
 		Balance,
+
+		/// Account storage was modified. Change::key contains the storage key,
+		/// Change::value the storage value.
 		Storage,
+
+		/// Account nonce was increased by 1.
 		Nonce,
+
+		/// Account was created (it was not existing before).
 		Create,
+
+		/// New code was added to an account (by "create" message execution).
 		NewCode,
+
+		/// Account was touched for the first time.
 		Touch
 	};
 
@@ -136,9 +149,17 @@ struct Change
 
 
 /**
- * @brief Model of an Ethereum state, essentially a facade for the trie.
- * Allows you to query the state of accounts, and has built-in caching for various aspects of the
- * state.
+ * Model of an Ethereum state, essentially a facade for the trie.
+ *
+ * Allows you to query the state of accounts as well as creating and modifying
+ * accounts. It has built-in caching for various aspects of the state.
+ *
+ * # State Changelog
+ *
+ * Any atomic change to any account is registered and appended in the changelog.
+ * In case some changes must be reverted, the changes are popped from the
+ * changelog and undone. For possible atomic changes list @see Change::Kind.
+ * The changelog is managed by savepoint(), rollback() and commit() methods.
  */
 class State
 {
