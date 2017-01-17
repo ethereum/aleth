@@ -204,7 +204,7 @@ Account* State::account(Address const& _a, bool _requireCode)
 		m_unchangedCacheEntries.push_back(_a);
 		a = &m_cache[_a];
 	}
-	if (_requireCode && a && !a->isFreshCode() && !a->codeCacheValid())
+	if (_requireCode && a && !a->isFreshCode())
 	{
 		a->noteCode(a->codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(a->codeHash())));
 		CodeSizeCache::instance().store(a->codeHash(), a->code().size());
@@ -326,7 +326,7 @@ void State::addBalance(Address const& _id, u256 const& _amount)
 		a->addBalance(_amount);
 	}
 	else
-		createAccount(_id, {requireAccountStartNonce(), _amount, Account::NormalCreation});
+		createAccount(_id, {requireAccountStartNonce(), _amount});
 
 	if (_amount)
 		m_changeLog.emplace_back(Change::Balance, _id, _amount);
@@ -348,15 +348,12 @@ void State::subBalance(Address const& _addr, u256 const& _value)
 
 void State::createContract(Address const& _address)
 {
-	createAccount(_address, Account(
-		requireAccountStartNonce(),
-		balance(_address),
-		Account::ContractConception
-	));
+	createAccount(_address, {requireAccountStartNonce(), 0});
 }
 
 void State::createAccount(Address const& _address, Account const&& _account)
 {
+	assert(!addressInUse(_address) && "Account already exists");
 	m_cache[_address] = std::move(_account);
 	m_nonExistingAccountsCache.erase(_address);
 	m_changeLog.emplace_back(Change::Create, _address);
@@ -454,6 +451,12 @@ bytes const& State::code(Address const& _a) const
 	return account(_a, true)->code();
 }
 
+void State::setNewCode(Address const& _address, bytes&& _code)
+{
+	m_cache[_address].setNewCode(std::move(_code));
+	m_changeLog.emplace_back(Change::NewCode, _address);
+}
+
 h256 State::codeHash(Address const& _a) const
 {
 	if (Account const* a = account(_a))
@@ -549,11 +552,11 @@ void State::rollback(size_t _savepoint)
 			account.setNonce(m_cache[change.address].nonce() - 1);
 			break;
 		case Change::Create:
-			// Clear the deployed code (if any) and mark as not dirty.
-			// FIXME: probably wrong for accounts prefunded in the same
-			//        transaction. Separate Create and SetCode events.
-			account.setCode({});
-			// fall through
+			m_cache.erase(change.address);
+			break;
+		case Change::NewCode:
+			account.resetCode();
+			break;
 		case Change::Touch:
 			account.untouch();
 			m_unchangedCacheEntries.emplace_back(change.address);
@@ -657,7 +660,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 
 			stringstream contout;
 
-			if ((cache && cache->codeBearing()) || (!cache && r && (h256)r[3] != EmptySHA3))
+			if ((cache && cache->codeHash() == EmptySHA3) || (!cache && r && (h256)r[3] != EmptySHA3))
 			{
 				std::map<u256, u256> mem;
 				std::set<u256> back;

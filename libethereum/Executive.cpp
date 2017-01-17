@@ -313,18 +313,16 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
 	m_gas = _gas;
 
-	m_s.createContract(m_newAddress);
+	// Transfer ether before deploying the code. This will also create new
+	// account if it does not exist yet.
+	m_s.transferBalance(_sender, m_newAddress, _endowment);
+
 	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock"))
 		m_s.incNonce(m_newAddress);
 
-	// Execute _init if not empty.
-	if (_init.empty())
-		m_s.setCode(m_newAddress, {});
-	else
+	// Schedule _init execution if not empty.
+	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
-
-	// Transfer ether.
-	m_s.transferBalance(_sender, m_newAddress, _endowment);
 
 	return !m_ext;
 }
@@ -389,7 +387,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out; // copy output to execution result
-				m_s.setCode(m_ext->myAddress, std::move(out));
+				m_s.setNewCode(m_ext->myAddress, std::move(out));
 			}
 			else
 			{

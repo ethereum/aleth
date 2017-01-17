@@ -67,16 +67,6 @@ namespace eth
 class Account
 {
 public:
-	/// Type of account to create.
-	enum NewAccountType
-	{
-		/// Normal account.
-		NormalCreation,
-		/// Contract account - we place this object into the contract-creation state (and as such we
-		/// expect setCode(), but codeHash() won't work).
-		ContractConception
-	};
-
 	/// Changedness of account to create.
 	enum Changedness
 	{
@@ -92,8 +82,6 @@ public:
 	/// Construct an alive Account, with given endowment, for either a normal (non-contract) account or for a
 	/// contract account in the
 	/// conception phase, where the code is not yet known.
-	Account(u256 _nonce, u256 _balance, NewAccountType _t, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance), m_codeHash(_t == NormalCreation ? EmptySHA3 : c_contractConceptionCodeHash) {}
-	/// Explicit constructor for wierd cases of construction of a normal account.
 	Account(u256 _nonce, u256 _balance, Changedness _c = Changed): m_isAlive(true), m_isUnchanged(_c == Unchanged), m_nonce(_nonce), m_balance(_balance) {}
 
 	/// Explicit constructor for wierd cases of construction or a contract account.
@@ -115,7 +103,7 @@ public:
 
 	/// @returns true if the nonce, balance and code is zero / empty. Code is considered empty
 	/// during creation phase.
-	bool isEmpty() const { return nonce() == 0 && balance() == 0 && (isFreshCode() ? code().empty() : codeHash() == EmptySHA3); }
+	bool isEmpty() const { return nonce() == 0 && balance() == 0 && codeHash() == EmptySHA3; }
 
 	/// @returns the balance of this account. Can be altered in place.
 	u256& balance() { return m_balance; }
@@ -152,29 +140,24 @@ public:
 	/// database.
 	void setStorageCache(u256 _p, u256 _v) const { const_cast<decltype(m_storageOverlay)&>(m_storageOverlay)[_p] = _v; }
 
-	/// @returns true if we are in the contract-conception state and setCode is valid to call.
-	bool isFreshCode() const { return m_codeHash == c_contractConceptionCodeHash; }
+	/// @returns the hash of the account's code.
+	h256 codeHash() const { return m_codeHash; }
 
-	/// @returns true if we are either in the contract-conception state or if the account's code is not
-	/// empty.
-	bool codeBearing() const { return m_codeHash != EmptySHA3; }
-
-	/// @returns the hash of the account's code. Must only be called when isFreshCode() returns false.
-	h256 codeHash() const { assert(!isFreshCode()); return m_codeHash; }
+	bool isFreshCode() const { return m_hasNewCode; }
 
 	/// Sets the code of the account.
-	/// Used by "create" transactions and for reverting changes.
-	void setCode(bytes&& _code) { m_codeCache = std::move(_code); changed(); }
+	/// Used by "create" transactions.
+	void setNewCode(bytes&& _code) { m_codeCache = std::move(_code); m_hasNewCode = true; m_codeHash = sha3(m_codeCache); }
 
-	/// @returns true if the account's code is available through code().
-	bool codeCacheValid() const { return m_codeHash == EmptySHA3 || m_codeHash == c_contractConceptionCodeHash || m_codeCache.size(); }
+	/// Reset the code set by previous CREATE message.
+	void resetCode() { m_codeCache.clear(); m_hasNewCode = false; }
 
 	/// Specify to the object what the actual code is for the account. @a _code must have a SHA3 equal to
 	/// codeHash() and must only be called when isFreshCode() returns false.
 	void noteCode(bytesConstRef _code) { assert(sha3(_code) == m_codeHash); m_codeCache = _code.toBytes(); }
 
-	/// @returns the account's code. Must only be called when codeCacheValid returns true.
-	bytes const& code() const { assert(codeCacheValid()); return m_codeCache; }
+	/// @returns the account's code.
+	bytes const& code() const { return m_codeCache; }
 
 private:
 	/// Note that we've altered the account.
@@ -185,6 +168,9 @@ private:
 
 	/// True if we've not made any alteration to the account having been given it's properties directly.
 	bool m_isUnchanged = false;
+
+	/// True if new code was deployed to the account
+	bool m_hasNewCode = false;
 
 	/// Account's nonce.
 	u256 m_nonce;

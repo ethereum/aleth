@@ -112,6 +112,7 @@ struct Change
 		Storage,
 		Nonce,
 		Create,
+		NewCode,
 		Touch
 	};
 
@@ -239,7 +240,7 @@ public:
 	void createContract(Address const& _address);
 
 	/// Sets the code of the account. Must only be called during / after contract creation.
-	void setCode(Address const& _address, bytes&& _code) { m_cache[_address].setCode(std::move(_code)); }
+	void setNewCode(Address const& _address, bytes&& _code);
 
 	/// Delete an account (used for processing suicides).
 	void kill(Address _a);
