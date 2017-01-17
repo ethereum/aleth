@@ -65,8 +65,6 @@ public:
 	bytes const& memory() const { return m_mem; }
 	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
 
-	VM(): m_stackSpace(1025), m_stack(m_stackSpace.data() + 1), m_pool(256) {};
-
 private:
 
 	u256* io_gas = 0;
@@ -77,7 +75,7 @@ private:
 	static std::array<InstructionMetric, 256> c_metrics;
 	static void initMetrics();
 	static u256 exp256(u256 _base, u256 _exponent);
-	void copyCode();
+	void copyCode(int);
 	const void* const* c_jumpTable = 0;
 	bool m_caseInit = false;
 	
@@ -95,19 +93,28 @@ private:
 
 	// space for code and pointer to data
 	bytes m_codeSpace;
-	byte* m_code;
+	byte* m_code = nullptr;
 
 	// space for stack and pointer to data
-	u256s m_stackSpace;
-	u256* m_stack;
+	u256 m_stackSpace[1025];
+	u256* m_stack = m_stackSpace + 1;
 	
+#if EVM_JUMPS_AND_SUBS
+	// space for return stack and pointer to data
+	uint64_t m_returnSpace[1025];
+	uint64_t* m_return = m_returnSpace + 1;
+#endif
+
 	// constant pool
-	u256s m_pool;
+	u256 m_pool[256];
 
 	// interpreter state
-	uint64_t    m_pc = 0;
-	u256*       m_sp = m_stack - 1;
-	Instruction m_op;
+	Instruction m_op;                   // current operator
+	uint64_t    m_pc = 0;               // program counter
+	u256*       m_sp = m_stack - 1;     // stack pointer
+#if EVM_JUMPS_AND_SUBS
+	uint64_t*   m_rp = m_return - 1;    // return pointer
+#endif
 
 	// metering and memory state
 	uint64_t m_runGas = 0;
@@ -136,6 +143,7 @@ private:
 
 	void reportStackUse();
 
+	std::vector<uint64_t> m_beginSubs;
 	std::vector<uint64_t> m_jumpDests;
 	int64_t verifyJumpDest(u256 const& _dest, bool _throw = true);
 
@@ -149,6 +157,9 @@ private:
 	void updateMem();
 	void logGasMem();
 	void fetchInstruction();
+	
+	uint64_t decodeJumpDest(const byte* const _code, uint64_t& _pc);
+	uint64_t decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp);
 
 	template<class T> uint64_t toUint64(T v)
 	{
