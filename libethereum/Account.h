@@ -105,9 +105,6 @@ public:
 	/// during creation phase.
 	bool isEmpty() const { return nonce() == 0 && balance() == 0 && codeHash() == EmptySHA3; }
 
-	/// @returns the balance of this account. Can be altered in place.
-	u256& balance() { return m_balance; }
-
 	/// @returns the balance of this account.
 	u256 const& balance() const { return m_balance; }
 
@@ -143,14 +140,13 @@ public:
 	/// @returns the hash of the account's code.
 	h256 codeHash() const { return m_codeHash; }
 
-	bool isFreshCode() const { return m_hasNewCode; }
+	bool hasNewCode() const { return m_hasNewCode; }
 
-	/// Sets the code of the account.
-	/// Used by "create" transactions.
-	void setNewCode(bytes&& _code) { m_codeCache = std::move(_code); m_hasNewCode = true; m_codeHash = sha3(m_codeCache); }
+	/// Sets the code of the account. Used by "create" messages.
+	void setNewCode(bytes&& _code);
 
 	/// Reset the code set by previous CREATE message.
-	void resetCode() { m_codeCache.clear(); m_hasNewCode = false; }
+	void resetCode() { m_codeCache.clear(); m_hasNewCode = false; m_codeHash = EmptySHA3; }
 
 	/// Specify to the object what the actual code is for the account. @a _code must have a SHA3 equal to
 	/// codeHash() and must only be called when isFreshCode() returns false.

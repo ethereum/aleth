@@ -381,9 +381,9 @@ AddressHash commit(AccountMap const& _cache, SecureTrieDB<Address, DB>& _state)
 					s.append(storageDB.root());
 				}
 
-				if (i.second.isFreshCode())
+				if (i.second.hasNewCode())
 				{
-					h256 ch = sha3(i.second.code());
+					h256 ch = i.second.codeHash();
 					// Store the size of the code
 					CodeSizeCache::instance().store(ch, i.second.code().size());
 					_state.db()->insert(ch, &i.second.code());

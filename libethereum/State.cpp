@@ -204,11 +204,15 @@ Account* State::account(Address const& _a, bool _requireCode)
 		m_unchangedCacheEntries.push_back(_a);
 		a = &m_cache[_a];
 	}
-	if (_requireCode && a && !a->isFreshCode())
+
+	// FIXME: load code using the same criteria but in State::code().
+	if (_requireCode && a && a->code().empty() && a->codeHash() != EmptySHA3)
 	{
-		a->noteCode(a->codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(a->codeHash())));
+		a->noteCode(m_db.lookup(a->codeHash()));
+		assert(!a->code().empty());
 		CodeSizeCache::instance().store(a->codeHash(), a->code().size());
 	}
+
 	return a;
 }
 
@@ -282,7 +286,7 @@ bool State::accountNonemptyAndExisting(Address const& _address) const
 bool State::addressHasCode(Address const& _id) const
 {
 	if (auto a = account(_id))
-		return a->isFreshCode() || a->codeHash() != EmptySHA3;
+		return a->codeHash() != EmptySHA3;
 	else
 		return false;
 }
@@ -460,12 +464,7 @@ void State::setNewCode(Address const& _address, bytes&& _code)
 h256 State::codeHash(Address const& _a) const
 {
 	if (Account const* a = account(_a))
-	{
-		if (a->isFreshCode())
-			return sha3(a->code());
-		else
-			return a->codeHash();
-	}
+		return a->codeHash();
 	else
 		return EmptySHA3;
 }
@@ -474,8 +473,8 @@ size_t State::codeSize(Address const& _a) const
 {
 	if (Account const* a = account(_a))
 	{
-		if (a->isFreshCode())
-			return code(_a).size();
+		if (a->hasNewCode())
+			return a->code().size();
 		auto& codeSizeCache = CodeSizeCache::instance();
 		h256 codeHash = a->codeHash();
 		if (codeSizeCache.contains(codeHash))
@@ -549,7 +548,7 @@ void State::rollback(size_t _savepoint)
 			account.addBalance(0 - change.value);
 			break;
 		case Change::Nonce:
-			account.setNonce(m_cache[change.address].nonce() - 1);
+			account.setNonce(account.nonce() - 1);
 			break;
 		case Change::Create:
 			m_cache.erase(change.address);
@@ -688,7 +687,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 					contout << "???";
 				else
 					contout << r[2].toHash<h256>();
-				if (cache && cache->isFreshCode())
+				if (cache && cache->hasNewCode())
 					contout << " $" << toHex(cache->code());
 				else
 					contout << " $" << (cache ? cache->codeHash() : r[3].toHash<h256>());

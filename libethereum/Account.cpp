@@ -21,17 +21,22 @@
 
 #include "Account.h"
 #include <json_spirit/JsonSpiritHeaders.h>
-#include <libethcore/Common.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/Precompiled.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+void Account::setNewCode(bytes&& _code)
+{
+	// FIXME: Make code hash lazy (calculated when first needed)?
+	m_codeCache = std::move(_code);
+	m_hasNewCode = true;
+	m_codeHash = sha3(m_codeCache);
+}
+
 namespace js = json_spirit;
-
-#pragma GCC diagnostic ignored "-Wunused-variable"
-
-const h256 Account::c_contractConceptionCodeHash;
 
 uint64_t toUnsigned(js::mValue const& _v)
 {
