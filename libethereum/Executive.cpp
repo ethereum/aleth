@@ -323,6 +323,11 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 	// Schedule _init execution if not empty.
 	if (!_init.empty())
 		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+	else if (m_s.addressHasCode(m_newAddress))
+		// Overwrite with empty code in case the account already has a code
+		// (address collision -- not real life case but we can check it with
+		// synthetic tests).
+		m_s.setNewCode(m_newAddress, {});
 
 	return !m_ext;
 }
