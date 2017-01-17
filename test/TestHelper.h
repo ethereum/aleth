@@ -242,6 +242,9 @@ public:
 	std::string singleTestFile;
 	std::string singleTestName;
 	std::string singleTestNet;
+	int test_d; ///< GeneralState data
+	int test_g; ///< GeneralState gas
+	int test_v; ///< GeneralState value
 	bool performance = false;
 	bool nonetwork = false;///< For libp2p
 	bool quadratic = false;

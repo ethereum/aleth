@@ -567,6 +567,10 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 			string trInfo = netIdToString(t.netId) + " data: " + toString(t.dataInd) + " gas: " + toString(t.gasInd) + " val: " + toString(t.valInd);
 			if (_expects.count("result"))
 			{
+				Options const& opt = Options::get();
+				if ((opt.test_d != -1 && opt.test_d != t.dataInd) || (opt.test_g != -1 && opt.test_g != t.gasInd) || (opt.test_v != -1 && opt.test_v != t.valInd))
+					continue;
+
 				State postState = t.postState;
 				eth::AccountMaskMap stateMap;
 				State expectState(0, OverlayDB(), eth::BaseState::Empty);
@@ -587,7 +591,7 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 
 			//if a single transaction check then stop once found
 			if (network[0] != "ALL" && d[0] != -1 && g[0] != -1 && v[0] != -1)
-			if (d.size() == 1 && g.size() == 1 && v.size() == 1)
+			if (network.size() == 1 && d.size() == 1 && g.size() == 1 && v.size() == 1)
 				break;
 		}
 	}
@@ -1070,6 +1074,9 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 
 Options::Options(int argc, char** argv)
 {
+	test_d = -1;
+	test_g = -1;
+	test_v = -1;
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -1184,6 +1191,12 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--nonetwork")
 			nonetwork = true;
+		else if (arg == "-d" && i + 1 < argc)
+			test_d = atoi(argv[i + 1]);
+		else if (arg == "-g" && i + 1 < argc)
+			test_g = atoi(argv[i + 1]);
+		else if (arg == "-v" && i + 1 < argc)
+			test_v = atoi(argv[i + 1]);
 	}
 
 	//Default option
