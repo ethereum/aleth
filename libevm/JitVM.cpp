@@ -54,12 +54,6 @@ void evm_query(
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
 	switch (_key)
 	{
-	case EVM_ADDRESS:
-		o_result->address = toEvmC(env.myAddress);
-		break;
-	case EVM_CALLER:
-		o_result->address = toEvmC(env.caller);
-		break;
 	case EVM_ORIGIN:
 		o_result->address = toEvmC(env.origin);
 		break;
@@ -118,9 +112,6 @@ void evm_query(
 		o_result->int64 = env.exists(addr);
 		break;
 	}
-	case EVM_CALL_DEPTH:
-		o_result->int64 = env.depth;
-		break;
 	}
 }
 
