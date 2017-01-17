@@ -290,7 +290,7 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
@@ -306,7 +306,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	m_savepoint = m_s.savepoint();
 
-	m_revertLog.isCreation = true;
+	m_isCreation = true;
 
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
@@ -322,7 +322,7 @@ bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _g
 
 	// Schedule _init execution if not empty.
 	if (!_init.empty())
-		m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
 
 	return !m_ext;
 }
@@ -358,7 +358,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 		{
 			// Create VM instance. Force Interpreter if tracing requested.
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
-			if (m_revertLog.isCreation)
+			if (m_isCreation)
 			{
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
