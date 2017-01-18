@@ -54,29 +54,6 @@ void evm_query(
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
 	switch (_key)
 	{
-	case EVM_ORIGIN:
-		o_result->address = toEvmC(env.origin);
-		break;
-	case EVM_GAS_PRICE:
-		o_result->uint256be = toEvmC(env.gasPrice);
-		break;
-	case EVM_COINBASE:
-		o_result->address = toEvmC(env.envInfo().author());
-		break;
-	case EVM_DIFFICULTY:
-		o_result->uint256be = toEvmC(env.envInfo().difficulty());
-		break;
-	case EVM_GAS_LIMIT:
-		o_result->int64 = env.envInfo().gasLimit();
-		break;
-	case EVM_NUMBER:
-		// TODO: Handle overflow / exception
-		o_result->int64 = static_cast<int64_t>(env.envInfo().number());
-		break;
-	case EVM_TIMESTAMP:
-		// TODO: Handle overflow / exception
-		o_result->int64 = static_cast<int64_t>(env.envInfo().timestamp());
-		break;
 	case EVM_CODE_BY_ADDRESS:
 	{
 		auto addr = fromEvmC(_arg->address);
