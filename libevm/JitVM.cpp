@@ -149,6 +149,18 @@ void evm_update(
 	}
 }
 
+void evm_get_tx_context(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
+{
+	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	result->tx_gas_price = toEvmC(env.gasPrice);
+	result->tx_origin = toEvmC(env.origin);
+	result->block_coinbase = toEvmC(env.envInfo().author());
+	result->block_number = static_cast<int64_t>(env.envInfo().number());
+	result->block_timestamp = static_cast<int64_t>(env.envInfo().timestamp());
+	result->block_gas_limit = env.envInfo().gasLimit();
+	result->block_difficulty = toEvmC(env.envInfo().difficulty());
+}
+
 int64_t evm_call(
 	evm_env* _opaqueEnv,
 	evm_call_kind _kind,
@@ -205,10 +217,12 @@ int64_t evm_call(
 class EVM
 {
 public:
-	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn)
+	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn,
+		evm_get_tx_context_fn _getTxContextFn
+	)
 	{
 		auto factory = evmjit_get_factory();
-		m_instance = factory.create(_queryFn, _updateFn, _callFn);
+		m_instance = factory.create(_queryFn, _updateFn, _callFn, _getTxContextFn);
 	}
 
 	~EVM()
@@ -296,7 +310,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(evm_query, evm_update, evm_call);
+	static EVM jit(evm_query, evm_update, evm_call, evm_get_tx_context);
 	return jit;
 }
 
