@@ -259,8 +259,8 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 	// If external transaction.
 	if (m_t)
 	{
-		// FIXME: some unrevertable changes occupy change log.
-//		std::cerr << "Savepoint: " << m_savepoint << "\n";
+		// FIXME: changelog contains unrevertable balance change that paid
+		//        for the transaction.
 		// Increment associated nonce for sender.
 		m_s.incNonce(_p.senderAddress);
 	}

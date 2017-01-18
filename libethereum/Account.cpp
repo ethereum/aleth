@@ -30,7 +30,6 @@ using namespace dev::eth;
 
 void Account::setNewCode(bytes&& _code)
 {
-	// FIXME: Make code hash lazy (calculated when first needed)?
 	m_codeCache = std::move(_code);
 	m_hasNewCode = true;
 	m_codeHash = sha3(m_codeCache);
