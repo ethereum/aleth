@@ -154,7 +154,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
 		}
 	}//for
-
+	dev::test::TestOutputHelper::finishTest();
 }//doTransactionTests
 
 } }// Namespace Close
