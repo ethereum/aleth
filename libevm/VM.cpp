@@ -141,7 +141,7 @@ void VM::fetchInstruction()
 	checkStack(metric.args, metric.ret);
 
 	// FEES...
-	m_runGas = toUint64(m_schedule->tierStepGas[metric.gasPriceTier]);
+	m_runGas = toUint64(m_schedule->tierStepGas[static_cast<unsigned>(metric.gasPriceTier)]);
 	m_newMemSize = m_mem.size();
 	m_copyMemSize = 0;
 }

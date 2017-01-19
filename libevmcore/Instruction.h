@@ -237,17 +237,17 @@ inline Instruction logInstruction(unsigned _number)
 	return Instruction(unsigned(Instruction::LOG0) + _number);
 }
 
-enum Tier
+enum class Tier : unsigned
 {
-	ZeroTier = 0,   // 0, Zero
-	BaseTier,       // 2, Quick
-	VeryLowTier,    // 3, Fastest
-	LowTier,        // 5, Fast
-	MidTier,        // 8, Mid
-	HighTier,       // 10, Slow
-	ExtTier,        // 20, Ext
-	SpecialTier,    // multiparam or otherwise special
-	InvalidTier     // Invalid.
+	Zero = 0,   // 0, Zero
+	Base,       // 2, Quick
+	VeryLow,    // 3, Fastest
+	Low,        // 5, Fast
+	Mid,        // 8, Mid
+	High,       // 10, Slow
+	Ext,        // 20, Ext
+	Special,    // multiparam or otherwise special
+	Invalid     // Invalid.
 };
 
 /// Information structure for a particular instruction.
@@ -258,7 +258,7 @@ struct InstructionInfo
 	int args;           ///< Number of items required on the stack for this instruction (and, for the purposes of ret, the number taken from the stack).
 	int ret;            ///< Number of items placed (back) on the stack by this instruction, assuming args items were removed.
 	bool sideEffects;   ///< false if the only effect on the execution environment (apart from gas usage) is a change to a topmost segment of the stack
-	int gasPriceTier;   ///< Tier for gas pricing.
+	Tier gasPriceTier;   ///< Tier for gas pricing.
 };
 
 /// Information on all the instructions.
