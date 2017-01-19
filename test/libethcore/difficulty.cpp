@@ -184,6 +184,7 @@ void testDifficulty(string const& _testFileFullName, Ethash& _sealEngine, Networ
 		//Manual formula test
 		checkCalculatedDifficulty(current, parent, _n, _sealEngine.chainParams(), "(" + i.first + ")");
 	}
+	dev::test::TestOutputHelper::finishTest();
 }
 
 BOOST_AUTO_TEST_SUITE(DifficultyTests)

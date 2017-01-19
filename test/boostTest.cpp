@@ -161,5 +161,6 @@ int main( int argc, char* argv[] )
 	int result = ret.get();
 	stopTravisOut = true;
 	outputThread.join();
+	dev::test::TestOutputHelper::printTestExecStats();
 	return result;
 }

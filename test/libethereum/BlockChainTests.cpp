@@ -400,6 +400,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 			ImportTest::compareStates(postState, blockchain.topBlock().state());
 		}
 	}//for tests
+	TestOutputHelper::finishTest();
 }
 
 //TestFunction

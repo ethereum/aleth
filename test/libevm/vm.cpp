@@ -452,6 +452,8 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 				BOOST_CHECK(vmExceptionOccured);
 		}
 	}
+
+	TestOutputHelper::finishTest();
 }
 
 } } // namespace close
