@@ -21,17 +21,21 @@
 
 #include "Account.h"
 #include <json_spirit/JsonSpiritHeaders.h>
-#include <libethcore/Common.h>
 #include <libethcore/ChainOperationParams.h>
 #include <libethcore/Precompiled.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+
+void Account::setNewCode(bytes&& _code)
+{
+	m_codeCache = std::move(_code);
+	m_hasNewCode = true;
+	m_codeHash = sha3(m_codeCache);
+}
+
 namespace js = json_spirit;
-
-#pragma GCC diagnostic ignored "-Wunused-variable"
-
-const h256 Account::c_contractConceptionCodeHash;
 
 uint64_t toUnsigned(js::mValue const& _v)
 {
@@ -82,19 +86,19 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 
 			if (haveCode)
 			{
-				ret[a] = Account(nonce, balance, Account::ContractConception);
+				ret[a] = Account(nonce, balance);
 				if (o["code"].type() == json_spirit::str_type)
 				{
 					if (o["code"].get_str().find("0x") != 0)
 						cerr << "Error importing code of account " << a << "! Code needs to be hex bytecode prefixed by \"0x\".";
 					else
-						ret[a].setCode(fromHex(o["code"].get_str().substr(2)));
+						ret[a].setNewCode(fromHex(o["code"].get_str().substr(2)));
 				}
 				else
 					cerr << "Error importing code of account " << a << "! Code field needs to be a string";
 			}
 			else
-				ret[a] = Account(nonce, balance, Account::NormalCreation);
+				ret[a] = Account(nonce, balance);
 
 			if (haveStorage)
 				for (pair<string, js::mValue> const& j: o["storage"].get_obj())
@@ -105,7 +109,7 @@ AccountMap dev::eth::jsonToAccountMap(std::string const& _json, u256 const& _def
 		{
 			(*o_mask)[a] = AccountMask(haveBalance, haveNonce, haveCode, haveStorage, shouldNotExists);
 			if (!haveStorage && !haveCode && !haveNonce && !haveBalance && shouldNotExists) //defined only shouldNotExists field
-				ret[a] = Account(0, 0, Account::NormalCreation);
+				ret[a] = Account(0, 0);
 		}
 
 		if (o_precompiled && o.count("precompiled"))

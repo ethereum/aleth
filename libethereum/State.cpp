@@ -41,6 +41,7 @@
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
+using namespace dev::eth::detail;
 namespace fs = boost::filesystem;
 
 const char* StateSafeExceptions::name() { return EthViolet "⚙" EthBlue " ℹ"; }
@@ -203,11 +204,15 @@ Account* State::account(Address const& _a, bool _requireCode)
 		m_unchangedCacheEntries.push_back(_a);
 		a = &m_cache[_a];
 	}
-	if (_requireCode && a && !a->isFreshCode() && !a->codeCacheValid())
+
+	// FIXME: load code using the same criteria but in State::code().
+	if (_requireCode && a && a->code().empty() && a->codeHash() != EmptySHA3)
 	{
-		a->noteCode(a->codeHash() == EmptySHA3 ? bytesConstRef() : bytesConstRef(m_db.lookup(a->codeHash())));
+		a->noteCode(m_db.lookup(a->codeHash()));
+		assert(!a->code().empty());
 		CodeSizeCache::instance().store(a->codeHash(), a->code().size());
 	}
+
 	return a;
 }
 
@@ -234,6 +239,7 @@ void State::commit(CommitBehaviour _commitBehaviour)
 	if (_commitBehaviour == CommitBehaviour::RemoveEmptyAccounts)
 		removeEmptyAccounts();
 	m_touched += dev::eth::commit(m_cache, m_state);
+	m_changeLog.clear();
 	m_cache.clear();
 	m_unchangedCacheEntries.clear();
 }
@@ -280,7 +286,7 @@ bool State::accountNonemptyAndExisting(Address const& _address) const
 bool State::addressHasCode(Address const& _id) const
 {
 	if (auto a = account(_id))
-		return a->isFreshCode() || a->codeHash() != EmptySHA3;
+		return a->codeHash() != EmptySHA3;
 	else
 		return false;
 }
@@ -296,52 +302,65 @@ u256 State::balance(Address const& _id) const
 void State::incNonce(Address const& _addr)
 {
 	if (Account* a = account(_addr))
+	{
 		a->incNonce();
+		m_changeLog.emplace_back(Change::Nonce, _addr);
+	}
 	else
 		// This is possible if a transaction has gas price 0.
 		createAccount(_addr, Account(requireAccountStartNonce() + 1, 0));
 }
 
-void State::setNonce(Address const& _addr, u256 const& _nonce)
-{
-	Account* a = account(_addr);
-	assert(a);
-	a->setNonce(_nonce);
-}
-
 void State::addBalance(Address const& _id, u256 const& _amount)
 {
 	if (Account* a = account(_id))
+	{
+		// Log empty account being touched. Empty touched accounts are cleared
+		// after the transaction, so this event must be also reverted.
+		// We only log the first touch (not dirty yet), and only for empty
+		// accounts, as other accounts does not matter.
+		// TODO: to save space we can combine this event with Balance by having
+		//       Balance and Balance+Touch events.
+		if (!a->isDirty() && a->isEmpty())
+			m_changeLog.emplace_back(Change::Touch, _id);
+
+		// Increase the account balance. This also is done for value 0 to mark
+		// the account as dirty. Dirty account are not removed from the cache
+		// and are cleared if empty at the end of the transaction.
 		a->addBalance(_amount);
+	}
 	else
-		createAccount(_id, Account(requireAccountStartNonce(), _amount, Account::NormalCreation));
+		createAccount(_id, {requireAccountStartNonce(), _amount});
+
+	if (_amount)
+		m_changeLog.emplace_back(Change::Balance, _id, _amount);
 }
 
-void State::subBalance(Address const& _id, bigint const& _amount)
+void State::subBalance(Address const& _addr, u256 const& _value)
 {
-	if (_amount == 0)
+	if (_value == 0)
 		return;
 
-	Account* a = account(_id);
-	if (!a || a->balance() < _amount)
+	Account* a = account(_addr);
+	if (!a || a->balance() < _value)
+		// TODO: I expect this never happens.
 		BOOST_THROW_EXCEPTION(NotEnoughCash());
-	else
-		a->addBalance(-_amount);
+
+	// Fall back to addBalance().
+	addBalance(_addr, 0 - _value);
 }
 
 void State::createContract(Address const& _address)
 {
-	createAccount(_address, Account(
-		requireAccountStartNonce(),
-		balance(_address),
-		Account::ContractConception
-	));
+	createAccount(_address, {requireAccountStartNonce(), 0});
 }
 
 void State::createAccount(Address const& _address, Account const&& _account)
 {
+	assert(!addressInUse(_address) && "Account already exists");
 	m_cache[_address] = std::move(_account);
 	m_nonExistingAccountsCache.erase(_address);
+	m_changeLog.emplace_back(Change::Create, _address);
 }
 
 void State::kill(Address _addr)
@@ -376,6 +395,12 @@ u256 State::storage(Address const& _id, u256 const& _key) const
 	}
 	else
 		return 0;
+}
+
+void State::setStorage(Address const& _contract, u256 const& _key, u256 const& _value)
+{
+	m_changeLog.emplace_back(_contract, _key, storage(_contract, _key));
+	m_cache[_contract].setStorage(_key, _value);
 }
 
 map<h256, pair<u256, u256>> State::storage(Address const& _id) const
@@ -430,15 +455,16 @@ bytes const& State::code(Address const& _a) const
 	return account(_a, true)->code();
 }
 
+void State::setNewCode(Address const& _address, bytes&& _code)
+{
+	m_cache[_address].setNewCode(std::move(_code));
+	m_changeLog.emplace_back(Change::NewCode, _address);
+}
+
 h256 State::codeHash(Address const& _a) const
 {
 	if (Account const* a = account(_a))
-	{
-		if (a->isFreshCode())
-			return sha3(a->code());
-		else
-			return a->codeHash();
-	}
+		return a->codeHash();
 	else
 		return EmptySHA3;
 }
@@ -447,8 +473,8 @@ size_t State::codeSize(Address const& _a) const
 {
 	if (Account const* a = account(_a))
 	{
-		if (a->isFreshCode())
-			return code(_a).size();
+		if (a->hasNewCode())
+			return a->code().size();
 		auto& codeSizeCache = CodeSizeCache::instance();
 		h256 codeHash = a->codeHash();
 		if (codeSizeCache.contains(codeHash))
@@ -497,6 +523,46 @@ bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
 			return false;
 		}
 	return true;
+}
+
+size_t State::savepoint() const
+{
+	return m_changeLog.size();
+}
+
+void State::rollback(size_t _savepoint)
+{
+	while (_savepoint != m_changeLog.size())
+	{
+		auto& change = m_changeLog.back();
+		auto& account = m_cache[change.address];
+
+		// Public State API cannot be used here because it will add another
+		// change log entry.
+		switch (change.kind)
+		{
+		case Change::Storage:
+			account.setStorage(change.key, change.value);
+			break;
+		case Change::Balance:
+			account.addBalance(0 - change.value);
+			break;
+		case Change::Nonce:
+			account.setNonce(account.nonce() - 1);
+			break;
+		case Change::Create:
+			m_cache.erase(change.address);
+			break;
+		case Change::NewCode:
+			account.resetCode();
+			break;
+		case Change::Touch:
+			account.untouch();
+			m_unchangedCacheEntries.emplace_back(change.address);
+			break;
+		}
+		m_changeLog.pop_back();
+	}
 }
 
 std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _envInfo, SealEngineFace const& _sealEngine, Transaction const& _t, Permanence _p, OnOpFunc const& _onOp)
@@ -593,7 +659,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 
 			stringstream contout;
 
-			if ((cache && cache->codeBearing()) || (!cache && r && (h256)r[3] != EmptySHA3))
+			if ((cache && cache->codeHash() == EmptySHA3) || (!cache && r && (h256)r[3] != EmptySHA3))
 			{
 				std::map<u256, u256> mem;
 				std::set<u256> back;
@@ -621,7 +687,7 @@ std::ostream& dev::eth::operator<<(std::ostream& _out, State const& _s)
 					contout << "???";
 				else
 					contout << r[2].toHash<h256>();
-				if (cache && cache->isFreshCode())
+				if (cache && cache->hasNewCode())
 					contout << " $" << toHex(cache->code());
 				else
 					contout << " $" << (cache ? cache->codeHash() : r[3].toHash<h256>());

@@ -223,14 +223,15 @@ void Executive::initialize(Transaction const& _transaction)
 	}
 
 	// Avoid unaffordable transactions.
-	m_gasCost = (bigint)m_t.gas() * m_t.gasPrice();
-	bigint totalCost = m_t.value() + m_gasCost;
+	bigint gasCost = (bigint)m_t.gas() * m_t.gasPrice();
+	bigint totalCost = m_t.value() + gasCost;
 	if (m_s.balance(m_t.sender()) < totalCost)
 	{
 		clog(ExecutiveWarnChannel) << "Not enough cash: Require >" << totalCost << "=" << m_t.gas() << "*" << m_t.gasPrice() << "+" << m_t.value() << " Got" << m_s.balance(m_t.sender()) << "for sender: " << m_t.sender();
 		m_excepted = TransactionException::NotEnoughCash;
 		BOOST_THROW_EXCEPTION(NotEnoughCash() << RequirementError(totalCost, (bigint)m_s.balance(m_t.sender())) << errinfo_comment(m_t.sender().abridged()));
 	}
+	m_gasCost = (u256)gasCost;  // Convert back to 256-bit, safe now.
 }
 
 bool Executive::execute()
@@ -238,7 +239,7 @@ bool Executive::execute()
 	// Entry point for a user-executed transaction.
 
 	// Pay...
-	clog(StateDetail) << "Paying" << formatBalance(u256(m_gasCost)) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
+	clog(StateDetail) << "Paying" << formatBalance(m_gasCost) << "from sender for gas (" << m_t.gas() << "gas at" << formatBalance(m_t.gasPrice()) << ")";
 	m_s.subBalance(m_t.sender(), m_gasCost);
 
 	if (m_t.isCreation())
@@ -255,13 +256,16 @@ bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _valu
 
 bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address const& _origin)
 {
-	// Always remember the sender, needed for revert.
-	m_revertLog.caller = _p.senderAddress;
-
 	// If external transaction.
 	if (m_t)
+	{
+		// FIXME: changelog contains unrevertable balance change that paid
+		//        for the transaction.
 		// Increment associated nonce for sender.
 		m_s.incNonce(_p.senderAddress);
+	}
+
+	m_savepoint = m_s.savepoint();
 
 	if (m_sealEngine.isPrecompiled(_p.codeAddress))
 	{
@@ -283,64 +287,48 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		m_gas = _p.gas;
 		if (m_s.addressHasCode(_p.codeAddress))
 		{
-//			clog(ExecutiveWarnChannel) << "Call " << _p.receiveAddress;
 			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
-			m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
+			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
 		}
 	}
 
-	// Remember the transfer params in case revert is needed.
-	m_revertLog.address = _p.receiveAddress;
-	m_revertLog.transfer = _p.valueTransfer;
-	if (m_sealEngine.evmSchedule(m_envInfo).emptinessIsNonexistence())
-		m_revertLog.existed = m_s.accountNonemptyAndExisting(m_revertLog.address);
-	else
-		m_revertLog.existed = m_s.addressInUse(m_revertLog.address);
-
 	// Transfer ether.
-//	clog(ExecutiveWarnChannel) << "Transfer " <<  m_orig.caller << m_orig.address << m_orig.transfer;
-	m_s.transferBalance(m_revertLog.caller, _p.receiveAddress, _p.valueTransfer);
-
-
+	m_s.transferBalance(_p.senderAddress, _p.receiveAddress, _p.valueTransfer);
 	return !m_ext;
 }
 
 bool Executive::create(Address _sender, u256 _endowment, u256 _gasPrice, u256 _gas, bytesConstRef _init, Address _origin)
 {
-	m_revertLog.isCreation = true;
-
-	// Always remember the sender, needed for revert.
-	m_revertLog.caller = _sender;
-
 	u256 nonce = m_s.getNonce(_sender);
 	m_s.incNonce(_sender);
 
+	m_savepoint = m_s.savepoint();
+
+	m_isCreation = true;
+
 	// We can allow for the reverted state (i.e. that with which m_ext is constructed) to contain the m_orig.address, since
 	// we delete it explicitly if we decide we need to revert.
-	m_revertLog.address = right160(sha3(rlpList(_sender, nonce)));
-	m_revertLog.existed = m_s.isAlive(m_revertLog.address);
+	m_newAddress = right160(sha3(rlpList(_sender, nonce)));
 	m_gas = _gas;
 
-	m_s.createContract(m_revertLog.address);
+	// Transfer ether before deploying the code. This will also create new
+	// account if it does not exist yet.
+	m_s.transferBalance(_sender, m_newAddress, _endowment);
+
 	if (m_envInfo.number() >= m_sealEngine.chainParams().u256Param("EIP158ForkBlock"))
-		m_s.incNonce(m_revertLog.address);
+		m_s.incNonce(m_newAddress);
 
-	// Execute _init.
+	// Schedule _init execution if not empty.
 	if (!_init.empty())
-		m_ext = make_shared<ExtVM>(m_s, m_revertLog, m_envInfo, m_sealEngine, m_revertLog.address, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+		m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, m_newAddress, _sender, _origin, _endowment, _gasPrice, bytesConstRef(), _init, sha3(_init), m_depth);
+	else if (m_s.addressHasCode(m_newAddress))
+		// Overwrite with empty code in case the account already has a code
+		// (address collision -- not real life case but we can check it with
+		// synthetic tests).
+		m_s.setNewCode(m_newAddress, {});
 
-	// Remember the transfer params in case revert is needed.
-	m_revertLog.transfer = _endowment;
-
-	// Transfer ether.
-	m_s.transferBalance(m_revertLog.caller, m_revertLog.address, m_revertLog.transfer);
-
-	if (_init.empty())
-		m_s.setCode(m_revertLog.address, {});
-
-//	clog(ExecutiveWarnChannel) << "Create " << m_orig.caller << m_orig.address << m_orig.transfer;
 	return !m_ext;
 }
 
@@ -375,7 +363,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 		{
 			// Create VM instance. Force Interpreter if tracing requested.
 			auto vm = _onOp ? VMFactory::create(VMKind::Interpreter) : VMFactory::create();
-			if (m_revertLog.isCreation)
+			if (m_isCreation)
 			{
 				auto out = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
@@ -404,7 +392,7 @@ bool Executive::go(OnOpFunc const& _onOp)
 				}
 				if (m_res)
 					m_res->output = out; // copy output to execution result
-				m_s.setCode(m_revertLog.address, std::move(out));
+				m_s.setNewCode(m_ext->myAddress, std::move(out));
 			}
 			else
 			{
@@ -475,67 +463,13 @@ void Executive::finalize()
 	if (m_ext)
 		m_logs = m_ext->sub.logs;
 
-//	cwarn << "m_gas" << m_gas << "m_refunded" << m_refunded << "gasUsed()" << gasUsed();
-
 	if (m_res) // Collect results
 	{
 		m_res->gasUsed = gasUsed();
 		m_res->excepted = m_excepted; // TODO: m_except is used only in ExtVM::call
-		m_res->newAddress = m_revertLog.address;
+		m_res->newAddress = m_newAddress;
 		m_res->gasRefunded = m_ext ? m_ext->sub.refunds : 0;
 	}
-}
-
-namespace
-{
-void revertAccountChanges(State& _state, AccountRevertLog const& _changes)
-{
-	// Firstly, revert attached successful calls.
-	for (auto it = _changes.children.rbegin(); it != _changes.children.rend(); ++it)
-		revertAccountChanges(_state, *it);
-
-	if (_changes.transfer)
-	{
-		// FIXME: In case of CREATE, not need to revert transfer and storage,
-		// as we are going to kill the whole account.
-		// TODO: Split transfer on sender and receiver parts.
-		_state.transferBalance(_changes.address, _changes.caller, _changes.transfer);
-	}
-
-	// Revert nonce if dumped.
-	if (_changes.nonceInc > 0)
-		_state.setNonce(_changes.address, _state.getNonce(_changes.address) - _changes.nonceInc);
-
-	if (_changes.isCreation)
-	{
-		if (_changes.existed)
-		{
-			// The account was alive before CREATE (prefund) we have to
-			// reset some params. This is not very precise but should work in
-			// real live networks where we don't anticipate hash collisions.
-			_state.setNonce(_changes.address, 0);
-			_state.setCode(_changes.address, {});
-			_state.clearStorageChanges(_changes.address);
-			// Also untouch it because it classify for being cleared any more.
-			_state.untouch(_changes.address);
-		}
-		else
-			// If the account was not existing before we can safely kill it.
-			_state.kill(_changes.address);
-	}
-	else
-	{
-		// Restore original storage for this account. The order does not matter.
-		for (auto& item: _changes.storage)
-			_state.setStorage(_changes.address, item.first, item.second);
-
-		if (!_changes.existed)
-			_state.untouch(_changes.address);
-	}
-
-	if (_changes.selfdestructBeneficiary)
-		_state.untouch(_changes.selfdestructBeneficiary);
-}
 }
 
 void Executive::revert()
@@ -543,6 +477,7 @@ void Executive::revert()
 	if (m_ext)
 		m_ext->sub.clear();
 
-	revertAccountChanges(m_s, m_revertLog);
-	m_revertLog.address = {};
+	// Set result address to the null one.
+	m_newAddress = {};
+	m_s.rollback(m_savepoint);
 }
