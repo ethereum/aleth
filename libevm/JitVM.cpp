@@ -21,9 +21,9 @@ inline evm_uint160be toEvmC(Address _addr)
 	return *reinterpret_cast<evm_uint160be*>(&_addr);
 }
 
-inline Address fromEvmC(evm_uint160be _addr)
+inline Address fromEvmC(evm_uint160be const* _addr)
 {
-	return *reinterpret_cast<Address*>(&_addr);
+	return *reinterpret_cast<Address const*>(_addr);
 }
 
 static_assert(sizeof(h256) == sizeof(evm_uint256be), "Hash types size mismatch");
@@ -34,78 +34,65 @@ inline evm_uint256be toEvmC(h256 _h)
 	return *reinterpret_cast<evm_uint256be*>(&_h);
 }
 
-inline u256 asUint(evm_uint256be _n)
+inline u256 asUint(evm_uint256be const* _n)
 {
-	return fromBigEndian<u256>(_n.bytes);
-}
-
-inline h256 asHash(evm_uint256be _n)
-{
-	return h256(&_n.bytes[0], h256::ConstructFromPointer);
+	return fromBigEndian<u256>(_n->bytes);
 }
 
 void evm_query(
 	evm_variant* o_result,
 	evm_env* _opaqueEnv,
 	evm_query_key _key,
-	evm_variant const* _arg
+	evm_uint160be const* _addr,
+	evm_uint256be const* _storageKey
 ) noexcept
 {
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	auto addr = fromEvmC(_addr);
 	switch (_key)
 	{
 	case EVM_CODE_BY_ADDRESS:
 	{
-		auto addr = fromEvmC(_arg->address);
 		auto &code = env.codeAt(addr);
 		o_result->data = code.data();
 		o_result->data_size = code.size();
 		break;
 	}
 	case EVM_CODE_SIZE:
-	{
-		auto addr = fromEvmC(_arg->address);
 		o_result->int64 = env.codeSizeAt(addr);
 		break;
-	}
 	case EVM_BALANCE:
-	{
-		auto addr = fromEvmC(_arg->address);
 		o_result->uint256be = toEvmC(env.balance(addr));
-		break;
-	}
-	case EVM_BLOCKHASH:
-		o_result->uint256be = toEvmC(env.blockHash(_arg->int64));
 		break;
 	case EVM_SLOAD:
 	{
-		auto key = asUint(_arg->uint256be);
-		o_result->uint256be = toEvmC(env.store(key));
+		auto storageKey = asUint(_storageKey);
+		o_result->uint256be = toEvmC(env.store(storageKey));
 		break;
 	}
 	case EVM_ACCOUNT_EXISTS:
-	{
-		auto addr = fromEvmC(_arg->address);
 		o_result->int64 = env.exists(addr);
 		break;
 	}
-	}
 }
 
-void evm_update(
+void updateState(
 	evm_env* _opaqueEnv,
 	evm_update_key _key,
+	evm_uint160be const* _addr,
 	evm_variant const* _arg1,
 	evm_variant const* _arg2
 ) noexcept
 {
+	(void) _addr;
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
+	assert(fromEvmC(_addr) == env.myAddress);
 	switch (_key)
 	{
 	case EVM_SSTORE:
 	{
-		auto index = asUint(_arg1->uint256be);
-		auto value = asUint(_arg2->uint256be);
+		auto index = asUint(&_arg1->uint256be);
+		auto value = asUint(&_arg2->uint256be);
 		if (value == 0 && env.store(index) != 0)                   // If delete
 			env.sub.refunds += env.evmSchedule().sstoreRefundGas;  // Increase refund counter
 
@@ -121,7 +108,7 @@ void evm_update(
 	}
 	case EVM_SELFDESTRUCT:
 		// Register selfdestruction beneficiary.
-		env.suicide(fromEvmC(_arg1->address));
+		env.suicide(fromEvmC(&_arg1->address));
 		break;
 	}
 }
@@ -138,6 +125,12 @@ void evm_get_tx_context(evm_tx_context* result, evm_env* _opaqueEnv) noexcept
 	result->block_difficulty = toEvmC(env.envInfo().difficulty());
 }
 
+void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
+{
+	auto &env = *reinterpret_cast<ExtVMFace*>(_envPtr);
+	*o_hash = toEvmC(env.blockHash(_number));
+}
+
 int64_t evm_call(
 	evm_env* _opaqueEnv,
 	evm_call_kind _kind,
@@ -152,7 +145,7 @@ int64_t evm_call(
 {
 	assert(_gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	auto value = asUint(*_value);
+	auto value = asUint(_value);
 	bytesConstRef input{_inputData, _inputSize};
 
 	if (_kind == EVM_CREATE)
@@ -173,7 +166,7 @@ int64_t evm_call(
 	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
 	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
 	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
-	params.codeAddress = fromEvmC(*_address);
+	params.codeAddress = fromEvmC(_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
 	params.out = {_outputData, _outputSize};
@@ -194,12 +187,15 @@ int64_t evm_call(
 class EVM
 {
 public:
-	EVM(evm_query_fn _queryFn, evm_update_fn _updateFn, evm_call_fn _callFn,
-		evm_get_tx_context_fn _getTxContextFn
+	EVM(evm_query_state_fn _queryFn, evm_update_state_fn _updateFn, evm_call_fn _callFn,
+		evm_get_tx_context_fn _getTxContextFn,
+		evm_get_block_hash_fn _getBlockHashFn
 	)
 	{
 		auto factory = evmjit_get_factory();
-		m_instance = factory.create(_queryFn, _updateFn, _callFn, _getTxContextFn);
+		m_instance = factory.create(
+				_queryFn, _updateFn, _callFn, _getTxContextFn, _getBlockHashFn
+		);
 	}
 
 	~EVM()
@@ -287,7 +283,7 @@ private:
 EVM& getJit()
 {
 	// Create EVM JIT instance by using EVM-C interface.
-	static EVM jit(evm_query, evm_update, evm_call, evm_get_tx_context);
+	static EVM jit(evm_query, updateState, evm_call, evm_get_tx_context, getBlockHash);
 	return jit;
 }
 
