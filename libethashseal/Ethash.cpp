@@ -73,18 +73,6 @@ StringHashMap Ethash::jsInfo(BlockHeader const& _bi) const
 	return { { "nonce", toJS(nonce(_bi)) }, { "seedHash", toJS(seedHash(_bi)) }, { "mixHash", toJS(mixHash(_bi)) }, { "boundary", toJS(boundary(_bi)) }, { "difficulty", toJS(_bi.difficulty()) } };
 }
 
-EVMSchedule const& Ethash::evmSchedule(EnvInfo const& _envInfo) const
-{
-	if (_envInfo.number() >= chainParams().u256Param("EIP158ForkBlock"))
-		return EIP158Schedule;
-	else if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
-		return EIP150Schedule;
-	else if (_envInfo.number() >= chainParams().u256Param("homsteadForkBlock"))
-		return HomesteadSchedule;
-	else
-		return FrontierSchedule;
-}
-
 void Ethash::verify(Strictness _s, BlockHeader const& _bi, BlockHeader const& _parent, bytesConstRef _block) const
 {
 	SealEngineFace::verify(_s, _bi, _parent, _block);
