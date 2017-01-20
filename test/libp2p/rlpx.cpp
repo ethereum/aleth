@@ -47,11 +47,6 @@ struct RLPXTestFixture: public TestOutputHelper {
 };
 BOOST_FIXTURE_TEST_SUITE(rlpx, RLPXTestFixture)
 
-static CryptoPP::AutoSeededRandomPool s_rng;
-static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
-static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
-static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP>::EllipticCurve s_curve(s_params.GetCurve());
-
 BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 {
 	KeyPair init(Secret(sha3("initiator")));
