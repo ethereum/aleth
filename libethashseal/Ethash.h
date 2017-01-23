@@ -33,7 +33,7 @@ namespace dev
 namespace eth
 {
 
-class Ethash: public SealEngineFace
+class Ethash: public SealEngineBase
 {
 public:
 	Ethash();
