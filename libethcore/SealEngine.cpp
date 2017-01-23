@@ -58,7 +58,7 @@ SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
 	return ret;
 }
 
-EVMSchedule const& SealEngineFace::evmSchedule(EnvInfo const& _envInfo) const
+EVMSchedule const& SealEngineBase::evmSchedule(EnvInfo const& _envInfo) const
 {
 	if (_envInfo.number() >= chainParams().u256Param("EIP158ForkBlock"))
 		return EIP158Schedule;
