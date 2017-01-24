@@ -98,12 +98,6 @@ public:
 	/// You can also set the author address.
 	Block(BlockChain const& _bc, OverlayDB const& _db, h256 const& _root, Address const& _author = Address());
 
-#if ETH_ALLOW_EMPTY_BLOCK_AND_STATE
-	Block(): Block(Block::Null) {}
-	explicit Block(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting, Address const& _author = Address()): Block(Invalid256, _db, _bs, _author) {}
-	Block(OverlayDB const& _db, h256 const& _root, Address const& _author = Address()): Block(Invalid256, _db, _root, _author) {}
-#endif
-
 	enum NullType { Null };
 	Block(NullType): m_state(0, OverlayDB(), BaseState::Empty), m_precommit(0) {}
 
