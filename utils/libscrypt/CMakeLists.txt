@@ -3,5 +3,3 @@ file(GLOB HEADERS "*.h")
 
 add_library(scrypt ${SRC_LIST} ${HEADERS})
 
-install(TARGETS scrypt RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
-
