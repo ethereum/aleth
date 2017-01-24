@@ -57,7 +57,6 @@ State::State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs
 	if (_bs != BaseState::PreExisting)
 		// Initialise to the state entailed by the genesis block; this guarantees the trie is built correctly.
 		m_state.init();
-	paranoia("end of normal construction.", true);
 }
 
 State::State(State const& _s):
@@ -68,9 +67,7 @@ State::State(State const& _s):
 	m_nonExistingAccountsCache(_s.m_nonExistingAccountsCache),
 	m_touched(_s.m_touched),
 	m_accountStartNonce(_s.m_accountStartNonce)
-{
-	paranoia("after state cloning (copy cons).", true);
-}
+{}
 
 OverlayDB State::openDB(std::string const& _basePath, h256 const& _genesisHash, WithExisting _we)
 {
@@ -141,22 +138,6 @@ void State::removeEmptyAccounts()
 			i.second.kill();
 }
 
-void State::paranoia(std::string const& _when, bool _enforceRefs) const
-{
-#if ETH_PARANOIA && !ETH_FATDB
-	// TODO: variable on context; just need to work out when there should be no leftovers
-	// [in general this is hard since contract alteration will result in nodes in the DB that are no directly part of the state DB].
-	if (!isTrieGood(_enforceRefs, false))
-	{
-		cwarn << "BAD TRIE" << _when;
-		BOOST_THROW_EXCEPTION(InvalidTrie());
-	}
-#else
-	(void)_when;
-	(void)_enforceRefs;
-#endif
-}
-
 State& State::operator=(State const& _s)
 {
 	if (&_s == this)
@@ -169,7 +150,6 @@ State& State::operator=(State const& _s)
 	m_nonExistingAccountsCache = _s.m_nonExistingAccountsCache;
 	m_touched = _s.m_touched;
 	m_accountStartNonce = _s.m_accountStartNonce;
-	paranoia("after state cloning (assignment op)", true);
 	return *this;
 }
 
@@ -267,7 +247,6 @@ void State::setRoot(h256 const& _r)
 	m_nonExistingAccountsCache.clear();
 //	m_touched.clear();
 	m_state.setRoot(_r);
-	paranoia("begin setRoot", true);
 }
 
 bool State::addressInUse(Address const& _id) const
@@ -490,41 +469,6 @@ size_t State::codeSize(Address const& _a) const
 		return 0;
 }
 
-bool State::isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const
-{
-	for (int e = 0; e < (_enforceRefs ? 2 : 1); ++e)
-		try
-		{
-			EnforceRefs r(m_db, !!e);
-			auto lo = m_state.leftOvers();
-			if (!lo.empty() && _requireNoLeftOvers)
-			{
-				cwarn << "LEFTOVERS" << (e ? "[enforced" : "[unenforced") << "refs]";
-				cnote << "Left:" << lo;
-				cnote << "Keys:" << m_db.keys();
-				m_state.debugStructure(cerr);
-				return false;
-			}
-			// TODO: Enable once fixed.
-/*			for (auto const& i: m_state)
-			{
-				RLP r(i.second);
-				SecureTrieDB<h256, OverlayDB> storageDB(const_cast<OverlayDB*>(&m_db), r[2].toHash<h256>());	// promise not to alter OverlayDB.
-				for (auto const& j: storageDB) { (void)j; }
-				if (!e && r[3].toHash<h256>() != EmptySHA3 && m_db.lookup(r[3].toHash<h256>()).empty())
-					return false;
-			}*/
-		}
-		catch (InvalidTrie const&)
-		{
-			cwarn << "BAD TRIE" << (e ? "[enforced" : "[unenforced") << "refs]";
-			cnote << m_db.keys();
-			m_state.debugStructure(cerr);
-			return false;
-		}
-	return true;
-}
-
 size_t State::savepoint() const
 {
 	return m_changeLog.size();
@@ -573,12 +517,6 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 		onOp = Executive::simpleTrace(); // override tracer
 #endif
 
-#if ETH_PARANOIA
-	paranoia("start of execution.", true);
-	State old(*this);
-	auto h = rootHash();
-#endif
-
 	// Create and initialize the executive. This will throw fairly cheaply and quickly if the
 	// transaction is bad in any way.
 	Executive e(*this, _envInfo, _sealEngine);
@@ -588,18 +526,9 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 
 	// OK - transaction looks valid - execute.
 	u256 startGasUsed = _envInfo.gasUsed();
-#if ETH_PARANOIA
-	ctrace << "Executing" << e.t() << "on" << h;
-	ctrace << toHex(e.t().rlp());
-#endif
 	if (!e.execute())
 		e.go(onOp);
 	e.finalize();
-
-#if ETH_PARANOIA
-	ctrace << "Ready for commit;";
-	ctrace << old.diff(*this);
-#endif
 
 	if (_p == Permanence::Reverted)
 		m_cache.clear();
@@ -607,24 +536,6 @@ std::pair<ExecutionResult, TransactionReceipt> State::execute(EnvInfo const& _en
 	{
 		bool removeEmptyAccounts = _envInfo.number() >= _sealEngine.chainParams().u256Param("EIP158ForkBlock");
 		commit(removeEmptyAccounts ? State::CommitBehaviour::RemoveEmptyAccounts : State::CommitBehaviour::KeepEmptyAccounts);
-
-#if ETH_PARANOIA && !ETH_FATDB
-		ctrace << "Executed; now" << rootHash();
-		ctrace << old.diff(*this);
-
-		paranoia("after execution commit.", true);
-
-		if (e.t().receiveAddress())
-		{
-			EnforceRefs r(m_db, true);
-			if (storageRoot(e.t().receiveAddress()) && m_db.lookup(storageRoot(e.t().receiveAddress())).empty())
-			{
-				cwarn << "TRIE immediately after execution; no node for receiveAddress";
-				BOOST_THROW_EXCEPTION(InvalidTrie());
-			}
-		}
-#endif
-		// TODO: CHECK TRIE after level DB flush to make sure exactly the same.
 	}
 
 	return make_pair(res, TransactionReceipt(rootHash(), startGasUsed + e.gasUsed(), e.logs()));

@@ -94,10 +94,7 @@ template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGen
 DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);
 DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 
-//#define ETH_ALLOW_EMPTY_BLOCK_AND_STATE 1
-
 class SealEngineFace;
-
 
 
 namespace detail
@@ -183,11 +180,6 @@ public:
 	/// which uses it. If you have no preexisting database then set BaseState to something other
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
 	explicit State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs = BaseState::PreExisting);
-
-#if ETH_ALLOW_EMPTY_BLOCK_AND_STATE
-	State(): State(Invalid256, OverlayDB(), BaseState::Empty) {}
-	explicit State(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting): State(Invalid256, _db, _bs) {}
-#endif
 
 	enum NullType { Null };
 	State(NullType): State(Invalid256, OverlayDB(), BaseState::Empty) {}
@@ -328,12 +320,6 @@ private:
 	void clearCacheIfTooLarge() const;
 
 	void createAccount(Address const& _address, Account const&& _account);
-
-	/// Debugging only. Good for checking the Trie is in shape.
-	bool isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const;
-
-	/// Debugging only. Good for checking the Trie is in shape.
-	void paranoia(std::string const& _when, bool _enforceRefs = false) const;
 
 	OverlayDB m_db;								///< Our overlay for the state tree.
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.
