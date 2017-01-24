@@ -153,47 +153,38 @@ State& State::operator=(State const& _s)
 	return *this;
 }
 
-Account const* State::account(Address const& _a, bool _requireCode) const
+Account const* State::account(Address const& _a) const
 {
-	return const_cast<State*>(this)->account(_a, _requireCode);
+	return const_cast<State*>(this)->account(_a);
 }
 
-Account* State::account(Address const& _a, bool _requireCode)
+Account* State::account(Address const& _addr)
 {
-	Account *a = nullptr;
-	auto it = m_cache.find(_a);
+	auto it = m_cache.find(_addr);
 	if (it != m_cache.end())
-		a = &it->second;
-	else
+		return &it->second;
+
+	if (m_nonExistingAccountsCache.count(_addr))
+		return nullptr;
+
+	// Populate basic info.
+	string stateBack = m_state.at(_addr);
+	if (stateBack.empty())
 	{
-		if (m_nonExistingAccountsCache.find(_a) != m_nonExistingAccountsCache.end())
-			return nullptr;
-
-		// populate basic info.
-		string stateBack = m_state.at(_a);
-		if (stateBack.empty())
-		{
-			m_nonExistingAccountsCache.insert(_a);
-			return nullptr;
-		}
-
-		clearCacheIfTooLarge();
-
-		RLP state(stateBack);
-		m_cache[_a] = Account(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged);
-		m_unchangedCacheEntries.push_back(_a);
-		a = &m_cache[_a];
+		m_nonExistingAccountsCache.insert(_addr);
+		return nullptr;
 	}
 
-	// FIXME: load code using the same criteria but in State::code().
-	if (_requireCode && a && a->code().empty() && a->codeHash() != EmptySHA3)
-	{
-		a->noteCode(m_db.lookup(a->codeHash()));
-		assert(!a->code().empty());
-		CodeSizeCache::instance().store(a->codeHash(), a->code().size());
-	}
+	clearCacheIfTooLarge();
 
-	return a;
+	RLP state(stateBack);
+	auto i = m_cache.emplace(
+		std::piecewise_construct,
+		std::forward_as_tuple(_addr),
+		std::forward_as_tuple(state[0].toInt<u256>(), state[1].toInt<u256>(), state[2].toHash<h256>(), state[3].toHash<h256>(), Account::Unchanged)
+	);
+	m_unchangedCacheEntries.push_back(_addr);
+	return &i.first->second;
 }
 
 void State::clearCacheIfTooLarge() const
@@ -228,7 +219,7 @@ unordered_map<Address, u256> State::addresses() const
 {
 #if ETH_FATDB
 	unordered_map<Address, u256> ret;
-	for (auto i: m_cache)
+	for (auto& i: m_cache)
 		if (i.second.isAlive())
 			ret[i.first] = i.second.balance();
 	for (auto const& i: m_state)
@@ -427,11 +418,21 @@ h256 State::storageRoot(Address const& _id) const
 	return EmptyTrie;
 }
 
-bytes const& State::code(Address const& _a) const
+bytes const& State::code(Address const& _addr) const
 {
-	if (!addressHasCode(_a))
+	Account const* a = account(_addr);
+	if (!a || a->codeHash() == EmptySHA3)
 		return NullBytes;
-	return account(_a, true)->code();
+
+	if (a->code().empty())
+	{
+		// Load the code from the backend.
+		Account* mutableAccount = const_cast<Account*>(a);
+		mutableAccount->noteCode(m_db.lookup(a->codeHash()));
+		CodeSizeCache::instance().store(a->codeHash(), a->code().size());
+	}
+
+	return a->code();
 }
 
 void State::setNewCode(Address const& _address, bytes&& _code)

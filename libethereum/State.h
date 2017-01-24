@@ -192,7 +192,6 @@ public:
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
 	static OverlayDB openDB(std::string const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
-	static OverlayDB openDB(h256 const& _genesisHash, WithExisting _we = WithExisting::Trust) { return openDB(std::string(), _genesisHash, _we); }
 	OverlayDB const& db() const { return m_db; }
 	OverlayDB& db() { return m_db; }
 
@@ -265,7 +264,7 @@ public:
 
 	/// Get the code of an account.
 	/// @returns bytes() if no account exists at that address.
-	bytes const& code(Address const& _contract) const;
+	bytes const& code(Address const& _addr) const;
 
 	/// Get the code hash of an account.
 	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
@@ -310,11 +309,11 @@ private:
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
-	Account const* account(Address const& _a, bool _requireCode = false) const;
+	Account const* account(Address const& _a) const;
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
-	Account* account(Address const& _a, bool _requireCode = false);
+	Account* account(Address const& _a);
 
 	/// Purges non-modified entries in m_cache if it grows too large.
 	void clearCacheIfTooLarge() const;
