@@ -2,7 +2,7 @@ aux_source_directory(. SRC_LIST)
 
 file(GLOB HEADERS "*.h")
 
-eth_simple_add_executable(ethminer ${SRC_LIST} ${HEADERS})
+add_executable(ethminer ${SRC_LIST} ${HEADERS})
 
 jsonrpcstub_client_create(ethminer minerfarm.json FarmClient ${CMAKE_CURRENT_SOURCE_DIR} FarmClient)
 

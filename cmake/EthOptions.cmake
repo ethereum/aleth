@@ -7,7 +7,7 @@ macro(configure_project)
 			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 	endif()
 
-	eth_default_option(STATIC_BUILD OFF)
+	eth_default_option(BUILD_SHARED_LIBS OFF)
 
 	# features
 	eth_default_option(VMTRACE OFF)
@@ -32,11 +32,6 @@ macro(configure_project)
 			message("VM Tracing requires debug - disabling for release build.")
 			set (VMTRACE OFF)
 		endif ()
-	endif ()
-
-	if (STATIC_BUILD)
-		set(STATIC_LINKING 1)
-		set(BUILD_SHARED_LIBS 0)
 	endif ()
 
 	# Define a matching property name of each of the "features".
