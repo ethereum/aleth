@@ -264,6 +264,8 @@ public:
 
 	/// Get the code of an account.
 	/// @returns bytes() if no account exists at that address.
+	/// @warning The reference to the code is only valid until the access to
+	///          other account. Do not keep it.
 	bytes const& code(Address const& _addr) const;
 
 	/// Get the code hash of an account.
@@ -309,11 +311,11 @@ private:
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
-	Account const* account(Address const& _a) const;
+	Account const* account(Address const& _addr) const;
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
-	Account* account(Address const& _a);
+	Account* account(Address const& _addr);
 
 	/// Purges non-modified entries in m_cache if it grows too large.
 	void clearCacheIfTooLarge() const;
