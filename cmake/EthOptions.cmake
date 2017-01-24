@@ -44,10 +44,6 @@ macro(configure_project)
 	# and on again easily enough, and also to grep for them.
 	add_definitions(-DDISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
 
-	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
-	# Common code has no business knowing which application it is part of.
-	add_definitions(-DETH_TRUE)
-
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
 	# not suitable for all platforms.

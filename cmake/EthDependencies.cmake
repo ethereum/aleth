@@ -49,9 +49,6 @@ if (MSVC)
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
 endif()
 
-# boilerplate macros for some code editors
-add_definitions(-DETH_TRUE)
-
 # custom cmake scripts
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
