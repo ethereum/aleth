@@ -1,5 +1,18 @@
-cmake_policy(SET CMP0015 NEW)
-
-aux_source_directory(. SRCS)
-
-add_sources(${SRCS})
+add_sources(
+	Block.cpp
+	BlockChain.cpp
+	BlockChainInsert.cpp
+	BlockChainTests.cpp
+	BlockChainTestsBoost.cpp
+	BlockQueue.cpp
+	ClientBase.cpp
+	EthereumPeerTest.cpp
+	GasPricer.cpp
+	Genesis.cpp
+	State.cpp
+	StateTests.cpp
+	StateUnitTests.cpp
+	Transaction.cpp
+	TransactionQueue.cpp
+	TransactionTests.cpp
+)

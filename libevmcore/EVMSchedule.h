@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <libevmcore/Instruction.h>
 #include <libdevcore/Common.h>
 
 namespace dev

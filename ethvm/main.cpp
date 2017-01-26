@@ -253,8 +253,8 @@ int main(int argc, char** argv)
 	if (!code.empty())
 	{
 		// Deploy the code on some fake account to be called later.
-		Account account(0,0, Account::ContractConception);
-		account.setCode(bytes{code});
+		Account account(0, 0);
+		account.setNewCode(bytes{code});
 		std::unordered_map<Address, Account> map;
 		map[contractDestination] = account;
 		state.populateFrom(map);

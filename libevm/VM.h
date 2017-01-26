@@ -49,7 +49,7 @@ inline u256 fromAddress(Address _a)
 
 struct InstructionMetric
 {
-	int gasPriceTier;
+	Tier gasPriceTier;
 	int args;
 	int ret;
 };

@@ -122,6 +122,7 @@ public:
 				string fileboost = iterator->path().filename().string();
 				dev::test::executeTests(fileboost, "/GeneralStateTests/"+_folder, "/GeneralStateTestsFiller/"+_folder, dev::test::doStateTests2);
 			}
+		dev::test::TestOutputHelper::finishTest();
 	}
 };
 
