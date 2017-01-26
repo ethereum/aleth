@@ -37,6 +37,29 @@ namespace dev
 namespace eth
 {
 
+class EthereumPeerFace
+{
+public:
+	virtual ~EthereumPeerFace() {}
+
+	/// Peer's latest block's hash that we know about or default null value if no need to sync.
+	virtual h256 latestHash() const = 0;
+	/// Peer's latest block's total difficulty.
+	virtual u256 totalDifficulty() const = 0;
+
+	virtual void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse) = 0;
+	virtual void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse) = 0;
+
+	/// Request specified blocks from peer.
+	virtual void requestBlockBodies(h256s const& _blocks) = 0;
+
+	/// Request values for specified keys from peer.
+	virtual void requestNodeData(h256s const& _hashes) = 0;
+
+	/// Request receipts for specified blocks from peer.
+	virtual void requestReceipts(h256s const& _blocks) = 0;
+};
+
 class EthereumPeerObserverFace
 {
 public:
@@ -80,7 +103,7 @@ public:
  * @todo Document fully.
  * @todo make state transitions thread-safe.
  */
-class EthereumPeer: public p2p::Capability
+class EthereumPeer: public EthereumPeerFace, public p2p::Capability
 {
 	friend class EthereumHost; //TODO: remove this
 	friend class BlockChainSync; //TODO: remove this
@@ -106,25 +129,25 @@ public:
 	p2p::NodeID id() const { return session()->id(); }
 
 	/// Peer's latest block's hash that we know about or default null value if no need to sync.
-	h256 latestHash() const { return m_latestHash;  }
+	h256 latestHash() const override { return m_latestHash;  }
 	/// Peer's latest block's total difficulty.
-	u256 totalDifficulty() const { return m_totalDifficulty; }
+	u256 totalDifficulty() const override { return m_totalDifficulty; }
 
 	/// Abort sync and reset fetch
 	void setIdle();
 
 	/// Request hashes for given parent hash.
-	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse);
-	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse);
+	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse) override;
+	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse) override;
 
 	/// Request specified blocks from peer.
-	void requestBlockBodies(h256s const& _blocks);
+	void requestBlockBodies(h256s const& _blocks) override;
 
 	/// Request values for specified keys from peer.
-	void requestNodeData(h256s const& _hashes);
+	void requestNodeData(h256s const& _hashes) override;
 
 	/// Request receipts for specified blocks from peer.
-	void requestReceipts(h256s const& _blocks);
+	void requestReceipts(h256s const& _blocks) override;
 
 	/// Check if this node is rude.
 	bool isRude() const;
@@ -142,7 +165,7 @@ private:
 	unsigned askOverride() const;
 
 	/// Interpret an incoming message.
-	virtual bool interpret(unsigned _id, RLP const& _r);
+	bool interpret(unsigned _id, RLP const& _r) override;
 
 	/// Request status. Called from constructor
 	void requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty, h256 _chainCurrentHash, h256 _chainGenesisHash);

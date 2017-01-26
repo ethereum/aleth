@@ -33,7 +33,7 @@ FastSync::FastSync()
 {
 }
 
-void FastSync::onPeerStatus(shared_ptr<EthereumPeer> _peer)
+void FastSync::onPeerStatus(shared_ptr<EthereumPeerFace> _peer)
 {
 	// TODO validate genesisHash, protocolVersion, networkId etc.
 
@@ -47,7 +47,7 @@ void FastSync::onPeerStatus(shared_ptr<EthereumPeer> _peer)
 		syncPeer(_peer);
 }
 
-void FastSync::syncPeer(std::shared_ptr<EthereumPeer> _peer)
+void FastSync::syncPeer(std::shared_ptr<EthereumPeerFace> _peer)
 {
 	Guard guard(m_downloadingHeadersMutex);
 	BlockNumberRange const nextRange = m_headersToDownload.lowestRange(c_maxRequestHeaders);
@@ -62,12 +62,12 @@ void FastSync::syncPeer(std::shared_ptr<EthereumPeer> _peer)
 	m_peersDownloadingHeaders[_peer] = nextRange;
 }
 
-void FastSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+void FastSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeerFace> _peer, RLP const& _r)
 {
 	if (_r.itemCount() == 1)
 		onHighestBlockHeaderDownloaded(_r[0].data());
 
-	BlockNumberRangeMask const dowloadedRangeMask = saveDownloadedHeaders(_peer, _r);
+	BlockNumberRangeMask const dowloadedRangeMask = saveDownloadedHeaders(_r);
 
 	updateDownloadingHeaders(_peer, dowloadedRangeMask);
 
@@ -98,7 +98,7 @@ void FastSync::extendHeadersToDownload(unsigned _newMaxBlockNumber)
 }
 
 
-FastSync::BlockNumberRangeMask FastSync::saveDownloadedHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r)
+FastSync::BlockNumberRangeMask FastSync::saveDownloadedHeaders(RLP const& _r)
 {
 	BlockNumberRangeMask downloadedRangeMask(allHeadersRange());
 	try
@@ -134,7 +134,7 @@ void FastSync::saveDownloadedHeader(unsigned _blockNumber, bytes&& _headerData)
 	m_downloadedHeaders.emplace(_blockNumber, _headerData);
 }
 
-void FastSync::updateDownloadingHeaders(std::shared_ptr<EthereumPeer> _peer, const BlockNumberRangeMask& _downloaded)
+void FastSync::updateDownloadingHeaders(std::shared_ptr<EthereumPeerFace> _peer, const BlockNumberRangeMask& _downloaded)
 {
 	Guard guard(m_downloadingHeadersMutex);
 

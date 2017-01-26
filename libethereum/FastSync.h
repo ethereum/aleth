@@ -29,35 +29,35 @@ namespace dev
 
 namespace eth
 {
-class EthereumPeer;
+class EthereumPeerFace;
 
 class FastSync
 {
 public:
 	FastSync();
 
-	void onPeerStatus(std::shared_ptr<EthereumPeer> _peer);
+	void onPeerStatus(std::shared_ptr<EthereumPeerFace> _peer);
 
-	void onPeerBlockHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	void onPeerBlockHeaders(std::shared_ptr<EthereumPeerFace> _peer, RLP const& _r);
 
 private:
 	using BlockNumberRangeMask = RangeMask<unsigned>;
 	using BlockNumberRange = BlockNumberRangeMask::Range;
 
-	void syncPeer(std::shared_ptr<EthereumPeer> _peer);
+	void syncPeer(std::shared_ptr<EthereumPeerFace> _peer);
 	void onHighestBlockHeaderDownloaded(bytesConstRef _data);
 	void extendHeadersToDownload(unsigned _newMaxBlockNumber);
-	BlockNumberRangeMask saveDownloadedHeaders(std::shared_ptr<EthereumPeer> _peer, RLP const& _r);
+	BlockNumberRangeMask saveDownloadedHeaders(RLP const& _r);
 	BlockNumberRange allHeadersRange() const;
 	void saveDownloadedHeader(unsigned _blockNumber, bytes&& _headerData);
-	void updateDownloadingHeaders(std::shared_ptr<EthereumPeer> _peer, const BlockNumberRangeMask& _downloaded);
+	void updateDownloadingHeaders(std::shared_ptr<EthereumPeerFace> _peer, const BlockNumberRangeMask& _downloaded);
 
 private:
 	u256 m_maxDifficulty;				///< Highest peer difficulty
 
 	mutable Mutex m_downloadingHeadersMutex;
 	BlockNumberRangeMask m_headersToDownload; ///< Set of pending block number ranges
-	std::map<std::weak_ptr<EthereumPeer>, BlockNumberRange, std::owner_less<std::weak_ptr<EthereumPeer>>> m_peersDownloadingHeaders; ///< Peers to assigned block number range
+	std::map<std::weak_ptr<EthereumPeerFace>, BlockNumberRange, std::owner_less<std::weak_ptr<EthereumPeerFace>>> m_peersDownloadingHeaders; ///< Peers to assigned block number range
 
 	Mutex m_downloadedHeadersMutex;
 	std::map<unsigned, bytes> m_downloadedHeaders; ///< Block numbers to downloaded header data
