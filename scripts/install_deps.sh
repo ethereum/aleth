@@ -115,6 +115,12 @@ FreeBSD)
 #------------------------------------------------------------------------------
 Linux)
 
+    # Detect if sudo is needed.
+    SUDO=""
+    if [ $(id -u) != 0 ]; then
+        SUDO="sudo"
+    fi
+
 #------------------------------------------------------------------------------
 # Arch Linux
 #------------------------------------------------------------------------------
@@ -126,7 +132,7 @@ Linux)
         # The majority of our dependencies can be found in the
         # Arch Linux official repositories.
         # See https://wiki.archlinux.org/index.php/Official_repositories
-        sudo pacman -Sy --noconfirm \
+        $SUDO pacman -Sy --noconfirm \
             autoconf \
             automake \
             gcc \
@@ -142,8 +148,8 @@ Linux)
         Debian*)
             echo "Installing cpp-ethereum dependencies on Debian Linux."
 
-            sudo apt-get -q update
-            sudo apt-get -qy install \
+            $SUDO apt-get -q update
+            $SUDO apt-get -qy install \
                 build-essential \
                 libboost-all-dev \
                 libcurl4-openssl-dev \
@@ -228,7 +234,7 @@ Linux)
                     #trusty or compatible LinuxMint distributions
                     echo "Installing cpp-ethereum dependencies on Ubuntu Trusty Tahr (14.04)."
                     echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" \
-                    | sudo tee -a /etc/apt/sources.list > /dev/null
+                    | $SUDO tee -a /etc/apt/sources.list > /dev/null
                     ;;
                 utopic)
                     #utopic
@@ -246,7 +252,7 @@ Linux)
                     #xenial
                     echo "Installing cpp-ethereum dependencies on Ubuntu Xenial Xerus (16.04)."
                     echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main" \
-                    | sudo tee -a /etc/apt/sources.list > /dev/null
+                    | $SUDO tee -a /etc/apt/sources.list > /dev/null
                     ;;
                 yakkety)
                     #yakkety
@@ -267,10 +273,10 @@ Linux)
 
             if [ TRAVIS ]; then
                 # On Travis CI llvm package conficts with the new to be installed.
-                sudo apt-get -y remove llvm
+                $SUDO apt-get -y remove llvm
             fi
-            sudo apt-get -q update
-            sudo apt-get install -qy --no-install-recommends --allow-unauthenticated \
+            $SUDO apt-get -q update
+            $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
                 build-essential \
                 libboost-all-dev \
                 libcurl4-openssl-dev \
