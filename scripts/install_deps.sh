@@ -134,8 +134,6 @@ case $(uname -s) in
                 gcc \
                 libtool \
                 boost \
-                cmake \
-                git \
                 leveldb \
                 libmicrohttpd \
                 miniupnpc
@@ -193,33 +191,15 @@ case $(uname -s) in
                 esac
 
                 # Install "normal packages"
-                sudo apt-get -y update
-                sudo apt-get -y install \
+                sudo apt-get -q update
+                sudo apt-get -qy install \
                     build-essential \
-                    cmake \
-                    g++ \
-                    gcc \
-                    git \
                     libboost-all-dev \
                     libcurl4-openssl-dev \
                     libgmp-dev \
                     libleveldb-dev \
                     libmicrohttpd-dev \
-                    libminiupnpc-dev \
-                    libz-dev \
-                    unzip
-
-                # All the Debian releases until Stretch have shipped with versions of CMake
-                # which are too old for cpp-ethereum to build successfully.
-                # We just download and install latest version.
-                #
-                # - https://packages.debian.org/wheezy/cmake (2.8.9)
-                # - https://packages.debian.org/jessie/cmake (3.0.2)
-                # - https://packages.debian.org/stretch/cmake (3.5.2)
-
-                wget -O- https://cmake.org/files/v3.7/cmake-3.7.1-Linux-x86_64.tar.gz \
-                    | sudo tar xz -C /usr/local --strip 1
-
+                    libminiupnpc-dev
                 ;;
 
 #------------------------------------------------------------------------------
@@ -236,17 +216,14 @@ case $(uname -s) in
                     autoconf \
                     automake \
                     boost-devel \
-                    cmake \
                     curl-devel \
                     gcc \
                     gcc-c++ \
-                    git \
                     gmp-devel \
                     leveldb-devel \
                     libtool \
                     miniupnpc-devel \
                     snappy-devel
-
                 ;;
 
 #------------------------------------------------------------------------------
@@ -309,7 +286,6 @@ case $(uname -s) in
                         echo "Installing cpp-ethereum dependencies on Ubuntu Yakkety Yak (16.10)."
                         echo ""
                         echo "NOTE - You are in unknown territory with this preview OS."
-                        echo "We will need to update the Ethereum PPAs, work through build and runtime breaks, etc."
                         echo "See https://github.com/ethereum/webthree-umbrella/issues/624."
                         echo "If you would like to partner with us to work through these, that"
                         echo "would be fantastic.  Please just comment on that issue.  Thanks!"
@@ -322,47 +298,13 @@ case $(uname -s) in
                         ;;
                 esac
 
-                # The Ethereum PPA is required for the handful of packages where we need newer versions than
-                # are shipped with Ubuntu itself.  We can likely minimize or remove the need for the PPA entirely
-                # as we switch more to a "build from source" model, as Pawel has recently done for LLVM in evmjit.
-                #
-                # See https://launchpad.net/~ethereum/+archive/ubuntu/ethereum
-                #
-                # The version of CMake which shipped with Trusty was too old for our codebase (we need 3.0.0 or newer),
-                # so the Ethereum PPA contains a newer release (3.2.2):
-                #
-                # - http://packages.ubuntu.com/trusty/cmake (2.8.12.2)
-                # - http://packages.ubuntu.com/wily/cmake (3.2.2)
-                # - http://packages.ubuntu.com/xenial/cmake (3.5.1)
-                # - http://packages.ubuntu.com/yakkety/cmake (3.5.2)
-                #
-                # All the Ubuntu releases until Yakkety have shipped with CryptoPP 5.6.1, but we need 5.6.2
-                # or newer.  Also worth of note is that the package name is libcryptopp in our PPA but
-                # libcrypto++ in the official repositories.
-                #
-                # - http://packages.ubuntu.com/trusty/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/wily/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/xenial/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/yakkety/libcrypto++-dev (5.6.3)
-                #
-                # NOTE - We actually want to remove the dependency in CryptoPP from our codebase entirely,
-                # which would make this versioning problem moot.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/103
-
                 if [ TRAVIS ]; then
                     # On Travis CI llvm package conficts with the new to be installed.
                     sudo apt-get -y remove llvm
                 fi
-                sudo apt-get -y update
-                # this installs the add-apt-repository command
-                sudo apt-get install -y --no-install-recommends software-properties-common
-                sudo add-apt-repository -y ppa:ethereum/ethereum
-                sudo apt-get -y update
-                sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
+                sudo apt-get -q update
+                sudo apt-get install -qy --no-install-recommends --allow-unauthenticated \
                     build-essential \
-                    cmake \
-                    git \
                     libboost-all-dev \
                     libcurl4-openssl-dev \
                     libgmp-dev \
