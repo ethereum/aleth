@@ -33,7 +33,7 @@ else
     ERROR=0
     TMPFILE=$(mktemp --tmpdir cmake-$VERSION-$OS-x86_64.XXXXXXXX.tar.gz)
     echo "Downloading CMake ($URL)..."
-    wget "$URL" -O "$TMPFILE" -nv
+    curl -s "$URL" > "$TMPFILE"
     if ! (shasum -a256 "$TMPFILE" | grep -q "$SHA256"); then
         echo "Checksum mismatch ($TMPFILE)"
         exit 1
