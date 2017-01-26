@@ -71,6 +71,16 @@ public:
 		return ret;
 	}
 
+	/// @returns a range that starts with the first element and ends @a _items later or at the first excluded element
+	Range lowestRange(decltype(T{} -T{}) _items) const
+	{
+		if (_items == 0 || m_ranges.empty())
+			return Range{0, 0};
+
+		auto itFirst = m_ranges.begin();
+		return { itFirst->first, std::min(itFirst->first + _items, itFirst->second) };
+	}
+
 	/// @returns the complement of the range mask relative to the ground range.
 	RangeMask operator~() const { return inverted(); }
 
@@ -200,14 +210,16 @@ public:
 		return c;
 	}
 
-	size_t firstOut() const
+	/// @returns the smallest element in the ground range not included in ranges
+	T firstOut() const
 	{
 		if (m_ranges.empty() || !m_ranges.count(m_all.first))
 			return m_all.first;
 		return m_ranges.at(m_all.first);
 	}
 
-	size_t lastIn() const
+	/// @returns the largest element included in ranges
+	T lastIn() const
 	{
 		if (m_ranges.empty())
 			return m_all.first;
@@ -216,7 +228,7 @@ public:
 
 private:
 	/// The ground range.
-	UnsignedRange m_all;
+	Range m_all;
 	/// Mapping begin -> end containing the ranges.
 	std::map<T, T> m_ranges;
 };
