@@ -1,3 +1,4 @@
+pragma solidity ^0.4.0;
 
 // https://people.csail.mit.edu/rivest/Rivest-rc5rev.pdf
 
