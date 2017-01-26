@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #------------------------------------------------------------------------------
 # Bash script for installing pre-requisite packages for cpp-ethereum on a
@@ -115,6 +115,8 @@ FreeBSD)
 #------------------------------------------------------------------------------
 Linux)
 
+    echo "Linux"
+
     # Detect if sudo is needed.
     SUDO=""
     if [ $(id -u) != 0 ]; then
@@ -160,23 +162,18 @@ Linux)
             ;;
         esac
 
-    else
-
-        case $(lsb_release -is) in
-
+    elif [ -f "/etc/alpine-release" ]; then
 #------------------------------------------------------------------------------
 # Alpine Linux
 #------------------------------------------------------------------------------
-        Alpine)
-            #Alpine
-            echo "Installing cpp-ethereum dependencies on Alpine Linux."
-            echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
-            echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-            echo "If you would like to get 'install_deps.sh' working for AlpineLinux, that would be fantastic."
-            echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-            echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-            exit 1
-            ;;
+
+        echo "Installing cpp-ethereum dependencies on Alpine Linux."
+        exit 1
+        ;;
+
+    else
+
+        case $(lsb_release -is) in
 
 #------------------------------------------------------------------------------
 # Fedora
