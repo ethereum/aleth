@@ -115,8 +115,6 @@ FreeBSD)
 #------------------------------------------------------------------------------
 Linux)
 
-    echo "Linux"
-
     # Detect if sudo is needed.
     SUDO=""
     if [ $(id -u) != 0 ]; then
@@ -159,6 +157,37 @@ Linux)
                 libleveldb-dev \
                 libmicrohttpd-dev \
                 libminiupnpc-dev
+            ;;
+
+#------------------------------------------------------------------------------
+# Ubuntu
+#
+# TODO - I wonder whether all of the Ubuntu-variants need some special
+# treatment?
+#
+# TODO - We should also test this code on Ubuntu Server, Ubuntu Snappy Core
+# and Ubuntu Phone.
+#
+# TODO - Our Ubuntu build is only working for amd64 and i386 processors.
+# It would be good to add armel, armhf and arm64.
+# See https://github.com/ethereum/webthree-umbrella/issues/228.
+#------------------------------------------------------------------------------
+        Ubuntu|LinuxMint)
+            if [ TRAVIS ]; then
+                # On Travis CI llvm package conficts with the new to be installed.
+                $SUDO apt-get -y remove llvm
+            fi
+            $SUDO apt-get -q update
+            $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
+                build-essential \
+                libboost-all-dev \
+                libcurl4-openssl-dev \
+                libgmp-dev \
+                libleveldb-dev \
+                libmicrohttpd-dev \
+                libminiupnpc-dev \
+                libz-dev \
+                llvm-3.9-dev
             ;;
         esac
 
@@ -209,80 +238,6 @@ Linux)
             echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
             echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
             exit 1
-            ;;
-
-#------------------------------------------------------------------------------
-# Ubuntu
-#
-# TODO - I wonder whether all of the Ubuntu-variants need some special
-# treatment?
-#
-# TODO - We should also test this code on Ubuntu Server, Ubuntu Snappy Core
-# and Ubuntu Phone.
-#
-# TODO - Our Ubuntu build is only working for amd64 and i386 processors.
-# It would be good to add armel, armhf and arm64.
-# See https://github.com/ethereum/webthree-umbrella/issues/228.
-#------------------------------------------------------------------------------
-        Ubuntu|LinuxMint)
-            #Ubuntu or LinuxMint
-            case $(lsb_release -cs) in
-                trusty|rosa|rafaela|rebecca|qiana)
-                    #trusty or compatible LinuxMint distributions
-                    echo "Installing cpp-ethereum dependencies on Ubuntu Trusty Tahr (14.04)."
-                    echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" \
-                    | $SUDO tee -a /etc/apt/sources.list > /dev/null
-                    ;;
-                utopic)
-                    #utopic
-                    echo "Installing cpp-ethereum dependencies on Ubuntu Utopic Unicorn (14.10)."
-                    ;;
-                vivid)
-                    #vivid
-                    echo "Installing cpp-ethereum dependencies on Ubuntu Vivid Vervet (15.04)."
-                    ;;
-                wily)
-                    #wily
-                    echo "Installing cpp-ethereum dependencies on Ubuntu Wily Werewolf (15.10)."
-                    ;;
-                xenial|sarah)
-                    #xenial
-                    echo "Installing cpp-ethereum dependencies on Ubuntu Xenial Xerus (16.04)."
-                    echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main" \
-                    | $SUDO tee -a /etc/apt/sources.list > /dev/null
-                    ;;
-                yakkety)
-                    #yakkety
-                    echo "Installing cpp-ethereum dependencies on Ubuntu Yakkety Yak (16.10)."
-                    echo ""
-                    echo "NOTE - You are in unknown territory with this preview OS."
-                    echo "See https://github.com/ethereum/webthree-umbrella/issues/624."
-                    echo "If you would like to partner with us to work through these, that"
-                    echo "would be fantastic.  Please just comment on that issue.  Thanks!"
-                    ;;
-                *)
-                    #other Ubuntu
-                    echo "ERROR - Unknown or unsupported Ubuntu version."
-                    echo "We only support Trusty, Utopic, Vivid, Wily and Xenial, with work-in-progress on Yakkety."
-                    exit 1
-                    ;;
-            esac
-
-            if [ TRAVIS ]; then
-                # On Travis CI llvm package conficts with the new to be installed.
-                $SUDO apt-get -y remove llvm
-            fi
-            $SUDO apt-get -q update
-            $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
-                build-essential \
-                libboost-all-dev \
-                libcurl4-openssl-dev \
-                libgmp-dev \
-                libleveldb-dev \
-                libmicrohttpd-dev \
-                libminiupnpc-dev \
-                libz-dev \
-                llvm-3.9-dev
             ;;
 
 #------------------------------------------------------------------------------
