@@ -48,6 +48,7 @@ namespace eth
 class TransactionQueue;
 class BlockQueue;
 class BlockChainSync;
+class FastSync;
 
 struct EthereumHostTrace: public LogChannel { static const char* name(); static const int verbosity = 6; };
 
@@ -130,10 +131,12 @@ private:
 	mutable RecursiveMutex x_sync;
 	mutable Mutex x_transactions;
 	std::unique_ptr<BlockChainSync> m_sync;
+	std::unique_ptr<FastSync> m_fastSync;
 	std::atomic<time_t> m_lastTick = { 0 };
 
 	std::shared_ptr<EthereumHostDataFace> m_hostData;
-	std::shared_ptr<EthereumPeerObserverFace> m_peerObserver;
+	std::shared_ptr<EthereumPeerObserverFace> m_fullSyncPeerObserver;
+	std::shared_ptr<EthereumPeerObserverFace> m_fastSyncPeerObserver;
 };
 
 }

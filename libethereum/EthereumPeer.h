@@ -105,6 +105,11 @@ public:
 
 	p2p::NodeID id() const { return session()->id(); }
 
+	/// Peer's latest block's hash that we know about or default null value if no need to sync.
+	h256 latestHash() const { return m_latestHash;  }
+	/// Peer's latest block's total difficulty.
+	u256 totalDifficulty() const { return m_totalDifficulty; }
+
 	/// Abort sync and reset fetch
 	void setIdle();
 
