@@ -116,7 +116,6 @@ FreeBSD)
 Linux)
 
     # Detect if sudo is needed.
-    SUDO=""
     if [ $(id -u) != 0 ]; then
         SUDO="sudo"
     fi
@@ -174,8 +173,11 @@ Linux)
 #------------------------------------------------------------------------------
         Ubuntu|LinuxMint)
             if [ "$TRAVIS" ]; then
-                # On Travis CI llvm package conficts with the new to be installed.
-                $SUDO apt-get -y remove llvm
+                # Setup prebuilt LLVM on Travis CI:
+                $SUDO apt-get -qy remove llvm  # Remove confilicting package.
+                echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | \
+                    $SUDO tee -a /etc/apt/sources.list > /dev/null
+                LLVM_PACKAGES="llvm-3.9-dev libz-dev"
             fi
             $SUDO apt-get -q update
             $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
@@ -186,8 +188,7 @@ Linux)
                 libleveldb-dev \
                 libmicrohttpd-dev \
                 libminiupnpc-dev \
-                libz-dev \
-                llvm-3.9-dev
+                $LLVM_PACKAGES
             ;;
         esac
 
