@@ -144,7 +144,7 @@ Linux)
 
     elif [ -f "/etc/os-release" ]; then
 
-        case $(source /etc/os-release; echo $NAME) in
+        case $(. /etc/os-release; echo $NAME) in
         Debian*)
             echo "Installing cpp-ethereum dependencies on Debian Linux."
 
@@ -173,7 +173,7 @@ Linux)
 # See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
         Ubuntu|LinuxMint)
-            if [ TRAVIS ]; then
+            if [ "$TRAVIS" ]; then
                 # On Travis CI llvm package conficts with the new to be installed.
                 $SUDO apt-get -y remove llvm
             fi
@@ -198,7 +198,6 @@ Linux)
 
         echo "Installing cpp-ethereum dependencies on Alpine Linux."
         exit 1
-        ;;
 
     else
 
