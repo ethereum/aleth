@@ -133,27 +133,23 @@ void getBlockHash(evm_uint256be* o_hash, evm_env* _envPtr, int64_t _number)
 
 int64_t evm_call(
 	evm_env* _opaqueEnv,
-	evm_call_kind _kind,
-	int64_t _gas,
-	evm_uint160be const* _address,
-	evm_uint256be const* _value,
-	uint8_t const* _inputData,
-	size_t _inputSize,
+	evm_message const* _msg,
 	uint8_t* _outputData,
 	size_t _outputSize
 ) noexcept
 {
-	assert(_gas >= 0 && "Invalid gas value");
+	assert(_msg->gas >= 0 && "Invalid gas value");
 	auto &env = *reinterpret_cast<ExtVMFace*>(_opaqueEnv);
-	auto value = asUint(_value);
-	bytesConstRef input{_inputData, _inputSize};
+	auto value = asUint(&_msg->value);
+	bytesConstRef input{_msg->input, _msg->input_size};
 
-	if (_kind == EVM_CREATE)
+	if (_msg->kind == EVM_CREATE)
 	{
 		assert(_outputSize == 20);
-		u256 gas = _gas;
+		u256 gas = _msg->gas;
+		// TODO: How it knows who the sender is?
 		auto addr = env.create(value, gas, input, {});
-		auto gasLeft = static_cast<decltype(_gas)>(gas);
+		auto gasLeft = static_cast<int64_t>(gas);
 		if (addr)
 			std::memcpy(_outputData, addr.data(), 20);
 		else
@@ -162,12 +158,12 @@ int64_t evm_call(
 	}
 
 	CallParameters params;
-	params.gas = _gas;
-	params.apparentValue = _kind == EVM_DELEGATECALL ? env.value : value;
-	params.valueTransfer = _kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
-	params.senderAddress = _kind == EVM_DELEGATECALL ? env.caller : env.myAddress;
-	params.codeAddress = fromEvmC(_address);
-	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
+	params.gas = _msg->gas;
+	params.apparentValue = value;
+	params.valueTransfer = _msg->kind == EVM_DELEGATECALL ? 0 : params.apparentValue;
+	params.senderAddress = fromEvmC(&_msg->sender);
+	params.codeAddress = fromEvmC(&_msg->address);
+	params.receiveAddress = _msg->kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
 	params.out = {_outputData, _outputSize};
 	params.onOp = {};
@@ -255,11 +251,10 @@ public:
 		auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
 		evm_message msg = {toEvmC(_ext.myAddress), toEvmC(_ext.caller),
 						   toEvmC(_ext.value), _ext.data.data(),
-						   _ext.data.size(), gas,
-						   static_cast<int32_t>(_ext.depth)};
+						   _ext.data.size(), toEvmC(_ext.codeHash), gas,
+						   static_cast<int32_t>(_ext.depth), EVM_CALL};
 		return Result{m_instance->execute(
-			m_instance, env, mode, toEvmC(_ext.codeHash), _ext.code.data(),
-			_ext.code.size(), msg
+			m_instance, env, mode, &msg, _ext.code.data(), _ext.code.size()
 		)};
 	}
 
