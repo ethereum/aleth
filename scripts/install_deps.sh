@@ -143,7 +143,8 @@ Linux)
 
     elif [ -f "/etc/os-release" ]; then
 
-        case $(. /etc/os-release; echo $NAME) in
+        DISTRO_NAME=$(. /etc/os-release; echo $NAME)
+        case $DISTRO_NAME in
 
         Debian*)
             echo "Installing cpp-ethereum dependencies on Debian Linux."
@@ -161,7 +162,6 @@ Linux)
 
         Fedora)
             echo "Installing cpp-ethereum dependencies on Fedora Linux."
-
             $SUDO dnf -qy install \
                 gcc-c++ \
                 boost-devel \
@@ -185,6 +185,7 @@ Linux)
 # See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
         Ubuntu|LinuxMint)
+            echo "Installing cpp-ethereum dependencies on Ubuntu."
             if [ "$TRAVIS" ]; then
                 # Setup prebuilt LLVM on Travis CI:
                 $SUDO apt-get -qy remove llvm  # Remove confilicting package.
@@ -203,6 +204,26 @@ Linux)
                 libminiupnpc-dev \
                 $LLVM_PACKAGES
             ;;
+
+        CentOS*)
+            echo "Installing cpp-ethereum dependencies on CentOS."
+            # Enable EPEL repo that contains leveldb-devel
+            $SUDO yum -y -q install epel-release
+            $SUDO yum -y -q install \
+                make \
+                gcc-c++ \
+                boost-devel \
+                leveldb-devel \
+                curl-devel \
+                libmicrohttpd-devel \
+                gmp-devel
+            ;;
+
+        *)
+            echo "Unsupported Linux distribution: $DISTRO_NAME."
+            exit 1
+            ;;
+
         esac
 
     elif [ -f "/etc/alpine-release" ]; then
