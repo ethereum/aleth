@@ -12,8 +12,6 @@ target_link_libraries(eth ${Eth_EVM_LIBRARIES})
 target_link_libraries(eth ${Web3_WEB3JSONRPC_LIBRARIES})
 target_link_libraries(eth ${Web3_WEBTHREE_LIBRARIES})
 target_link_libraries(eth jsonrpc::client)
-# TODO: Remove.
-target_compile_definitions(eth PRIVATE ETH_JSONRPC)
 
 if (EVMJIT)
 	# Do we need include paths here?
