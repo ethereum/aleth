@@ -144,6 +144,7 @@ Linux)
     elif [ -f "/etc/os-release" ]; then
 
         case $(. /etc/os-release; echo $NAME) in
+
         Debian*)
             echo "Installing cpp-ethereum dependencies on Debian Linux."
 
@@ -156,6 +157,18 @@ Linux)
                 libleveldb-dev \
                 libmicrohttpd-dev \
                 libminiupnpc-dev
+            ;;
+
+        Fedora)
+            echo "Installing cpp-ethereum dependencies on Fedora Linux."
+
+            $SUDO dnf -qy install \
+                gcc-c++ \
+                boost-devel \
+                leveldb-devel \
+                curl-devel \
+                libmicrohttpd-devel \
+                gmp-devel
             ;;
 
 #------------------------------------------------------------------------------
@@ -203,29 +216,6 @@ Linux)
     else
 
         case $(lsb_release -is) in
-
-#------------------------------------------------------------------------------
-# Fedora
-#------------------------------------------------------------------------------
-        Fedora)
-            #Fedora
-            echo "Installing cpp-ethereum dependencies on Fedora."
-
-            # Install "normal packages"
-            # See https://fedoraproject.org/wiki/Package_management_system.
-            dnf install \
-                autoconf \
-                automake \
-                boost-devel \
-                curl-devel \
-                gcc \
-                gcc-c++ \
-                gmp-devel \
-                leveldb-devel \
-                libtool \
-                miniupnpc-devel \
-                snappy-devel
-            ;;
 
 #------------------------------------------------------------------------------
 # OpenSUSE
