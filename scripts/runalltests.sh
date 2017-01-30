@@ -36,7 +36,7 @@ timeend=$(date +%s.%N)
 exec &> $workdir/testreport.txt
 exectime=$(echo "$timeend - $timestart" | bc)
 echo "REPORT"
-echo "Test execution time: "$exectime
+echo "Test execution time: $exectime s"
 cat $workdir/testerror.txt
 cat $workdir/testreport.txt | cat - $workdir/testlog.txt > temp && mv temp $workdir/testlog.txt
 
