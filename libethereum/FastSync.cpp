@@ -50,11 +50,14 @@ void FastSync::onPeerStatus(shared_ptr<EthereumPeerFace> _peer)
 void FastSync::syncPeer(std::shared_ptr<EthereumPeerFace> _peer)
 {
 	Guard guard(m_downloadingHeadersMutex);
-	BlockNumberRange const nextRange = m_headersToDownload.lowestRange(c_maxRequestHeaders);
-	if (nextRange.first == nextRange.second)
+
+	if (m_headersToDownload.empty())
 		// nothing left to download
 		// TODO add to the pool of free peers
 		return;
+
+	BlockNumberRange const nextRange = m_headersToDownload.lowestRange(c_maxRequestHeaders);
+	assert(nextRange.second > nextRange.first);
 
 	_peer->requestBlockHeaders(nextRange.first, nextRange.second - nextRange.first, 0, false);
 
@@ -64,6 +67,7 @@ void FastSync::syncPeer(std::shared_ptr<EthereumPeerFace> _peer)
 
 void FastSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeerFace> _peer, RLP const& _r)
 {
+	// TODO get highest block headers from several peers, average block height and select pivot point
 	if (_r.itemCount() == 1)
 		onHighestBlockHeaderDownloaded(_r[0].data());
 
@@ -107,14 +111,14 @@ FastSync::BlockNumberRangeMask FastSync::saveDownloadedHeaders(RLP const& _r)
 	BlockNumberRangeMask downloadedRangeMask(allHeadersRange());
 	try
 	{
-		for (size_t i = 0; i < _r.itemCount(); ++i)
+		for (RLP rlpHeader: _r)
 		{
-			BlockHeader const header(_r[i].data(), HeaderData);
+			BlockHeader const header(rlpHeader.data(), HeaderData);
 			unsigned const blockNumber = static_cast<unsigned>(header.number());
 
 			// TODO validate parent hashes
 
-			saveDownloadedHeader(blockNumber, _r[i].data().toBytes());
+			saveDownloadedHeader(blockNumber, rlpHeader.data().toBytes());
 			downloadedRangeMask.unionWith(blockNumber);
 		}
 	}
