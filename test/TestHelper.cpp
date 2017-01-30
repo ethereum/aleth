@@ -54,6 +54,9 @@ void printHelp()
 	cout << setw(30) << "-t <TestSuite>/<TestCase>" << std::endl;
 
 	cout << std::endl << "Debugging" << std::endl;
+	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests" << std::endl;
+	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests" << std::endl;
+	cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests" << std::endl;
 	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test" << std::endl;
 	cout << setw(30) << "--singletest <TestFile> <TestName>" << std::endl;
 	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed" << std::endl;
@@ -568,7 +571,10 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 			if (_expects.count("result"))
 			{
 				Options const& opt = Options::get();
-				if ((opt.test_d != -1 && opt.test_d != t.dataInd) || (opt.test_g != -1 && opt.test_g != t.gasInd) || (opt.test_v != -1 && opt.test_v != t.valInd))
+				//filter transactions if a specific index set in options
+				if ((opt.trDataIndex != -1 && opt.trDataIndex != t.dataInd) ||
+					(opt.trGasIndex != -1 && opt.trGasIndex != t.gasInd) ||
+					(opt.trValueIndex != -1 && opt.trValueIndex != t.valInd))
 					continue;
 
 				State postState = t.postState;
@@ -1074,9 +1080,9 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 
 Options::Options(int argc, char** argv)
 {
-	test_d = -1;
-	test_g = -1;
-	test_v = -1;
+	trDataIndex = -1;
+	trGasIndex = -1;
+	trValueIndex = -1;
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -1192,11 +1198,11 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--nonetwork")
 			nonetwork = true;
 		else if (arg == "-d" && i + 1 < argc)
-			test_d = atoi(argv[i + 1]);
+			trDataIndex = atoi(argv[i + 1]);
 		else if (arg == "-g" && i + 1 < argc)
-			test_g = atoi(argv[i + 1]);
+			trGasIndex = atoi(argv[i + 1]);
 		else if (arg == "-v" && i + 1 < argc)
-			test_v = atoi(argv[i + 1]);
+			trValueIndex = atoi(argv[i + 1]);
 	}
 
 	//Default option
