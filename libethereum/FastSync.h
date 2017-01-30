@@ -40,6 +40,8 @@ public:
 
 	void onPeerBlockHeaders(std::shared_ptr<EthereumPeerFace> _peer, RLP const& _r);
 
+	std::map<unsigned, bytes> const& downloadedHeaders() const { return m_downloadedHeaders;  }
+
 private:
 	using BlockNumberRangeMask = RangeMask<unsigned>;
 	using BlockNumberRange = BlockNumberRangeMask::Range;

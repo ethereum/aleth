@@ -93,8 +93,12 @@ void FastSync::extendHeadersToDownload(unsigned _newMaxBlockNumber)
 {
 	Guard guard(m_downloadingHeadersMutex);
 
-	m_headersToDownload.extendAll(_newMaxBlockNumber);
-	m_headersToDownload.unionWith(make_pair(m_headersToDownload.lastIn(), _newMaxBlockNumber));
+	unsigned const allEnd = m_headersToDownload.all().second;
+	if (_newMaxBlockNumber >= allEnd)
+	{
+		m_headersToDownload.extendAll(_newMaxBlockNumber);
+		m_headersToDownload.unionWith(make_pair(allEnd, _newMaxBlockNumber + 1));
+	}
 }
 
 
