@@ -1,29 +1,30 @@
-workdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"/testslog
-testdir=$workdir/../../../tests
-
-if [ -d $workdir ]; then
-rm -r $workdir
-fi
-mkdir $workdir
+workdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+#Clean the previous build
+cd $workdir
+rm -r cpp-ethereum
+rm -r tests
 exec &> $workdir/testlog.txt
-cd $testdir
 
-echo "Fetching the test repository:"
-git pull
-echo "Test Repository last commit hash:"
-git rev-parse HEAD
+#Clonning Repositories
+echo "Cloning Repositories"
+git clone https://github.com/ethereum/tests.git
+git clone --recursive https://github.com/ethereum/cpp-ethereum.git
+cd tests
+testHead=$(git rev-parse HEAD)
 cd ..
 cd cpp-ethereum
-echo "Fetching the cpp-ethereum develop:"
-git pull
-echo "cpp-ethereum last commit hash:"
-git rev-parse HEAD
+cppHead=$(git rev-parse HEAD)
+
+#Prepare test results
+mkdir build
 cd build
 echo "Make cpp-ethereum develop:"
+cmake ..
 make -j8
-
-exec &>> $workdir/testlog.txt
 cd test
+echo "Running all tests:"
+echo "cpp-ethereum HEAD "$cppHead
+echo "tests HEAD"$testHead
 ./testeth --all --exectimelog
 
 exec &> /dev/null
@@ -33,5 +34,4 @@ exec &> /dev/null
 date=$(date +%Y-%m-%d)
 
 mail -s "cpp-ethereum test results "$date dimitry@ethereum.org < $workdir/testlog.txt  #-A $workdir/results.zip
-mail -s "cpp-ethereum test results "$date chris@ethereum.org < $workdir/testlog.txt #-A $workdir/results.zip
-rm -r $workdir
+#mail -s "cpp-ethereum test results "$date chris@ethereum.org < $workdir/testlog.txt #-A $workdir/results.zip
