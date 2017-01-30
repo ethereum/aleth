@@ -81,6 +81,8 @@ public:
 
 	virtual void onPeerReceipts(std::shared_ptr<EthereumPeer> _peer, RLP const& _r) = 0;
 
+	virtual void onPeerRequestTimeout(std::shared_ptr<EthereumPeer> _peer, Asking _asking) = 0;
+
 	virtual void onPeerAborting() = 0;
 };
 

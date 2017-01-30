@@ -165,6 +165,8 @@ public:
 		clog(EthereumHostTrace) << "Receipts (" << dec << itemCount << "entries)";
 	}
 
+	void onPeerRequestTimeout(std::shared_ptr<EthereumPeer> /* _peer */, Asking /* _asking */) override {}
+
 private:
 	BlockChainSync& m_sync;
 	RecursiveMutex& m_syncMutex;
@@ -185,7 +187,7 @@ public:
 		}
 		catch (Exception const& e)
 		{
-			clog(EthereumHostTrace) << "Exception durinf fast sync:" << e.what();
+			clog(EthereumHostTrace) << "Exception during fast sync: " << e.what();
 		}
 	}
 
@@ -201,7 +203,7 @@ public:
 		}
 		catch (Exception const& e)
 		{
-			clog(EthereumHostTrace) << "Exception durinf fast sync:" << e.what();
+			clog(EthereumHostTrace) << "Exception during timeout handling in fast sync: " << e.what();
 		}
 	}
 
@@ -214,6 +216,18 @@ public:
 	void onPeerNodeData(std::shared_ptr<EthereumPeer> /*_peer*/, RLP const& /*_r*/) override {}
 
 	void onPeerReceipts(std::shared_ptr<EthereumPeer> /* _peer */, RLP const& /*_r*/) override {}
+
+	void onPeerRequestTimeout(std::shared_ptr<EthereumPeer> _peer, Asking _asking) override
+	{
+		try
+		{
+			m_fastSync.onPeerRequestTimeout(_peer, _asking);
+		}
+		catch (Exception const& e)
+		{
+			clog(EthereumHostTrace) << "Exception durinf fast sync: " << e.what();
+		}
+	}
 
 private:
 	FastSync& m_fastSync;

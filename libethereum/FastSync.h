@@ -21,6 +21,7 @@
 #include <libdevcore/Guards.h>
 #include <libdevcore/RangeMask.h>
 #include <libdevcore/RLP.h>
+#include <libethereum/CommonNet.h>
 
 #include <memory>
 
@@ -39,7 +40,9 @@ public:
 	void onPeerStatus(std::shared_ptr<EthereumPeerFace> _peer);
 
 	void onPeerBlockHeaders(std::shared_ptr<EthereumPeerFace> _peer, RLP const& _r);
-
+	
+	void onPeerRequestTimeout(std::shared_ptr<EthereumPeerFace> _peer, Asking _asking);
+	
 	std::map<unsigned, bytes> const& downloadedHeaders() const { return m_downloadedHeaders;  }
 
 private:

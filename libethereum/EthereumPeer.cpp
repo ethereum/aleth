@@ -220,8 +220,13 @@ void EthereumPeer::tick()
 	auto s = session();
 	time_t  now = std::chrono::system_clock::to_time_t(chrono::system_clock::now());
 	if (s && (now - m_lastAsk > 10 && m_asking != Asking::Nothing))
+	{
 		// timeout
 		s->disconnect(PingTimeout);
+
+		if (m_observer)
+			m_observer->onPeerRequestTimeout(dynamic_pointer_cast<EthereumPeer>(shared_from_this()), m_asking);
+	}
 }
 
 bool EthereumPeer::isConversing() const

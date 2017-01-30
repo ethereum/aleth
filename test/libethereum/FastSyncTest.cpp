@@ -205,4 +205,22 @@ BOOST_AUTO_TEST_CASE(FastSyncSuite_requestsNextRange)
 	BOOST_REQUIRE_EQUAL(peer->m_countRequested, 1024);
 }
 
+BOOST_AUTO_TEST_CASE(FastSyncSuite_requestsTheSameRangeIfTimeouted)
+{
+	peer->m_totalDifficulty = 100;
+	sync.onPeerStatus(peer);
+
+	bytes header(createHeaderData(2048));
+	sync.onPeerBlockHeaders(peer, RLP(header));
+
+	sync.onPeerRequestTimeout(peer, Asking::BlockHeaders);
+
+	shared_ptr<MockEthereumPeer> peer2(make_shared<MockEthereumPeer>());
+	peer2->m_totalDifficulty = 50;
+	sync.onPeerStatus(peer2);
+
+	BOOST_REQUIRE_EQUAL(peer2->m_startNumberRequested, 0);
+	BOOST_REQUIRE_EQUAL(peer2->m_countRequested, 1024);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

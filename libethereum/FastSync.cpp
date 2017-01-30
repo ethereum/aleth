@@ -153,3 +153,12 @@ void FastSync::updateDownloadingHeaders(std::shared_ptr<EthereumPeerFace> _peer,
 		m_headersToDownload.unionWith(notReturned);
 	}
 }
+
+void FastSync::onPeerRequestTimeout(std::shared_ptr<EthereumPeerFace> _peer, Asking _asking)
+{
+	assert(_asking == Asking::BlockHeaders);
+
+	// mark all requested data as pending again
+	BlockNumberRangeMask const emptyDownloaded(allHeadersRange());
+	updateDownloadingHeaders(_peer, emptyDownloaded);
+}
