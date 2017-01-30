@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 workdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 #Clean the previous build
 cd $workdir
@@ -24,7 +26,7 @@ make -j8
 cd test
 echo "Running all tests:"
 echo "cpp-ethereum HEAD "$cppHead
-echo "tests HEAD"$testHead
+echo "tests HEAD "$testHead
 ./testeth --all --exectimelog
 
 exec &> /dev/null
@@ -34,4 +36,4 @@ exec &> /dev/null
 date=$(date +%Y-%m-%d)
 
 mail -s "cpp-ethereum test results "$date dimitry@ethereum.org < $workdir/testlog.txt  #-A $workdir/results.zip
-#mail -s "cpp-ethereum test results "$date chris@ethereum.org < $workdir/testlog.txt #-A $workdir/results.zip
+mail -s "cpp-ethereum test results "$date chris@ethereum.org < $workdir/testlog.txt #-A $workdir/results.zip
