@@ -227,12 +227,16 @@ Linux)
         esac
 
     elif [ -f "/etc/alpine-release" ]; then
-#------------------------------------------------------------------------------
-# Alpine Linux
-#------------------------------------------------------------------------------
 
+        # Alpine Linux
         echo "Installing cpp-ethereum dependencies on Alpine Linux."
-        exit 1
+        $SUDO apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
+            g++ \
+            make \
+            boost-dev \
+            curl-dev \
+            libmicrohttpd-dev \
+            leveldb-dev
 
     else
 
