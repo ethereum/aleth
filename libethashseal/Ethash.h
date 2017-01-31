@@ -33,7 +33,7 @@ namespace dev
 namespace eth
 {
 
-class Ethash: public SealEngineFace
+class Ethash: public SealEngineBase
 {
 public:
 	Ethash();
@@ -53,7 +53,6 @@ public:
 	void setSealer(std::string const& _sealer) override { m_sealer = _sealer; }
 	void cancelGeneration() override { m_farm.stop(); }
 	void generateSeal(BlockHeader const& _bi) override;
-	void onSealGenerated(std::function<void(bytes const&)> const& _f) override;
 	bool shouldSeal(Interface* _i) override;
 
 	eth::GenericFarm<EthashProofOfWork>& farm() { return m_farm; }
@@ -69,8 +68,6 @@ public:
 	u256 calculateDifficulty(BlockHeader const& _bi, BlockHeader const& _parent) const;
 	u256 childGasLimit(BlockHeader const& _bi, u256 const& _gasFloorTarget = Invalid256) const;
 
-	virtual EVMSchedule const& evmSchedule(EnvInfo const&) const override;
-
 	void manuallySetWork(BlockHeader const& _work) { m_sealing = _work; }
 	void manuallySubmitWork(h256 const& _mixHash, Nonce _nonce);
 
@@ -84,7 +81,6 @@ private:
 	eth::GenericFarm<EthashProofOfWork> m_farm;
 	std::string m_sealer = "cpu";
 	BlockHeader m_sealing;
-	std::function<void(bytes const&)> m_onSealGenerated;
 };
 
 }
