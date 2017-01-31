@@ -272,11 +272,6 @@ void Ethash::generateSeal(BlockHeader const& _bi)
 		ensurePrecomputed((unsigned)_bi.number());
 }
 
-void Ethash::onSealGenerated(std::function<void(bytes const&)> const& _f)
-{
-	m_onSealGenerated = _f;
-}
-
 bool Ethash::shouldSeal(Interface*)
 {
 	return true;

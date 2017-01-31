@@ -105,7 +105,7 @@ public:
 	void onSealGenerated(std::function<void(bytes const&)> const& _f) override { m_onSealGenerated = _f; }
 	EVMSchedule const& evmSchedule(EnvInfo const&) const override;
 
-private:
+protected:
 	std::function<void(bytes const& s)> m_onSealGenerated;
 };
 
