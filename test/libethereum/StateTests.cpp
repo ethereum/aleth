@@ -49,6 +49,10 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
+		//For 100% at the log output
+		if (_fillin == false && Options::get().fillBlockchain)
+			continue;
+
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("pre") > 0, testname + "pre not set!");
 		BOOST_REQUIRE_MESSAGE(o.count("transaction") > 0, testname + "transaction not set!");
@@ -58,6 +62,8 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 
 		Listener::ExecTimeGuard guard{i.first};
 		importer.executeTest();
+		if (Options::get().fillBlockchain)
+			continue;
 
 		if (_fillin)
 		{

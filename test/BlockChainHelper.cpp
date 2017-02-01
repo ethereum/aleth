@@ -552,14 +552,14 @@ AccountMap TestBlockChain::defaultAccountMap()
 	return ret;
 }
 
-TestBlock TestBlockChain::defaultGenesisBlock(u256 const& _gasLimit)
+json_spirit::mObject TestBlockChain::defaultGenesisBlockJson()
 {
 	json_spirit::mObject blockObj;
 	blockObj["bloom"] = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
 	blockObj["coinbase"] = "0x8888f1f195afa192cfee860698584c030f4c9db1";
 	blockObj["difficulty"] = "131072";
 	blockObj["extraData"] = "0x42";
-	blockObj["gasLimit"] = toString(_gasLimit);
+	blockObj["gasLimit"] = "3141592";
 	blockObj["gasUsed"] = "0";
 	blockObj["mixHash"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 	blockObj["nonce"] = "0x0102030405060708";
@@ -570,6 +570,13 @@ TestBlock TestBlockChain::defaultGenesisBlock(u256 const& _gasLimit)
 	blockObj["timestamp"] = "0x54c98c81";
 	blockObj["transactionsTrie"] = "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421";
 	blockObj["uncleHash"] = "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347";
+	return blockObj;
+}
+
+TestBlock TestBlockChain::defaultGenesisBlock(u256 const& _gasLimit)
+{
+	json_spirit::mObject blockObj = defaultGenesisBlockJson();
+	blockObj["gasLimit"] = toString(_gasLimit);
 
 	json_spirit::mObject accountObj;
 	accountObj["balance"] = "10000000000";

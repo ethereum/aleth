@@ -99,17 +99,21 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	TestOutputHelper::initTest(_v);
+	if (!Options::get().fillBlockchain) //fill blockchain through state tests
+		TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
+		if (!Options::get().fillBlockchain)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BOOST_REQUIRE(o.count("pre"));
+		if (o.count("network"))
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
 
 		TestBlock genesisBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj());
 		if (_fillin)

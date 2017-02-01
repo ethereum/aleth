@@ -157,6 +157,9 @@ private:
 		eth::Network netId;
 	};
 	std::vector<transactionToExecute> m_transactions;
+	typedef std::pair<eth::State, eth::AccountMaskMap> stateAndMap;
+	typedef std::pair<transactionToExecute, stateAndMap> trExpectSection;
+	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", trExpectSection* _search = NULL) const;
 
 	json_spirit::mObject& m_testObject;
 	testType m_testType;
@@ -170,6 +173,8 @@ protected:
 };
 
 // helping functions
+std::string netIdToString(eth::Network _netId);
+eth::Network stringToNetId(std::string const& _netname);
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
 void replaceLLLinState(json_spirit::mObject& _o);
@@ -204,6 +209,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
+json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMaskMap const& _map);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
@@ -226,6 +232,7 @@ class Options
 public:
 	bool vmtrace = false;	///< Create EVM execution tracer
 	bool fillTests = false; ///< Create JSON test files from execution results
+	bool fillBlockchain = false; ///< Fill tests as a blockchain tests if possible
 	bool stats = false;		///< Execution time and stats for state tests
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool exectimelog = false; ///< Print execution time for each test suite
