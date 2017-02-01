@@ -78,6 +78,7 @@ public:
 	Client(
 		ChainParams const& _params,
 		int _networkID,
+		SyncMode _syncMode,
 		p2p::Host* _host,
 		std::shared_ptr<GasPricer> _gpForAdoption,
 		std::string const& _dbPath = std::string(),
@@ -205,7 +206,7 @@ public:
 protected:
 	/// Perform critical setup functions.
 	/// Must be called in the constructor of the finally derived class.
-	void init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId);
+	void init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _forceAction, u256 _networkId, SyncMode _syncMode);
 
 	/// InterfaceStub methods
 	BlockChain& bc() override { return m_bc; }

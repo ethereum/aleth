@@ -40,13 +40,14 @@ ClientTest* dev::eth::asClientTest(Interface* _c)
 ClientTest::ClientTest(
 	ChainParams const& _params,
 	int _networkID,
+	SyncMode _syncMode,
 	p2p::Host* _host,
 	std::shared_ptr<GasPricer> _gpForAdoption,
 	std::string const& _dbPath,
 	WithExisting _forceAction,
 	TransactionQueue::Limits const& _limits
 ):
-	Client(_params, _networkID, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
+	Client(_params, _networkID, _syncMode, _host, _gpForAdoption, _dbPath, _forceAction, _limits)
 {}
 
 void ClientTest::setChainParams(string const& _genesis)

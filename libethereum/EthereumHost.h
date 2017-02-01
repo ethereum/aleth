@@ -61,7 +61,7 @@ class EthereumHost: public p2p::HostCapability<EthereumPeer>, Worker
 {
 public:
 	/// Start server, but don't listen.
-	EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId);
+	EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId, SyncMode _syncMode);
 
 	/// Will block on network process events.
 	virtual ~EthereumHost();
@@ -119,6 +119,8 @@ private:
 	BlockQueue& m_bq;						///< Maintains a list of incoming blocks not yet on the blockchain (to be imported).
 
 	u256 m_networkId;
+
+	SyncMode m_syncMode = SyncMode::FullSync;
 
 	h256 m_latestBlockSent;
 	h256Hash m_transactionsSent;

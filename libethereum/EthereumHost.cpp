@@ -440,7 +440,7 @@ private:
 
 }
 
-EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId):
+EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, TransactionQueue& _tq, BlockQueue& _bq, u256 _networkId, SyncMode _syncMode):
 	HostCapability<EthereumPeer>(),
 	Worker		("ethsync"),
 	m_chain		(_ch),
@@ -448,6 +448,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_tq		(_tq),
 	m_bq		(_bq),
 	m_networkId	(_networkId),
+	m_syncMode(_syncMode),
 	m_hostData(make_shared<EthereumHostData>(m_chain, m_db))
 {
 	// TODO: Composition would be better. Left like that to avoid initialization
@@ -718,7 +719,7 @@ shared_ptr<Capability> EthereumHost::newPeerCapability(shared_ptr<SessionFace> c
 		m_chain.currentHash(),
 		m_chain.genesisHash(),
 		m_hostData,
-		m_fullSyncPeerObserver
+		m_syncMode == SyncMode::FastSync ? m_fastSyncPeerObserver : m_fullSyncPeerObserver
 	);
 
 	return ret;

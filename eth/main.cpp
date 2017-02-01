@@ -95,6 +95,7 @@ void help()
 		<< "    --oppose-dao-fork  Ignore DAO hard fork (default is to participate)." << endl
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
+		<< "    --fast  Enable fast syncing through state downloads." << endl
 		<< endl
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --ipc  Enable IPC server (default: on)." << endl
@@ -390,6 +391,7 @@ int main(int argc, char** argv)
 	/// Whisper
 	bool useWhisper = false;
 	bool testingMode = false;
+	bool fastSync = false;
 
 	string configFile = getDataDir() + "/config.rlp";
 	bytes b = contents(configFile);
@@ -871,6 +873,10 @@ int main(int argc, char** argv)
 			noPinning = true;
 			bootstrap = false;
 		}
+		else if (arg == "--fast")
+		{
+			fastSync = true;
+		}
 		else
 		{
 			cerr << "Invalid argument: " << arg << endl;
@@ -1021,7 +1027,8 @@ int main(int argc, char** argv)
 		nodeMode == NodeMode::Full ? caps : set<string>(),
 		netPrefs,
 		&nodesState,
-		testingMode
+		testingMode,
+		fastSync ? SyncMode::FastSync : SyncMode::FullSync
 	);
 
 	if (!extraData.empty())
