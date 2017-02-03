@@ -176,6 +176,7 @@ BOOST_AUTO_TEST_CASE(stCreateTest){}
 BOOST_AUTO_TEST_CASE(stRevertTest){}
 
 //Stress Tests
+BOOST_AUTO_TEST_CASE(stAttackTest){}
 BOOST_AUTO_TEST_CASE(stMemoryStressTest){}
 BOOST_AUTO_TEST_CASE(stQuadraticComplexityTest){}
 BOOST_AUTO_TEST_SUITE_END()

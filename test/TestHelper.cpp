@@ -242,7 +242,7 @@ bytes ImportTest::executeTest()
 
 					json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
 					genesisObj["coinbase"] = toString(m_envInfo.author());
-					genesisObj["gasLimit"] = toString(m_envInfo.gasLimit());
+					genesisObj["gasLimit"] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);
 					testObj["genesisBlockHeader"] = genesisObj;
 					testObj["pre"] = fillJsonWithState(m_statePre);
 
@@ -270,7 +270,7 @@ bytes ImportTest::executeTest()
 									{
 										u256 expectCoinbaseBalance = toInt(adr.second.get_obj()["balance"]);
 										expectCoinbaseBalance += u256("5000000000000000000");
-										adr.second.get_obj()["balance"] = toHex(expectCoinbaseBalance, HexPrefix::Add);
+										adr.second.get_obj()["balance"] = toCompactHex(expectCoinbaseBalance, HexPrefix::Add);
 									}
 								}
 							}
@@ -279,10 +279,15 @@ bytes ImportTest::executeTest()
 						}
 					}
 
+					json_spirit::mObject rewriteHeader;
+					rewriteHeader["gasLimit"] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);
+					rewriteHeader["updatePoW"] = "1";
+
 					json_spirit::mArray blocksArr;
 					json_spirit::mArray transcArr;
 					transcArr.push_back(fillJsonWithTransaction(m_transactions[i].transaction));
 					json_spirit::mObject blocksObj;
+					blocksObj["blockHeaderPremine"] = rewriteHeader;
 					blocksObj["transactions"] = transcArr;
 					blocksObj["uncleHeaders"] = json_spirit::mArray();
 					blocksArr.push_back(blocksObj);
