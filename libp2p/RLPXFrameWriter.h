@@ -22,6 +22,7 @@
 
 #pragma once
 
+#include <deque>
 #include <libdevcore/Guards.h>
 #include "RLPXFrameCoder.h"
 #include "RLPXPacket.h"

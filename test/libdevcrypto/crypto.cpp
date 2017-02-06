@@ -21,6 +21,7 @@
  * Crypto test functions.
  */
 
+#include <libdevcore/Guards.h>
 #include <secp256k1/include/secp256k1.h>
 #include <cryptopp/keccak.h>
 #include <cryptopp/pwdbased.h>

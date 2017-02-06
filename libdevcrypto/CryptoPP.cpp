@@ -19,11 +19,11 @@
  * @date 2014
  */
 
+#include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "CryptoPP.h"
 #include <cryptopp/eccrypto.h>
 #include <cryptopp/osrng.h>
 #include <cryptopp/oids.h>
-#include <libdevcore/Guards.h>
 #include <libdevcore/Assertions.h>
 #include <libdevcore/SHA3.h>
 #include "ECDHE.h"
@@ -222,7 +222,7 @@ void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 	auto& ctx = Secp256k1PPCtx::get();
 	ECIES<ECP>::Encryptor e;
 	{
-		std::lock_guard<std::mutex> l(ctx.x_params);
+		Guard l(ctx.x_params);
 		e.AccessKey().Initialize(ctx.m_params, publicToPoint(_k));
 	}
 
@@ -244,7 +244,7 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	auto& ctx = Secp256k1PPCtx::get();
 	CryptoPP::ECIES<CryptoPP::ECP>::Decryptor d;
 	{
-		std::lock_guard<std::mutex> l(ctx.x_params);
+		Guard l(ctx.x_params);
 		d.AccessKey().Initialize(ctx.m_params, secretToExponent(_k));
 	}
 

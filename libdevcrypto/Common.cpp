@@ -20,15 +20,14 @@
  * @date 2014
  */
 
+#include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
-#include <thread>
 #include <secp256k1/include/secp256k1.h>
 #include <cryptopp/aes.h>
 #include <cryptopp/pwdbased.h>
 #include <cryptopp/sha.h>
 #include <cryptopp/modes.h>
 #include <libscrypt/libscrypt.h>
-#include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
 #include "AES.h"
@@ -227,7 +226,7 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 	int v;
 	if (!secp256k1_ecdsa_sign_compact(Secp256k1Context::get(), _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
 		return Signature();
-	ss.v = v;
+	ss.v = static_cast<byte>(v);
 	if (ss.s > c_secp256k1n / 2)
 	{
 		ss.v = ss.v ^ 1;
