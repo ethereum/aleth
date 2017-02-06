@@ -7,8 +7,6 @@ grade: devel
 confinement: devmode
 
 apps:
-  bench:
-    command: bench
   eth:
     command: eth
   ethkey:
