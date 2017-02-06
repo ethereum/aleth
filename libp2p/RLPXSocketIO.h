@@ -43,8 +43,6 @@ public:
 	
 	void doWrite();
 	
-	bool congested() const { return !!m_congestion; }
-	
 private:
 	static std::vector<RLPXFrameWriter> writers(unsigned _capacity);
 	
