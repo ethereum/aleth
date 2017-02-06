@@ -139,6 +139,41 @@ void EthereumPeer::requestStatus(u256 _hostNetworkId, u256 _chainTotalDifficulty
 	sealAndSend(s);
 }
 
+bool EthereumPeer::validateStatus(h256 const& _genesisHash, vector<unsigned> const& _protocolVersions, u256 const& _networkId)
+{
+	std::shared_ptr<SessionFace> s = session();
+	if (!s)
+		return false; // Expired
+
+	if (m_genesisHash != _genesisHash)
+	{
+		disable("Invalid genesis hash");
+		return false;
+	}
+	if (find(_protocolVersions.begin(), _protocolVersions.end(), m_protocolVersion) == _protocolVersions.end())
+	{
+		disable("Invalid protocol version.");
+		return false;
+	}
+	if (m_networkId != _networkId)
+	{
+		disable("Invalid network identifier.");
+		return false;
+	}
+	if (s->info().clientVersion.find("/v0.7.0/") != string::npos)
+	{
+		disable("Blacklisted client version.");
+		return false;
+	}
+	if (m_asking != Asking::State && m_asking != Asking::Nothing)
+	{
+		disable("Peer banned for unexpected status message.");
+		return false;
+	}
+
+	return true;
+}
+
 void EthereumPeer::requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse)
 {
 	if (m_asking != Asking::Nothing)

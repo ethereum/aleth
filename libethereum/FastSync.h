@@ -24,6 +24,7 @@
 #include <libethereum/CommonNet.h>
 
 #include <memory>
+#include <vector>
 
 namespace dev
 {
@@ -35,7 +36,7 @@ class EthereumPeerFace;
 class FastSync
 {
 public:
-	FastSync();
+	FastSync(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions, u256 const& _networkId);
 
 	void onPeerStatus(std::shared_ptr<EthereumPeerFace> _peer);
 
@@ -58,6 +59,10 @@ private:
 	void updateDownloadingHeaders(std::shared_ptr<EthereumPeerFace> _peer, const BlockNumberRangeMask& _downloaded);
 
 private:
+	u256 const m_genesisHash;
+	std::vector<unsigned> const m_protocolVersions;
+	u256 const m_networkId;
+
 	u256 m_maxDifficulty;				///< Highest peer difficulty
 
 	mutable Mutex m_downloadingHeadersMutex;

@@ -29,13 +29,17 @@ namespace
 unsigned const c_maxRequestHeaders = 1024;
 }
 
-FastSync::FastSync()
+FastSync::FastSync(h256 const& _genesisHash, vector<unsigned> const& _protocolVersions, u256 const& _networkId):
+	m_genesisHash(_genesisHash),
+	m_protocolVersions(_protocolVersions),
+	m_networkId(_networkId)
 {
 }
 
 void FastSync::onPeerStatus(shared_ptr<EthereumPeerFace> _peer)
 {
-	// TODO validate genesisHash, protocolVersion, networkId etc.
+	if (!_peer->validateStatus(m_genesisHash, m_protocolVersions, m_networkId))
+		return;
 
 	// TODO don't request header if it's already in block queue
 	if (_peer->totalDifficulty() > m_maxDifficulty)

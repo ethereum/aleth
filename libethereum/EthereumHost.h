@@ -73,7 +73,6 @@ public:
 	void reset();
 
 	bool isSyncing() const;
-	bool isBanned(p2p::NodeID const& _id) const { return !!m_banned.count(_id); }
 
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
@@ -124,8 +123,6 @@ private:
 
 	h256 m_latestBlockSent;
 	h256Hash m_transactionsSent;
-
-	std::unordered_set<p2p::NodeID> m_banned;
 
 	bool m_newTransactions = false;
 	bool m_newBlocks = false;

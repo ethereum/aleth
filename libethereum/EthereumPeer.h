@@ -47,6 +47,10 @@ public:
 	/// Peer's latest block's total difficulty.
 	virtual u256 totalDifficulty() const = 0;
 
+	/// Validates whether peer is able to communicate with the host, disables peer if not
+	virtual bool validateStatus(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions, u256 const& _networkId) = 0;
+
+	/// Request specified headers from peer.
 	virtual void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse) = 0;
 	virtual void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse) = 0;
 
@@ -138,7 +142,10 @@ public:
 	/// Abort sync and reset fetch
 	void setIdle();
 
-	/// Request hashes for given parent hash.
+	/// Validates whether peer is able to communicate with the host, disables peer if not
+	bool validateStatus(h256 const& _genesisHash, std::vector<unsigned> const& _protocolVersions, u256 const& _networkId) override;
+
+	/// Request specified headers from peer.
 	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned _skip, bool _reverse) override;
 	void requestBlockHeaders(unsigned _startNumber, unsigned _count, unsigned _skip, bool _reverse) override;
 

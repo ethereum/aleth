@@ -35,6 +35,8 @@ public:
 	/// Peer's latest block's total difficulty.
 	u256 totalDifficulty() const override { return m_totalDifficulty; }
 
+	bool validateStatus(h256 const& /*_genesisHash*/, vector<unsigned> const& /*_protocolVersions*/, u256 const& /*_networkId*/) override { return true; }
+		
 	void requestBlockHeaders(h256 const& _startHash, unsigned _count, unsigned /*_skip*/, bool /*_reverse*/) override
 	{
 		m_startHashRequested = _startHash;
@@ -99,7 +101,8 @@ class FastSyncFixture: public TestOutputHelper
 {
 public:
 	FastSyncFixture():
-		peer(make_shared<MockEthereumPeer>())
+		peer(make_shared<MockEthereumPeer>()),
+		sync(h256("0xd4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3") , {62, 63}, 2)
 	{
 	}
 

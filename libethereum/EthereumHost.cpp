@@ -456,7 +456,7 @@ EthereumHost::EthereumHost(BlockChain const& _ch, OverlayDB const& _db, Transact
 	m_sync.reset(new BlockChainSync(*this));
 	m_fullSyncPeerObserver = make_shared<FullSyncPeerObserver>(*m_sync, x_sync, m_tq);
 
-	m_fastSync.reset(new FastSync());
+	m_fastSync.reset(new FastSync(chain().genesisHash(), { protocolVersion(), EthereumHost::c_oldProtocolVersion }, networkId()));
 	m_fastSyncPeerObserver = make_shared<FastSyncPeerObserver>(*m_fastSync);
 
 	m_latestBlockSent = _ch.currentHash();

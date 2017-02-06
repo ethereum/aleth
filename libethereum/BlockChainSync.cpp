@@ -191,22 +191,7 @@ void BlockChainSync::onPeerStatus(std::shared_ptr<EthereumPeer> _peer)
 {
 	RecursiveGuard l(x_sync);
 	DEV_INVARIANT_CHECK;
-	std::shared_ptr<SessionFace> session = _peer->session();
-	if (!session)
-		return; // Expired
-	if (_peer->m_genesisHash != host().chain().genesisHash())
-		_peer->disable("Invalid genesis hash");
-	else if (_peer->m_protocolVersion != host().protocolVersion() && _peer->m_protocolVersion != EthereumHost::c_oldProtocolVersion)
-		_peer->disable("Invalid protocol version.");
-	else if (_peer->m_networkId != host().networkId())
-		_peer->disable("Invalid network identifier.");
-	else if (session->info().clientVersion.find("/v0.7.0/") != string::npos)
-		_peer->disable("Blacklisted client version.");
-	else if (host().isBanned(session->id()))
-		_peer->disable("Peer banned for previous bad behaviour.");
-	else if (_peer->m_asking != Asking::State && _peer->m_asking != Asking::Nothing)
-		_peer->disable("Peer banned for unexpected status message.");
-	else
+	if (_peer->validateStatus(host().chain().genesisHash(), { host().protocolVersion(), EthereumHost::c_oldProtocolVersion }, host().networkId()))
 		syncPeer(_peer, false);
 }
 
@@ -227,13 +212,13 @@ void BlockChainSync::syncPeer(std::shared_ptr<EthereumPeer> _peer, bool _force)
 
 	u256 syncingDifficulty = std::max(m_syncingTotalDifficulty, td);
 
-	if (_force || _peer->m_totalDifficulty > syncingDifficulty)
+	if (_force || _peer->totalDifficulty() > syncingDifficulty)
 	{
 		// start sync
-		m_syncingTotalDifficulty = _peer->m_totalDifficulty;
+		m_syncingTotalDifficulty = _peer->totalDifficulty();
 		if (m_state == SyncState::Idle || m_state == SyncState::NotSynced)
 			m_state = SyncState::Blocks;
-		_peer->requestBlockHeaders(_peer->m_latestHash, 1, 0, false);
+		_peer->requestBlockHeaders(_peer->latestHash(), 1, 0, false);
 		_peer->m_requireTransactions = true;
 		return;
 	}
