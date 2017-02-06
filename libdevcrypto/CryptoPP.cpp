@@ -28,6 +28,8 @@
 #include <libdevcore/SHA3.h>
 #include "ECDHE.h"
 
+static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
+
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
