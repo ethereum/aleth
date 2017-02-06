@@ -22,6 +22,7 @@
 #include "RLPXFrameCoder.h"
 
 #include <libdevcore/Assertions.h>
+#include <libdevcore/SHA3.h>
 #include "RLPxHandshake.h"
 #include "RLPXPacket.h"
 

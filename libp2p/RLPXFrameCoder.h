@@ -23,6 +23,9 @@
 #pragma once
 
 #include <memory>
+#include <cryptopp/aes.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/modes.h>
 #include <libdevcore/Guards.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>

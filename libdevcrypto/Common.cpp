@@ -21,21 +21,23 @@
  */
 
 #include "Common.h"
-#include <cstdint>
-#include <chrono>
 #include <thread>
-#include <mutex>
+#include <secp256k1/include/secp256k1.h>
+#include <cryptopp/aes.h>
+#include <cryptopp/pwdbased.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/modes.h>
 #include <libscrypt/libscrypt.h>
 #include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
-#include <secp256k1/include/secp256k1.h>
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
+using namespace CryptoPP;
 
 class Secp256k1Context
 {

@@ -22,6 +22,14 @@
  */
 
 #include <secp256k1/include/secp256k1.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/pwdbased.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/eccrypto.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/oids.h>
+#include <cryptopp/dsa.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
@@ -140,7 +148,7 @@ BOOST_AUTO_TEST_CASE(cryptopp_cryptopp_secp256k1libport)
 	{
 		KeyPair key(secret);
 		Public pkey = key.pub();
-		signer.AccessKey().Initialize(params(), secretToExponent(secret));
+		signer.AccessKey().Initialize(params(), Integer(secret.data(), Secret::size));
 		
 		h256 he(sha3(e));
 		Integer heInt(he.asBytes().data(), 32);
@@ -725,7 +733,7 @@ BOOST_AUTO_TEST_CASE(recoverVgt3)
 	{
 		KeyPair key(secret);
 		Public pkey = key.pub();
-		signer.AccessKey().Initialize(params(), secretToExponent(secret));
+		signer.AccessKey().Initialize(params(), Integer(secret.data(), Secret::size));
 
 		h256 he(sha3(e));
 		Integer heInt(he.asBytes().data(), 32);

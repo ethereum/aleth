@@ -20,6 +20,8 @@
  * RLPx test functions.
  */
 
+#include <cryptopp/hmac.h>
+#include <cryptopp/sha.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
