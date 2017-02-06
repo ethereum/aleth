@@ -20,7 +20,10 @@
  * RLPx test functions.
  */
 
+#include <cryptopp/aes.h>
 #include <cryptopp/hmac.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/modes.h>
 #include <cryptopp/sha.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>

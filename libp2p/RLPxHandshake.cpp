@@ -27,7 +27,6 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::crypto;
-using namespace CryptoPP;
 
 void RLPXHandshake::writeAuth()
 {
