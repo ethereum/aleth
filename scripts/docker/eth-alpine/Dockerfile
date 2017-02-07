@@ -20,7 +20,7 @@ RUN apk add --no-cache \
     && sed -i -E -e 's/include <sys\/poll.h>/include <poll.h>/' /usr/include/boost/asio/detail/socket_types.hpp \
     && git clone --recursive https://github.com/ethereum/cpp-ethereum --branch develop --single-branch --depth 1 \
     && mkdir /build && cd /build \
-    && cmake /cpp-ethereum -DCMAKE_BUILD_TYPE=Release \
+    && cmake /cpp-ethereum -DCMAKE_BUILD_TYPE=RelWithDebInfo -DTOOLS=Off -DTESTS=Off \
     && make -j8 \
     && make install \
     && cd / && rm /build -rf \
