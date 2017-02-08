@@ -62,6 +62,8 @@ public:
 
 	/// Request receipts for specified blocks from peer.
 	virtual void requestReceipts(h256s const& _blocks) = 0;
+
+	virtual void addRating(int _r) = 0;
 };
 
 class EthereumPeerObserverFace
@@ -157,6 +159,8 @@ public:
 
 	/// Request receipts for specified blocks from peer.
 	void requestReceipts(h256s const& _blocks) override;
+
+	void addRating(int _r) override { p2p::Capability::addRating(_r); }
 
 	/// Check if this node is rude.
 	bool isRude() const;

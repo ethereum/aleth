@@ -57,18 +57,21 @@ public:
 	/// Request receipts for specified blocks from peer.
 	void requestReceipts(h256s const& /*_blocks*/) override {}
 
+	void addRating(int _r) override { m_rating += _r; }
+
 	h256 m_latestHash;
 	u256 m_totalDifficulty;
 
 	h256 m_startHashRequested;
 	unsigned m_startNumberRequested = 0;
 	unsigned m_countRequested = 0;
+	int m_rating = 0;
 };
 
-bytes createHeaderData(unsigned blockNumber)
+bytes createHeaderData(unsigned _blockNumber)
 {
 	BlockHeader header;
-	header.setNumber(blockNumber);
+	header.setNumber(_blockNumber);
 	RLPStream headerRLP;
 	header.streamRLP(headerRLP, WithSeal);
 	
@@ -78,21 +81,53 @@ bytes createHeaderData(unsigned blockNumber)
 	return headersRLP.out();
 }
 
-bytes createHeadersData(const vector<unsigned>& blockNumbers)
+pair<bytes, h256s> createHeadersDataAndHashes(const vector<unsigned>& _blockNumbers, const h256& _parentHash = h256())
 {
-	RLPStream headersRLP(blockNumbers.size());
+	RLPStream headersRLP(_blockNumbers.size());
+	h256s hashes;
 
-	for (unsigned blockNumber : blockNumbers)
+	h256 prevHash = _parentHash;
+	for (unsigned blockNumber : _blockNumbers)
 	{
 		BlockHeader header;
 		header.setNumber(blockNumber);
+		header.setParentHash(prevHash);
+
 		RLPStream headerRLP;
 		header.streamRLP(headerRLP, WithSeal);
 
 		headersRLP.append(RLP(headerRLP.out()));
+
+		prevHash = header.hash();
+		hashes.push_back(prevHash);
 	}
 
-	return headersRLP.out();
+	return make_pair(headersRLP.out(), hashes);
+}
+
+bytes createHeadersData(const vector<unsigned>& _blockNumbers, const h256& _parentHash = h256())
+{
+	bytes ret;
+	tie(ret, ignore) = createHeadersDataAndHashes(_blockNumbers, _parentHash);
+	return ret;
+}
+
+bool mapContainsAll(std::map<unsigned, bytes> _map, const vector<unsigned>& _numbers)
+{
+	for (unsigned number : _numbers)
+		if (_map.find(number) == _map.end())
+			return false;
+
+	return true;
+}
+
+bool mapContainsNone(std::map<unsigned, bytes> _map, const vector<unsigned>& _numbers)
+{
+	for (unsigned number : _numbers)
+		if (_map.find(number) != _map.end())
+			return false;
+	
+	return true;
 }
 
 }
@@ -188,9 +223,7 @@ BOOST_AUTO_TEST_CASE(FastSyncSuite_downloadedHeadersAreSaved)
 	sync.onPeerBlockHeaders(peer, RLP(headers));
 
 	std::map<unsigned, bytes> const& downloadedHeaders = sync.downloadedHeaders();
-	BOOST_REQUIRE(downloadedHeaders.find(0) != downloadedHeaders.end());
-	BOOST_REQUIRE(downloadedHeaders.find(1) != downloadedHeaders.end());
-	BOOST_REQUIRE(downloadedHeaders.find(2) != downloadedHeaders.end());
+	BOOST_REQUIRE(mapContainsAll(downloadedHeaders, {0, 1, 2}));
 }
 
 BOOST_AUTO_TEST_CASE(FastSyncSuite_requestsNextRange)
@@ -224,6 +257,84 @@ BOOST_AUTO_TEST_CASE(FastSyncSuite_requestsTheSameRangeIfTimeouted)
 
 	BOOST_REQUIRE_EQUAL(peer2->m_startNumberRequested, 0);
 	BOOST_REQUIRE_EQUAL(peer2->m_countRequested, 1024);
+}
+
+BOOST_AUTO_TEST_CASE(FastSyncSuite_ignoresNotExpectedHeaders)
+{
+	peer->m_totalDifficulty = 100;
+	sync.onPeerStatus(peer);
+
+	bytes header(createHeaderData(2048));
+	sync.onPeerBlockHeaders(peer, RLP(header));
+
+	bytes headers(createHeadersData({ 1025, 1026, 1027 }));
+	sync.onPeerBlockHeaders(peer, RLP(headers));
+
+	std::map<unsigned, bytes> const& downloadedHeaders = sync.downloadedHeaders();
+	BOOST_REQUIRE(mapContainsNone(downloadedHeaders, { 1025, 1026, 1027 }));
+
+	BOOST_REQUIRE_LT(peer->m_rating, 0);
+}
+
+BOOST_AUTO_TEST_CASE(FastSyncSuite_ignoresHeadersWithIncorrectParentHash)
+{
+	peer->m_totalDifficulty = 100;
+	sync.onPeerStatus(peer);
+
+	bytes header(createHeaderData(2048));
+	sync.onPeerBlockHeaders(peer, RLP(header));
+
+	bytes headers1(createHeadersData({ 0, 1, 2 }));
+	sync.onPeerBlockHeaders(peer, RLP(headers1));
+
+	bytes headers2(createHeadersData({ 3, 4, 5 }));
+	sync.onPeerBlockHeaders(peer, RLP(headers2));
+
+	std::map<unsigned, bytes> const& downloadedHeaders = sync.downloadedHeaders();
+	BOOST_REQUIRE(mapContainsNone(downloadedHeaders, { 3, 4, 5 }));
+
+	BOOST_REQUIRE_LT(peer->m_rating, 0);
+}
+
+BOOST_AUTO_TEST_CASE(FastSyncSuite_savesHeadersWithCorrectParentHash)
+{
+	peer->m_totalDifficulty = 100;
+	sync.onPeerStatus(peer);
+
+	bytes header(createHeaderData(2048));
+	sync.onPeerBlockHeaders(peer, RLP(header));
+
+	bytes headers1;
+	h256s hashes1;
+	tie(headers1, hashes1) = createHeadersDataAndHashes({ 0, 1, 2 });
+	sync.onPeerBlockHeaders(peer, RLP(headers1));
+
+	bytes headers2(createHeadersData({ 3, 4, 5 }, hashes1.back()));
+	sync.onPeerBlockHeaders(peer, RLP(headers2));
+
+	std::map<unsigned, bytes> const& downloadedHeaders = sync.downloadedHeaders();
+	BOOST_REQUIRE(mapContainsAll(downloadedHeaders, { 3, 4, 5 }));
+}
+
+BOOST_AUTO_TEST_CASE(FastSyncSuite_deletesOlderHeadersWithIncorrectParentHash)
+{
+	peer->m_totalDifficulty = 100;
+	sync.onPeerStatus(peer);
+
+	bytes header(createHeaderData(2048));
+	sync.onPeerBlockHeaders(peer, RLP(header));
+
+	bytes headers1(createHeadersData({ 0, 1, 2 }));
+	bytes headers2(createHeadersData({ 3, 4, 5 })); // incorrect parent hash for block 3
+	bytes headers3(createHeadersData({ 10, 11, 12 })); // incorrect parent hash for block 10, but we won't know that until we receive 9
+
+	sync.onPeerBlockHeaders(peer, RLP(headers3));
+	sync.onPeerBlockHeaders(peer, RLP(headers2));
+	sync.onPeerBlockHeaders(peer, RLP(headers1));
+
+	std::map<unsigned, bytes> const& downloadedHeaders = sync.downloadedHeaders();
+	BOOST_REQUIRE(mapContainsAll(downloadedHeaders, { 0, 1, 2, 10, 11, 12 }));
+	BOOST_REQUIRE(mapContainsNone(downloadedHeaders, { 3, 4, 5 }));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

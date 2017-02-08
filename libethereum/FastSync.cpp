@@ -63,7 +63,7 @@ void FastSync::syncPeer(std::shared_ptr<EthereumPeerFace> _peer)
 	BlockNumberRange const nextRange = m_headersToDownload.lowestRange(c_maxRequestHeaders);
 	assert(nextRange.second > nextRange.first);
 
-	_peer->requestBlockHeaders(nextRange.first, nextRange.second - nextRange.first, 0, false);
+	_peer->requestBlockHeaders(nextRange.first, rangeLength(nextRange), 0, false);
 
 	m_headersToDownload -= nextRange;
 	m_peersDownloadingHeaders[_peer] = nextRange;
@@ -75,9 +75,20 @@ void FastSync::onPeerBlockHeaders(std::shared_ptr<EthereumPeerFace> _peer, RLP c
 	if (_r.itemCount() == 1)
 		onHighestBlockHeaderDownloaded(_r[0].data());
 
-	BlockNumberRangeMask const dowloadedRangeMask = saveDownloadedHeaders(_r);
+	BlockNumberRange const expectedRange = downloadingRange(_peer);
+	if (isEmptyRange(expectedRange))
+	{
+		// peer returned headers when not asked, EthereumPeer checks that, so we shoudln't get here
+		clog(p2p::NetImpolite) << "Received not expected headers";
+		_peer->addRating(-1);
+	}
 
-	updateDownloadingHeaders(_peer, dowloadedRangeMask);
+	pair<BlockNumberRangeMask, bool> const saveResult = saveDownloadedHeaders(_r, expectedRange);
+
+	updateDownloadingHeaders(_peer, saveResult.first);
+
+	if (!saveResult.second)
+		_peer->addRating(-1);
 
 	syncPeer(_peer);
 }
@@ -110,19 +121,52 @@ void FastSync::extendHeadersToDownload(unsigned _newMaxBlockNumber)
 }
 
 
-FastSync::BlockNumberRangeMask FastSync::saveDownloadedHeaders(RLP const& _r)
+FastSync::BlockNumberRange FastSync::downloadingRange(std::shared_ptr<EthereumPeerFace> _peer) const
 {
+	Guard guard(m_downloadingHeadersMutex);
+
+	auto itExpectedRange = m_peersDownloadingHeaders.find(_peer);
+	if (itExpectedRange == m_peersDownloadingHeaders.end())
+		// peer returned headers when not asked, EthereumPeer checks that, so we shoudln't get here
+		return BlockNumberRange();
+
+	return itExpectedRange->second;
+}
+
+pair<FastSync::BlockNumberRangeMask, bool> FastSync::saveDownloadedHeaders(RLP const& _r, BlockNumberRange const& expectedRange)
+{
+	bool politePeer = true;
+
 	BlockNumberRangeMask downloadedRangeMask(allHeadersRange());
 	try
 	{
-		for (RLP rlpHeader: _r)
+		for (RLP rlpHeader : _r)
 		{
 			BlockHeader const header(rlpHeader.data(), HeaderData);
 			unsigned const blockNumber = static_cast<unsigned>(header.number());
 
-			// TODO validate parent hashes
+			if (!isNumberInRange(expectedRange, blockNumber))
+			{
+				// peer giving us not expected headers
+				clog(p2p::NetImpolite) << "Unexpected block header " << blockNumber;
+				politePeer = false;
+				break;
+			}
 
-			saveDownloadedHeader(blockNumber, rlpHeader.data().toBytes());
+			// TODO check also against the last block imported to database
+			if (!checkDownloadedHash(blockNumber - 1, header.parentHash()))
+			{
+				// mismatching parent hash, don't add it and all the following
+				clog(p2p::NetImpolite) << "Unknown parent hash for block header " << blockNumber << " " << header.hash();
+				politePeer = false;
+				break;
+			}
+
+			if (!checkDownloadedParentHash(blockNumber + 1, header.parentHash()))
+				removeConsecutiveHeadersFromDownloaded(blockNumber + 1);
+
+			saveDownloadedHeader(blockNumber, header.hash(), header.parentHash(), rlpHeader.data().toBytes());
+
 			downloadedRangeMask.unionWith(blockNumber);
 		}
 	}
@@ -131,7 +175,7 @@ FastSync::BlockNumberRangeMask FastSync::saveDownloadedHeaders(RLP const& _r)
 		cwarn << "Exception during fast sync headers downloading: " << e.what();
 	}
 
-	return downloadedRangeMask;
+	return make_pair(downloadedRangeMask, politePeer);
 }
 
 FastSync::BlockNumberRange FastSync::allHeadersRange() const
@@ -140,10 +184,34 @@ FastSync::BlockNumberRange FastSync::allHeadersRange() const
 	return m_headersToDownload.all();
 }
 
-void FastSync::saveDownloadedHeader(unsigned _blockNumber, bytes&& _headerData)
+bool FastSync::checkDownloadedHash(unsigned _blockNumber, h256 const& _hash) const
 {
-	Guard guard(m_downloadedHeadersMutex);
-	m_downloadedHeaders.emplace(_blockNumber, _headerData);
+	auto const block = m_downloadedHeaders.find(_blockNumber);
+	return block == m_downloadedHeaders.end() || _hash == block->second.hash;
+}
+
+bool FastSync::checkDownloadedParentHash(unsigned _blockNumber, h256 const& _hash) const
+{
+	auto const block = m_downloadedHeaders.find(_blockNumber);
+	return block == m_downloadedHeaders.end() || _hash == block->second.parentHash;
+}
+
+void FastSync::removeConsecutiveHeadersFromDownloaded(unsigned _startNumber)
+{
+	unsigned prevNumber = 0;
+	auto block = m_downloadedHeaders.find(_startNumber);
+
+	while (block != m_downloadedHeaders.end() && (prevNumber == 0 || block->first == prevNumber + 1))
+	{
+		prevNumber = block->first;
+		block = m_downloadedHeaders.erase(block);
+	}
+}
+
+void FastSync::saveDownloadedHeader(unsigned _blockNumber, h256 const& _hash, h256 const& _parentHash, bytes&& _headerData)
+{
+	Header headerData{ _headerData, _hash, _parentHash };
+	m_downloadedHeaders.emplace(_blockNumber, headerData);
 }
 
 void FastSync::updateDownloadingHeaders(std::shared_ptr<EthereumPeerFace> _peer, const BlockNumberRangeMask& _downloaded)
