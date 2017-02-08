@@ -100,9 +100,6 @@ public:
 	/// @returns true if transaction is contract-creation.
 	bool isCreation() const { return m_type == ContractCreation; }
 
-	/// @returns true if transaction is message-call.
-	bool isMessageCall() const { return m_type == MessageCall; }
-
 	/// Serialises this transaction to an RLPStream.
 	void streamRLP(RLPStream& _s, IncludeSignature _sig = WithSignature, bool _forEip155hash = false) const;
 
@@ -114,8 +111,6 @@ public:
 
 	/// @returns the amount of ETH to be transferred by this (message-call) transaction, in Wei. Synonym for endowment().
 	u256 value() const { return m_value; }
-	/// @returns the amount of ETH to be endowed by this (contract-creation) transaction, in Wei. Synonym for value().
-	u256 endowment() const { return m_value; }
 
 	/// @returns the base fee and thus the implied exchange rate of ETH to GAS.
 	u256 gasPrice() const { return m_gasPrice; }
@@ -134,8 +129,6 @@ public:
 
 	/// @returns the data associated with this (message-call) transaction. Synonym for initCode().
 	bytes const& data() const { return m_data; }
-	/// @returns the initialisation code associated with this (contract-creation) transaction. Synonym for data().
-	bytes const& initCode() const { return m_data; }
 
 	/// @returns the transaction-count of the sender.
 	u256 nonce() const { return m_nonce; }
@@ -178,7 +171,6 @@ protected:
 
 	mutable h256 m_hashWith;			///< Cached hash of transaction with signature.
 	mutable Address m_sender;			///< Cached sender, determined from signature.
-	mutable bigint m_gasRequired = 0;	///< Memoised amount required for the transaction to run.
 };
 
 /// Nice name for vector of Transaction.

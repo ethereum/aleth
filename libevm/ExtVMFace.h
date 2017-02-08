@@ -207,9 +207,7 @@ public:
 	void setTimestamp(u256 const& _v) { m_timestamp = _v; }
 	void setDifficulty(u256 const& _v) { m_difficulty = _v; }
 	void setGasLimit(int64_t _v) { m_gasLimit = _v; }
-	void setLastHashes(LastHashes const& _lh) { m_lastHashes = _lh; }
 	void setLastHashes(LastHashes&& _lh) { m_lastHashes = _lh; }
-	void setGasUsed(u256 const& _v) { m_gasUsed = _v; }
 
 private:
 	u256 m_number;
@@ -270,9 +268,6 @@ public:
 
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
 	h256 blockHash(u256 _number) { return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ? envInfo().lastHashes()[(unsigned)(envInfo().number() - 1 - _number)] : h256(); }
-
-	/// Get the code at the given location in code ROM.
-	byte getCode(u256 _n) const { return _n < code.size() ? code[(size_t)_n] : 0; }
 
 	/// Get the execution environment information.
 	EnvInfo const& envInfo() const { return m_envInfo; }
