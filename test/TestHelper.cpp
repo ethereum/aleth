@@ -243,6 +243,7 @@ bytes ImportTest::executeTest()
 					json_spirit::mObject genesisObj = TestBlockChain::defaultGenesisBlockJson();
 					genesisObj["coinbase"] = toString(m_envInfo.author());
 					genesisObj["gasLimit"] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);
+					genesisObj["timestamp"] = toCompactHex(m_envInfo.timestamp() - 50, HexPrefix::Add);
 					testObj["genesisBlockHeader"] = genesisObj;
 					testObj["pre"] = fillJsonWithState(m_statePre);
 
@@ -281,6 +282,8 @@ bytes ImportTest::executeTest()
 
 					json_spirit::mObject rewriteHeader;
 					rewriteHeader["gasLimit"] = toCompactHex(m_envInfo.gasLimit(), HexPrefix::Add);
+					rewriteHeader["difficulty"] = toCompactHex(m_envInfo.difficulty(), HexPrefix::Add);
+					rewriteHeader["timestamp"] = toCompactHex(m_envInfo.timestamp(), HexPrefix::Add);
 					rewriteHeader["updatePoW"] = "1";
 
 					json_spirit::mArray blocksArr;
@@ -566,13 +569,13 @@ int ImportTest::compareStates(State const& _stateExpect, State const& _statePost
 				map<h256, pair<u256, u256>> stateStorage = _statePost.storage(a.first);
 				for (auto const& s: _stateExpect.storage(a.first))
 					CHECK((stateStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first << ": incorrect storage [" << s.second.first << "] = " << toHex(stateStorage[s.first].second) << ", expected [" << s.second.first << "] = " << toHex(s.second.second));
+					TestOutputHelper::testName() + "Check State: " << a.first << ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(stateStorage[s.first].second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add));
 
 				//Check for unexpected storage values
 				map<h256, pair<u256, u256>> expectedStorage = _stateExpect.storage(a.first);
 				for (auto const& s: _statePost.storage(a.first))
 					CHECK((expectedStorage[s.first] == s.second),
-					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << s.second.first << "] = " << toHex(s.second.second) << ", expected [" << s.second.first << "] = " << toHex(expectedStorage[s.first].second));
+					TestOutputHelper::testName() + "Check State: " << a.first <<  ": incorrect storage [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(s.second.second, HexPrefix::Add) << ", expected [" << toCompactHex(s.second.first, HexPrefix::Add) << "] = " << toCompactHex(expectedStorage[s.first].second, HexPrefix::Add));
 			}
 
 			if (addressOptions.hasCode())
@@ -1446,7 +1449,6 @@ bool TestOutputHelper::passTest(json_spirit::mObject& _o, std::string& _testName
 		std::cout << std::endl;
 	}
 
-	if (m_currentTestCaseName != "stRandom")
 	if (test::Options::get().singleTest && test::Options::get().singleTestName != _testName)
 	{
 		_o.clear();
