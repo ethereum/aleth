@@ -189,7 +189,7 @@ void Executive::initialize(Transaction const& _transaction)
 	u256 startGasUsed = m_envInfo.gasUsed();
 	if (startGasUsed + (bigint)m_t.gas() > m_envInfo.gasLimit())
 	{
-		clog(ExecutiveWarnChannel) << "Too much gas used in this block: Require <" << (m_envInfo.gasLimit() - startGasUsed) << " Got" << m_t.gas();
+		clog(ExecutiveWarnChannel) << "Cannot fit tx in block" << m_envInfo.number() << ": Require <" << (m_envInfo.gasLimit() - startGasUsed) << " Got" << m_t.gas();
 		m_excepted = TransactionException::BlockGasLimitReached;
 		BOOST_THROW_EXCEPTION(BlockGasLimitReached() << RequirementError((bigint)(m_envInfo.gasLimit() - startGasUsed), (bigint)m_t.gas()));
 	}

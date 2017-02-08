@@ -154,7 +154,7 @@ public:
 	virtual ~Host();
 
 	/// Default hosts for current version of client.
-	static std::unordered_map<Public, std::string> const& pocHosts();
+	static std::unordered_map<Public, std::string> pocHosts();
 
 	/// Register a peer-capability; all new peer connections will have this capability.
 	template <class T> std::shared_ptr<T> registerCapability(std::shared_ptr<T> const& _t) { _t->m_host = this; m_capabilities[std::make_pair(T::staticName(), T::staticVersion())] = _t; return _t; }
