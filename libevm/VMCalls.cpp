@@ -129,8 +129,16 @@ void VM::caseCall()
 {
 	m_bounce = &VM::interpretCases;
 	unique_ptr<CallParameters> callParams(new CallParameters());
-	if (caseCallSetup(&*callParams))
-		*++m_sp = m_ext->call(*callParams);
+	if (caseCallSetup(callParams.get()))
+	{
+		if (boost::optional<owning_bytes_ref> r = m_ext->call(*callParams))
+		{
+			r->copyTo(callParams->out);
+			*++m_sp = 1;
+		}
+		else
+			*++m_sp = 0;
+	}
 	else
 		*++m_sp = 0;
 	m_io_gas += uint64_t(callParams->gas);
@@ -148,11 +156,15 @@ bool VM::caseCallSetup(CallParameters *callParams)
 	if (m_op != Instruction::DELEGATECALL && *(m_sp - 2) > 0)
 		m_runGas += toUint64(m_schedule->callValueTransferGas);
 
-	unsigned sizesOffset = m_op == Instruction::DELEGATECALL ? 3 : 4;
-	m_newMemSize = std::max(
-		memNeed(m_stack[(1 + m_sp - m_stack) - sizesOffset - 2], m_stack[(1 + m_sp - m_stack) - sizesOffset - 3]),
-		memNeed(m_stack[(1 + m_sp - m_stack) - sizesOffset], m_stack[(1 + m_sp - m_stack) - sizesOffset - 1])
-	);
+	size_t sizesOffset = m_op == Instruction::DELEGATECALL ? 3 : 4;
+	u256 inputOffset = m_stack[(1 + m_sp - m_stack) - sizesOffset];
+	u256 inputSize = m_stack[(1 + m_sp - m_stack) - sizesOffset - 1];
+	u256 outputOffset = m_stack[(1 + m_sp - m_stack) - sizesOffset - 2];
+	u256 outputSize = m_stack[(1 + m_sp - m_stack) - sizesOffset - 3];
+	uint64_t inputMemNeed = memNeed(inputOffset, inputSize);
+	uint64_t outputMemNeed = memNeed(outputOffset, outputSize);
+
+	m_newMemSize = std::max(inputMemNeed, outputMemNeed);
 	updateMem();
 	updateIOGas();
 

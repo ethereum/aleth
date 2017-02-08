@@ -170,11 +170,6 @@ u256 Executive::gasUsed() const
 	return m_t.gas() - m_gas;
 }
 
-u256 Executive::gasUsedNoRefunds() const
-{
-	return m_t.gas() - m_gas + m_refunded;
-}
-
 void Executive::accrueSubState(SubState& _parentContext)
 {
 	if (m_ext)
@@ -287,7 +282,6 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		m_gas = _p.gas;
 		if (m_s.addressHasCode(_p.codeAddress))
 		{
-			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
 			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
@@ -396,12 +390,10 @@ bool Executive::go(OnOpFunc const& _onOp)
 			}
 			else
 			{
-				owning_bytes_ref output = vm->exec(m_gas, *m_ext, _onOp);
-				// Copy expected output:
-				output.copyTo(m_outRef);
+				m_output = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
 					// Copy full output:
-					m_res->output = output.toVector();
+					m_res->output = m_output.toVector();
 			}
 		}
 		catch (VMException const& _e)
