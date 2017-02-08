@@ -60,7 +60,7 @@ struct InstructionMetric
 class VM: public VMFace
 {
 public:
-	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
 
 	bytes const& memory() const { return m_mem; }
 	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
@@ -86,7 +86,7 @@ private:
 	EVMSchedule const* m_schedule = nullptr;
 
 	// return bytes
-	bytesConstRef m_bytes = bytesConstRef();
+	owning_bytes_ref m_output;
 
 	// space for memory
 	bytes m_mem;

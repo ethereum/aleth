@@ -387,22 +387,21 @@ bool Executive::go(OnOpFunc const& _onOp)
 					{
 						if (m_res)
 							m_res->codeDeposit = CodeDeposit::Failed;
-						out.clear();
+						out = {};
 					}
 				}
 				if (m_res)
-					m_res->output = out; // copy output to execution result
-				m_s.setNewCode(m_ext->myAddress, std::move(out));
+					m_res->output = out.toVector(); // copy output to execution result
+				m_s.setNewCode(m_ext->myAddress, out.toVector());
 			}
 			else
 			{
+				owning_bytes_ref output = vm->exec(m_gas, *m_ext, _onOp);
+				// Copy expected output:
+				output.copyTo(m_outRef);
 				if (m_res)
-				{
-					m_res->output = vm->exec(m_gas, *m_ext, _onOp); // take full output
-					bytesConstRef{&m_res->output}.copyTo(m_outRef);
-				}
-				else
-					vm->exec(m_gas, *m_ext, m_outRef, _onOp); // take only expected output
+					// Copy full output:
+					m_res->output = output.toVector();
 			}
 		}
 		catch (VMException const& _e)
