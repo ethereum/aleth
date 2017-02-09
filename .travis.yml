@@ -102,6 +102,7 @@ cache:
     directories:
         - ~/.ethash
         - ~/.local
+        - ~/Library/Caches/Homebrew
         # Cache whole deps dir hoping you will not need to download and
         # build external dependencies next build.
         - $TRAVIS_BUILD_DIR/deps
