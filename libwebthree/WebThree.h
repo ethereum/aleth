@@ -139,7 +139,6 @@ public:
 
 	eth::Client* ethereum() const { if (!m_ethereum) BOOST_THROW_EXCEPTION(InterfaceNotSupported("eth")); return m_ethereum.get(); }
 	std::shared_ptr<shh::WhisperHost> whisper() const { auto w = m_whisper.lock(); if (!w) BOOST_THROW_EXCEPTION(InterfaceNotSupported("shh")); return w; }
-	bzz::Interface* swarm() const;
 
 	Support* support() const { return m_support.get(); }
 
@@ -220,7 +219,6 @@ private:
 
 	std::unique_ptr<eth::Client> m_ethereum;		///< Client for Ethereum ("eth") protocol.
 	std::weak_ptr<shh::WhisperHost> m_whisper;		///< Client for Whisper ("shh") protocol.
-	std::shared_ptr<bzz::Client> m_swarm;			///< Client for Swarm ("bzz") protocol.
 
 	std::shared_ptr<Support> m_support;
 };

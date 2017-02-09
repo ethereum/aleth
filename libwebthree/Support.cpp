@@ -111,7 +111,6 @@ void Support::hintSHA256(h256 const& _content, h256 const& _sha256, Secret const
 Address Support::icapRegistrar() const
 {
 	return Address("a1a111bc074c9cfa781f0c38e63bd51c91b8af00");
-	return lookup<Address>({"icapregistrar"}, "addr");
 }
 
 std::pair<Address, bytes> Support::decodeICAP(std::string const& _icap) const
