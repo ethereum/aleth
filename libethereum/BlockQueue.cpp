@@ -52,9 +52,10 @@ BlockQueue::BlockQueue():
 {
 	// Allow some room for other activity
 	unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
+	verifierThreads = 1;
 	for (unsigned i = 0; i < verifierThreads; ++i)
 		m_verifiers.emplace_back([=](){
-			setThreadName("verifier" + toString(i));
+//			setThreadName("verifier" + toString(i));
 			this->verifierBody();
 		});
 }
