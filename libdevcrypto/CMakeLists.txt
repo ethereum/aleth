@@ -10,9 +10,7 @@ find_package(Utils)
 
 target_include_directories(devcrypto PRIVATE ..)
 target_include_directories(devcrypto PRIVATE ../utils)
-target_link_libraries(devcrypto ${Dev_DEVCORE_LIBRARIES})
-target_link_libraries(devcrypto ${Utils_SCRYPT_LIBRARIES})
-target_link_libraries(devcrypto cryptopp)
+target_link_libraries(devcrypto cryptopp ${Utils_SCRYPT_LIBRARIES} devcore)
 
 if (NOT EMSCRIPTEN)
 	target_link_libraries(devcrypto ${Utils_SECP256K1_LIBRARIES})

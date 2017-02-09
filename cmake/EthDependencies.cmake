@@ -152,30 +152,6 @@ if (STATIC_LINKING)
 	set(ETH_STATIC ON)
 endif()
 
-# Add Homebrew include paths and library paths for macOS clients.
-#
-# Homebrew (http://brew.sh/) is the de-facto standard package manager for Mac.
-# It is a rolling-release manager, which brings its own problems, because it
-# means that we are building on top of an unstable platform, where the build
-# can work for me today and be broken for you tomorrow, even though we didn't
-# change anything ourselves.  Qt was particularly problematic for this, but
-# thankfully is no longer an issue for us anymore, after we removed the GUI
-# applications in cpp-ethereum-v1.3.0.
-#
-# There is an alternative (minority) packaging system called MacPorts, but it isn't
-# possible to run both on a single computer, so we dropped support for
-# MacPorts in early 2016 to simplify our problem space.
-#
-# Again, as per the Windows notes above, building dependencies from source
-# would sidestep these issues entirely.
-#
-# "Both Homebrew and MacPorts are 'rolling release' package managers"
-# https://github.com/ethereum/webthree-umbrella/issues/118
-if (APPLE)
-	link_directories(/usr/local/lib)
-	include_directories(/usr/local/include)
-endif()
-
 include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
 
 function(eth_use TARGET REQUIRED)
