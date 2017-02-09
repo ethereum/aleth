@@ -157,9 +157,9 @@ private:
 		eth::Network netId;
 	};
 	std::vector<transactionToExecute> m_transactions;
-	typedef std::pair<eth::State, eth::AccountMaskMap> stateAndMap;
-	typedef std::pair<transactionToExecute, stateAndMap> trExpectSection;
-	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", trExpectSection* _search = NULL) const;
+	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;
+	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
+	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
 	json_spirit::mObject& m_testObject;
 	testType m_testType;
@@ -231,14 +231,14 @@ class Options
 {
 public:
 	bool vmtrace = false;	///< Create EVM execution tracer
-	bool fillTests = false; ///< Create JSON test files from execution results
-	bool fillBlockchain = false; ///< Fill tests as a blockchain tests if possible
+	bool filltests = false; ///< Create JSON test files from execution results
+	bool fillchain = false; ///< Fill tests as a blockchain tests if possible
 	bool stats = false;		///< Execution time and stats for state tests
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
 	bool exectimelog = false; ///< Print execution time for each test suite
 	std::string rCheckTest;   ///< Test Input (for random tests)
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
-	bool checkState = false;///< Throw error when checking test states
+	bool checkstate = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;

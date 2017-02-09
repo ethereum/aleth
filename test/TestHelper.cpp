@@ -77,9 +77,10 @@ void printHelp()
 	cout << setw(30) << "--wallet" << setw(25) << "Enable wallet tests" << std::endl;
 	cout << setw(30) << "--all" << setw(25) << "Enable all tests" << std::endl;
 
-	cout << std::endl << "Test Creation" << std::endl;
+	cout << std::endl << "Test Generation" << std::endl;
 	cout << setw(30) << "--filltests" << setw(25) << "Run test fillers" << std::endl;
 	cout << setw(30) << "--checkstate" << setw(25) << "Enable expect section state checks" << std::endl;
+	cout << setw(30) << "--fillchain" << setw(25) << "When filling the state tests, fill tests as blockchain instead" << std::endl;
 	cout << setw(30) << "--createRandomTest" << setw(25) << "Create random test and output it to the console" << std::endl;
 	//cout << setw(30) << "--fulloutput" << setw(25) << "Disable address compression in the output field" << std::endl;
 
@@ -230,7 +231,7 @@ bytes ImportTest::executeTest()
 				m_transactions[i].netId = network;
 				transactionResults.push_back(m_transactions[i]);
 
-				if (Options::get().fillBlockchain)
+				if (Options::get().fillchain)
 				{
 					json_spirit::mObject testObj;
 					testObj["network"] = netIdToString(networks[j]);
@@ -249,15 +250,15 @@ bytes ImportTest::executeTest()
 
 					State s = State (0, OverlayDB(), eth::BaseState::Empty);
 					AccountMaskMap m = std::unordered_map<Address, AccountMask>();
-					stateAndMap smap {s, m};
-					trExpectSection search {m_transactions[i], smap};
+					StateAndMap smap {s, m};
+					TrExpectSection search {m_transactions[i], smap};
 					vector<size_t> stateIndexesToPrint; //not used
 					// look if there is an expect section that match this transaction
 
 					if (m_testObject.count("expect"))
 					for (auto const& exp: m_testObject["expect"].get_array())
 					{
-						trExpectSection* search2 = &search;
+						TrExpectSection* search2 = &search;
 						checkGeneralTestSectionSearch(exp.get_obj(), stateIndexesToPrint, "", search2);
 						if (search.second.first.addresses().size() != 0) //if match in the expect sections for this tr found
 						{
@@ -300,7 +301,7 @@ bytes ImportTest::executeTest()
 			}
 		}
 
-		if (Options::get().fillBlockchain)
+		if (Options::get().fillchain)
 		{
 			string tmpFillerName = getTestPath() + "/src/GenStateTestAsBcTemp/" + TestOutputHelper::caseName() + "/" + TestOutputHelper::testName() + "Filler.json";
 			writeFile(tmpFillerName, asBytes(json_spirit::write_string((json_spirit::mValue)json, true)));
@@ -623,7 +624,7 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 	checkGeneralTestSectionSearch(_expects, _errorTransactions, _network, NULL);
 }
 
-void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network, trExpectSection* _search) const
+void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, vector<size_t>& _errorTransactions, string const& _network, TrExpectSection* _search) const
 {
 	vector<int> d;
 	vector<int> g;
@@ -683,7 +684,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 					_search->second.second = stateMap;
 					return;
 				}
-				int errcode = compareStates(expectState, postState, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+				int errcode = compareStates(expectState, postState, stateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);
 				if (errcode > 0)
 				{
 					cerr << trInfo << std::endl;
@@ -732,7 +733,7 @@ int ImportTest::exportTest(bytes const& _output)
 			obj2["indexes"] = obj;
 			obj2["hash"] = toHex(m_transactions[i].postState.rootHash().asBytes());
 			if (stateIndexesToPrint.size())
-			if (i == stateIndexesToPrint[k] && Options::get().checkState)
+			if (i == stateIndexesToPrint[k] && Options::get().checkstate)
 			{
 				obj2["postState"] = fillJsonWithState(m_transactions[i].postState);
 				k++;
@@ -756,7 +757,7 @@ int ImportTest::exportTest(bytes const& _output)
 		if (m_testObject.count("expectOut") > 0)
 		{
 			std::string warning = "Check State: Error! Unexpected output: " + m_testObject["out"].get_str() + " Expected: " + m_testObject["expectOut"].get_str();
-			if (Options::get().checkState)
+			if (Options::get().checkstate)
 			{
 				bool statement = (m_testObject["out"].get_str() == m_testObject["expectOut"].get_str());
 				BOOST_CHECK_MESSAGE(statement, warning);
@@ -778,7 +779,7 @@ int ImportTest::exportTest(bytes const& _output)
 			eth::AccountMaskMap stateMap;
 			State expectState(0, OverlayDB(), eth::BaseState::Empty);
 			importState(m_testObject["expect"].get_obj(), expectState, stateMap);
-			compareStates(expectState, m_statePost, stateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+			compareStates(expectState, m_statePost, stateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);
 			m_testObject.erase(m_testObject.find("expect"));
 		}
 
@@ -1077,7 +1078,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests)
 			oSingleTest[pos->first] = pos->second;
 
 		json_spirit::mValue v_singleTest(oSingleTest);
-		doTests(v_singleTest, test::Options::get().fillTests);
+		doTests(v_singleTest, test::Options::get().filltests);
 	}
 	catch (Exception const& _e)
 	{
@@ -1101,7 +1102,7 @@ void executeTests(const string& _name, const string& _testPathAppendix, const st
 	if (_name.rfind("Filler.json") != std::string::npos)
 		name = _name.substr(0, _name.rfind("Filler.json"));
 
-	if (Options::get().fillTests)
+	if (Options::get().filltests)
 	{
 		try
 		{
@@ -1232,9 +1233,9 @@ Options::Options(int argc, char** argv)
 			g_logVerbosity = 13;
 		}
 		else if (arg == "--filltests")
-			fillTests = true;
+			filltests = true;
 		else if (arg == "--fillchain")
-			fillBlockchain = true;
+			fillchain = true;
 		else if (arg == "--stats" && i + 1 < argc)
 		{
 			stats = true;
@@ -1253,7 +1254,7 @@ Options::Options(int argc, char** argv)
 		else if (arg == "--bigdata")
 			bigData = true;
 		else if (arg == "--checkstate")
-			checkState = true;
+			checkstate = true;
 		else if (arg == "--wallet")
 			wallet = true;
 		else if (arg == "--all")

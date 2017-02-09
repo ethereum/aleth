@@ -84,7 +84,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (o.count("expect") > 0)
 				{
 					bool expectInValid = (o["expect"].get_str() == "invalid");
-					if (Options::get().checkState)
+					if (Options::get().checkstate)
 							BOOST_CHECK_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
 						else
 							BOOST_WARN_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
@@ -97,7 +97,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			if (o.count("expect") > 0)
 			{
 				bool expectValid = (o["expect"].get_str() == "valid");
-				if (Options::get().checkState)
+				if (Options::get().checkstate)
 						BOOST_CHECK_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
 					else
 						BOOST_WARN_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
@@ -195,7 +195,7 @@ BOOST_AUTO_TEST_CASE(ttTransactionTest)
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 {
 	std::string fillersPath =  dev::test::getTestPath() + "/src/TransactionTestsFiller/Homestead";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 	else
 	{
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 {
 	std::string fillersPath = dev::test::getTestPath() + "/src/TransactionTestsFiller";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
 	else
 	{

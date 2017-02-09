@@ -197,7 +197,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsFrontier)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::FrontierTest)));
 
-	if (dev::test::Options::get().fillTests)
+	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
 	testDifficulty(testFileFullName, sealEngine, Network::FrontierTest);
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsRopsten)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::Ropsten)));
 
-	if (dev::test::Options::get().fillTests)
+	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
 	testDifficulty(testFileFullName, sealEngine, Network::Ropsten);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsHomestead)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::HomesteadTest)));
 
-	if (dev::test::Options::get().fillTests)
+	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
 	testDifficulty(testFileFullName, sealEngine, Network::HomesteadTest);
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsMainNetwork)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));
 
-	if (dev::test::Options::get().fillTests)
+	if (dev::test::Options::get().filltests)
 		fillDifficulty(testFileFullName, sealEngine);
 
 	testDifficulty(testFileFullName, sealEngine, Network::MainNetwork);
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(difficultyTestsCustomMainNetwork)
 	Ethash sealEngine;
 	sealEngine.setChainParams(ChainParams(genesisInfo(Network::MainNetwork)));
 
-	if (dev::test::Options::get().fillTests)
+	if (dev::test::Options::get().filltests)
 	{
 		u256 homsteadBlockNumber = 1000000;
 		std::vector<u256> blockNumberVector = {homsteadBlockNumber - 100000, homsteadBlockNumber, homsteadBlockNumber + 100000};

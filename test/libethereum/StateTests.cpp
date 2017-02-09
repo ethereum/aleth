@@ -50,7 +50,7 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 			continue;
 
 		//For 100% at the log output
-		if (_fillin == false && Options::get().fillBlockchain)
+		if (_fillin == false && Options::get().fillchain)
 			continue;
 
 		BOOST_REQUIRE_MESSAGE(o.count("env") > 0, testname + "env not set!");
@@ -62,7 +62,7 @@ void doStateTests2(json_spirit::mValue& _v, bool _fillin)
 
 		Listener::ExecTimeGuard guard{i.first};
 		importer.executeTest();
-		if (Options::get().fillBlockchain)
+		if (Options::get().fillchain)
 			continue;
 
 		if (_fillin)
@@ -117,7 +117,7 @@ public:
 		for(; iterator_tmp != boost::filesystem::directory_iterator(); ++iterator_tmp)
 			if (boost::filesystem::is_regular_file(iterator_tmp->path()) && iterator_tmp->path().extension() == ".json")
 				fileCount++;
-		if (dev::test::Options::get().fillTests)
+		if (dev::test::Options::get().filltests)
 			fileCount *= 2; //tests are checked when filled and after they been filled
 		dev::test::TestOutputHelper::initTest(fileCount);
 
