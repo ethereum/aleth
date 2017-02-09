@@ -477,16 +477,17 @@ void Host::runAcceptor()
 	}
 }
 
-std::unordered_map<Public, std::string> const& Host::pocHosts()
+std::unordered_map<Public, std::string> Host::pocHosts()
 {
-	static const std::unordered_map<Public, std::string> c_ret = {
-		{ Public("5374c1bff8df923d3706357eeb4983cd29a63be40a269aaa2296ee5f3b2119a8978c0ed68b8f6fc84aad0df18790417daadf91a4bfbb786a16c9b0a199fa254a"), "gav.ethdev.com:30300" },
-		{ Public("e58d5e26b3b630496ec640f2530f3e7fa8a8c7dfe79d9e9c4aac80e3730132b869c852d3125204ab35bb1b1951f6f2d40996c1034fd8c5a69b383ee337f02ddc"), "gav.ethdev.com:30303" },
+	return {
+		// Mainnet:
 		{ Public("a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c"), "52.16.188.185:30303" },
-		{ Public("7f25d3eab333a6b98a8b5ed68d962bb22c876ffcd5561fca54e3c2ef27f754df6f7fd7c9b74cc919067abac154fb8e1f8385505954f161ae440abc355855e034"), "54.207.93.166:30303" },
-		{ Public("5374c1bff8df923d3706357eeb4983cd29a63be40a269aaa2296ee5f3b2119a8978c0ed68b8f6fc84aad0df18790417daadf91a4bfbb786a16c9b0a199fa254a"), "92.51.165.126:30303" },
+		{ Public("de471bccee3d042261d52e9bff31458daecc406142b401d4cd848f677479f73104b9fdeb090af9583d3391b7f10cb2ba9e26865dd5fca4fcdc0fb1e3b723c786"), "54.94.239.50:30303" },
+		{ Public("1118980bf48b0a3640bdba04e0fe78b1add18e1cd99bf22d53daac1fd9972ad650df52176e7c7d89d1114cfef2bc23a2959aa54998a46afcf7d91809f0855082"), "52.74.57.123:30303" },
+		// Testnet:
+		{ Public("e4533109cc9bd7604e4ff6c095f7a1d807e15b38e9bfeb05d3b7c423ba86af0a9e89abbf40bd9dde4250fef114cd09270fa4e224cbeef8b7bf05a51e8260d6b8"), "94.242.229.4:40404" },
+		{ Public("8c336ee6f03e99613ad21274f269479bf4413fb294d697ef15ab897598afb931f56beb8e97af530aee20ce2bcba5776f4a312bc168545de4d43736992c814592"), "94.242.229.203:30303" },
 	};
-	return c_ret;
 }
 
 void Host::addPeer(NodeSpec const& _s, PeerType _t)

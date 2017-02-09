@@ -10,8 +10,6 @@ find_package(Eth)
 
 target_include_directories(ethminer PRIVATE ..)
 target_link_libraries(ethminer ${Eth_ETHASHSEAL_LIBRARIES} jsonrpc::client)
-# TODO: Remove.
-target_compile_definitions(ethminer PRIVATE ETH_JSONRPC)
 
 if (MSVC)
 	find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time)

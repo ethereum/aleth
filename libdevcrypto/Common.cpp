@@ -20,41 +20,41 @@
  * @date 2014
  */
 
+#include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
 #include "Common.h"
-#include <cstdint>
-#include <chrono>
-#include <thread>
-#include <mutex>
+#include <secp256k1/include/secp256k1.h>
+#include <cryptopp/aes.h>
+#include <cryptopp/pwdbased.h>
+#include <cryptopp/sha.h>
+#include <cryptopp/modes.h>
 #include <libscrypt/libscrypt.h>
-#include <libdevcore/Guards.h>
 #include <libdevcore/SHA3.h>
 #include <libdevcore/RLP.h>
-#if ETH_HAVE_SECP256K1
-#include <secp256k1/include/secp256k1.h>
-#endif
 #include "AES.h"
 #include "CryptoPP.h"
 #include "Exceptions.h"
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
+using namespace CryptoPP;
 
-#ifdef ETH_HAVE_SECP256K1
 class Secp256k1Context
 {
 public:
-	static secp256k1_context_t const* get() { if (!s_this) s_this = new Secp256k1Context; return s_this->m_ctx; }
+	static secp256k1_context_t const* get()
+	{
+		static Secp256k1Context s_ctx;
+		return s_ctx.m_ctx;
+	}
 
 private:
-	Secp256k1Context() { m_ctx = secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY); }
+	Secp256k1Context():
+		m_ctx(secp256k1_context_create(SECP256K1_CONTEXT_SIGN | SECP256K1_CONTEXT_VERIFY)) {}
 	~Secp256k1Context() { secp256k1_context_destroy(m_ctx); }
 
-	secp256k1_context_t* m_ctx;
-
-	static Secp256k1Context* s_this;
+	secp256k1_context_t* const m_ctx = nullptr;
 };
-Secp256k1Context* Secp256k1Context::s_this = nullptr;
-#endif
+
 
 bool dev::SignatureStruct::isValid() const noexcept
 {
@@ -76,17 +76,11 @@ Address dev::ZeroAddress = Address();
 
 Public dev::toPublic(Secret const& _secret)
 {
-#ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
 	if (!secp256k1_ec_pubkey_create(Secp256k1Context::get(), o.data(), &pubkeylen, _secret.data(), false))
 		return Public();
 	return FixedHash<64>(o.data()+1, Public::ConstructFromPointer);
-#else
-	Public p;
-	Secp256k1PP::get()->toPublic(_secret, p);
-	return p;
-#endif
 }
 
 Address dev::toAddress(Public const& _public)
@@ -212,15 +206,11 @@ static const Public c_zeroKey("3f17f1962b36e491b30a40b2405849e597ba5fb5");
 Public dev::recover(Signature const& _sig, h256 const& _message)
 {
 	Public ret;
-#ifdef ETH_HAVE_SECP256K1
 	bytes o(65);
 	int pubkeylen;
 	if (_sig[64] > 3 || !secp256k1_ecdsa_recover_compact(Secp256k1Context::get(), _message.data(), _sig.data(), o.data(), &pubkeylen, false, _sig[64]))
 		return Public();
 	ret = FixedHash<64>(o.data() + 1, Public::ConstructFromPointer);
-#else
-	ret = Secp256k1PP::get()->recover(_sig, _message.ref());
-#endif
 	if (ret == c_zeroKey)
 		return Public();
 	return ret;
@@ -233,14 +223,10 @@ Signature dev::sign(Secret const& _k, h256 const& _hash)
 	Signature s;
 	SignatureStruct& ss = *reinterpret_cast<SignatureStruct*>(&s);
 
-#ifdef ETH_HAVE_SECP256K1
 	int v;
 	if (!secp256k1_ecdsa_sign_compact(Secp256k1Context::get(), _hash.data(), s.data(), _k.data(), NULL, NULL, &v))
 		return Signature();
-	ss.v = v;
-#else
-	s = Secp256k1PP::get()->sign(_k, _hash);
-#endif
+	ss.v = static_cast<byte>(v);
 	if (ss.s > c_secp256k1n / 2)
 	{
 		ss.v = ss.v ^ 1;
@@ -254,11 +240,7 @@ bool dev::verify(Public const& _p, Signature const& _s, h256 const& _hash)
 {
 	if (!_p)
 		return false;
-#ifdef ETH_HAVE_SECP256K1
 	return _p == recover(_s, _hash);
-#else
-	return Secp256k1PP::get()->verify(_p, _s, _hash.ref(), true);
-#endif
 }
 
 bytesSec dev::pbkdf2(string const& _pass, bytes const& _salt, unsigned _iterations, unsigned _dkLen)

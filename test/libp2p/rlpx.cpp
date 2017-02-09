@@ -20,10 +20,17 @@
  * RLPx test functions.
  */
 
+#include <libdevcore/Guards.h>
+#include <boost/asio.hpp>
+#include <boost/test/unit_test.hpp>
+#include <cryptopp/aes.h>
+#include <cryptopp/hmac.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>

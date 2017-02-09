@@ -17,7 +17,4 @@ include(EthExecutableHelper)
 include(EthDependencies)
 
 add_subdirectory(libscrypt)
-
-if (NOT EMSCRIPTEN)
-	add_subdirectory(secp256k1)
-endif()
+add_subdirectory(secp256k1)

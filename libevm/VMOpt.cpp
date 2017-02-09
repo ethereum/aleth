@@ -63,14 +63,16 @@ void VM::copyCode(int _extraBytes)
 
 void VM::optimize()
 {
-	size_t pc, nBytes = m_ext->code.size();
+	copyCode(33);
+
+	size_t const nBytes = m_ext->code.size();
 
 	// build a table of jump destinations for use in verifyJumpDest
 	
 	TRACE_STR(1, "Build JUMPDEST table")
-	for (pc = 0; pc < nBytes; ++pc)
+	for (size_t pc = 0; pc < nBytes; ++pc)
 	{
-		Instruction op = Instruction(m_ext->code[pc]);
+		Instruction op = Instruction(m_code[pc]);
 		TRACE_OP(2, pc, op);
 				
 		// make synthetic ops in user code trigger invalid instruction if run
@@ -81,7 +83,7 @@ void VM::optimize()
 		)
 		{
 			TRACE_OP(1, pc, op);
-			m_ext->code[pc] = (byte)Instruction::BAD;
+			m_code[pc] = (byte)Instruction::BAD;
 		}
 
 		if (op == Instruction::JUMPDEST)
@@ -107,7 +109,7 @@ void VM::optimize()
 		else if (op == Instruction::JUMPV || op == Instruction::JUMPSUBV)
 		{
 			++pc;
-			pc += 4 * m_ext->code[pc];  // number of 4-byte dests followed by table
+			pc += 4 * m_code[pc];  // number of 4-byte dests followed by table
 		}
 		else if (op == Instruction::BEGINSUB)
 		{
@@ -120,8 +122,6 @@ void VM::optimize()
 #endif
 	}
 	
-	copyCode(pc - nBytes + 33);
-
 #ifdef EVM_DO_FIRST_PASS_OPTIMIZATION
 	
 	#ifdef EVM_USE_CONSTANT_POOL
@@ -178,7 +178,7 @@ void VM::optimize()
 	#endif
 
 	TRACE_STR(1, "Do first pass optimizations")
-	for (pc = 0; pc < nBytes; ++pc)
+	for (size_t pc = 0; pc < nBytes; ++pc)
 	{
 		u256 val = 0;
 		Instruction op = Instruction(m_code[pc]);

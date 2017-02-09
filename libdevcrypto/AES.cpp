@@ -20,8 +20,12 @@
  */
 
 #include "AES.h"
-#include <libdevcore/Common.h>
-#include "CryptoPP.h"
+#include <cryptopp/aes.h>
+#include <cryptopp/filters.h>
+#include <cryptopp/pwdbased.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
+
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;

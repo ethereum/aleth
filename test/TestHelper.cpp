@@ -54,6 +54,9 @@ void printHelp()
 	cout << setw(30) << "-t <TestSuite>/<TestCase>" << std::endl;
 
 	cout << std::endl << "Debugging" << std::endl;
+	cout << setw(30) << "-d <index>" << setw(25) << "Set the transaction data array index when running GeneralStateTests" << std::endl;
+	cout << setw(30) << "-g <index>" << setw(25) << "Set the transaction gas array index when running GeneralStateTests" << std::endl;
+	cout << setw(30) << "-v <index>" << setw(25) << "Set the transaction value array index when running GeneralStateTests" << std::endl;
 	cout << setw(30) << "--singletest <TestName>" << setw(25) << "Run on a single test" << std::endl;
 	cout << setw(30) << "--singletest <TestFile> <TestName>" << std::endl;
 	cout << setw(30) << "--verbosity <level>" << setw(25) << "Set logs verbosity. 0 - silent, 1 - only errors, 2 - informative, >2 - detailed" << std::endl;
@@ -567,6 +570,13 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 			string trInfo = netIdToString(t.netId) + " data: " + toString(t.dataInd) + " gas: " + toString(t.gasInd) + " val: " + toString(t.valInd);
 			if (_expects.count("result"))
 			{
+				Options const& opt = Options::get();
+				//filter transactions if a specific index set in options
+				if ((opt.trDataIndex != -1 && opt.trDataIndex != t.dataInd) ||
+					(opt.trGasIndex != -1 && opt.trGasIndex != t.gasInd) ||
+					(opt.trValueIndex != -1 && opt.trValueIndex != t.valInd))
+					continue;
+
 				State postState = t.postState;
 				eth::AccountMaskMap stateMap;
 				State expectState(0, OverlayDB(), eth::BaseState::Empty);
@@ -587,7 +597,7 @@ void ImportTest::checkGeneralTestSection(json_spirit::mObject const& _expects, v
 
 			//if a single transaction check then stop once found
 			if (network[0] != "ALL" && d[0] != -1 && g[0] != -1 && v[0] != -1)
-			if (d.size() == 1 && g.size() == 1 && v.size() == 1)
+			if (network.size() == 1 && d.size() == 1 && g.size() == 1 && v.size() == 1)
 				break;
 		}
 	}
@@ -1070,6 +1080,9 @@ RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj
 
 Options::Options(int argc, char** argv)
 {
+	trDataIndex = -1;
+	trGasIndex = -1;
+	trValueIndex = -1;
 	for (auto i = 0; i < argc; ++i)
 	{
 		auto arg = std::string{argv[i]};
@@ -1184,6 +1197,12 @@ Options::Options(int argc, char** argv)
 		}
 		else if (arg == "--nonetwork")
 			nonetwork = true;
+		else if (arg == "-d" && i + 1 < argc)
+			trDataIndex = atoi(argv[i + 1]);
+		else if (arg == "-g" && i + 1 < argc)
+			trGasIndex = atoi(argv[i + 1]);
+		else if (arg == "-v" && i + 1 < argc)
+			trValueIndex = atoi(argv[i + 1]);
 	}
 
 	//Default option

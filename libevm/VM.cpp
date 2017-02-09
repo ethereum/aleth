@@ -146,6 +146,15 @@ void VM::fetchInstruction()
 	m_copyMemSize = 0;
 }
 
+#if EVM_HACK_ON_OPERATION
+	#define onOperation()
+#endif
+#if EVM_HACK_UPDATE_IO_GAS
+	#define updateIOGas()
+#endif
+#if EVM_HACK_STACK
+	#define checkStack(r,a)
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -385,7 +394,11 @@ void VM::interpretCases()
 			updateIOGas();
 
 			//pops two items and pushes S[-1] * S[-2] mod 2^256.
+#if EVM_HACK_MUL_64
+			*(uint64_t*)(m_sp - 1) *= *(uint64_t*)m_sp;
+#else
 			*(m_sp - 1) *= *m_sp;
+#endif
 			--m_sp;
 			++m_pc;
 		CASE_END
@@ -956,7 +969,11 @@ void VM::interpretCases()
 			updateIOGas();
 
 			unsigned n = 1 + (unsigned)m_op - (unsigned)Instruction::DUP1;
+#if EVM_HACK_DUP_64
+			*(uint64_t*)(m_sp+1) = *(uint64_t*)&m_stack[(1 + m_sp - m_stack) - n];
+#else
 			*(m_sp+1) = m_stack[(1 + m_sp - m_stack) - n];
+#endif
 			++m_sp;
 			++m_pc;
 		}

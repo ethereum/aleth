@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
 #------------------------------------------------------------------------------
 # Bash script for installing pre-requisite packages for cpp-ethereum on a
@@ -61,207 +61,115 @@ case $(uname -s) in
 # macOS
 #------------------------------------------------------------------------------
 
-    Darwin)
-        case $(sw_vers -productVersion | awk -F . '{print $1"."$2}') in
-            10.9)
-                echo "Installing cpp-ethereum dependencies on OS X 10.9 Mavericks."
-                ;;
-            10.10)
-                echo "Installing cpp-ethereum dependencies on OS X 10.10 Yosemite."
-                ;;
-            10.11)
-                echo "Installing cpp-ethereum dependencies on OS X 10.11 El Capitan."
-                ;;
-            10.12)
-                echo "Installing cpp-ethereum dependencies on macOS 10.12 Sierra."
-                echo ""
-                echo "NOTE - You are in unknown territory with this preview OS."
-                echo "Even Homebrew doesn't have official support yet, and there are"
-                echo "known issues (see https://github.com/ethereum/webthree-umbrella/issues/614)."
-                echo "If you would like to partner with us to work through these issues, that"
-                echo "would be fantastic.  Please just comment on that issue.  Thanks!"
-                ;;
-            *)
-                echo "Unsupported macOS version."
-                echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
-                exit 1
-                ;;
-        esac
+Darwin)
+    case $(sw_vers -productVersion | awk -F . '{print $1"."$2}') in
+        10.9)
+            echo "Installing cpp-ethereum dependencies on OS X 10.9 Mavericks."
+            ;;
+        10.10)
+            echo "Installing cpp-ethereum dependencies on OS X 10.10 Yosemite."
+            ;;
+        10.11)
+            echo "Installing cpp-ethereum dependencies on OS X 10.11 El Capitan."
+            ;;
+        10.12)
+            echo "Installing cpp-ethereum dependencies on macOS 10.12 Sierra."
+            echo ""
+            echo "NOTE - You are in unknown territory with this preview OS."
+            echo "Even Homebrew doesn't have official support yet, and there are"
+            echo "known issues (see https://github.com/ethereum/webthree-umbrella/issues/614)."
+            echo "If you would like to partner with us to work through these issues, that"
+            echo "would be fantastic.  Please just comment on that issue.  Thanks!"
+            ;;
+        *)
+            echo "Unsupported macOS version."
+            echo "We only support Mavericks, Yosemite and El Capitan, with work-in-progress on Sierra."
+            exit 1
+            ;;
+    esac
 
-        # Check for Homebrew install and abort if it is not installed.
-        brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
+    # Check for Homebrew install and abort if it is not installed.
+    brew -v > /dev/null 2>&1 || { echo >&2 "ERROR - cpp-ethereum requires a Homebrew install.  See http://brew.sh."; exit 1; }
 
-        # And finally install all the external dependencies.
-        brew install \
-            leveldb \
-            libmicrohttpd \
-            miniupnpc
+    # And finally install all the external dependencies.
+    brew install \
+        leveldb \
+        libmicrohttpd \
+        miniupnpc
 
-        ;;
+    ;;
 
 #------------------------------------------------------------------------------
 # FreeBSD
 #------------------------------------------------------------------------------
-
-    FreeBSD)
-        echo "Installing cpp-ethereum dependencies on FreeBSD."
-        echo "ERROR - 'install_deps.sh' doesn't have FreeBSD support yet."
-        echo "Please let us know if you see this error message, and we can work out what is missing."
-        echo "At https://gitter.im/ethereum/cpp-ethereum-development."
-        exit 1
-        ;;
+FreeBSD)
+    echo "Installing cpp-ethereum dependencies on FreeBSD."
+    echo "ERROR - 'install_deps.sh' doesn't have FreeBSD support yet."
+    echo "Please let us know if you see this error message, and we can work out what is missing."
+    echo "At https://gitter.im/ethereum/cpp-ethereum-development."
+    exit 1
+    ;;
 
 #------------------------------------------------------------------------------
 # Linux
 #------------------------------------------------------------------------------
+Linux)
 
-    Linux)
+    # Detect if sudo is needed.
+    if [ $(id -u) != 0 ]; then
+        SUDO="sudo"
+    fi
 
 #------------------------------------------------------------------------------
 # Arch Linux
 #------------------------------------------------------------------------------
 
-        if [ -f "/etc/arch-release" ]; then
+    if [ -f "/etc/arch-release" ]; then
 
-            echo "Installing cpp-ethereum dependencies on Arch Linux."
+        echo "Installing cpp-ethereum dependencies on Arch Linux."
 
-            # The majority of our dependencies can be found in the
-            # Arch Linux official repositories.
-            # See https://wiki.archlinux.org/index.php/Official_repositories
-            sudo pacman -Sy --noconfirm \
-                autoconf \
-                automake \
-                gcc \
-                libtool \
-                boost \
-                cmake \
-                git \
-                leveldb \
-                libmicrohttpd \
-                miniupnpc
+        # The majority of our dependencies can be found in the
+        # Arch Linux official repositories.
+        # See https://wiki.archlinux.org/index.php/Official_repositories
+        $SUDO pacman -Sy --noconfirm \
+            autoconf \
+            automake \
+            gcc \
+            libtool \
+            boost \
+            leveldb \
+            libmicrohttpd \
+            miniupnpc
 
-        fi
+    elif [ -f "/etc/os-release" ]; then
 
-        case $(lsb_release -is) in
+        DISTRO_NAME=$(. /etc/os-release; echo $NAME)
+        case $DISTRO_NAME in
 
-#------------------------------------------------------------------------------
-# Alpine Linux
-#------------------------------------------------------------------------------
+        Debian*)
+            echo "Installing cpp-ethereum dependencies on Debian Linux."
 
-            Alpine)
-                #Alpine
-                echo "Installing cpp-ethereum dependencies on Alpine Linux."
-                echo "ERROR - 'install_deps.sh' doesn't have Alpine Linux support yet."
-                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-                echo "If you would like to get 'install_deps.sh' working for AlpineLinux, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                echo "See also https://github.com/ethereum/webthree-umbrella/issues/495 where we are working through Alpine support."
-                exit 1
-                ;;
+            $SUDO apt-get -q update
+            $SUDO apt-get -qy install \
+                build-essential \
+                libboost-all-dev \
+                libcurl4-openssl-dev \
+                libgmp-dev \
+                libleveldb-dev \
+                libmicrohttpd-dev \
+                libminiupnpc-dev
+            ;;
 
-#------------------------------------------------------------------------------
-# Debian
-#------------------------------------------------------------------------------
-
-            Debian)
-                #Debian
-                case $(lsb_release -cs) in
-                    wheezy)
-                        #wheezy
-                        echo "Installing cpp-ethereum dependencies on Debian Wheezy (7.x)."
-                        echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-                        echo "If you would like to get 'install_deps.sh' working for Debian Wheezy, that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                        ;;
-                    jessie)
-                        #jessie
-                        echo "Installing cpp-ethereum dependencies on Debian Jessie (8.x)."
-                        ;;
-                    stretch)
-                        #stretch
-                        echo "Installing cpp-ethereum dependencies on Debian Stretch (9.x)."
-                        ;;
-                    *)
-                        #other Debian
-                        echo "Installing 'install_deps.sh' dependencies on unknown Debian version."
-                        echo "ERROR - Debian Jessie and Debian Stretch are the only Debian versions which cpp-ethereum has been tested on."
-                        echo "If you are using a different release and would like to get 'install_deps.sh'"
-                        echo "working for that release that would be fantastic."
-                        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                        exit 1
-                        ;;
-                esac
-
-                # Install "normal packages"
-                sudo apt-get -y update
-                sudo apt-get -y install \
-                    build-essential \
-                    cmake \
-                    g++ \
-                    gcc \
-                    git \
-                    libboost-all-dev \
-                    libcurl4-openssl-dev \
-                    libgmp-dev \
-                    libleveldb-dev \
-                    libmicrohttpd-dev \
-                    libminiupnpc-dev \
-                    libz-dev \
-                    unzip
-
-                # All the Debian releases until Stretch have shipped with versions of CMake
-                # which are too old for cpp-ethereum to build successfully.
-                # We just download and install latest version.
-                #
-                # - https://packages.debian.org/wheezy/cmake (2.8.9)
-                # - https://packages.debian.org/jessie/cmake (3.0.2)
-                # - https://packages.debian.org/stretch/cmake (3.5.2)
-
-                wget -O- https://cmake.org/files/v3.7/cmake-3.7.1-Linux-x86_64.tar.gz \
-                    | sudo tar xz -C /usr/local --strip 1
-
-                ;;
-
-#------------------------------------------------------------------------------
-# Fedora
-#------------------------------------------------------------------------------
-
-            Fedora)
-                #Fedora
-                echo "Installing cpp-ethereum dependencies on Fedora."
-
-                # Install "normal packages"
-                # See https://fedoraproject.org/wiki/Package_management_system.
-                dnf install \
-                    autoconf \
-                    automake \
-                    boost-devel \
-                    cmake \
-                    curl-devel \
-                    gcc \
-                    gcc-c++ \
-                    git \
-                    gmp-devel \
-                    leveldb-devel \
-                    libtool \
-                    miniupnpc-devel \
-                    snappy-devel
-
-                ;;
-
-#------------------------------------------------------------------------------
-# OpenSUSE
-#------------------------------------------------------------------------------
-
-            "openSUSE project")
-                #openSUSE
-                echo "Installing cpp-ethereum dependencies on openSUSE."
-                echo "ERROR - 'install_deps.sh' doesn't have openSUSE support yet."
-                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-                echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
-                echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
-                exit 1
-                ;;
+        Fedora)
+            echo "Installing cpp-ethereum dependencies on Fedora Linux."
+            $SUDO dnf -qy install \
+                gcc-c++ \
+                boost-devel \
+                leveldb-devel \
+                curl-devel \
+                libmicrohttpd-devel \
+                gmp-devel
+            ;;
 
 #------------------------------------------------------------------------------
 # Ubuntu
@@ -276,131 +184,104 @@ case $(uname -s) in
 # It would be good to add armel, armhf and arm64.
 # See https://github.com/ethereum/webthree-umbrella/issues/228.
 #------------------------------------------------------------------------------
+        Ubuntu|LinuxMint)
+            echo "Installing cpp-ethereum dependencies on Ubuntu."
+            if [ "$TRAVIS" ]; then
+                # Setup prebuilt LLVM on Travis CI:
+                $SUDO apt-get -qy remove llvm  # Remove confilicting package.
+                echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" | \
+                    $SUDO tee -a /etc/apt/sources.list > /dev/null
+                LLVM_PACKAGES="llvm-3.9-dev libz-dev"
+            fi
+            $SUDO apt-get -q update
+            $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
+                build-essential \
+                libboost-all-dev \
+                libcurl4-openssl-dev \
+                libgmp-dev \
+                libleveldb-dev \
+                libmicrohttpd-dev \
+                libminiupnpc-dev \
+                $LLVM_PACKAGES
+            ;;
 
-            Ubuntu|LinuxMint)
-                #Ubuntu or LinuxMint
-                case $(lsb_release -cs) in
-                    trusty|rosa|rafaela|rebecca|qiana)
-                        #trusty or compatible LinuxMint distributions
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Trusty Tahr (14.04)."
-                        echo "deb http://apt.llvm.org/trusty/ llvm-toolchain-trusty-3.9 main" \
-                        | sudo tee -a /etc/apt/sources.list > /dev/null
-                        ;;
-                    utopic)
-                        #utopic
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Utopic Unicorn (14.10)."
-                        ;;
-                    vivid)
-                        #vivid
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Vivid Vervet (15.04)."
-                        ;;
-                    wily)
-                        #wily
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Wily Werewolf (15.10)."
-                        ;;
-                    xenial|sarah)
-                        #xenial
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Xenial Xerus (16.04)."
-                        echo "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-3.9 main" \
-                        | sudo tee -a /etc/apt/sources.list > /dev/null
-                        ;;
-                    yakkety)
-                        #yakkety
-                        echo "Installing cpp-ethereum dependencies on Ubuntu Yakkety Yak (16.10)."
-                        echo ""
-                        echo "NOTE - You are in unknown territory with this preview OS."
-                        echo "We will need to update the Ethereum PPAs, work through build and runtime breaks, etc."
-                        echo "See https://github.com/ethereum/webthree-umbrella/issues/624."
-                        echo "If you would like to partner with us to work through these, that"
-                        echo "would be fantastic.  Please just comment on that issue.  Thanks!"
-                        ;;
-                    *)
-                        #other Ubuntu
-                        echo "ERROR - Unknown or unsupported Ubuntu version."
-                        echo "We only support Trusty, Utopic, Vivid, Wily and Xenial, with work-in-progress on Yakkety."
-                        exit 1
-                        ;;
-                esac
+        CentOS*)
+            echo "Installing cpp-ethereum dependencies on CentOS."
+            # Enable EPEL repo that contains leveldb-devel
+            $SUDO yum -y -q install epel-release
+            $SUDO yum -y -q install \
+                make \
+                gcc-c++ \
+                boost-devel \
+                leveldb-devel \
+                curl-devel \
+                libmicrohttpd-devel \
+                gmp-devel
+            ;;
 
-                # The Ethereum PPA is required for the handful of packages where we need newer versions than
-                # are shipped with Ubuntu itself.  We can likely minimize or remove the need for the PPA entirely
-                # as we switch more to a "build from source" model, as Pawel has recently done for LLVM in evmjit.
-                #
-                # See https://launchpad.net/~ethereum/+archive/ubuntu/ethereum
-                #
-                # The version of CMake which shipped with Trusty was too old for our codebase (we need 3.0.0 or newer),
-                # so the Ethereum PPA contains a newer release (3.2.2):
-                #
-                # - http://packages.ubuntu.com/trusty/cmake (2.8.12.2)
-                # - http://packages.ubuntu.com/wily/cmake (3.2.2)
-                # - http://packages.ubuntu.com/xenial/cmake (3.5.1)
-                # - http://packages.ubuntu.com/yakkety/cmake (3.5.2)
-                #
-                # All the Ubuntu releases until Yakkety have shipped with CryptoPP 5.6.1, but we need 5.6.2
-                # or newer.  Also worth of note is that the package name is libcryptopp in our PPA but
-                # libcrypto++ in the official repositories.
-                #
-                # - http://packages.ubuntu.com/trusty/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/wily/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/xenial/libcrypto++-dev (5.6.1)
-                # - http://packages.ubuntu.com/yakkety/libcrypto++-dev (5.6.3)
-                #
-                # NOTE - We actually want to remove the dependency in CryptoPP from our codebase entirely,
-                # which would make this versioning problem moot.
-                #
-                # See https://github.com/ethereum/webthree-umbrella/issues/103
+        *)
+            echo "Unsupported Linux distribution: $DISTRO_NAME."
+            exit 1
+            ;;
 
-                if [ TRAVIS ]; then
-                    # On Travis CI llvm package conficts with the new to be installed.
-                    sudo apt-get -y remove llvm
-                fi
-                sudo apt-get -y update
-                # this installs the add-apt-repository command
-                sudo apt-get install -y --no-install-recommends software-properties-common
-                sudo add-apt-repository -y ppa:ethereum/ethereum
-                sudo apt-get -y update
-                sudo apt-get install -y --no-install-recommends --allow-unauthenticated \
-                    build-essential \
-                    cmake \
-                    git \
-                    libboost-all-dev \
-                    libcurl4-openssl-dev \
-                    libgmp-dev \
-                    libleveldb-dev \
-                    libmicrohttpd-dev \
-                    libminiupnpc-dev \
-                    libz-dev \
-                    llvm-3.9-dev
-                ;;
-            *)
+        esac
+
+    elif [ -f "/etc/alpine-release" ]; then
+
+        # Alpine Linux
+        echo "Installing cpp-ethereum dependencies on Alpine Linux."
+        $SUDO apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
+            g++ \
+            make \
+            boost-dev \
+            curl-dev \
+            libmicrohttpd-dev \
+            leveldb-dev
+
+    else
+
+        case $(lsb_release -is) in
+
+#------------------------------------------------------------------------------
+# OpenSUSE
+#------------------------------------------------------------------------------
+        openSUSE*)
+            #openSUSE
+            echo "Installing cpp-ethereum dependencies on openSUSE."
+            echo "ERROR - 'install_deps.sh' doesn't have openSUSE support yet."
+            echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
+            echo "If you would like to get 'install_deps.sh' working for openSUSE, that would be fantastic."
+            echo "See https://github.com/ethereum/webthree-umbrella/issues/552."
+            exit 1
+            ;;
 
 #------------------------------------------------------------------------------
 # Other (unknown) Linux
 # Major and medium distros which we are missing would include Mint, CentOS,
 # RHEL, Raspbian, Cygwin, OpenWrt, gNewSense, Trisquel and SteamOS.
 #------------------------------------------------------------------------------
-
-                #other Linux
-                echo "ERROR - Unsupported or unidentified Linux distro."
-                echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
-                echo "If you would like to get your distro working, that would be fantastic."
-                echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-                exit 1
-                ;;
+        *)
+            #other Linux
+            echo "ERROR - Unsupported or unidentified Linux distro."
+            echo "See http://cpp-ethereum.org/building-from-source/linux.html for manual instructions."
+            echo "If you would like to get your distro working, that would be fantastic."
+            echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+            exit 1
+            ;;
         esac
-        ;;
+    fi
+    ;;
 
 #------------------------------------------------------------------------------
 # Other platform (not Linux, FreeBSD or macOS).
 # Not sure what might end up here?
 # Maybe OpenBSD, NetBSD, AIX, Solaris, HP-UX?
 #------------------------------------------------------------------------------
-
-    *)
-        #other
-        echo "ERROR - Unsupported or unidentified operating system."
-        echo "See http://cpp-ethereum.org/building-from-source/ for manual instructions."
-        echo "If you would like to get your operating system working, that would be fantastic."
-        echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
-        ;;
+*)
+    #other
+    echo "ERROR - Unsupported or unidentified operating system."
+    echo "See http://cpp-ethereum.org/building-from-source/ for manual instructions."
+    echo "If you would like to get your operating system working, that would be fantastic."
+    echo "Drop us a message at https://gitter.im/ethereum/cpp-ethereum-development."
+    ;;
 esac
