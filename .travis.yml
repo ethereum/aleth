@@ -106,6 +106,10 @@ cache:
         # Cache whole deps dir hoping you will not need to download and
         # build external dependencies next build.
         - $TRAVIS_BUILD_DIR/deps
+before_install:
+    # Install ccache on osx
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
 install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
     - ./scripts/install_deps.sh
