@@ -1,7 +1,4 @@
-file(GLOB SRC_LIST "*.cpp")
-file(GLOB HEADERS "*.h")
-
-add_library(webthree ${SRC_LIST} ${HEADERS})
+add_library(webthree WebThree.cpp WebThree.h)
 
 eth_use(webthree REQUIRED Web3::whisper)
 

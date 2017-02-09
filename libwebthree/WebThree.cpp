@@ -28,7 +28,6 @@
 #include <libethashseal/EthashClient.h>
 #include "cpp-ethereum/BuildInfo.h"
 #include <libethashseal/Ethash.h>
-#include "Support.h"
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
@@ -71,8 +70,6 @@ WebThreeDirect::WebThreeDirect(
 
 	if (_interfaces.count("shh"))
 		m_whisper = m_net.registerCapability(make_shared<WhisperHost>());
-
-	m_support = make_shared<Support>(this);
 }
 
 WebThreeDirect::~WebThreeDirect()

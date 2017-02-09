@@ -286,7 +286,7 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
-class ExitHandler: public SystemManager
+class ExitHandler: public rpc::SystemManager
 {
 public:
 	void exit() { exitHandler(0); }
