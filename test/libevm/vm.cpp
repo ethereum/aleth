@@ -390,7 +390,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 					AccountMaskMap expectStateMap;
 					ImportTest::importState(o["post"].get_obj(), postState);
 					ImportTest::importState(o["expect"].get_obj(), expectState, expectStateMap);
-					ImportTest::compareStates(expectState, postState, expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow);
+					ImportTest::compareStates(expectState, postState, expectStateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow);
 					o.erase(o.find("expect"));
 				}
 
@@ -401,7 +401,7 @@ void doVMTests(json_spirit::mValue& _v, bool _fillin)
 				if (o.count("expectOut") > 0)
 				{
 					std::string warning = "Check State: Error! Unexpected output: " + o["out"].get_str() + " Expected: " + o["expectOut"].get_str();
-					if (Options::get().checkState)
+					if (Options::get().checkstate)
 						BOOST_CHECK_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
 					else
 						BOOST_WARN_MESSAGE(o["out"].get_str() == o["expectOut"].get_str(), warning);
