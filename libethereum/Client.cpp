@@ -29,7 +29,6 @@
 #include "Defaults.h"
 #include "Executive.h"
 #include "EthereumHost.h"
-#include "Utility.h"
 #include "Block.h"
 #include "TransactionQueue.h"
 using namespace std;

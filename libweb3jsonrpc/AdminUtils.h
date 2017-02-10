@@ -1,5 +1,4 @@
 #pragma once
-#include <libwebthree/SystemManager.h>
 #include "AdminUtilsFace.h"
 
 namespace dev
@@ -8,6 +7,12 @@ namespace rpc
 {
 
 class SessionManager;
+
+class SystemManager
+{
+public:
+	virtual void exit() = 0;
+};
 
 class AdminUtils: public dev::rpc::AdminUtilsFace
 {

@@ -1,5 +1,4 @@
-aux_source_directory(. SRC_LIST)
-
+file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
 add_library(ethereum ${SRC_LIST} ${HEADERS})

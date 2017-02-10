@@ -99,17 +99,21 @@ void checkBlocks(TestBlock const& _blockFromFields, TestBlock const& _blockFromR
 
 void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 {
-	TestOutputHelper::initTest(_v);
+	if (!Options::get().fillchain) //fill blockchain through state tests
+		TestOutputHelper::initTest(_v);
 	for (auto& i: _v.get_obj())
 	{
 		string testname = i.first;
 		json_spirit::mObject& o = i.second.get_obj();
 
+		if (!Options::get().fillchain)
 		if (!TestOutputHelper::passTest(o, testname))
 			continue;
 
 		BOOST_REQUIRE(o.count("genesisBlockHeader"));
 		BOOST_REQUIRE(o.count("pre"));
+		if (o.count("network"))
+			dev::test::TestBlockChain::s_sealEngineNetwork = stringToNetId(o["network"].get_str());
 
 		TestBlock genesisBlock(o["genesisBlockHeader"].get_obj(), o["pre"].get_obj());
 		if (_fillin)
@@ -232,7 +236,7 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 					if (testChain.addBlock(alterBlock))
 						cnote << "The most recent best Block now is " <<  importBlockNumber << "in chain" << chainname << "at test " << testname;
 
-					if (test::Options::get().checkState == true)
+					if (test::Options::get().checkstate == true)
 						BOOST_REQUIRE_MESSAGE(blObj.count("expectException") == 0, "block import expected exception, but no exeption was thrown!");
 					if (o.count("noBlockChainHistory") == 0)
 					{
@@ -267,8 +271,8 @@ void doBlockchainTests(json_spirit::mValue& _v, bool _fillin)
 				AccountMaskMap expectStateMap;
 				State stateExpect(State::Null);
 				ImportTest::importState(o["expect"].get_obj(), stateExpect, expectStateMap);
-				if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, Options::get().checkState ? WhenError::Throw : WhenError::DontThrow))
-					if (Options::get().checkState)
+				if (ImportTest::compareStates(stateExpect, testChain.topBlock().state(), expectStateMap, Options::get().checkstate ? WhenError::Throw : WhenError::DontThrow))
+					if (Options::get().checkstate)
 						cerr << testname << endl;
 				o.erase(o.find("expect"));
 			}
@@ -672,7 +676,7 @@ mObject writeBlockHeaderToJson(BlockHeader const& _bi)
 
 void checkExpectedException(mObject& _blObj, Exception const& _e)
 {
-	if (!test::Options::get().checkState)
+	if (!test::Options::get().checkstate)
 		return;
 
 	string exWhat {	_e.what() };
