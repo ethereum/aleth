@@ -67,6 +67,96 @@ enum class QueueStatus
 
 std::ostream& operator<< (std::ostream& os, QueueStatus const& obj);
 
+template<class T>
+class SizedBlockQueue
+{
+public:
+	std::size_t count() const { return m_queue.size(); }
+
+	std::size_t size() const { return m_size; }
+	
+	bool isEmpty() const { return m_queue.empty(); }
+
+	h256 nextHash() const { return m_queue.front().verified.info.sha3Uncles(); }
+
+	T const& next() const { return m_queue.front(); }
+
+	void clear()
+	{
+		m_queue.clear();
+		m_size = 0;
+	}
+
+	void enqueue(T&& _t)
+	{
+		m_size += _t.blockData.size();
+		m_queue.emplace_back(std::move(_t));
+	}
+
+	T dequeue()
+	{
+		T t;
+		std::swap(t, m_queue.front());
+		m_queue.pop_front();
+		m_size -= t.blockData.size();
+
+		return t;
+	}
+
+	std::vector<T> dequeueMultiple(std::size_t _n)
+	{
+		return removeRange(m_queue.begin(), m_queue.begin() + _n);
+	}
+
+	bool remove(h256 const& _hash)
+	{
+		std::vector<T> removed = removeIf(sha3UnclesEquals(_hash));
+		return !removed.empty();
+	}
+
+	template<class Pred>
+	std::vector<T> removeIf(Pred _pred)
+	{
+		auto const removedBegin = std::remove_if(m_queue.begin(), m_queue.end(), _pred);
+
+		return removeRange(removedBegin, m_queue.end());
+	}
+
+	bool replace(h256 const& _hash, T&& _t)
+	{
+		auto const it = std::find_if(m_queue.begin(), m_queue.end(), sha3UnclesEquals(_hash));
+
+		if (it == m_queue.end())
+			return false;
+
+		m_size -= it->blockData.size();
+		m_size += _t.blockData.size();
+		*it = std::move(_t);
+
+		return true;
+	}
+
+private:
+	static std::function<bool(T const&)> sha3UnclesEquals(h256 const& _hash)
+	{
+		return [&_hash](T const& _t) { return _t.verified.info.sha3Uncles() == _hash; };
+	}
+
+	std::vector<T> removeRange(typename std::deque<T>::iterator _begin, typename std::deque<T>::iterator _end)
+	{
+		std::vector<T> ret(std::make_move_iterator(_begin), std::make_move_iterator(_end));
+
+		for (auto it = ret.begin(); it != ret.end(); ++it)
+			m_size -= it->blockData.size();
+
+		m_queue.erase(_begin, _end);
+		return ret;
+	}
+
+	std::deque<T> m_queue;
+	std::atomic<size_t> m_size;	///< Tracks total size in bytes
+};
+
 /**
  * @brief A queue of blocks. Sits between network or other I/O and the BlockChain.
  * Sorts them ready for blockchain insertion (with the BlockChain::sync() method).
@@ -113,7 +203,7 @@ public:
 	h256 firstUnknown() const { ReadGuard l(m_lock); return m_unknownSet.size() ? *m_unknownSet.begin() : h256(); }
 
 	/// Get some infomration on the current status.
-	BlockQueueStatus status() const { ReadGuard l(m_lock); Guard l2(m_verification); return BlockQueueStatus{m_drainingSet.size(), m_verified.size(), m_verifying.size(), m_unverified.size(), m_future.size(), m_unknown.size(), m_knownBad.size()}; }
+	BlockQueueStatus status() const { ReadGuard l(m_lock); Guard l2(m_verification); return BlockQueueStatus{m_drainingSet.size(), m_verified.count(), m_verifying.count(), m_unverified.count(), m_future.size(), m_unknown.size(), m_knownBad.size()}; }
 
 	/// Get some infomration on the given block's status regarding us.
 	QueueStatus blockStatus(h256 const& _h) const;
@@ -133,7 +223,7 @@ private:
 	{
 		h256 hash;
 		h256 parentHash;
-		bytes block;
+		bytes blockData;
 	};
 
 	void noteReady_WITH_LOCK(h256 const& _b);
@@ -144,6 +234,9 @@ private:
 	void collectUnknownBad_WITH_BOTH_LOCKS(h256 const& _bad);
 	void updateBad_WITH_LOCK(h256 const& _bad);
 	void drainVerified_WITH_BOTH_LOCKS();
+
+	std::size_t knownSize() const;
+	std::size_t knownCount() const;
 
 	BlockChain const* m_bc;												///< The blockchain into which our imports go.
 
@@ -159,18 +252,16 @@ private:
 
 	mutable Mutex m_verification;										///< Mutex that allows writing to m_verified, m_verifying and m_unverified.
 	std::condition_variable m_moreToVerify;								///< Signaled when m_unverified has a new entry.
-	std::deque<VerifiedBlock> m_verified;								///< List of blocks, in correct order, verified and ready for chain-import.
-	std::deque<VerifiedBlock> m_verifying;								///< List of blocks being verified; as long as the block component (bytes) is empty, it's not finished.
-	std::deque<UnverifiedBlock> m_unverified;							///< List of <block hash, parent hash, block data> in correct order, ready for verification.
+	SizedBlockQueue<VerifiedBlock> m_verified;								///< List of blocks, in correct order, verified and ready for chain-import.
+	SizedBlockQueue<VerifiedBlock> m_verifying;								///< List of blocks being verified; as long as the block component (bytes) is empty, it's not finished.
+	SizedBlockQueue<UnverifiedBlock> m_unverified;							///< List of <block hash, parent hash, block data> in correct order, ready for verification.
 
 	std::vector<std::thread> m_verifiers;								///< Threads who only verify.
 	std::atomic<bool> m_deleting = {false};								///< Exit condition for verifiers.
 
 	std::function<void(Exception&)> m_onBad;							///< Called if we have a block that doesn't verify.
 	std::atomic<size_t> m_unknownSize;									///< Tracks total size in bytes of all unknown blocks
-	std::atomic<size_t> m_knownSize;									///< Tracks total size in bytes of all known blocks;
 	std::atomic<size_t> m_unknownCount;									///< Tracks total count of unknown blocks. Used to avoid additional syncing
-	std::atomic<size_t> m_knownCount;									///< Tracks total count of known blocks. Used to avoid additional syncing
 	u256 m_difficulty;													///< Total difficulty of blocks in the queue
 	u256 m_drainingDifficulty;											///< Total difficulty of blocks in draining
 };
