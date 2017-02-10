@@ -93,7 +93,6 @@ matrix:
         - os: osx
           osx_image: xcode8
           env:
-              - TRAVIS_TESTS=Off
               - ZIP_SUFFIX=macos-sierra
 git:
     depth: 2
@@ -102,6 +101,11 @@ cache:
     directories:
         - ~/.ethash
         - ~/.local
+        - ~/Library/Caches/Homebrew
+before_install:
+    # Install ccache on osx
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install ccache; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then export PATH="/usr/local/opt/ccache/libexec:$PATH"; fi
 install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then ./scripts/install_cmake.sh; fi
     - ./scripts/install_deps.sh
