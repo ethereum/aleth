@@ -1,5 +1,4 @@
-aux_source_directory(. SRC_LIST)
-
+file(GLOB SRC_LIST "*.cpp")
 file(GLOB HEADERS "*.h")
 
 add_library(web3jsonrpc ${SRC_LIST} ${HEADERS})
@@ -27,11 +26,6 @@ jsonrpcstub_create(web3jsonrpc whisper.json
 jsonrpcstub_create(web3jsonrpc net.json
 	dev::rpc::NetFace ${CMAKE_CURRENT_SOURCE_DIR} NetFace
 	NetClient ${CMAKE_CURRENT_BINARY_DIR} NetClient
-)
-
-jsonrpcstub_create(web3jsonrpc bzz.json
-	dev::rpc::BzzFace ${CMAKE_CURRENT_SOURCE_DIR} BzzFace
-	BzzClient ${CMAKE_CURRENT_BINARY_DIR} BzzClient
 )
 
 jsonrpcstub_create(web3jsonrpc web3.json

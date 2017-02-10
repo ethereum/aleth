@@ -311,10 +311,8 @@ private:
 	static h256 chunkId(unsigned _level, unsigned _index) { return h256(_index * 0xff + _level); }
 
 	/// Initialise everything and ready for openning the database.
-	// TODO: rename to init
-	void init(ChainParams const& _p, std::string const& _path);
+	void init(ChainParams const& _p);
 	/// Open the database.
-	// TODO: rename to open.
 	unsigned open(std::string const& _path, WithExisting _we);
 	/// Open the database, rebuilding if necessary.
 	void open(std::string const& _path, WithExisting _we, ProgressCallback const& _pc);
