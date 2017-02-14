@@ -44,9 +44,7 @@ size_t const c_maxKnownSize = 128 * 1024 * 1024;
 size_t const c_maxUnknownCount = 100000;
 size_t const c_maxUnknownSize = 512 * 1024 * 1024; // Block size can be ~50kb
 
-BlockQueue::BlockQueue():
-	m_unknownSize(0),
-	m_unknownCount(0)
+BlockQueue::BlockQueue()
 {
 	// Allow some room for other activity
 	unsigned verifierThreads = std::max(thread::hardware_concurrency(), 3U) - 2U;
@@ -86,8 +84,6 @@ void BlockQueue::clear()
 	m_unknownSet.clear();
 	m_unknown.clear();
 	m_future.clear();
-	m_unknownSize = 0;
-	m_unknownCount = 0;
 	m_difficulty = 0;
 	m_drainingDifficulty = 0;
 }
@@ -221,14 +217,12 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 	// Check it's not in the future
 	if (bi.timestamp() > utcTime() && !_isOurs)
 	{
-		m_future.insert(make_pair((unsigned)bi.timestamp(), make_pair(h, _block.toBytes())));
+		m_future.insert(static_cast<time_t>(bi.timestamp()), h, _block.toBytes());
 		char buf[24];
-		time_t bit = (unsigned)bi.timestamp();
+		time_t bit = static_cast<time_t>(bi.timestamp());
 		if (strftime(buf, 24, "%X", localtime(&bit)) == 0)
 			buf[0] = '\0'; // empty if case strftime fails
 		clog(BlockQueueTraceChannel) << "OK - queued for future [" << bi.timestamp() << "vs" << utcTime() << "] - will wait until" << buf;
-		m_unknownSize += _block.size();
-		m_unknownCount++;
 		m_difficulty += bi.difficulty();
 		bool unknown =  !m_readySet.count(bi.parentHash()) && !m_drainingSet.count(bi.parentHash()) && !m_bc->isKnown(bi.parentHash());
 		return unknown ? ImportResult::FutureTimeUnknown : ImportResult::FutureTimeKnown;
@@ -247,11 +241,9 @@ ImportResult BlockQueue::import(bytesConstRef _block, bool _isOurs)
 		{
 			// We don't know the parent (yet) - queue it up for later. It'll get resent to us if we find out about its ancestry later on.
 			clog(BlockQueueTraceChannel) << "OK - queued as unknown parent:" << bi.parentHash();
-			m_unknown.insert(make_pair(bi.parentHash(), make_pair(h, _block.toBytes())));
+			m_unknown.insert(bi.parentHash(), h, _block.toBytes());
 			m_unknownSet.insert(h);
-			m_unknownSize += _block.size();
 			m_difficulty += bi.difficulty();
-			m_unknownCount++;
 
 			return ImportResult::UnknownParent;
 		}
@@ -327,18 +319,14 @@ void BlockQueue::collectUnknownBad_WITH_BOTH_LOCKS(h256 const& _bad)
 	list<h256> badQueue(1, _bad);
 	while (!badQueue.empty())
 	{
-		auto r = m_unknown.equal_range(badQueue.front());
+		vector<pair<h256, bytes>> const removed = m_unknown.removeByKeyEqual(badQueue.front());
 		badQueue.pop_front();
-		for (auto it = r.first; it != r.second; ++it)
+		for (auto& newBad: removed)
 		{
-			m_unknownSize -= it->second.second.size();
-			m_unknownCount--;
-			auto newBad = it->second.first;
-			m_unknownSet.erase(newBad);
-			m_knownBad.insert(newBad);
-			badQueue.push_back(newBad);
+			m_unknownSet.erase(newBad.first);
+			m_knownBad.insert(newBad.first);
+			badQueue.push_back(newBad.first);
 		}
-		m_unknown.erase(r.first, r.second);
 	}
 }
 
@@ -364,13 +352,13 @@ void BlockQueue::tick()
 	vector<pair<h256, bytes>> todo;
 	{
 		UpgradableGuard l(m_lock);
-		if (m_future.empty())
+		if (m_future.isEmpty())
 			return;
 
 		cblockq << "Checking past-future blocks...";
 
-		uint64_t t = utcTime();
-		if (t < m_future.begin()->first)
+		time_t t = utcTime();
+		if (t < m_future.firstKey())
 			return;
 
 		cblockq << "Past-future blocks ready.";
@@ -378,14 +366,7 @@ void BlockQueue::tick()
 		{
 			UpgradeGuard l2(l);
 			DEV_INVARIANT_CHECK;
-			auto end = m_future.upper_bound(t);
-			for (auto i = m_future.begin(); i != end; ++i)
-			{
-				m_unknownSize -= i->second.second.size();
-				m_unknownCount--;
-				todo.push_back(move(i->second));
-			}
-			m_future.erase(m_future.begin(), end);
+			todo = m_future.removeByKeyNotGreater(t);
 		}
 	}
 	cblockq << "Importing" << todo.size() << "past-future blocks.";
@@ -394,10 +375,12 @@ void BlockQueue::tick()
 		import(&b.second);
 }
 
-template <class T> T advanced(T _t, unsigned _n)
-{
-	std::advance(_t, _n);
-	return _t;
+BlockQueueStatus BlockQueue::status() const
+{ 
+	ReadGuard l(m_lock); 
+	Guard l2(m_verification); 
+	return BlockQueueStatus{ m_drainingSet.size(), m_verified.count(), m_verifying.count(), m_unverified.count(), 
+		m_future.count(), m_unknown.count(), m_knownBad.size() };
 }
 
 QueueStatus BlockQueue::blockStatus(h256 const& _h) const
@@ -432,7 +415,17 @@ std::size_t BlockQueue::knownCount() const
 
 bool BlockQueue::unknownFull() const
 {
-	return m_unknownSize > c_maxUnknownSize || m_unknownCount > c_maxUnknownCount;
+	return unknownSize() > c_maxUnknownSize || unknownCount() > c_maxUnknownCount;
+}
+
+std::size_t BlockQueue::unknownSize() const
+{
+	return m_future.size() + m_unknown.size();
+}
+
+std::size_t BlockQueue::unknownCount() const
+{
+	return m_future.count() + m_unknown.count();
 }
 
 void BlockQueue::drain(VerifiedBlocks& o_out, unsigned _max)
@@ -481,21 +474,18 @@ void BlockQueue::noteReady_WITH_LOCK(h256 const& _good)
 	bool notify = false;
 	while (!goodQueue.empty())
 	{
-		auto r = m_unknown.equal_range(goodQueue.front());
+		h256 const parent = goodQueue.front();
+		vector<pair<h256, bytes>> const removed = m_unknown.removeByKeyEqual(parent);
 		goodQueue.pop_front();
-		for (auto it = r.first; it != r.second; ++it)
+		for (auto& newReady: removed)
 		{
 			DEV_GUARDED(m_verification)
-				m_unverified.enqueue(UnverifiedBlock { it->second.first, it->first, it->second.second });
-			m_unknownSize -= it->second.second.size();
-			m_unknownCount--;
-			auto newReady = it->second.first;
-			m_unknownSet.erase(newReady);
-			m_readySet.insert(newReady);
-			goodQueue.push_back(newReady);
+				m_unverified.enqueue(UnverifiedBlock { newReady.first, parent, move(newReady.second) });
+			m_unknownSet.erase(newReady.first);
+			m_readySet.insert(newReady.first);
+			goodQueue.push_back(newReady.first);
 			notify = true;
 		}
-		m_unknown.erase(r.first, r.second);
 	}
 	if (notify)
 		m_moreToVerify.notify_all();
@@ -505,18 +495,19 @@ void BlockQueue::retryAllUnknown()
 {
 	WriteGuard l(m_lock);
 	DEV_INVARIANT_CHECK;
-	for (auto it = m_unknown.begin(); it != m_unknown.end(); ++it)
+	while (!m_unknown.isEmpty())
 	{
-		DEV_GUARDED(m_verification)
-			m_unverified.enqueue(UnverifiedBlock { it->second.first, it->first, it->second.second });
-		auto newReady = it->second.first;
-		m_unknownSet.erase(newReady);
-		m_readySet.insert(newReady);
-		m_moreToVerify.notify_one();
+		h256 parent = m_unknown.firstKey();
+		vector<pair<h256, bytes>> removed = m_unknown.removeByKeyEqual(parent);
+		for (auto& newReady: removed)
+		{
+			DEV_GUARDED(m_verification)
+				m_unverified.enqueue(UnverifiedBlock{ newReady.first, parent, move(newReady.second) });
+			m_unknownSet.erase(newReady.first);
+			m_readySet.insert(newReady.first);
+			m_moreToVerify.notify_one();
+		}
 	}
-	m_unknown.clear();
-	m_unknownSize = 0;
-	m_unknownCount = 0;
 	m_moreToVerify.notify_all();
 }
 
