@@ -742,7 +742,7 @@ void BlockChainSync::resetSync()
 	m_bodySyncPeers.clear();
 	m_headerIdToNumber.clear();
 	m_syncingTotalDifficulty = 0;
-	m_state = SyncState::Idle;
+	m_state = SyncState::NotSynced;
 }
 
 void BlockChainSync::restartSync()
@@ -755,7 +755,6 @@ void BlockChainSync::restartSync()
 	m_startingBlock = host().chain().number();
 	m_lastImportedBlock = m_startingBlock;
 	m_lastImportedBlockHash = host().chain().currentHash();
-	m_state = SyncState::NotSynced;
 }
 
 void BlockChainSync::completeSync()
