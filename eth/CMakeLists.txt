@@ -19,12 +19,6 @@ if (EVMJIT)
 	eth_copy_dlls(eth EVMJIT_DLLS)
 endif()
 
-if (MSVC)
-	find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time)
-	target_link_libraries(eth ${Boost_CHRONO_LIBRARIES})
-	target_link_libraries(eth ${Boost_DATE_TIME_LIBRARIES})
-endif()
-
 if (UNIX AND NOT APPLE)
 	target_link_libraries(eth pthread)
 endif()

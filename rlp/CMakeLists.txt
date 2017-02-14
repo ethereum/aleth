@@ -13,12 +13,6 @@ target_include_directories(rlp PRIVATE ../utils)
 target_link_libraries(rlp ${Dev_DEVCORE_LIBRARIES})
 target_link_libraries(rlp ${Dev_DEVCRYPTO_LIBRARIES})
 
-if (MSVC)
-	find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time)
-	target_link_libraries(rlp ${Boost_CHRONO_LIBRARIES})
-	target_link_libraries(rlp ${Boost_DATE_TIME_LIBRARIES})
-endif()
-
 if (UNIX AND NOT APPLE)
 	target_link_libraries(rlp pthread)
 endif()
