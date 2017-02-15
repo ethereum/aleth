@@ -11,5 +11,3 @@ add_library(testutils ${LOCAL_SRC_LIST} ${HEADERS})
 find_package(Eth)
 
 target_link_libraries(testutils ${Eth_ETHASHSEAL_LIBRARIES})
-
-install(TARGETS testutils RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

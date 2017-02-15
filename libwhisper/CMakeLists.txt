@@ -1,5 +1,3 @@
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DSTATICLIB")
-
 aux_source_directory(. SRC_LIST)
 
 file(GLOB HEADERS "*.h")
@@ -15,5 +13,3 @@ target_link_libraries(whisper ${Boost_REGEX_LIBRARIES})
 target_link_libraries(whisper ${Dev_DEVCORE_LIBRARIES})
 target_link_libraries(whisper ${Dev_DEVCRYPTO_LIBRARIES})
 target_link_libraries(whisper ${Dev_P2P_LIBRARIES})
-
-install(TARGETS whisper RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

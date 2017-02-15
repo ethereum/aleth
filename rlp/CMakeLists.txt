@@ -23,9 +23,3 @@ if (UNIX AND NOT APPLE)
 	target_link_libraries(rlp pthread)
 endif()
 
-if (APPLE)
-	install(TARGETS rlp DESTINATION bin)
-else()
-	eth_install_executable(rlp)
-endif()
-
