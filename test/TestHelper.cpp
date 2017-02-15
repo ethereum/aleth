@@ -153,6 +153,7 @@ string netIdToString(eth::Network _netId)
 		case eth::Network::HomesteadTest: return "Homestead";
 		case eth::Network::EIP150Test: return "EIP150";
 		case eth::Network::EIP158Test: return "EIP158";
+		case eth::Network::MetropolisTest: return "Metropolis";
 		default: return "other";
 	}
 	return "unknown";
@@ -168,6 +169,8 @@ eth::Network stringToNetId(string const& _netname)
 		return eth::Network::EIP150Test;
 	if (netIdToString(eth::Network::EIP158Test) == _netname)
 		return eth::Network::EIP158Test;
+	if (netIdToString(eth::Network::MetropolisTest) == _netname)
+		return eth::Network::MetropolisTest;
 	BOOST_ERROR(TestOutputHelper::testName() + " network not found: " + _netname);
 	return eth::Network::FrontierTest;
 }
@@ -217,6 +220,7 @@ bytes ImportTest::executeTest()
 			networks.push_back(eth::Network::HomesteadTest);
 			networks.push_back(eth::Network::EIP150Test);
 			networks.push_back(eth::Network::EIP158Test);
+			networks.push_back(eth::Network::MetropolisTest);
 		}
 
 		json_spirit::mObject json;
@@ -637,7 +641,7 @@ void ImportTest::checkGeneralTestSectionSearch(json_spirit::mObject const& _expe
 
 	BOOST_CHECK_MESSAGE(network.size() > 0, TestOutputHelper::testName() + "Network array not set!");
 	vector<string> allowednetworks = {netIdToString(eth::Network::FrontierTest), netIdToString(eth::Network::HomesteadTest),
-									netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), "ALL"};
+				   netIdToString(eth::Network::EIP150Test), netIdToString(eth::Network::EIP158Test), netIdToString(eth::Network::MetropolisTest), "ALL"};
 	for(size_t i=0; i<network.size(); i++)
 		BOOST_CHECK_MESSAGE(inArray(allowednetworks, network.at(i)), TestOutputHelper::testName() + "Specified Network not found: " + network.at(i));
 
