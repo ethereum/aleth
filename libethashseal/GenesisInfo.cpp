@@ -61,6 +61,7 @@ h256 const& dev::eth::genesisStateRoot(Network _n)
 	case Network::FrontierTest: return c_genesisStateRootFrontierTest;
 	case Network::HomesteadTest: return c_genesisStateRootHomesteadTest;
 	case Network::EIP150Test: return c_genesisStateRootEIP150Test;
+	case Network::EIP158Test: return c_genesisStateRootEIP158Test;
 	case Network::MetropolisTest: return c_genesisStateRootMetropolisTest;
 	default:
 		throw std::invalid_argument("Invalid network value");
