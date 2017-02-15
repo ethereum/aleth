@@ -11,5 +11,3 @@ if (NOT EMSCRIPTEN)
     target_include_directories(devcore SYSTEM PUBLIC ${LEVELDB_INCLUDE_DIRS})
     target_link_libraries(devcore boost::filesystem boost::random boost::thread ${LEVELDB_LIBRARIES})
 endif()
-
-install(TARGETS devcore RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

@@ -15,5 +15,3 @@ target_link_libraries(devcrypto cryptopp ${Utils_SCRYPT_LIBRARIES} devcore)
 if (NOT EMSCRIPTEN)
 	target_link_libraries(devcrypto ${Utils_SECP256K1_LIBRARIES})
 endif ()
-
-install(TARGETS devcrypto RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

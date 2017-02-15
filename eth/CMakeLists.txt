@@ -2,7 +2,7 @@ aux_source_directory(. SRC_LIST)
 
 file(GLOB HEADERS "*.h")
 
-eth_simple_add_executable(eth ${SRC_LIST} ${HEADERS})
+add_executable(eth ${SRC_LIST} ${HEADERS})
 
 find_package(Eth)
 find_package(Web3)

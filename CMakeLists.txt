@@ -36,11 +36,11 @@ eth_policy()
 # project name and version should be set after cmake_policy CMP0048
 project(cpp-ethereum VERSION "1.3.0")
 
+include(EthOptions)
 include(EthCompilerSettings)
 include(EthExecutableHelper)
 include(EthDependencies)
 include(EthUtils)
-include(EthOptions)
 
 include(deps/jsoncpp.cmake)
 include(deps/jsonrpc.cmake)

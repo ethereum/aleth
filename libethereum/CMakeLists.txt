@@ -21,5 +21,3 @@ endif()
 if (EVMJIT)
 	target_link_libraries(ethereum ${Eth_EVMJIT_LIBRARIES})
 endif()
-
-install(TARGETS ethereum RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)
