@@ -177,6 +177,9 @@ BOOST_AUTO_TEST_CASE(stCodeSizeLimit){}
 BOOST_AUTO_TEST_CASE(stCreateTest){}
 BOOST_AUTO_TEST_CASE(stRevertTest){}
 
+//Metropolis Tests
+BOOST_AUTO_TEST_CASE(stStackTests){}
+
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}
 BOOST_AUTO_TEST_CASE(stMemoryStressTest){}

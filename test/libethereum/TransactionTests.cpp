@@ -162,6 +162,11 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
 
+BOOST_AUTO_TEST_CASE(ttMetropolisTests)
+{
+	dev::test::executeTests("ttMetropolisTest", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
+}
+
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
 {
 	dev::test::executeTests("ttTransactionTestEip155VitaliksTests", "/TransactionTests/EIP155", "/TransactionTestsFiller/EIP155", dev::test::doTransactionTests);
