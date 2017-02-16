@@ -157,6 +157,9 @@ private:
 		eth::Network netId;
 	};
 	std::vector<transactionToExecute> m_transactions;
+	using StateAndMap = std::pair<eth::State, eth::AccountMaskMap>;
+	using TrExpectSection = std::pair<transactionToExecute, StateAndMap>;
+	void checkGeneralTestSectionSearch(json_spirit::mObject const& _expects, std::vector<size_t>& _errorTransactions, std::string const& _network = "", TrExpectSection* _search = NULL) const;
 
 	json_spirit::mObject& m_testObject;
 	testType m_testType;
@@ -170,6 +173,8 @@ protected:
 };
 
 // helping functions
+std::string netIdToString(eth::Network _netId);
+eth::Network stringToNetId(std::string const& _netname);
 u256 toInt(json_spirit::mValue const& _v);
 byte toByte(json_spirit::mValue const& _v);
 void replaceLLLinState(json_spirit::mObject& _o);
@@ -204,6 +209,7 @@ void userDefinedTest(std::function<void(json_spirit::mValue&, bool)> doTests);
 RLPStream createRLPStreamFromTransactionFields(json_spirit::mObject const& _tObj);
 eth::LastHashes lastHashes(u256 _currentBlockNumber);
 json_spirit::mObject fillJsonWithState(eth::State const& _state);
+json_spirit::mObject fillJsonWithState(eth::State const& _state, eth::AccountMaskMap const& _map);
 json_spirit::mObject fillJsonWithTransaction(eth::Transaction const& _txn);
 
 //Fill Test Functions
@@ -225,12 +231,14 @@ class Options
 {
 public:
 	bool vmtrace = false;	///< Create EVM execution tracer
-	bool fillTests = false; ///< Create JSON test files from execution results
-	bool stats = false;		///< Execution time stats
+	bool filltests = false; ///< Create JSON test files from execution results
+	bool fillchain = false; ///< Fill tests as a blockchain tests if possible
+	bool stats = false;		///< Execution time and stats for state tests
 	std::string statsOutFile; ///< Stats output file. "out" for standard output
+	bool exectimelog = false; ///< Print execution time for each test suite
 	std::string rCheckTest;   ///< Test Input (for random tests)
 	std::string rCurrentTestSuite; ///< Remember test suite before boost overwrite (for random tests)
-	bool checkState = false;///< Throw error when checking test states
+	bool checkstate = false;///< Throw error when checking test states
 	bool fulloutput = false;///< Replace large output to just it's length
 	bool createRandomTest = false; ///< Generate random test
 	Verbosity logVerbosity = Verbosity::NiceReport;
@@ -241,6 +249,9 @@ public:
 	std::string singleTestFile;
 	std::string singleTestName;
 	std::string singleTestNet;
+	int trDataIndex; ///< GeneralState data
+	int trGasIndex; ///< GeneralState gas
+	int trValueIndex; ///< GeneralState value
 	bool performance = false;
 	bool nonetwork = false;///< For libp2p
 	bool quadratic = false;
@@ -259,7 +270,6 @@ private:
 	Options(Options const&) = delete;
 };
 
-
 class TestOutputHelper
 {
 public:
@@ -272,12 +282,18 @@ public:
 	static std::string const& testName() { return m_currentTestName; }
 	static std::string const& caseName() { return m_currentTestCaseName; }
 	static std::string const& testFileName() { return m_currentTestFileName; }
+	static void finishTest();
+	static void printTestExecStats();
+	~TestOutputHelper() { TestOutputHelper::finishTest(); }
 private:
+	static Timer m_timer;
 	static size_t m_currTest;
 	static size_t m_maxTests;
 	static std::string m_currentTestName;
 	static std::string m_currentTestCaseName;
 	static std::string m_currentTestFileName;
+	typedef std::pair<double, std::string> execTimeName;
+	static std::vector<execTimeName> m_execTimeResults;
 };
 
 /// Allows observing test execution process.

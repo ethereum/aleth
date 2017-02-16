@@ -23,10 +23,8 @@
  */
 
 #include <thread>
-#include <chrono>
 #include <fstream>
 #include <iostream>
-#include <clocale>
 #include <signal.h>
 
 #include <boost/algorithm/string.hpp>
@@ -39,13 +37,12 @@
 #include <libevm/VMFactory.h>
 #include <libethcore/KeyManager.h>
 #include <libethcore/ICAP.h>
-#include <libethereum/All.h>
+#include <libethereum/Defaults.h>
 #include <libethereum/BlockChainSync.h>
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
 #include <libwebthree/WebThree.h>
 
-#if ETH_JSONRPC
 #include <libweb3jsonrpc/AccountHolder.h>
 #include <libweb3jsonrpc/Eth.h>
 #include <libweb3jsonrpc/SafeHttpServer.h>
@@ -56,15 +53,12 @@
 #include <libweb3jsonrpc/Whisper.h>
 #include <libweb3jsonrpc/Net.h>
 #include <libweb3jsonrpc/Web3.h>
-#include <libweb3jsonrpc/SessionManager.h>
 #include <libweb3jsonrpc/AdminNet.h>
 #include <libweb3jsonrpc/AdminEth.h>
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Debug.h>
 #include <libweb3jsonrpc/Test.h>
-#include "Farm.h"
-#endif // ETH_JSONRPC
 
 #include <ethminer/MinerAux.h>
 #include "AccountManager.h"
@@ -98,7 +92,6 @@ void help()
 		<< endl
 		<< "    -o,--mode <full/peer>  Start a full node or a peer node (default: full)." << endl
 		<< endl
-#if ETH_JSONRPC
 		<< "    -j,--json-rpc  Enable JSON-RPC server (default: off)." << endl
 		<< "    --ipc  Enable IPC server (default: on)." << endl
 		<< "    --ipcpath Set .ipc socket path (default: data directory)" << endl
@@ -107,7 +100,6 @@ void help()
 		<< "    --json-rpc-port <n>  Specify JSON-RPC server port (implies '-j', default: " << SensibleHttpPort << ")." << endl
 		<< "    --rpccorsdomain <domain>  Domain on which to send Access-Control-Allow-Origin header." << endl
 		<< "    --admin <password>  Specify admin session key for JSON-RPC (default: auto-generated and printed at start-up)." << endl
-#endif // ETH_JSONRPC
 		<< "    -K,--kill  Kill the blockchain first." << endl
 		<< "    -R,--rebuild  Rebuild the blockchain from the existing database." << endl
 		<< "    --rescue  Attempt to rescue a corrupt database." << endl
@@ -294,7 +286,7 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
-class ExitHandler: public SystemManager
+class ExitHandler: public rpc::SystemManager
 {
 public:
 	void exit() { exitHandler(0); }
@@ -341,12 +333,10 @@ int main(int argc, char** argv)
 	NodeMode nodeMode = NodeMode::Full;
 	bool interactive = false;
 
-#if ETH_JSONRPC
 	int jsonRPCURL = -1;
 	bool adminViaHttp = false;
 	bool ipc = true;
 	std::string rpcCorsDomain = "";
-#endif // ETH_JSONRPC
 
 	string jsonAdmin;
 	ChainParams chainParams(genesisInfo(eth::Network::MainNetwork), genesisStateRoot(eth::Network::MainNetwork));
@@ -755,7 +745,6 @@ int main(int argc, char** argv)
 		else if (arg == "--old-interactive")
 			interactive = true;
 
-#if ETH_JSONRPC
 		else if ((arg == "-j" || arg == "--json-rpc"))
 			jsonRPCURL = jsonRPCURL == -1 ? SensibleHttpPort : jsonRPCURL;
 		else if (arg == "--admin-via-http")
@@ -770,7 +759,6 @@ int main(int argc, char** argv)
 			ipc = true;
 		else if (arg == "--no-ipc")
 			ipc = false;
-#endif // ETH_JSONRPC
 
 		else if ((arg == "-v" || arg == "--verbosity") && i + 1 < argc)
 			g_logVerbosity = atoi(argv[++i]);
@@ -1195,7 +1183,6 @@ int main(int argc, char** argv)
 	else
 		cout << "Networking disabled. To start, use netstart or pass --bootstrap or a remote host." << endl;
 
-#if ETH_JSONRPC
 	unique_ptr<ModularServer<>> jsonrpcHttpServer;
 	unique_ptr<ModularServer<>> jsonrpcIpcServer;
 	unique_ptr<rpc::SessionManager> sessionManager;
@@ -1296,7 +1283,6 @@ int main(int argc, char** argv)
 		writeFile(getDataDir("web3") + "/session.key", jsonAdmin);
 		writeFile(getDataDir("web3") + "/session.url", "http://localhost:" + toString(jsonRPCURL));
 	}
-#endif // ETH_JSONRPC
 
 	for (auto const& p: preferredNodes)
 		if (p.second.second)
@@ -1327,12 +1313,10 @@ int main(int argc, char** argv)
 		while (!exitHandler.shouldExit())
 			this_thread::sleep_for(chrono::milliseconds(1000));
 
-#if ETH_JSONRPC
 	if (jsonrpcHttpServer.get())
 		jsonrpcHttpServer->StopListening();
 	if (jsonrpcIpcServer.get())
 		jsonrpcIpcServer->StopListening();
-#endif
 
 	auto netData = web3.saveNetwork();
 	if (!netData.empty())

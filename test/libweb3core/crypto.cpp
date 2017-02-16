@@ -26,14 +26,12 @@
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
-#include <libdevcore/Common.h>
 #include <libethereum/Transaction.h>
 #include <test/TestHelper.h>
 
 using namespace std;
 using namespace dev;
 using namespace dev::crypto;
-using namespace CryptoPP;
 using namespace dev::test;
 
 BOOST_FIXTURE_TEST_SUITE(devcrypto, TestOutputHelper)

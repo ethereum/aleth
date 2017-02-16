@@ -29,13 +29,14 @@
 #include "Defaults.h"
 #include "Executive.h"
 #include "EthereumHost.h"
-#include "Utility.h"
 #include "Block.h"
 #include "TransactionQueue.h"
 using namespace std;
 using namespace dev;
 using namespace dev::eth;
 using namespace p2p;
+
+static_assert(BOOST_VERSION == 106300, "Wrong boost headers version");
 
 std::ostream& dev::eth::operator<<(std::ostream& _out, ActivityReport const& _r)
 {
@@ -137,7 +138,7 @@ void Client::onBadBlock(Exception& _ex) const
 	if (!block)
 	{
 		cwarn << "ODD: onBadBlock called but exception (" << _ex.what() << ") has no block in it.";
-		cwarn << boost::diagnostic_information(_ex, true);
+		cwarn << boost::diagnostic_information(_ex);
 		return;
 	}
 

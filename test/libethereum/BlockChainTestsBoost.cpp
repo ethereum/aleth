@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(bcMultiChainTestHomestead) {	dev::test::executeTests("bcMul
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTestHomestead)
 {
 	std::string fillersPath =  dev::test::getTestPath() +  "/src/BlockchainTestsFiller/Homestead";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests/Homestead", "/BlockchainTestsFiller/Homestead", dev::test::doBlockchainTests);
 	else
 	{
@@ -110,7 +110,7 @@ BOOST_FIXTURE_TEST_SUITE(BlockChainTests, frontierFixture)
 BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 {
 	std::string fillersPath =  dev::test::getTestPath() + "/src/BlockchainTestsFiller";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("bcForkBlockTest", "/BlockchainTests", "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 	else
 	{
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(bcForkBlockTest)
 BOOST_AUTO_TEST_CASE(bcForkUncleTest)
 {
 	std::string fillersPath =  dev::test::getTestPath() + "/src/BlockchainTestsFiller";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("bcForkUncle", "/BlockchainTests", "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 	else
 	{
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(bcTotalDifficultyTest) {	dev::test::executeTests("bcTotalDi
 BOOST_AUTO_TEST_CASE(bcInvalidRLPTest)
 {
 	std::string fillersPath =  dev::test::getTestPath() + "/src/BlockchainTestsFiller";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("bcInvalidRLPTest", "/BlockchainTests", "/BlockchainTestsFiller", dev::test::doBlockchainTests);
 	else
 	{

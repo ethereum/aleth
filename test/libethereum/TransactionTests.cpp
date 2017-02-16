@@ -84,7 +84,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 				if (o.count("expect") > 0)
 				{
 					bool expectInValid = (o["expect"].get_str() == "invalid");
-					if (Options::get().checkState)
+					if (Options::get().checkstate)
 							BOOST_CHECK_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
 						else
 							BOOST_WARN_MESSAGE(expectInValid, testname + "Check state: Transaction '" << i.first << "' is expected to be valid!");
@@ -97,7 +97,7 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			if (o.count("expect") > 0)
 			{
 				bool expectValid = (o["expect"].get_str() == "valid");
-				if (Options::get().checkState)
+				if (Options::get().checkstate)
 						BOOST_CHECK_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
 					else
 						BOOST_WARN_MESSAGE(expectValid, testname + "Check state: Transaction '" << i.first << "' is expected to be invalid!");
@@ -154,13 +154,18 @@ void doTransactionTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_CHECK_MESSAGE(txFromFields.sender() == addressReaded || txFromRlp.sender() == addressReaded, testname + "Signature address of sender does not match given sender address!");
 		}
 	}//for
-
+	dev::test::TestOutputHelper::finishTest();
 }//doTransactionTests
 
 } }// Namespace Close
 
 
 BOOST_AUTO_TEST_SUITE(TransactionTests)
+
+BOOST_AUTO_TEST_CASE(ttMetropolisTests)
+{
+	dev::test::executeTests("ttMetropolisTest", "/TransactionTests/Metropolis", "/TransactionTestsFiller/Metropolis", dev::test::doTransactionTests);
+}
 
 BOOST_AUTO_TEST_CASE(ttTransactionTestEip155VitaliksTests)
 {
@@ -195,7 +200,7 @@ BOOST_AUTO_TEST_CASE(ttTransactionTest)
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 {
 	std::string fillersPath =  dev::test::getTestPath() + "/src/TransactionTestsFiller/Homestead";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller/Homestead", dev::test::doTransactionTests);
 	else
 	{
@@ -207,7 +212,7 @@ BOOST_AUTO_TEST_CASE(ttWrongRLPTransactionHomestead)
 BOOST_AUTO_TEST_CASE(ttWrongRLPTransaction)
 {
 	std::string fillersPath = dev::test::getTestPath() + "/src/TransactionTestsFiller";
-	if (!dev::test::Options::get().fillTests)
+	if (!dev::test::Options::get().filltests)
 		dev::test::executeTests("ttWrongRLPTransaction", "/TransactionTests", "/TransactionTestsFiller", dev::test::doTransactionTests);
 	else
 	{

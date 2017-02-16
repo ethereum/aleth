@@ -27,13 +27,8 @@
 #include <libethcore/BasicAuthority.h>
 #include <libethcore/Exceptions.h>
 #include <libethashseal/EthashCPUMiner.h>
-
-#if ETH_JSONRPC
-	#include <jsonrpccpp/client/connectors/httpclient.h>
-	#include "FarmClient.h"
-#endif // ETH_JSONRPC
-
-#include "cpp-ethereum/BuildInfo.h"
+#include <jsonrpccpp/client/connectors/httpclient.h>
+#include "FarmClient.h"
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
 //
@@ -247,12 +242,10 @@ public:
 	static void streamHelp(ostream& _out)
 	{
 		_out
-#if ETH_JSONRPC
 			<< "Work farming mode:" << endl
 			<< "    -F,--farm <url>  Put into mining farm mode with the work server at URL (default: http://127.0.0.1:8545)" << endl
 			<< "    --farm-recheck <n>  Leave n ms between checks for changed work (default: 500)." << endl
 			<< "    --no-precompute  Don't precompute the next epoch's DAG." << endl
-#endif // ETH_JSONRPC
 			<< "Ethash verify mode:" << endl
 			<< "    -w,--check-pow <headerHash> <seedHash> <difficulty> <nonce>  Check PoW credentials for validity." << endl
 			<< endl
@@ -345,7 +338,6 @@ private:
 		(void)_m;
 		(void)_remote;
 		(void)_recheckPeriod;
-#if ETH_JSONRPC
 		jsonrpc::HttpClient client(_remote);
 
 		h256 id = h256::random();
@@ -444,8 +436,6 @@ private:
 			{
 				this_thread::sleep_for(chrono::milliseconds(100));
 			}
-
-#endif // ETH_JSONRPC
 		exit(0);
 	}
 

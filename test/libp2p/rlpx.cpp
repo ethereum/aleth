@@ -20,10 +20,17 @@
  * RLPx test functions.
  */
 
+#include <libdevcore/Guards.h>
+#include <boost/asio.hpp>
+#include <boost/test/unit_test.hpp>
+#include <cryptopp/aes.h>
+#include <cryptopp/hmac.h>
+#include <cryptopp/keccak.h>
+#include <cryptopp/modes.h>
+#include <cryptopp/sha.h>
 #include <libdevcore/Common.h>
 #include <libdevcore/RLP.h>
 #include <libdevcore/Log.h>
-#include <boost/test/unit_test.hpp>
 #include <libdevcore/SHA3.h>
 #include <libdevcrypto/ECDHE.h>
 #include <libdevcrypto/CryptoPP.h>
@@ -46,11 +53,6 @@ struct RLPXTestFixture: public TestOutputHelper {
 	Secp256k1PP* s_secp256k1;
 };
 BOOST_FIXTURE_TEST_SUITE(rlpx, RLPXTestFixture)
-
-static CryptoPP::AutoSeededRandomPool s_rng;
-static CryptoPP::OID s_curveOID(CryptoPP::ASN1::secp256k1());
-static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP> s_params(s_curveOID);
-static CryptoPP::DL_GroupParameters_EC<CryptoPP::ECP>::EllipticCurve s_curve(s_params.GetCurve());
 
 BOOST_AUTO_TEST_CASE(test_secrets_cpp_vectors)
 {

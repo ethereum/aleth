@@ -516,7 +516,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 //	string testPath = dev::test::getTestPath() + "/StateTests/RandomTests";
 //	string fillersPath = dev::test::getTestPath() + "/src/StateTestsFiller/RandomTests";
 
-//	if (dev::test::Options::get().fillTests)
+//	if (dev::test::Options::get().filltests)
 //	{
 //		test::TestOutputHelper::initTest();
 //		vector<boost::filesystem::path> testFiles;

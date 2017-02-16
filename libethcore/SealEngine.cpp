@@ -21,6 +21,7 @@
 
 #include "SealEngine.h"
 #include "Transaction.h"
+#include <libevm/ExtVMFace.h>
 using namespace std;
 using namespace dev;
 using namespace eth;
@@ -55,4 +56,16 @@ SealEngineFace* SealEngineRegistrar::create(ChainOperationParams const& _params)
 	if (ret)
 		ret->setChainParams(_params);
 	return ret;
+}
+
+EVMSchedule const& SealEngineBase::evmSchedule(EnvInfo const& _envInfo) const
+{
+	if (_envInfo.number() >= chainParams().u256Param("EIP158ForkBlock"))
+		return EIP158Schedule;
+	else if (_envInfo.number() >= chainParams().u256Param("EIP150ForkBlock"))
+		return EIP150Schedule;
+	else if (_envInfo.number() >= chainParams().u256Param("homsteadForkBlock"))
+		return HomesteadSchedule;
+	else
+		return FrontierSchedule;
 }

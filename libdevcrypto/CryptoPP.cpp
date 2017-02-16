@@ -19,33 +19,16 @@
  * @date 2014
  */
 
-#include <libdevcore/Guards.h>
+#include <libdevcore/Guards.h>  // <boost/thread> conflicts with <thread>
+#include "CryptoPP.h"
+#include <cryptopp/eccrypto.h>
+#include <cryptopp/osrng.h>
+#include <cryptopp/oids.h>
 #include <libdevcore/Assertions.h>
+#include <libdevcore/SHA3.h>
 #include "ECDHE.h"
 
-// At 5.6.3 the ECIES implementation has been deprecated and a warning has
-// been added. A new implementation will be added in 6.0. Until then and for
-// -Werror to not fail the build we have to have this warning ignore pragma here
-// and until the end of the file.
-//
-// Refer here for more information:
-// https://www.cryptopp.com/wiki/Elliptic_Curve_Integrated_Encryption_Scheme#5.6.3_and_6.0_Changes
-//
-// There is also a warning which needs suppressing for Debian builds to work,
-// presumably because to older GCC version (4.9.2) in Debian Jesse compared to
-// other distros.
-//
-// /home/ricardo/cpp-ethereum/cryptopp/misc.h:1074:20:
-// error: ‘std::string CryptoPP::StringNarrow(const wchar_t*, bool)’ defined but not used [-Werror=unused-function]
-// static std::string StringNarrow(const wchar_t *str, bool throwOnError = true)
-
-#if defined(__GNUC__)
-	#pragma GCC diagnostic push
-	// Do not warn about uses of functions, variables, and types marked as deprecated by using the deprecated attribute
-	#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif // defined(__GNUC__)
-
-#include "CryptoPP.h"
+static_assert(CRYPTOPP_VERSION == 570, "Wrong Crypto++ version");
 
 using namespace std;
 using namespace dev;
@@ -56,7 +39,57 @@ static_assert(dev::Secret::size == 32, "Secret key must be 32 bytes.");
 static_assert(dev::Public::size == 64, "Public key must be 64 bytes.");
 static_assert(dev::Signature::size == 65, "Signature must be 65 bytes.");
 
-Secp256k1PP* Secp256k1PP::s_this = nullptr;
+namespace
+{
+class Secp256k1PPCtx
+{
+public:
+	OID m_oid;
+
+	std::mutex x_rng;
+	AutoSeededRandomPool m_rng;
+
+	std::mutex x_params;
+	DL_GroupParameters_EC<ECP> m_params;
+
+	DL_GroupParameters_EC<ECP>::EllipticCurve m_curve;
+
+	Integer m_q;
+	Integer m_qs;
+
+	static Secp256k1PPCtx& get()
+	{
+		static Secp256k1PPCtx ctx;
+		return ctx;
+	}
+
+	void exportPublicKey(DL_PublicKey_EC<ECP> const& _k, Public& o_p);
+
+	void exponentToPublic(Integer const& _e, Public& o_p);
+
+private:
+	Secp256k1PPCtx():
+		m_oid(ASN1::secp256k1()), m_params(m_oid), m_curve(m_params.GetCurve()),
+		m_q(m_params.GetGroupOrder()), m_qs(m_params.GetSubgroupOrder())
+	{}
+};
+
+inline ECP::Point publicToPoint(Public const& _p) { Integer x(_p.data(), 32); Integer y(_p.data() + 32, 32); return ECP::Point(x,y); }
+
+inline Integer secretToExponent(Secret const& _s) { return Integer(_s.data(), Secret::size); }
+
+}
+
+Secp256k1PP* Secp256k1PP::get()
+{
+	static Secp256k1PP s_this;
+	return &s_this;
+}
+
+void Secp256k1PP::toPublic(Secret const& _s, Public& o_public)
+{
+	Secp256k1PPCtx::get().exponentToPublic(Integer(_s.data(), sizeof(_s)), o_public);
+}
 
 bytes Secp256k1PP::eciesKDF(Secret const& _z, bytes _s1, unsigned kdByteLen)
 {
@@ -186,16 +219,20 @@ bool Secp256k1PP::decryptECIES(Secret const& _k, bytesConstRef _sharedMacData, b
 
 void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	ECIES<ECP>::Encryptor e;
-	initializeDLScheme(_k, e);
+	{
+		Guard l(ctx.x_params);
+		e.AccessKey().Initialize(ctx.m_params, publicToPoint(_k));
+	}
 
 	size_t plen = io_cipher.size();
 	bytes ciphertext;
 	ciphertext.resize(e.CiphertextLength(plen));
 	
 	{
-		Guard l(x_rng);
-		e.Encrypt(m_rng, io_cipher.data(), plen, ciphertext.data());
+		Guard l(ctx.x_rng);
+		e.Encrypt(ctx.m_rng, io_cipher.data(), plen, ciphertext.data());
 	}
 	
 	memset(io_cipher.data(), 0, io_cipher.size());
@@ -204,8 +241,12 @@ void Secp256k1PP::encrypt(Public const& _k, bytes& io_cipher)
 
 void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	CryptoPP::ECIES<CryptoPP::ECP>::Decryptor d;
-	initializeDLScheme(_k, d);
+	{
+		Guard l(ctx.x_params);
+		d.AccessKey().Initialize(ctx.m_params, secretToExponent(_k));
+	}
 
 	if (!io_text.size())
 	{
@@ -219,8 +260,8 @@ void Secp256k1PP::decrypt(Secret const& _k, bytes& io_text)
 	
 	DecodingResult r;
 	{
-		Guard l(x_rng);
-		r = d.Decrypt(m_rng, io_text.data(), clen, plain.data());
+		Guard l(ctx.x_rng);
+		r = d.Decrypt(ctx.m_rng, io_text.data(), clen, plain.data());
 	}
 	
 	if (!r.isValidCoding)
@@ -240,29 +281,30 @@ Signature Secp256k1PP::sign(Secret const& _k, bytesConstRef _message)
 
 Signature Secp256k1PP::sign(Secret const& _key, h256 const& _hash)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	// assumption made by signing alogrithm
-	asserts(m_q == m_qs);
+	asserts(ctx.m_q == ctx.m_qs);
 	
 	Signature sig;
 	
 	Integer k(kdf(_key, _hash).data(), 32);
 	if (k == 0)
 		BOOST_THROW_EXCEPTION(InvalidState());
-	k = 1 + (k % (m_qs - 1));
+	k = 1 + (k % (ctx.m_qs - 1));
 	
 	ECP::Point rp;
 	Integer r;
 	{
-		Guard l(x_params);
-		rp = m_params.ExponentiateBase(k);
-		r = m_params.ConvertElementToInteger(rp);
+		Guard l(ctx.x_params);
+		rp = ctx.m_params.ExponentiateBase(k);
+		r = ctx.m_params.ConvertElementToInteger(rp);
 	}
 	sig[64] = 0;
 //	sig[64] = (r >= m_q) ? 2 : 0;
 	
-	Integer kInv = k.InverseMod(m_q);
+	Integer kInv = k.InverseMod(ctx.m_q);
 	Integer z(_hash.asBytes().data(), 32);
-	Integer s = (kInv * (Integer(_key.data(), 32) * r + z)) % m_q;
+	Integer s = (kInv * (Integer(_key.data(), 32) * r + z)) % ctx.m_q;
 	if (r == 0 || s == 0)
 		BOOST_THROW_EXCEPTION(InvalidState());
 	
@@ -292,6 +334,7 @@ bool Secp256k1PP::verify(Public const& _p, Signature const& _sig, bytesConstRef 
 
 Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	Public recovered;
 	
 	Integer r(_signature.data(), 32);
@@ -303,8 +346,8 @@ Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
 	
 	ECP::Element x;
 	{
-		m_curve.DecodePoint(x, encodedpoint, 33);
-		if (!m_curve.VerifyPoint(x))
+		ctx.m_curve.DecodePoint(x, encodedpoint, 33);
+		if (!ctx.m_curve.VerifyPoint(x))
 			return recovered;
 	}
 	
@@ -317,18 +360,18 @@ Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
 //	}
 	
 	Integer z(_message.data(), 32);
-	Integer rn = r.InverseMod(m_q);
-	Integer u1 = m_q - (rn.Times(z)).Modulo(m_q);
-	Integer u2 = (rn.Times(s)).Modulo(m_q);
+	Integer rn = r.InverseMod(ctx.m_q);
+	Integer u1 = ctx.m_q - (rn.Times(z)).Modulo(ctx.m_q);
+	Integer u2 = (rn.Times(s)).Modulo(ctx.m_q);
 	
 	ECP::Point p;
 	byte recoveredbytes[65];
 	{
 		// todo: make generator member
-		p = m_curve.CascadeMultiply(u2, x, u1, m_params.GetSubgroupGenerator());
+		p = ctx.m_curve.CascadeMultiply(u2, x, u1, ctx.m_params.GetSubgroupGenerator());
 		if (p.identity)
 			return Public();
-		m_curve.EncodePoint(recoveredbytes, p, false);
+		ctx.m_curve.EncodePoint(recoveredbytes, p, false);
 	}
 	memcpy(recovered.data(), &recoveredbytes[1], 64);
 	return recovered;
@@ -336,17 +379,18 @@ Public Secp256k1PP::recover(Signature _signature, bytesConstRef _message)
 
 bool Secp256k1PP::verifySecret(Secret const& _s, Public& _p)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	DL_PrivateKey_EC<ECP> k;
-	k.Initialize(m_params, secretToExponent(_s));
-	if (!k.Validate(m_rng, 3))
+	k.Initialize(ctx.m_params, secretToExponent(_s));
+	if (!k.Validate(ctx.m_rng, 3))
 		return false;
 	
 	DL_PublicKey_EC<CryptoPP::ECP> pub;
 	k.MakePublicKey(pub);
-	if (!k.Validate(m_rng, 3))
+	if (!k.Validate(ctx.m_rng, 3))
 		return false;
 
-	exportPublicKey(pub, _p);
+	ctx.exportPublicKey(pub, _p);
 	return true;
 }
 
@@ -361,26 +405,28 @@ void Secp256k1PP::agree(Secret const& _s, Public const& _r, Secret& o_s)
 	d.Agree(o_s.writable().data(), _s.data(), remote);
 }
 
-void Secp256k1PP::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p)
+void Secp256k1PPCtx::exportPublicKey(CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> const& _k, Public& o_p)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	bytes prefixedKey(_k.GetGroupParameters().GetEncodedElementSize(true));
 	
 	{
-		Guard l(x_params);
-		m_params.GetCurve().EncodePoint(prefixedKey.data(), _k.GetPublicElement(), false);
+		Guard l(ctx.x_params);
+		ctx.m_params.GetCurve().EncodePoint(prefixedKey.data(), _k.GetPublicElement(), false);
 		assert(Public::size + 1 == _k.GetGroupParameters().GetEncodedElementSize(true));
 	}
 
 	memcpy(o_p.data(), &prefixedKey[1], Public::size);
 }
 
-void Secp256k1PP::exponentToPublic(Integer const& _e, Public& o_p)
+void Secp256k1PPCtx::exponentToPublic(Integer const& _e, Public& o_p)
 {
+	auto& ctx = Secp256k1PPCtx::get();
 	CryptoPP::DL_PublicKey_EC<CryptoPP::ECP> pk;
 	
 	{
-		Guard l(x_params);
-		pk.Initialize(m_params, m_params.ExponentiateBase(_e));
+		Guard l(ctx.x_params);
+		pk.Initialize(ctx.m_params, ctx.m_params.ExponentiateBase(_e));
 	}
 	
 	exportPublicKey(pk, o_p);

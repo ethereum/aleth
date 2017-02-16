@@ -94,10 +94,7 @@ template <class KeyType, class DB> using SecureTrieDB = SpecificTrieDB<HashedGen
 DEV_SIMPLE_EXCEPTION(InvalidAccountStartNonceInState);
 DEV_SIMPLE_EXCEPTION(IncorrectAccountStartNonceInState);
 
-//#define ETH_ALLOW_EMPTY_BLOCK_AND_STATE 1
-
 class SealEngineFace;
-
 
 
 namespace detail
@@ -184,11 +181,6 @@ public:
 	/// than BaseState::PreExisting in order to prepopulate the Trie.
 	explicit State(u256 const& _accountStartNonce, OverlayDB const& _db, BaseState _bs = BaseState::PreExisting);
 
-#if ETH_ALLOW_EMPTY_BLOCK_AND_STATE
-	State(): State(Invalid256, OverlayDB(), BaseState::Empty) {}
-	explicit State(OverlayDB const& _db, BaseState _bs = BaseState::PreExisting): State(Invalid256, _db, _bs) {}
-#endif
-
 	enum NullType { Null };
 	State(NullType): State(Invalid256, OverlayDB(), BaseState::Empty) {}
 
@@ -200,7 +192,6 @@ public:
 
 	/// Open a DB - useful for passing into the constructor & keeping for other states that are necessary.
 	static OverlayDB openDB(std::string const& _path, h256 const& _genesisHash, WithExisting _we = WithExisting::Trust);
-	static OverlayDB openDB(h256 const& _genesisHash, WithExisting _we = WithExisting::Trust) { return openDB(std::string(), _genesisHash, _we); }
 	OverlayDB const& db() const { return m_db; }
 	OverlayDB& db() { return m_db; }
 
@@ -273,7 +264,9 @@ public:
 
 	/// Get the code of an account.
 	/// @returns bytes() if no account exists at that address.
-	bytes const& code(Address const& _contract) const;
+	/// @warning The reference to the code is only valid until the access to
+	///          other account. Do not keep it.
+	bytes const& code(Address const& _addr) const;
 
 	/// Get the code hash of an account.
 	/// @returns EmptySHA3 if no account exists at that address or if there is no code associated with the address.
@@ -318,22 +311,16 @@ private:
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
-	Account const* account(Address const& _a, bool _requireCode = false) const;
+	Account const* account(Address const& _addr) const;
 
 	/// @returns the account at the given address or a null pointer if it does not exist.
 	/// The pointer is valid until the next access to the state or account.
-	Account* account(Address const& _a, bool _requireCode = false);
+	Account* account(Address const& _addr);
 
 	/// Purges non-modified entries in m_cache if it grows too large.
 	void clearCacheIfTooLarge() const;
 
 	void createAccount(Address const& _address, Account const&& _account);
-
-	/// Debugging only. Good for checking the Trie is in shape.
-	bool isTrieGood(bool _enforceRefs, bool _requireNoLeftOvers) const;
-
-	/// Debugging only. Good for checking the Trie is in shape.
-	void paranoia(std::string const& _when, bool _enforceRefs = false) const;
 
 	OverlayDB m_db;								///< Our overlay for the state tree.
 	SecureTrieDB<Address, OverlayDB> m_state;	///< Our state tree, as an OverlayDB DB.

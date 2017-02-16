@@ -45,7 +45,10 @@ clone_script:
           git checkout -qf FETCH_HEAD
           git submodule -q update --init --recursive
       }
-cache: build/evmjit/llvm -> evmjit/cmake/llvm.cmake
+cache:
+    - build/evmjit/llvm -> evmjit/cmake/llvm.cmake
+    - deps/boost -> deps/boost.cmake
+    - deps/tmp/boost -> deps/boost.cmake
 #RDP LOGIN details for trouble shooting
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
