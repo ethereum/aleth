@@ -122,17 +122,6 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 		endif()
 
-		# A couple of extra warnings suppressions which we seemingly
-		# need when building with Clang.
-		#
-		# TODO - Nail down exactly where these warnings are manifesting and
-		# try to suppress them in a more localized way.   Notes in this file
-		# indicate that the first is needed for sepc256k1 and that the
-		# second is needed for the (clog, cwarn) macros.  These will need
-		# testing on at least OS X and Ubuntu.
-		add_compile_options(-Wno-unused-function)
-		add_compile_options(-Wno-dangling-else)
-
 		# Some Linux-specific Clang settings.  We don't want these for OS X.
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
 
