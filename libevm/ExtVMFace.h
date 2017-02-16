@@ -201,7 +201,6 @@ struct CallParameters
 	u256 apparentValue;
 	u256 gas;
 	bytesConstRef data;
-	bytesRef out;
 	OnOpFunc onOp;
 };
 

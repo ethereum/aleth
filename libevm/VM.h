@@ -130,7 +130,7 @@ private:
 
 	// interpreter cases that call out
 	void caseCreate();
-	bool caseCallSetup(CallParameters*);
+	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
 	void copyDataToMemory(bytesConstRef _data, u256*& m_sp);

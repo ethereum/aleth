@@ -129,11 +129,12 @@ void VM::caseCall()
 {
 	m_bounce = &VM::interpretCases;
 	unique_ptr<CallParameters> callParams(new CallParameters());
-	if (caseCallSetup(callParams.get()))
+	bytesRef output;
+	if (caseCallSetup(callParams.get(), output))
 	{
 		if (boost::optional<owning_bytes_ref> r = m_ext->call(*callParams))
 		{
-			r->copyTo(callParams->out);
+			r->copyTo(output);
 			*++m_sp = 1;
 		}
 		else
@@ -145,7 +146,7 @@ void VM::caseCall()
 	++m_pc;
 }
 
-bool VM::caseCallSetup(CallParameters *callParams)
+bool VM::caseCallSetup(CallParameters *callParams, bytesRef& o_output)
 {
 	m_runGas = toUint64(m_schedule->callGas);
 
@@ -212,7 +213,7 @@ bool VM::caseCallSetup(CallParameters *callParams)
 		callParams->senderAddress = m_op == Instruction::DELEGATECALL ? m_ext->caller : m_ext->myAddress;
 		callParams->receiveAddress = m_op == Instruction::CALL ? callParams->codeAddress : m_ext->myAddress;
 		callParams->data = bytesConstRef(m_mem.data() + inOff, inSize);
-		callParams->out = bytesRef(m_mem.data() + outOff, outSize);
+		o_output = bytesRef(m_mem.data() + outOff, outSize);
 		return true;
 	}
 	else

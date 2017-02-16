@@ -34,18 +34,18 @@ class PrecompiledContract
 {
 public:
 	PrecompiledContract() = default;
-	PrecompiledContract(std::function<bigint(unsigned)> const& _cost, std::function<void(bytesConstRef, bytesRef)> const& _exec):
+	PrecompiledContract(std::function<bigint(size_t)> const& _cost, std::function<bytes(bytesConstRef)> const& _exec):
 		m_cost(_cost),
 		m_execute(_exec)
 	{}
-	PrecompiledContract(unsigned _base, unsigned _word, std::function<void(bytesConstRef, bytesRef)> const& _exec);
+	PrecompiledContract(unsigned _base, unsigned _word, std::function<bytes(bytesConstRef)> const& _exec);
 
 	bigint cost(bytesConstRef _in) const { return m_cost(_in.size()); }
-	void execute(bytesConstRef _in, bytesRef _out) const { m_execute(_in, _out); }
+	bytes execute(bytesConstRef _in) const { return m_execute(_in); }
 
 private:
-	std::function<bigint(unsigned)> m_cost;
-	std::function<void(bytesConstRef, bytesRef)> m_execute;
+	std::function<bigint(size_t)> m_cost;
+	std::function<bytes(bytesConstRef)> m_execute;
 };
 
 struct ChainOperationParams

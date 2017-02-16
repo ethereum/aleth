@@ -245,7 +245,7 @@ bool Executive::execute()
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}, {}};
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 
@@ -274,7 +274,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		else
 		{
 			m_gas = (u256)(_p.gas - g);
-			m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, _p.out);
+			bytes output = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data);
+			size_t outputSize = output.size();
+			m_output = owning_bytes_ref{std::move(output), 0, outputSize};
 		}
 	}
 	else
