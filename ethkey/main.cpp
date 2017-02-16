@@ -21,14 +21,12 @@
  */
 
 #include <thread>
-#include <chrono>
-#include <clocale>
 #include <fstream>
 #include <iostream>
 #include <libdevcore/FileSystem.h>
 #include <libdevcore/Log.h>
 #include <libethcore/KeyManager.h>
-#include "cpp-ethereum/BuildInfo.h"
+#include "BuildInfo.h"
 #include "KeyAux.h"
 using namespace std;
 using namespace dev;

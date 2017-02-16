@@ -92,10 +92,6 @@ function(eth_use TARGET REQUIRED)
 		message(FATAL_ERROR "eth_use called for non existing target ${TARGET}")
 	endif()
 
-	if (TARGET ${PROJECT_NAME}_BuildInfo.h)
-		add_dependencies(${TARGET} ${PROJECT_NAME}_BuildInfo.h)
-	endif()
-
 	foreach(MODULE ${ARGN})
 		string(REPLACE "::" ";" MODULE_PARTS "${MODULE}")
 		list(GET MODULE_PARTS 0 MODULE_MAIN)
