@@ -197,14 +197,15 @@ int64_t evm_call(
 	params.codeAddress = fromEvmC(_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
-	params.out = {_outputData, _outputSize};
 	params.onOp = {};
 
-	auto ret = env.call(params);
+	auto output = env.call(params);
 	auto gasLeft = static_cast<int64_t>(params.gas);
 
-	// Add failure indicator.
-	if (!ret)
+	if (output)
+		output->copyTo({_outputData, _outputSize});
+	else
+		// Add failure indicator.
 		gasLeft |= EVM_CALL_FAILURE;
 
 	return gasLeft;
