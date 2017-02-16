@@ -14,5 +14,3 @@ find_package(Eth)
 target_include_directories(ethashseal PRIVATE ..)
 target_link_libraries(ethashseal ${Eth_ETHASH_LIBRARIES})
 target_link_libraries(ethashseal ${Eth_ETHEREUM_LIBRARIES})
-
-install(TARGETS ethashseal RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

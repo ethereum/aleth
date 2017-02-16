@@ -196,12 +196,6 @@ elseif (MSVC)
 	# stack size 16MB
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099,4075 /STACK:16777216")
 
-	# windows likes static
-	if (NOT ETH_STATIC)
-		message("Forcing static linkage for MSVC.")
-		set(ETH_STATIC 1)
-	endif ()
-
 # If you don't have GCC, Clang or VC++ then you are on your own.  Good luck!
 else ()
 	message(WARNING "Your compiler is not tested, if you run into any issues, we'd welcome any patches.")
@@ -240,9 +234,3 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 		endif ()
 	endif ()
 endif ()
-
-if(ETH_STATIC)
-	set(BUILD_SHARED_LIBS OFF)
-else()
-	set(BUILD_SHARED_LIBS ON)
-endif(ETH_STATIC)

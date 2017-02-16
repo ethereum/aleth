@@ -23,10 +23,8 @@
  */
 
 #include <thread>
-#include <chrono>
 #include <fstream>
 #include <iostream>
-#include <clocale>
 #include <signal.h>
 
 #include <boost/algorithm/string.hpp>
@@ -39,7 +37,7 @@
 #include <libevm/VMFactory.h>
 #include <libethcore/KeyManager.h>
 #include <libethcore/ICAP.h>
-#include <libethereum/All.h>
+#include <libethereum/Defaults.h>
 #include <libethereum/BlockChainSync.h>
 #include <libethashseal/EthashClient.h>
 #include <libethashseal/GenesisInfo.h>
@@ -55,14 +53,12 @@
 #include <libweb3jsonrpc/Whisper.h>
 #include <libweb3jsonrpc/Net.h>
 #include <libweb3jsonrpc/Web3.h>
-#include <libweb3jsonrpc/SessionManager.h>
 #include <libweb3jsonrpc/AdminNet.h>
 #include <libweb3jsonrpc/AdminEth.h>
 #include <libweb3jsonrpc/AdminUtils.h>
 #include <libweb3jsonrpc/Personal.h>
 #include <libweb3jsonrpc/Debug.h>
 #include <libweb3jsonrpc/Test.h>
-#include "Farm.h"
 
 #include <ethminer/MinerAux.h>
 #include "AccountManager.h"
@@ -290,7 +286,7 @@ void stopSealingAfterXBlocks(eth::Client* _c, unsigned _start, unsigned& io_mini
 	this_thread::sleep_for(chrono::milliseconds(100));
 }
 
-class ExitHandler: public SystemManager
+class ExitHandler: public rpc::SystemManager
 {
 public:
 	void exit() { exitHandler(0); }

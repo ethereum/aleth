@@ -29,7 +29,7 @@ set(LEVELDB_LIBRARIES ${LEVELDB_LIBRARY})
 # This might be due to some dependency within leveldb which would be dead-code
 # stripped if we were using a static lib for leveldb.   We aren't (yet), because
 # we only have partial static-linkage on OS X so far.
-if (STATIC_LINKING AND APPLE)
+if (NOT BUILD_SHARED_LIBS AND APPLE)
 	find_path(SNAPPY_INCLUDE_DIR snappy.h PATH_SUFFIXES snappy)
 	find_library(SNAPPY_LIBRARY snappy)
 	set(LEVELDB_INCLUDE_DIRS ${LEVELDB_INCLUDE_DIR} ${SNAPPY_INCLUDE_DIR})

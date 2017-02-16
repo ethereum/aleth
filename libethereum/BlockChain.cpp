@@ -38,7 +38,6 @@
 #include "GenesisInfo.h"
 #include "State.h"
 #include "Block.h"
-#include "Utility.h"
 #include "Defaults.h"
 using namespace std;
 using namespace dev;
@@ -147,7 +146,7 @@ static const unsigned c_minCacheSize = 1024 * 1024 * 32;
 BlockChain::BlockChain(ChainParams const& _p, std::string const& _dbPath, WithExisting _we, ProgressCallback const& _pc):
 	m_dbPath(_dbPath)
 {
-	init(_p, _dbPath);
+	init(_p);
 	open(_dbPath, _we, _pc);
 }
 
@@ -170,7 +169,7 @@ BlockHeader const& BlockChain::genesis() const
 	return m_genesis;
 }
 
-void BlockChain::init(ChainParams const& _p, std::string const& _path)
+void BlockChain::init(ChainParams const& _p)
 {
 	// initialise deathrow.
 	m_cacheUsage.resize(c_collectionQueueSize);
@@ -181,9 +180,6 @@ void BlockChain::init(ChainParams const& _p, std::string const& _path)
 	m_sealEngine.reset(m_params.createSealEngine());
 	m_genesis.clear();
 	genesis();
-
-	// remove the next line real soon. we don't need to be supporting this forever.
-	upgradeDatabase(_path, genesisHash());
 }
 
 unsigned BlockChain::open(std::string const& _path, WithExisting _we)
@@ -274,7 +270,7 @@ void BlockChain::open(std::string const& _path, WithExisting _we, ProgressCallba
 void BlockChain::reopen(ChainParams const& _p, WithExisting _we, ProgressCallback const& _pc)
 {
 	close();
-	init(_p, m_dbPath);
+	init(_p);
 	open(m_dbPath, _we, _pc);
 }
 
@@ -1489,7 +1485,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 
 	RLP r(_block);
 	unsigned i = 0;
-	if (_ir && !!(ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))
+	if (_ir & (ImportRequirements::UncleBasic | ImportRequirements::UncleParent | ImportRequirements::UncleSeals))
 		for (auto const& uncle: r[2])
 		{
 			BlockHeader uh(uncle.data(), HeaderData);
@@ -1522,7 +1518,7 @@ VerifiedBlockRef BlockChain::verifyBlock(bytesConstRef _block, std::function<voi
 			++i;
 		}
 	i = 0;
-	if (_ir && !!(ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
+	if (_ir & (ImportRequirements::TransactionBasic | ImportRequirements::TransactionSignatures))
 		for (RLP const& tr: r[1])
 		{
 			bytesConstRef d = tr.data();
