@@ -5,13 +5,11 @@ add_library(ethereum ${SRC_LIST} ${HEADERS})
 
 target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES} jsoncpp)
 
-find_package(Boost QUIET REQUIRED COMPONENTS regex)
 find_package(Dev)
 find_package(Eth)
 
 target_include_directories(ethereum PRIVATE ..)
 target_include_directories(ethereum PRIVATE ../utils)
-target_link_libraries(ethereum ${Boost_REGEX_LIBRARIES})
 target_link_libraries(ethereum ${Eth_ETHCORE_LIBRARIES})
 target_link_libraries(ethereum ${Eth_EVM_LIBRARIES})
 

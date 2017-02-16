@@ -136,7 +136,6 @@ Linux)
             automake \
             gcc \
             libtool \
-            boost \
             leveldb \
             libmicrohttpd \
             miniupnpc
@@ -152,7 +151,6 @@ Linux)
             $SUDO apt-get -q update
             $SUDO apt-get -qy install \
                 build-essential \
-                libboost-all-dev \
                 libcurl4-openssl-dev \
                 libgmp-dev \
                 libleveldb-dev \
@@ -164,7 +162,6 @@ Linux)
             echo "Installing cpp-ethereum dependencies on Fedora Linux."
             $SUDO dnf -qy install \
                 gcc-c++ \
-                boost-devel \
                 leveldb-devel \
                 curl-devel \
                 libmicrohttpd-devel \
@@ -196,7 +193,6 @@ Linux)
             $SUDO apt-get -q update
             $SUDO apt-get install -qy --no-install-recommends --allow-unauthenticated \
                 build-essential \
-                libboost-all-dev \
                 libcurl4-openssl-dev \
                 libgmp-dev \
                 libleveldb-dev \
@@ -212,7 +208,6 @@ Linux)
             $SUDO yum -y -q install \
                 make \
                 gcc-c++ \
-                boost-devel \
                 leveldb-devel \
                 curl-devel \
                 libmicrohttpd-devel \
@@ -233,7 +228,6 @@ Linux)
         $SUDO apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ \
             g++ \
             make \
-            boost-dev \
             curl-dev \
             libmicrohttpd-dev \
             leveldb-dev
