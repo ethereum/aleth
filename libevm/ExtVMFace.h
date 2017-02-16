@@ -23,6 +23,7 @@
 
 #include <set>
 #include <functional>
+#include <boost/optional.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/RLP.h>
