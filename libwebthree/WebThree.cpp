@@ -26,7 +26,7 @@
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
 #include <libethashseal/EthashClient.h>
-#include "cpp-ethereum/BuildInfo.h"
+#include "BuildInfo.h"
 #include <libethashseal/Ethash.h>
 using namespace std;
 using namespace dev;

@@ -29,7 +29,6 @@
 #include <libethashseal/EthashCPUMiner.h>
 #include <jsonrpccpp/client/connectors/httpclient.h>
 #include "FarmClient.h"
-#include "cpp-ethereum/BuildInfo.h"
 
 // TODO - having using derivatives in header files is very poor style, and we need to fix these up.
 //

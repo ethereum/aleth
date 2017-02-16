@@ -83,7 +83,7 @@ macro(configure_project)
 	endif()
 
 	include(EthBuildInfo)
-	create_build_info(${NAME})
+	create_build_info()
 	print_config(${NAME})
 endmacro()
 
