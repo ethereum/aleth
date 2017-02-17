@@ -303,6 +303,9 @@ int main(int argc, char** argv)
 {
 	setDefaultOrCLocale();
 
+	// Init secp256k1 context by calling one of the functions.
+	toPublic({});
+
 	// Init defaults
 	Defaults::get();
 	Ethash::init();
