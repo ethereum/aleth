@@ -48,7 +48,8 @@ TransactionQueue::TransactionQueue(unsigned _limit, unsigned _futureLimit):
 
 TransactionQueue::~TransactionQueue()
 {
-	m_aborting = true;
+	DEV_GUARDED(x_queue)
+		m_aborting = true;
 	m_queueReady.notify_all();
 	for (auto& i: m_verifiers)
 		i.join();
