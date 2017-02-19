@@ -49,7 +49,8 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 uint64_t VM::decodeJumpDest(const byte* const _code, uint64_t& _pc)
 {
-	// turn 4 MSB-first bytes in the code into a native-order integer
+	// turn 4 MSB-first bytes after the opcode into a native-order integer
+	++_pc;
 	uint64_t dest      = _code[_pc++];
 	dest = (dest << 8) | _code[_pc++];
 	dest = (dest << 8) | _code[_pc++];
@@ -68,7 +69,7 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp)
 	uint64_t pc = _pc;
 	byte n = _code[++pc];           // byte after opcode is number of jumps
 	if (i >= n) i = n - 1;          // if index overflow use default jump
-	pc += 1 + i * 4;                // adjust pc to index destination in table
+	pc += _v * 4;                   // adjust inout pc before index destination in table
 	
 	uint64_t dest = decodeJumpDest(_code, pc);
 	
@@ -898,8 +899,7 @@ void VM::interpretCases()
 			updateIOGas();
 			{
 				*++m_rp = m_pc;
-				m_pc = 
-				jumpvDest(m_code, m_pc, m_sp);
+				m_pc = decodeJumpDest(m_code, m_pc);
 			}
 		CASE_END
 

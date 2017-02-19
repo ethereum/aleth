@@ -61,6 +61,12 @@ class VM: public VMFace
 {
 public:
 	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+	
+#if EVM_JUMPS_AND_SUBS
+	// invalid code will throw an exeption
+	void validate(ExtVMFace& _ext);
+	void validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP);
+#endif
 
 	bytes const& memory() const { return m_mem; }
 	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
@@ -98,11 +104,15 @@ private:
 	// space for stack and pointer to data
 	u256 m_stackSpace[1025];
 	u256* m_stack = m_stackSpace + 1;
+	ptrdiff_t stackSize() { return m_sp - m_stack; }
 	
 #if EVM_JUMPS_AND_SUBS
 	// space for return stack and pointer to data
 	uint64_t m_returnSpace[1025];
 	uint64_t* m_return = m_returnSpace + 1;
+	
+	// mark PCs with frame size to detect cycles and stack mismatch
+	std::vector<size_t> m_frameSize;
 #endif
 
 	// constant pool

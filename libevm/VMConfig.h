@@ -33,27 +33,21 @@ namespace eth
 //
 // EVM_TRACE              - provides various levels of tracing
 
-#if true && defined(__GNUG__)
-	#define EVM_JUMP_DISPATCH
+#ifdef EVM_JUMP_DISPATCH
+	#ifndef __GNUC__
+		#error "address of label extension avaiable only on Gnu"
+	#endif
 #else
 	#define EVM_SWITCH_DISPATCH
 #endif
 
-#if false
-	#define EVM_REPLACE_CONST_JUMP
+#ifdef EVM_OPTIMIZE
+	#define EVM_REPLACE_CONST_JUMP true
+	#define EVM_USE_CONSTANT_POOL false
+	#define EVM_DO_FIRST_PASS_OPTIMIZATION true
 #endif
 
-#if false
-	#define EVM_USE_CONSTANT_POOL
-#endif
-
-#if	defined(EVM_USE_CONSTANT_POOL) || \
-	defined(EVM_REPLACE_CONST_JUMP)
-		#define EVM_DO_FIRST_PASS_OPTIMIZATION
-#endif
-
-#define EVM_JUMPS_AND_SUBS false
-
+#define EVM_JUMPS_AND_SUBS true
 
 
 ///////////////////////////////////////////////////////////////////////////////
