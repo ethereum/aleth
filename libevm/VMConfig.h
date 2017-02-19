@@ -34,7 +34,7 @@ namespace eth
 // EVM_TRACE              - provides various levels of tracing
 
 #ifndef EVM_JUMP_DISPATCH
-	#ifndef __GNUC__
+	#ifdef __GNUC__
 		#define EVM_JUMP_DISPATCH true
 	#else
 		#define EVM_JUMP_DISPATCH false
