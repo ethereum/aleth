@@ -69,7 +69,7 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp)
 	uint64_t pc = _pc;
 	byte n = _code[++pc];           // byte after opcode is number of jumps
 	if (i >= n) i = n - 1;          // if index overflow use default jump
-	pc += _v * 4;                   // adjust inout pc before index destination in table
+	pc += i * 4;                    // adjust pc to index destination in table
 	
 	uint64_t dest = decodeJumpDest(_code, pc);
 	
@@ -889,7 +889,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 			{
-				*++m_rp = m_pc++;
+				*++m_rp = m_pc;
 				m_pc = decodeJumpDest(m_code, m_pc);
 			}
 		CASE_END
