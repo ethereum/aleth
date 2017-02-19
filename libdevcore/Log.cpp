@@ -27,9 +27,6 @@
 #ifdef __APPLE__
 #include <pthread.h>
 #endif
-#if !defined(ETH_EMSCRIPTEN)
-#include <boost/asio/ip/tcp.hpp>
-#endif
 #include "Guards.h"
 using namespace std;
 using namespace dev;
@@ -109,13 +106,6 @@ LogOutputStreamBase::LogOutputStreamBase(char const* _id, std::type_info const* 
 		m_sstr << c_sep1 << getThreadName() << ThreadContext::join(c_sep2) << c_end;
 	}
 }
-
-#if !defined(ETH_EMSCRIPTEN)
-void LogOutputStreamBase::append(boost::asio::ip::basic_endpoint<boost::asio::ip::tcp> const& _t)
-{
-	m_sstr << EthNavyUnder "tcp://" << _t << EthReset;
-}
-#endif
 
 /// Associate a name with each thread for nice logging.
 struct ThreadLocalLogName

@@ -7,7 +7,7 @@ macro(configure_project)
 			"Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
 	endif()
 
-	eth_default_option(STATIC_BUILD OFF)
+	eth_default_option(BUILD_SHARED_LIBS OFF)
 
 	# features
 	eth_default_option(VMTRACE OFF)
@@ -34,11 +34,6 @@ macro(configure_project)
 		endif ()
 	endif ()
 
-	if (STATIC_BUILD)
-		set(STATIC_LINKING 1)
-		set(BUILD_SHARED_LIBS 0)
-	endif ()
-
 	# Define a matching property name of each of the "features".
 	foreach(FEATURE ${ARGN})
 		set(SUPPORT_${FEATURE} TRUE)
@@ -48,10 +43,6 @@ macro(configure_project)
 	# Hiding them behind this pre-processor symbol lets us turn them off
 	# and on again easily enough, and also to grep for them.
 	add_definitions(-DDISABLE_BROKEN_UNIT_TESTS_UNTIL_WE_FIX_THEM)
-
-	# TODO:  Eliminate this pre-processor symbol, which is a bad pattern.
-	# Common code has no business knowing which application it is part of.
-	add_definitions(-DETH_TRUE)
 
 	# Are we including the JIT EVM module?
 	# That pulls in a quite heavyweight LLVM dependency, which is
@@ -92,7 +83,7 @@ macro(configure_project)
 	endif()
 
 	include(EthBuildInfo)
-	create_build_info(${NAME})
+	create_build_info()
 	print_config(${NAME})
 endmacro()
 

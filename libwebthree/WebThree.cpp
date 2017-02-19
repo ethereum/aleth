@@ -26,13 +26,15 @@
 #include <libethereum/EthereumHost.h>
 #include <libethereum/ClientTest.h>
 #include <libethashseal/EthashClient.h>
-#include "cpp-ethereum/BuildInfo.h"
+#include "BuildInfo.h"
 #include <libethashseal/Ethash.h>
 using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 using namespace dev::eth;
 using namespace dev::shh;
+
+static_assert(BOOST_VERSION == 106300, "Wrong boost headers version");
 
 WebThreeDirect::WebThreeDirect(
 	std::string const& _clientVersion,

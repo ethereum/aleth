@@ -73,6 +73,8 @@ struct ChainBranch
 			dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::EIP150Test;
 		else if (chainname == "TestFtoH5")
 			dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::TransitionnetTest;
+		else if (chainname == "Metropolis")
+			dev::test::TestBlockChain::s_sealEngineNetwork = eth::Network::MetropolisTest;
 	}
 
 	static void resetBlockchain()

@@ -31,7 +31,10 @@ configuration:
     - RelWithDebInfo
 environment:
     TESTS: On
-cache: build/evmjit/llvm
+cache:
+    - build/evmjit/llvm
+    - deps/boost -> deps/boost.cmake
+    - deps/tmp/boost -> deps/boost.cmake
 #RDP LOGIN details for trouble shooting
 #init:
 #    - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

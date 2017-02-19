@@ -5,7 +5,7 @@ workdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $workdir
 rm -r cpp-ethereum
 rm -r tests
-exec &> $workdir/testlog.txt
+exec &> $workdir/buildlog.txt
 
 #Clonning Repositories
 echo "Cloning Repositories"
@@ -25,22 +25,20 @@ cmake ..
 make -j8
 cd test
 echo "Running all tests:"
-echo "cpp-ethereum HEAD "$cppHead
-echo "tests HEAD "$testHead
-exec 2> $workdir/testerror.txt
+echo "cpp-ethereum repository at commit $cppHead"
+echo "tests repository at commit $testHead"
+exec 2> $workdir/testlog.txt
 timestart=$(date +%s.%N)
-./testeth --all --exectimelog
+./testeth -- --all --exectimelog
 timeend=$(date +%s.%N)
 
-#Prepare Header of the report
-exec &> $workdir/testreport.txt
-exectime=$(echo "$timeend - $timestart" | bc)
-echo "REPORT"
-echo "Test execution time: $exectime s"
-cat $workdir/testerror.txt
-cat $workdir/testreport.txt | cat - $workdir/testlog.txt > temp && mv temp $workdir/testlog.txt
-
 #Send Mails
+RECIPIENTS="dimitry@ethereum.org pawel@ethereum.org chris@ethereum.org andrei@ethereum.org"
 date=$(date +%Y-%m-%d)
-mail -s "cpp-ethereum test results "$date dimitry@ethereum.org < $workdir/testlog.txt  #-A $workdir/results.zip
-mail -s "cpp-ethereum test results "$date chris@ethereum.org < $workdir/testlog.txt #-A $workdir/results.zip
+(
+echo "REPORT"
+exectime=$(echo "$timeend - $timestart" | bc)
+echo "Test execution time: $exectime s"
+cat $workdir/testlog.txt
+cat $workdir/buildlog.txt
+) | mail -s "cpp-ethereum test results $date" $RECIPIENTS

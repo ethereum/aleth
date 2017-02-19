@@ -41,6 +41,8 @@ using namespace std;
 using namespace dev;
 using namespace dev::p2p;
 
+static_assert(BOOST_VERSION == 106300, "Wrong boost headers version");
+
 std::set<bi::address> Network::getInterfaceAddresses()
 {
 	std::set<bi::address> addresses;

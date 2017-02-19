@@ -64,5 +64,3 @@ target_include_directories(web3jsonrpc PRIVATE ..)
 target_link_libraries(web3jsonrpc ${Web3_WEBTHREE_LIBRARIES}
                                   ${Web3_WHISPER_LIBRARIES}
                                   jsonrpc::server)
-
-install(TARGETS web3jsonrpc RUNTIME DESTINATION bin ARCHIVE DESTINATION lib LIBRARY DESTINATION lib)

@@ -101,6 +101,8 @@ public:
 	generaltestfixture()
 	{
 		string casename = boost::unit_test::framework::current_test_case().p_name;
+		if (casename == "stBoundsTest" && !test::Options::get().memory)
+			return;
 		if (casename == "stMemoryStressTest" && !test::Options::get().memory)
 			return;
 		if (casename == "stQuadraticComplexityTest" && !test::Options::get().quadratic)
@@ -174,6 +176,9 @@ BOOST_AUTO_TEST_CASE(stZeroCallsRevert){}
 BOOST_AUTO_TEST_CASE(stCodeSizeLimit){}
 BOOST_AUTO_TEST_CASE(stCreateTest){}
 BOOST_AUTO_TEST_CASE(stRevertTest){}
+
+//Metropolis Tests
+BOOST_AUTO_TEST_CASE(stStackTests){}
 
 //Stress Tests
 BOOST_AUTO_TEST_CASE(stAttackTest){}

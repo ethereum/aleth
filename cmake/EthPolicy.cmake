@@ -9,7 +9,7 @@ macro (eth_policy)
 
 	# CMake 2.8.12 and lower allowed the use of targets and files with double
 	# colons in target_link_libraries,
-	cmake_policy(SET CMP0028 OLD)
+	cmake_policy(SET CMP0028 NEW)
 
 	if (${CMAKE_VERSION} VERSION_GREATER 3.0)
 

@@ -23,10 +23,6 @@ static const secp256k1_ge_t secp256k1_ge_const_g = SECP256K1_GE_CONST(
     0xFD17B448UL, 0xA6855419UL, 0x9C47D08FUL, 0xFB10D4B8UL
 );
 
-static void secp256k1_ge_set_infinity(secp256k1_ge_t *r) {
-    r->infinity = 1;
-}
-
 static void secp256k1_ge_set_xy(secp256k1_ge_t *r, const secp256k1_fe_t *x, const secp256k1_fe_t *y) {
     r->infinity = 0;
     r->x = *x;
@@ -110,13 +106,6 @@ static void secp256k1_gej_set_infinity(secp256k1_gej_t *r) {
     secp256k1_fe_set_int(&r->z, 0);
 }
 
-static void secp256k1_gej_set_xy(secp256k1_gej_t *r, const secp256k1_fe_t *x, const secp256k1_fe_t *y) {
-    r->infinity = 0;
-    r->x = *x;
-    r->y = *y;
-    secp256k1_fe_set_int(&r->z, 1);
-}
-
 static void secp256k1_gej_clear(secp256k1_gej_t *r) {
     r->infinity = 0;
     secp256k1_fe_clear(&r->x);
@@ -174,26 +163,6 @@ static void secp256k1_gej_neg(secp256k1_gej_t *r, const secp256k1_gej_t *a) {
 
 static int secp256k1_gej_is_infinity(const secp256k1_gej_t *a) {
     return a->infinity;
-}
-
-static int secp256k1_gej_is_valid_var(const secp256k1_gej_t *a) {
-    secp256k1_fe_t y2, x3, z2, z6;
-    if (a->infinity) {
-        return 0;
-    }
-    /** y^2 = x^3 + 7
-     *  (Y/Z^3)^2 = (X/Z^2)^3 + 7
-     *  Y^2 / Z^6 = X^3 / Z^6 + 7
-     *  Y^2 = X^3 + 7*Z^6
-     */
-    secp256k1_fe_sqr(&y2, &a->y);
-    secp256k1_fe_sqr(&x3, &a->x); secp256k1_fe_mul(&x3, &x3, &a->x);
-    secp256k1_fe_sqr(&z2, &a->z);
-    secp256k1_fe_sqr(&z6, &z2); secp256k1_fe_mul(&z6, &z6, &z2);
-    secp256k1_fe_mul_int(&z6, 7);
-    secp256k1_fe_add(&x3, &z6);
-    secp256k1_fe_normalize_weak(&x3);
-    return secp256k1_fe_equal_var(&y2, &x3);
 }
 
 static int secp256k1_ge_is_valid_var(const secp256k1_ge_t *a) {

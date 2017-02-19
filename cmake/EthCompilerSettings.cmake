@@ -42,39 +42,20 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 	# TODO - Track down what breaks if we do NOT do this.
 	add_compile_options(-Wno-unknown-pragmas)
 
-	# To get the code building on FreeBSD and Arch Linux we seem to need the following
-	# warning suppression to work around some issues in Boost headers.
-	#
-	# See the following reports:
-	#     https://github.com/ethereum/webthree-umbrella/issues/384
-	#     https://github.com/ethereum/webthree-helpers/pull/170
-	#
-	# The issue manifest as warnings-as-errors like the following:
-	#
-	#     /usr/local/include/boost/multiprecision/cpp_int.hpp:181:4: error:
-	#         right operand of shift expression '(1u << 63u)' is >= than the precision of the left operand
-	#
-	# -fpermissive is a pretty nasty way to address this.   It is described as follows:
-	#
-	#    Downgrade some diagnostics about nonconformant code from errors to warnings.
-	#    Thus, using -fpermissive will allow some nonconforming code to compile.
-	#
-	# NB: Have to use this form for the setting, so that it only applies to C++ builds.
-	# Applying -fpermissive to a C command-line (ie. secp256k1) gives a build error.
-	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fpermissive")
-
-	# Build everything as shared libraries (.so files)
-	add_definitions(-DSHAREDLIB)
-
-	# If supported for the target machine, emit position-independent code, suitable for dynamic
-	# linking and avoiding any limit on the size of the global offset table.
-	add_compile_options(-fPIC)
-
 	# Configuration-specific compiler settings.
 	set(CMAKE_CXX_FLAGS_DEBUG          "-Og -g -DETH_DEBUG")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG -DETH_RELEASE")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DETH_RELEASE")
+
+	option(USE_LD_GOLD "Use GNU gold linker" ON)
+	if (USE_LD_GOLD)
+		execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
+		if ("${LD_VERSION}" MATCHES "GNU gold")
+			set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+			set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
+		endif ()
+	endif ()
 
 	# Additional GCC-specific compiler settings.
 	if ("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
@@ -122,40 +103,14 @@ if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MA
 			message(WARNING "CMAKE_CXX_COMPILER_VERSION = ${CMAKE_CXX_COMPILER_VERSION}")
 		endif()
 
-		# A couple of extra warnings suppressions which we seemingly
-		# need when building with Clang.
-		#
-		# TODO - Nail down exactly where these warnings are manifesting and
-		# try to suppress them in a more localized way.   Notes in this file
-		# indicate that the first is needed for sepc256k1 and that the
-		# second is needed for the (clog, cwarn) macros.  These will need
-		# testing on at least OS X and Ubuntu.
-		add_compile_options(-Wno-unused-function)
-		add_compile_options(-Wno-dangling-else)
-
 		# Some Linux-specific Clang settings.  We don't want these for OS X.
 		if ("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
-
-			# TODO - Is this even necessary?  Why?
-			# See http://stackoverflow.com/questions/19774778/when-is-it-necessary-to-use-use-the-flag-stdlib-libstdc.
-			add_compile_options(-stdlib=libstdc++)
 
 			# Tell Boost that we're using Clang's libc++.   Not sure exactly why we need to do.
 			add_definitions(-DBOOST_ASIO_HAS_CLANG_LIBCXX)
 
 			# Use fancy colors in the compiler diagnostics
 			add_compile_options(-fcolor-diagnostics)
-
-			# See "How to silence unused command line argument error with clang without disabling it?"
-			# When using -Werror with clang, it transforms "warning: argument unused during compilation" messages
-			# into errors, which makes sense.
-			# http://stackoverflow.com/questions/21617158/how-to-silence-unused-command-line-argument-error-with-clang-without-disabling-i
-			add_compile_options(-Qunused-arguments)
-		endif()
-
-		if (EMSCRIPTEN)
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --memory-init-file 0 -O3 -s LINKABLE=1 -s DISABLE_EXCEPTION_CATCHING=0 -s NO_EXIT_RUNTIME=1 -s ALLOW_MEMORY_GROWTH=1 -s NO_DYNAMIC_EXECUTION=1")
-			add_definitions(-DETH_EMSCRIPTEN=1)
 		endif()
 	endif()
 
@@ -196,12 +151,6 @@ elseif (MSVC)
 	# stack size 16MB
 	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4099,4075 /STACK:16777216")
 
-	# windows likes static
-	if (NOT ETH_STATIC)
-		message("Forcing static linkage for MSVC.")
-		set(ETH_STATIC 1)
-	endif ()
-
 # If you don't have GCC, Clang or VC++ then you are on your own.  Good luck!
 else ()
 	message(WARNING "Your compiler is not tested, if you run into any issues, we'd welcome any patches.")
@@ -229,20 +178,3 @@ if (PROFILING AND (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")))
         set(CMAKE_SHARED_LINKER_FLAGS "--coverage ${CMAKE_SHARED_LINKER_FLAGS} -lprofiler")
         set(CMAKE_EXE_LINKER_FLAGS "--coverage ${CMAKE_EXE_LINKER_FLAGS} -lprofiler")
 endif ()
-
-if (("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU") OR ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang"))
-	option(USE_LD_GOLD "Use GNU gold linker" ON)
-	if (USE_LD_GOLD)
-		execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version ERROR_QUIET OUTPUT_VARIABLE LD_VERSION)
-		if ("${LD_VERSION}" MATCHES "GNU gold")
-			set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fuse-ld=gold")
-			set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fuse-ld=gold")
-		endif ()
-	endif ()
-endif ()
-
-if(ETH_STATIC)
-	set(BUILD_SHARED_LIBS OFF)
-else()
-	set(BUILD_SHARED_LIBS ON)
-endif(ETH_STATIC)

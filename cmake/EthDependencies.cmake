@@ -49,9 +49,6 @@ if (MSVC)
 	set (CMAKE_PREFIX_PATH ${ETH_DEPENDENCY_INSTALL_DIR} ${CMAKE_PREFIX_PATH})
 endif()
 
-# boilerplate macros for some code editors
-add_definitions(-DETH_TRUE)
-
 # custom cmake scripts
 set(ETH_CMAKE_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(ETH_SCRIPTS_DIR ${ETH_CMAKE_DIR}/scripts)
@@ -88,79 +85,11 @@ else()
 	set(Boost_USE_STATIC_LIBS ON)
 endif()
 
-# We have work-in-progress here to support building cpp-ethereum with static-linkage, which
-# provides a fantastic end-user experience.  You have entirely standalone executables
-# which are entirely atomic and "just work".  They contain everything you need and talk directly
-# to the operating system kernel.  Such linkage also allow best-possible dead-code removal and
-# global optimizations.  That is the model which is used by default for all golang apps.
-#
-# "Enable static build of binaries"
-# https://github.com/ethereum/webthree-umbrella/issues/495
-#
-# So we just have `geth` and `geth.exe`.  This mode lets you have an `eth` which works just
-# the same.  This approach is a particular benefit on Linux where there is huge fragmentation
-# of packaging systems and .so versioning across distros.  Building a standalone executable
-# for Linux which "just works" on all distros would be a huge win.  This mode allows just
-# that to happen already on Alpine Linux using the musl standard library, and I hope we can
-# extend that support to further distros in the near future.
-#
-# We also have partial support for static linkage on macOS, though we would only be able to
-# statically link the external dependencies above the kernel.  Anything which is part of the
-# operating system itself can only be used via dylibs.  Still, we can improve things a lot.
-#
-# This is a macOS operating system constraint.
-#
-# See https://developer.apple.com/library/mac/qa/qa1118/_index.html
-#
-# "Apple does not support statically linked binaries on Mac OS X.  A statically linked binary
-# assumes binary compatibility at the kernel system call interface, and we do not make any
-# guarantees on that front. Rather, we strive to ensure binary compatibility in each
-# dynamically linked system library and framework."
-
-set(STATIC_LINKING FALSE CACHE BOOL "Build static binaries")
-
-if (STATIC_LINKING)
-
-	set(Boost_USE_STATIC_RUNTIME ON)
-	set(OpenSSL_USE_STATIC_LIBS ON)
-
-	if (MSVC)
-		# TODO - Why would we need .a on Windows?  Maybe some Cygwin-ism.
-		# When I work through Windows static linkage, I will remove this,
-		# if that is possible.
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .lib .a ${CMAKE_FIND_LIBRARY_SUFFIXES})
-	elseif (APPLE)
-		# At the time of writing, we are still only PARTIALLY statically linked
-		# on OS X, with a mixture of statically linked external libraries where
-		# those are available, and dynamically linked where that is the only
-		# option we have.    Ultimately, the aim would be for everything except
-		# the runtime libraries to be statically linked.
-		#
-		# Still TODO:
-		# - json-rpc-cpp
-		# - leveldb (which pulls in snappy, for the dylib at ;east)
-		# - miniupnp
-		# - gmp
-		#
-		# Two further libraries (curl and zlib) ship as dylibs with the platform
-		# but again we could build from source and statically link these too.
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .a .dylib)
-	else()
-		set(CMAKE_FIND_LIBRARY_SUFFIXES .a)
-	endif()
-
-	set(ETH_STATIC ON)
-endif()
-
 include_directories(BEFORE "${PROJECT_BINARY_DIR}/include")
 
 function(eth_use TARGET REQUIRED)
 	if (NOT TARGET ${TARGET})
 		message(FATAL_ERROR "eth_use called for non existing target ${TARGET}")
-	endif()
-
-	if (TARGET ${PROJECT_NAME}_BuildInfo.h)
-		add_dependencies(${TARGET} ${PROJECT_NAME}_BuildInfo.h)
 	endif()
 
 	foreach(MODULE ${ARGN})

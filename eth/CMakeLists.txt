@@ -2,7 +2,7 @@ aux_source_directory(. SRC_LIST)
 
 file(GLOB HEADERS "*.h")
 
-eth_simple_add_executable(eth ${SRC_LIST} ${HEADERS})
+add_executable(eth ${SRC_LIST} ${HEADERS})
 
 find_package(Eth)
 find_package(Web3)
@@ -19,18 +19,8 @@ if (EVMJIT)
 	eth_copy_dlls(eth EVMJIT_DLLS)
 endif()
 
-if (MSVC)
-	find_package(Boost QUIET REQUIRED COMPONENTS chrono date_time)
-	target_link_libraries(eth ${Boost_CHRONO_LIBRARIES})
-	target_link_libraries(eth ${Boost_DATE_TIME_LIBRARIES})
-endif()
-
 if (UNIX AND NOT APPLE)
 	target_link_libraries(eth pthread)
 endif()
 
-if (APPLE)
-	install(TARGETS eth DESTINATION bin)
-else()
-	eth_install_executable(eth)
-endif()
+install(TARGETS eth DESTINATION bin)
