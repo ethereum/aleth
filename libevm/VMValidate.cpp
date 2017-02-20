@@ -42,6 +42,18 @@ void VM::validate(ExtVMFace& _ext)
 			validateSubroutine(PC, m_return, m_stack);
 		else if (OP == byte(Instruction::BEGINDATA))
 			break;
+		else if (
+				(byte)Instruction::PUSH1 <= (byte)OP &&
+				(byte)PC <= (byte)Instruction::PUSH32)
+			PC += (byte)OP - (byte)Instruction::PUSH1;
+		else if (
+				OP == Instruction::JUMPTO ||
+				OP == Instruction::JUMPIF ||
+				OP == Instruction::JUMPSUB)
+			PC += 4;
+		else if (OP == Instruction::JUMPV || op == Instruction::JUMPSUBV)
+			PC += 4 * m_code[PC];  // number of 4-byte dests followed by table
+	}
 }
 
 // we validate each subroutine individually, as if at top level
