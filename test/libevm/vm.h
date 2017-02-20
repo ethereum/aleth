@@ -41,8 +41,6 @@ along with cpp-ethereum.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace dev { namespace test {
 
-struct FakeExtVMFailure : virtual Exception {};
-
 class FakeExtVM: public eth::ExtVMFace
 {
 public:
@@ -57,7 +55,7 @@ public:
 	virtual bytes const& codeAt(Address _a) override { return std::get<3>(addresses[_a]); }
 	virtual size_t codeSizeAt(Address _a) override { return std::get<3>(addresses[_a]).size(); }
 	virtual h160 create(u256 _endowment, u256& io_gas, bytesConstRef _init, eth::OnOpFunc const&) override;
-	virtual bool call(eth::CallParameters&) override;
+	virtual boost::optional<eth::owning_bytes_ref> call(eth::CallParameters&) override;
 	void setTransaction(Address _caller, u256 _value, u256 _gasPrice, bytes const& _data);
 	void setContract(Address _myAddress, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);
 	void set(Address _a, u256 _myBalance, u256 _myNonce, std::map<u256, u256> const& _storage, bytes const& _code);

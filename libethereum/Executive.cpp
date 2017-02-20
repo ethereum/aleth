@@ -170,11 +170,6 @@ u256 Executive::gasUsed() const
 	return m_t.gas() - m_gas;
 }
 
-u256 Executive::gasUsedNoRefunds() const
-{
-	return m_t.gas() - m_gas + m_refunded;
-}
-
 void Executive::accrueSubState(SubState& _parentContext)
 {
 	if (m_ext)
@@ -250,7 +245,7 @@ bool Executive::execute()
 
 bool Executive::call(Address _receiveAddress, Address _senderAddress, u256 _value, u256 _gasPrice, bytesConstRef _data, u256 _gas)
 {
-	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}, {}};
+	CallParameters params{_senderAddress, _receiveAddress, _receiveAddress, _value, _value, _gas, _data, {}};
 	return call(params, _gasPrice, _senderAddress);
 }
 
@@ -279,7 +274,9 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		else
 		{
 			m_gas = (u256)(_p.gas - g);
-			m_sealEngine.executePrecompiled(_p.codeAddress, _p.data, _p.out);
+			bytes output = m_sealEngine.executePrecompiled(_p.codeAddress, _p.data);
+			size_t outputSize = output.size();
+			m_output = owning_bytes_ref{std::move(output), 0, outputSize};
 		}
 	}
 	else
@@ -287,7 +284,6 @@ bool Executive::call(CallParameters const& _p, u256 const& _gasPrice, Address co
 		m_gas = _p.gas;
 		if (m_s.addressHasCode(_p.codeAddress))
 		{
-			m_outRef = _p.out; // Save ref to expected output buffer to be used in go()
 			bytes const& c = m_s.code(_p.codeAddress);
 			h256 codeHash = m_s.codeHash(_p.codeAddress);
 			m_ext = make_shared<ExtVM>(m_s, m_envInfo, m_sealEngine, _p.receiveAddress, _p.senderAddress, _origin, _p.apparentValue, _gasPrice, _p.data, &c, codeHash, m_depth);
@@ -387,22 +383,19 @@ bool Executive::go(OnOpFunc const& _onOp)
 					{
 						if (m_res)
 							m_res->codeDeposit = CodeDeposit::Failed;
-						out.clear();
+						out = {};
 					}
 				}
 				if (m_res)
-					m_res->output = out; // copy output to execution result
-				m_s.setNewCode(m_ext->myAddress, std::move(out));
+					m_res->output = out.toVector(); // copy output to execution result
+				m_s.setNewCode(m_ext->myAddress, out.toVector());
 			}
 			else
 			{
+				m_output = vm->exec(m_gas, *m_ext, _onOp);
 				if (m_res)
-				{
-					m_res->output = vm->exec(m_gas, *m_ext, _onOp); // take full output
-					bytesConstRef{&m_res->output}.copyTo(m_outRef);
-				}
-				else
-					vm->exec(m_gas, *m_ext, m_outRef, _onOp); // take only expected output
+					// Copy full output:
+					m_res->output = m_output.toVector();
 			}
 		}
 		catch (VMException const& _e)

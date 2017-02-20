@@ -145,9 +145,8 @@ public:
 	/// @returns total gas used in the transaction/operation.
 	/// @warning Only valid after finalise().
 	u256 gasUsed() const;
-	/// @returns total gas used in the transaction/operation, excluding anything refunded.
-	/// @warning Only valid after finalise().
-	u256 gasUsedNoRefunds() const;
+
+	owning_bytes_ref takeOutput() { return std::move(m_output); }
 
 	/// Set up the executive for evaluating a bare CREATE (contract-creation) operation.
 	/// @returns false iff go() must be called (and thus a VM execution in required).
@@ -188,7 +187,7 @@ private:
 	// TODO: consider changign to EnvInfo const& to avoid LastHashes copy at every CALL/CREATE
 	EnvInfo m_envInfo;					///< Information on the runtime environment.
 	std::shared_ptr<ExtVM> m_ext;		///< The VM externality object for the VM execution or null if no VM is required. shared_ptr used only to allow ExtVM forward reference. This field does *NOT* survive this object.
-	bytesRef m_outRef;					///< Reference to "expected output" buffer.
+	owning_bytes_ref m_output;			///< Execution output.
 	ExecutionResult* m_res = nullptr;	///< Optional storage for execution results.
 
 	unsigned m_depth = 0;				///< The context's call-depth.

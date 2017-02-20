@@ -78,7 +78,7 @@ void doStateTests(json_spirit::mValue& _v, bool _fillin)
 			BOOST_REQUIRE(o.count("out") > 0);
 
 			// check output
-			checkOutput(output, o);
+			checkOutput(&output, o);
 
 			// check logs
 			checkLog(importer.m_logs, importer.m_logsExpected);

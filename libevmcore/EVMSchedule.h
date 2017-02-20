@@ -38,7 +38,6 @@ struct EVMSchedule
 	bool haveDelegateCall = true;
 	bool eip150Mode = false;
 	bool eip158Mode = false;
-	unsigned stackLimit = 1024;
 	std::array<unsigned, 8> tierStepGas;
 	unsigned expGas = 10;
 	unsigned expByteGas = 10;

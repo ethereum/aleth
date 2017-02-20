@@ -23,6 +23,7 @@
 
 #include <set>
 #include <functional>
+#include <boost/optional.hpp>
 #include <libdevcore/Common.h>
 #include <libdevcore/CommonData.h>
 #include <libdevcore/RLP.h>
@@ -36,6 +37,46 @@ namespace dev
 {
 namespace eth
 {
+
+/// Reference to a slice of buffer that also owns the buffer.
+///
+/// This is extension to the concept C++ STL library names as array_view
+/// (also known as gsl::span, array_ref, here vector_ref) -- reference to
+/// continuous non-modifiable memory. The extension makes the object also owning
+/// the referenced buffer.
+///
+/// This type is used by VMs to return output coming from RETURN instruction.
+/// To avoid memory copy, a VM returns its whole memory + the information what
+/// part of this memory is actually the output. This simplifies the VM design,
+/// because there are multiple options how the output will be used (can be
+/// ignored, part of it copied, or all of it copied). The decision what to do
+/// with it was moved out of VM interface making VMs "stateless".
+///
+/// The type is movable, but not copyable. Default constructor available.
+class owning_bytes_ref: public vector_ref<byte const>
+{
+public:
+	owning_bytes_ref() = default;
+
+	/// @param _bytes  The buffer.
+	/// @param _begin  The index of the first referenced byte.
+	/// @param _size   The number of referenced bytes.
+	owning_bytes_ref(bytes&& _bytes, size_t _begin, size_t _size):
+			m_bytes(std::move(_bytes))
+	{
+		// Set the reference *after* the buffer is moved to avoid
+		// pointer invalidation.
+		retarget(&m_bytes[_begin], _size);
+	}
+
+	owning_bytes_ref(owning_bytes_ref const&) = delete;
+	owning_bytes_ref(owning_bytes_ref&&) = default;
+	owning_bytes_ref& operator=(owning_bytes_ref const&) = delete;
+	owning_bytes_ref& operator=(owning_bytes_ref&&) = default;
+
+private:
+	bytes m_bytes;
+};
 
 enum class BlockPolarity
 {
@@ -160,7 +201,6 @@ struct CallParameters
 	u256 apparentValue;
 	u256 gas;
 	bytesConstRef data;
-	bytesRef out;
 	OnOpFunc onOp;
 };
 
@@ -207,9 +247,7 @@ public:
 	void setTimestamp(u256 const& _v) { m_timestamp = _v; }
 	void setDifficulty(u256 const& _v) { m_difficulty = _v; }
 	void setGasLimit(int64_t _v) { m_gasLimit = _v; }
-	void setLastHashes(LastHashes const& _lh) { m_lastHashes = _lh; }
 	void setLastHashes(LastHashes&& _lh) { m_lastHashes = _lh; }
-	void setGasUsed(u256 const& _v) { m_gasUsed = _v; }
 
 private:
 	u256 m_number;
@@ -236,7 +274,7 @@ public:
 	virtual ~ExtVMFace() = default;
 
 	ExtVMFace(ExtVMFace const&) = delete;
-	void operator=(ExtVMFace) = delete;
+	ExtVMFace& operator=(ExtVMFace const&) = delete;
 
 	/// Read storage location.
 	virtual u256 store(u256) { return 0; }
@@ -263,16 +301,13 @@ public:
 	virtual h160 create(u256, u256&, bytesConstRef, OnOpFunc const&) { return h160(); }
 
 	/// Make a new message call.
-	virtual bool call(CallParameters&) { return false; }
+	virtual boost::optional<owning_bytes_ref> call(CallParameters&) = 0;
 
 	/// Revert any changes made (by any of the other calls).
 	virtual void log(h256s&& _topics, bytesConstRef _data) { sub.logs.push_back(LogEntry(myAddress, std::move(_topics), _data.toBytes())); }
 
 	/// Hash of a block if within the last 256 blocks, or h256() otherwise.
 	h256 blockHash(u256 _number) { return _number < envInfo().number() && _number >= (std::max<u256>(256, envInfo().number()) - 256) ? envInfo().lastHashes()[(unsigned)(envInfo().number() - 1 - _number)] : h256(); }
-
-	/// Get the code at the given location in code ROM.
-	byte getCode(u256 _n) const { return _n < code.size() ? code[(size_t)_n] : 0; }
 
 	/// Get the execution environment information.
 	EnvInfo const& envInfo() const { return m_envInfo; }

@@ -185,7 +185,7 @@ bytes importByteArray(std::string const& _str);
 void copyFile(std::string const& _source, std::string const& _destination);
 eth::LogEntries importLog(json_spirit::mArray& _o);
 json_spirit::mArray exportLog(eth::LogEntries _logs);
-void checkOutput(bytes const& _output, json_spirit::mObject& _o);
+void checkOutput(bytesConstRef _output, json_spirit::mObject& _o);
 void checkStorage(std::map<u256, u256> _expectedStore, std::map<u256, u256> _resultStore, Address _expectedAddr);
 void checkLog(eth::LogEntries _resultLogs, eth::LogEntries _expectedLogs);
 void checkCallCreates(eth::Transactions _resultCallCreates, eth::Transactions _expectedCallCreates);
