@@ -154,7 +154,7 @@ private:
 	}
 
 	std::deque<T> m_queue;
-	std::atomic<size_t> m_size;	///< Tracks total size in bytes
+	std::atomic<size_t> m_size = {0};	///< Tracks total size in bytes
 };
 
 template<class KeyType>
@@ -214,7 +214,7 @@ private:
 	}
 		
 	BlockMultimap m_map;
-	std::atomic<size_t> m_size;	///< Tracks total size in bytes
+	std::atomic<size_t> m_size = {0};	///< Tracks total size in bytes
 };
 
 /**
