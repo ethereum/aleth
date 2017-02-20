@@ -979,22 +979,23 @@ LogEntries importLog(json_spirit::mArray& _a)
 	return logEntries;
 }
 
-void checkOutput(bytes const& _output, json_spirit::mObject& _o)
+void checkOutput(bytesConstRef _output, json_spirit::mObject& _o)
 {
 	int j = 0;
+	auto expectedOutput = _o["out"].get_str();
 
-	if (_o["out"].get_str().find("#") == 0)
-		BOOST_CHECK((u256)_output.size() == toInt(_o["out"].get_str().substr(1)));
+	if (expectedOutput.find("#") == 0)
+		BOOST_CHECK(_output.size() == toInt(expectedOutput.substr(1)));
 	else if (_o["out"].type() == json_spirit::array_type)
 		for (auto const& d: _o["out"].get_array())
 		{
 			BOOST_CHECK_MESSAGE(_output[j] == toInt(d), "Output byte [" << j << "] different!");
 			++j;
 		}
-	else if (_o["out"].get_str().find("0x") == 0)
-		BOOST_CHECK(_output == fromHex(_o["out"].get_str().substr(2)));
+	else if (expectedOutput.find("0x") == 0)
+		BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput.substr(2))));
 	else
-		BOOST_CHECK(_output == fromHex(_o["out"].get_str()));
+		BOOST_CHECK(_output.contentsEqual(fromHex(expectedOutput)));
 }
 
 void checkStorage(map<u256, u256> _expectedStore, map<u256, u256> _resultStore, Address _expectedAddr)

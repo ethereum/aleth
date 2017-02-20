@@ -60,8 +60,8 @@ struct InstructionMetric
 class VM: public VMFace
 {
 public:
-	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
-	
+	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) override final;
+
 #if EVM_JUMPS_AND_SUBS
 	// invalid code will throw an exeption
 	void validate(ExtVMFace& _ext);
@@ -92,7 +92,7 @@ private:
 	EVMSchedule const* m_schedule = nullptr;
 
 	// return bytes
-	bytesConstRef m_bytes = bytesConstRef();
+	owning_bytes_ref m_output;
 
 	// space for memory
 	bytes m_mem;
@@ -140,7 +140,7 @@ private:
 
 	// interpreter cases that call out
 	void caseCreate();
-	bool caseCallSetup(CallParameters*);
+	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
 	void copyDataToMemory(bytesConstRef _data, u256*& m_sp);

@@ -77,13 +77,12 @@ public:
 	SealEngineFace* withChainParams(ChainOperationParams const& _params) { setChainParams(_params); return this; }
 	virtual EVMSchedule const& evmSchedule(EnvInfo const&) const = 0;
 
-	virtual bool isPrecompiled(Address const& _a) const { return m_params.precompiled.count(_a); }
+	virtual bool isPrecompiled(Address const& _a) const { return m_params.precompiled.count(_a) != 0; }
 	virtual bigint costOfPrecompiled(Address const& _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).cost(_in); }
-	virtual void executePrecompiled(Address const& _a, bytesConstRef _in, bytesRef _out) const { return m_params.precompiled.at(_a).execute(_in, _out); }
+	virtual bytes executePrecompiled(Address const& _a, bytesConstRef _in) const { return m_params.precompiled.at(_a).execute(_in); }
 
 protected:
 	virtual bool onOptionChanging(std::string const&, bytes const&) { return true; }
-	void injectOption(std::string const& _name, bytes const& _value) { Guard l(x_options); m_options[_name] = _value; }
 
 private:
 	mutable Mutex x_options;

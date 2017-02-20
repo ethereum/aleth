@@ -197,14 +197,15 @@ int64_t evm_call(
 	params.codeAddress = fromEvmC(_address);
 	params.receiveAddress = _kind == EVM_CALL ? params.codeAddress : env.myAddress;
 	params.data = input;
-	params.out = {_outputData, _outputSize};
 	params.onOp = {};
 
-	auto ret = env.call(params);
+	auto output = env.call(params);
 	auto gasLeft = static_cast<int64_t>(params.gas);
 
-	// Add failure indicator.
-	if (!ret)
+	if (output)
+		output->copyTo({_outputData, _outputSize});
+	else
+		// Add failure indicator.
 		gasLeft |= EVM_CALL_FAILURE;
 
 	return gasLeft;
@@ -315,7 +316,7 @@ EVM& getJit()
 
 }
 
-bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref JitVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	auto rejected = false;
 	// TODO: Rejecting transactions with gas limit > 2^63 can be used by attacker to take JIT out of scope
@@ -326,8 +327,7 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 	if (rejected)
 	{
 		cwarn << "Execution rejected by EVM JIT (gas limit: " << io_gas << "), executing with interpreter";
-		m_fallbackVM = VMFactory::create(VMKind::Interpreter);
-		return m_fallbackVM->execImpl(io_gas, _ext, _onOp);
+		return VMFactory::create(VMKind::Interpreter)->exec(io_gas, _ext, _onOp);
 	}
 
 	auto gas = static_cast<int64_t>(io_gas);
@@ -338,10 +338,9 @@ bytesConstRef JitVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _on
 		BOOST_THROW_EXCEPTION(OutOfGas());
 
 	io_gas = r.gasLeft();
-	// FIXME: Copy the output for now, but copyless version possible.
 	auto output = r.output();
-	m_output.assign(output.begin(), output.end());
-	return {m_output.data(), m_output.size()};
+	// FIXME: Copy the output for now, but copyless version possible.
+	return {output.toVector(), 0, output.size()};
 }
 
 evm_mode JitVM::scheduleToMode(EVMSchedule const& _schedule)

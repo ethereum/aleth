@@ -432,6 +432,11 @@ tuple<ImportRoute, bool, unsigned> BlockChain::sync(BlockQueue& _bq, OverlayDB c
 				std::move(std::begin(r.goodTranactions), std::end(r.goodTranactions), std::back_inserter(goodTransactions));
 				++count;
 			}
+			catch (dev::eth::AlreadyHaveBlock const&)
+			{
+				cwarn << "ODD: Import queue contains already imported block";
+				continue;
+			}
 			catch (dev::eth::UnknownParent)
 			{
 				cwarn << "ODD: Import queue contains block with unknown parent.";// << LogTag::Error << boost::current_exception_diagnostic_information();
@@ -660,7 +665,7 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 	if (isKnown(_block.info.hash()) && _mustBeNew)
 	{
 		clog(BlockChainNote) << _block.info.hash() << ": Not new.";
-		BOOST_THROW_EXCEPTION(AlreadyHaveBlock());
+		BOOST_THROW_EXCEPTION(AlreadyHaveBlock() << errinfo_block(_block.block.toBytes()));
 	}
 
 	// Work out its number as the parent's number + 1

@@ -49,8 +49,7 @@ template <class S> S modWorkaround(S const& _a, S const& _b)
 
 uint64_t VM::decodeJumpDest(const byte* const _code, uint64_t& _pc)
 {
-	// turn 4 MSB-first bytes after the opcode into a native-order integer
-	++_pc;
+	// turn 4 MSB-first bytes in the code into a native-order integer
 	uint64_t dest      = _code[_pc++];
 	dest = (dest << 8) | _code[_pc++];
 	dest = (dest << 8) | _code[_pc++];
@@ -161,7 +160,7 @@ void VM::fetchInstruction()
 //
 // interpreter entry point
 
-bytesConstRef VM::execImpl(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	io_gas = &_io_gas;
 	m_io_gas = uint64_t(_io_gas);
@@ -186,7 +185,7 @@ bytesConstRef VM::execImpl(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp
 	}
 
 	*io_gas = m_io_gas;
-	return m_bytes;
+	return std::move(m_output);
 }
 
 //
@@ -225,7 +224,7 @@ void VM::interpretCases()
 
 			uint64_t b = (uint64_t)*m_sp--;
 			uint64_t s = (uint64_t)*m_sp--;
-			m_bytes = bytesConstRef(m_mem.data() + b, s);
+			m_output = owning_bytes_ref{std::move(m_mem), b, s};
 			m_bounce = 0;
 		}
 		CASE_RETURN
