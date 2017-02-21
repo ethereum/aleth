@@ -63,7 +63,7 @@ void VM::validate(ExtVMFace& _ext)
 void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 {
 	// set current interpreter state
-	m_pc = _PC, m_rp = _RP, m_sp = _SP;
+	m_PC = _PC, m_RP = _RP, m_SP = _SP;
 	
 	INIT_CASES
 	DO_CASES
@@ -71,7 +71,7 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		CASE_BEGIN(JUMPDEST)
 		{
 			// if frame size is set then we have been here before
-			ptrdiff_t frameSize = m_frameSize[m_pc];
+			ptrdiff_t frameSize = m_frameSize[m_PC];
 			if (0 <= frameSize)
 			{
 				// check for constant frame size
@@ -82,15 +82,15 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 				return;
 			}
 			// set frame size to check later
-			m_frameSize[m_pc] = stackSize();
-			++m_pc;
+			m_frameSize[m_PC] = stackSize();
+			++m_PC;
 		}
 		CASE_END
 
 		CASE_BEGIN(JUMPTO)
 		{
 			// extract jump destination from bytecode
-			m_pc = decodeJumpDest(m_code, m_pc);
+			m_PC = decodeJumpDest(m_code, m_PC);
 		}
 		CASE_END
 
@@ -98,23 +98,23 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		{
 			// recurse to validate code to jump to, saving and restoring
 			// interpreter state around call
-			_PC = m_pc, _RP = m_rp, _SP = m_sp;
-			validateSubroutine(decodeJumpvDest(m_code, m_pc, m_sp), _RP, _SP);
-			m_pc = _PC, m_rp = _RP, m_sp = _SP;
-			++m_pc;
+			_PC = m_PC, _RP = m_RP, _SP = m_SP;
+			validateSubroutine(decodeJumpvDest(m_code, m_PC, m_SP), _RP, _SP);
+			m_PC = _PC, m_RP = _RP, m_SP = _SP;
+			++m_PC;
 		}
 		CASE_END
 
 		CASE_BEGIN(JUMPV)
 		{
 			// for every jump destination in jump vector
-			for (size_t dest = 0, nDests = m_code[m_pc+1]; dest < nDests; ++dest)
+			for (size_t dest = 0, nDests = m_code[m_PC+1]; dest < nDests; ++dest)
 			{
 				// recurse to validate code to jump to, saving and 
 				// restoring interpreter state around call
-				_PC = m_pc, _RP = m_rp, _SP = m_sp;
-				validateSubroutine(decodeJumpDest(m_code, m_pc), _RP, _SP);
-				m_pc = _PC, m_rp = _RP, m_sp = _SP;
+				_PC = m_PC, _RP = m_RP, _SP = m_SP;
+				validateSubroutine(decodeJumpDest(m_code, m_PC), _RP, _SP);
+				m_PC = _PC, m_RP = _RP, m_SP = _SP;
 			}
 		}
 		CASE_RETURN
@@ -122,7 +122,7 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		CASE_BEGIN(JUMPSUB)
 		{
 			// check for enough arguments on stack
-			size_t destPC = decodeJumpDest(m_code, m_pc);
+			size_t destPC = decodeJumpDest(m_code, m_PC);
 			byte nArgs = m_code[destPC+1];
 			if (stackSize() < nArgs) 
 				throwBadStack(stackSize(), nArgs, 0);
@@ -132,8 +132,8 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 		CASE_BEGIN(JUMPSUBV)
 		{
 			// for every subroutine in jump vector
-			_PC = m_pc;
-			for (size_t sub = 0, nSubs = m_code[m_pc+1]; sub < nSubs; ++sub)
+			_PC = m_PC;
+			for (size_t sub = 0, nSubs = m_code[m_PC+1]; sub < nSubs; ++sub)
 			{
 				// check for enough arguments on stack
 				u256 slot = sub;
@@ -143,7 +143,7 @@ void VM::validateSubroutine(uint64_t _PC, uint64_t* _RP, u256* _SP)
 				if (stackSize() < nArgs) 
 					throwBadStack(stackSize(), nArgs, 0);
 			}
-			m_pc = _PC;
+			m_PC = _PC;
 		}
 		CASE_END
 

@@ -69,7 +69,7 @@ public:
 #endif
 
 	bytes const& memory() const { return m_mem; }
-	u256s stack() const { assert(m_stack <= m_sp + 1); return u256s(m_stack, m_sp + 1); };
+	u256s stack() const { assert(m_stack <= m_SP + 1); return u256s(m_stack, m_SP + 1); };
 
 private:
 
@@ -104,7 +104,7 @@ private:
 	// space for stack and pointer to data
 	u256 m_stackSpace[1025];
 	u256* m_stack = m_stackSpace + 1;
-	ptrdiff_t stackSize() { return m_sp - m_stack; }
+	ptrdiff_t stackSize() { return m_SP - m_stack; }
 	
 #if EVM_JUMPS_AND_SUBS
 	// space for return stack and pointer to data
@@ -119,11 +119,11 @@ private:
 	u256 m_pool[256];
 
 	// interpreter state
-	Instruction m_op;                   // current operator
-	uint64_t    m_pc = 0;               // program counter
-	u256*       m_sp = m_stack - 1;     // stack pointer
+	Instruction m_OP;                   // current operator
+	uint64_t    m_PC = 0;               // program counter
+	u256*       m_SP = m_stack - 1;     // stack pointer
 #if EVM_JUMPS_AND_SUBS
-	uint64_t*   m_rp = m_return - 1;    // return pointer
+	uint64_t*   m_RP = m_return - 1;    // return pointer
 #endif
 
 	// metering and memory state
@@ -143,7 +143,7 @@ private:
 	bool caseCallSetup(CallParameters*, bytesRef& o_output);
 	void caseCall();
 
-	void copyDataToMemory(bytesConstRef _data, u256*& m_sp);
+	void copyDataToMemory(bytesConstRef _data, u256*& m_SP);
 	uint64_t memNeed(u256 _offset, u256 _size);
 
 	void throwOutOfGas();
