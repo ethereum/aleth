@@ -41,9 +41,9 @@ PrecompiledExecutor const& PrecompiledRegistrar::executor(std::string const& _na
 namespace
 {
 
-ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in)
 {
-	struct inType
+	struct
 	{
 		h256 hash;
 		h256 v;
@@ -66,27 +66,28 @@ ETH_REGISTER_PRECOMPILED(ecrecover)(bytesConstRef _in, bytesRef _out)
 				{
 					ret = dev::sha3(rec);
 					memset(ret.data(), 0, 12);
-					ret.ref().copyTo(_out);
+					return ret.asBytes();
 				}
 			}
 			catch (...) {}
 		}
 	}
+	return {};
 }
 
-ETH_REGISTER_PRECOMPILED(sha256)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(sha256)(bytesConstRef _in)
 {
-	dev::sha256(_in).ref().copyTo(_out);
+	return dev::sha256(_in).asBytes();
 }
 
-ETH_REGISTER_PRECOMPILED(ripemd160)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(ripemd160)(bytesConstRef _in)
 {
-	h256(dev::ripemd160(_in), h256::AlignRight).ref().copyTo(_out);
+	return h256(dev::ripemd160(_in), h256::AlignRight).asBytes();
 }
 
-ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in, bytesRef _out)
+ETH_REGISTER_PRECOMPILED(identity)(bytesConstRef _in)
 {
-	_in.copyTo(_out);
+	return _in.toBytes();
 }
 
 }

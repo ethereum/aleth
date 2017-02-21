@@ -68,7 +68,7 @@ uint64_t VM::decodeJumpvDest(const byte* const _code, uint64_t& _pc, u256*& _sp)
 	uint64_t pc = _pc;
 	byte n = _code[++pc];           // byte after opcode is number of jumps
 	if (i >= n) i = n - 1;          // if index overflow use default jump
-	pc += 1 + i * 4;                // adjust pc to index destination in table
+	pc += i * 4;                    // adjust pc to index destination in table
 	
 	uint64_t dest = decodeJumpDest(_code, pc);
 	
@@ -160,7 +160,7 @@ void VM::fetchInstruction()
 //
 // interpreter entry point
 
-bytesConstRef VM::execImpl(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref VM::exec(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	io_gas = &_io_gas;
 	m_io_gas = uint64_t(_io_gas);
@@ -185,7 +185,7 @@ bytesConstRef VM::execImpl(u256& _io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp
 	}
 
 	*io_gas = m_io_gas;
-	return m_bytes;
+	return std::move(m_output);
 }
 
 //
@@ -224,7 +224,7 @@ void VM::interpretCases()
 
 			uint64_t b = (uint64_t)*m_sp--;
 			uint64_t s = (uint64_t)*m_sp--;
-			m_bytes = bytesConstRef(m_mem.data() + b, s);
+			m_output = owning_bytes_ref{std::move(m_mem), b, s};
 			m_bounce = 0;
 		}
 		CASE_RETURN
@@ -888,7 +888,7 @@ void VM::interpretCases()
 			ON_OP();
 			updateIOGas();
 			{
-				*++m_rp = m_pc++;
+				*++m_rp = m_pc;
 				m_pc = decodeJumpDest(m_code, m_pc);
 			}
 		CASE_END
@@ -898,8 +898,7 @@ void VM::interpretCases()
 			updateIOGas();
 			{
 				*++m_rp = m_pc;
-				m_pc = 
-				jumpvDest(m_code, m_pc, m_sp);
+				m_pc = decodeJumpDest(m_code, m_pc);
 			}
 		CASE_END
 

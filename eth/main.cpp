@@ -61,6 +61,7 @@
 #include <libweb3jsonrpc/Test.h>
 
 #include <ethminer/MinerAux.h>
+#include "BuildInfo.h"
 #include "AccountManager.h"
 
 using namespace std;
@@ -302,6 +303,9 @@ bool ExitHandler::s_shouldExit = false;
 int main(int argc, char** argv)
 {
 	setDefaultOrCLocale();
+
+	// Init secp256k1 context by calling one of the functions.
+	toPublic({});
 
 	// Init defaults
 	Defaults::get();

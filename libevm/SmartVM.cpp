@@ -87,7 +87,7 @@ namespace
 	};
 }
 
-bytesConstRef SmartVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
+owning_bytes_ref SmartVM::exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp)
 {
 	auto vmKind = VMKind::Interpreter; // default VM
 	auto mode = JitVM::scheduleToMode(_ext.evmSchedule());
@@ -113,10 +113,7 @@ bytesConstRef SmartVM::execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _
 		clog(JitInfo) << "Interpreter:   " << _ext.codeHash;
 	}
 
-	// TODO: Selected VM must be kept only because it returns reference to its internal memory.
-	//       VM implementations should be stateless, without escaping memory reference.
-	m_selectedVM = VMFactory::create(vmKind);
-	return m_selectedVM->execImpl(io_gas, _ext, _onOp);
+	return VMFactory::create(vmKind)->exec(io_gas, _ext, _onOp);
 }
 
 }

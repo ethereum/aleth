@@ -29,7 +29,7 @@ echo "cpp-ethereum repository at commit $cppHead"
 echo "tests repository at commit $testHead"
 exec 2> $workdir/testlog.txt
 timestart=$(date +%s.%N)
-./testeth --all --exectimelog
+./testeth -- --all --exectimelog
 timeend=$(date +%s.%N)
 
 #Send Mails

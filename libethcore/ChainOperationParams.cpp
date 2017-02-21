@@ -26,7 +26,7 @@ using namespace std;
 using namespace dev;
 using namespace eth;
 
-PrecompiledContract::PrecompiledContract(unsigned _base, unsigned _word, std::function<void(bytesConstRef, bytesRef)> const& _exec):
+PrecompiledContract::PrecompiledContract(unsigned _base, unsigned _word, std::function<bytes(bytesConstRef)> const& _exec):
 	PrecompiledContract([=](unsigned size) -> bigint
 	{
 		bigint s = size;

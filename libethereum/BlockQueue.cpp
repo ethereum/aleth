@@ -400,6 +400,7 @@ QueueStatus BlockQueue::blockStatus(h256 const& _h) const
 
 bool BlockQueue::knownFull() const
 {
+	Guard l(m_verification);
 	return knownSize() > c_maxKnownSize || knownCount() > c_maxKnownCount;
 }
 
@@ -415,6 +416,7 @@ std::size_t BlockQueue::knownCount() const
 
 bool BlockQueue::unknownFull() const
 {
+	ReadGuard l(m_lock);
 	return unknownSize() > c_maxUnknownSize || unknownCount() > c_maxUnknownCount;
 }
 

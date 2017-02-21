@@ -27,12 +27,12 @@ namespace eth
 
 struct VMException: virtual Exception {};
 #define ETH_SIMPLE_EXCEPTION_VM(X) struct X: virtual VMException { const char* what() const noexcept override { return #X; } }
-ETH_SIMPLE_EXCEPTION_VM(BreakPointHit);
 ETH_SIMPLE_EXCEPTION_VM(BadInstruction);
 ETH_SIMPLE_EXCEPTION_VM(BadJumpDestination);
 ETH_SIMPLE_EXCEPTION_VM(OutOfGas);
 ETH_SIMPLE_EXCEPTION_VM(OutOfStack);
 ETH_SIMPLE_EXCEPTION_VM(StackUnderflow);
+
 
 /// EVM Virtual Machine interface
 class VMFace
@@ -43,22 +43,8 @@ public:
 	VMFace(VMFace const&) = delete;
 	VMFace& operator=(VMFace const&) = delete;
 
-	/// Execute EVM code by VM.
-	///
-	/// @param _out		Expected output
-	void exec(u256& io_gas, ExtVMFace& _ext, bytesRef _out, OnOpFunc const& _onOp = {})
-	{
-		execImpl(io_gas, _ext, _onOp).copyTo(_out);
-	}
-
-	/// The same as above but returns a copy of full output.
-	bytes exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp = {})
-	{
-		return execImpl(io_gas, _ext, _onOp).toVector();
-	}
-
 	/// VM implementation
-	virtual bytesConstRef execImpl(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) = 0;
+	virtual owning_bytes_ref exec(u256& io_gas, ExtVMFace& _ext, OnOpFunc const& _onOp) = 0;
 };
 
 }
