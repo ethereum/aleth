@@ -103,14 +103,17 @@ void Client::init(p2p::Host* _extNet, std::string const& _dbPath, WithExisting _
 	m_bq.setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 	bc().setOnBad([=](Exception& ex){ this->onBadBlock(ex); });
 
+
 	if (_forceAction == WithExisting::Rescue)
 		bc().rescue(m_stateDB);
 
 	m_gp->update(bc());
 
 	auto host = _extNet->registerCapability(make_shared<EthereumHost>(bc(), m_stateDB, m_tq, m_bq, _networkId));
+	bc().setOnBlockImport([=](BlockHeader const& _info){ host->onBlockImported(_info); });
 	m_host = host;
 	_extNet->addCapability(host, EthereumHost::staticName(), EthereumHost::c_oldProtocolVersion); //TODO: remove this once v61+ protocol is common
+
 
 	if (_dbPath.size())
 		Defaults::setDBPath(_dbPath);

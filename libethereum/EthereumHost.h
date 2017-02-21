@@ -36,6 +36,8 @@
 #include <libdevcore/OverlayDB.h>
 #include "CommonNet.h"
 #include "EthereumPeer.h"
+#include "BlockChainSync.h"
+#include "libethcore/BlockHeader.h"
 
 namespace dev
 {
@@ -76,6 +78,7 @@ public:
 
 	void noteNewTransactions() { m_newTransactions = true; }
 	void noteNewBlocks() { m_newBlocks = true; }
+	void onBlockImported(BlockHeader const& _info) { m_sync->onBlockImported(_info); }
 
 	BlockChain const& chain() const { return m_chain; }
 	OverlayDB const& db() const { return m_db; }

@@ -26,6 +26,7 @@
 
 #include <libdevcore/Guards.h>
 #include <libethcore/Common.h>
+#include "libethcore/BlockHeader.h"
 #include <libp2p/Common.h>
 #include "CommonNet.h"
 
@@ -74,6 +75,9 @@ public:
 
 	/// Called by peer when it is disconnecting
 	void onPeerAborting();
+
+	/// Called when a blockchain has imported a new block onto the DB
+	void onBlockImported(BlockHeader const& _info);
 
 	/// @returns Synchonization status
 	SyncStatus status() const;

@@ -864,6 +864,8 @@ ImportRoute BlockChain::import(VerifiedBlockRef const& _block, OverlayDB const& 
 		{
 			newLastBlockHash = _block.info.hash();
 			newLastBlockNumber = (unsigned)_block.info.number();
+			if (m_onBlockImport)
+				m_onBlockImport(_block.info);
 		}
 
 		clog(BlockChainNote) << "   Imported and best" << td << " (#" << _block.info.number() << "). Has" << (details(_block.info.parentHash()).children.size() - 1) << "siblings. Route:" << route;
